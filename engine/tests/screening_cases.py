@@ -123,11 +123,12 @@ CASES=[
          posting=posting('glob',locations=[{'text':'Remote (Global)','source':'location'}],
                          description=INTRO+'Please note: We are currently accepting applications only from candidates based in North America, South America or Europe.\n'+REQS),
          expected={'verdict':'conditional','gates':{'geography':'unknown'}}),
-    # Owner rule (gates version 3): a bare "$" is USD when every listed location is in the United States.
-    dict(id='bare_dollar_us_only_above_floor',about='US-only posting, bare $ range above 120k',candidate=U,posting=us('a','$130,000 - $150,000 per year base salary'),
-         expected={'verdict':'conditional','gates':{'geography':'pass','salary':'pass'}}),
-    dict(id='bare_dollar_us_only_below_floor',about='US-only posting, bare $ range below 120k',candidate=U,posting=us('b','$90,000 - $110,000 per year base salary'),
-         expected={'verdict':'excluded','gates':{'salary':'fail'}}),
+    # A bare "$" names no currency. Reading it as USD on US-only postings (gates version 3) was not a verified owner
+    # instruction and was removed in version 7, so U (no assume_currency_for_symbol) can't compare it either way.
+    dict(id='bare_dollar_us_only_above_floor',about='US-only posting, bare $ range above 120k: currency unstated, salary unknown',candidate=U,posting=us('a','$130,000 - $150,000 per year base salary'),
+         expected={'verdict':'conditional','gates':{'geography':'pass','salary':'unknown'}}),
+    dict(id='bare_dollar_us_only_below_floor',about='US-only posting, bare $ range below 120k: currency unstated, so no exclusion',candidate=U,posting=us('b','$90,000 - $110,000 per year base salary'),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
     dict(id='bare_dollar_location_unstated',about='location is just "Remote": not US-only, so $ stays unknown',candidate=U,
          posting=us('c','$130,000 - $150,000 per year base salary',('Remote',)),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
     dict(id='bare_dollar_mixed_locations',about='India and United States listed: not US-only',candidate=U,

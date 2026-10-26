@@ -79,11 +79,9 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 **Salary.**
 - Never converted between currencies, never annualised. Pay quoted per month or per hour doesn't count against an annual floor.
 - Currency comes from an explicit code or an unambiguous symbol (₹ € £ zł R$).
-- **Bare `$` (owner rule, gates version 3):** a `$` with no currency code in the quote counts as USD when **every location the job board lists is recognised as the United States**.
-  - A location that is just "Remote", a mix such as India plus the United States, or a city-only entry such as "San Francisco, CA" (cities aren't recognised) is not confirmed US-only. There, `$` stays currency-unknown unless the candidate's own `assume_currency_for_symbol` maps it.
-  - Other dollars (`CA$`, `A$`, `HK$`, or a CAD/AUD/… code) are never USD.
-  - `US$` is left unknown for now: the extractor doesn't yet read "US$x - US$y" as one range, and comparing a broken range could fail a floor wrongly. That's an extractor follow-up, after farshaikh17/Codex#9.
-  - Estimates are excluded before this rule applies, so a third-party "$135,000" on a US-only posting stays unknown.
+- **Bare `$`:** a `$` with no currency code is currency-unknown unless the candidate's own `assume_currency_for_symbol` maps it. Other dollars (`CA$`, `A$`, `HK$`, or a CAD/AUD/… code) are never USD.
+  - Gates versions 3–6 read a bare `$` as USD when every listed location was in the United States, attributed to the owner. That attribution was not verified (GPT Master, 2026-10-26), so version 7 removed the behaviour. It remains an open proposal for the owner and the GPT Master, and is not applied.
+  - `US$` is left unknown for now: the extractor doesn't yet read "US$x - US$y" as one range, and comparing a broken range could fail a floor wrongly. That's an extractor follow-up (B3).
 - **Amounts in millions or billions** ("generates nearly $1B annually") are company figures, never pay, and are not compared. Found on a real Twilio posting, where the `$` rule would otherwise have failed a floor on "$1".
 - **Several floors, one per currency (owner rule, gates version 5):** `rules.salary` may be one floor (an object) or a list, at most one floor per currency, for example `[{"minimum": 2500000, "currency": "INR", "period": "year", "basis": "base"}, {"minimum": 60000, "currency": "USD", "period": "year", "basis": "base"}]`.
   - Each stated range is compared only with the floor in its own currency, using that floor's period, basis and `assume_period`. There's no conversion; a range in a currency with no floor stays unknown.

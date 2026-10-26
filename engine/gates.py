@@ -23,6 +23,8 @@ from engine.places import covers,places
 #    limited to residents of places that exclude the candidate is not compared
 # 6: a range with one published bound is open-ended: 'at least X' can pass but never fail, 'up to Y' can fail but never
 #    pass; a missing bound is never copied from the other
+#    (7 also removes version 3's bare-'$' rule: it was not a verified owner instruction (GPT Master, 2026-10-26), so a bare
+#    '$' is again a currency only if the candidate's own assume_currency_for_symbol maps it)
 # 7: only third-party or salary-site pay is excluded; an employer-published estimate is compared and kept as evidence
 #    with its wording and an 'employer-published estimate' qualifier, but its result is provisional and never decides the gate
 GATES_VERSION=7
@@ -159,7 +161,6 @@ def qualifications(fields,profile,reviews):
     return _gate('pass','every mandatory requirement reviewed; %d met, %d not requirements'%(len(met),len(out)-len(met)),met,'review decisions',units=out)
 # CA$, A$, HK$ ... are not US dollars. US$ is, but the extractor does not yet parse 'US$x - US$y' as one range,
 # so it is left unknown here rather than compared on a broken range.
-OTHER_DOLLARS=re.compile(r'[A-Za-z]\$|\b(?:CAD|AUD|NZD|SGD|HKD|MXN|TWD|BRL)\b')
 def _magnitude(r,quote):
     """True when the amount is written in millions or billions ('$1B', '$2.5 million'): a company figure, not pay."""
     return bool(r.get('text')) and bool(re.search(re.escape(r['text'])+r'\s?(?:[MB]\b|bn\b|mn\b|million\b|billion\b)',quote,re.I))
@@ -171,17 +172,10 @@ def _against(low,high,floor):
     if low is not None and low>=floor: return 'pass'
     if high is not None and high<floor: return 'fail'
     return 'span' if low is not None and high is not None else 'open'
-def us_only(fields):
-    """True when the job board lists at least one location and every listed location is recognised as the United
-    States. City-only entries ('San Francisco, CA') are not recognised, so they leave this False."""
-    listed=[places(i['quote']) for i in fields['location']['items'] if i['method'].startswith('ats_field:')]
-    return bool(listed) and all(found=={'US'} for found in listed)
-def _currency(r,rule,quote='',us_posting=False):
+def _currency(r,rule):
     if r.get('currency'): return r['currency'],None
     sym=r.get('currency_symbol')
     if sym in SYMBOL_CURRENCY and SYMBOL_CURRENCY[sym]: return SYMBOL_CURRENCY[sym],'currency from unambiguous symbol %s'%sym
-    if sym=='$' and us_posting and not OTHER_DOLLARS.search(quote):
-        return 'USD','bare "$" read as USD because every listed location is in the United States (owner rule)'
     assumed=(rule.get('assume_currency_for_symbol') or {}).get(sym)
     if assumed: return assumed,'currency %s assumed for symbol %s by rules.salary.assume_currency_for_symbol'%(assumed,sym)
     return None,None
@@ -219,7 +213,6 @@ def salary(fields,rules,posting=None,profile=None):
         if no_base: return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base,desc)
         return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
     outcomes,notes,provisional=[],[],[]
-    us_posting=us_only(fields)
     for i in comp['items']:
         pay=i['interpretation']
         if not pay: continue
@@ -235,7 +228,7 @@ def salary(fields,rules,posting=None,profile=None):
             if _magnitude(r,i['quote']):
                 notes.append('%s: an amount in millions or billions, not pay; not compared'%r['text'])
                 continue
-            cur,cur_note=_currency(r,{'assume_currency_for_symbol':symbols},i['quote'],us_posting)
+            cur,cur_note=_currency(r,{'assume_currency_for_symbol':symbols})
             if cur not in floors:
                 notes.append('%s: currency %s has no floor; not converted'%(r.get('text') or i['quote'],cur or 'unstated')); continue
             rule=floors[cur]
