@@ -29,6 +29,45 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 **Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
+**Snapshot, 17:10 UTC (supersedes the 16:20 heads and the main block below where they differ):**
+
+*main:* **`084bafb`** (bot snapshot, 16:59). It was produced by push-verification run [40364324592](https://github.com/farshaikh17/Codex/actions/runs/40364324592) after the owner's **`562baaf`** (16:59 UTC, Farhan Shaikh): "Schedule five daily feed collections without the age-gate skip".
+- **Cron:** now `37 1,6,11,16,21 * * *` UTC, with gaps of 5/5/5/5/4 h.
+- **Age gate:** the five-hour step is removed. The workflow runs `python collect.py` directly.
+- **Data:** `public/status.json` attempted 16:59, `ok`, 10/10 sources, 536 listings.
+- **Authorization:** the change was authorized by the owner and the GPT Master, who re-verified the Actions budget at $0 paid with usage blocked. See *GPT Master production schedule update* at the end of this file.
+- **Not yet verified:** scheduled execution on the new cron. No `schedule` event on `37 …` has arrived yet.
+
+*Open PR heads, 17:10* (16:20 values in brackets where changed):
+- #1 `d1c15a0` [`a4867d0`]. It now includes:
+  - Worker A `eddcaad` (page-capture **schema 3**; `review_change` based on posting links; new `review_basis`, `listings_unchanged`)
+  - capture `726a27a`
+  - Worker A `1441d0f` (16:58, job-summary tweak in `crawl-pages.yml`)
+  - the owner's `d1c15a0`
+- #2 `5cc7334` [`5c87de2`]. It now includes:
+  - `dbfdf1f` (16:25, **bare-`$` → USD on US-only postings, labelled "owner rule"**; amounts in millions or billions never compared; `GATES_VERSION=3`; third synthetic candidate)
+  - `5cc7334` (17:02, **E6 consumer outputs**: posting records, cursor pages, review batches, decision feed)
+  - **B1 not started.**
+- #3 `d11f691`, #4 `a43890a`, #5 `48ff370`, #6 `1bca0d2`, #8 `5932c0d`, #9 `3018541` (all unchanged)
+- #7 `ea69b67` [`e1438f2`]. It now includes:
+  - `6e5ae79` (16:28, 2 new cases: `us-dollar-code-range`, `company-revenue-not-pay`)
+  - `98773d9` (16:58, "Record **owner rule**: commission-only pay fails a base salary floor")
+  - `ea69b67` (17:05, "Record **owner rule**: salary floors in several currencies, compared per currency")
+  - `e1438f2` not yet reverted.
+
+*Combined tree, Master check 17:10, all nine heads on `084bafb`:*
+- **Conflicts:**
+  - `docs/ENGINE.md` (#6 vs #9, doc-only, keep both).
+  - **`.github/workflows/collect.yml` (#3 vs the owner's `562baaf`).** #3, #4 and #5 each conflict with `main` there on their own; #1 merges cleanly.
+- **Tests:** taking #3's side of `collect.yml` only to get a code result (workflow YAML isn't tested), **159 offline tests pass**, 0 failures, 0 errors.
+- **Versions:** `EXTRACTOR_VERSION=3`, `GATES_VERSION=3`.
+- **One-sided pay-range collapse:** still present.
+
+*Schedule integration hazard (verified 17:10):* #3's `due_sources()` collects a source on `schedule` only when its last attempt is at least `poll_interval_hours` (default 5) minus `DUE_SLACK` (15 min) old, that is 4 h 45 m.
+- Under the owner's cron, **the 01:37 run follows a 4-hour gap and would skip every source**. Checked on the combined code: a 4 h gap gives no due source; a 5 h gap gives the source.
+- Any delayed run would also make the next on-time run skip.
+- Merged as is, #3 would **re-introduce the age gate** the owner removed. The fix belongs to C1 (see section 5).
+
 **Current heads, 16:20** (15:20 values in brackets where changed):
 - #1 `a4867d0` [`f27a04a`]: bot capture commit from run 40356103511 on top of Worker A's `f284658` (16:07, job-summary review-queue line in `crawl-pages.yml`)
 - #2 `5c87de2` [`8794ca8`]: `8f026c4` (15:14, per-candidate review queue, E5) and `5c87de2` (16:08, salary gate never compares estimates, `GATES_VERSION=2`)
@@ -134,6 +173,13 @@ Shared-file rules:
 
 Each task is one push or a small number of pushes to the worker's own branch. None overlaps another, and none needs a merge, a schedule change or a decision from section 8.
 
+**Update 17:10 (Master; the 16:30 decision below still binds, with these additions):**
+- **Pushes after the decision:** all three workers pushed after the 16:30 decision was written. None shows the decision was received. Re-send the 16:30 messages, and the 17:10 additions below.
+- **Owner instructions:** they are reaching workers directly ("owner rule", "owner request"). Until D9 is settled, a worker acting on an owner instruction that isn't in this file records it in section 9 **before** pushing, quoting the instruction.
+- **Schema:** page capture is now **schema 3**. Every reference to `-2` in B1 means `-3`.
+- **B2 version:** B2's gate version is **4**, because `dbfdf1f` already took 3.
+- **C1 has a new requirement:** see *C1 schedule integration* below.
+
 **GPT Master decision, 16:30 (binding until changed):**
 - **Worker A** stands by. No pushes unless assigned.
 - **Worker B** finishes B1 before any further gate work, then does B2.
@@ -174,7 +220,11 @@ Each task is one push or a small number of pushes to the worker's own branch. No
   - **Downstream check:** make sure every consumer of `ranges` in `8794ca8` (`gates.py`, `screen.py`, `benchmark.py`) treats a `null` bound as unknown. It must not read it as zero, as equal to the other bound, or as a pass or fail. A salary gate with one bound below the threshold and the other unknown stays `unknown` unless the known bound settles it.
   - **Other paths:** apply the same rule to any other structured path that can carry one bound (Lever `salaryRange`, Greenhouse `pay_input_ranges`) if it can collapse the same way. Say on #2 which paths you checked.
   - **Version:** keep `EXTRACTOR_VERSION=3`. Version 3 has not shipped to `main` or to any persisted store, so it needs no bump. Bump to 4 only if a v3 store exists anywhere you know of.
-- **ENGINE.md §3:** Worker A posted the schema `-2` field list on #2 (comment 6419553617). Update ENGINE.md §3 to `public-page-capture-index-2`. Don't implement E2b ingestion yet.
+- **ENGINE.md §3:** update ENGINE.md §3 to **`public-page-capture-index-3`** (17:10: Worker A bumped the schema in `eddcaad` and posted a notice on #2; the earlier `-2` field list is in comment 6419553617). Don't implement E2b ingestion yet.
+- **Leave the 16:25–17:02 work as is (17:10):** `dbfdf1f` (bare-`$` rule, company-figure exclusion) and `5cc7334` (E6 consumer outputs) are provisional. Don't extend them or remove them until D7 and D3 are answered. Note both on #2.
+- **Extraction follow-ups (recorded, not assigned):** `dbfdf1f` found two real extractor defects, now numbered **B3**. Don't start them before B1 and B2 are reported.
+  - "generates nearly $1B annually" is extracted as stated compensation of $1. The gate now excludes it, but the extractor still mislabels it.
+  - "US$130,000 – US$150,000" isn't parsed as one range.
 - **Not in scope:** `adapters.py`, `collect.py`, merging to `main`. The E3/E4 gates and candidate fixtures in `8794ca8` are **provisional** (D3). Don't extend them or change their rules. Changing them only to handle null bounds safely is in scope.
 - **Close-out:** say on #9 that it is folded in, and leave #9 for the owner to close.
 - **Report (required by the GPT Master):** post on #2, and append to section 9:
@@ -194,7 +244,7 @@ GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `G
 - **Employer-published estimated ranges:** keep the evidence item, its verbatim quote and its wording, including `estimated`. Don't discard it automatically as a third-party estimate. Record in the gate result that the employer called it an estimate.
 - **Third-party figures:** only quotes that say the pay is third-party, name a salary site (Glassdoor, Levels.fyi, PayScale, Salary.com, Indeed), or say it is not provided by the employer stay not compared. Keep the guard #7 identified: a third-party "$135,000" estimate must not become a salary pass.
 - **Salary results stay provisional:** any salary result based on an estimated range is marked provisional. Final salary qualification awaits the GPT Master's canonical Sheets comparison (D3). Don't decide here whether an employer estimate can pass a floor; record it and leave the call open.
-- **Versioning:** bump `GATES_VERSION` to 3 with a comment.
+- **Versioning:** bump `GATES_VERSION` to **4** with a comment (17:10: `dbfdf1f` already took 3).
 - **Tests:**
   - an employer "estimated pay range" quote is kept as evidence and not discarded
   - a third-party/salary-site quote is not compared
@@ -219,9 +269,15 @@ GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `G
   - Revert `e1438f2` on `builderbranches-benchmark` with `git revert` (a new commit, no history rewrite).
     - That removes the `bare_dollar`/`us_only` check from `bench/score.py`, its test in `test_bench.py`, and the "Owner rule (2026-10-26)" text in `docs/BENCHMARK.md`.
     - It also restores the 3 salary labels it changed (`remote-unspecified` ×2 and `contract-role`/cand-us, `unknown` → `pass`).
-  - If the revert conflicts, remove those items by hand. Don't keep any of them as an approved rule.
+  - If the revert conflicts, remove those items by hand. Don't keep any of them as an approved rule. **17:10: it does conflict.** `git revert e1438f2` on the current branch conflicts in `docs/BENCHMARK.md`, because `6e5ae79` edited the same table. Resolve it by hand.
+  - **17:10:** `98773d9` (commission-only fails a base floor) and `ea69b67` (multi-currency floors) also say "owner rule" and were pushed after the 16:30 "no new labels" decision. Leave them as they are, and don't revert or extend them. They are listed under D7/D8 for the GPT Master.
   - In the benchmark docs you may record the question as an open proposal for D3 ("bare `$` → USD when every location is in the US: unverified, not applied"). Don't use the word "owner".
   - This is a removal, not new labels, and it is the only label change allowed.
+- **C1 schedule integration (owner and GPT Master requirement, 17:10; see the end of this file):**
+  - Merge current `main` (`084bafb` or later) into `builderbranches`, `fix/publication-manifest` and `builderbranches-compensation` before touching `collect.yml`. Use merge commits, no rebase.
+  - In the `collect.yml` conflict, **keep `main`'s cron `37 1,6,11,16,21 * * *` and keep the age-gate step removed**. Carry over only #3's and #5's own step changes (`--trigger`, verify and revert).
+  - Make sure #3's per-source due logic can't act as an age gate. **Every slot of the new cron, including 01:37 after the 4-hour gap and a run that follows a delayed one, must collect every enabled source.** Pick a mechanism (for example, scheduled runs collect all enabled sources, or the default interval is well under 4 h), explain it on #3, and add a test that replays the five cron slots, including the 4-hour gap and a 40-minute-late run.
+  - Don't restore the hourly cron or the five-hour gate, and don't change the cron itself.
 - **C1 report:** post on #3/#4/#7, and append to section 9:
   - the commit SHAs
   - the offline test count
@@ -253,6 +309,7 @@ When Ashby `compensationTiers` holds at least one object, `compensation_raw` is 
 
 ## 7. Integration order (recommendation; the owner merges)
 
+0. **17:10:** `main` now has the owner's schedule change (`562baaf`). #3, #4 and #5 conflict with it in `collect.yml` until Worker C merges `main` in under C1. #1 still merges cleanly.
 1. **#1.** It brings the Offline tests CI, the `branches: [main]` push filter and the publish-target fix. Browser capture stays manual-only.
 2. **#3 with #5 folded in.** Neither ships alone: without #5, #3's multi-file publish could commit a mixed generation.
 3. **#4 with #8 folded in**, retargeted to `main`. The first collection after merge reports a one-time wave of `changed_fields: ["compensation_raw"]`, with `endpoint_changed` or `normalization_changed` set.
@@ -268,7 +325,7 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 | # | Decision or blocker | Who decides | Blocks |
 |---|---|---|---|
 | D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via GPT Master | All merges |
-| D2 | Scheduled collection is unreliable: 2 schedule runs (07:55, 15:17) in about 14 hourly ticks, the second about 55 minutes late, and data reached about 7 h 20 m old before it. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
+| D2 | **Superseded 17:10 by the owner's `562baaf`** (five daily runs, age gate removed, authorized with a re-verified $0 budget). What remains is to verify that `schedule` events actually arrive on the new cron. Historical note: scheduled collection was unreliable: 2 schedule runs (07:55, 15:17) in about 14 hourly ticks, the second about 55 minutes late, and data reached about 7 h 20 m old before it. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
 | D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. **GPT Master direction, 15:20:**
 - All candidate-specific gates and labels (`8794ca8` on #2 and the whole of #7) are **provisional** until compared with the canonical Google Sheets.
 - No Claude session reads or edits the Sheets. The comparison is the GPT Master's.
@@ -285,11 +342,16 @@ Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gat
   - #7 notes that once the rule is in the gates, `5c87de2`'s estimate guard is what prevents a false READY on a third-party "$135,000" estimate.
   - If the rule is confirmed, it belongs in #2's salary gate (Worker B), with #7's labels unchanged.
 
-Neither worker extends these further. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
+Neither worker extends these further.
+
+**Added 17:10:** #2 `5cc7334` (17:02) adds **E6 consumer outputs** (`engine/outputs.py`, `docs/OUTPUTS.md`: posting records, cursor pages, review batches, decision feed). It is provisional; where candidate outputs live is still open here. #2 `dbfdf1f` and #7 `98773d9`/`ea69b67` are listed under D7. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
 | D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
-| B-1 | The $0 Actions budget (MIGRATION.md) can't be re-checked from any Claude session. It needs one look at the billing UI before any schedule change. | Owner | D2 |
+| B-1 | **Resolved 17:10:** the GPT Master re-verified the Actions budget at $0 paid usage, with usage blocked, before `562baaf`. Claude sessions still can't check it. | Owner | – |
+| D7 | **Origin of the "owner rules".** Workers B and C cite owner instructions that the GPT Master hasn't verified. The bare-`$` → USD on US-only postings rule is in #7 `e1438f2` and, since 16:25, in #2's live gates (`dbfdf1f`). Also: commission-only fails a base floor (#7 `98773d9`), and multi-currency floors compared per currency (#7 `ea69b67`). The GPT Master's 16:30 decision rejected only the bare-`$` rule, and only in #7. Needed: confirmation from the owner, per rule, and whether #2's `dbfdf1f` is removed too. | Owner, via GPT Master | B2; merge of #2's gates and #7 |
+| D8 | Keep or drop #7's provisional cases added after the decision window: `6e5ae79` (2 cases for the `US$` range and company-revenue hazards; neither needs the bare-`$` rule). | GPT Master | #7 |
+| D9 | **Instruction channel.** The owner is instructing workers directly. That has given us the bare-`$` rule, the schema-3 bump and the "owner rule" labels, while the coordination plan assumed the GPT Master channel. Choose one: (a) the owner routes worker instructions through the GPT Master, or (b) workers log any direct owner instruction in section 9 before acting on it (the interim rule in section 5). | Owner / GPT Master | Coordination reliability |
 | B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the GPT Master chat (interactive). **Automated consumer access** (the scheduled ChatGPT task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | GPT Master | Consumer access verified |
 
 ## 9. Handoff log
@@ -328,3 +390,10 @@ Owner requested immediate completion and schedule repair. GPT Master reverified 
 Worker C must preserve this new cron and removal of the age gate when integrating #3/#5; merge current main before editing the workflow. This supersedes D2's no-change status and old hourly schedule proposals. Do not restore the age gate or hourly cron inadvertently.
 
 Farhan and Sana ChatGPT tasks were independently read: both enabled, RRULE hourly interval 5, with completed recorded runs scheduled around 09:48 America/New_York on 26 October. Their schedules and candidate rules were not changed. Consumer task access still requires separate end-to-end verification.
+- 2026-10-26 17:10 Master:
+  - Recorded the owner's production schedule change `562baaf` and `main` `084bafb` (D2 superseded, B-1 resolved).
+  - Verified that #3/#4/#5 now conflict with `main` in `collect.yml`, and that #3's due logic would skip every source at the 01:37 slot (4-hour gap). C1 now requires preserving the cron and proving every slot collects.
+  - Recorded schema 3 (B1 targets `-3`), B2 at gate version 4, the `e1438f2` revert conflict, and the new provisional work (`dbfdf1f`, `5cc7334`, `98773d9`, `ea69b67`, `6e5ae79`, `1441d0f`).
+  - Combined tree: 159 code tests OK.
+  - Opened D7 (origin of the "owner rules"), D8 (#7's new cases) and D9 (instruction channel).
+  - Placement note: the owner's *GPT Master production schedule update* section follows this log and is kept as written.
