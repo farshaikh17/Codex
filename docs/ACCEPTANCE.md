@@ -49,6 +49,14 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Scope widened for Twilio (owner approved), Clipboard and Resilinc (ownership verified by 301 chains from the established domains); Clipboard's `careers_url` applied with evidence
 - [x] Owner approved all three `careers_url` proposals. They're applied to `employers.json` with evidence, and a `careers_url` without evidence is rejected: `test_careers_url_requires_evidence`
 
+## Collector backoff and budgets (E8)
+- [x] Backoff schedule (10 h doubling to 7 days; 404/410 from 24 h; 429 at least 24 h or Retry-After): `test_backoff_schedule`, `test_rate_limit_honours_retry_after`
+- [x] Scheduled runs skip a source in backoff; manual runs try it; a success clears backoff: `test_scheduled_runs_respect_backoff_manual_runs_do_not`, `test_success_clears_backoff`
+- [x] Request budget prefers never-attempted, then stalest; time budget stops new requests: `test_request_budget_prefers_new_then_stalest`, `test_time_budget_stops_new_requests`
+- [x] Never-attempted sources over budget are deferred, never published as fake attempts; nothing to attempt publishes nothing: `test_never_attempted_source_over_budget_is_deferred_not_invented`, `test_nothing_to_attempt_publishes_nothing`
+- [x] PR #2's `ingest_snapshot` accepts budget-deferred, failing, and backed-off snapshots without warnings, including from a fresh store (scratch merge with builder1)
+- [ ] First scheduled run after merge shows `not_attempted` in the job summary (only once a source is actually failing)
+
 ## Consumer (G)
 - [ ] Original chat completes [CONSUMER_TEST.md](CONSUMER_TEST.md) and reports results
 - [ ] End-to-end tracker ingestion verified (out of scope here)

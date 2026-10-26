@@ -1,7 +1,8 @@
 import json,os,tempfile,unittest
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
-from collect import collect,public_job,due_sources,redact,exclusive_lock
+import urllib.error
+from collect import collect,public_job,due_sources,redact,exclusive_lock,backoff_hours,NothingToAttempt,main as collect_main
 SOURCE={'id':'sample-lever','provider':'lever','board':'sample','url':'https://api.lever.co/v0/postings/sample?mode=json'}
 def posting(text='Full public description'):
     return {'id':'one','text':'Implementation Manager','hostedUrl':'https://jobs.lever.co/sample/one','descriptionPlain':text,'categories':{'location':'India'},'workplaceType':'remote'}
@@ -123,7 +124,7 @@ class ReliabilityTests(unittest.TestCase):
             asked.append(source['id'])
             return by_source({'sample-lever':[posting()],'other-ashby':ashby})(source)
         result=collect([SOURCE,OTHER],self.out,fetch,lambda _:None,due={'sample-lever'})
-        self.assertEqual(asked,['sample-lever','other-ashby'])  # never attempted, so attempted anyway
+        self.assertEqual(asked,['other-ashby','sample-lever'])  # never attempted, so attempted anyway, and first
         for s in json.loads((self.out/'status.json').read_text())['sources']:
             self.assertIn(s['status'],('ok','failed'))
             self.assertTrue(s['checked_at'])
@@ -174,6 +175,79 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual(due_sources([SOURCE,daily],status,now),{'sample-lever'})  # an opt-in interval still waits
         result=collect([SOURCE],self.out,lambda _:[posting()],lambda _:None)
         self.assertEqual((result['sources'][0]['poll_interval_hours'],result['sources'][0]['next_due_at']),(None,None))
+    def test_backoff_schedule(self):
+        self.assertEqual([backoff_hours(n) for n in (1,2,3,4,5,6,9)],[0,10,20,40,80,160,168])
+        self.assertEqual((backoff_hours(1,429),backoff_hours(1,429,7*86400)),(24,168))
+        self.assertEqual([backoff_hours(n,404) for n in (1,2,3,4)],[24,48,96,168])
+    def failing_twice(self):
+        self.run_both()
+        def down(source):
+            if source['id']=='other-ashby': raise OSError('offline')
+            return [posting()]
+        for _ in range(2): result=collect([SOURCE,OTHER],self.out,down,lambda _:None)
+        return result,down
+    def test_scheduled_runs_respect_backoff_manual_runs_do_not(self):
+        result,down=self.failing_twice()
+        other=result['sources'][1]
+        self.assertEqual(other['consecutive_failures'],2)
+        self.assertTrue(other['backoff_until'] > result['attempted_at'])  # 10 hours after the second failure
+        asked=[]
+        def fetch(source):
+            asked.append(source['id'])
+            return down(source)
+        scheduled=collect([SOURCE,OTHER],self.out,fetch,lambda _:None,respect_backoff=True,trigger='schedule')
+        self.assertEqual(asked,['sample-lever'])
+        o=scheduled['sources'][1]
+        self.assertEqual((o['attempted_this_run'],o['not_attempted_reason'],o['status'],o['consecutive_failures']),(False,'backoff','failed',2))
+        self.assertEqual(scheduled['not_attempted'],{'backoff':1})
+        asked.clear()
+        collect([SOURCE,OTHER],self.out,fetch,lambda _:None,trigger='workflow_dispatch')  # a person asked: try everything
+        self.assertEqual(sorted(asked),['other-ashby','sample-lever'])
+    def test_rate_limit_honours_retry_after(self):
+        self.run_both()
+        def limited(source):
+            if source['id']=='other-ashby':
+                raise urllib.error.HTTPError(source['url'],429,'Too Many Requests',{'Retry-After':str(3*86400)},None)
+            return [posting()]
+        other=collect([SOURCE,OTHER],self.out,limited,lambda _:None)['sources'][1]
+        self.assertEqual((other['http_status'],other['retry_after_s'],other['consecutive_failures']),(429,3*86400,1))
+        gap=datetime.fromisoformat(other['backoff_until'])-datetime.fromisoformat(other['checked_at'])
+        self.assertEqual(gap,timedelta(hours=72))  # first failure, but the server asked for 3 days
+    def test_success_clears_backoff(self):
+        self.failing_twice()
+        self.assertIsNone(self.run_both()['sources'][1]['backoff_until'])
+    def test_request_budget_prefers_new_then_stalest(self):
+        third={'id':'third-lever','provider':'lever','board':'third','url':'https://api.lever.co/v0/postings/third?mode=json'}
+        self.run_both()
+        asked=[]
+        def fetch(source):
+            asked.append(source['id'])
+            return ashby() if source['provider']=='ashby' else [posting()]
+        result=collect([SOURCE,OTHER,third],self.out,fetch,lambda _:None,limits={'max_requests':1})
+        self.assertEqual(asked,['third-lever'])  # never attempted beats stale
+        self.assertEqual(result['not_attempted'],{'request_budget':2})
+        self.assertEqual({s['source']:s.get('not_attempted_reason') for s in result['sources']},
+                         {'sample-lever':'request_budget','other-ashby':'request_budget','third-lever':None})
+        asked.clear()
+        collect([SOURCE,OTHER,third],self.out,fetch,lambda _:None,limits={'max_requests':2})
+        self.assertEqual(sorted(asked),['other-ashby','sample-lever'])  # the stalest two now
+    def test_time_budget_stops_new_requests(self):
+        self.run_both()
+        ticks=iter([0,0,500,500])
+        result=collect([SOURCE,OTHER],self.out,by_source({'sample-lever':[posting()],'other-ashby':ashby}),lambda _:None,
+                       limits={'deadline_s':480},clock=lambda:next(ticks))
+        self.assertEqual((result['attempted_sources'],result['not_attempted']),(1,{'time_budget':1}))
+    def test_never_attempted_source_over_budget_is_deferred_not_invented(self):
+        result=collect([SOURCE,OTHER],self.out,by_source({'sample-lever':[posting()],'other-ashby':ashby}),lambda _:None,limits={'max_requests':1})
+        self.assertEqual([s['source'] for s in result['sources']],['sample-lever'])
+        self.assertEqual(result['deferred_sources'],[{'source':'other-ashby','reason':'request_budget'}])
+        for s in json.loads((self.out/'status.json').read_text())['sources']: self.assertIn(s['status'],('ok','failed'))
+    def test_nothing_to_attempt_publishes_nothing(self):
+        result,down=self.failing_twice()
+        before=snapshot(self.out)
+        with self.assertRaises(NothingToAttempt):
+            collect([SOURCE,OTHER],self.out,down,lambda _:None,due={'other-ashby'},respect_backoff=True)
+        self.assertEqual(snapshot(self.out),before)
     def test_redaction(self):
         text=redact('GET https://me:secret@host/x?api_key=K1&page=2 Authorization: Bearer abc.def')
         for leaked in ('secret','K1','abc.def'): self.assertNotIn(leaked,text)

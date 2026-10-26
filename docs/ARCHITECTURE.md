@@ -22,6 +22,8 @@ Principles:
 - Downstream: farshaikh17/Codex#2 (`engine/store.py`) ingests `status.json` and the boards into an SQLite posting store with version history. It is the storage layer for assessment and review queues.
 - One run is one `run_id`, written to every board file it produced and to `index.json` and `status.json`.
 
+Backoff and budgets: scheduled runs skip a failing source until `backoff_until` (10 h doubling to 7 days; 404/410 and 429 have their own floors). Each run makes at most 40 feed requests, never-attempted sources first, then the stalest, and starts no request after 8 minutes. See OPERATIONS_RECOVERY.md.
+
 Concurrency: the workflow uses concurrency group `public-job-collection`. Local runs take an `flock` on `.collect.lock`. The publish step rebases onto the current branch and pushes without force.
 
 Dependencies: Python standard library only for collection. Crawl4AI is confined to PR #1's `requirements-crawl.txt` and workflow.
