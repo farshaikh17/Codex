@@ -165,6 +165,15 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual(due_sources([SOURCE|{'poll_interval_hours':5},OTHER|{'poll_interval_hours':5}],status,now),{'sample-lever'})
         self.assertEqual(due_sources([SOURCE,OTHER|{'poll_interval_hours':1}],status,now),{'sample-lever','other-ashby'})
         self.assertEqual(due_sources([SOURCE],{},now),{'sample-lever'})
+    def test_owner_schedule_collects_every_run_without_an_interval(self):
+        # Owner's five daily runs (01:37, 06:37, 11:37, 16:37, 21:37 UTC) include a 4-hour gap: no source may be skipped there.
+        now=datetime(2026,10,27,1,37,tzinfo=timezone.utc)
+        status={'sources':[{'source':s,'checked_at':(now-timedelta(hours=4)).isoformat()} for s in ('sample-lever','other-ashby')]}
+        self.assertEqual(due_sources([SOURCE,OTHER],status,now),{'sample-lever','other-ashby'})
+        daily=OTHER|{'poll_interval_hours':24}
+        self.assertEqual(due_sources([SOURCE,daily],status,now),{'sample-lever'})  # an opt-in interval still waits
+        result=collect([SOURCE],self.out,lambda _:[posting()],lambda _:None)
+        self.assertEqual((result['sources'][0]['poll_interval_hours'],result['sources'][0]['next_due_at']),(None,None))
     def test_redaction(self):
         text=redact('GET https://me:secret@host/x?api_key=K1&page=2 Authorization: Bearer abc.def')
         for leaked in ('secret','K1','abc.def'): self.assertNotIn(leaked,text)

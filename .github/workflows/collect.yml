@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
   schedule:
-    - cron: '23 * * * *'
+    # Five daily collections: gaps of 5, 5, 5, 5 and 4 hours (UTC).
+    - cron: '37 1,6,11,16,21 * * *'
 permissions:
   contents: write
 concurrency:
@@ -24,7 +25,7 @@ jobs:
         run: python -m unittest -v
       - name: Validate source registry before any request
         run: python registry.py
-      - name: Collect sources that are due (scheduled) or all enabled sources (manual, push)
+      - name: Collect official employer feeds (every enabled source; one with its own poll_interval_hours waits until due)
         env:
           EVENT: ${{ github.event_name }}
         run: python collect.py --trigger "$EVENT"

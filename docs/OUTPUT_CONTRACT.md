@@ -37,7 +37,7 @@ No new external endpoints are created by this work. See [CONSUMER_TEST.md](CONSU
 ## Detecting stale data
 
 1. Read `status.json`. Compare `run_id` with the last one you processed. Unchanged means nothing new.
-2. `attempted_at` older than about 6 hours (5-hour interval plus hourly tick plus GitHub delay) means the schedule may have stopped. Say so, and don't present the data as current.
+2. `attempted_at` older than about 6 hours (longest scheduled gap is 5 hours, plus GitHub delay) means the schedule may have stopped. Say so, and don't present the data as current.
 3. `status: failed` means every listing is last-known-good from earlier runs.
 4. Per source: `consecutive_failures > 0` or `checked_at` older than `next_due_at` plus 2 hours means that source's jobs are historical.
 5. A listing's `observed_at` is when it was last fetched successfully, not when the file was written.
