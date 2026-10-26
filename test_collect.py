@@ -1,7 +1,8 @@
 import json,os,tempfile,unittest
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
-from collect import collect,public_job,due_sources,redact,exclusive_lock
+from collect import collect,public_job,due_sources,redact,exclusive_lock,verify_publication
+from unittest import mock
 SOURCE={'id':'sample-lever','provider':'lever','board':'sample','url':'https://api.lever.co/v0/postings/sample?mode=json'}
 def posting(text='Full public description'):
     return {'id':'one','text':'Implementation Manager','hostedUrl':'https://jobs.lever.co/sample/one','descriptionPlain':text,'categories':{'location':'India'},'workplaceType':'remote'}
@@ -68,6 +69,38 @@ class ReliabilityTests(unittest.TestCase):
         with self.assertRaises(KeyboardInterrupt): collect([SOURCE,OTHER],self.out,crash,lambda _:None)
         self.assertEqual(snapshot(self.out),before)
         self.assertFalse(list(Path(self.tmp.name).glob('.collect-staging-*')))
+    def test_crash_during_replacement_is_detected_not_silent(self):
+        self.run_both(run_id='gen1')
+        self.assertEqual(verify_publication(self.out),[])
+        real=os.replace
+        moves=[]
+        def flaky(src,dst):
+            if '.collect-staging-' in str(src) and '.collect-staging-' not in str(dst):
+                moves.append(dst)
+                if len(moves)==2: raise OSError('simulated crash during replacement')
+            return real(src,dst)
+        with mock.patch('collect.os.replace',flaky):
+            with self.assertRaises(OSError): self.run_both(run_id='gen2')
+        runs={p.name:json.loads(p.read_text())['run_id'] for p in (self.out/'boards').glob('*.json')}
+        self.assertEqual(sorted(runs.values()),['gen1','gen2'])  # mixed generations really are on disk
+        self.assertEqual(json.loads((self.out/'status.json').read_text())['run_id'],'gen1')
+        problems=verify_publication(self.out)
+        self.assertTrue(problems)
+        self.assertTrue(any('does not match status.json run gen1' in p for p in problems))
+        self.run_both(run_id='gen3')  # next complete run repairs it
+        self.assertEqual(verify_publication(self.out),[])
+    def test_manifest_covers_carried_boards(self):
+        self.run_both(run_id='gen1')
+        collect([SOURCE,OTHER],self.out,lambda s:[posting('x')],lambda _:None,due={'sample-lever'},run_id='gen2')
+        manifest=json.loads((self.out/'status.json').read_text())['manifest']
+        self.assertEqual(sorted(manifest),['boards/other-ashby.json','boards/sample-lever.json','index.json'])
+        self.assertEqual(verify_publication(self.out),[])
+        (self.out/'boards/other-ashby.json').write_text('{}')
+        self.assertEqual(verify_publication(self.out),['boards/other-ashby.json does not match status.json run gen2'])
+    def test_legacy_status_without_manifest_is_unverifiable(self):
+        self.out.mkdir(parents=True,exist_ok=True)
+        (self.out/'status.json').write_text('{"schema":"public-job-index-1"}')
+        self.assertIn('no manifest',verify_publication(self.out)[0])
     def test_run_id_links_boards_index_and_status(self):
         result=self.run_both(run_id='gh-1-1',trigger='workflow_dispatch')
         status=json.loads((self.out/'status.json').read_text())

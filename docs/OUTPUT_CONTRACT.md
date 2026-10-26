@@ -8,7 +8,7 @@
 | `public/index.json` | `public-job-index-1` | Same summary plus one compact row per listing (`key`, `title`, `locations`, `url`, `content_hash`, `observed_at`, `board_file`, `source_status`, `change`). |
 | `public/boards/<source>.json` | `public-job-board-1` | Full normalized postings with complete descriptions for one source. |
 
-Run-level fields: `run_id`, `trigger` (`schedule`, `workflow_dispatch`, `push`, `local`), `attempted_at`, `status` (`ok` = every attempted source succeeded, `partial`, `failed` = none succeeded), `outcome` (plain sentence), `attempted_sources`, `successful_sources`, `failed_sources`, `not_due_sources`, `total_sources`, `listing_count`, `orphan_board_files`, `notice`.
+Run-level fields (status.json also carries `manifest`): `run_id`, `trigger` (`schedule`, `workflow_dispatch`, `push`, `local`), `attempted_at`, `status` (`ok` = every attempted source succeeded, `partial`, `failed` = none succeeded), `outcome` (plain sentence), `attempted_sources`, `successful_sources`, `failed_sources`, `not_due_sources`, `total_sources`, `listing_count`, `orphan_board_files`, `notice`.
 
 Per-source fields: `source`, `endpoint`, `status` (`ok` or `failed`; always the source's latest real attempt), `checked_at` (time of that attempt), `attempted_this_run` (false means the source wasn't due, no request was made, and the entry is copied unchanged from the earlier run), `last_success_at`, `consecutive_failures`, `poll_interval_hours`, `next_due_at`, `endpoint_changed` (true when this attempt used a different feed URL from the previous attempt, for example because compensation was newly requested). For `ok`: `jobs`, `skipped`, `new`, `changed`, `no_longer_listed`. For `failed`: `error_type`, `error` (redacted), `retained_historical_jobs`.
 
@@ -45,6 +45,15 @@ No new external endpoints are created by this work. See [CONSUMER_TEST.md](CONSU
 ## Resuming after an interrupted read
 
 Process by `run_id`. Record `(run_id, board_file)` pairs you have finished. If the `run_id` in `status.json` changes mid-read, restart from `status.json` for the new run. Board files for sources that were `ok` in a run carry the same `run_id`. Files for sources that failed or weren't attempted this run carry the earlier run's `run_id`, which is expected. Invariant: for every `ok` source, the board file's `collected_at` equals the source's `checked_at`. A mismatch means a partial read from mixed commits: re-read from one commit.
+
+## Verifying one generation (manifest)
+
+Moving several files into place is not atomic. If a run dies between moves, `public/` can hold board files from the new run next to an index and status from the old one. Two guards stop that from being ingested silently:
+
+- `status.json` carries `manifest`: `{relative path: SHA-256}` for `index.json` and every board file in the snapshot, including carried board files that were not rewritten. It is written last.
+- `python collect.py --verify` compares the files on disk with the manifest (no network). The publish step in `collect.yml` runs it whenever `public/` changed. On any mismatch it reverts `public/` to the last commit and fails the job, so a mixed generation is never committed. Tested: `test_crash_during_replacement_is_detected_not_silent` crashes on the second move, confirms mixed generations on disk, and confirms verify reports them.
+
+Consumers: after reading `status.json`, compute the SHA-256 of `index.json` and of every board file you read, and compare with `status.json.manifest`. On a mismatch, discard what you read and use the previous commit. The posting store's existing `collected_at == checked_at` check catches the same case for ok sources. A `status.json` without `manifest` was written by the pre-P2 collector and cannot be verified this way.
 
 ## Schema compatibility
 
