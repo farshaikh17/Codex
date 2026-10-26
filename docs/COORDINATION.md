@@ -841,3 +841,97 @@ Unchanged:
 - `completion/integration` `05a3ba3`
 
 The merge order in section 8 uses these current heads. No collection run has started since run 40386117652 (19:22, `main`). No `schedule` run has appeared since 15:17; the next slot is 01:37 UTC.
+
+## Final release candidate and merge checklist — Claude Master, 2026-10-26 ~23:50 UTC
+
+Supersedes sections 2, 3 and 11 of the release report where they differ. **Nothing is merged.** All pushes were fast-forwards.
+
+### A. Exact heads
+
+Docs-only updates are listed.
+
+| Merge step | Branch | Head | Changes since the 23:10 report |
+|---|---|---|---|
+| (base) | `main` | `e812b42` | none |
+| 1 | `build/crawl4ai` (#1) | the commit adding this section (docs only). Validated code = `aec118a` = `0591b23` | docs only (`5ba8ab6`, `aec118a`, this commit) |
+| 2 | `builderbranches` (#3) | **`c1c4a64`** | `95bdcd1` (docs); **`c1c4a64`: production test step now runs `test_collect test_registry`** |
+| 3 | `builderbranches-compensation` (#4) | **`582b5ca`** | `21fba41` (docs, by Worker C); `582b5ca` merges #3 `c1c4a64` (no other change) |
+| 4 | `builder1` (#2) | **`bb00b1c`** | `e5b1bf6` cache-invalidation regressions; `af6c1bd` `collect.yml` restored to `main`'s (the engine branch no longer edits the production workflow); `bb00b1c` docs |
+| 5 (optional) | `builderbranches-benchmark` (#7) | `4607d11` | docs only (`95bdcd1` via #4, by Worker C) |
+| parked | #10 / #11 | `ad1ed8b` / `8281831` | docs only |
+| validation only | `completion/integration` | **`739efa8`** | `main` + #1 `aec118a` + #3 `c1c4a64` + #4 `582b5ca` + #2 `bb00b1c` |
+
+Close #5, #6, #8 and #9 as superseded.
+
+### B. Verification evidence
+
+Master, 23:30–23:46 UTC, on a fresh `git archive` export with `PYTHONDONTWRITEBYTECODE=1` and outbound sockets disabled.
+
+| Check | Result | Change from the 23:10 report |
+|---|---|---|
+| Merge order simulated from clean `main` (#1 → #3 → #4 → #2, `--no-ff`) | 4/4 clean; the result is **byte-identical** to `completion/integration` `739efa8` | new check |
+| Full offline suite on `739efa8` | **205 run, 0 failures, 0 errors, 0 skipped** | 203 → 205 (+2 cache regressions) |
+| `739efa8` + #7 | **217, 0 failures**. Benchmark: false READY 0, missed READY 0, incorrect exclusions 0, missed exclusions 0, salary 34/34 | 215 → 217 |
+| End-to-end acceptance | **47 passed, 0 failed, 1 not run** (real-snapshot READY path). Synthetic READY path passes completely | unchanged |
+| Production test step `python -m unittest test_collect test_registry` | OK (32 tests on #3, 36 on #4 and in the combined tree) | new: registry tests now run in Actions |
+| `registry.py` | OK, 10 employers, 10 sources | unchanged |
+| **actionlint 1.7.7** (release tarball, SHA-256 matched `actionlint_1.7.7_checksums.txt`) with shellcheck 0.10.0 and pyflakes 3.2.0, on all four workflows of `739efa8` | **0 errors** (exit 0). Shell checking confirmed active: a syntax-error canary is reported (SC1046/SC1073, exit 1) | new |
+| Byte identity of each PR's own files in `739efa8` vs its head (#1 `aec118a`, #4 `582b5ca`, #2 `bb00b1c`) | 0 files differ for each | unchanged |
+| `collect.yml` vs `main` | Cron `37 1,6,11,16,21 * * *` and `push.branches: [main]` unchanged. Added: test step (`test_collect test_registry`), `registry.py` validation, `--trigger "$EVENT"`, manifest `--verify` with revert-and-fail, branch-relative publish. **Only `collect.yml` has a schedule** | test step now includes `test_registry` |
+| Candidate data in the tree | 4 candidate configs, all `synthetic: true`; no real profiles, decisions or application history | unchanged |
+
+### C. B3 cache invalidation
+
+- **Extraction:** results are keyed on (posting, content hash, `EXTRACTOR_VERSION`). B3 bumped the extractor to **4**, so every stored version is re-extracted on the next `extract`.
+- **Screening:** queue item ids include `GATES_VERSION`, now **8**, so every posting is re-screened.
+- **Regressions (`e5b1bf6`):**
+  - A cached version-3 record that read "$1B annually in revenue" as a $1 pay range is re-extracted, and the current record says compensation `not_stated`. The test **fails if `EXTRACTOR_VERSION` is left at 3** (checked).
+  - A `GATES_VERSION` bump re-screens unchanged postings.
+- **Measured on real data** at the 20:10 completion: a version bump re-extracts all 544 versions; an unchanged rerun extracts 0.
+
+### D. Decisions recorded (owner, 23:30)
+
+- **A bare `$` stays currency-unknown.** No rule reads it as USD (gates `_currency`; `bench/score.py` flags any bare-`$` salary label).
+- **Candidate Sheets remain the separate canonical ledgers.** The Sheets adapter is a fake with no live client; no Sheet is written.
+- **No real candidate profiles, decisions or application history are committed.** Enforced by `test_committed_candidate_files_are_synthetic` and by the repository-path refusals in `candidates`, `review`, `outputs` and `sheets`.
+- **Unresolved candidate policies stay provisional.** The list, with affected tests, is in `docs/HANDOFF.md` on #3/#4.
+- **#10 and #11 stay parked.**
+- **Trafilatura: evaluated, not adopted.** On 2026-10-26, version 2.3.1 (Apache-2.0) installed 18 packages, including lxml (a C extension) and `tld` (MPL/GPL/LGPL). On ATS description fragments, the only input the engine has, it matched the standard-library converter: 5/5 requirement bullets and the pay line kept. It helps only on full HTML pages, which the engine doesn't ingest. Adopting it would add dependencies and break the install-free CI for no measured gain. Revisit only if single job pages are fetched for primary-posting verification; that would need an `EXTRACTOR_VERSION` and `CONTENT_HASH_VERSION` bump. Details: `docs/ENGINE.md` §6.
+- **JobSpy:** a bounded evaluation (licence plus the scraped sites' terms), **not a release blocker, not started**.
+
+### E. Incidents during this pass (no production effect)
+
+- **`af6c1bd`/`bb00b1c` were pushed to `builder1` before their test result was checked.** That run showed 1 failure. The cause was a stale `__pycache__` in the Master's scratch worktree: a proof step briefly set `EXTRACTOR_VERSION=3` and restored it within the same second at the same size, so Python reused the old bytecode. The committed code was correct. With the cache cleared, 148/148 passed.
+- From then on, every push was made only after a green fresh-export run with `PYTHONDONTWRITEBYTECODE=1`.
+- `builder1`'s `collect.yml` has the branch filter, so no collection could run from it.
+
+### F. Merge checklist (owner; merge commits; stop at any failed check)
+
+1. ☐ **Before merging:** confirm the heads in table A (`git ls-remote origin`). Any other SHA invalidates section B.
+2. ☐ **Merge #1 `build/crawl4ai`** into `main`.
+   - Expect PR CI (`tests.yml`) to start running on later PRs.
+   - No capture runs (`crawl-pages.yml` triggers only on `build/crawl4ai` pushes and manual dispatch).
+3. ☐ **Merge #3 `builderbranches` (`c1c4a64`).**
+   - **Expect one live push collection on `main`** (root `*.py` and `collect.yml` changed).
+   - Check its job summary: the test step runs `test_collect test_registry`, the registry validates, all sources show `ok`, and the run writes the first `manifest` to `status.json`.
+   - Then run `python collect.py --verify` on the result: it should report "publication consistent".
+4. ☐ **Merge #4 `builderbranches-compensation` (`582b5ca`).**
+   - The next collection publishes a **one-time wave** of about 162 `changed` rows with `changed_fields: ["compensation_raw"]`, each with `endpoint_changed` or `normalization_changed` set.
+   - All board files should be at `normalization_version` 2.
+5. ☐ **Merge #2 `builder1` (`bb00b1c`).**
+   - Expect no new collection behaviour; `collect.yml` is unchanged by this merge.
+   - Optionally dispatch `engine.yml` (manual, read-only) and expect acceptance 47/0/1.
+6. ☐ **Optional:** merge #7 `4607d11` after D7/D3. **Do not merge #10 or #11.**
+7. ☐ **Close** #5, #6, #8 and #9 as superseded.
+8. ☐ **After merging:**
+   - Watch for the first `schedule` event on `37 1,6,11,16,21`. None has arrived since the cron changed, so the 21:37 slot was missed.
+   - Confirm `branches: [main]` and the cron are byte-identical to `709948e`/`562baaf`.
+9. ☐ **Rollback, if needed:** `git revert -m 1 <merge-sha>`, newest first. See release report section 9.
+
+### G. Still not verified (not release blockers)
+
+- Scheduled execution of the five-daily cron.
+- Automated ChatGPT consumer access. Interactive reading works.
+- Live Sheets. None by design.
+- A real-posting READY path. It needs a provisional policy decision; the synthetic path is proven.
+- **Not started:** JobSpy evaluation, P8, and an actionlint step in CI. actionlint was run locally before merge, as required.
