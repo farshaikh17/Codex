@@ -12,22 +12,38 @@ Use exactly one of these per claim. Never substitute one for another.
 - **Consumer access verified**: the intended consumer (ChatGPT task) read the files, per CONSUMER_TEST.md.
 - **End-to-end tracker ingestion verified**: data flowed from collection through the consumer into the tracker and was checked.
 
-## State
+## State (2026-10-26, evening)
 
-| Component | Status |
-|---|---|
-| ATS feed collector on `main` | Live collection verified (Actions push runs on `main`). Scheduled execution verified once: run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346) (event `schedule`, 07:55 UTC on 2026-10-26, pre-P2 code) collected and committed 456397a. The hourly ticks 02:23–06:23 created no runs at all, and this tick started 32 minutes late. GitHub's schedule is best-effort, so freshness checks matter. |
-| Registry + validation + reliable runs (this branch) | Implemented and tested offline (28 tests). Live collection verified in this container against all 10 feeds (scratch output, not committed). Not run in Actions yet: the push trigger is now `main` only, so this branch runs no collection. |
-| Posting store (PR #2, other session) | Implemented and tested offline (per its PR). Ingest of this branch's outputs checked offline in a three-way merge. Unmerged. |
-| Crawl4AI page fallback (PR #1) | Implemented and tested offline. Live collection verified on `build/crawl4ai` via Actions push runs. Unmerged. No schedule. |
-| Consumer access (ChatGPT) | Not verified. |
-| Tracker ingestion | Not verified; out of scope. |
+| Component | Where | Status |
+|---|---|---|
+| ATS feed collector on `main` | `main` | Live collection verified (push runs). Scheduled execution verified once: run 40288776346 (07:55 UTC). GitHub dropped the five earlier hourly ticks |
+| P2 registry and reliable runs | farshaikh17/Codex#3 | Implemented and tested offline; live collection verified (local container). Not yet run in Actions |
+| E2a compensation inputs | farshaikh17/Codex#4 (on #3) | Implemented and tested offline; live collection verified (local): +125 postings with employer-published pay |
+| H benchmark | farshaikh17/Codex#7 (on #4) | Implemented and tested offline. 21 cases, 34 verdicts. Owner rules encoded (bare "$", commission-only, multi-currency floors); real cases confirmed |
+| B source discovery | farshaikh17/Codex#10 (on #7) | Implemented and tested offline; live discovery verified (local, 19 targeted runs, 51 requests). Verified `careers_url` applied for Oyster, Zapier, Weave and Clipboard |
+| Posting store, extraction, gates, review queue | farshaikh17/Codex#2 and follow-ups #6, #9 (other session) | Implemented and tested offline (per that session). Scored here at 877b6aa: false READY 0, incorrect exclusions 0, salary 32/34 |
+| Crawl4AI page fallback | farshaikh17/Codex#1 (other session) | Implemented and tested offline; live capture verified on its branch. No schedule |
+| Follow-ups stacked on mine by others | #5 (on #3), #8 (on #4) | Merge cleanly with my branches; all suites pass on the combined tree |
+| Consumer access (ChatGPT) | – | Not verified. Run CONSUMER_TEST.md from the original chat |
+| Tracker ingestion | – | Not verified; out of scope |
 
-## Next
+## Merge order
 
-1. Review and merge PR #1, PR #2 and this PR (farshaikh17/Codex#3) in any order. A local three-way test merge was clean, and all suites passed on the merged tree.
-2. After merge, dispatch *Collect public job feeds* once and confirm the job summary table. Then watch for the first `schedule` event run.
-3. Run CONSUMER_TEST.md from the original chat.
-4. Decide on P10 (cron frequency).
-5. Compensation inputs (E2a): stacked PR on `builderbranches-compensation`. Retarget it to `main` once #3 merges.
-6. E2 (evidence records) and E3+E4 (candidate config and gates) are being built in the PR #2 session. The H benchmark (`builderbranches-benchmark`, stacked on E2a) is how they get measured: `python -m bench score`. Two real-posting labels need a person to confirm them.
+#1 and #2 (with #6, #9) are independent of mine. Mine merge in order: #3 → #4 → #7 → #10. Retarget each to `main` after the one below it merges. #5 and #8 follow #3 and #4. After #3 merges, one `main` push triggers a full collection. Check its job summary. After #4 merges, expect about 125 `changed` postings with `changed_fields: ["compensation_raw"]`.
+
+## Decided by the owner (2026-10-26)
+
+- A bare "$" means USD only on US-only postings.
+- Commission-only pay fails a base salary floor.
+- Salary floors may be set in several currencies, compared per currency, never converted.
+- The GitLab and Zapier benchmark labels are confirmed.
+- Oyster, Zapier and Weave `careers_url` are applied. Clipboard's is applied on the owner's instruction, after ownership was verified.
+- jobs.twilio.com is allowed. clipboard.com and resilinc.ai are allowed after ownership was verified.
+
+## Still open
+
+1. Owner review and merge of the PR chain above.
+2. CONSUMER_TEST.md from the original chat (consumer access).
+3. P10: hourly cron cost (about 720 of 2,000 free minutes a month). Change to `23 */5 * * *` after #1 merges.
+4. PR #2 follow-up: US$ range parsing (the last salary disagreement in the benchmark).
+5. Boards on JavaScript-only careers pages (GitLab, Remote, Twilio, Resilinc) can't be found from static HTML. That would need PR #1's browser capture, not discovery.
