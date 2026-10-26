@@ -1,3 +1,6 @@
+# collect.py local lock and interrupted staging output
+.collect.lock
+.collect-staging-*/
 __pycache__/
 *.pyc
 .venv/

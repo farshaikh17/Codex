@@ -1,60 +1,70 @@
 [
   {
     "id": "gitlab-greenhouse",
+    "employer": "gitlab",
     "provider": "greenhouse",
     "board": "gitlab",
     "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true"
   },
   {
     "id": "remote-greenhouse",
+    "employer": "remote",
     "provider": "greenhouse",
     "board": "remote",
     "url": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true"
   },
   {
     "id": "clipboard-ashby",
+    "employer": "clipboard",
     "provider": "ashby",
     "board": "clipboard",
     "url": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true"
   },
   {
     "id": "oyster-ashby",
+    "employer": "oyster",
     "provider": "ashby",
     "board": "oyster",
     "url": "https://api.ashbyhq.com/posting-api/job-board/oyster"
   },
   {
     "id": "zapier-ashby",
+    "employer": "zapier",
     "provider": "ashby",
     "board": "zapier",
     "url": "https://api.ashbyhq.com/posting-api/job-board/zapier"
   },
   {
     "id": "posthog-ashby",
+    "employer": "posthog",
     "provider": "ashby",
     "board": "posthog",
     "url": "https://api.ashbyhq.com/posting-api/job-board/posthog"
   },
   {
     "id": "drivetrain-lever",
+    "employer": "drivetrain",
     "provider": "lever",
     "board": "drivetrain",
     "url": "https://api.lever.co/v0/postings/drivetrain?mode=json"
   },
   {
     "id": "resilinc-lever",
+    "employer": "resilinc",
     "provider": "lever",
     "board": "resilinc",
     "url": "https://api.lever.co/v0/postings/resilinc?mode=json"
   },
   {
     "id": "weave-ashby",
+    "employer": "weave",
     "provider": "ashby",
     "board": "weave",
     "url": "https://api.ashbyhq.com/posting-api/job-board/weave"
   },
   {
     "id": "twilio-greenhouse",
+    "employer": "twilio",
     "provider": "greenhouse",
     "board": "twilio",
     "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true"
