@@ -61,11 +61,11 @@ class ExtractionStoreTests(unittest.TestCase):
     def test_v1_store_migrates_and_backfills_change_history(self):
         self.h.run([posting(text=REQ)])
         self.h.run([posting(text=REQ+'\nKubernetes.')])
-        for table in ('evidence','extractions','version_changes'): self.h.conn.execute('drop table '+table)
+        for table in ('evidence','extractions','version_changes','leads','page_captures','page_attempts','pages'): self.h.conn.execute('drop table '+table)
         self.h.conn.execute("update meta set value='1' where key='schema_version'")
         self.h.conn.close()
         self.h.conn=connect(Path(self.folder.name)/'state'/'engine.sqlite3')
-        self.assertEqual(self.h.conn.execute("select value from meta where key='schema_version'").fetchone()[0],'2')
+        self.assertEqual(self.h.conn.execute("select value from meta where key='schema_version'").fetchone()[0],'3')
         kinds=[(r['kind'],json.loads(r['fields'])) for r in self.h.conn.execute('select * from version_changes')]
         self.assertEqual(kinds,[('content_changed',['description'])])
         self.assertEqual(extract_pending(self.h.conn)['extracted'],2)

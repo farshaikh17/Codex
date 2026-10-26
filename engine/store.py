@@ -15,7 +15,7 @@ from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import parse_qsl,urlencode,urlsplit,urlunsplit
 from engine.extract import EXTRACTOR_VERSION,FIELDS,extract
-SCHEMA_VERSION=2
+SCHEMA_VERSION=3
 CONTENT_HASH_VERSION=1
 CONTENT_FIELDS=('title','locations','workplace_type','description','compensation_raw')
 TRACKING=re.compile(r'^(utm_[a-z_]+|gh_src|lever-source|lever-origin|lever-via|fbclid|gclid|mc_cid|mc_eid)$',re.I)
@@ -72,7 +72,27 @@ def _backfill_changes(conn):
         prev=last.get(r['posting_id'])
         if prev and prev!=r['content_hash']: _record_change(conn,r['posting_id'],prev,r['content_hash'],r['run_id'],r['checked_at'])
         last[r['posting_id']]=r['content_hash']
-MIGRATIONS={2:(V2,_backfill_changes)}
+V3='''
+create table pages(
+  page_id text primary key,employer text,official_url text not null,first_seen_at text not null,
+  state text not null check(state in ('captured','inaccessible','never_captured')),state_reason text,
+  last_attempt_at text,last_result text,captured_at text,content_hash text,review_hash text,review_basis text,review_changed_at text,
+  capture_status text,listing_quality text,coverage text,flags text,job_links integer,claimed_total integer);
+create table page_attempts(
+  page_id text not null references pages,at text not null,result text not null,reason text,http_status integer,final_url text,
+  primary key(page_id,at));
+create table page_captures(
+  page_id text not null references pages,review_hash text not null,content_hash text,captured_at text not null,
+  review_basis text,listing_quality text,coverage text,job_links integer,claimed_total integer,leads_extracted integer,lead_note text,
+  primary key(page_id,review_hash));
+create table leads(
+  lead_id text primary key,page_id text not null references pages,label text,url text not null,canonical_url text not null,
+  first_seen_at text not null,last_seen_at text not null,last_seen_review_hash text not null,
+  state text not null check(state in ('open','matched','not_in_latest_capture','not_seen_partial_capture')),
+  state_at text not null,matched_posting_id text);
+create index leads_canonical on leads(canonical_url);
+'''
+MIGRATIONS={2:(V2,_backfill_changes),3:(V3,lambda conn:None)}
 def connect(path,timeout=30):
     """Opens the store, creating or migrating it on first use; opening a current store never writes.
     WAL mode lets readers continue during an ingest; a second writer waits up to timeout seconds, then fails."""

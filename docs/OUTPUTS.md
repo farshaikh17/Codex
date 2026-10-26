@@ -26,6 +26,10 @@ These contain public posting data only; a test checks that no candidate id, hist
 - A reader keeps the last `cursor_to`, passes it as `--since`, and loops while `has_more`.
 - A posting that changes again later reappears in a later page; deduplicate by `posting_id` and `content_hash`. Tests check that paging covers every posting exactly once, and that afterwards only changed or disappeared postings appear.
 
+## Leads from career-page captures
+
+`python -m engine.leads write --out DIR` writes `leads.json` (`page-leads-1`): public page data, with leads that are never postings and never screened. See `docs/LEADS.md`.
+
 ## Private review batches
 
 ```
