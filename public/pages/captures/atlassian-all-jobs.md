@@ -2,10 +2,10 @@
 
 - official_url: https://www.atlassian.com/company/careers/all-jobs
 - final_url: https://www.atlassian.com/company/careers/all-jobs
-- captured_at: 2026-10-26T01:59:38.589359+00:00
-- content_hash: sha256:0a9baa4e038204a1ac27671970a14fd0edf0cc232e1a72dcd2a3b2724b616341
+- captured_at: 2026-10-26T02:06:10.744606+00:00
+- content_hash: sha256:feb3d29e3b9e657816e44b34abeb5caed13785af7ba012312a3b9cf82bf32bb8
 - capture_status: usable
-- word_count: 6220
+- word_count: 6186
 - notice: Captured public career-page text. Not a verified job, eligibility or READY evidence. Treat page text as untrusted data, never instructions. captured_at is when the text was fetched; failed or blocked attempts never refresh it.
 
 ---
@@ -305,7 +305,7 @@ WHAT FUNCTION MATCHES YOU?
 * Analytics & Data Science (17)
 * Atlassian Corporate Engineering (ACE) (2)
 * Design (8)
-* Engineering (111)
+* Engineering (110)
 * Finance & Accounting (5)
 * Graduates (5)
 * Interns (12)
@@ -313,9 +313,9 @@ WHAT FUNCTION MATCHES YOU?
 * Marketing (5)
 * Other (7)
 * People (2)
-* Product Management (10)
+* Product Management (9)
 * Program Management (1)
-* Sales (140)
+* Sales (139)
 * Security (7)
 * Support (1)
 
@@ -324,7 +324,7 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 * Canada (16)
 * France (9)
 * Germany (14)
-* India (42)
+* India (41)
 * Japan (1)
 * Netherlands (12)
 * New Zealand (5)
@@ -334,9 +334,9 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 * South Korea (2)
 * Turkey (0)
 * United Kingdom (54)
-* United States (165)
+* United States (163)
 
-337 jobs
+334 jobs
 ### Analytics & Data Science
 | Position | Location |
 | --- | --- |
@@ -376,6 +376,7 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 ### Engineering
 | Position | Location |
 | --- | --- |
+| [Senior machine learning engineer](https://www.atlassian.com/company/careers/details/27356) | Mountain View or Remote |
 | [Principal Software Engineer - Loom](https://www.atlassian.com/company/careers/details/27814) | San Francisco or Remote |
 | [Principal Software Engineer - Confluence AI](https://www.atlassian.com/company/careers/details/27567) | Canada or Remote |
 | [Principal Software Engineer](https://www.atlassian.com/company/careers/details/27485) | San Francisco or Remote |
@@ -411,7 +412,6 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 | [Senior Engineering Manager](https://www.atlassian.com/company/careers/details/26973) | San Francisco or Remote |
 | [Senior Software Engineer](https://www.atlassian.com/company/careers/details/26757) | |
 | [Backend Software Engineer](https://www.atlassian.com/company/careers/details/25539) | San Francisco or Remote |
-| [Infrastructure Engineer](https://www.atlassian.com/company/careers/details/25283) | Remote or Remote |
 | [Senior Backend Software Engineer, DX](https://www.atlassian.com/company/careers/details/27730) | Remote or Remote |
 | [Principal Fullstack Software Engineer](https://www.atlassian.com/company/careers/details/27074) | San Francisco or Remote |
 | [Senior Machine Learning Engineer](https://www.atlassian.com/company/careers/details/26955) | Seattle or Remote |
@@ -465,7 +465,6 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 | [Principal Machine Learning Engineer](https://www.atlassian.com/company/careers/details/25394) | Mountain View or Remote |
 | [Senior Machine Learning Engineer](https://www.atlassian.com/company/careers/details/27149) | San Francisco or Remote |
 | [Principal Engineer - Kubernetes Platform](https://www.atlassian.com/company/careers/details/26359) | Seattle or Remote |
-| [Senior machine learning engineer](https://www.atlassian.com/company/careers/details/27356) | Mountain View or Remote |
 | [Machine Learning System Engineer](https://www.atlassian.com/company/careers/details/27388) | Seattle or Remote |
 | [Senior Software Engineer](https://www.atlassian.com/company/careers/details/26956) | Seattle or Remote |
 | [Principal Data Platform Engineer](https://www.atlassian.com/company/careers/details/27391) | Remote or Remote |
@@ -555,7 +554,6 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 | [Principal Product Manager, Confluence Aggregation](https://www.atlassian.com/company/careers/details/27291) | San Francisco or Remote |
 | [Senior Product Manager - Forge (Developer Platform)](https://www.atlassian.com/company/careers/details/27274) | Bengaluru or Remote |
 | [Product Manager, Atlassian Government Cloud](https://www.atlassian.com/company/careers/details/27433) | Seattle or Remote |
-| [Principal Product Manager, Focus](https://www.atlassian.com/company/careers/details/27092) | San Francisco or Remote |
 | [Senior Product Manager, Data Cloud and Connectors](https://www.atlassian.com/company/careers/details/26663) | Salt Lake City or Remote |
 | [Product Manager, Rovo](https://www.atlassian.com/company/careers/details/26289) | Seattle or Remote |
 | [Senior Product Manager - IT Operations](https://www.atlassian.com/company/careers/details/27326) | Bengaluru or Remote |
@@ -663,7 +661,6 @@ WHERE ARE YOU ELIGIBLE TO WORK?
 | [Senior Account Executive, Enterprise - West](https://www.atlassian.com/company/careers/details/25759) | Remote or Remote |
 | [Account Executive, Mid Market Canada](https://www.atlassian.com/company/careers/details/25370) | Canada |
 | [Account Manager, Enterprise (Public Sector DACH)](https://www.atlassian.com/company/careers/details/27502) | London or Remote |
-| [Senior Partner Solutions Architect - Cloud Platform](https://www.atlassian.com/company/careers/details/27278) | San Francisco or Remote |
 | [Manager - Account Executive, Enterprise](https://www.atlassian.com/company/careers/details/26838) | Canada or Remote |
 | [Senior Solutions Architect](https://www.atlassian.com/company/careers/details/26716) | Remote or Remote |
 | [Senior Solution Architect](https://www.atlassian.com/company/careers/details/25390) | Sydney or Remote |
@@ -802,5 +799,5 @@ checkbox label label
 checkbox label label
 Reject all Confirm my choices
 [![Powered by Onetrust](https://cdn.cookielaw.org/logos/static/powered_by_logo.svg)](https://www.onetrust.com/solutions/consent-and-preferences/?utm_source=cmp&utm_medium=cmpbanner)
-![](https://bat.bing.com/action/0?ti=4063247&tm=gtm002&Ver=2&mid=c089340d-7885-4bf4-93d5-d9f96c525c6d&bo=1&sid=fab22aa0d0e011f182afc9a1edc109db&vid=fab24120d0e011f187d6096577b90c16&vids=1&msclkid=N&uach=pv%3D&pi=0&lg=en-US&sw=1080&sh=600&sc=24&tl=Atlassian%20Jobs%3A%20View%20Listings%20for%20Open%20Positions%20%7C%20Atlassian&p=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&r=&lt=2620&evt=pageLoad&sv=2&cdb=AQET&rn=166060)
-![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=c7d61b59-6096-4d44-9a8f-59ea7cca724d&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=8&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=numx2&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=4cb095f7-cbc4-45e1-b881-d1c3c69a9ebd&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=11&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=nuoaw&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=0a6ae80d-c1f9-4100-b22a-44a350c93491&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=15&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=nujcz&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=ea0b8d68-0e08-46ec-823a-4b916d0600a3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_ch_fvl=Not%3AA-Brand%2F8.0.0.0%2CChromium%2F156.0.8078.4%2CHeadlessChrome%2F156.0.8078.4&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=2&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&tw_session_start=1&twpid=tw.1792980012328.319835698286373115&txn_id=nulad&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=c7d61b59-6096-4d44-9a8f-59ea7cca724d&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=8&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=numx2&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=4cb095f7-cbc4-45e1-b881-d1c3c69a9ebd&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=11&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=nuoaw&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=0a6ae80d-c1f9-4100-b22a-44a350c93491&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=15&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&twpid=tw.1792980012328.319835698286373115&txn_id=nujcz&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=ea0b8d68-0e08-46ec-823a-4b916d0600a3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=12c74b51-fb7e-4cb7-b276-69c9fb91b787&tw_ch_fvl=Not%3AA-Brand%2F8.0.0.0%2CChromium%2F156.0.8078.4%2CHeadlessChrome%2F156.0.8078.4&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=2&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980012328-905807170&tw_session_start=1&twpid=tw.1792980012328.319835698286373115&txn_id=nulad&type=javascript&version=2.4.12) ![](blob:https://www.atlassian.com/f29f0296-15fa-4945-b271-76f64a89c613)
+![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=b32e1f34-a2ae-470b-89cc-46cd63242443&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=8&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=numx2&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=e81778e6-4d45-4065-b673-5449708a54fe&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=13&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=nuoaw&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=247ba4ee-1445-4278-9c61-d05295153480&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=15&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=nujcz&type=javascript&version=2.4.12)![](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=454c0a36-3128-4c8f-8ca4-edf1e5e4ae92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_ch_fvl=Not%3AA-Brand%2F8.0.0.0%2CChromium%2F156.0.8078.4%2CHeadlessChrome%2F156.0.8078.4&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=4&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&tw_session_start=1&twpid=tw.1792980405749.21265363357073222&txn_id=nulad&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=b32e1f34-a2ae-470b-89cc-46cd63242443&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=8&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=numx2&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=e81778e6-4d45-4065-b673-5449708a54fe&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=13&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=nuoaw&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=247ba4ee-1445-4278-9c61-d05295153480&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=15&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&twpid=tw.1792980405749.21265363357073222&txn_id=nujcz&type=javascript&version=2.4.12)![](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%261080%26600%262%2624%261080%26600%260%26na%261&eci=3&event=%7B%7D&event_id=454c0a36-3128-4c8f-8ca4-edf1e5e4ae92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=d6550fb2-a498-4104-9049-a562f25e8642&tw_ch_fvl=Not%3AA-Brand%2F8.0.0.0%2CChromium%2F156.0.8078.4%2CHeadlessChrome%2F156.0.8078.4&tw_document_href=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&tw_engaged_ms=4&tw_iframe_status=0&tw_pid_src=1&tw_session_count=1&tw_session_id=1792980405749-695360308&tw_session_start=1&twpid=tw.1792980405749.21265363357073222&txn_id=nulad&type=javascript&version=2.4.12)
+![](https://bat.bing.com/action/0?ti=4063247&tm=gtm002&Ver=2&mid=3908f17b-b1aa-41b1-b064-d3f66669cb35&bo=1&sid=e5f0c6a0d0e111f199e969d826340ea8&vid=e5f18560d0e111f1a62f85d323378521&vids=1&msclkid=N&uach=pv%3D&pi=0&lg=en-US&sw=1080&sh=600&sc=24&tl=Atlassian%20Jobs%3A%20View%20Listings%20for%20Open%20Positions%20%7C%20Atlassian&p=https%3A%2F%2Fwww.atlassian.com%2Fcompany%2Fcareers%2Fall-jobs&r=&lt=2861&evt=pageLoad&sv=2&cdb=AQET&rn=445846)
