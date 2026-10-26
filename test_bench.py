@@ -25,17 +25,14 @@ class FixtureTests(unittest.TestCase):
         broken=copy.deepcopy(cases)
         next(c for c in broken['cases'] if c['id']=='remote-us-only')['expected']['cand-us']['gates']['geography']['basis']='Open to anyone anywhere'
         self.assertIn('is not quoted from the posting',' '.join(score.validate(broken)))
-    def test_bare_dollar_rule(self):
-        from bench.score import bare_dollar,us_only
+    def test_bare_dollar_names_no_currency(self):
+        from bench.score import bare_dollar
         self.assertTrue(bare_dollar('$130,000 - $150,000 per year base salary'))
         self.assertFalse(bare_dollar('$125,000 - $140,000 USD base per year'))
         self.assertFalse(bare_dollar('US$130,000'))
-        self.assertTrue(us_only({'locations':[{'text':'Remote - United States'}]}))
-        self.assertFalse(us_only({'locations':[{'text':'Remote'}]}))
-        self.assertFalse(us_only({'locations':[{'text':'Remote - India'},{'text':'Remote - United States'}]}))
-        broken=copy.deepcopy(score.load('cases.json'))
-        next(c for c in broken['cases'] if c['id']=='remote-unspecified')['expected']['cand-us']['gates']['salary']={'value':'pass','basis':'$130,000 - $150,000 per year base salary'}
-        self.assertIn('needs a US-only posting',' '.join(score.validate(broken)))
+        broken=copy.deepcopy(score.load('cases.json'))  # a salary label may not read a bare "$" as any currency, on any posting
+        next(c for c in broken['cases'] if c['id']=='remote-us-only')['expected']['cand-us']['gates']['salary']={'value':'pass','basis':'$130,000 - $150,000 per year base salary'}
+        self.assertIn('names no currency',' '.join(score.validate(broken)))
     def test_two_candidates_differ_on_one_posting(self):
         case=next(c for c in score.load('cases.json')['cases'] if c['id']=='contract-role')
         self.assertEqual((case['expected']['cand-in']['verdict'],case['expected']['cand-us']['verdict']),('ready','excluded'))
