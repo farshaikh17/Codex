@@ -14,7 +14,7 @@ A source whose ATS is Greenhouse, Lever or Ashby needs only a JSON edit. No Pyth
    {"id": "acme-lever", "employer": "acme", "provider": "lever", "board": "acme"}
    ```
    `url` is optional. When omitted it is derived, and it requests employer-published compensation: Greenhouse `https://boards-api.greenhouse.io/v1/boards/<board>/jobs?content=true&pay_transparency=true`, Lever `https://api.lever.co/v0/postings/<board>?mode=json`, Ashby `https://api.ashbyhq.com/posting-api/job-board/<board>?includeCompensation=true`. A Greenhouse or Ashby URL without its compensation option produces a validation warning. Allowed query options: Greenhouse `content`, `pay_transparency`; Lever `mode=json`; Ashby `includeCompensation`. Changing an existing source's URL can change content hashes. See BACKLOG E2.
-   Optional: `enabled` (default true), `poll_interval_hours` (1–168, default 5), `notes`.
+   Optional: `enabled` (default true), `poll_interval_hours` (1–168; omit it to collect on every scheduled run, set it, for example 24, to poll a source less often), `notes`.
 4. Run `python registry.py` (it validates both files). It must print `OK`. Warnings (for example a missing `careers_url`) don't block collection, but resolve them.
 5. Trial locally: `python collect.py --ids acme-lever`. Check the run table and `public/boards/acme-lever.json`. Revert `public/` if you don't intend to commit a collection.
 6. Open a PR. A `main` push of `sources.json` triggers a full collection. `employers.json` edits don't.

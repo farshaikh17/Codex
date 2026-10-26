@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import urlparse,parse_qsl
 ROOT=Path(__file__).resolve().parent
 SCHEMA='employer-registry-1'
-DEFAULTS={'enabled':True,'poll_interval_hours':5}
+DEFAULTS={'enabled':True,'poll_interval_hours':None}  # None: collected on every scheduled run (owner's five daily runs)
 ID=re.compile(r'^[a-z0-9][a-z0-9-]{1,62}$')
 BOARD=re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$')
 # Official feed per adapter. The URL must be exactly this endpoint plus only the listed query options.
@@ -102,7 +102,7 @@ def validate(source_list,employer_doc):
             warns.append('%s does not request employer-published compensation (%s=true)'%(where,option))
         if not isinstance(s['enabled'],bool): errs.append(where+' enabled must be true or false')
         hours=s['poll_interval_hours']
-        if isinstance(hours,bool) or not isinstance(hours,(int,float)) or not LIMITS['min_poll_hours']<=hours<=LIMITS['max_poll_hours']:
+        if hours is not None and (isinstance(hours,bool) or not isinstance(hours,(int,float)) or not LIMITS['min_poll_hours']<=hours<=LIMITS['max_poll_hours']):
             errs.append('%s poll_interval_hours must be between %d and %d'%(where,LIMITS['min_poll_hours'],LIMITS['max_poll_hours']))
         sources.append(s)
     for eid in sorted(set(employers)-used): warns.append('employer %s has no sources'%eid)

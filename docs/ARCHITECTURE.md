@@ -3,8 +3,8 @@
 ```
 employers.json + sources.json ──registry.py validate──> enabled sources
                                          │
-GitHub Actions hourly tick ──> collect.py --trigger schedule
-                                         │ due_sources(): last checked_at + poll_interval_hours (15 min slack)
+GitHub Actions, five daily runs (37 1,6,11,16,21 * * * UTC, owner's schedule) ──> collect.py --trigger schedule
+                                         │ due_sources(): every source without poll_interval_hours; one with an interval only once due (15 min slack)
                                          ├─ none due ──> "skipped" job summary, exit 0, no requests, no file changes
                                          └─ due ──> one HTTPS GET per due source (no redirects, host-pinned, 25 MB cap, 2 s spacing)
                                                      adapters.normalize ──> public jobs + content_hash + change

@@ -7,7 +7,7 @@
 - `no_longer_listed` reports disappearance from a feed after one successful fetch. It is not confirmed closure, and reopened requisitions aren't detected yet.
 - Duplicate detection is per source and requisition id. Cross-URL duplicates are indexed by PR #2's canonical URL but aren't handled in review yet (H, E5).
 - Scheduled execution has been verified once (07:55 UTC, 2026-10-26). GitHub dropped the five earlier hourly ticks and started that one 32 minutes late. Consumers must use the staleness rules in OUTPUT_CONTRACT.md.
-- The hourly tick costs runner minutes even when it skips (BACKLOG P10).
+- The owner's five daily runs each cost at least one runner minute (about 150 a month of the 2,000 free private-repo minutes), down from about 720 for hourly ticks.
 - The benchmark is small: 21 cases, 34 labelled verdicts, 6 collection scenarios. It finds specific failure modes; it isn't a statistical estimate of accuracy on live feeds.
 - Discovery reads static HTML only. Boards that a page adds with JavaScript (as GitLab's and Remote's careers pages appear to) aren't seen. Twilio's and Resilinc's careers sites are like that, so their boards aren't found even with the wider scope. Widening `allowed_hosts` needs a recorded basis.
 - ChatGPT access to this private repository hasn't been verified (see OUTPUT_CONTRACT.md).
