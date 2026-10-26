@@ -684,3 +684,160 @@ No merges, schedule, task or Sheet changes.
 
 Worker A is standing by; it self-checks at 01:15 UTC and Worker C at 23:13 UTC. Neither check replaces the actions above.
 - 2026-10-26 Worker A (A2, done): fixed the stale-index regression from 4301da0. Run 40412808666 (22:30, from 2df792d, which adds crawl_pages.py to the branch-only push paths) republished 5/6 pages, but Canonical timed out and kept its old entry (job_links 333 vs 313 derived). Root fix 8fcfea9: listing labels (job_links, claimed_total, listing_quality, coverage, flags, boilerplate_share) are re-derived from every stored capture on every run, failed fetches included; evidence/change fields and capture files untouched (test_listing_labels_follow_the_code_even_when_a_fetch_fails). Run 40413438919 (22:35) committed 8f5bfe1: 6/6 usable, index job_links equals job_links() on every page (Atlassian 334/334, Canonical 313/313). completion/integration f1d31c8 + #1 8f5bfe1 merges cleanly: 197 offline tests, 0 failures, 0 errors, 0 skipped, including test_leads.CommittedCaptureTests and test_acceptance.
+
+## Release report — Claude Master, 2026-10-26 ~23:10 UTC (supersedes earlier completion and handoff sections where they differ)
+
+No PR merged, no schedule changed, no live Sheets writes, no candidate rule deployed. All pushes were fast-forwards.
+
+### 1. Correction to the 22:50 record
+
+The **197-test result** was measured on `completion/integration` `f1d31c8` + #1 **`0591b23`**. #1's head then moved to **`9e18579`**, a Master docs-only commit: `git diff 0591b23 9e18579` touches only `docs/COORDINATION.md`, so no code changed. A2 is fixed, as recorded at 22:50. The current release candidate below replaces both numbers.
+
+### 2. Exact heads (release candidate)
+
+| PR / branch | Head | Role |
+|---|---|---|
+| `main` | `e812b42` | production; owner commits `562baaf` (cron), `709948e` (filter) |
+| #1 `build/crawl4ai` | `9e18579` code = `0591b23` (+ this report's commit, docs only) | page capture, PR CI, coordination docs |
+| #3 `builderbranches` | `95bdcd1` | registry, reliable runs, #5 manifest, backlog/handoff refresh |
+| #4 `builderbranches-compensation` | `c4e38fc` | compensation inputs, #8 Ashby tiers |
+| #2 `builder1` | **`23922ab`** | store, extraction v4, gates v8 (provisional), queue, outputs, fake Sheets, #6, #9 |
+| #7 `builderbranches-benchmark` | `2bae921` | benchmark (labels partly provisional) |
+| #10, #11 | `51d450d`, `5c26659` | **parked**, not in the release |
+| `completion/integration` | **`05a3ba3`** | validation only, never merge: `main` + #1 + #3 + #4 + #2 |
+| #5, #6, #8, #9 | `48ff370`, `1bca0d2`, `5932c0d`, `3018541` | superseded; content folded into #3, #2, #4 and #2 |
+
+### 3. Combined tests and READY-path coverage (Master, offline, outbound sockets disabled)
+
+- **`completion/integration` `05a3ba3`: 203 tests, 0 failures, 0 errors, 0 skipped.** Each PR's own files are byte-identical to its head (`git diff` of #1's, #4's and #2's files against their heads: 0 files).
+- **`05a3ba3` + #7 `2bae921`: 215 tests, 0 failures.** Benchmark against gates v8: **false READY 0, missed READY 0, incorrect exclusions 0, missed exclusions 0, unknowns retained 12/12, every gate 34/34** (salary was 32/34 before B3).
+- **End-to-end acceptance on `05a3ba3`: 47 passed, 0 failed, 1 not run.**
+  - **Synthetic READY path: passes completely.** It uses an invented `example.invalid` posting and a synthetic US candidate in its own store, queue and fake ledger. Gates pass on stated evidence (the `US$` range is read as USD), review makes it READY, and the decision reaches the fake ledger.
+  - **Real-snapshot READY path: `not_run`.** On today's real postings, none can reach READY for the synthetic candidates without the bare-`$` rule (provisional, off). This is reported honestly, not as a pass.
+  - Career-page leads, mixed-generation, rebuild, cache and isolation checks all pass.
+- **Earlier evidence that still holds**, from the 20:10 completion report:
+  - The real publish step rejects a mixed generation and recovers on the next live collection.
+  - Two rebuilds from real history are identical.
+  - Cache invalidation re-extracts only changed versions.
+  - The live collection trial: 162 compensation-only changes, all attributed to the collector.
+
+### 4. B3 (Master took ownership; Worker B disconnected since 19:11)
+
+B3 is commit **`23922ab`** on #2: extractor version 4, gates version 8.
+- **Company figures:**
+  - "$1B annually in revenue" is no longer pay.
+  - Funding, valuation and payments-volume sentences without pay wording give no range.
+  - Real pay written in millions is kept (JPY 6M–8M; INR 3M–4M passes an INR floor). This replaces version 3's blanket "millions/billions are never pay" rule.
+- **Coded dollars:** `US$`, `CA$`, `C$`, `A$`, `AU$`, `NZ$`, `HK$` and `S$` set the currency, so "US$130,000 - US$150,000" is one USD range. A bare `$` is still currency-unknown.
+- **Per-unit ranges:** "$30.09/hr - $37.61/hr" is one hourly range (it was two single points).
+- **Tests:** 7 extractor tests and 4 labelled cases; 5 of the 6 targeted ones fail on the previous code. On `main`'s 534 postings, exactly 2 extractions change, both Twilio and both as intended.
+- **Worker B, on reconnect:** `git pull origin builder1` before any push. Keep all completion commits (`3595af8`…`23922ab`). No force-push and no new engine steps.
+
+### 5. Production workflow checks (`05a3ba3` vs `main`)
+
+- **`collect.yml`:**
+  - `push.branches: [main]` (from `709948e`), cron `37 1,6,11,16,21 * * *` (from `562baaf`), no age gate.
+  - Added steps: `registry.py` validation before any request, `--trigger "$EVENT"`, #5's `--verify` with revert-and-fail, and branch-relative publish.
+  - The test step runs `test_collect` only, so `test_registry` doesn't run in Actions; `registry.py` itself still validates every run.
+- **Other workflows:**
+  - `crawl-pages.yml`: push limited to `build/crawl4ai`, plus `workflow_dispatch`; no schedule.
+  - `tests.yml`: pull requests only, read-only token.
+  - `engine.yml`: `workflow_dispatch` only, read-only.
+  - **Only `collect.yml` has a schedule.**
+- **Scheduled execution on the new cron is not verified.** Actions holds no `schedule` run after 15:17. The 21:37 UTC slot, the first under `562baaf`, created no run. The next slot is 01:37 UTC. There have been no stray collections since run 40377774005 (18:26, nothing published).
+
+### 6. Unresolved candidate-policy behaviour (provisional; integration does not depend on it)
+
+The full table, with affected tests, is in `docs/HANDOFF.md` on #3 (`95bdcd1`).
+
+| Rule | In code now | If the owner decides otherwise |
+|---|---|---|
+| Bare `$` = USD on US-only postings. Owner direct, per Worker C; the GPT Master treated it as unverified | **off** | Re-add once in `engine/gates.py` `_currency` and update the #7 labels. That would bring back the real-snapshot READY path |
+| Commission-only fails a base floor | on (gates v4) | Remove `commission_only` and update the cases |
+| Multi-currency floors; residents-only pay not compared | on (gates v5) | Revert to one floor and update the config schema and cases |
+| Employer estimates are provisional evidence, never deciding | on (gates v7; GPT Master decision) | Change `EMPLOYER_ESTIMATE` handling |
+| "Millions/billions never pay" | **replaced** by the context rule (gates v8 / extractor v4), per the owner's completion instruction | — |
+| GitLab and Zapier `human_confirmed` labels; #10 careers URLs and hosts | on in #7; #10 parked | relabel; drop from #10 |
+
+**Every salary result and every READY is provisional** until the canonical Sheets comparison (D3).
+
+### 7. Implemented versus deployed
+
+| Feature | Implemented and tested offline | Deployed (on `main`, running) |
+|---|---|---|
+| ATS feed collector, 10 feeds | yes | **yes**, old collector code; last collection 19:23 (`e812b42`) |
+| Five-daily cron, no age gate, `main`-only push filter | yes | **yes** (owner); schedule events not yet observed |
+| Registry, reliable runs, manifest (#3), compensation inputs and tiers (#4) | yes; live trial in a container | no |
+| Crawl4AI page capture (#1) | yes; live runs on its branch | no (branch-only, manual) |
+| Store, extraction v4, rebuild (#2) | yes | no |
+| Gates, review queue, outputs, fake Sheets adapter (#2) | yes, **provisional** | no; no live Sheets, no candidate rules deployed |
+| Benchmark (#7) | yes, partly provisional | no |
+| Discovery (#10), backoff (#11) | yes | no; parked |
+| Automated ChatGPT consumer access | — | **not verified**. Interactive read works (GPT Master) |
+
+### 8. Merge order and what each merge triggers
+
+Owner only; use merge commits. After each merge, the next PR's owner merges `main` into their branch, re-runs the offline guard and confirms `collect.yml` still matches section 5.
+
+1. **#1** (`build/crawl4ai`).
+   - Brings PR CI (`tests.yml`) and the capture workflow; no schedule.
+   - `crawl-pages.yml` push trigger is inert on `main`.
+2. **#3** (`builderbranches`).
+   - Its merge pushes root `*.py` and `collect.yml` to `main`, so **one live collection runs** with the new collector. It writes the first manifest.
+   - Check the job summary table.
+3. **#4** (`builderbranches-compensation`, retarget to `main`).
+   - The next collection publishes a **one-time wave** of about 162 `changed_fields: ["compensation_raw"]` rows, with `endpoint_changed` / `normalization_changed` set.
+4. **#2** (`builder1`).
+   - Adds `engine/`, `engine.yml` (manual) and #2's collector-only test step. **No new collection behaviour.**
+   - Candidate features remain provisional and need a private config path to run at all.
+5. **#7** (benchmark), after D7/D3, if wanted. **#10 and #11 stay out.**
+
+Close #5, #6, #8 and #9 as superseded.
+
+### 9. Rollback
+
+- **A merge on `main`:** `git revert -m 1 <merge-sha>`, newest merge first, so no history rewrite. Reverting #3 restores `709948e`'s `collect.yml` (filter and cron kept, original collector).
+  - Collected snapshots stay valid: `public/` is plain data.
+  - A snapshot written by the new collector carries a `manifest` and `normalization_version` that the old collector ignores.
+- **Bad publication:** #5's step already refuses and reverts a mixed generation. To restore data by hand, `git checkout <good-commit> -- public/` and commit.
+- **Engine store:** a git-ignored cache. Delete `state/engine.sqlite3` and run `python -m engine rebuild --ref origin/main`; it is deterministic.
+- **Schedule:** cron changes are owner-only; nothing in this release changes the cron.
+- **Candidate outputs:** none are deployed. The Sheets adapter is a fake, so there's nothing to roll back.
+
+### 10. Bounded assignments not started
+
+None of these started; none blocks the release.
+
+- **actionlint (Worker A, after #1 merges):**
+  - Run a pinned actionlint release binary locally against the four workflow files in `completion/integration`, with no CI change.
+  - Report findings; fix only `crawl-pages.yml`/`tests.yml`. Hand any `collect.yml` finding to Worker C and the owner.
+  - **Not started.**
+- **JobSpy (Worker C, after C1, as an evaluation doc only):**
+  - Verify its licence and the terms of the sites it scrapes. It targets job aggregators whose terms may forbid scraping.
+  - No code in the release, no scheduled use, no candidate data.
+  - **Not started.**
+- **Trafilatura (Worker B):** evaluated and **not adopted** (`docs/ENGINE.md` §6). Revisit only when single job pages are fetched for primary-posting verification. No action now.
+
+Other open items:
+- C1's `BACKLOG.md`/`HANDOFF.md` refresh is now **done by the Master on #3 (`95bdcd1`)**.
+- P8 (fold `pages.json` into the registry) is **not started**.
+
+### 11. Head update, 23:28 UTC (Master)
+
+At 23:14 Worker C merged the #3 notes commit `95bdcd1` up its stack. **Every change is docs only.** `git diff --name-only` outside `docs/` is 0 files for each branch against its section 2 head, so the section 3 results stand unchanged.
+
+| PR | Section 2 head | Current head |
+|---|---|---|
+| #4 `builderbranches-compensation` | `c4e38fc` | **`21fba41`** (contains #3 `95bdcd1`) |
+| #7 `builderbranches-benchmark` | `2bae921` | **`4607d11`** |
+| #10 (parked) | `51d450d` | **`ad1ed8b`** |
+| #11 (parked) | `5c26659` | **`8281831`** |
+
+Unchanged:
+- `main` `e812b42`
+- #1 `5ba8ab6` (code identical to `0591b23`)
+- #3 `95bdcd1`
+- #2 `23922ab`
+- `completion/integration` `05a3ba3`
+
+The merge order in section 8 uses these current heads. No collection run has started since run 40386117652 (19:22, `main`). No `schedule` run has appeared since 15:17; the next slot is 01:37 UTC.
