@@ -12,8 +12,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   collect:
-    # Private execution remains off until the owner verifies a no-spending Actions budget.
-    if: github.event.repository.private == false || vars.ENABLE_JOB_COLLECTOR == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
