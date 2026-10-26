@@ -1,6 +1,6 @@
 # Job engine: audit, plan and integration boundaries
 
-Status: foundation only. The complete engine is **not** proven to work; that needs the end-to-end acceptance test in step 9.
+Status: steps 1 and 2 implemented and tested offline. The complete engine is **not** proven to work; that needs the end-to-end acceptance test in step 9.
 
 ## 1. Audit (main at aa6f50c, build/crawl4ai at ce9c4fa, 2026-10-26)
 
@@ -22,8 +22,11 @@ Status: foundation only. The complete engine is **not** proven to work; that nee
 
 Each step is one bounded PR. Later steps depend only on earlier ones.
 
-1. **Posting store (this PR).** `engine/store.py`: stable IDs, canonical URLs, content hashes, versions, observations, and the four availability states. It ingests the collector's snapshots idempotently.
-2. **Extraction records.** Per-version extraction metadata: description and requirement sections, verbatim salary text, word counts, and `thin` / `uncertain` / `failed` flags. Ingest Crawl4AI page captures as *source pages / leads* (section 3), never as postings. Evaluate Trafilatura for ordinary HTML in a separate spike. It was not adopted here: its current licence and dependency tree must be checked at adoption time, and it is unnecessary for the JSON ATS feeds.
+Step numbers match `docs/BACKLOG.md` in farshaikh17/Codex#3 (E1 = step 1, and so on).
+
+1. **Posting store (done).** `engine/store.py`: stable IDs, canonical URLs, content hashes, versions, observations, and the four availability states. It ingests the collector's snapshots idempotently.
+2. **Extraction records (done for ATS postings, section 6).** Evidence items per posting version, mandatory and preferred requirements kept apart, verbatim pay text, field states, extraction warnings, and named change kinds. Trafilatura was evaluated and not adopted (section 6).
+   **2b. Crawl4AI leads (next).** Ingest PR #1's page captures as *source pages / leads* (section 3), never as postings. This waits for PR #1 to merge and its owner to confirm the contract.
 3. **Candidate configuration and isolation.** A `candidates/` loader for a private config path outside Git (an environment variable). The config holds a profile version, a rules version and gate definitions. Synthetic fixtures only in Git. Missing facts stay `unknown`.
 4. **Evidence-based gates.** Configurable gates for geography, engagement, experience, salary and prior applications. Each result is `pass` / `fail` / `unknown` with evidence (posting version hash, field, quoted span) or an explicit unknown reason. Keyword relevance is a separate score that never sets a gate.
 5. **Durable review queue.** Per-candidate queue keyed on (candidate, posting, content hash, rules version, profile version). States are pending, in_progress (with a lease), conditional and completed. Each decision is committed before the next item. Expired leases are recovered. Reassessment happens only when one of those keys changes. Being indexed is never treated as reviewed. Reports keep the assessed, newly qualified and open READY counts separate.
@@ -59,7 +62,64 @@ python -m engine summary  # counts by availability, freshness per source, duplic
 - Safety: each snapshot is ingested in one `BEGIN IMMEDIATE` transaction, so any error rolls everything back. Re-ingesting the same snapshot, or an older one, is skipped. A board file whose `collected_at` does not match `status.json` is skipped with a warning (this protects against reading a half-published commit). A concurrent writer waits up to its timeout, then fails without writing. Readers are not blocked.
 - Limits: timestamps compare as ISO strings from the collector's single format. The store does not yet persist between Actions runs; it can be rebuilt by replaying committed snapshots in order (verified on the three snapshots in Git history). Persistence is decided in step 9.
 
-## 6. Persistence and recovery (before any scheduled use)
+## 6. Extraction records (step 2)
+
+```
+python -m engine extract                      # extracts every stored version not yet extracted at the current extractor version
+python -m engine show --posting greenhouse:gitlab:8860302002   # one readable record: identity, availability, changes, evidence
+```
+
+`engine/extract.py` is deterministic and uses only the standard library: no network, no LLM, no confidence percentages. It reads one stored posting version and returns evidence for six fields: `location`, `workplace`, `employment_type`, `compensation`, `requirements_mandatory` and `requirements_preferred`.
+
+**Evidence item** (`evidence-1`): `{field, source_url, retrieved_at, quote, interpretation, method, schema_version}`.
+- `quote` is always a verbatim span of the posting's own text. A test checks this for every committed posting.
+- `retrieved_at` is when this content version was first retrieved.
+- `method` names where the quote came from: `ats_field:<name>`, `description_section:<heading>`, `inline_marker_in:<heading>`, `location_text`, `description_text` or `title`.
+- `interpretation` is filled only for explicit wording. Workplace is `remote`, `hybrid` or `onsite`. Employment type is `full_time`, `part_time`, `contract`, `internship` or `temporary`. Pay is parsed ranges. Locations, location restrictions and requirements are quoted, never interpreted: geography and qualification judgements belong to the candidate gates (step 4).
+
+**Field states:**
+- `stated`: at least one item.
+- `not_stated`: text was read and nothing was found.
+- `not_retrieved`: there was no description to read.
+- `conflicting`: two explicit interpretations disagree, for example PostHog `Remote (US)` against the feed field `OnSite`. Quotes without an interpretation never create a conflict.
+
+**Requirements.** Descriptions are split at recognised headings, calibrated on the committed postings: "What you'll bring", "Qualifications", "\*Required", "Desired", "Nice to have" and others. Lines in a mandatory section that say "is a plus", "preferred", "helpful, but not required" and so on move to preferred, unless they say "(required)". Mandatory text is kept in full, as contiguous verbatim runs. Unrecognised short lines stay content, so a section can run into an unfamiliar following heading. A description with no recognised requirement heading gets `requirements_not_sectioned` and is never guessed.
+
+**Compensation.**
+- Sources: the feed field (Ashby summary split at `•`, Lever `salaryRange`, Greenhouse `pay_input_ranges`), "Compensation" or "… Salary Range" sections, and lines with pay wording that contain an amount.
+- An amount counts only with a currency or a `K` suffix, so years, `401(k)` and "40 days off per year" are ignored.
+- Ranges keep the original units. There's no currency or period conversion, and `$` is not assumed to be USD (`currency` is set only from an explicit code). Lakh and crore are recorded in `amount_unit`, not multiplied.
+- Recorded separately: `basis` (`base`, `ote` or `unspecified`), `estimated`, `variable_mentioned`, `equity_mentioned` and `multiple_ranges`.
+
+**Warnings and state.** Possible warnings: `empty_description`, `thin_description` (under 80 words), `navigation_only`, `possibly_truncated`, `list_captured_as_description`, `compensation_signalled_not_found` (strong pay wording such as "base salary" or "pay range" with no amount) and `requirements_not_sectioned`. The state is `failed` (empty), `thin`, `uncertain` (any other warning) or `ok`.
+
+**Store (schema 2, migrated automatically from 1).**
+- `extractions` and `evidence` are keyed by (posting, content hash, extractor version). They are independent of any candidate, so unchanged content is never re-extracted. A new `EXTRACTOR_VERSION` re-extracts everything and keeps the old rows.
+- `extract_pending` commits every 100 versions, so an interrupted run resumes where it stopped.
+- `version_changes` records the fields that changed in each content change, with a kind:
+  - `content_changed`
+  - `compensation_source_added`: only the pay field appeared, for example after the collector enables Greenhouse `pay_transparency`.
+  - `compensation_removed`
+  The review queue (step 5) uses this to recheck only salary gates when pay is newly published, instead of reassessing the whole role. Migration rebuilds this history from schema 1 observations.
+
+**Measured on the committed snapshot (532 postings).**
+- States: 502 `ok`, 30 `uncertain`, 0 `thin` or `failed`.
+- Warnings: `requirements_not_sectioned` 26 (mostly Clipboard, whose descriptions have no requirements heading) and `compensation_signalled_not_found` 4. Two of the four are correct (PostHog: "base salary component, plus a bonus" with no amount). Two are false (Oyster duties mention the "EU Pay Transparency" directive).
+- Compensation stated: 213. Mandatory requirements stated: 501. Preferred: 318. Workplace conflicting: 4. Employment type stated or conflicting: 9. Most postings don't state it in role wording; boilerplate such as "How GitLab Supports Full-Time Employees" is deliberately not counted.
+
+**Known gaps.**
+- The collector drops Ashby `employmentType` and Greenhouse `metadata`, so employment type relies on text. Fixing that is a collector change, owned by PR #3's area.
+- Greenhouse feeds don't request `pay_transparency` yet (BACKLOG E2 measurement).
+- Heading patterns are English only.
+- Section boundaries depend on known headings.
+
+### Trafilatura evaluation (2026-10-26)
+
+- **Licence and dependencies, verified from PyPI and the installed metadata:** trafilatura 2.3.1, Apache-2.0. It installs 18 packages, including lxml 6.1.3 (C extension, BSD-3-Clause), dateparser, regex (Apache-2.0 AND CNRI-Python), certifi (MPL-2.0) and `tld` (MPL-1.1 OR GPL-2.0-only OR LGPL-2.1-or-later; the MPL option would be chosen). All are free and open source.
+- **Synthetic comparison:** on ATS description fragments, the shape every current source delivers, the standard-library `html_to_text` and Trafilatura both kept 5/5 requirement bullets and the pay line. On a full page with navigation and footer, Trafilatura removed the boilerplate and the standard library leaked it.
+- **Decision: not adopted.** The engine has no full-page HTML input today. Crawl4AI captures arrive as its own markdown, and ATS feeds are fragments. Trafilatura would add 18 packages and break the install-free CI for no measured gain.
+- **Revisit when** primary-posting-page verification fetches single job pages. Swapping converters changes text (for example, it adds `- ` bullets), so it needs a `CONTENT_HASH_VERSION` and `EXTRACTOR_VERSION` bump to avoid false content changes. This was one synthetic comparison, not a benchmark; the step H fixtures should repeat it.
+## 7. Persistence and recovery (before any scheduled use)
 
 The SQLite file is a cache, not the record. The record is (a) every collector snapshot already committed to Git and (b) `data/posting-events.jsonl`, a committed journal for facts no snapshot contains (today only expiry evidence). Nothing else needs to persist between Actions runs, and no binary database is committed.
 

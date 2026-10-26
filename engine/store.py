@@ -11,9 +11,11 @@ Availability states:
   expired       explicit closure evidence recorded with mark_expired()
 """
 import hashlib,json,re,sqlite3
+from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import parse_qsl,urlencode,urlsplit,urlunsplit
-SCHEMA_VERSION=1
+from engine.extract import EXTRACTOR_VERSION,FIELDS,extract
+SCHEMA_VERSION=2
 CONTENT_HASH_VERSION=1
 CONTENT_FIELDS=('title','locations','workplace_type','description','compensation_raw')
 TRACKING=re.compile(r'^(utm_[a-z_]+|gh_src|lever-source|lever-origin|lever-via|fbclid|gclid|mc_cid|mc_eid)$',re.I)
@@ -43,8 +45,36 @@ create table if not exists observations(
   outcome text not null check(outcome in ('listed','missing','inaccessible')),content_hash text,
   primary key(run_id,posting_id));
 '''
+V2='''
+create table version_changes(
+  posting_id text not null references postings,from_hash text not null,to_hash text not null,
+  run_id integer not null references source_runs,changed_at text not null,fields text not null,
+  kind text not null check(kind in ('content_changed','compensation_source_added','compensation_removed')),
+  primary key(posting_id,run_id));
+create table extractions(
+  posting_id text not null,content_hash text not null,extractor_version integer not null,extracted_at text not null,
+  state text not null check(state in ('ok','uncertain','thin','failed')),warnings text not null,field_states text not null,
+  description_words integer not null,primary key(posting_id,content_hash,extractor_version),
+  foreign key(posting_id,content_hash) references posting_versions);
+create table evidence(
+  posting_id text not null,content_hash text not null,extractor_version integer not null,seq integer not null,
+  field text not null,method text not null,quote text not null,interpretation text,source_url text,retrieved_at text,
+  schema_version text not null,primary key(posting_id,content_hash,extractor_version,seq),
+  foreign key(posting_id,content_hash,extractor_version) references extractions);
+create index evidence_field on evidence(field);
+'''
+def _backfill_changes(conn):
+    """Reconstructs version_changes from the observation history recorded before schema 2."""
+    rows=conn.execute('''select o.posting_id,o.content_hash,o.run_id,r.checked_at from observations o join source_runs r using(run_id)
+                         where o.outcome='listed' order by o.posting_id,r.checked_at''').fetchall()
+    last={}
+    for r in rows:
+        prev=last.get(r['posting_id'])
+        if prev and prev!=r['content_hash']: _record_change(conn,r['posting_id'],prev,r['content_hash'],r['run_id'],r['checked_at'])
+        last[r['posting_id']]=r['content_hash']
+MIGRATIONS={2:(V2,_backfill_changes)}
 def connect(path,timeout=30):
-    """Opens the store, creating it on first use; opening an existing store never writes.
+    """Opens the store, creating or migrating it on first use; opening a current store never writes.
     WAL mode lets readers continue during an ingest; a second writer waits up to timeout seconds, then fails."""
     Path(path).parent.mkdir(parents=True,exist_ok=True)
     conn=sqlite3.connect(str(path),timeout=timeout,isolation_level=None)
@@ -53,13 +83,27 @@ def connect(path,timeout=30):
     found=None
     if conn.execute("select 1 from sqlite_master where type='table' and name='meta'").fetchone():
         found=conn.execute("select value from meta where key='schema_version'").fetchone()
-    if found:
-        if int(found[0])!=SCHEMA_VERSION:
-            raise RuntimeError('Store schema %s, code expects %d; migrate before use'%(found[0],SCHEMA_VERSION))
-        return conn
-    conn.execute('pragma journal_mode=wal')
-    conn.executescript(DDL)
-    conn.execute("insert or ignore into meta values('schema_version',?),('content_hash_version',?)",(SCHEMA_VERSION,CONTENT_HASH_VERSION))
+    version=int(found[0]) if found else 0
+    if version>SCHEMA_VERSION:
+        raise RuntimeError('Store schema %d is newer than this code (%d); update the code'%(version,SCHEMA_VERSION))
+    if version==SCHEMA_VERSION: return conn
+    if not version:
+        conn.execute('pragma journal_mode=wal')
+        conn.executescript(DDL)
+        conn.execute("insert or ignore into meta values('schema_version','1'),('content_hash_version',?)",(CONTENT_HASH_VERSION,))
+        version=1
+    conn.execute('begin immediate')
+    try:
+        version=int(conn.execute("select value from meta where key='schema_version'").fetchone()[0])  # another process may have migrated
+        for target in range(version+1,SCHEMA_VERSION+1):
+            sql,backfill=MIGRATIONS[target]
+            for statement in filter(str.strip,sql.split(';')): conn.execute(statement)
+            backfill(conn)
+            conn.execute("update meta set value=? where key='schema_version'",(str(target),))
+        conn.execute('commit')
+    except BaseException:
+        conn.execute('rollback')
+        raise
     return conn
 def canonical_url(url):
     """Lowercase scheme and host, drop fragment, default port, trailing slash and known tracking parameters.
@@ -71,15 +115,29 @@ def canonical_url(url):
     query=urlencode(sorted((k,v) for k,v in parse_qsl(p.query,keep_blank_values=True) if not TRACKING.match(k)))
     path=p.path.rstrip('/') or '/'
     return urlunsplit((p.scheme.lower(),host,path,query,''))
-def content_hash(job):
-    """Hash of the posting's relevant content only. Retrieval timestamps, URLs and change labels are excluded,
-    so a re-fetch of identical text never looks like a change."""
-    locs=sorted({' '.join((l.get('text') or '').split()) for l in job.get('locations') or [] if isinstance(l,dict)}-{''})
+def _content(job):
+    locs=job.get('locations') or []
+    if isinstance(locs,str): locs=json.loads(locs)
+    locs=sorted({' '.join((l.get('text') or '').split()) for l in locs if isinstance(l,dict)}-{''})
     body={k:job.get(k) for k in CONTENT_FIELDS}|{'locations':locs}
     for k in ('title','workplace_type','description','compensation_raw'):
         if isinstance(body[k],str): body[k]='\n'.join(' '.join(line.split()) for line in body[k].strip().splitlines())
-    raw=json.dumps(body,sort_keys=True,ensure_ascii=False,separators=(',',':'))
+    return body
+def content_hash(job):
+    """Hash of the posting's relevant content only. Retrieval timestamps, URLs and change labels are excluded,
+    so a re-fetch of identical text never looks like a change."""
+    raw=json.dumps(_content(job),sort_keys=True,ensure_ascii=False,separators=(',',':'))
     return hashlib.sha256(raw.encode()).hexdigest()
+def _record_change(conn,posting_id,old_hash,new_hash,run_id,at):
+    """Names the fields that changed, so reassessment can tell a newly published pay range from a rewritten role."""
+    get=lambda h:dict(conn.execute('select * from posting_versions where posting_id=? and content_hash=?',(posting_id,h)).fetchone())
+    old,new=_content(get(old_hash)),_content(get(new_hash))
+    fields=sorted(k for k in CONTENT_FIELDS if old[k]!=new[k])
+    kind='content_changed'
+    if fields==['compensation_raw']:
+        if not old['compensation_raw']: kind='compensation_source_added'
+        elif not new['compensation_raw']: kind='compensation_removed'
+    conn.execute('insert or ignore into version_changes values(?,?,?,?,?,?,?)',(posting_id,old_hash,new_hash,run_id,at,json.dumps(fields),kind))
 def _read(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
 def _set_availability(conn,posting_id,state,at,reason):
@@ -107,6 +165,7 @@ def _record_listed(conn,run_id,source_id,job,at):
                   job.get('workplace_type'),job.get('published'),job.get('description'),job.get('compensation_raw'),
                   len((job.get('description') or '').split()),job.get('content_hash')))
     conn.execute('insert into observations values(?,?,?,?)',(run_id,pid,'listed',digest))
+    if change=='changed': _record_change(conn,pid,row['content_hash'],digest,run_id,at)
     return change
 def ingest_snapshot(conn,public,sources=()):
     """Ingests one published collector snapshot in a single transaction. Idempotent: a source retrieval already
@@ -177,6 +236,56 @@ def mark_expired(conn,posting_id,at,evidence):
         found=conn.execute("update postings set availability='expired',availability_at=?,availability_reason=? where posting_id=?",
                            (at,evidence[:500],posting_id)).rowcount
     if not found: raise KeyError(posting_id)
+def extract_pending(conn,limit=None,batch=100,now=None):
+    """Extracts every stored version that has no extraction at the current EXTRACTOR_VERSION, current versions first.
+    Results are cached by (posting, content hash, extractor version), independent of any candidate, so unchanged
+    content is never re-extracted. Commits every batch, so an interrupted run keeps its progress and resumes."""
+    now=now or datetime.now(timezone.utc).isoformat()
+    todo=conn.execute('''select v.*,p.url from posting_versions v join postings p using(posting_id)
+        where not exists(select 1 from extractions e where e.posting_id=v.posting_id and e.content_hash=v.content_hash and e.extractor_version=?)
+        order by v.content_hash!=p.content_hash,v.first_seen_at,v.posting_id'''+(' limit %d'%int(limit) if limit else ''),(EXTRACTOR_VERSION,)).fetchall()
+    counts={'extracted':0,'ok':0,'uncertain':0,'thin':0,'failed':0}
+    for start in range(0,len(todo),batch):
+        conn.execute('begin immediate')
+        try:
+            for v in todo[start:start+batch]:
+                if conn.execute('select 1 from extractions where posting_id=? and content_hash=? and extractor_version=?',
+                                (v['posting_id'],v['content_hash'],EXTRACTOR_VERSION)).fetchone(): continue  # done by a concurrent run
+                r=extract(dict(v),v['url'])
+                conn.execute('insert into extractions values(?,?,?,?,?,?,?,?)',(v['posting_id'],v['content_hash'],EXTRACTOR_VERSION,now,r['state'],
+                             json.dumps(r['warnings']),json.dumps({f:r['fields'][f]['state'] for f in FIELDS}),r['description_words']))
+                items=[i for f in FIELDS for i in r['fields'][f]['items']]
+                conn.executemany('insert into evidence values(?,?,?,?,?,?,?,?,?,?,?)',
+                                 [(v['posting_id'],v['content_hash'],EXTRACTOR_VERSION,n,i['field'],i['method'],i['quote'],
+                                   None if i['interpretation'] is None else json.dumps(i['interpretation'],ensure_ascii=False),
+                                   i['source_url'],i['retrieved_at'],i['schema_version']) for n,i in enumerate(items)])
+                counts['extracted']+=1
+                counts[r['state']]+=1
+            conn.execute('commit')
+        except BaseException:
+            conn.execute('rollback')
+            raise
+    return counts
+def posting_record(conn,posting_id):
+    """One readable record: identity, availability, current content hash, change history and extracted evidence."""
+    p=conn.execute('select * from postings where posting_id=?',(posting_id,)).fetchone()
+    if p is None: raise KeyError(posting_id)
+    v=conn.execute('select title,published,first_seen_at,last_seen_at,description_words from posting_versions where posting_id=? and content_hash=?',
+                   (posting_id,p['content_hash'])).fetchone()
+    e=conn.execute('select * from extractions where posting_id=? and content_hash=? and extractor_version=?',
+                   (posting_id,p['content_hash'],EXTRACTOR_VERSION)).fetchone()
+    fields=None
+    if e:
+        fields={f:{'state':s,'items':[]} for f,s in json.loads(e['field_states']).items()}
+        for i in conn.execute('select * from evidence where posting_id=? and content_hash=? and extractor_version=? order by seq',
+                              (posting_id,p['content_hash'],EXTRACTOR_VERSION)):
+            fields[i['field']]['items'].append({'quote':i['quote'],'method':i['method'],'source_url':i['source_url'],'retrieved_at':i['retrieved_at'],
+                'interpretation':json.loads(i['interpretation']) if i['interpretation'] else None,'schema_version':i['schema_version']})
+    changes=[dict(c)|{'fields':json.loads(c['fields'])} for c in conn.execute(
+        'select from_hash,to_hash,changed_at,fields,kind from version_changes where posting_id=? order by changed_at',(posting_id,))]
+    return {'posting':dict(p),'current_version':dict(v),'changes':changes,
+            'extraction':None if e is None else {'extractor_version':EXTRACTOR_VERSION,'state':e['state'],'warnings':json.loads(e['warnings']),
+                                                 'extracted_at':e['extracted_at'],'fields':fields}}
 def summary(conn):
     """Compact counts and freshness per source for status reporting."""
     rows=conn.execute('''select s.source_id,
@@ -190,6 +299,14 @@ def summary(conn):
     dupes=conn.execute('''select count(*) from (select canonical_url from postings where canonical_url is not null
         and availability!='expired' group by canonical_url having count(*)>1)''').fetchone()[0]
     totals={k:sum(p[k] for p in per) for k in ('listed','missing','inaccessible','expired')}
-    return {'schema_version':SCHEMA_VERSION,'content_hash_version':CONTENT_HASH_VERSION,'postings':totals,
+    current=('from postings p left join extractions e on e.posting_id=p.posting_id and e.content_hash=p.content_hash '
+             "and e.extractor_version=%d where p.availability!='expired'"%EXTRACTOR_VERSION)
+    extraction={r[0] or 'pending':r[1] for r in conn.execute('select e.state,count(*) '+current+' group by e.state')}
+    warnings={}
+    for (w,) in conn.execute('select e.warnings '+current+" and e.warnings!='[]'"):
+        for name in json.loads(w): warnings[name]=warnings.get(name,0)+1
+    return {'schema_version':SCHEMA_VERSION,'content_hash_version':CONTENT_HASH_VERSION,'extractor_version':EXTRACTOR_VERSION,
+            'postings':totals,'current_extraction':extraction,'current_extraction_warnings':warnings,
+            'change_kinds':{r[0]:r[1] for r in conn.execute('select kind,count(*) from version_changes group by kind')},
             'versions':conn.execute('select count(*) from posting_versions').fetchone()[0],
             'duplicate_canonical_urls':dupes,'sources':per}
