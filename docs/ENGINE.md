@@ -58,3 +58,18 @@ python -m engine summary  # counts by availability, freshness per source, duplic
 - Availability: `listed`; `missing` (absent from a *successful* retrieval, not proof of closure); `inaccessible` (the source's latest retrieval failed); `expired` (only through `mark_expired()` with evidence, and kept through later absences). Reappearing returns a posting to `listed` and records why.
 - Safety: each snapshot is ingested in one `BEGIN IMMEDIATE` transaction, so any error rolls everything back. Re-ingesting the same snapshot, or an older one, is skipped. A board file whose `collected_at` does not match `status.json` is skipped with a warning (this protects against reading a half-published commit). A concurrent writer waits up to its timeout, then fails without writing. Readers are not blocked.
 - Limits: timestamps compare as ISO strings from the collector's single format. The store does not yet persist between Actions runs; it can be rebuilt by replaying committed snapshots in order (verified on the three snapshots in Git history). Persistence is decided in step 9.
+
+## 6. Persistence and recovery (before any scheduled use)
+
+The SQLite file is a cache, not the record. The record is (a) every collector snapshot already committed to Git and (b) `data/posting-events.jsonl`, a committed journal for facts no snapshot contains (today only expiry evidence). Nothing else needs to persist between Actions runs, and no binary database is committed.
+
+```
+python -m engine rebuild [--ref origin/main]   # replay every commit that changed public/status.json, oldest first, then the journal
+python -m engine check                         # PRAGMA integrity_check; non-zero exit means delete the file and rebuild
+```
+
+- Rebuild uses `git log --reverse -- public/status.json` and `git show` per commit. It refuses a shallow clone (Actions needs `actions/checkout` with `fetch-depth: 0`).
+- Journal events are applied at their place in time: an expiry is applied before the first snapshot attempted after it, so a later relisting still wins. The journal accepts only `{event: expired, posting_id, at, evidence}`; any other event type or key is refused, so candidate information cannot reach the committed file through this module. `record_expiry()` writes the store and the journal together.
+- Tested (`engine/tests/test_persist.py`, synthetic Git repositories): a rebuild equals the incrementally built store table for table; a rebuild interrupted mid-way resumes on rerun to the same result; expiry evidence survives rebuild and a later relisting wins; a corrupted cache file fails `check` and a fresh rebuild restores it; a shallow clone is refused.
+- Measured on this repository's real history (`--ref origin/main`, 2026-10-26): 3 snapshot commits, 30 source retrievals, 533 listed postings, 535 versions, integrity ok, two rebuilds identical, 2.3 s.
+- Proposed Actions use (not added; no schedule in this PR): restore `state/engine.sqlite3` from `actions/cache` keyed on the last ingested commit as an accelerator, run `check`, and on a miss or failure run `rebuild`. Cache storage and full-history checkout use only free Actions features. Rebuild time grows with the number of snapshot commits (about 0.75 s each now); re-measure before relying on cold rebuilds.
