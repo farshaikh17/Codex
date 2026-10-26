@@ -27,7 +27,13 @@
     {
       "id": "clipboard",
       "name": "Clipboard",
-      "careers_url": null,
+      "careers_url": "https://www.clipboard.com/careers",
+      "careers_url_evidence": {
+        "url": "https://www.clipboard.com/careers",
+        "checked_at": "2026-10-26",
+        "quote": "https://jobs.ashbyhq.com/clipboard",
+        "basis": "discover.py found this link to the configured Ashby board on the page. www.clipboardhealth.com/careers answers a 301 to this URL, and the page names \"Clipboard Health\". Applied on the owner's instruction 2026-10-26"
+      },
       "job_families": [],
       "geography": [],
       "inclusion": {

@@ -45,6 +45,8 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] New boards verified through the pinned official feed and dry-run validated; `sources.json` never written: `test_new_board_verified_and_validated_never_written`
 - [x] A configured board linked from a page proposes `careers_url` with evidence, without re-requesting the feed: `test_configured_board_proposes_careers_url_with_evidence`
 - [x] Live trial: 16 targets, 40 requests. Three `careers_url` proposals (Oyster, Zapier, Weave); scope, robots and 429 stops observed (see DISCOVERY.md)
+- [x] Cross-host redirects check the destination's robots.txt, and redirect targets aren't fetched twice: `test_cross_host_redirect_checks_destination_robots`, `test_redirect_target_not_fetched_twice`
+- [x] Scope widened for Twilio (owner approved), Clipboard and Resilinc (ownership verified by 301 chains from the established domains); Clipboard's `careers_url` applied with evidence
 - [x] Owner approved all three `careers_url` proposals. They're applied to `employers.json` with evidence, and a `careers_url` without evidence is rejected: `test_careers_url_requires_evidence`
 
 ## Consumer (G)

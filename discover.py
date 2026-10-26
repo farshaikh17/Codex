@@ -201,7 +201,13 @@ def discover(targets,source_list,employer_doc,get=http_get,feed=fetch_feed,limit
                 try:
                     status,final,html=request(url,allowed)
                     page.update(status=status,final_url=final)
+                    seen.add(final)  # a redirect target is the same page: don't fetch it again through its own link
                     _check_access(status,html)
+                    fhost=urlparse(final).hostname
+                    if fhost!=host:  # redirected within the allowed hosts: robots.txt is per host, so ask the destination too
+                        if fhost not in robots: robots[fhost]=robots_rules(lambda u:request(u,allowed),final)
+                        ok,why=robots[fhost][0](final)
+                        if not ok: raise Blocked('redirect target %s: %s'%(fhost,why))
                 except Blocked as e:
                     blocked_hosts[host]=str(e)
                     page.update(result='blocked',reason=str(e))

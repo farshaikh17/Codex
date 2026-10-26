@@ -106,6 +106,25 @@ class BoundTests(unittest.TestCase):
         site=Site({'https://acme.example/careers':Blocked('redirect off the allowed hosts to evil.example')})
         page=go(site,[target()])['targets'][0]['pages'][-1]
         self.assertEqual((page['result'],page['reason']),('blocked','redirect off the allowed hosts to evil.example'))
+    def test_cross_host_redirect_checks_destination_robots(self):
+        class Two(Site):
+            def get(self,url,allowed,limits):
+                self.log.append(url)
+                if url=='https://acme.example/robots.txt': return ROBOTS_OK
+                if url=='https://careers.acme.example/robots.txt': return (200,'','User-agent: *\nDisallow: /\n')
+                if url=='https://acme.example/careers': return (200,'https://careers.acme.example/','<a href="https://jobs.lever.co/acme">jobs</a>')
+                return 404,url,''
+        site=Two({})
+        t=go(site,[target(allowed_hosts=['acme.example','careers.acme.example'])])['targets'][0]
+        self.assertIn('https://careers.acme.example/robots.txt',site.log)
+        self.assertEqual(t['pages'][-1]['result'],'blocked')
+        self.assertIn('redirect target careers.acme.example: disallowed by robots.txt',t['pages'][-1]['reason'])
+        self.assertEqual(t['boards'],[])  # nothing taken from a page its host disallows
+    def test_redirect_target_not_fetched_twice(self):
+        # Found live: clipboardhealth.com/careers redirects to clipboard.com/careers, which links to itself.
+        site=Site({'https://acme.example/careers':(200,'https://acme.example/jobs','<a href="/jobs">Jobs</a>')})
+        go(site,[target()],sitemaps=False)
+        self.assertEqual([u for u in site.log if not u.endswith('robots.txt')],['https://acme.example/careers'])
     def test_sitemap_read_once_within_scope(self):
         site=Site({'https://acme.example/sitemap.xml':(200,'','<loc>https://acme.example/jobs/9</loc><loc>https://acme.example/blog/1</loc><loc>https://x.example/jobs/1</loc>'),
                    'https://acme.example/careers':(200,'https://acme.example/careers',''),
