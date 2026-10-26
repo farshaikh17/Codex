@@ -20,7 +20,9 @@ FEEDS={
     'lever':('api.lever.co','/v0/postings/{board}',{'mode':{'json'}}),
     'ashby':('api.ashbyhq.com','/posting-api/job-board/{board}',{'includeCompensation':{'true'}}),
 }
-DEFAULT_URL={'greenhouse':'?content=true','lever':'?mode=json','ashby':''}
+# Compensation is requested wherever the feed offers it; Lever includes salary fields by default.
+DEFAULT_URL={'greenhouse':'?content=true&pay_transparency=true','lever':'?mode=json','ashby':'?includeCompensation=true'}
+COMPENSATION_OPTION={'greenhouse':'pay_transparency','ashby':'includeCompensation'}
 GEO_BASIS={'explicit_statement','posting_location'}
 EMPLOYER_KEYS={'id','name','careers_url','job_families','geography','inclusion','notes'}
 SOURCE_KEYS={'id','employer','provider','board','url','enabled','poll_interval_hours','notes'}
@@ -94,6 +96,9 @@ def validate(source_list,employer_doc):
         boards[key]=s['id']
         s.setdefault('url',feed_url(s['provider'],s['board']))
         errs+=_url_errors(where,s)
+        option=COMPENSATION_OPTION.get(s['provider'])
+        if option and (option,'true') not in parse_qsl(urlparse(s['url']).query):
+            warns.append('%s does not request employer-published compensation (%s=true)'%(where,option))
         if not isinstance(s['enabled'],bool): errs.append(where+' enabled must be true or false')
         hours=s['poll_interval_hours']
         if hours is not None and (isinstance(hours,bool) or not isinstance(hours,(int,float)) or not LIMITS['min_poll_hours']<=hours<=LIMITS['max_poll_hours']):
