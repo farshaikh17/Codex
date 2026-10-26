@@ -24,6 +24,26 @@ class ExtractionStoreTests(unittest.TestCase):
         self.assertEqual(self.h.count('extractions'),3,'the earlier version keeps its extraction')
         with mock.patch.object(engine.store,'EXTRACTOR_VERSION',engine.store.EXTRACTOR_VERSION+1):
             self.assertEqual(extract_pending(self.h.conn)['extracted'],3,'a new extractor version re-extracts every version')
+    def test_b3_extractor_bump_reextracts_a_cached_company_figure(self):
+        """B3 (extractor version 4) must not reuse version-3 results: a cached record that read company revenue as pay is
+        re-extracted, and the current record has no pay."""
+        self.assertGreaterEqual(engine.store.EXTRACTOR_VERSION,4)
+        text=REQ+'\nTwilio generates nearly $1B annually in revenue.'  # plain description text, as in the real Twilio posting
+        self.h.run([posting(text=text)])
+        real=engine.store.extract
+        def v3(version,url):  # what version 3 stored: '$1B' read as a $1 pay range
+            r=real(version,url)
+            r['fields']['compensation']={'state':'stated','items':[{'field':'compensation','source_url':url,'retrieved_at':None,'quote':'$1',
+                'interpretation':{'ranges':[{'min':1.0,'max':1.0,'currency':None,'currency_symbol':'$','text':'$1'}]},'method':'description_text',
+                'schema_version':1}]}
+            return r
+        with mock.patch.object(engine.store,'EXTRACTOR_VERSION',3),mock.patch.object(engine.store,'extract',v3):
+            self.assertEqual(extract_pending(self.h.conn)['extracted'],1)
+        states=lambda v:[json.loads(r[0])['compensation'] for r in self.h.conn.execute('select field_states from extractions where extractor_version=?',(v,))]
+        self.assertEqual(states(3),['stated'])
+        self.assertEqual(extract_pending(self.h.conn)['extracted'],1,'the current version does not reuse the version-3 record')
+        self.assertEqual(states(engine.store.EXTRACTOR_VERSION),['not_stated'],'revenue is not pay at the current version')
+        self.assertEqual(extract_pending(self.h.conn)['extracted'],0)
     def test_interrupted_extraction_keeps_committed_batches_and_resumes(self):
         self.h.run([posting(p,text=REQ) for p in ('a','b','c','d','e')])
         real,calls=engine.store.extract,[]

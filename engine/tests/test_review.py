@@ -51,6 +51,13 @@ class QueueTests(unittest.TestCase):
         with mock.patch.object(rq,'screen',side_effect=AssertionError('rescreened')):
             again=self.w.enqueue()[A]
         self.assertEqual((again['new_items'],again['unchanged']),(0,2))
+    def test_new_gates_version_rescreens_unchanged_postings(self):
+        """A GATES_VERSION bump (B3 made it 8) re-screens every posting; results under the previous rules are not reused."""
+        self.w.collect({'x':[lever('1'),lever('2')]})
+        self.w.enqueue()
+        with mock.patch.object(rq,'GATES_VERSION',rq.GATES_VERSION+1):
+            again=self.w.enqueue()[A]
+        self.assertEqual(again['new_items'],2,again)
     def test_states_from_screening(self):
         self.w.collect({'x':[lever('1'),lever('us',categories={'location':'Remote - US'}),lever('off',title='Account Executive',
                         descriptionPlain='Sell things.\n'+REQS)]})
