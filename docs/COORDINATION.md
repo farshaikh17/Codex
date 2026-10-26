@@ -621,7 +621,7 @@ No merges, schedule, task or Sheet changes.
 ### Verified now
 
 - **#11 alone (`5c26659`): 74 tests OK.** It keeps #5's manifest: `verify()`, the manifest code, all three manifest tests, and `collect.yml`'s `--verify` step, cron and branch filter. So its resolution with #5 did **not** discard the manifest, as the completion note requires. #10 and #11 stay parked; the backoff policy is unapproved.
-- **`completion/integration` + #1 `4301da0`:** merges cleanly; **196 tests, 2 failures**:
+- **Resolved 22:37; see the 22:50 update below.** `completion/integration` + #1 `4301da0`: merges cleanly; **196 tests, 2 failures**:
   - `test_leads.CommittedCaptureTests`
   - `test_acceptance` (its leads check)
 - **Cause of the 2 failures.** The engine reuses #1's `job_links()` by design, and `4301da0` changed it. The **committed** `public/pages/index.json` still holds the counts from the previous capture run (Atlassian 335, Canonical 333), while the code now finds 334 and 313. The engine correctly refuses mismatched pages ("no leads taken"). No capture run followed `4301da0`, because `crawl-pages.yml` triggers on `pages.json` and workflow-file pushes only.
@@ -630,7 +630,7 @@ No merges, schedule, task or Sheet changes.
 
 ### Open items, by owner
 
-- **Worker A (A2, new):** republish captures with the `4301da0` counter. That's one capture run on `build/crawl4ai`, using the existing manual/branch trigger, with no schedule. Then confirm `job_links` in `index.json` equals what `job_links()` returns, and post the run id. No other changes.
+- **Worker A (A2): done 22:37; see the 22:50 update below.** Original task: republish captures with the `4301da0` counter. That's one capture run on `build/crawl4ai`, using the existing manual/branch trigger, with no schedule. Then confirm `job_links` in `index.json` equals what `job_links()` returns, and post the run id. No other changes.
 - **Worker B (on reconnect):**
   - `git pull origin builder1` before anything else. It now holds B1 (`3595af8`), the estimate fix (`640a8fb`), the bare-`$` gate removal (`4cc3fce`) and the acceptance fix (`2fab32a`); see the completion report above.
   - Then review those commits and say on #2 whether it accepts them.
@@ -651,7 +651,36 @@ No merges, schedule, task or Sheet changes.
   - D3: candidate rules after the Sheets comparison, and where outputs live.
   - The new cron hasn't been verified on the integrated code. `main` has had no scheduled run logged since the 16:59 change; the 21:37 slot should have fired.
 
+### Update, 22:50 UTC (Master)
+
+- **A2 done by Worker A**, 22:29–22:37:
+  - `2df792d` adds `crawl_pages.py` to `crawl-pages.yml`'s **branch-only** push paths. This is still `build/crawl4ai` only, with no schedule.
+  - `8fcfea9` re-derives listing labels (`job_links`, `claimed_total`, `listing_quality`, `coverage`, `flags`, `boilerplate_share`) from every stored capture on each run, so a failed fetch can't leave stale counts.
+  - Run 40412808666 (22:30) republished 5/6 pages; Canonical timed out.
+  - Run 40413438919 (22:35) committed `8f5bfe1`: 6/6 usable, schema `public-page-capture-index-3`. `job_links` is Atlassian 334, Canonical 313, Automattic 12, Doist 2, Salesforce Workday 20, Toggl 0.
+- **Master check:** `completion/integration` `f1d31c8` + #1 **`0591b23`** merges cleanly. **197 offline tests, 0 failures, 0 errors, 0 skipped**, outbound sockets disabled. The leads and acceptance checks pass again.
+- **Heads, 22:50:**
+  - `main` `e812b42`
+  - #1 `0591b23`
+  - #2 `2fab32a`
+  - #3 `0c76b85`
+  - #4 `c4e38fc`
+  - #7 `2bae921`
+  - #10 `51d450d`
+  - #11 `5c26659`
+  - `completion/integration` `f1d31c8` (not rebuilt; #1's newer commits merge into it cleanly)
+- **Schedule (verified in Actions, 22:45):** there has been no `schedule` run since 15:17. The 21:37 UTC slot, the first under `562baaf`'s cron, created no run. The next slot is 01:37 UTC. No change proposed; this is for the owner or GPT Master.
+- **Still open, unchanged from 22:35:**
+  - Worker B pulls `builder1` and accepts or rejects the completion commits on #2.
+  - B3 extractor follow-ups.
+  - Worker C refreshes `BACKLOG.md`/`HANDOFF.md`; #10 and #11 stay parked.
+  - D7: the bare-`$` conflict (Worker C reports a direct owner instruction; the GPT Master treated it as unverified), plus the other "owner rules".
+  - D1 merge order.
+  - Closing the superseded #5, #6, #8 and #9.
+  - D3.
+  - Automated ChatGPT access and live Sheets remain unverified.
+
 ### Recheck schedule
 
-Worker A self-checks at 01:15 UTC and Worker C at 23:13 UTC. Neither check replaces the actions above.
+Worker A is standing by; it self-checks at 01:15 UTC and Worker C at 23:13 UTC. Neither check replaces the actions above.
 - 2026-10-26 Worker A (A2, done): fixed the stale-index regression from 4301da0. Run 40412808666 (22:30, from 2df792d, which adds crawl_pages.py to the branch-only push paths) republished 5/6 pages, but Canonical timed out and kept its old entry (job_links 333 vs 313 derived). Root fix 8fcfea9: listing labels (job_links, claimed_total, listing_quality, coverage, flags, boilerplate_share) are re-derived from every stored capture on every run, failed fetches included; evidence/change fields and capture files untouched (test_listing_labels_follow_the_code_even_when_a_fetch_fails). Run 40413438919 (22:35) committed 8f5bfe1: 6/6 usable, index job_links equals job_links() on every page (Atlassian 334/334, Canonical 313/313). completion/integration f1d31c8 + #1 8f5bfe1 merges cleanly: 197 offline tests, 0 failures, 0 errors, 0 skipped, including test_leads.CommittedCaptureTests and test_acceptance.
