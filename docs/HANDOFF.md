@@ -12,20 +12,42 @@ Use exactly one of these per claim. Never substitute one for another.
 - **Consumer access verified**: the intended consumer (ChatGPT task) read the files, per CONSUMER_TEST.md.
 - **End-to-end tracker ingestion verified**: data flowed from collection through the consumer into the tracker and was checked.
 
-## State
+## State (2026-10-26 ~23:00 UTC)
 
-| Component | Status |
-|---|---|
-| ATS feed collector on `main` | Live collection verified (Actions push runs on `main`). Scheduled execution verified once: run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346) (event `schedule`, 07:55 UTC on 2026-10-26, pre-P2 code) collected and committed 456397a. The hourly ticks 02:23–06:23 created no runs at all, and this tick started 32 minutes late. GitHub's schedule is best-effort, so freshness checks matter. |
-| Registry + validation + reliable runs (this branch) | Implemented and tested offline (28 tests). Live collection verified in this container against all 10 feeds (scratch output, not committed). Not run in Actions yet: the push trigger is now `main` only, so this branch runs no collection. |
-| Posting store (PR #2, other session) | Implemented and tested offline (per its PR). Ingest of this branch's outputs checked offline in a three-way merge. Unmerged. |
-| Crawl4AI page fallback (PR #1) | Implemented and tested offline. Live collection verified on `build/crawl4ai` via Actions push runs. Unmerged. No schedule. |
-| Consumer access (ChatGPT) | Not verified. |
-| Tracker ingestion | Not verified; out of scope. |
+Status labels as defined above. Exact heads are in `docs/COORDINATION.md` on `build/crawl4ai` (release report).
+
+| Component | Where | Status |
+|---|---|---|
+| ATS feed collector on `main` | `main` `e812b42` | Live collection verified (push runs on `main`). Scheduled execution verified twice on the old hourly cron (07:55, 15:17). **Not yet verified on the owner's five-daily cron** (`562baaf`): the 21:37 UTC slot created no run |
+| P2 registry and reliable runs, with #5 manifest | #3 `0c76b85` | Implemented and tested offline. Mixed-generation rejection verified with the real publish step in a scratch repo |
+| E2a compensation inputs, with #8 Ashby tiers | #4 `c4e38fc` | Implemented and tested offline; live collection verified (container, scratch only) |
+| H benchmark | #7 `2bae921` | Implemented and tested offline; labels partly provisional (below) |
+| B discovery, E8 backoff | #10, #11 | Implemented and tested offline; **parked** |
+| Store, extraction, gates, queue, outputs, Sheets interface | #2 `23922ab` (other session) | Implemented and tested offline; candidate policy provisional |
+| Crawl4AI page fallback | #1 (other session) | Implemented and tested offline; live capture verified on its branch; no schedule |
+| Consumer access (ChatGPT) | – | Interactive authenticated read works (GPT Master). **Automated consumer access not verified** |
+| Tracker ingestion | – | Not verified. The Sheets adapter is a fake; no live Sheets writes |
+
+## Provisional candidate-policy rules
+
+None of these blocks integrating the collector, store or extraction. Each lives only in the candidate gates or the benchmark labels, and can be changed there alone. "Owner (direct)" means the owner told a worker session directly; the GPT Master has not recorded it.
+
+| Rule | Source | In code now | Where | Affected tests and features |
+|---|---|---|---|---|
+| A bare `$` is USD on US-only postings | Owner (direct, per this session's notes); the GPT Master treated it as unverified | **No.** Removed in gates version 7 (`4cc3fce`) and in the benchmark (`2bae921`) | `engine/gates.py` `_currency`; `bench/score.py` `validate()` | `screening_cases.py` `bare_dollar_*`; bench labels `remote-us-only`, `range-spans-threshold`/cand-in, `already-applied`, `remote-unspecified`, `contract-role`/cand-us; acceptance real-snapshot READY path (`not_run` while the rule is off) |
+| Commission-only pay fails a base salary floor | Owner (direct) | Yes (gates version 4, `897ddbe`) | `engine/gates.py` `commission_only` | commission-only screening cases; bench `commission-only` |
+| Salary floors in several currencies, compared per currency | Owner (direct) | Yes (gates version 5, `877b6aa`) | `engine/candidates.py` config schema; `engine/gates.py` | `test_salary_floors_one_per_currency`; bench cand-in floors; `bench/engine_adapter.py` |
+| Pay limited to residents elsewhere is not compared | Owner (direct), with the multi-currency rule | Yes (gates version 5) | `engine/gates.py` `residency_limit` | `residents_of_us_only_not_compared` |
+| Amounts in millions or billions are never pay | Owner (direct) | **No.** Replaced in gates version 8 / extractor version 4 (`23922ab`) by a context rule (company figures are not pay; real pay in millions is), per the owner's completion instruction | `engine/extract.py` `COMPANY_FIGURE` | `CompanyFigureAndCodedDollarTests`; `company_revenue_not_pay`, `real_pay_in_millions` |
+| Employer-published estimates are provisional evidence, never deciding | GPT Master decision | Yes (gates version 7, `640a8fb`) | `engine/gates.py` `EMPLOYER_ESTIMATE` | `EstimateTests`; `employer_estimate_*` cases |
+| GitLab and Zapier benchmark cases confirmed | Owner (direct) | Yes (`human_confirmed`) | `bench/fixtures/cases.json` | gating metrics in `bench` |
+| Careers URLs (Oyster, Zapier, Weave, Clipboard) and allowed hosts | Owner (direct) | On #10 only (parked) | `employers.json` on #10 | #10 tests |
+
+Until the owner and the GPT Master settle these against the canonical Sheets, treat every salary pass, fail or READY as provisional.
 
 ## Next
 
-1. Review and merge PR #1, PR #2 and this PR (farshaikh17/Codex#3) in any order. A local three-way test merge was clean, and all suites passed on the merged tree.
-2. After merge, dispatch *Collect public job feeds* once and confirm the job summary table. Then watch for the first `schedule` event run.
-3. Run CONSUMER_TEST.md from the original chat.
-4. Decide on P10 (cron frequency). Next build step: E2 (evidence and extraction records on PR #2's store, Greenhouse pay transparency), then H fixtures.
+1. The owner reviews and merges, in order: #1, #3, #4, #2, then #7 (see the release report in `docs/COORDINATION.md` on `build/crawl4ai`). #5, #6, #8 and #9 are folded in and can be closed. #10 and #11 stay parked.
+2. Confirm that the five-daily cron fires on `main`. The first slot was 21:37 UTC; the next is 01:37 UTC.
+3. The owner and the GPT Master settle the provisional rules above against the canonical Sheets.
+4. Run CONSUMER_TEST.md for automated consumer access.
