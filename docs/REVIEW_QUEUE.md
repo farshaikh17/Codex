@@ -56,6 +56,7 @@ python -m engine.review_cli status  --candidates DIR [--candidate ID] [--since I
 - `findings` settle a gate the deterministic screening left `unknown`:
   - pass or fail, a reason, and a quote that must appear **verbatim** in the posting (title, description, locations, pay text or workplace field).
   - A finding can't override a pass or a fail, and can't decide qualifications; those go line by line.
+  - A salary *pass* can't quote an estimate or pay the employer didn't publish (the same rule as the gate, `NOT_EMPLOYER_PAY`).
   - Invented quotes are refused, and a refused submission writes nothing.
 - The item is then screened again with the decisions. `ready` or `excluded` completes it; remaining unknowns make it `conditional`.
 - `usage` is optional. It's stored exactly as the AI tool reported it and summed in `status`; missing usage is counted, never estimated.
@@ -93,7 +94,7 @@ Not implemented: a time-based recheck of `conditional` items with unchanged cont
 
 ## Verified
 
-- `engine/tests/test_review.py` (15 tests), offline:
+- `engine/tests/test_review.py` (16 tests), offline:
   - idempotent enqueue with no rescreening
   - state routing (pending, excluded automatically, deferred)
   - supersede on a content change, with review carry-over (a pay-only change completes as `ready` with no new review)

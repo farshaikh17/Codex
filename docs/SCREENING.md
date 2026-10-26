@@ -81,6 +81,8 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 - Currency comes from an explicit code or an unambiguous symbol (₹ € £ zł R$). A bare `$` counts only if the candidate's own `assume_currency_for_symbol` maps it.
 - A missing period counts only if the candidate's `assume_period` says so. Every such assumption is written into the evidence.
 - Lakh and crore are applied as units.
+- **Estimates and pay the employer didn't publish are never compared** (gates version 2). This covers any pay quote that says "estimate", "estimated", "third-party", "not provided by the employer" or names a salary site. Such a quote can't pass or fail the gate; it's listed in `notes` and the gate stays unknown. An employer's "expected base salary range" is still compared. The check reads the quote itself, so it holds even where the extractor's `estimated` flag misses (that flag misses "estimate", which is a known E2 gap).
+  - Measured cost on the committed snapshot: 59 pay quotes fall under the rule. Most are employer-published wording ("The estimated pay ranges for this role are as follows", Twilio; "Estimated OTE", Clipboard), not third-party figures. For the two synthetic profiles nothing changed, because those postings were already incomparable on currency or period. For a USD candidate they would now stay unknown. Narrowing the rule to third-party figures only is a policy question for D3.
 - `basis`:
   - A `base` floor compares base or plain ranges. An OTE range whose top is below the floor also fails, because base is below OTE.
   - A `total` floor compares OTE or plain ranges. A base range at or above the floor passes.
@@ -90,7 +92,7 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 
 ## Benchmark (`python -m engine.benchmark`)
 
-There are 37 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
+There are 40 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
 - remote US-only; India explicitly allowed; worldwide with a conflicting country; a negated eligible country; a city-only location
 - missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed; missing period
 - mandatory years unmet; preferred years unmet; "or equivalent"; a required language missing; reviewer `not_met`
@@ -101,7 +103,7 @@ There are 37 hand-labelled synthetic cases in `engine/tests/screening_cases.py`.
 
 The primary metric is **false READY**, reported next to incorrect exclusions, missed exclusions, retained unknowns and gate mismatches.
 
-Current result: 37 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 25. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
+Current result: 40 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 28. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
 
 The queue-related H cases are handled in step 5 (`docs/REVIEW_QUEUE.md`): interruption recovery and identical reposts. Reopened requisitions are partly covered by the application-history gate. An expired page returning HTTP 200 and a failed retrieval after success are store and collector concerns (availability states), not queue rules.
 

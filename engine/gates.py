@@ -15,11 +15,15 @@ requirement needs a review decision with profile evidence (input `reviews`), whi
 import hashlib,re
 from datetime import date
 from engine.places import covers,places
-GATES_VERSION=1
+GATES_VERSION=2  # 2: pay described as an estimate, third-party or not employer-provided is never compared
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
 UNIT_MULTIPLIER={'lakh':100000,'crore':10000000}
+# Pay the employer did not publish, or calls an estimate, is not compared with a floor: a third-party figure or an
+# estimate could otherwise turn into a salary pass. Read from the quote itself, so it holds whatever the extractor flags say.
+NOT_EMPLOYER_PAY=re.compile(r"(?i)\b(?:estimat(?:e|es|ed|ion)|third[- ]party|not (?:provided|published|stated|set|confirmed) by (?:the )?(?:employer|company|hiring (?:company|team))|"
+                            r"glassdoor|levels\.fyi|payscale|salary\.com|indeed)\b")
 SCOPE=re.compile(r"(?i)\b(located|based|reside|residents?|live|eligible to work|authori[sz]ed to work|right to work|open to|candidates (?:in|from)|hire in|hiring in|only)\b")
 NEGATION=re.compile(r"(?i)\b(not|cannot|can't|unable|outside(?: of)?|except|excluding|exclude)\b")
 YEARS=re.compile(r'(?i)\b(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?(?:years?|yrs?)\b')
@@ -158,6 +162,9 @@ def salary(fields,rules):
     for i in comp['items']:
         pay=i['interpretation']
         if not pay: continue
+        if NOT_EMPLOYER_PAY.search(i['quote']):
+            notes.append('%s: an estimate or not employer-published pay; not compared'%i['quote'][:120])
+            continue
         for r in pay['ranges']:
             cur,cur_note=_currency(r,rule)
             period,period_note=pay.get('period'),None

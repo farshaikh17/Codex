@@ -150,6 +150,16 @@ class QueueTests(unittest.TestCase):
         out=submit(unit_decisions=self.w.met_all(item),findings={'salary':{'result':'fail','quote':'This is a full-time position.',
                    'reason':'no pay stated; candidate rule requires one','basis':'synthetic'}})
         self.assertEqual((out['state'],out['verdict']),('completed','excluded'))
+    def test_reviewer_cannot_pass_salary_on_an_estimate(self):
+        estimate='Salary estimate (third-party, not provided by the employer): INR 30,00,000 - 40,00,000 per annum'
+        self.w.collect({'x':[lever('1',salaryDescriptionPlain=None,descriptionPlain='About the role\nLead SaaS implementation. This is a full-time position.\n'+REQS+'\n'+estimate)]})
+        self.w.enqueue()
+        item,=rq.claim(self.w.store,self.w.q,A,'w1',now=at(1))
+        self.assertEqual(item['gates']['salary']['result'],'unknown','the gate itself does not compare the estimate')
+        with self.assertRaises(rq.QueueError) as err:
+            rq.submit(self.w.store,self.w.q,self.w.people,item['item_id'],'w1',findings={'salary':{'result':'pass','quote':estimate,'reason':'above floor'}},now=at(2))
+        self.assertIn('estimate',str(err.exception))
+        self.assertEqual(self.w.q.execute('select count(*) from events where event=?',('reviewed',)).fetchone()[0],0)
     def test_ready_counts_stay_distinct_and_survive_disappearance(self):
         self.w.collect({'x':[lever('1'),lever('2')]})
         self.w.enqueue()

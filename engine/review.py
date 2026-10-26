@@ -24,7 +24,7 @@ import hashlib,json,os,sqlite3
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from engine import candidates as cfg
-from engine.gates import GATES_VERSION,screen
+from engine.gates import GATES_VERSION,NOT_EMPLOYER_PAY,screen
 from engine.store import EXTRACTOR_VERSION,posting_record
 ENV='JOB_ENGINE_REVIEW_DB'
 SCHEMA_VERSION=1
@@ -249,6 +249,8 @@ def submit(store,conn,people,iid,worker,unit_decisions=None,findings=None,usage=
             if f.get('result') not in ('pass','fail'): raise QueueError('finding %s: result must be pass or fail'%gate)
             if not (f.get('reason') or '').strip(): raise QueueError('finding %s needs a reason'%gate)
             if not _verbatim(f.get('quote'),posting): raise QueueError('finding %s: quote is not verbatim posting text'%gate)
+            if gate=='salary' and f['result']=='pass' and NOT_EMPLOYER_PAY.search(f['quote']):
+                raise QueueError('finding salary: an estimate or pay not published by the employer cannot pass the salary gate')
             clean[gate]=dict(f,reviewer=worker)
         stored=json.loads(r['findings'])|clean
         result=_screen(store,conn,candidate,posting,stored,today)
