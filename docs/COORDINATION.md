@@ -42,6 +42,13 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 | farshaikh17/Codex#4 | `builderbranches-compensation` → `builderbranches` | `a43890a` | no | Worker C | E2a: request compensation on Greenhouse and Ashby feeds, `changed_fields`, `endpoint_changed` |
 | farshaikh17/Codex#5 | `fix/publication-manifest` → `builderbranches` | `48ff370` | yes | Worker A, **in Worker C's area** | SHA-256 manifest, `collect.py --verify`, revert-on-mixed-generation in `collect.yml` |
 | farshaikh17/Codex#6 | `fix/store-rebuild` → `builder1` | `1bca0d2` | yes | Worker A, **in Worker B's area** | Store rebuild from Git history, expiry journal |
+| farshaikh17/Codex#7 | `builderbranches-benchmark` → `builderbranches-compensation` | `2088dce` | no | Worker C | Backlog H: labelled benchmark fixtures, collection scenarios and scorer (opened 14:36) |
+| farshaikh17/Codex#8 | `fix/ashby-comp-tiers` → `builderbranches-compensation` | `5932c0d` | yes | Worker A, **in Worker C's area** | Ashby `compensationTiers` kept verbatim (section 6 shape), `normalization_version`/`normalization_changed` |
+| farshaikh17/Codex#9 | `fix/ashby-comp-extract` → `builder1` | `1412f62` | yes | Worker A, **in Worker B's area** | E2 parses the section 6 tier JSON per component |
+
+**Update 14:50:** `builder1` (#2) has moved to `8794ca8` (Worker B, 14:40, "Add candidate configuration and evidence-based screening gates"). That adds `engine/candidates.py`, `gates.py`, `screen.py`, `places.py`, `benchmark.py`, `docs/SCREENING.md` and synthetic candidate fixtures, which is E3/E4 work. Two consequences:
+- It sets `EXTRACTOR_VERSION=2` for a wording change. #9 is based on `5d31675` and *also* sets `EXTRACTOR_VERSION=2`, for the tier parser. The extraction cache is keyed on extractor version, so the two must not share a number. Whichever lands second on `builder1` takes **3**.
+- E3/E4 sat behind decision D3. See D3 in section 8.
 
 Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all six for compatibility testing, with `docs/INTEGRATION.md`. Do not merge it.
 
@@ -88,49 +95,64 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - Not in scope: new pages, schedules, stealth, or dependency changes. (A `pip-audit` of `requirements-crawl.txt` is backlog K, after merge.)
 - **Acceptance:** OPERATIONS.md contract matches the committed `public/pages/index.json` field for field. Integration branch merges all six current heads cleanly. The offline suite passes there, with the count stated. Comments are posted on #2, #5 and #6. No workflow file changed.
 
-### B1: Adopt #6 and parse structured Ashby pay in E2 (Worker B)
+### B1: Adopt #6 and #9 into `builder1` (Worker B) (revised 14:50; don't reimplement the tier parser)
 - Review `fix/store-rebuild` (#6). Either merge it into `builder1` or keep it stacked, and say which on #2. Don't create a second persistence module.
-- In `engine/extract.py`, accept the Ashby `compensation_raw` JSON shape fixed in section 6, and keep accepting the old summary string:
+- Review `fix/ashby-comp-extract` (#9) against section 6 and merge it into `builder1` (a merge commit, no rebase). Then:
+  - Resolve the `EXTRACTOR_VERSION` clash: the tier parser becomes **3**, with a comment naming both changes.
+  - Check that format detection is by `data.get('source') == 'ashby.compensationTiers'`, not by a leading `{`. Lever `salaryRange` JSON must still take the Lever path.
+  - Check that `additional_information` is kept as a verbatim quote and is never parsed into amounts.
+  - Check that #9's tests and `8794ca8`'s screening tests pass together.
+- Mapping rules, as in #9 (verify, don't change):
   - one range per tier and component
   - currency from `currencyCode`, never from `$`
-  - period from `interval` (`1 YEAR` → year; `NONE` or missing → `not_stated`)
+  - period from `interval` (`1 YEAR` → year, also month, week, day and hour; `NONE` or unknown → `not_stated`, with `interval_raw` kept)
   - basis from `compensationType` (Salary → base; Bonus and Commission → variable; Equity* → equity)
   - null min or max → `not_stated`
   - no conversion, no annualizing, no merging of tiers
-- Bump `EXTRACTOR_VERSION`.
-- Fixtures: build them from the shape in section 6 (Oyster USD+CAD, Zapier multi-component, a null currency, a Greenhouse range with no period). Don't wait for C's push.
 - After A1's comment, update `docs/ENGINE.md` §3 to schema `-2`. Don't implement E2b ingestion yet.
-- Not in scope: `adapters.py`, `collect.py`, E3 or later (candidate config and gates wait for D3).
-- **Acceptance:** all engine tests pass offline. Existing string-format extraction is unchanged (state the before/after counts on the committed snapshot). New fixture tests cover the four cases. #6's status is stated on #2.
+- Not in scope: `adapters.py`, `collect.py`. No further E3+ work until D3 is answered.
+- Say on #9 that it is folded in, then leave #9 for the owner to close.
+- **Acceptance:** all engine tests pass offline, with the count stated. The extractor version is distinct from `8794ca8`'s 2. Existing string-format extraction counts on the committed snapshot are unchanged. #6's and #9's status is stated on #2.
 
-### C1: Adopt #5 and emit structured Ashby pay in the collector (Worker C)
+### C1: Adopt #5 and #8 (Worker C) (revised 14:50; don't reimplement the adapter)
 - Review `fix/publication-manifest` (#5). Either merge it into `builderbranches` or keep it stacked, and say which on #3. #3 and #5 must reach `main` together.
-- In `adapters.py` on `builderbranches-compensation` (#4): when Ashby `compensationTiers` is present, set `compensation_raw` to the exact JSON shape in section 6. Without tiers, keep today's summary string. Greenhouse and Lever stay unchanged.
-- Tests: use saved real responses with the same four cases as B1. Add a live trial in the container with scratch output and nothing committed, and report the count of postings whose hash changes. That count must include Clipboard, which already had compensation on.
-- Document the shape in `docs/OUTPUT_CONTRACT.md`.
-- Refresh the stale `BACKLOG.md`/`HANDOFF.md` statements in section 3, and list #5 and #6 there.
-- Not in scope: H benchmark fixtures and anything touching candidate rules (wait for D3), and cron changes (D2).
-- **Acceptance:** offline suite passes. The live trial shows only `compensation_raw` changes (plus genuine new postings). `changed_fields` and `endpoint_changed` are correct for the new format. OUTPUT_CONTRACT.md matches section 6 byte for byte. #5's status is stated on #3.
+- Review `fix/ashby-comp-tiers` (#8) against section 6 and merge it into `builderbranches-compensation` (#4), as a merge commit. Then:
+  - Check that `docs/OUTPUT_CONTRACT.md` states the section 6 shape exactly (it does on #8 at `5932c0d`; keep it in sync).
+  - Check that `normalization_version` 2 and `normalization_changed` are documented, and that `changed_fields == ["compensation_raw"]` with `endpoint_changed` or `normalization_changed` counts as a collector-side change.
+  - Confirm #7's benchmark still passes on top of #4 + #8.
+  - Run a live trial in the container with scratch output and nothing committed. Report the postings whose hash changes. #8 reports 161 on replayed feeds, including Clipboard's 36, which only `normalization_changed` explains.
+- Refresh the stale `BACKLOG.md`/`HANDOFF.md` statements in section 3, and list #5–#9 there.
+- #7 (benchmark) is open. Don't extend its labels until D3 is answered; leave it as is for review.
+- Not in scope: cron changes (D2). Say on #8 that it is folded in, then leave #8 for the owner to close.
+- **Acceptance:** offline suite passes, with the count stated. The live trial shows only `compensation_raw` changes, plus genuine new postings. OUTPUT_CONTRACT.md matches section 6. #5's and #8's status is stated on #3/#4.
 
 ## 6. Interface fixed by the Master: Ashby `compensation_raw` (for B1 and C1)
 
-Taken from the proposal in `docs/INTEGRATION.md` (Worker A, verified against live feeds 11:57 UTC):
-- When `compensationTiers` is present, the field is compact JSON (`separators=(',',':')`, keys in this order, values verbatim from the feed, nulls kept).
-- When it is absent, the field is the plain `compensationTierSummary` string, as today.
+**Adopted 2026-10-26 14:50: the shape implemented in #8 (`adapters.ashby_compensation`, `5932c0d`) and parsed by #9 (`1412f62`).** It replaces the first version of this section, which had no `source` key, no `additional_information`, and detection by a leading `{`.
+
+When Ashby `compensationTiers` holds at least one object, `compensation_raw` is compact JSON:
+- `json.dumps(..., ensure_ascii=False, separators=(',',':'))`, with keys in exactly this order.
+- Values verbatim from the feed. Nulls are kept. Nothing is converted or inferred.
+- Feed keys map as: `summary` ← `compensationTierSummary` (null if empty); tier `summary` ← `tierSummary`; tier `additional_information` ← `additionalInformation`; component keys ← the same names.
 
 ```json
-{"summary":"<compensationTierSummary or null>","tiers":[{"title":"<tier title>","summary":"<tier summary or null>","components":[{"compensationType":"Salary","currencyCode":"USD","interval":"1 YEAR","minValue":54600,"maxValue":61200,"summary":"<component summary or null>"}]}]}
+{"source":"ashby.compensationTiers","summary":"<compensationTierSummary or null>","tiers":[{"title":"<tier title>","summary":"<tierSummary or null>","additional_information":"<additionalInformation or null>","components":[{"compensationType":"Salary","currencyCode":"USD","interval":"1 YEAR","minValue":54600,"maxValue":61200,"summary":"<component summary or null>"}]}]}
 ```
 
-- E2 detects the format by a leading `{`. Any change to this shape is decided here first, and B and C then update together.
-- It changes `compensation_raw` for the same postings as #4, so C1 ships inside #4. That way they change hash once, with one compensation-only wave.
+- **Without tiers:** the plain `compensationTierSummary` string, else `scrapeableCompensationSalarySummary`, else null, as before. Greenhouse and Lever are unchanged.
+- **Detection (E2):** only by `"source":"ashby.compensationTiers"`. A leading `{` is not enough, because Lever `salaryRange` JSON also starts with `{`.
+- **Why `additional_information`:** on the 2026-10-26 feeds, 3 of 98 Ashby tiers carry pay facts only there (for example Clipboard "Estimated OTE: 65K-80K USD"). E2 keeps it as a verbatim quote and doesn't parse amounts out of it.
+- **Versioning:** board files carry `normalization_version` 2. The first v2 run reports `normalization_changed: true` per source, so rewrites where the URL is unchanged (Clipboard's 36) aren't read as employer edits. On the extraction side, this parser is `EXTRACTOR_VERSION` 3 once merged onto `builder1` (see section 3).
+- **Shipping:** #8 ships inside #4 so postings change hash once, in one compensation-only wave (161 on replayed feeds per #8). #9 ships inside #2.
+- Any further change to this shape is decided here first. B and C then update together.
 
 ## 7. Integration order (recommendation; the owner merges)
 
 1. **#1.** It brings the Offline tests CI, the `branches: [main]` push filter and the publish-target fix. Browser capture stays manual-only.
 2. **#3 with #5 folded in.** Neither ships alone: without #5, #3's multi-file publish could commit a mixed generation.
-3. **#4 with C1 included**, retargeted to `main`. The first collection after merge reports a one-time wave of `changed_fields: ["compensation_raw"]`.
-4. **#2 with #6 folded in and B1 included.** Its pay evidence only matters after step 3.
+3. **#4 with #8 folded in**, retargeted to `main`. The first collection after merge reports a one-time wave of `changed_fields: ["compensation_raw"]`, with `endpoint_changed` or `normalization_changed` set.
+4. **#2 with #6 and #9 folded in.** Its pay evidence only matters after step 3. Its E3/E4 content (`8794ca8`) waits on D3.
+5. **#7** (benchmark), after D3 confirms its labels.
 
 Every order merges conflict-free. The order matters for behaviour (CI coverage, the atomic-publish safety, one hash wave), not for conflicts.
 
@@ -142,7 +164,7 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 |---|---|---|---|
 | D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via GPT Master | All merges |
 | D2 | Scheduled collection is not firing: 1 schedule run in about 13 hourly ticks, and data is about 6¾ h old. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
-| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). | GPT Master | H, E3–E7 |
+| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
 | D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
@@ -155,3 +177,4 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
 
 - 2026-10-26 Master: created this file; assigned A1, B1, C1; fixed the Ashby `compensation_raw` shape (section 6).
 - 2026-10-26 Worker A (on the owner's direct request "implement the Ashby compensation tier fix"): opened farshaikh17/Codex#8 (adapter, stacked on #4) and farshaikh17/Codex#9 (extractor v2, stacked on #2) before this board was read; offered to C and B to adopt or replace. Their shape differs from section 6 in two keys, for evidence-based reasons, for the Master to decide: (1) it keeps `additional_information` per tier, because on the 2026-10-26 feeds 3 of 98 Ashby tiers carry pay facts only there (Clipboard: "Estimated OTE:  65K-80K USD", "Uncapped commissions. Base salary range is $90,000-$110,000.", "Uncapped Commission + Base Salary"); (2) it adds `"source":"ashby.compensationTiers"` and E2 detects the format by that key, because Lever `salaryRange` JSON also starts with `{`, so a leading `{` cannot identify it. #8 also adds `normalization_version`/`normalization_changed` so Clipboard's 36 rewrites (URL unchanged) are not read as employer edits. Verified: 161 compensation-only changes on replayed real feeds, 171/171 components kept, 0 non-verbatim quotes; #7+#8+#9 together 83 tests OK, bench scores unchanged.
+- 2026-10-26 14:50 Master (on owner instruction): adopted the #8/#9 shape as section 6. Revised B1 to "adopt #6 and #9" and C1 to "adopt #5 and #8". Recorded #7–#9, `builder1` at `8794ca8`, the `EXTRACTOR_VERSION=2` clash (tier parser becomes 3), and D3's new urgency.
