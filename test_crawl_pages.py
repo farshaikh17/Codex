@@ -1,9 +1,9 @@
 import json,tempfile,unittest
 from pathlib import Path
-from crawl_pages import Halt,classify,robots_allows,run,validate,PAGE_KEYS,ATTEMPT_KEYS
+from crawl_pages import Halt,classify,listing_quality,robots_allows,robots_rules,run,validate,PAGE_KEYS,ATTEMPT_KEYS
 PAGE={'id':'sample-careers','employer':'Sample','url':'https://careers.example.com/jobs','why':'private note never published'}
 OTHER={'id':'other-careers','employer':'Other','url':'https://other.example.com/jobs'}
-ALLOW=lambda url,timeout:(True,'allowed by robots.txt')
+ALLOW=lambda url,timeout:(lambda target:(True,'allowed by robots.txt'))
 WORDS=' '.join('Implementation Manager role open in India remote team'.split()*30)
 def page(text=WORDS,status=200,html='<html><body>ok</body></html>',final=None,error=None):
     return lambda p,limits:{'status_code':status,'final_url':final or p['url'],'html':html,'text':text,'error':error}
@@ -90,7 +90,7 @@ class CaptureTests(unittest.TestCase):
     def test_robots_disallow_means_no_page_request(self):
         def never(p,limits):raise AssertionError('page fetched despite robots.txt')
         with tempfile.TemporaryDirectory() as folder:
-            got=entry(go(Path(folder),never,robots=lambda u,t:(False,'disallowed by robots.txt')))
+            got=entry(go(Path(folder),never,robots=lambda u,t:(lambda target:(False,'disallowed by robots.txt'))))
             self.assertEqual((got['last_attempt']['result'],got['last_attempt']['reason']),('blocked','disallowed by robots.txt'))
     def test_robots_rules(self):
         body='User-agent: *\nDisallow: /private\n'
@@ -119,8 +119,9 @@ class CaptureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             self.assertEqual(len(go(Path(folder),fetch,pages=pages,batch_size=50)['batch']),10)
             calls.clear()
-            limited=go(Path(folder),fetch,pages=pages,batch_size=10,max_requests=5)
-            self.assertEqual(limited['requests_made'],5)
+            limited=go(Path(folder),fetch,pages=pages,batch_size=10,max_operations=5)
+            self.assertEqual(limited['operations']['robots_fetches']+limited['operations']['page_navigations'],5)
+            self.assertEqual(limited['operations']['page_navigations'],2)
             self.assertEqual(len(calls),2)
             with self.assertRaises(ValueError):run(pages,Path(folder),fetch,{},ids=['not-listed'],robots=ALLOW,pause=lambda _:None)
     def test_rotation_prefers_oldest_attempts(self):
@@ -140,6 +141,64 @@ class CaptureTests(unittest.TestCase):
             for word in ('profile','resume','cv_','candidate_','eligible":','ready":','applied','password','token','cookie'):
                 self.assertNotIn(word,published.lower().replace('implementation manager',''))
             self.assertIn('Not a verified job',json.loads((path/'index.json').read_text())['notice'])
+    def test_robots_rules_cached_per_origin_but_checked_per_url(self):
+        fetched=[]
+        def get(url,timeout):
+            fetched.append(url)
+            return 200,'User-agent: *\nDisallow: /private\n'
+        a=dict(PAGE,id='open-jobs',url='https://careers.example.com/jobs')
+        b=dict(PAGE,id='private-jobs',url='https://careers.example.com/private/jobs')
+        with tempfile.TemporaryDirectory() as folder:
+            result=go(Path(folder),page(),pages=(a,b),robots=lambda u,t:robots_rules(u,t,get),batch_size=2)
+        self.assertEqual(fetched,['https://careers.example.com/robots.txt'])
+        self.assertEqual(entry(result,'open-jobs')['last_attempt']['result'],'usable')
+        self.assertEqual((entry(result,'private-jobs')['last_attempt']['result'],entry(result,'private-jobs')['last_attempt']['reason']),
+                         ('blocked','disallowed by robots.txt'))
+        self.assertEqual(result['operations']['robots_fetches'],1)
+        self.assertEqual(result['operations']['page_navigations'],1)
+    def test_operations_and_browser_traffic_are_reported_separately(self):
+        fetch=lambda p,limits:page()(p,limits)|{'browser_requests':{'seen':40,'blocked':12,'over_cap':0}}
+        with tempfile.TemporaryDirectory() as folder:
+            result=go(Path(folder),fetch,pages=(PAGE,OTHER),batch_size=2)
+        self.assertEqual(result['operations']['robots_fetches']+result['operations']['page_navigations'],4)
+        self.assertEqual((result['browser_requests']['requests_seen'],result['browser_requests']['requests_blocked']),(80,24))
+        self.assertIn('not browser subrequests',result['operations']['counts'])
+        self.assertNotIn('requests_made',result)
+        self.assertEqual(entry(result)['last_attempt']['browser_requests']['seen'],40)
+    def test_cookie_banner_change_is_boilerplate_only(self):
+        listing=WORDS+'\n* [Data Engineer](https://careers.example.com/jobs/27443)'
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)
+            first=entry(go(path,page(listing+'\nWe use cookies. Accept Deny Non-Essential Manage Preferences')))
+            second=entry(go(path,page(listing+'\nThis website uses cookies for analytics and advertising. Manage Preferences')))
+            self.assertEqual((second['change'],second['review_change']),('changed','boilerplate_only'))
+            self.assertEqual(second['review_changed_at'],first['review_changed_at'])
+            self.assertNotEqual(second['content_hash'],first['content_hash'])
+            self.assertIn('analytics and advertising',(path/'captures'/'sample-careers.md').read_text())
+            third=entry(go(path,page(listing+'\n* [ML Engineer](https://careers.example.com/jobs/27356)')))
+            self.assertEqual(third['review_change'],'changed')
+    def test_listing_quality_is_separate_from_text_volume(self):
+        p=dict(PAGE)
+        roles='\n'.join('* [Role %d](https://careers.example.com/jobs/%d)'%(i,i) for i in range(20))
+        complete=listing_quality(WORDS+'\n20 jobs\n'+roles,p)
+        self.assertEqual((complete['listing_quality'],complete['coverage'],complete['job_links']),('listings_found','appears_complete',20))
+        paged=listing_quality(WORDS+'\n1568 JOBS FOUND\n'+roles,p)
+        self.assertEqual((paged['listing_quality'],paged['coverage'],paged['claimed_total']),('partial_listings','partial',1568))
+        self.assertIn('paginated_or_truncated',paged['flags'])
+        self.assertIn('paginated_or_truncated',listing_quality(WORDS+'\n'+roles+'\nLoad more',p)['flags'])
+        empty=listing_quality(WORDS+'\n## Our current openings\n![](https://cdn.example.com/banner.avif)\nSign up for free!',p)
+        self.assertEqual((empty['listing_quality'],empty['coverage']),('no_listings_detected','none_detected'))
+        self.assertIn('openings_section_empty',empty['flags'])
+        cookies='\n'.join(['Cookie consent vendor %d: storage duration 30 days, advertising and personalisation'%i for i in range(60)])
+        heavy=listing_quality(cookies+'\n'+WORDS,p)
+        self.assertIn('cookie_heavy',heavy['flags'])
+        nav=listing_quality('[Careers](https://careers.example.com/jobs)\n[See open roles](https://careers.example.com/jobs#open-roles)',p)
+        self.assertEqual(nav['job_links'],0)
+    def test_usable_text_without_listings_is_labelled(self):
+        with tempfile.TemporaryDirectory() as folder:
+            got=entry(go(Path(folder),page(WORDS+'\n## Our current openings\n')))
+            self.assertEqual((got['capture_status'],got['listing_quality']),('usable','no_listings_detected'))
+            self.assertIn('listing_quality: no_listings_detected',(Path(folder)/'captures'/'sample-careers.md').read_text())
     def test_classify_keeps_job_pages_with_invisible_recaptcha_script(self):
         got={'status_code':200,'html':'<script src="https://www.google.com/recaptcha/api.js?render=k"></script>','text':WORDS}
         self.assertEqual(classify(PAGE,got,150)[0],'usable')
