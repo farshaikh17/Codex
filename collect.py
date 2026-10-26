@@ -8,7 +8,7 @@ from adapters import normalize,extract_jobs,Skip
 import registry
 ROOT=Path(__file__).resolve().parent
 HOSTS={p:feed[0] for p,feed in registry.FEEDS.items()}
-DUE_SLACK=timedelta(minutes=15)  # scheduled runs drift; without slack a 24-hour interval can slip a whole run
+DUE_SLACK=timedelta(minutes=15)  # hourly ticks drift; without slack a 5-hour interval becomes 6
 FIELDS=('key','provider','board','req_id','title','locations','workplace_type','url','apply_url','published','description','compensation_raw')
 NOTICE='Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.'
 def read(path,default):
@@ -55,7 +55,8 @@ def _time(v):
     except (TypeError,ValueError): return None
 def due_sources(sources,status,now):
     """Ids to collect on a scheduled run. A source without poll_interval_hours is collected on every run; one with an
-    interval only once its last real attempt is that old. Never-attempted sources are always due."""
+    interval only once its last real attempt is that old (less DUE_SLACK, so run drift can't slip it a whole run).
+    Never-attempted sources are always due."""
     last={s.get('source'):_time(s.get('checked_at')) for s in (status or {}).get('sources',[])}
     return {s['id'] for s in sources
             if not s.get('poll_interval_hours') or not last.get(s['id'])
