@@ -38,6 +38,63 @@ def _copy_snapshot(src,dst):
     (dst/'boards').mkdir(parents=True)
     shutil.copy(src/'status.json',dst/'status.json')
     for f in (src/'boards').glob('*.json'): shutil.copy(f,dst/'boards'/f.name)
+SYNTHETIC_SOURCE='synthetic-acceptance'
+SYNTHETIC_POSTING={  # invented employer and URL (example.invalid); never collected, never published
+    'key':'greenhouse:synthetic-acceptance:1','provider':'greenhouse','board':'synthetic-acceptance','req_id':'1',
+    'title':'Customer Success Manager (synthetic acceptance posting)',
+    'locations':[{'text':'Remote - United States','source':'location.name'}],'workplace_type':'Remote',
+    'url':'https://jobs.example.invalid/synthetic-acceptance/1','apply_url':'https://jobs.example.invalid/synthetic-acceptance/1',
+    'published':'2029-12-01T00:00:00+00:00',
+    'description':('About the role\nSYNTHETIC ACCEPTANCE POSTING: an invented employer used only to prove the READY path end to end. '
+                   'You will lead onboarding for SaaS customers and run renewals with the account team. This is a full-time position.\n'
+                   'Requirements\n3+ years of customer success experience with SaaS platforms\n'
+                   'Compensation\nBase salary: US$130,000 - US$150,000 per year.'),
+    'compensation_raw':None,'observed_at':'2029-12-01T00:00:00+00:00','change':'new'}
+def _synthetic_ready_path(r,work,fixtures):
+    """A complete READY path on one clearly synthetic posting, so the path is always exercised even when no real posting
+    in the committed snapshot can become READY. Own store, queue and ledger; nothing touches the real-snapshot run."""
+    area='6 queue (synthetic)'
+    base=work/'synthetic';snap=base/'snap';(snap/'boards').mkdir(parents=True)
+    private=base/'private';private.mkdir()
+    def fits(c):  # a synthetic fixture that can be READY for the synthetic posting: US-eligible with a USD salary floor
+        floors=c['rules'].get('salary') or []
+        floors=floors if isinstance(floors,list) else [floors]
+        return c.get('synthetic') is True and 'US' in (c['profile'].get('eligible_countries') or []) and any(f.get('currency')=='USD' for f in floors)
+    pick=next((f for f in sorted(fixtures.glob('*.json')) if fits(json.loads(f.read_text()))),None)
+    if pick is None: return r.not_run(area,'synthetic READY path','no synthetic fixture is US-eligible with a USD floor')
+    shutil.copy(pick,private/pick.name)
+    people=cfg.load_all(private)
+    candidate=next(iter(people))
+    if any(not c.get('synthetic') for c in people.values()): return r.check(area,'synthetic READY path uses synthetic candidates only',False,'non-synthetic candidate')
+    when='2029-12-01T00:00:00+00:00'
+    (snap/'status.json').write_text(json.dumps({'schema':'public-job-index-1','attempted_at':when,'status':'ok','successful_sources':1,'total_sources':1,
+        'listing_count':1,'sources':[{'source':SYNTHETIC_SOURCE,'endpoint':'https://jobs.example.invalid/feed','checked_at':when,'status':'ok','jobs':1,
+        'skipped':0,'new':1,'changed':0,'no_longer_listed':[]}]}))
+    (snap/'boards'/(SYNTHETIC_SOURCE+'.json')).write_text(json.dumps({'schema':'public-job-board-1','source':SYNTHETIC_SOURCE,'collected_at':when,'jobs':[SYNTHETIC_POSTING]}))
+    sources=[{'id':SYNTHETIC_SOURCE,'provider':'greenhouse','board':'synthetic-acceptance','url':'https://jobs.example.invalid/feed'}]
+    store=connect(base/'engine.sqlite3');queue=rq.connect(private/'review.sqlite3')
+    ing=ingest_snapshot(store,snap,sources);extract_pending(store)
+    pid=store.execute('select posting_id from postings').fetchone()[0]
+    rq.enqueue(store,queue,people,now=at(100))
+    pool=rq.claim(store,queue,candidate,'synthetic-ready',batch_size=10,per_employer_cap=10,now=at(101))
+    item=next((i for i in pool if i['posting_id']==pid),None)
+    if not item: return r.check(area,'the synthetic posting reaches the review queue',False,{'ingest':ing['warnings'],'pool':len(pool)})
+    auto={g:v['result'] for g,v in item['gates'].items()}
+    r.check(area,'before review, every gate but qualifications passes on stated evidence (US$ range read as USD)',
+            item['blocking']==['qualifications'] and all(v=='pass' for g,v in auto.items() if g!='qualifications'),{'gates':auto,'blocking':item['blocking']})
+    answers={u['id']:{'decision':'met','evidence':'synthetic acceptance reviewer: fixture profile, not a real person'}
+             for u in item['gates']['qualifications'].get('units',[]) if u['status']=='pending'}
+    out=rq.submit(store,queue,people,item['item_id'],'synthetic-ready',answers,now=at(102))
+    r.check(area,'a reviewed synthetic item whose other gates passed becomes READY',out['verdict']=='ready' and out['state']=='completed',
+            {'verdict':out['verdict'],'state':out['state'],'posting':pid})
+    feed=json.loads((private/'out'/eo.write_decisions(queue,private/'out',candidate,limit=50,now=at(103),store=store)['file']).read_text())
+    header=['Role','Company','Applied','Engine posting id','Notes','Engine seq','Outcome','Verdict','Link','Open questions']
+    cols={'posting_id':'Engine posting id','feed_seq':'Engine seq','outcome':'Outcome','verdict':'Verdict','title':'Role','employer':'Company',
+          'url':'Link','blocking':'Open questions'}
+    sheet=sh.FakeSheets({'synthetic':{'Tracker':[list(header)]}})
+    sh.sync(sheet,{'schema':sh.TARGET_SCHEMA,'candidate_id':candidate,'spreadsheet_id':'synthetic','tab':'Tracker','columns':cols},feed,private/'journal.json',now=at(104))
+    row=next((x for x in sheet.tabs['synthetic']['Tracker'][1:] if x[3]==pid),None)
+    r.check(area,'the synthetic READY decision reaches the (fake) ledger',bool(row) and row[6]=='ready',row[5:8] if row else 'no row')
 def _follow_up(snap1,snap2,when,prefer=()):
     """A second collection derived from the real one: one posting's text changes, one disappears, one source fails,
     everything else is re-fetched unchanged. Returns what was changed, for the checks. The changed posting is taken
@@ -223,6 +280,7 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         rows=lambda:{row[3]:row for row in crash.tabs['acceptance']['Tracker'][1:]}
         if ready_item and ready_cid==cid:
             r.check('8 sheets','the READY decision reaches the ledger',rows()[ready_item['posting_id']][6]=='ready',rows()[ready_item['posting_id']][6:8])
+        _synthetic_ready_path(r,work,fixtures)
         # 1/2/6 follow-up collection: change, disappearance, failure ----------------------------------------
         snap2=work/'snap2'
         info=_follow_up(snap1,snap2,(datetime.fromisoformat(max(s['checked_at'] for s in status1['sources']))+timedelta(days=1)).isoformat(),

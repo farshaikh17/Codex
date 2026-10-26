@@ -128,6 +128,14 @@ python -m engine show --posting greenhouse:gitlab:8860302002   # one readable re
 
 Greenhouse labels (title and blurb) are now plain text instead of HTML; period stays null because Greenhouse publishes none. On real feeds saved 2026-10-26, Oyster pay went from one range with currency null to Salary ranges in 12 stated currencies, and Zapier gained its INR tier. Bumping `EXTRACTOR_VERSION` makes `extract` redo stored versions lazily.
 
+**Extractor version 4 (B3).**
+- **Suffixes:** amounts read K, M and B suffixes (`$1.2M` is 1,200,000).
+- **Coded dollars:** `US$`, `CA$`, `C$`, `A$`, `AU$`, `NZ$`, `HK$` and `S$` set the currency. A bare `$` sets none.
+- **Units between amounts:** a unit between two amounts (`$30.09/hr - $37.61/hr`) keeps one range.
+- **Company figures:** an amount in a sentence about the company (revenue, funding, valuation, customers, payments volume) with no pay wording is not pay.
+- **Measured on main's snapshot `e812b42`:** 2 of 534 postings change, both Twilio. One loses a spurious `$1` range from its revenue sentence; one reads three hourly ranges instead of six single points.
+- Tests: `CompanyFigureAndCodedDollarTests`.
+
 ## 7. Persistence and recovery (before any scheduled use)
 
 The SQLite file is a cache, not the record. The record is (a) every collector snapshot already committed to Git and (b) `data/posting-events.jsonl`, a committed journal for facts no snapshot contains (today only expiry evidence). Nothing else needs to persist between Actions runs, and no binary database is committed.

@@ -142,6 +142,33 @@ class PayBoundTests(unittest.TestCase):
         self.assertEqual([(x['min'],x['max']) for x in r],[(90000,None)])
         none=extract(version(FILLER,compensation_raw=json.dumps({'min':None,'max':None,'currency':'USD','interval':'per-year-salary'})))
         self.assertTrue(all(not (i['interpretation'] or {}).get('ranges') for i in none['fields']['compensation']['items']))
+class CompanyFigureAndCodedDollarTests(unittest.TestCase):
+    """Company revenue or funding is never pay; genuine pay is kept even when written in millions; coded dollars name a currency."""
+    def ranges(self,text):
+        return [(r['min'],r['max'],r['currency'],r['currency_symbol']) for r in (parse_pay(text) or {}).get('ranges',[])]
+    def test_company_revenue_and_funding_are_not_pay(self):
+        for text in ('Twilio generates nearly $1B annually in revenue.','We raised $50M in Series B funding from leading investors.',
+                     'Our customers processed $2.5 billion in payments last year.','The company is valued at $3B.'):
+            self.assertEqual(self.ranges(text),[],text)
+        r=extract(version(FILLER+'\nRequirements\nSQL.\nTwilio generates nearly $1B annually in revenue.'))
+        self.assertEqual(r['fields']['compensation']['state'],'not_stated')  # previously 'stated' with a $1 range
+    def test_real_pay_in_millions_is_kept(self):
+        self.assertEqual(self.ranges('Base salary JPY 6M - 8M per year'),[(6_000_000,8_000_000,'JPY',None)])
+        self.assertEqual(self.ranges('INR 3M - 4M per annum base'),[(3_000_000,4_000_000,'INR',None)])
+        self.assertEqual(self.ranges('Salary: $1.2M - $1.5M per year'),[(1_200_000,1_500_000,None,'$')])
+    def test_revenue_beside_salary_keeps_only_the_salary(self):
+        self.assertEqual(self.ranges('Our customers process $2B in payments. The base salary is $140,000 - $160,000 USD per year.'),
+                         [(140000,160000,'USD','$')])
+    def test_coded_dollars_name_their_currency(self):
+        self.assertEqual(self.ranges('US$130,000 - US$150,000 per year base salary'),[(130000,150000,'USD','US$')])  # one range, not two
+        self.assertEqual(self.ranges('CA$130,000 - CA$150,000 per year base salary'),[(130000,150000,'CAD','CA$')])
+        self.assertEqual(self.ranges('A$120,000 - A$140,000 per year'),[(120000,140000,'AUD','A$')])
+    def test_unit_between_amounts_keeps_one_range(self):
+        r=parse_pay('Based in Colorado, Hawaii, Minnesota or Vermont : $30.09/hr - $37.61/hr.')  # real Twilio wording
+        self.assertEqual([(x['min'],x['max']) for x in r['ranges']],[(30.09,37.61)])
+        self.assertEqual(r['period'],'hour')
+    def test_bare_dollar_stays_currency_unknown(self):
+        self.assertEqual(self.ranges('$130,000 - $150,000 per year base salary'),[(130000,150000,None,'$')])
 class WorkplaceAndTypeTests(unittest.TestCase):
     def test_explicit_disagreement_is_conflicting(self):
         r=extract(version(FILLER,locations=[{'text':'Remote (US)','source':'location'}],workplace_type='OnSite'))

@@ -27,7 +27,10 @@ from engine.places import covers,places
 #    '$' is again a currency only if the candidate's own assume_currency_for_symbol maps it)
 # 7: only third-party or salary-site pay is excluded; an employer-published estimate is compared and kept as evidence
 #    with its wording and an 'employer-published estimate' qualifier, but its result is provisional and never decides the gate
-GATES_VERSION=7
+# 8: version 3's 'amounts in millions or billions are never pay' is removed. The extractor (version 4) now reads K/M/B
+#    suffixes and drops company figures (revenue, funding, valuation) by sentence context, so real pay written in millions
+#    is compared like any other amount
+GATES_VERSION=8
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -161,9 +164,6 @@ def qualifications(fields,profile,reviews):
     return _gate('pass','every mandatory requirement reviewed; %d met, %d not requirements'%(len(met),len(out)-len(met)),met,'review decisions',units=out)
 # CA$, A$, HK$ ... are not US dollars. US$ is, but the extractor does not yet parse 'US$x - US$y' as one range,
 # so it is left unknown here rather than compared on a broken range.
-def _magnitude(r,quote):
-    """True when the amount is written in millions or billions ('$1B', '$2.5 million'): a company figure, not pay."""
-    return bool(r.get('text')) and bool(re.search(re.escape(r['text'])+r'\s?(?:[MB]\b|bn\b|mn\b|million\b|billion\b)',quote,re.I))
 def _bound(v):
     return 'unstated' if v is None else v
 def _against(low,high,floor):
@@ -225,9 +225,6 @@ def salary(fields,rules,posting=None,profile=None):
             notes.append('"%s": pay for residents elsewhere; not compared (eligible countries: %s)'%(limit,', '.join(countries or ['unknown'])))
             continue
         for r in pay['ranges']:
-            if _magnitude(r,i['quote']):
-                notes.append('%s: an amount in millions or billions, not pay; not compared'%r['text'])
-                continue
             cur,cur_note=_currency(r,{'assume_currency_for_symbol':symbols})
             if cur not in floors:
                 notes.append('%s: currency %s has no floor; not converted'%(r.get('text') or i['quote'],cur or 'unstated')); continue

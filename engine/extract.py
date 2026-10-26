@@ -8,7 +8,7 @@ Nothing here decides fit, eligibility or READY.
 import html,json,re
 # 2: 'advantage'/'beneficial' wording is preferred; 'this role is based in X' is a location statement
 # 3: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text
-EXTRACTOR_VERSION=3
+EXTRACTOR_VERSION=4  # 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
@@ -32,11 +32,23 @@ HEADINGS=[(kind,re.compile('^(?:%s)$'%pattern)) for kind,pattern in (
         r"travel|what success looks like|success factors|what this role is not|how we work.*|how you work|stay alert to recruitment fraud|"
         r"quick note on scammers|equal opportunity.*|eeo.*|see yourself at [a-z]+|[a-z]+ thinks big\. do you"))]
 INLINE_PREFERRED=re.compile(r"\b(nice[- ]to[- ]have|preferred|is a plus|a plus|bonus points?|helpful,? but not required|not required|ideally|desirable|(?:an?|distinct|big|strong) advantage|advantageous|beneficial)\b",re.I)
-CURRENCY_CODES='USD|EUR|GBP|INR|CAD|AUD|NZD|SGD|CHF|SEK|NOK|DKK|PLN|BRL|MXN|JPY|ZAR|AED'
+CURRENCY_CODES='USD|EUR|GBP|INR|CAD|AUD|NZD|SGD|HKD|CHF|SEK|NOK|DKK|PLN|BRL|MXN|JPY|ZAR|AED'
+# Dollar signs that name their currency. A bare '$' names none and stays currency-unknown.
+CODED_DOLLARS={'US$':'USD','CA$':'CAD','C$':'CAD','A$':'AUD','AU$':'AUD','NZ$':'NZD','HK$':'HKD','S$':'SGD'}
 _NUM=r'\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:[,.]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?'  # 12,00,000 (Indian grouping) | 120,000 | 120
-_CUR=r'R\$|[$€£₹¥]|zł|\b(?:%s)\b'%CURRENCY_CODES
-MONEY=re.compile(r'(?P<c1>%s)?\s?(?P<a>%s)\s?(?P<k1>[kK]\b)?(?:\s?(?P<s1>%s))?(?:\s?(?:-|–|—|to)\s?(?P<c2>%s)?\s?(?P<b>%s)\s?(?P<k2>[kK]\b)?)?(?:\s?(?P<c3>%s))?'
-                 %(_CUR,_NUM,_CUR,_CUR,_NUM,_CUR))
+_CUR=r'\b(?:US|CA|AU|NZ|HK)\$|\b[CAS]\$|R\$|[$€£₹¥]|zł|\b(?:%s)\b'%CURRENCY_CODES
+_MULT=r'[kK]\b|(?:M|mn|[Mm]illion|B|bn|[Bb]illion)\b'  # thousand, million, billion
+_UNIT=r'\s?/\s?(?:hr|hour|yr|year|annum|mo|month|wk|week|day)\b'  # '$30.09/hr - $37.61/hr': a unit between the amounts keeps one range
+MONEY=re.compile(r'(?P<c1>%s)?\s?(?P<a>%s)\s?(?P<k1>%s)?(?:\s?(?P<s1>%s))?(?:%s)?(?:\s?(?:-|–|—|to)\s?(?P<c2>%s)?\s?(?P<b>%s)\s?(?P<k2>%s)?)?(?:\s?(?P<c3>%s))?'
+                 %(_CUR,_NUM,_MULT,_CUR,_UNIT,_CUR,_NUM,_MULT,_CUR))
+# A figure about the company (revenue, funding, valuation, size), not pay. Applied per sentence and only when the same
+# sentence has no pay wording, so real compensation written in millions ('JPY 6M - 8M per year base salary') is kept.
+COMPANY_FIGURE=re.compile(r'\b(revenue|revenues|ARR|recurring revenue|funding|funded|raised|raise|series [a-h]\b|valuation|valued|investors?|'
+                          r'backed|market cap|turnover|sales|GMV|assets under management|AUM|customers|users|in (?:annual )?(?:sales|bookings)|'
+                          r'generates?|generated|processes|processed|transactions?|payments volume|donations?|grants?)\b',re.I)
+PAY_CONTEXT=re.compile(r'\b(salary|salaries|base pay|pay (?:range|band|is)|compensation|wage|stipend|OTE|on[- ]target|per (?:year|annum|hour|month)|'
+                       r'hourly|annual (?:base|salary|pay)|bonus|commission|equity|offer)\b',re.I)
+_SENTENCE=re.compile(r'(?<=[.!?;])\s+(?=[A-Z])|\n')
 PAY_SIGNAL=re.compile(r'\b(salary (?:range|band)s?|base (?:salary|pay)|pay (?:range|band|transparency)|compensation (?:range|band)s?|OTE|on[- ]target earnings)\b',re.I)
 PAY_LINE=re.compile(PAY_SIGNAL.pattern+r'|\b(salary|per annum|per year|annually|per hour|hourly|per month|compensation|pay)\b',re.I)
 PERIODS=((r'per[- ]year|/\s?(?:yr|year)\b|annual(?:ly)?|per annum|yearly|\bLPA\b|year-salary','year'),
@@ -73,7 +85,14 @@ def sections(text):
 def _amount(num,k):
     if re.fullmatch(r'\d{1,3}(?:\.\d{3})+',num): num=num.replace('.','')  # 90.000 written with dot separators
     v=float(num.replace(',',''))
-    return v*1000 if k else v
+    if not k: return v
+    return v*(1000 if k in ('k','K') else 1_000_000_000 if k in ('B','bn','billion','Billion') else 1_000_000)
+def _sentence_at(text,pos):
+    start=0
+    for m in _SENTENCE.finditer(text):
+        if m.start()>=pos: return text[start:m.start()]
+        start=m.end()
+    return text[start:]
 def _pay_flags(text):
     low=text.lower()
     return {'period':next((p for pattern,p in PERIODS if re.search(pattern,text,re.I)),None),
@@ -83,17 +102,21 @@ def _pay_flags(text):
             'amount_unit':'lakh' if re.search(r'\bLPA\b|\blakhs?\b',text,re.I) else ('crore' if re.search(r'\bcrores?\b',low) else None)}
 def parse_pay(text):
     """Reads explicit pay wording. Returns None unless at least one amount has a currency or K suffix.
-    Values keep the text's own units: no currency conversion, no period conversion, '$' is not assumed to be USD."""
+    Values keep the text's own units: no currency conversion, no period conversion, '$' is not assumed to be USD.
+    K, M (million) and B (billion) suffixes are read as written. 'US$', 'CA$', 'A$' and similar name their currency.
+    An amount in a sentence about the company (revenue, funding, valuation, size) with no pay wording is not pay."""
     ranges=[]
     for m in MONEY.finditer(text):
         cur=m.group('c1') or m.group('s1') or m.group('c2') or m.group('c3')
         if not (cur or m.group('k1') or m.group('k2')) or (not m.group('b') and not cur): continue
+        sentence=_sentence_at(text,m.start())
+        if COMPANY_FIGURE.search(sentence) and not PAY_CONTEXT.search(sentence): continue  # revenue, funding, valuation: not pay
         a=_amount(m.group('a'),m.group('k1') or m.group('k2'))
         b=_amount(m.group('b'),m.group('k2') or m.group('k1')) if m.group('b') else a
         found=[c for c in (m.group('c3'),m.group('c2'),m.group('s1'),m.group('c1')) if c]
-        code=next((c for c in found if re.fullmatch(CURRENCY_CODES,c)),None)
-        ranges.append({'min':min(a,b),'max':max(a,b),'currency':code,'currency_symbol':next((c for c in found if not re.fullmatch(CURRENCY_CODES,c)),None),
-                       'text':m.group(0).strip()})
+        code=next((c for c in found if re.fullmatch(CURRENCY_CODES,c)),None) or next((CODED_DOLLARS[c] for c in found if c in CODED_DOLLARS),None)
+        ranges.append({'min':min(a,b),'max':max(a,b),'currency':code,
+                       'currency_symbol':next((c for c in found if not re.fullmatch(CURRENCY_CODES,c)),None),'text':m.group(0).strip()})
     if not ranges: return None
     return {'ranges':ranges}|_pay_flags(text)|{'multiple_ranges':len(ranges)>1 or 'multiple ranges' in text.lower()}
 ASHBY_INTERVALS={'1 YEAR':'year','1 MONTH':'month','1 WEEK':'week','1 DAY':'day','1 HOUR':'hour'}
