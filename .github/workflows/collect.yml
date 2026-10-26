@@ -2,6 +2,7 @@ name: Collect public job feeds
 on:
   workflow_dispatch:
   push:
+    # main only: a push to any other branch must never start a live employer collection.
     branches: [main]
     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
   schedule:
@@ -22,7 +23,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test incremental publishing and adapters
-        run: python -m unittest -v
+        # Collector tests only. Engine tests run in engine.yml on demand, so they never add minutes to collections.
+        run: python -m unittest -v test_collect
       - name: Validate source registry before any request
         run: python registry.py
       - name: Collect official employer feeds (every enabled source; one with its own poll_interval_hours waits until due)
