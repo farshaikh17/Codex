@@ -1,192 +1,72 @@
-{
-  "schema": "source-registry-1",
-  "notice": "Public employer facts only. No candidate preferences. job_families and geography stay empty until evidenced; a remote posting is not evidence of hiring in any country.",
-  "defaults": {
-    "enabled": true,
-    "poll_interval_hours": 5
+[
+  {
+    "id": "gitlab-greenhouse",
+    "employer": "gitlab",
+    "provider": "greenhouse",
+    "board": "gitlab",
+    "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true"
   },
-  "employers": [
-    {
-      "id": "gitlab",
-      "name": "GitLab",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "remote",
-      "name": "Remote",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "clipboard",
-      "name": "Clipboard",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "oyster",
-      "name": "Oyster",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "zapier",
-      "name": "Zapier",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "posthog",
-      "name": "PostHog",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "drivetrain",
-      "name": "Drivetrain",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "resilinc",
-      "name": "Resilinc",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "weave",
-      "name": "Weave",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    },
-    {
-      "id": "twilio",
-      "name": "Twilio",
-      "careers_url": null,
-      "job_families": [],
-      "geography": [],
-      "inclusion": {
-        "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
-        "evidence_url": null
-      }
-    }
-  ],
-  "sources": [
-    {
-      "id": "gitlab-greenhouse",
-      "employer": "gitlab",
-      "provider": "greenhouse",
-      "board": "gitlab",
-      "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true"
-    },
-    {
-      "id": "remote-greenhouse",
-      "employer": "remote",
-      "provider": "greenhouse",
-      "board": "remote",
-      "url": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true"
-    },
-    {
-      "id": "clipboard-ashby",
-      "employer": "clipboard",
-      "provider": "ashby",
-      "board": "clipboard",
-      "url": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true"
-    },
-    {
-      "id": "oyster-ashby",
-      "employer": "oyster",
-      "provider": "ashby",
-      "board": "oyster",
-      "url": "https://api.ashbyhq.com/posting-api/job-board/oyster"
-    },
-    {
-      "id": "zapier-ashby",
-      "employer": "zapier",
-      "provider": "ashby",
-      "board": "zapier",
-      "url": "https://api.ashbyhq.com/posting-api/job-board/zapier"
-    },
-    {
-      "id": "posthog-ashby",
-      "employer": "posthog",
-      "provider": "ashby",
-      "board": "posthog",
-      "url": "https://api.ashbyhq.com/posting-api/job-board/posthog"
-    },
-    {
-      "id": "drivetrain-lever",
-      "employer": "drivetrain",
-      "provider": "lever",
-      "board": "drivetrain",
-      "url": "https://api.lever.co/v0/postings/drivetrain?mode=json"
-    },
-    {
-      "id": "resilinc-lever",
-      "employer": "resilinc",
-      "provider": "lever",
-      "board": "resilinc",
-      "url": "https://api.lever.co/v0/postings/resilinc?mode=json"
-    },
-    {
-      "id": "weave-ashby",
-      "employer": "weave",
-      "provider": "ashby",
-      "board": "weave",
-      "url": "https://api.ashbyhq.com/posting-api/job-board/weave"
-    },
-    {
-      "id": "twilio-greenhouse",
-      "employer": "twilio",
-      "provider": "greenhouse",
-      "board": "twilio",
-      "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true"
-    }
-  ]
-}
+  {
+    "id": "remote-greenhouse",
+    "employer": "remote",
+    "provider": "greenhouse",
+    "board": "remote",
+    "url": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true"
+  },
+  {
+    "id": "clipboard-ashby",
+    "employer": "clipboard",
+    "provider": "ashby",
+    "board": "clipboard",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true"
+  },
+  {
+    "id": "oyster-ashby",
+    "employer": "oyster",
+    "provider": "ashby",
+    "board": "oyster",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/oyster"
+  },
+  {
+    "id": "zapier-ashby",
+    "employer": "zapier",
+    "provider": "ashby",
+    "board": "zapier",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/zapier"
+  },
+  {
+    "id": "posthog-ashby",
+    "employer": "posthog",
+    "provider": "ashby",
+    "board": "posthog",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/posthog"
+  },
+  {
+    "id": "drivetrain-lever",
+    "employer": "drivetrain",
+    "provider": "lever",
+    "board": "drivetrain",
+    "url": "https://api.lever.co/v0/postings/drivetrain?mode=json"
+  },
+  {
+    "id": "resilinc-lever",
+    "employer": "resilinc",
+    "provider": "lever",
+    "board": "resilinc",
+    "url": "https://api.lever.co/v0/postings/resilinc?mode=json"
+  },
+  {
+    "id": "weave-ashby",
+    "employer": "weave",
+    "provider": "ashby",
+    "board": "weave",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/weave"
+  },
+  {
+    "id": "twilio-greenhouse",
+    "employer": "twilio",
+    "provider": "greenhouse",
+    "board": "twilio",
+    "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true"
+  }
+]

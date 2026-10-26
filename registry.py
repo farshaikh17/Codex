@@ -1,4 +1,7 @@
-"""Employer and source registry: load and validate sources.json before any request.
+"""Employer and source registry: validate employers.json and sources.json before any request.
+
+sources.json stays a JSON list of source objects (other readers, such as the
+posting store, iterate it as a list). Employer facts live in employers.json.
 
 Public employer facts only. Candidate preferences, profiles and application
 history never belong here; unknown keys are rejected so they cannot slip in.
@@ -7,7 +10,8 @@ import json,re,sys
 from pathlib import Path
 from urllib.parse import urlparse,parse_qsl
 ROOT=Path(__file__).resolve().parent
-SCHEMA='source-registry-1'
+SCHEMA='employer-registry-1'
+DEFAULTS={'enabled':True,'poll_interval_hours':5}
 ID=re.compile(r'^[a-z0-9][a-z0-9-]{1,62}$')
 BOARD=re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$')
 # Official feed per adapter. The URL must be exactly this endpoint plus only the listed query options.
@@ -42,16 +46,16 @@ def _evidence_errors(where,ev):
     if not isinstance(ev,dict) or not str(ev.get('url','')).startswith('https://') or not ev.get('checked_at'):
         return ['%s needs evidence {url (https), checked_at, quote?}'%where]
     return []
-def validate(reg):
+def validate(source_list,employer_doc):
     """Returns (employers, sources, warnings). Raises RegistryError listing every problem."""
     errs,warns=[],[]
-    if not isinstance(reg,dict) or reg.get('schema')!=SCHEMA:
-        raise RegistryError(['registry must be an object with schema %r'%SCHEMA])
-    defaults={'enabled':True,'poll_interval_hours':5}|(reg.get('defaults') or {})
-    extra=set(reg)-{'schema','defaults','employers','sources','notice'}
-    if extra: errs.append('unknown top-level keys: %s'%', '.join(sorted(extra)))
+    if not isinstance(employer_doc,dict) or employer_doc.get('schema')!=SCHEMA:
+        raise RegistryError(['employers.json must be an object with schema %r'%SCHEMA])
+    if not isinstance(source_list,list): raise RegistryError(['sources.json must be a JSON list of sources'])
+    extra=set(employer_doc)-{'schema','employers','notice'}
+    if extra: errs.append('employers.json unknown top-level keys: %s'%', '.join(sorted(extra)))
     employers={}
-    for n,e in enumerate(reg.get('employers') or []):
+    for n,e in enumerate(employer_doc.get('employers') or []):
         where='employers[%d]'%n
         if not isinstance(e,dict): errs.append(where+' is not an object'); continue
         if set(e)-EMPLOYER_KEYS: errs.append('%s unknown keys: %s'%(where,', '.join(sorted(set(e)-EMPLOYER_KEYS))))
@@ -73,11 +77,11 @@ def validate(reg):
                 errs.append('%s geography %s basis must be one of %s (remote wording alone is not geographic evidence)'%(where,g['region'],sorted(GEO_BASIS)))
             errs+=_evidence_errors('%s geography %s'%(where,g['region']),g.get('evidence'))
     sources,boards,used=[],{},set()
-    for n,raw in enumerate(reg.get('sources') or []):
+    for n,raw in enumerate(source_list):
         where='sources[%d]'%n
         if not isinstance(raw,dict): errs.append(where+' is not an object'); continue
         if set(raw)-SOURCE_KEYS: errs.append('%s unknown keys: %s'%(where,', '.join(sorted(set(raw)-SOURCE_KEYS))))
-        s=defaults|raw
+        s=DEFAULTS|raw
         if not ID.match(str(s.get('id',''))): errs.append(where+' id must match %s'%ID.pattern); continue
         where='source %s'%s['id']
         if any(x['id']==s['id'] for x in sources): errs.append('duplicate source id %s'%s['id']); continue
@@ -99,12 +103,13 @@ def validate(reg):
     if not any(s.get('enabled') is True for s in sources): errs.append('no enabled sources')
     if errs: raise RegistryError(errs)
     return employers,sources,warns
-def load(path=ROOT/'sources.json'):
-    try: reg=json.loads(Path(path).read_text(encoding='utf-8'))
+def _read(path):
+    try: return json.loads(Path(path).read_text(encoding='utf-8'))
     except (OSError,ValueError) as e: raise RegistryError(['cannot read %s: %s'%(path,e)])
-    return validate(reg)
+def load(sources=ROOT/'sources.json',employers=ROOT/'employers.json'):
+    return validate(_read(sources),_read(employers))
 if __name__=='__main__':
-    try: employers,sources,warns=load(sys.argv[1] if len(sys.argv)>1 else ROOT/'sources.json')
+    try: employers,sources,warns=load(*sys.argv[1:3])
     except RegistryError as e:
         for m in e.errors: print('ERROR',m)
         raise SystemExit(1)

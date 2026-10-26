@@ -99,7 +99,7 @@ class ReliabilityTests(unittest.TestCase):
         self.assertIn('last-known-good',result['outcome'])
         self.assertEqual(result['listing_count'],2)
     def test_not_due_sources_carried_without_requests(self):
-        self.run_both()
+        first=self.run_both()
         asked=[]
         def fetch(source):
             asked.append(source['id'])
@@ -108,10 +108,37 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual(asked,['sample-lever'])
         self.assertEqual((result['status'],result['not_due_sources'],result['attempted_sources']),('ok',1,1))
         other=result['sources'][1]
-        self.assertEqual((other['status'],other['last_result']),('not_due','ok'))
+        # status is the latest real attempt, unchanged; only attempted_this_run says it was not this run
+        self.assertEqual((other['status'],other['attempted_this_run'],other['checked_at']),('ok',False,first['sources'][1]['checked_at']))
+        board=json.loads((self.out/'boards/other-ashby.json').read_text())
+        self.assertEqual(board['collected_at'],other['checked_at'])
         self.assertEqual([j['change'] for j in result['jobs'] if j['key'].startswith('ashby')],['not_checked'])
         again=collect([SOURCE,OTHER],self.out,fetch,lambda _:None,due={'sample-lever'})
-        self.assertEqual(again['sources'][1]['last_result'],'ok')
+        self.assertEqual(again['sources'][1]['checked_at'],first['sources'][1]['checked_at'])
+    def test_every_published_source_state_is_a_real_attempt(self):
+        """Consumers such as the posting store accept only ok/failed attempts with a checked_at."""
+        collect([SOURCE],self.out,lambda _:[posting()],lambda _:None)
+        asked=[]
+        def fetch(source):
+            asked.append(source['id'])
+            return by_source({'sample-lever':[posting()],'other-ashby':ashby})(source)
+        result=collect([SOURCE,OTHER],self.out,fetch,lambda _:None,due={'sample-lever'})
+        self.assertEqual(asked,['sample-lever','other-ashby'])  # never attempted, so attempted anyway
+        for s in json.loads((self.out/'status.json').read_text())['sources']:
+            self.assertIn(s['status'],('ok','failed'))
+            self.assertTrue(s['checked_at'])
+            if s['status']=='ok':
+                self.assertEqual(json.loads((self.out/'boards'/(s['source']+'.json')).read_text())['collected_at'],s['checked_at'])
+    def test_carried_failure_keeps_failure_count(self):
+        self.run_both()
+        def down(source):
+            if source['id']=='other-ashby': raise OSError('offline')
+            return [posting()]
+        collect([SOURCE,OTHER],self.out,down,lambda _:None)
+        result=collect([SOURCE,OTHER],self.out,down,lambda _:None,due={'sample-lever'})
+        other=result['sources'][1]
+        self.assertEqual((other['status'],other['consecutive_failures'],other['attempted_this_run']),('failed',1,False))
+        self.assertEqual(result['failed_sources'],0)
     def test_due_selection(self):
         now=datetime(2026,10,26,12,tzinfo=timezone.utc)
         status={'sources':[{'source':'sample-lever','checked_at':(now-timedelta(hours=4,minutes=50)).isoformat()},

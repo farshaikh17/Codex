@@ -2,7 +2,8 @@
 
 | Path | What it is |
 |---|---|
-| `sources.json` | Employer and source registry (`source-registry-1`). Public employer facts only. See [SOURCE_ONBOARDING.md](SOURCE_ONBOARDING.md). |
+| `sources.json` | Source list (JSON array): employer, provider, board, URL, enabled, poll interval. See [SOURCE_ONBOARDING.md](SOURCE_ONBOARDING.md). |
+| `employers.json` | Employer registry (`employer-registry-1`): name, careers URL, evidenced job families and geography, inclusion reason. Public facts only. |
 | `registry.py` | Loads and validates the registry. `python registry.py` before any collection. |
 | `collect.py` | Official ATS feed collector: due scheduling, staged publication, run summary. |
 | `adapters.py` | Greenhouse, Lever, Ashby normalization (MIT, extracted from the earlier local collector). |
@@ -11,6 +12,7 @@
 | `migration/` | Provenance from the `public-job-collector` migration. |
 | `test_*.py` | Offline tests: `python -m unittest -v`. |
 | `crawl_pages.py`, `pages.json`, `public/pages/` | Manual Crawl4AI page fallback. **Only after farshaikh17/Codex#1 merges.** |
+| `engine/`, `docs/ENGINE.md` | SQLite posting store over collector snapshots. **Only after farshaikh17/Codex#2 merges.** |
 
 Docs:
 - [ARCHITECTURE.md](ARCHITECTURE.md): current architecture

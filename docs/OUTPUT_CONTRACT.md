@@ -10,7 +10,7 @@
 
 Run-level fields: `run_id`, `trigger` (`schedule`, `workflow_dispatch`, `push`, `local`), `attempted_at`, `status` (`ok` = every attempted source succeeded, `partial`, `failed` = none succeeded), `outcome` (plain sentence), `attempted_sources`, `successful_sources`, `failed_sources`, `not_due_sources`, `total_sources`, `listing_count`, `orphan_board_files`, `notice`.
 
-Per-source fields: `source`, `endpoint`, `status` (`ok`, `failed`, `not_due`), `checked_at` (last real attempt; not refreshed for `not_due`), `last_result` (for `not_due`), `last_success_at`, `consecutive_failures`, `poll_interval_hours`, `next_due_at`. For `ok`: `jobs`, `skipped`, `new`, `changed`, `no_longer_listed`. For `failed`: `error_type`, `error` (redacted), `retained_historical_jobs`.
+Per-source fields: `source`, `endpoint`, `status` (`ok` or `failed`; always the source's latest real attempt), `checked_at` (time of that attempt), `attempted_this_run` (false means the source wasn't due, no request was made, and the entry is copied unchanged from the earlier run), `last_success_at`, `consecutive_failures`, `poll_interval_hours`, `next_due_at`. For `ok`: `jobs`, `skipped`, `new`, `changed`, `no_longer_listed`. For `failed`: `error_type`, `error` (redacted), `retained_historical_jobs`.
 
 Per-listing `change`: `new`, `changed`, `unchanged` (fetched this run), `unknown_after_failure` (source failed; data is older), `not_checked` (source not due).
 
@@ -22,6 +22,7 @@ The repository is private.
 
 | Reader | Method | Tested? |
 |---|---|---|
+| Posting store (farshaikh17/Codex#2, unmerged) | Reads `public/` from a checkout | Yes, offline: `ingest_snapshot` against this branch's outputs (scratch scenario) |
 | Repository owner | GitHub UI / git | Yes (owner pushes) |
 | This Claude Code session | Repository-scoped GitHub access | Yes |
 | ChatGPT tasks | Authenticated GitHub connector, per MIGRATION.md | **Not verified.** Nothing in this repository proves a ChatGPT task has read these files. |
@@ -39,7 +40,7 @@ No new external endpoints are created by this work. See [CONSUMER_TEST.md](CONSU
 
 ## Resuming after an interrupted read
 
-Process by `run_id`. Record `(run_id, board_file)` pairs you have finished. If the `run_id` in `status.json` changes mid-read, restart from `status.json` for the new run. Board files for sources that were `ok` in a run carry the same `run_id`. Files for `failed` or `not_due` sources carry the earlier run's `run_id`, which is expected. A board whose `run_id` doesn't match the source's state is a partial read from mixed commits: re-read from one commit.
+Process by `run_id`. Record `(run_id, board_file)` pairs you have finished. If the `run_id` in `status.json` changes mid-read, restart from `status.json` for the new run. Board files for sources that were `ok` in a run carry the same `run_id`. Files for sources that failed or weren't attempted this run carry the earlier run's `run_id`, which is expected. Invariant: for every `ok` source, the board file's `collected_at` equals the source's `checked_at`. A mismatch means a partial read from mixed commits: re-read from one commit.
 
 ## Schema compatibility
 
