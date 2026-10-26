@@ -2,9 +2,9 @@
 
 - official_url: https://toggl.com/jobs
 - final_url: https://toggl.com/jobs
-- captured_at: 2026-10-26T16:08:59.031996+00:00
+- captured_at: 2026-10-26T16:25:40.831239+00:00
 - content_hash: sha256:4d1212960a541af2eb0c9bcedd6a289f59dca40c306dde560819d4918bd7d136
-- review_hash: sha256:4900a9dfac65a1c4e5407b0cd170db27e0a526be03691c557a10065e83b12347
+- review_hash: sha256:d51cde6aa4d70e1441b823c2f7a1794e152157ec7108a1ee0ef663405bb2e57a (basis: text)
 - capture_status: usable
 - listing_quality: no_listings_detected (coverage: none_detected; flags: cookie_heavy, no_job_links, openings_section_empty)
 - job_links: 0; claimed_total: None

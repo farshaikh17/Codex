@@ -2,9 +2,9 @@
 
 - official_url: https://automattic.com/work-with-us/jobs/
 - final_url: https://automattic.com/work-with-us/jobs/
-- captured_at: 2026-10-26T16:08:59.031996+00:00
-- content_hash: sha256:c167a3212ee35e7a3cc3b2635c75201e5509241457fc4f00f4d60890afbaae8f
-- review_hash: sha256:c167a3212ee35e7a3cc3b2635c75201e5509241457fc4f00f4d60890afbaae8f
+- captured_at: 2026-10-26T16:25:40.831239+00:00
+- content_hash: sha256:ed4f6ad0d4073347ba66daf06518997f4c2ee2ed89fe5a3981727e43508e2aaa
+- review_hash: sha256:6e1eaa2699253abd3d8340ad23f9f48b6adf3b359fcead1826cb34dad4d6d702 (basis: job_links)
 - capture_status: usable
 - listing_quality: listings_found (coverage: unknown; flags: none)
 - job_links: 12; claimed_total: None
@@ -62,4 +62,4 @@ Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirec
 [Report this content](https://wordpress.com/abuse/?report_url=https://automattic.com/work-with-us/jobs/)
 [Collapse this bar](https://automattic.com/work-with-us/jobs/)
 
-![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.7140125040815528)
+![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.5890712546832519)
