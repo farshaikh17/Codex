@@ -55,7 +55,8 @@ python -m engine.review_cli status  --candidates DIR [--candidate ID] [--since I
   - Decisions are stored per (candidate, posting, line id, profile version). They carry over to a new content version when the line is unchanged, but not across a profile change.
 - `findings` settle a gate the deterministic screening left `unknown`:
   - pass or fail, a reason, and a quote that must appear **verbatim** in the posting (title, description, locations, pay text or workplace field).
-  - A finding can't override a pass or a fail, and can't decide qualifications; those go line by line.
+  - A finding can't override a pass or a fail.
+  - Qualifications go line by line. A `qualifications` finding is accepted only when the extractor found no requirement lines at all (the gate is `unknown` with no units). It must then also carry `basis`: the candidate profile evidence it was judged against. Without this rule, a posting with no recognised requirements section could never become READY.
   - A salary *pass* can't quote an estimate or pay the employer didn't publish (the same rule as the gate, `NOT_EMPLOYER_PAY`).
   - Invented quotes are refused, and a refused submission writes nothing.
 - The item is then screened again with the decisions. `ready` or `excluded` completes it; remaining unknowns make it `conditional`.

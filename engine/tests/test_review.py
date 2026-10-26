@@ -150,6 +150,17 @@ class QueueTests(unittest.TestCase):
         out=submit(unit_decisions=self.w.met_all(item),findings={'salary':{'result':'fail','quote':'This is a full-time position.',
                    'reason':'no pay stated; candidate rule requires one','basis':'synthetic'}})
         self.assertEqual((out['state'],out['verdict']),('completed','excluded'))
+    def test_qualifications_finding_only_when_no_requirement_lines_were_extracted(self):
+        self.w.collect({'x':[lever('1',text='We want someone who has run SaaS onboarding projects end to end.')]})
+        self.w.enqueue()
+        item,=rq.claim(self.w.store,self.w.q,A,'w1',now=at(1))
+        self.assertEqual((item['gates']['qualifications']['result'],item['gates']['qualifications']['units']),('unknown',[]))
+        quote='We want someone who has run SaaS onboarding projects end to end.'
+        submit=lambda f:rq.submit(self.w.store,self.w.q,self.w.people,item['item_id'],'w1',findings={'qualifications':f},now=at(2))
+        with self.assertRaises(rq.QueueError):submit({'result':'pass','quote':quote,'reason':'fits'})
+        with self.assertRaises(rq.QueueError):submit({'result':'pass','quote':'Ten years of Kubernetes','reason':'fits','basis':'synthetic profile line'})
+        out=submit({'result':'pass','quote':quote,'reason':'profile shows SaaS onboarding projects','basis':'synthetic profile line'})
+        self.assertEqual((out['state'],out['verdict']),('completed','ready'))
     def test_reviewer_cannot_pass_salary_on_an_estimate(self):
         estimate='Salary estimate (third-party, not provided by the employer): INR 30,00,000 - 40,00,000 per annum'
         self.w.collect({'x':[lever('1',salaryDescriptionPlain=None,descriptionPlain='About the role\nLead SaaS implementation. This is a full-time position.\n'+REQS+'\n'+estimate)]})

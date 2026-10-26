@@ -243,8 +243,11 @@ def submit(store,conn,people,iid,worker,unit_decisions=None,findings=None,usage=
                          d['decision'],d.get('evidence'),worker,now))
         clean,gates=({},json.loads(r['screening'])['gates'])
         for gate,f in (findings or {}).items():
-            if gate=='qualifications': raise QueueError('qualifications are decided per requirement line, not by a gate finding')
             if gate not in gates: raise QueueError('unknown gate %s'%gate)
+            if gate=='qualifications':
+                if gates[gate].get('units'): raise QueueError('qualifications are decided per requirement line, not by a gate finding')
+                if not (f.get('basis') or '').strip():
+                    raise QueueError('finding qualifications: needs basis, the candidate profile evidence it was judged against')
             if gates[gate]['result']!='unknown': raise QueueError('gate %s is already %s with evidence; findings only settle unknown gates'%(gate,gates[gate]['result']))
             if f.get('result') not in ('pass','fail'): raise QueueError('finding %s: result must be pass or fail'%gate)
             if not (f.get('reason') or '').strip(): raise QueueError('finding %s needs a reason'%gate)

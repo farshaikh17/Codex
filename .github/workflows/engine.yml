@@ -1,0 +1,26 @@
+name: Engine tests and acceptance (manual)
+# Manual only: no schedule and no push trigger, so this never runs unless someone starts it.
+# Read-only: it commits nothing and writes no candidate data. Candidate stages need private
+# profiles that are never in this repository, so they cannot run here.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: engine-acceptance
+  cancel-in-progress: true
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Engine unit tests
+        run: python -m unittest discover -v -s engine/tests -t .
+      - name: End-to-end acceptance on the committed snapshot (synthetic candidates)
+        run: |
+          python -m engine.acceptance --out "$RUNNER_TEMP/acceptance"
+          cat "$RUNNER_TEMP/acceptance/acceptance.md" >> "$GITHUB_STEP_SUMMARY"
