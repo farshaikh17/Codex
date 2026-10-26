@@ -4,7 +4,8 @@ on:
   push:
     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
   schedule:
-    - cron: '23 * * * *'
+    # Five daily collections: gaps of 5, 5, 5, 5 and 4 hours (UTC).
+    - cron: '37 1,6,11,16,21 * * *'
 permissions:
   contents: write
 concurrency:
@@ -21,24 +22,8 @@ jobs:
           python-version: '3.12'
       - name: Test incremental publishing and adapters
         run: python -m unittest -v
-      - name: Collect when five hours have elapsed
-        env:
-          EVENT: ${{ github.event_name }}
-        run: |
-          python - <<'PY'
-          import json,os,subprocess
-          from datetime import datetime,timezone
-          from pathlib import Path
-          status=Path('public/status.json')
-          due=True
-          if os.environ['EVENT']=='schedule' and status.exists():
-              last=json.loads(status.read_text())
-              age=(datetime.now(timezone.utc)-datetime.fromisoformat(last['attempted_at'])).total_seconds()
-              due=age>=5*3600
-          if due:
-              raise SystemExit(subprocess.call(['python','collect.py']))
-          print('Last attempt less than five hours ago; no employer requests.')
-          PY
+      - name: Collect official employer feeds
+        run: python collect.py
       - name: Publish public data and failure status
         if: always()
         run: |
