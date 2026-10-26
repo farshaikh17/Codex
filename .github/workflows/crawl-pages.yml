@@ -61,6 +61,9 @@ jobs:
           d=json.load(open('public/pages/index.json'))
           print('## Career page capture %s (%s)\n'%(d.get('attempted_at'),d.get('schema')))
           print('Operations: %s. Browser requests: %s. Halted: %s.\n'%(d.get('operations'),d.get('browser_requests'),d.get('halted')))
+          queue=[p['id'] for p in d['pages'] if p['id'] in d.get('batch',[]) and p.get('review_change') in ('new','changed')]
+          quiet=[p['id'] for p in d['pages'] if p['id'] in d.get('batch',[]) and p.get('review_change') in ('unchanged','boilerplate_only')]
+          print('Queue for review (review_change new/changed): %s. Not queued (unchanged/boilerplate_only): %s.\n'%(', '.join(queue) or 'none',', '.join(quiet) or 'none'))
           print('| page | result | listing quality | coverage | flags | job links | review change |')
           print('|---|---|---|---|---|---|---|')
           for p in d['pages']:
