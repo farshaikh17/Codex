@@ -6,6 +6,7 @@
 | `employers.json` | Employer registry (`employer-registry-1`): name, careers URL, evidenced job families and geography, inclusion reason. Public facts only. |
 | `registry.py` | Loads and validates the registry. `python registry.py` before any collection. |
 | `collect.py` | Official ATS feed collector: due scheduling, staged publication, run summary. |
+| `discover.py`, `discovery_targets.json` | Bounded source discovery: proposals for review, never edits the registry. See [DISCOVERY.md](DISCOVERY.md). |
 | `adapters.py` | Greenhouse, Lever, Ashby normalization (MIT, extracted from the earlier local collector). |
 | `public/status.json`, `public/index.json`, `public/boards/*.json` | Published collection output. See [OUTPUT_CONTRACT.md](OUTPUT_CONTRACT.md). |
 | `.github/workflows/collect.yml` | Hourly tick, collects only due sources; manual and `main` push runs collect all. |
@@ -18,6 +19,7 @@
 Docs:
 - [ARCHITECTURE.md](ARCHITECTURE.md): current architecture
 - [SOURCE_ONBOARDING.md](SOURCE_ONBOARDING.md): adding a source
+- [DISCOVERY.md](DISCOVERY.md): bounded source discovery
 - [OUTPUT_CONTRACT.md](OUTPUT_CONTRACT.md): output files, consumers, staleness, compatibility
 - [OPERATIONS_RECOVERY.md](OPERATIONS_RECOVERY.md): operations and recovery
 - [ACCEPTANCE.md](ACCEPTANCE.md): acceptance-test checklist

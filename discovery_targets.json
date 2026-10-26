@@ -1,0 +1,22 @@
+{
+  "schema": "discovery-targets-1",
+  "notice": "Start pages for bounded discovery. Entries marked operator_guess are unverified: a run verifies one only when the page links to that employer's configured board, and then proposes it as careers_url with that link as evidence. Entries from pages.json are the URLs the PR #1 page-capture allowlist already opens.",
+  "targets": [
+    {"employer": "gitlab", "start_url": "https://about.gitlab.com/jobs/", "basis": "operator_guess"},
+    {"employer": "remote", "start_url": "https://remote.com/careers", "basis": "operator_guess"},
+    {"employer": "clipboard", "start_url": "https://www.clipboardhealth.com/careers", "basis": "operator_guess"},
+    {"employer": "oyster", "start_url": "https://www.oysterhr.com/careers", "basis": "operator_guess"},
+    {"employer": "zapier", "start_url": "https://zapier.com/jobs", "basis": "operator_guess"},
+    {"employer": "posthog", "start_url": "https://posthog.com/careers", "basis": "operator_guess"},
+    {"employer": "drivetrain", "start_url": "https://www.drivetrain.ai/careers", "basis": "operator_guess"},
+    {"employer": "resilinc", "start_url": "https://www.resilinc.com/careers/", "basis": "operator_guess"},
+    {"employer": "weave", "start_url": "https://www.getweave.com/careers/", "basis": "operator_guess"},
+    {"employer": "twilio", "start_url": "https://www.twilio.com/en-us/company/jobs", "basis": "operator_guess"},
+    {"employer": "automattic", "start_url": "https://automattic.com/work-with-us/jobs/", "basis": "pages.json (PR #1)"},
+    {"employer": "doist", "start_url": "https://www.todoist.com/careers", "basis": "pages.json (PR #1)"},
+    {"employer": "toggl", "start_url": "https://toggl.com/jobs", "basis": "pages.json (PR #1)"},
+    {"employer": "atlassian", "start_url": "https://www.atlassian.com/company/careers/all-jobs", "basis": "pages.json (PR #1)"},
+    {"employer": "canonical", "start_url": "https://canonical.com/careers/all", "basis": "pages.json (PR #1)"},
+    {"employer": "salesforce", "start_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site", "basis": "pages.json (PR #1)"}
+  ]
+}

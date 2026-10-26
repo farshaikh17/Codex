@@ -38,6 +38,14 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Validator catches a qualifications label that contradicts the candidate's years on file (the error found by cross-checking PR #2's gates)
 - [x] Repository owner confirmed the two real-posting cases (2026-10-26); they now count in gating metrics: `test_only_confirmed_labels_count`
 - [ ] Re-score ENGINE steps 3+4 after PR #2 merges, and after each gates change (false READY must stay 0)
+## Source discovery (B)
+- [x] Board detection for Greenhouse, Lever and Ashby links, embeds, API URLs and JSON-LD; unsupported ATS recorded only: `DetectionTests`
+- [x] Depth 1, same allowed hosts, anchor links to non-asset pages only; page and request budgets are hard caps: `test_depth_one_same_host_job_pages_only`, `test_only_anchor_links_to_pages_are_followed`, `test_page_and_request_budgets_are_hard_caps`
+- [x] robots.txt disallow, unreachable or off-scope redirect blocks before any page; 429 halts the run; CAPTCHA/login stops the host: `test_robots_disallow_and_unreachable_block`, `test_access_restrictions_stop_the_host`, `test_off_host_redirect_is_blocked`
+- [x] New boards verified through the pinned official feed and dry-run validated; `sources.json` never written: `test_new_board_verified_and_validated_never_written`
+- [x] A configured board linked from a page proposes `careers_url` with evidence, without re-requesting the feed: `test_configured_board_proposes_careers_url_with_evidence`
+- [x] Live trial: 16 targets, 40 requests. Three `careers_url` proposals (Oyster, Zapier, Weave); scope, robots and 429 stops observed (see DISCOVERY.md)
+- [ ] A person reviews the three `careers_url` proposals and applies the approved ones to `employers.json`
 
 ## Consumer (G)
 - [ ] Original chat completes [CONSUMER_TEST.md](CONSUMER_TEST.md) and reports results

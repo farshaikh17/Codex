@@ -9,6 +9,7 @@
 - Scheduled execution has been verified once (07:55 UTC, 2026-10-26). GitHub dropped the five earlier hourly ticks and started that one 32 minutes late. Consumers must use the staleness rules in OUTPUT_CONTRACT.md.
 - The hourly tick costs runner minutes even when it skips (BACKLOG P10).
 - The benchmark is small: 21 cases, 34 labelled verdicts, 6 collection scenarios. It finds specific failure modes; it isn't a statistical estimate of accuracy on live feeds.
+- Discovery reads static HTML only. Boards that a page adds with JavaScript (as GitLab's and Remote's careers pages appear to) aren't seen. Expanding `allowed_hosts` to a redirect target (Twilio's jobs.twilio.com, Resilinc's resilinc.ai) needs a person's confirmation.
 - ChatGPT access to this private repository hasn't been verified (see OUTPUT_CONTRACT.md).
 - The local lock uses `fcntl`, so local runs are POSIX only. Actions runs rely on the workflow concurrency group.
 - Publication is atomic per file and ordered (status last). A reader of the working tree during the moves could see new boards with an old status, but git commits, which are what consumers read, are atomic.
