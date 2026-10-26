@@ -1,0 +1,53 @@
+name: Collect public job feeds
+on:
+  workflow_dispatch:
+  push:
+    paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
+  schedule:
+    - cron: '23 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: public-job-collection
+  cancel-in-progress: false
+jobs:
+  collect:
+    # Private execution remains off until the owner verifies a no-spending Actions budget.
+    if: github.event.repository.private == false || vars.ENABLE_JOB_COLLECTOR == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test incremental publishing and adapters
+        run: python -m unittest -v
+      - name: Collect when five hours have elapsed
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          from datetime import datetime,timezone
+          from pathlib import Path
+          status=Path('public/status.json')
+          due=True
+          if os.environ['EVENT']=='schedule' and status.exists():
+              last=json.loads(status.read_text())
+              age=(datetime.now(timezone.utc)-datetime.fromisoformat(last['attempted_at'])).total_seconds()
+              due=age>=5*3600
+          if due:
+              raise SystemExit(subprocess.call(['python','collect.py']))
+          print('Last attempt less than five hours ago; no employer requests.')
+          PY
+      - name: Publish public data and failure status
+        if: always()
+        run: |
+          if [ ! -f public/status.json ]; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update public ATS snapshots'
+          git push
