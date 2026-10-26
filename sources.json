@@ -1,62 +1,72 @@
 [
   {
     "id": "gitlab-greenhouse",
+    "employer": "gitlab",
     "provider": "greenhouse",
     "board": "gitlab",
-    "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true"
+    "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true&pay_transparency=true"
   },
   {
     "id": "remote-greenhouse",
+    "employer": "remote",
     "provider": "greenhouse",
     "board": "remote",
-    "url": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true"
+    "url": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true&pay_transparency=true"
   },
   {
     "id": "clipboard-ashby",
+    "employer": "clipboard",
     "provider": "ashby",
     "board": "clipboard",
     "url": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true"
   },
   {
     "id": "oyster-ashby",
+    "employer": "oyster",
     "provider": "ashby",
     "board": "oyster",
-    "url": "https://api.ashbyhq.com/posting-api/job-board/oyster"
+    "url": "https://api.ashbyhq.com/posting-api/job-board/oyster?includeCompensation=true"
   },
   {
     "id": "zapier-ashby",
+    "employer": "zapier",
     "provider": "ashby",
     "board": "zapier",
-    "url": "https://api.ashbyhq.com/posting-api/job-board/zapier"
+    "url": "https://api.ashbyhq.com/posting-api/job-board/zapier?includeCompensation=true"
   },
   {
     "id": "posthog-ashby",
+    "employer": "posthog",
     "provider": "ashby",
     "board": "posthog",
-    "url": "https://api.ashbyhq.com/posting-api/job-board/posthog"
+    "url": "https://api.ashbyhq.com/posting-api/job-board/posthog?includeCompensation=true"
   },
   {
     "id": "drivetrain-lever",
+    "employer": "drivetrain",
     "provider": "lever",
     "board": "drivetrain",
     "url": "https://api.lever.co/v0/postings/drivetrain?mode=json"
   },
   {
     "id": "resilinc-lever",
+    "employer": "resilinc",
     "provider": "lever",
     "board": "resilinc",
     "url": "https://api.lever.co/v0/postings/resilinc?mode=json"
   },
   {
     "id": "weave-ashby",
+    "employer": "weave",
     "provider": "ashby",
     "board": "weave",
-    "url": "https://api.ashbyhq.com/posting-api/job-board/weave"
+    "url": "https://api.ashbyhq.com/posting-api/job-board/weave?includeCompensation=true"
   },
   {
     "id": "twilio-greenhouse",
+    "employer": "twilio",
     "provider": "greenhouse",
     "board": "twilio",
-    "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true"
+    "url": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true&pay_transparency=true"
   }
 ]
