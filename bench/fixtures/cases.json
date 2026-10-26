@@ -63,8 +63,8 @@
        "basis": "3+ years of customer success experience"
       },
       "salary": {
-       "value": "pass",
-       "basis": "$130,000 - $150,000 per year base salary"
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
       },
       "application_history": {
        "value": "pass",
@@ -89,15 +89,15 @@
        "basis": "3+ years of customer success experience"
       },
       "salary": {
-       "value": "pass",
-       "basis": "$130,000 - $150,000 per year base salary"
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
       },
       "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "verdict": "ready"
+     "verdict": "conditional"
     }
    }
   },
@@ -602,8 +602,8 @@
        "basis": "2+ years of customer success experience"
       },
       "salary": {
-       "value": "pass",
-       "basis": "$100,000 - $140,000 per year base salary"
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
       },
       "application_history": {
        "value": "pass",
@@ -1239,8 +1239,8 @@
        "basis": "2+ years of customer success experience"
       },
       "salary": {
-       "value": "pass",
-       "basis": "$130,000 - $145,000 per year base salary"
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
       },
       "application_history": {
        "value": "pass",
@@ -1265,8 +1265,8 @@
        "basis": "2+ years of customer success experience"
       },
       "salary": {
-       "value": "pass",
-       "basis": "$130,000 - $145,000 per year base salary"
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
       },
       "application_history": {
        "value": "fail",
