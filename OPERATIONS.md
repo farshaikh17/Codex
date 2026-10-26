@@ -36,12 +36,12 @@ robots.txt is fetched once per origin and parsed; permission is evaluated separa
 
 capture_status says whether text loaded: usable (at least 150 words) or thin (fewer). It says nothing about jobs. listing_quality says whether the text holds postings, from deterministic heuristics:
 
-- job_links: distinct links whose path has a job-like segment (jobs, careers, positions, openings, details, roles ...) followed by an identifier, excluding the page itself and in-page anchors.
+- job_links: distinct links whose path has a job-like segment (jobs, careers, positions, openings, details, roles ...) followed by an identifier, excluding the page itself and in-page anchors. Postings on one site share a URL shape (parent path plus whether the last segment is numeric, contains a digit, or is words); when one shape holds at least 80% of at least 5 candidates, the other links are navigation and are not counted. On the 17:44 captures this removed Canonical's 13 department pages ("Engineering 167 roles") and 7 culture pages (333 to 313, matching its claimed 313) and Atlassian's recruitment-fraud notice (335 to 334, matching 334). Because review_hash on job_links basis covers these links, the first capture after this change reports review_change changed once for Canonical and Atlassian.
 - claimed_total: the largest "N jobs / N results / N JOBS FOUND" count on the page, if any.
 - flags: cookie_heavy (at least 30% of words are on cookie, consent or tracking lines), no_job_links, openings_section_empty (an "open/current openings/positions/roles" heading with no job links), paginated_or_truncated (claimed_total well above job_links, or load-more / next-page markers).
 - listing_quality: listings_found, partial_listings (paginated_or_truncated) or no_listings_detected. coverage: appears_complete (claimed_total matches the links), partial, none_detected or unknown (links found, no count to compare).
 
-Trial captures labelled this way: Atlassian listings_found, appears_complete (335 links, 334 claimed); Automattic and Doist listings_found, coverage unknown; Salesforce Workday partial_listings (20 of 1568); Toggl no_listings_detected with cookie_heavy and openings_section_empty.
+Trial captures labelled this way: Atlassian listings_found, appears_complete (334 links, 334 claimed); Automattic and Doist listings_found, coverage unknown; Salesforce Workday partial_listings (20 of 1568); Toggl no_listings_detected with cookie_heavy and openings_section_empty.
 
 ### Raw and review hashes
 

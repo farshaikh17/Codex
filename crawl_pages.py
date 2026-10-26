@@ -95,15 +95,29 @@ def review_basis(text,page):
         body=json.dumps({'job_links':sorted(links.items()),'claimed_total':max(claims) if claims else None},ensure_ascii=False,sort_keys=True)
         return 'job_links',hashlib.sha256(body.encode()).hexdigest()
     return 'text',hashlib.sha256(review_text(text).encode()).hexdigest()
+def link_shape(url):
+    """Parent path (at most two segments) and the kind of the last segment: numeric, containing a digit, or words."""
+    segs=[s for s in urlparse(url).path.split('/') if s]
+    last=segs[-1] if segs else ''
+    kind='numeric' if re.fullmatch(r'\d+',last) else ('has_digit' if re.search(r'\d',last) else 'word')
+    return '/'.join(segs[:min(2,len(segs)-1)]),kind
 def job_links(text,page):
     """Distinct links that look like individual postings: a job-ish path segment followed by an identifier,
-    excluding the listing page itself and in-page anchors."""
+    excluding the listing page itself and in-page anchors. Postings on one site share a URL shape; when one shape
+    holds at least 80% of at least 5 candidates, the rest are navigation (department pages such as 'Engineering
+    167 roles', culture pages, fraud notices) and are dropped."""
     base=urldefrag(page['url'])[0].rstrip('/')
     found={}
     for label,url in LINK.findall(text):
         url=urldefrag(url)[0]
         if url.rstrip('/')!=base and JOB_PATH.search(urlparse(url).path) and len(label.split())<=40:
             found.setdefault(url,' '.join(label.split()))
+    shapes={u:link_shape(u) for u in found}
+    counts={}
+    for sh in shapes.values(): counts[sh]=counts.get(sh,0)+1
+    if len(found)>=5:
+        top=max(counts,key=counts.get)
+        if counts[top]>=0.8*len(found): found={u:l for u,l in found.items() if shapes[u]==top}
     return found
 def listing_quality(text,page):
     """Labels whether the capture holds job listings, separately from whether it holds substantial text."""

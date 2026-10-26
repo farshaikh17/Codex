@@ -248,6 +248,23 @@ class CaptureTests(unittest.TestCase):
         for p in index['pages']:
             self.assertEqual(list(p),list(PAGE_KEYS))
             if p['last_attempt']: self.assertEqual(list(p['last_attempt']),list(ATTEMPT_KEYS))
+    def test_navigation_links_beside_postings_are_not_counted(self):
+        """Shapes from the 17:44 live captures: Canonical lists 313 numeric postings plus department pages
+        ('Engineering 167 roles') and culture pages; Atlassian adds a recruitment-fraud notice."""
+        p=dict(PAGE,url='https://careers.example.com/careers/all')
+        posts='\n'.join('* [Role %d](https://careers.example.com/careers/%d)'%(i,7000000+i) for i in range(30))
+        nav=('* [Engineering 17 roles](https://careers.example.com/careers/engineering)\n'
+             '* [Sales 7 roles](https://careers.example.com/careers/sales)\n'
+             '* [Remote work](https://careers.example.com/careers/company-culture/remote-work)\n'
+             '* [Diversity](https://careers.example.com/careers/company-culture/diversity)')
+        got=listing_quality(WORDS+'\n30 jobs\n'+nav+'\n'+posts,p)
+        self.assertEqual((got['job_links'],got['coverage']),(30,'appears_complete'))
+        slugs='\n'.join('* [Role %d](https://careers.example.com/work-with-us/job/role-%s/)'%(i,'abcdefghij'[i]) for i in range(10))
+        self.assertEqual(listing_quality(WORDS+'\n'+slugs,p)['job_links'],10)  # one shape: nothing dropped
+        mixed='\n'.join('* [Role %d](https://careers.example.com/careers/%d)'%(i,i) for i in range(3))+'\n'+nav
+        self.assertEqual(listing_quality(WORDS+'\n'+mixed,p)['job_links'],7)  # no dominant shape: keep everything
+        few='* [Role](https://careers.example.com/careers/123)\n* [Engineering 5 roles](https://careers.example.com/careers/engineering)'
+        self.assertEqual(listing_quality(WORDS+'\n'+few,p)['job_links'],2)  # under 5 candidates: keep everything
     def test_classify_keeps_job_pages_with_invisible_recaptcha_script(self):
         got={'status_code':200,'html':'<script src="https://www.google.com/recaptcha/api.js?render=k"></script>','text':WORDS}
         self.assertEqual(classify(PAGE,got,150)[0],'usable')
