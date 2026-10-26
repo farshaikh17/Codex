@@ -4,11 +4,11 @@
  "gates": [
   "geography",
   "engagement",
-  "experience",
+  "qualifications",
   "salary",
-  "prior_application"
+  "application_history"
  ],
- "decision_rule": "any gate fail -> EXCLUDE; all gates pass -> READY; otherwise NEEDS_REVIEW. Relevance never changes the decision.",
+ "verdict_rule": "any gate fail -> excluded; all gates pass -> ready; otherwise conditional. Relevance never changes the verdict.",
  "cases": [
   {
    "id": "remote-us-only",
@@ -58,7 +58,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of customer success experience"
       },
@@ -66,12 +66,12 @@
        "value": "pass",
        "basis": "$130,000 - $150,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -84,7 +84,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of customer success experience"
       },
@@ -92,12 +92,12 @@
        "value": "pass",
        "basis": "$130,000 - $150,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "READY"
+     "verdict": "ready"
     }
    }
   },
@@ -143,7 +143,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "4+ years of implementation experience"
       },
@@ -151,12 +151,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     },
     "cand-us": {
      "relevance": "match",
@@ -169,20 +169,20 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
-       "value": "pass",
+      "qualifications": {
+       "value": "fail",
        "basis": "4+ years of implementation experience"
       },
       "salary": {
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -234,7 +234,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -242,12 +242,12 @@
        "value": "pass",
        "basis": "$125,000 - $140,000 USD base per year"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     },
     "cand-us": {
      "relevance": "match",
@@ -260,7 +260,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -268,12 +268,12 @@
        "value": "pass",
        "basis": "$125,000 - $140,000 USD base per year"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "READY"
+     "verdict": "ready"
     }
    }
   },
@@ -322,7 +322,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of customer success experience"
       },
@@ -330,12 +330,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     },
     "cand-us": {
      "relevance": "match",
@@ -348,7 +348,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of customer success experience"
       },
@@ -356,12 +356,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -415,7 +415,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "1+ years of customer success experience"
       },
@@ -423,12 +423,12 @@
        "value": "fail",
        "basis": "This is a commission-only role with no base salary."
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -441,7 +441,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "1+ years of customer success experience"
       },
@@ -449,12 +449,12 @@
        "value": "fail",
        "basis": "This is a commission-only role with no base salary."
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -506,7 +506,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -514,12 +514,12 @@
        "value": "unknown",
        "basis": "OTE is total target pay; the base is not stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -532,7 +532,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -540,12 +540,12 @@
        "value": "unknown",
        "basis": "OTE is total target pay; the base is not stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -597,7 +597,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -605,12 +605,12 @@
        "value": "pass",
        "basis": "$100,000 - $140,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -623,7 +623,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -631,12 +631,12 @@
        "value": "unknown",
        "basis": "Range $100,000 - $140,000 spans the 120,000 floor"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -685,7 +685,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "8+ years of customer success experience"
       },
@@ -693,12 +693,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -711,7 +711,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "8+ years of customer success experience"
       },
@@ -719,12 +719,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -780,7 +780,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience (SQL is only preferred)"
       },
@@ -788,12 +788,12 @@
        "value": "pass",
        "basis": "INR 40,00,000 - 50,00,000 per year base (India)"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "READY"
+     "verdict": "ready"
     },
     "cand-us": {
      "relevance": "match",
@@ -806,7 +806,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience (SQL is only preferred)"
       },
@@ -814,12 +814,12 @@
        "value": "pass",
        "basis": "USD 125,000 - 145,000 per year base (United States)"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "READY"
+     "verdict": "ready"
     }
    }
   },
@@ -869,7 +869,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -877,12 +877,12 @@
        "value": "unknown",
        "basis": "Only a third-party estimate is given"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -895,7 +895,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -903,12 +903,12 @@
        "value": "unknown",
        "basis": "Only a third-party estimate is given"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -960,7 +960,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of implementation experience"
       },
@@ -968,12 +968,12 @@
        "value": "pass",
        "basis": "$130,000 - $150,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     },
     "cand-us": {
      "relevance": "match",
@@ -986,7 +986,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of implementation experience"
       },
@@ -994,12 +994,12 @@
        "value": "pass",
        "basis": "$130,000 - $150,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -1049,7 +1049,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -1057,12 +1057,12 @@
        "value": "unknown",
        "basis": "Hourly rate; an annual figure needs an hours assumption"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -1075,7 +1075,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -1083,12 +1083,12 @@
        "value": "unknown",
        "basis": "Hourly rate; an annual figure needs an hours assumption"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "NEEDS_REVIEW"
+     "verdict": "conditional"
     }
    }
   },
@@ -1143,7 +1143,7 @@
        "value": "pass",
        "basis": "This is a 6-month contract position. (contract accepted)"
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of implementation experience"
       },
@@ -1151,12 +1151,12 @@
        "value": "pass",
        "basis": "₹35,00,000 - ₹40,00,000 per year (India)"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "READY"
+     "verdict": "ready"
     },
     "cand-us": {
      "relevance": "match",
@@ -1169,7 +1169,7 @@
        "value": "fail",
        "basis": "This is a 6-month contract position. (full-time only)"
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "3+ years of implementation experience"
       },
@@ -1177,12 +1177,12 @@
        "value": "pass",
        "basis": "$130,000 - $150,000 per year (United States)"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -1234,7 +1234,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -1242,12 +1242,12 @@
        "value": "pass",
        "basis": "$130,000 - $145,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "match",
@@ -1260,7 +1260,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "pass",
        "basis": "2+ years of customer success experience"
       },
@@ -1268,12 +1268,12 @@
        "value": "pass",
        "basis": "$130,000 - $145,000 per year base salary"
       },
-      "prior_application": {
+      "application_history": {
        "value": "fail",
        "basis": "cand-us applied on 2026-09-14"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -1322,7 +1322,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "5+ years of backend software engineering in Go"
       },
@@ -1330,12 +1330,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     },
     "cand-us": {
      "relevance": "no_match",
@@ -1348,7 +1348,7 @@
        "value": "pass",
        "basis": "This is a full-time role."
       },
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "5+ years of backend software engineering in Go"
       },
@@ -1356,12 +1356,12 @@
        "value": "unknown",
        "basis": "No pay is stated"
       },
-      "prior_application": {
+      "application_history": {
        "value": "pass",
        "basis": "No application on record for this posting"
       }
      },
-     "decision": "EXCLUDE"
+     "verdict": "excluded"
     }
    }
   },
@@ -1515,7 +1515,7 @@
     "cand-in": {
      "relevance": "no_match",
      "gates": {
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "4-6+ years of accounting/finance-specific experience"
       }
@@ -1524,7 +1524,7 @@
     "cand-us": {
      "relevance": "no_match",
      "gates": {
-      "experience": {
+      "qualifications": {
        "value": "fail",
        "basis": "4-6+ years of accounting/finance-specific experience"
       }

@@ -3,27 +3,29 @@
 Labels are test expectations written with the fixtures, never model output. Gating metrics use only
 author_constructed cases; needs_human_review cases are reported separately until a person confirms them.
 """
-import json
+import json,re
 from pathlib import Path
 FIXTURES=Path(__file__).resolve().parent/'fixtures'
-GATES=('geography','engagement','experience','salary','prior_application')
+GATES=('geography','engagement','qualifications','salary','application_history')
 GATE_VALUES={'pass','fail','unknown'}
-DECISIONS={'READY','EXCLUDE','NEEDS_REVIEW'}
+VERDICTS={'ready','conditional','excluded'}
+YEARS=re.compile(r'(\d+)\+ years of ([a-z ]+?) experience')
 EVIDENCE_STATES={'stated','not_stated','conflicting','not_retrieved'}
 AVAILABILITY={'listed','missing','closed_stated'}
 LABEL_STATUS={'author_constructed','needs_human_review'}
 def load(name):
     return json.loads((FIXTURES/name).read_text(encoding='utf-8'))
 def decide(gates):
-    """The benchmark's decision rule: any fail excludes, all pass is READY, anything else needs review."""
+    """The verdict rule (the same as ENGINE step 4): any fail is excluded, all pass is ready, anything else is conditional."""
     values=[gates[g]['value'] if isinstance(gates[g],dict) else gates[g] for g in GATES]
-    if 'fail' in values: return 'EXCLUDE'
-    return 'READY' if all(v=='pass' for v in values) else 'NEEDS_REVIEW'
+    if 'fail' in values: return 'excluded'
+    return 'ready' if all(v=='pass' for v in values) else 'conditional'
 def validate(cases=None,candidates=None):
     """Returns a list of problems in the fixtures themselves; empty means the labels are internally consistent."""
     cases=cases or load('cases.json')
     candidates=candidates or load('candidates.json')
-    cids={c['id'] for c in candidates['candidates']}
+    people={c['id']:c for c in candidates['candidates']}
+    cids=set(people)
     problems,seen=[],set()
     for c in cases['cases']:
         where='case %s'%c.get('id')
@@ -47,13 +49,17 @@ def validate(cases=None,candidates=None):
                 elif c['label_status']=='author_constructed' and v['value']!='unknown':
                     quote=v['basis'].split(' (')[0].strip('"')
                     text=' '.join([p.get('description') or '',p.get('compensation_raw') or '']+[l['text'] for l in p.get('locations') or []])
-                    if g!='prior_application' and quote not in text:
+                    if g!='application_history' and quote not in text:
                         problems.append('%s/%s: %s basis %r is not quoted from the posting'%(where,cid,g,quote))
-            if 'decision' in exp:
-                if set(gates)!=set(GATES): problems.append('%s/%s: a decision label needs every gate'%(where,cid))
-                elif exp['decision'] not in DECISIONS or exp['decision']!=decide(gates):
-                    problems.append('%s/%s: decision %s contradicts the decision rule (%s)'%(where,cid,exp.get('decision'),decide(gates)))
-            elif c['label_status']=='author_constructed': problems.append('%s/%s: author_constructed labels need a decision'%(where,cid))
+                    m=YEARS.search(quote) if g=='qualifications' else None
+                    years=(people.get(cid) or {}).get('experience_years',{}).get(m.group(2).replace(' ','_')) if m else None
+                    if years is not None and (v['value']=='pass')!=(years>=int(m.group(1))):
+                        problems.append('%s/%s: qualifications %s contradicts %s years of %s on file'%(where,cid,v['value'],years,m.group(2)))
+            if 'verdict' in exp:
+                if set(gates)!=set(GATES): problems.append('%s/%s: a verdict label needs every gate'%(where,cid))
+                elif exp['verdict'] not in VERDICTS or exp['verdict']!=decide(gates):
+                    problems.append('%s/%s: verdict %s contradicts the verdict rule (%s)'%(where,cid,exp.get('verdict'),decide(gates)))
+            elif c['label_status']=='author_constructed': problems.append('%s/%s: author_constructed labels need a verdict'%(where,cid))
             if exp.get('relevance') not in ('match','no_match'): problems.append('%s/%s: relevance must be match or no_match'%(where,cid))
     return problems
 def pairs(cases,status=('author_constructed',)):
@@ -61,26 +67,27 @@ def pairs(cases,status=('author_constructed',)):
         if c['label_status'] in status:
             for cid,exp in (c.get('expected') or {}).items(): yield c,cid,exp
 def score_assessments(predictions,cases=None,status=('author_constructed',)):
-    """predictions: [{case, candidate, decision, gates?:{gate: value}}]. Missing predictions count as not READY and are listed."""
+    """predictions: [{case, candidate, verdict, gates?:{gate: value}}]. Missing predictions count as not ready and are listed."""
     cases=cases or load('cases.json')
     got={(p['case'],p['candidate']):p for p in predictions}
-    r={'pairs':0,'false_ready':[],'missed_ready':[],'incorrect_exclusions':[],'expected_unknowns':0,'retained_unknowns':0,
-       'missing':[],'gate_agreement':{g:[0,0] for g in GATES},'decision_matrix':{}}
+    r={'pairs':0,'false_ready':[],'missed_ready':[],'incorrect_exclusions':[],'missed_exclusions':[],'expected_unknowns':0,'retained_unknowns':0,
+       'missing':[],'gate_agreement':{g:[0,0] for g in GATES},'verdict_matrix':{}}
     for c,cid,exp in pairs(cases,status):
-        if 'decision' not in exp: continue
+        if 'verdict' not in exp: continue
         r['pairs']+=1
         key=(c['id'],cid)
         p=got.get(key)
         if p is None: r['missing'].append('%s/%s'%key)
-        pd=(p or {}).get('decision','MISSING')
-        cell='%s->%s'%(exp['decision'],pd)
-        r['decision_matrix'][cell]=r['decision_matrix'].get(cell,0)+1
-        if pd=='READY' and exp['decision']!='READY': r['false_ready'].append('%s/%s'%key)
-        if exp['decision']=='READY' and pd!='READY': r['missed_ready'].append('%s/%s'%key)
-        if pd=='EXCLUDE' and exp['decision'] in ('READY','NEEDS_REVIEW'): r['incorrect_exclusions'].append('%s/%s'%key)
-        if exp['decision']=='NEEDS_REVIEW':
+        pv=(p or {}).get('verdict','missing')
+        cell='%s->%s'%(exp['verdict'],pv)
+        r['verdict_matrix'][cell]=r['verdict_matrix'].get(cell,0)+1
+        if pv=='ready' and exp['verdict']!='ready': r['false_ready'].append('%s/%s'%key)
+        if exp['verdict']=='ready' and pv!='ready': r['missed_ready'].append('%s/%s'%key)
+        if pv=='excluded' and exp['verdict'] in ('ready','conditional'): r['incorrect_exclusions'].append('%s/%s'%key)
+        if exp['verdict']=='excluded' and pv!='excluded': r['missed_exclusions'].append('%s/%s'%key)
+        if exp['verdict']=='conditional':
             r['expected_unknowns']+=1
-            r['retained_unknowns']+=pd=='NEEDS_REVIEW'
+            r['retained_unknowns']+=pv=='conditional'
         for g in GATES:
             if p and g in (p.get('gates') or {}):
                 r['gate_agreement'][g][1]+=1
@@ -139,5 +146,5 @@ def score_queue(runs,collection=None):
 def baseline(name,cases=None):
     """Trivial assessors that show the metrics discriminate: always_ready, always_exclude, always_review."""
     cases=cases or load('cases.json')
-    decision={'always_ready':'READY','always_exclude':'EXCLUDE','always_review':'NEEDS_REVIEW'}[name]
-    return [{'case':c['id'],'candidate':cid,'decision':decision} for c,cid,exp in pairs(cases) if 'decision' in exp]
+    verdict={'always_ready':'ready','always_exclude':'excluded','always_review':'conditional'}[name]
+    return [{'case':c['id'],'candidate':cid,'verdict':verdict} for c,cid,exp in pairs(cases) if 'verdict' in exp]

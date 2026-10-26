@@ -21,7 +21,7 @@ def main(argv):
     if cmd=='baselines':
         for name in ('always_ready','always_exclude','always_review'):
             r=score.score_assessments(score.baseline(name))
-            report(name,{k:(len(v) if isinstance(v,list) else v) for k,v in r.items() if k!='decision_matrix'})
+            report(name,{k:(len(v) if isinstance(v,list) else v) for k,v in r.items() if k!='verdict_matrix'})
         return 0
     if cmd=='engine':
         from bench import engine_adapter
@@ -31,6 +31,8 @@ def main(argv):
         preds=engine_adapter.predictions()
         report('extraction',score.score_extraction(preds))
         report('extraction_needs_human_review',score.score_extraction(preds,status=('needs_human_review',)))
+        if engine_adapter.gates_available():
+            report('gates',score.score_assessments(engine_adapter.gate_predictions()))
         return 0
     if cmd=='score' and len(argv)>1:
         preds=json.loads(open(argv[1],encoding='utf-8').read())

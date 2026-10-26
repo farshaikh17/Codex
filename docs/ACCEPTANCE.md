@@ -34,9 +34,10 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Every difficult case from the extension request is present: `test_required_difficult_cases_present`
 - [x] Metrics separate trivial assessors (always-READY, always-exclude, always-review): `test_baselines_are_separated`
 - [x] Collector meets all 6 collection scenarios (29 checks), and the runner catches a wrong expectation: `test_collector_meets_every_scenario`, `test_runner_detects_a_wrong_expectation`
-- [x] PR #2's extractor measured on a scratch merge (see BENCHMARK.md current measurements)
+- [x] PR #2's extractor and gates (8794ca8) measured on a scratch merge: gates false READY 0, incorrect exclusions 0 (see BENCHMARK.md)
+- [x] Validator catches a qualifications label that contradicts the candidate's years on file (the error found by cross-checking PR #2's gates)
 - [ ] A person confirms or corrects the two `needs_human_review` real cases
-- [ ] ENGINE step 3+4 gates scored with `python -m bench score` (false READY must be 0)
+- [ ] Re-score ENGINE steps 3+4 after PR #2 merges, and after each gates change (false READY must stay 0)
 
 ## Consumer (G)
 - [ ] Original chat completes [CONSUMER_TEST.md](CONSUMER_TEST.md) and reports results

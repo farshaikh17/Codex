@@ -17,28 +17,31 @@ class FixtureTests(unittest.TestCase):
         cases=score.load('cases.json')
         broken=copy.deepcopy(cases)
         exp=next(c for c in broken['cases'] if c['id']=='range-spans-threshold')['expected']['cand-us']
-        exp['decision']='READY'  # a salary range spanning the floor must not be labelled READY
-        self.assertIn('contradicts the decision rule',' '.join(score.validate(broken)))
+        exp['verdict']='ready'  # a salary range spanning the floor must not be labelled ready
+        self.assertIn('contradicts the verdict rule',' '.join(score.validate(broken)))
+        broken=copy.deepcopy(cases)
+        next(c for c in broken['cases'] if c['id']=='remote-india-allowed')['expected']['cand-us']['gates']['qualifications']['value']='pass'
+        self.assertIn('contradicts 3 years of implementation on file',' '.join(score.validate(broken)))  # caught by cross-checking PR #2's gates
         broken=copy.deepcopy(cases)
         next(c for c in broken['cases'] if c['id']=='remote-us-only')['expected']['cand-us']['gates']['geography']['basis']='Open to anyone anywhere'
         self.assertIn('is not quoted from the posting',' '.join(score.validate(broken)))
     def test_two_candidates_differ_on_one_posting(self):
         case=next(c for c in score.load('cases.json')['cases'] if c['id']=='contract-role')
-        self.assertEqual((case['expected']['cand-in']['decision'],case['expected']['cand-us']['decision']),('READY','EXCLUDE'))
+        self.assertEqual((case['expected']['cand-in']['verdict'],case['expected']['cand-us']['verdict']),('ready','excluded'))
 class MetricTests(unittest.TestCase):
     def test_baselines_are_separated(self):
         ready=score.score_assessments(score.baseline('always_ready'))
         exclude=score.score_assessments(score.baseline('always_exclude'))
         review=score.score_assessments(score.baseline('always_review'))
-        self.assertEqual(len(ready['false_ready']),ready['pairs']-len([1 for c,cid,e in score.pairs(score.load('cases.json')) if e.get('decision')=='READY']))
+        self.assertEqual(len(ready['false_ready']),ready['pairs']-len([1 for c,cid,e in score.pairs(score.load('cases.json')) if e.get('verdict')=='ready']))
         self.assertEqual((len(exclude['false_ready']),len(exclude['incorrect_exclusions'])>0),(0,True))
         self.assertEqual((len(review['false_ready']),len(review['incorrect_exclusions']),review['retained_unknowns']),(0,0,review['expected_unknowns']))
         self.assertTrue(review['missed_ready'])  # never committing is not free either
     def test_perfect_predictions_score_clean(self):
-        perfect=[{'case':c['id'],'candidate':cid,'decision':e['decision'],'gates':{g:v['value'] for g,v in e['gates'].items()}}
+        perfect=[{'case':c['id'],'candidate':cid,'verdict':e['verdict'],'gates':{g:v['value'] for g,v in e['gates'].items()}}
                  for c,cid,e in score.pairs(score.load('cases.json'))]
         r=score.score_assessments(perfect)
-        self.assertEqual((r['false_ready'],r['missed_ready'],r['incorrect_exclusions'],r['missing']),([],[],[],[]))
+        self.assertEqual((r['false_ready'],r['missed_ready'],r['incorrect_exclusions'],r['missed_exclusions'],r['missing']),([],[],[],[],[]))
         self.assertTrue(all(a.split('/')[0]==a.split('/')[1] for a in r['gate_agreement'].values()))
     def test_missing_predictions_are_reported_not_ignored(self):
         r=score.score_assessments([])
