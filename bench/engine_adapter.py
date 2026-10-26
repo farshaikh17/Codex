@@ -39,7 +39,7 @@ def gates_available():
         return True
     except ImportError:
         return False
-BENCH_PEOPLE={  # bench/fixtures/candidates.json expressed in candidate-config-1. One salary floor per candidate is all it supports.
+BENCH_PEOPLE={  # bench/fixtures/candidates.json in candidate-config-1, which holds one salary floor; cand-in's USD floor is dropped until it holds several (owner rule 2026-10-26).
     'cand-in':{'countries':['IN'],'years':6,'types':['full_time','contract'],'floor':(3000000,'INR'),'history':[]},
     'cand-us':{'countries':['US'],'years':3,'types':['full_time'],'floor':(120000,'USD'),
                'history':[{'posting_id':'lever:bench:already-applied','status':'applied','date':'2026-09-14'}]}}
