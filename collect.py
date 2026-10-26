@@ -9,6 +9,9 @@ import registry
 ROOT=Path(__file__).resolve().parent
 HOSTS={p:feed[0] for p,feed in registry.FEEDS.items()}
 DUE_SLACK=timedelta(minutes=15)  # hourly ticks drift; without slack a 5-hour interval becomes 6
+# Bumped when adapters change how a field is written, so the change is not mistaken for an employer edit.
+# 2: Ashby compensation_raw keeps compensationTiers as JSON instead of the one-line summary.
+NORMALIZATION_VERSION=2
 FIELDS=('key','provider','board','req_id','title','locations','workplace_type','url','apply_url','published','description','compensation_raw')
 NOTICE='Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.'
 def read(path,default):
@@ -122,7 +125,8 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
             status=dict(prior)|{'attempted_this_run':False}
         else:
             status={'source':source['id'],'endpoint':source['url'],'checked_at':now,'attempted_this_run':True,
-                    'endpoint_changed':bool(prior.get('endpoint')) and prior.get('endpoint')!=source['url']}
+                    'endpoint_changed':bool(prior.get('endpoint')) and prior.get('endpoint')!=source['url'],
+                    'normalization_changed':bool(previous['jobs']) and previous.get('normalization_version',1)!=NORMALIZATION_VERSION}
             try:
                 jobs,skipped,seen=[],0,set()
                 for raw in extract_jobs(source['provider'],fetcher(source)):
@@ -135,7 +139,8 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
                     job['change']='new' if job['key'] not in old else ('unchanged' if job['content_hash']==old[job['key']]['content_hash'] else 'changed')
                     if job['change']=='changed': job['changed_fields']=sorted(k for k in FIELDS if job[k]!=old[job['key']].get(k))
                     jobs.append(job)
-                staged[rel]={'schema':'public-job-board-1','source':source['id'],'run_id':run_id,'collected_at':now,'jobs':jobs}
+                staged[rel]={'schema':'public-job-board-1','source':source['id'],'run_id':run_id,'collected_at':now,
+                             'normalization_version':NORMALIZATION_VERSION,'jobs':jobs}
                 status.update(status='ok',jobs=len(jobs),skipped=skipped,new=sum(j['change']=='new' for j in jobs),changed=sum(j['change']=='changed' for j in jobs),no_longer_listed=sorted(set(old)-seen))
             except Exception as error:
                 jobs=previous['jobs']

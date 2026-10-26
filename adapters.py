@@ -105,6 +105,23 @@ def _flag_from_workplace(wt):
         return False
     return None
 
+ASHBY_COMPONENT_KEYS = ('compensationType', 'currencyCode', 'interval', 'minValue', 'maxValue', 'summary')
+
+def ashby_compensation(c):
+    """Ashby compensation, verbatim. With compensationTiers (one tier per location or level), returns compact JSON
+    keeping each tier's title and each component's type, currency, interval and amounts exactly as published, so
+    nothing is lost to the one-line summary (which shows only the first tier, e.g. '$54.6K \u2013 $61.2K \u2022
+    Multiple Ranges' for a USD and a CAD tier). Without tiers, the summary text as before. Never converts or infers."""
+    tiers = [t for t in c.get('compensationTiers') or [] if isinstance(t, dict)]
+    if tiers:
+        return json.dumps({'source': 'ashby.compensationTiers', 'summary': _s(c.get('compensationTierSummary')) or None,
+                           'tiers': [{'title': t.get('title'), 'summary': t.get('tierSummary'),
+                                      'additional_information': t.get('additionalInformation'),
+                                      'components': [{k: comp.get(k) for k in ASHBY_COMPONENT_KEYS}
+                                                     for comp in t.get('components') or [] if isinstance(comp, dict)]}
+                                     for t in tiers]}, ensure_ascii=False, separators=(',', ':'))
+    return _s(c.get('compensationTierSummary')) or _s(c.get('scrapeableCompensationSalarySummary')) or None
+
 def normalize(provider, board, j):
     if not isinstance(j, dict):
         raise Skip('not_object', 'job entry is not an object')
@@ -149,7 +166,7 @@ def normalize(provider, board, j):
         if flag is None and j.get('isRemote') is True:
             flag, wt = True, 'isRemote=true'
         c = j.get('compensation') if isinstance(j.get('compensation'), dict) else {}
-        comp = _s(c.get('compensationTierSummary')) or _s(c.get('scrapeableCompensationSalarySummary')) or None
+        comp = ashby_compensation(c)
         desc = _s(j.get('descriptionPlain')) or html_to_text(_s(j.get('descriptionHtml')))
         return _rec(provider, board, req, j.get('title'), locs, flag, wt, j.get('jobUrl'),
                     j.get('applyUrl'), j.get('publishedAt'), None, desc, comp, j)
