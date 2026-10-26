@@ -11,15 +11,17 @@ import argparse,copy,json,re,shutil,sys,tempfile
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
 import engine.outputs as eo
+import engine.run as er
 import engine.review as rq
 import engine.sheets as sh
 from engine import candidates as cfg
 from engine import leads as el
+from engine.lock import LockBusy,RunLock
 from engine.store import connect,extract_pending,ingest_snapshot,summary
 ROOT=Path(__file__).resolve().parent.parent
 FIXTURES=ROOT/'engine'/'tests'/'fixtures'/'candidates'
 T0=datetime(2030,1,1,9,0,tzinfo=timezone.utc)  # a fixed clock, later than any committed snapshot
-SCOPE={'proves':'engine behaviour end to end, offline: store, extraction, leads, screening, review queue, outputs and ledger sync',
+SCOPE={'proves':'engine behaviour end to end, offline: store, extraction, leads, screening, review queue, outputs, ledger sync and the locked run pipeline',
        'does_not_prove':['live collection against employer feeds','scheduled execution','live Google Sheets or tracker ingestion',
                          'ChatGPT access to this private repository','outcomes for real candidates (synthetic profiles only)']}
 def at(minutes):
@@ -277,6 +279,26 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         r.counts['collection']={'first':{'sources':len(status1['sources']),'listed':expected},
                                 'follow_up':{k:sum(s.get(k,0) for s in ing2['sources']) for k in ('new','changed','unchanged','missing','inaccessible')}}
         r.counts['duplicates_marked']={c:v['duplicate'] for c,v in enq.items()}
+        # 8. reliability: the same two collections through the locked pipeline, on a fresh store -------------
+        rdb=work/'run'/'engine.sqlite3'
+        hour_after=lambda snap:(datetime.fromisoformat(json.loads((snap/'status.json').read_text())['attempted_at'])+timedelta(hours=1)).isoformat()
+        run1=er.run(rdb,snap1,sources,pages_root=root,now=hour_after(snap1))
+        r.check('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
+                run1['outcome']=='ok' and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
+                {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected']})
+        with RunLock(rdb,'acceptance: a run already in progress'):
+            try: er.run(rdb,snap2,sources,pages_root=root,now=hour_after(snap2));busy=False
+            except LockBusy: busy=True
+        r.check('8 reliability','a second run is refused while one holds the lock',busy,'LockBusy')
+        run2=er.run(rdb,snap2,sources,pages_root=root,now=hour_after(snap2))
+        state={f['source']:f['state'] for f in run2['freshness']['sources']}
+        r.check('8 reliability','the follow-up run is partial, names the failed source and re-extracts only the change',
+                run2['outcome']=='partial' and any(info['failed_source'] in x for x in run2['reasons']) and state[info['failed_source']]=='failing'
+                and run2['counts']['extracted']==1,{'reasons':run2['reasons'],'extracted':run2['counts']['extracted']})
+        rconn=connect(rdb)
+        runs=[x[0] for x in rconn.execute('select outcome from engine_runs order by run_id')]
+        rconn.close()
+        r.check('8 reliability','every run is recorded with its outcome',runs==['ok','partial'],runs)
         store.close();queue.close()
     except Exception as e:  # an unexpected failure is a failed acceptance, reported with its cause
         r.check('run','acceptance completed without an unexpected error',False,'%s: %s'%(type(e).__name__,e))

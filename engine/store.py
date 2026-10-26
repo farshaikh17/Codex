@@ -10,12 +10,12 @@ Availability states:
   inaccessible  the latest retrieval of its source failed; last known state was listed
   expired       explicit closure evidence recorded with mark_expired()
 """
-import hashlib,json,re,sqlite3
+import hashlib,json,re,sqlite3,time
 from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import parse_qsl,urlencode,urlsplit,urlunsplit
 from engine.extract import EXTRACTOR_VERSION,FIELDS,extract
-SCHEMA_VERSION=3
+SCHEMA_VERSION=4
 CONTENT_HASH_VERSION=1
 CONTENT_FIELDS=('title','locations','workplace_type','description','compensation_raw')
 TRACKING=re.compile(r'^(utm_[a-z_]+|gh_src|lever-source|lever-origin|lever-via|fbclid|gclid|mc_cid|mc_eid)$',re.I)
@@ -92,7 +92,13 @@ create table leads(
   state_at text not null,matched_posting_id text);
 create index leads_canonical on leads(canonical_url);
 '''
-MIGRATIONS={2:(V2,_backfill_changes),3:(V3,lambda conn:None)}
+V4='''
+create table engine_runs(
+  run_id integer primary key,started_at text not null,finished_at text,
+  outcome text not null check(outcome in ('running','ok','partial','failed','interrupted')),
+  reasons text,report text,error text);
+'''
+MIGRATIONS={2:(V2,_backfill_changes),3:(V3,lambda conn:None),4:(V4,lambda conn:None)}
 def connect(path,timeout=30):
     """Opens the store, creating or migrating it on first use; opening a current store never writes.
     WAL mode lets readers continue during an ingest; a second writer waits up to timeout seconds, then fails."""
@@ -197,9 +203,16 @@ def ingest_snapshot(conn,public,sources=()):
     conn.execute('begin immediate')
     try:
         for s in status.get('sources',[]):
-            sid,at=s['source'],s['checked_at']
-            out={'source':sid,'checked_at':at,'status':s['status'],'action':'ingested',
+            sid,at=s['source'],s.get('checked_at')
+            out={'source':sid,'checked_at':at,'status':s.get('status'),'action':'ingested',
                  'new':0,'changed':0,'unchanged':0,'missing':0,'inaccessible':0,'relisted':0}
+            if s.get('status') not in ('ok','failed') or not at:
+                # Not a retrieval this engine can read (for example a source the collector skipped while backing off).
+                # It says nothing about the source's postings, so nothing changes; the next real attempt is ingested.
+                out['action']='not_attempted'
+                out['reason']=s.get('not_attempted_reason') or ('status %r'%s.get('status') if at else 'no checked_at')
+                result['sources'].append(out)
+                continue
             latest=conn.execute('select max(checked_at) from source_runs where source_id=?',(sid,)).fetchone()[0]
             if latest and at<=latest:
                 out['action']='already_ingested' if at==latest else 'older_than_store'
@@ -256,16 +269,21 @@ def mark_expired(conn,posting_id,at,evidence):
         found=conn.execute("update postings set availability='expired',availability_at=?,availability_reason=? where posting_id=?",
                            (at,evidence[:500],posting_id)).rowcount
     if not found: raise KeyError(posting_id)
-def extract_pending(conn,limit=None,batch=100,now=None):
+def extract_pending(conn,limit=None,batch=100,now=None,max_seconds=None,clock=time.monotonic):
     """Extracts every stored version that has no extraction at the current EXTRACTOR_VERSION, current versions first.
     Results are cached by (posting, content hash, extractor version), independent of any candidate, so unchanged
-    content is never re-extracted. Commits every batch, so an interrupted run keeps its progress and resumes."""
+    content is never re-extracted. Commits every batch, so an interrupted run keeps its progress and resumes.
+    max_seconds is a time budget checked between batches: the run stops cleanly and reports what is still pending."""
     now=now or datetime.now(timezone.utc).isoformat()
     todo=conn.execute('''select v.*,p.url from posting_versions v join postings p using(posting_id)
         where not exists(select 1 from extractions e where e.posting_id=v.posting_id and e.content_hash=v.content_hash and e.extractor_version=?)
         order by v.content_hash!=p.content_hash,v.first_seen_at,v.posting_id'''+(' limit %d'%int(limit) if limit else ''),(EXTRACTOR_VERSION,)).fetchall()
-    counts={'extracted':0,'ok':0,'uncertain':0,'thin':0,'failed':0}
+    counts={'extracted':0,'ok':0,'uncertain':0,'thin':0,'failed':0,'budget_exhausted':False}
+    started=clock()
     for start in range(0,len(todo),batch):
+        if max_seconds is not None and start and clock()-started>=max_seconds:
+            counts['budget_exhausted']=True
+            break
         conn.execute('begin immediate')
         try:
             for v in todo[start:start+batch]:
@@ -285,7 +303,11 @@ def extract_pending(conn,limit=None,batch=100,now=None):
         except BaseException:
             conn.execute('rollback')
             raise
+    counts['pending']=pending_extractions(conn)
     return counts
+def pending_extractions(conn):
+    return conn.execute('''select count(*) from posting_versions v where not exists(select 1 from extractions e
+        where e.posting_id=v.posting_id and e.content_hash=v.content_hash and e.extractor_version=?)''',(EXTRACTOR_VERSION,)).fetchone()[0]
 def posting_record(conn,posting_id):
     """One readable record: identity, availability, current content hash, change history and extracted evidence."""
     p=conn.execute('select * from postings where posting_id=?',(posting_id,)).fetchone()
@@ -330,3 +352,25 @@ def summary(conn):
             'change_kinds':{r[0]:r[1] for r in conn.execute('select kind,count(*) from version_changes group by kind')},
             'versions':conn.execute('select count(*) from posting_versions').fetchone()[0],
             'duplicate_canonical_urls':dupes,'sources':per}
+def _hours(later,earlier):
+    return round((datetime.fromisoformat(later)-datetime.fromisoformat(earlier)).total_seconds()/3600,2)
+def freshness(conn,now,stale_after_hours=12,expected=()):
+    """Per-source freshness from the retrieval history. States: fresh (last success within stale_after_hours),
+    stale (older), failing (latest attempt failed), never_succeeded, not_reported (an expected source with no
+    retrieval in the store). Postings of a stale or failing source are not evidence of anything current."""
+    out=[]
+    ids=sorted({r[0] for r in conn.execute('select source_id from sources')}|set(expected))
+    for sid in ids:
+        runs=conn.execute('select checked_at,status,error from source_runs where source_id=? order by checked_at desc',(sid,)).fetchall()
+        if not runs:
+            out.append({'source':sid,'state':'not_reported','last_attempt_at':None,'last_success_at':None,'hours_since_success':None,'consecutive_failures':0})
+            continue
+        fails=next((n for n,r in enumerate(runs) if r['status']=='ok'),len(runs))
+        ok=runs[fails]['checked_at'] if fails<len(runs) else None
+        age=None if ok is None else _hours(now,ok)
+        state='never_succeeded' if ok is None else 'failing' if fails else 'stale' if age>stale_after_hours else 'fresh'
+        out.append({'source':sid,'state':state,'last_attempt_at':runs[0]['checked_at'],'last_success_at':ok,'hours_since_success':age,
+                    'consecutive_failures':fails,'last_error':runs[0]['error'] if fails else None})
+    counts={}
+    for f in out: counts[f['state']]=counts.get(f['state'],0)+1
+    return {'at':now,'stale_after_hours':stale_after_hours,'counts':counts,'sources':out}

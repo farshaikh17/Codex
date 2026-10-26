@@ -12,6 +12,9 @@ ap.add_argument('--posting',help='posting id for show, for example greenhouse:gi
 ap.add_argument('--limit',type=int,help='extract at most this many versions')
 args=ap.parse_args()
 conn=connect(args.db)
+if args.command in ('ingest','extract'):  # writers take the run lock, so they never interleave with python -m engine.run
+    from engine.lock import RunLock
+    _lock=RunLock(args.db,'python -m engine '+args.command).__enter__()  # released when this process exits
 if args.command=='show':
     if not args.posting: ap.error('show needs --posting')
     print(json.dumps(posting_record(conn,args.posting),indent=1,ensure_ascii=False))
