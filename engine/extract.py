@@ -5,8 +5,9 @@ Every item quotes the source text it came from. interpretation is filled only wh
 Field states: stated, not_stated, conflicting (explicit statements disagree), not_retrieved (no text to read).
 Nothing here decides fit, eligibility or READY.
 """
-import json,re
-EXTRACTOR_VERSION=1
+import html,json,re
+# 2: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text.
+EXTRACTOR_VERSION=2
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
@@ -93,10 +94,33 @@ def parse_pay(text):
                        'text':m.group(0).strip()})
     if not ranges: return None
     return {'ranges':ranges}|_pay_flags(text)|{'multiple_ranges':len(ranges)>1 or 'multiple ranges' in text.lower()}
+ASHBY_INTERVALS={'1 YEAR':'year','1 MONTH':'month','1 WEEK':'week','1 DAY':'day','1 HOUR':'hour'}
+ASHBY_BASIS={'Salary':'base','Bonus':'variable','Commission':'variable','EquityCashValue':'equity','EquityPercentage':'equity'}
+def _text(fragment):
+    return ' '.join(html.unescape(re.sub(r'<[^>]+>',' ',fragment or '')).split())
+def _ashby_tiers(data):
+    """One item per tier component, exactly as Ashby states it. Currency only from currencyCode (never from '$'),
+    period only from interval ('NONE' or an unknown interval is not stated), basis from compensationType.
+    Null amounts give no range. The quote is the component's own JSON as it appears in compensation_raw."""
+    tiers=data.get('tiers') or []
+    out=[]
+    for tier in tiers:
+        for c in tier.get('components') or []:
+            amounts=(c.get('minValue'),c.get('maxValue'))
+            kind=c.get('compensationType')
+            interp={'ranges':[{'min':min(a for a in amounts if a is not None),'max':max(a for a in amounts if a is not None),
+                               'currency':c.get('currencyCode'),'currency_symbol':None,'text':c.get('summary')}] if any(a is not None for a in amounts) else [],
+                    'period':ASHBY_INTERVALS.get(c.get('interval')),'interval_raw':c.get('interval'),
+                    'basis':ASHBY_BASIS.get(kind,'unspecified'),'component_type':kind,'estimated':False,
+                    'variable_mentioned':kind in ('Bonus','Commission'),'equity_mentioned':(kind or '').startswith('Equity'),
+                    'amount_unit':'percent' if kind=='EquityPercentage' else None,'multiple_ranges':len(tiers)>1,'label':tier.get('title')}
+            out.append((interp,json.dumps(c,ensure_ascii=False,separators=(',',':')),'ats_field:compensationTiers'))
+    return out
 def _structured_pay(raw):
-    """Greenhouse pay_input_ranges and Lever salaryRange arrive as JSON text from the collector."""
+    """Greenhouse pay_input_ranges, Lever salaryRange and Ashby compensationTiers arrive as JSON text from the collector."""
     try: data=json.loads(raw)
     except (TypeError,ValueError): return None
+    if isinstance(data,dict) and data.get('source')=='ashby.compensationTiers': return _ashby_tiers(data)
     if isinstance(data,dict) and {'min','max'}<=set(data):
         interp={'ranges':[{'min':data['min'],'max':data['max'],'currency':data.get('currency'),'currency_symbol':None,'text':None}]}
         return [(interp|_pay_flags(data.get('interval') or '')|{'multiple_ranges':False},raw,'ats_field:salaryRange')]
@@ -104,7 +128,7 @@ def _structured_pay(raw):
         out=[]
         for r in data:
             if not isinstance(r,dict) or r.get('min_cents') is None: continue
-            label=' '.join(x for x in (r.get('title'),r.get('blurb')) if x)
+            label=' '.join(x for x in (_text(r.get('title')),_text(r.get('blurb'))) if x)
             interp={'ranges':[{'min':r['min_cents']/100,'max':(r.get('max_cents') or r['min_cents'])/100,'currency':r.get('currency_type'),
                                'currency_symbol':None,'text':None}]}|_pay_flags(label)|{'multiple_ranges':len(data)>1,'label':label or None}
             out.append((interp,json.dumps(r,ensure_ascii=False),'ats_field:pay_input_ranges'))

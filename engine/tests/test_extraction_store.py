@@ -22,7 +22,7 @@ class ExtractionStoreTests(unittest.TestCase):
         self.h.run([posting(text=REQ+'\nKubernetes.'),posting('two',text=REQ)])
         self.assertEqual(extract_pending(self.h.conn)['extracted'],1)
         self.assertEqual(self.h.count('extractions'),3,'the earlier version keeps its extraction')
-        with mock.patch.object(engine.store,'EXTRACTOR_VERSION',2):
+        with mock.patch.object(engine.store,'EXTRACTOR_VERSION',engine.store.EXTRACTOR_VERSION+1):
             self.assertEqual(extract_pending(self.h.conn)['extracted'],3,'a new extractor version re-extracts every version')
     def test_interrupted_extraction_keeps_committed_batches_and_resumes(self):
         self.h.run([posting(p,text=REQ) for p in ('a','b','c','d','e')])
