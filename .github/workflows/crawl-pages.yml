@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        id: python
         with:
           python-version: '3.12'
           # Free Actions cache for downloaded wheels; installed versions still come from requirements-crawl.txt.
@@ -81,7 +82,11 @@ jobs:
         run: timeout 900 python crawl_pages.py --ids "$IDS" --batch-size "$BATCH"
       - name: Summarise capture and listing quality
         if: always()
+        env:
+          PIP_CACHE_HIT: ${{ steps.python.outputs.cache-hit }}
+          BROWSER_CACHE_HIT: ${{ steps.browsers.outputs.cache-hit }}
         run: |
+          echo "Caches: pip ${PIP_CACHE_HIT:-false}, Playwright browsers ${BROWSER_CACHE_HIT:-false}." >> "$GITHUB_STEP_SUMMARY"
           if [ ! -f public/pages/index.json ]; then exit 0; fi
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
