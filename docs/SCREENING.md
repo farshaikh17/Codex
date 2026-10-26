@@ -9,7 +9,7 @@ This corresponds to BACKLOG E3+E4, plus the gate-relevant part of H (labelled be
 - **Real profiles never go in this repository.** Keep one JSON file per candidate in a private directory, and point `JOB_ENGINE_CANDIDATES` at it (or pass `--candidates DIR`).
 - `engine/candidates.py` refuses any file inside the work tree unless it says `"synthetic": true`. It also refuses an application-history file inside the work tree for a real profile.
 - Keep only candidate files, `*.history.json` files and the review database (`docs/REVIEW_QUEUE.md`) in that directory. Any other JSON there is refused as an invalid candidate.
-- The only committed candidates are the three synthetic fixtures in `engine/tests/fixtures/candidates/`. A test fails if any committed candidate config is not synthetic.
+- The only committed candidates are the four synthetic fixtures in `engine/tests/fixtures/candidates/`. A test fails if any committed candidate config is not synthetic.
 - Screening output contains candidate facts (history entries, salary floor, eligible countries). `python -m engine.screen` prints it and writes nothing. Where stored candidate outputs live is an owner decision before step 6; they must never go under `public/`.
 
 ## Configuration (`candidate-config-1`)
@@ -85,6 +85,15 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
   - `US$` is left unknown for now: the extractor doesn't yet read "US$x - US$y" as one range, and comparing a broken range could fail a floor wrongly. That's an extractor follow-up, after farshaikh17/Codex#9.
   - Estimates are excluded before this rule applies, so a third-party "$135,000" on a US-only posting stays unknown.
 - **Amounts in millions or billions** ("generates nearly $1B annually") are company figures, never pay, and are not compared. Found on a real Twilio posting, where the `$` rule would otherwise have failed a floor on "$1".
+- **Several floors, one per currency (owner rule, gates version 5):** `rules.salary` may be one floor (an object) or a list, at most one floor per currency, for example `[{"minimum": 2500000, "currency": "INR", "period": "year", "basis": "base"}, {"minimum": 60000, "currency": "USD", "period": "year", "basis": "base"}]`.
+  - Each stated range is compared only with the floor in its own currency, using that floor's period, basis and `assume_period`. There's no conversion; a range in a currency with no floor stays unknown.
+  - When ranges in different currencies disagree (one passes, one fails), salary is unknown.
+  - `assume_currency_for_symbol` maps may not contradict each other across floors.
+- **Residents-only pay (owner rule, gates version 5):** a pay statement limited to residents of places that don't include the candidate's `eligible_countries` isn't compared, and the limiting phrase is quoted in `notes`. Examples are "residents of the United States only" (GitLab's Greenhouse pay blurbs) and "applies to candidates located in X".
+  - A limit naming no recognised place ("residents of listed locations") excludes nothing.
+  - A limit that includes the candidate's country doesn't block comparison.
+  - Without known eligible countries, a recognised limit can't be confirmed, so that range isn't compared.
+  - Measured: no committed real posting is affected today. Its limiting phrases name US states or "those locations", which aren't recognised places. GitLab's blurbs arrive once farshaikh17/Codex#4 requests pay data.
 - **Commission-only (owner rule, gates version 4):** an explicit statement that the role has no base pay ("commission-only", "100% commission", "no base salary", "without a base salary") **fails a base floor**. The failing line is quoted verbatim as evidence.
   - A negated statement ("not a commission-only role") doesn't count.
   - Wording about undisclosed pay ("no base salary range is listed", "no base salary information") doesn't count.
@@ -105,9 +114,9 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 
 ## Benchmark (`python -m engine.benchmark`)
 
-There are 54 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
+There are 62 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
 - remote US-only; India explicitly allowed; worldwide with a conflicting country; a negated eligible country; a city-only location
-- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed for an INR floor; missing period; estimates; the bare-`$` rule (US-only above and below the floor, unstated, mixed and city-only locations, `CA$`, `US$`, an estimate on a US-only posting, company revenue); commission-only (explicit, negated, undisclosed pay, OTE-only, contradicted by a base range)
+- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed for an INR floor; missing period; estimates; the bare-`$` rule (US-only above and below the floor, unstated, mixed and city-only locations, `CA$`, `US$`, an estimate on a US-only posting, company revenue); commission-only (explicit, negated, undisclosed pay, OTE-only, contradicted by a base range); multi-currency floors (INR and USD floors, no floor for EUR, floors disagreeing) and residents-only limits (US-only blurb, India blurb, unrecognised place)
 - mandatory years unmet; preferred years unmet; "or equivalent"; a required language missing; reviewer `not_met`
 - already applied; same employer and title; employer cooldown
 - onsite in an eligible country; conflicting workplace; employment type unstated; empty description; EMEA
@@ -116,7 +125,7 @@ There are 54 hand-labelled synthetic cases in `engine/tests/screening_cases.py`.
 
 The primary metric is **false READY**, reported next to incorrect exclusions, missed exclusions, retained unknowns and gate mismatches.
 
-Current result: 54 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 40. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
+Current result: 62 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 47. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
 
 The queue-related H cases are handled in step 5 (`docs/REVIEW_QUEUE.md`): interruption recovery and identical reposts. Reopened requisitions are partly covered by the application-history gate. An expired page returning HTTP 200 and a failed retrieval after success are store and collector concerns (availability states), not queue rules.
 

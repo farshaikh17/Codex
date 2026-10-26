@@ -78,14 +78,24 @@ def validate(config,where='config'):
         _strings(eng.get('employment_types'),where+'.rules.engagement.employment_types',EMPLOYMENT_TYPES)
     sal=rules.get('salary')
     if sal is not None:
-        _keys(sal,KEYS['salary'],where+'.rules.salary')
-        if isinstance(sal.get('minimum'),bool) or not isinstance(sal.get('minimum'),(int,float)) or sal['minimum']<=0: raise ConfigError('%s.rules.salary.minimum must be a positive number'%where)
-        if not re.fullmatch(r'[A-Z]{3}',sal.get('currency') or ''): raise ConfigError('%s.rules.salary.currency must be an ISO 4217 code'%where)
-        if sal.get('period') not in ('year','month','day','hour'): raise ConfigError('%s.rules.salary.period must be year, month, day or hour'%where)
-        if sal.get('basis','base') not in ('base','total'): raise ConfigError('%s.rules.salary.basis must be base or total'%where)
-        if sal.get('assume_period') not in (None,'year','month','day','hour'): raise ConfigError('%s.rules.salary.assume_period must be a period or null'%where)
-        sym=sal.get('assume_currency_for_symbol')
-        if sym is not None and (not isinstance(sym,dict) or not all(re.fullmatch(r'[A-Z]{3}',v or '') for v in sym.values())): raise ConfigError('%s.rules.salary.assume_currency_for_symbol maps symbols to ISO codes'%where)
+        # one floor (an object) or several (a list), at most one per currency; never converted between currencies
+        floors=sal if isinstance(sal,list) else [sal]
+        if not floors: raise ConfigError('%s.rules.salary is an empty list; omit it if there is no floor'%where)
+        symbols={}
+        for n,f in enumerate(floors):
+            at=where+'.rules.salary'+('[%d]'%n if isinstance(sal,list) else '')
+            _keys(f,KEYS['salary'],at)
+            if isinstance(f.get('minimum'),bool) or not isinstance(f.get('minimum'),(int,float)) or f['minimum']<=0: raise ConfigError('%s.minimum must be a positive number'%at)
+            if not re.fullmatch(r'[A-Z]{3}',f.get('currency') or ''): raise ConfigError('%s.currency must be an ISO 4217 code'%at)
+            if f.get('period') not in ('year','month','day','hour'): raise ConfigError('%s.period must be year, month, day or hour'%at)
+            if f.get('basis','base') not in ('base','total'): raise ConfigError('%s.basis must be base or total'%at)
+            if f.get('assume_period') not in (None,'year','month','day','hour'): raise ConfigError('%s.assume_period must be a period or null'%at)
+            sym=f.get('assume_currency_for_symbol')
+            if sym is not None and (not isinstance(sym,dict) or not all(re.fullmatch(r'[A-Z]{3}',v or '') for v in sym.values())): raise ConfigError('%s.assume_currency_for_symbol maps symbols to ISO codes'%at)
+            for k,v in (sym or {}).items():
+                if symbols.setdefault(k,v)!=v: raise ConfigError('%s.rules.salary: symbol %s is assumed to be both %s and %s'%(where,k,symbols[k],v))
+        currencies=[f['currency'] for f in floors]
+        if len(set(currencies))!=len(currencies): raise ConfigError('%s.rules.salary: one floor per currency'%where)
     hist=rules.get('application_history')
     if hist is not None:
         _keys(hist,KEYS['application_history_rule'],where+'.rules.application_history')

@@ -19,7 +19,9 @@ from engine.places import covers,places
 # 3: owner rule: a bare '$' is USD when every listed location is in the United States; amounts in millions or
 #    billions ('$1B annually') are company figures, never pay
 # 4: owner rule: an explicit commission-only or no-base-salary statement fails a base floor
-GATES_VERSION=4
+# 5: owner rule: several floors, one per currency, each range compared only with its own currency's floor; a range
+#    limited to residents of places that exclude the candidate is not compared
+GATES_VERSION=5
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -178,13 +180,26 @@ def commission_only(posting,fields):
     lines=[l.strip() for l in (posting.get('description') or '').split('\n')]
     return [{'field':'compensation','quote':l,'method':'description_text','source_url':posting.get('canonical_url'),'retrieved_at':retrieved}
             for l in lines if COMMISSION_ONLY.search(l) and not COMMISSION_NEGATED.search(l)]
-def salary(fields,rules,posting=None):
+RESIDENTS=re.compile(r"(?i)\b(?:residents? of|resid(?:e|es|ing) in|(?:candidates|applicants|employees|people) (?:located|based|living|residing|hired) in|"
+                     r"applies (?:only )?to (?:candidates |roles |positions )?(?:located |based )?in)\s+(?:the\s+)?([^.;:()\n]{2,80})")
+def residency_limit(quote,countries):
+    """The phrase limiting a pay statement to residents of places that do not include the candidate's eligible
+    countries, or None. Places that are not recognised ('residents of listed locations') never limit anything.
+    Without known eligible countries, any recognised residency limit counts, since it cannot be confirmed."""
+    text=' '.join(re.sub(r'<[^>]+>',' ',quote or '').split())
+    for m in RESIDENTS.finditer(text):
+        found=places(m.group(1))
+        if found and (not countries or not covers(found,countries)): return m.group(0).strip()
+    return None
+def salary(fields,rules,posting=None,profile=None):
     rule=rules.get('salary')
     if rule is None: return _gate('unknown','candidate salary rule not provided; not assumed')
-    floor,basis=rule['minimum'],rule.get('basis','base')
-    desc='rules.salary minimum %s %s per %s (%s)'%(floor,rule['currency'],rule['period'],basis)
+    floors={f['currency']:f for f in (rule if isinstance(rule,list) else [rule])}
+    symbols={k:v for f in floors.values() for k,v in (f.get('assume_currency_for_symbol') or {}).items()}
+    countries=(profile or {}).get('eligible_countries')
+    desc='; '.join('rules.salary minimum %s %s per %s (%s)'%(f['minimum'],c,f['period'],f.get('basis','base')) for c,f in floors.items())
     comp=fields['compensation']
-    no_base=commission_only(posting or {},fields) if basis=='base' else []
+    no_base=commission_only(posting or {},fields) if any(f.get('basis','base')=='base' for f in floors.values()) else []
     if comp['state']!='stated':
         if no_base: return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base,desc)
         return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
@@ -196,22 +211,29 @@ def salary(fields,rules,posting=None):
         if NOT_EMPLOYER_PAY.search(i['quote']):
             notes.append('%s: an estimate or not employer-published pay; not compared'%i['quote'][:120])
             continue
+        limit=residency_limit(i['quote'],countries)
+        if limit:
+            notes.append('"%s": pay for residents elsewhere; not compared (eligible countries: %s)'%(limit,', '.join(countries or ['unknown'])))
+            continue
         for r in pay['ranges']:
             if _magnitude(r,i['quote']):
                 notes.append('%s: an amount in millions or billions, not pay; not compared'%r['text'])
                 continue
-            cur,cur_note=_currency(r,rule,i['quote'],us_posting)
+            cur,cur_note=_currency(r,{'assume_currency_for_symbol':symbols},i['quote'],us_posting)
+            if cur not in floors:
+                notes.append('%s: currency %s has no floor; not converted'%(r.get('text') or i['quote'],cur or 'unstated')); continue
+            rule=floors[cur]
+            floor,basis=rule['minimum'],rule.get('basis','base')
             period,period_note=pay.get('period'),None
             if period is None and rule.get('assume_period'):
-                period,period_note=rule['assume_period'],'period %s assumed by rules.salary.assume_period'%rule['assume_period']
+                period,period_note=rule['assume_period'],'period %s assumed by the %s floor'%(rule['assume_period'],cur)
             why=[n for n in (cur_note,period_note) if n]
-            if cur!=rule['currency']: notes.append('%s: currency %s, not comparable without conversion'%(r.get('text') or i['quote'],cur or 'unstated')); continue
             if period!=rule['period']: notes.append('%s: period %s, not annualised or converted'%(r.get('text') or i['quote'],period or 'unstated')); continue
             mult=UNIT_MULTIPLIER.get(pay.get('amount_unit'),1)
             low,high=r['min']*mult,r['max']*mult
             kind=pay.get('basis','unspecified')
             plain=kind=='unspecified' and not pay.get('variable_mentioned')
-            ev=_item(i,'compensation')|{'basis':'; '.join(why+['range %s-%s %s per %s, basis %s'%(low,high,cur,period,kind)])}
+            ev=_item(i,'compensation')|{'basis':'; '.join(why+['range %s-%s %s per %s, basis %s, against the %s floor %s (%s)'%(low,high,cur,period,kind,cur,floor,basis)])}
             if basis=='base':
                 if kind=='base' or plain: verdict='pass' if low>=floor else 'fail' if high<floor else 'span'
                 elif kind=='ote' and high<floor: verdict='fail'  # base is below OTE, so below the floor too
@@ -271,7 +293,7 @@ def screen(candidate,posting,extraction,reviews=None,today=None):
     profile,rules,fields=candidate['profile'],candidate['rules'],extraction['fields']
     required=set(rules.get('required_gates') or ('geography','engagement','qualifications','salary','application_history'))
     gates={'geography':geography(fields,profile),'engagement':engagement(fields,rules),
-           'qualifications':qualifications(fields,profile,reviews),'salary':salary(fields,rules,posting),
+           'qualifications':qualifications(fields,profile,reviews),'salary':salary(fields,rules,posting,profile),
            'application_history':application_history(posting,profile,rules,today)}
     for name,g in gates.items(): g['required']=name in required
     results={g['result'] for g in gates.values() if g['required']}

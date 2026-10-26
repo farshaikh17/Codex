@@ -32,6 +32,14 @@ class ConfigTests(unittest.TestCase):
                     config(rules={'required_gates':['vibes']}),config(rules={'salary':{'minimum':10,'currency':'rupees','period':'year'}}),
                     config(rules={'engagement':{'workplace':['beach']}}),config(profile={'application_history':[{'employer':'x','status':'maybe'}]})):
             with self.assertRaises(cfg.ConfigError):cfg.validate(bad)
+    def test_salary_floors_one_per_currency(self):
+        floor=lambda cur,**k:{'minimum':100,'currency':cur,'period':'year'}|k
+        cfg.validate(config(rules={'salary':[floor('INR'),floor('USD')]}))
+        cfg.validate(config(rules={'salary':floor('INR')}))
+        for bad in ([],[floor('USD'),floor('USD',period='month')],
+                    [floor('USD',assume_currency_for_symbol={'$':'USD'}),floor('CAD',assume_currency_for_symbol={'$':'CAD'})],
+                    [floor('INR'),{'minimum':100,'currency':'USD'}]):
+            with self.assertRaises(cfg.ConfigError):cfg.validate(config(rules={'salary':bad}))
     def test_real_profile_inside_repository_is_refused(self):
         with tempfile.TemporaryDirectory() as folder,mock.patch.object(cfg,'ROOT',Path(folder).resolve()):
             path=self.write(folder,config(synthetic=False))

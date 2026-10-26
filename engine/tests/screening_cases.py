@@ -3,6 +3,7 @@
 Labels are written from what each posting says, before running the code: they are test expectations, never
 model or program output. `gates` lists only the gates a case is about; `verdict` is always checked.
 """
+import json
 REQS='Requirements\n5+ years of experience implementing B2B SaaS\nSQL and data migration experience\nNice to have\nWorkday experience'
 INTRO=('About the role\nYou will lead customer implementations from kickoff to go-live, working with product, support and the customer team '
        'to configure the platform, migrate data and train users. This is a full-time position.\n')
@@ -12,7 +13,10 @@ BASE={'posting_id':'synthetic:acme:1','board':'acme','title':'Implementation Man
 REVIEWED={'met':'profile: 7 years implementing SaaS platforms (synthetic)'}
 def posting(pid,**changes):
     return BASE|{'posting_id':'synthetic:acme:'+pid}|changes
-A,B,U='synthetic-impl-in','synthetic-design-eu','synthetic-cs-us'
+A,B,U,M='synthetic-impl-in','synthetic-design-eu','synthetic-cs-us','synthetic-multi-in'
+def gh_range(dollars_low,dollars_high,blurb,title='Annual base salary'):
+    """Greenhouse pay_input_ranges JSON as the collector stores it (amounts in cents, HTML blurb)."""
+    return json.dumps([{'min_cents':dollars_low*100,'max_cents':dollars_high*100,'currency_type':'USD','title':title,'blurb':blurb}])
 def us(pid,pay,locations=('Remote - United States',),extra=''):
     """A US customer-success posting for candidate U (USD floor 120,000 per year, base, no symbol assumptions)."""
     return {'posting_id':'synthetic:umbrella:'+pid,'board':'umbrella','title':'Customer Success Manager','canonical_url':'https://jobs.example/umbrella/'+pid,
@@ -150,6 +154,27 @@ CASES=[
     dict(id='commission_only_contradicted_by_base_range',about='says no base salary but also states a base range above the floor',candidate=A,
          posting=posting('contra',description=INTRO+REQS+'\nThere is no base salary for the first month.'),
          expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    # Owner rule (gates version 5): one floor per currency, never converted; residents-only ranges for elsewhere are not compared.
+    dict(id='multi_inr_range_inr_floor',about='INR range against the INR floor',candidate=M,posting=posting('m1',compensation_raw='INR 30,00,000 - 40,00,000 per annum base'),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
+    dict(id='multi_usd_range_usd_floor',about='USD range against the USD floor (no conversion to INR)',candidate=M,posting=posting('m2',compensation_raw='USD 70,000 - 90,000 per year base'),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
+    dict(id='multi_usd_below_usd_floor',about='USD range below the USD floor',candidate=M,posting=posting('m3',compensation_raw='USD 40,000 - 50,000 per year base'),
+         expected={'verdict':'excluded','gates':{'salary':'fail'}}),
+    dict(id='multi_no_floor_for_currency',about='EUR range, no EUR floor: unknown, never converted',candidate=M,posting=posting('m4',compensation_raw='EUR 70,000 - 80,000 per year base'),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='multi_floors_disagree',about='INR range passes, USD range fails: unknown',candidate=M,
+         posting=posting('m5',compensation_raw='INR 30,00,000 - 40,00,000 per annum base',description=INTRO+REQS+'\nThe US base salary range is USD 40,000 - 50,000 per year.'),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='residents_of_us_only_not_compared',about='Greenhouse blurb limits the range to US residents; the candidate is eligible in India',candidate=M,
+         posting=posting('m6',compensation_raw=gh_range(70000,90000,'<p>This base salary range is for residents of the United States only.</p>')),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='residents_of_india_compared',about='a residency limit that includes the candidate does not block comparison',candidate=M,
+         posting=posting('m7',compensation_raw=gh_range(70000,90000,'<p>This range applies to residents of India only.</p>')),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
+    dict(id='residents_of_unrecognised_place_compared',about='"residents of listed locations" names no place, so nothing is excluded',candidate=M,
+         posting=posting('m8',compensation_raw=gh_range(70000,90000,'<p>For residents of listed locations only.</p>')),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
     dict(id='emea_for_eu_candidate',about='EMEA includes Germany; B has no salary gate requirement listed, so default all five are required',candidate=B,
          posting=EU_POSTING|{'posting_id':'synthetic:initech:emea','locations':[{'text':'Remote - EMEA','source':'location.name'}]},
          expected={'verdict':'conditional','gates':{'geography':'pass'}}),
