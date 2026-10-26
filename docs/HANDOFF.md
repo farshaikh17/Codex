@@ -20,7 +20,7 @@ Use exactly one of these per claim. Never substitute one for another.
 | P2 registry and reliable runs | farshaikh17/Codex#3 | Implemented and tested offline; live collection verified (local container). Not yet run in Actions |
 | E2a compensation inputs | farshaikh17/Codex#4 (on #3) | Implemented and tested offline; live collection verified (local): +125 postings with employer-published pay |
 | H benchmark | farshaikh17/Codex#7 (on #4) | Implemented and tested offline. 21 cases, 34 verdicts. Owner rules encoded (bare "$", commission-only, multi-currency floors); real cases confirmed |
-| B source discovery | farshaikh17/Codex#10 (on #7) | Implemented and tested offline; live discovery verified (local, 19 targeted runs, 51 requests). Verified `careers_url` applied for Oyster, Zapier, Weave and Clipboard |
+| B source discovery | farshaikh17/Codex#10 (on #7) | Implemented and tested offline; live discovery verified (local container: 6 runs over 16 employers, 51 requests through `discover.py`, plus 9 manual requests for the ownership checks). Verified `careers_url` applied for Oyster, Zapier, Weave and Clipboard |
 | Posting store, extraction, gates, review queue | farshaikh17/Codex#2 and follow-ups #6, #9 (other session) | Implemented and tested offline (per that session). Scored here at 877b6aa: false READY 0, incorrect exclusions 0, salary 32/34 |
 | Crawl4AI page fallback | farshaikh17/Codex#1 (other session) | Implemented and tested offline; live capture verified on its branch. No schedule |
 | Follow-ups stacked on mine by others | #5 (on #3), #8 (on #4) | Merge cleanly with my branches; all suites pass on the combined tree |
