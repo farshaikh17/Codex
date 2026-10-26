@@ -6,7 +6,7 @@
 - No evidence objects or extraction-quality warnings for ATS postings yet (E2). Descriptions are stored complete, but section structure (mandatory vs preferred) isn't separated.
 - `no_longer_listed` reports disappearance from a feed after one successful fetch. It is not confirmed closure, and reopened requisitions aren't detected yet.
 - Duplicate detection is per source and requisition id. Cross-URL duplicates are indexed by PR #2's canonical URL but aren't handled in review yet (H, E5).
-- Scheduled execution hasn't been verified, and GitHub can delay or drop scheduled runs.
+- Scheduled execution has been verified once (07:55 UTC, 2026-10-26). GitHub dropped the five earlier hourly ticks and started that one 32 minutes late. Consumers must use the staleness rules in OUTPUT_CONTRACT.md.
 - The hourly tick costs runner minutes even when it skips (BACKLOG P10).
 - ChatGPT access to this private repository hasn't been verified (see OUTPUT_CONTRACT.md).
 - The local lock uses `fcntl`, so local runs are POSIX only. Actions runs rely on the workflow concurrency group.

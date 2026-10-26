@@ -20,7 +20,7 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Concurrent local run refused: `test_concurrent_run_refused`
 - [x] Live collection against the 10 feeds: 10/10 ok, keys and hashes identical to the committed snapshot (local container, scratch output, 2026-10-26)
 - [ ] Actions `workflow_dispatch` run on `main` after merge produces a job summary table
-- [ ] First `schedule` event run shows *Collection skipped* or a collection, plus a matching commit
+- [ ] First `schedule` event run **with P2 code** shows *Collection skipped* or a collection, plus a matching commit (pre-P2 scheduled run already verified: run 40288776346)
 - [ ] Re-check merges with PR #1 and PR #2 at merge time
 
 ## Consumer (G)

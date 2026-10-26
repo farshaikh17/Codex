@@ -16,7 +16,7 @@ Use exactly one of these per claim. Never substitute one for another.
 
 | Component | Status |
 |---|---|
-| ATS feed collector on `main` | Live collection verified (Actions push runs on `main`, 2026-10-26). Scheduled execution not verified. |
+| ATS feed collector on `main` | Live collection verified (Actions push runs on `main`). Scheduled execution verified once: run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346) (event `schedule`, 07:55 UTC on 2026-10-26, pre-P2 code) collected and committed 456397a. The hourly ticks 02:23–06:23 created no runs at all, and this tick started 32 minutes late. GitHub's schedule is best-effort, so freshness checks matter. |
 | Registry + validation + reliable runs (this branch) | Implemented and tested offline (28 tests). Live collection verified in this container against all 10 feeds (scratch output, not committed). Not run in Actions yet: the push trigger is now `main` only, so this branch runs no collection. |
 | Posting store (PR #2, other session) | Implemented and tested offline (per its PR). Ingest of this branch's outputs checked offline in a three-way merge. Unmerged. |
 | Crawl4AI page fallback (PR #1) | Implemented and tested offline. Live collection verified on `build/crawl4ai` via Actions push runs. Unmerged. No schedule. |
