@@ -1,6 +1,6 @@
 {
-  "schema": "public-page-capture-index-1",
-  "attempted_at": "2026-10-26T02:06:10.744606+00:00",
+  "schema": "public-page-capture-index-2",
+  "attempted_at": "2026-10-26T14:29:11.386986+00:00",
   "batch": [
     "automattic-work-with-us",
     "doist-careers",
@@ -10,18 +10,30 @@
     "salesforce-workday"
   ],
   "results": {
-    "usable": 5,
+    "usable": 6,
     "thin": 0,
-    "failed": 1,
+    "failed": 0,
     "blocked": 0,
     "skipped": 0
   },
-  "requests_made": 12,
+  "operations": {
+    "robots_fetches": 6,
+    "page_navigations": 6,
+    "limit": 25,
+    "counts": "robots.txt fetches and top-level page navigations only, not browser subrequests"
+  },
+  "browser_requests": {
+    "requests_seen": 321,
+    "requests_blocked": 8,
+    "per_page_limit": 300,
+    "counts": "requests the page made that Playwright routing could intercept; service-worker and WebSocket traffic is not seen"
+  },
   "halted": null,
   "limits": {
     "batch_size": 6,
     "max_batch_size": 10,
-    "max_requests": 25,
+    "max_operations": 25,
+    "max_browser_requests_per_page": 300,
     "page_timeout_s": 30,
     "robots_timeout_s": 10,
     "pause_s": 5,
@@ -35,18 +47,32 @@
       "official_url": "https://automattic.com/work-with-us/jobs/",
       "capture_file": "public/pages/captures/automattic-work-with-us.md",
       "capture_status": "usable",
-      "captured_at": "2026-10-26T02:06:10.744606+00:00",
-      "changed_at": "2026-10-26T02:06:10.744606+00:00",
-      "content_hash": "d8b0b2d52f8ae2915b27b02113138d833ecfe7ee5f59ca7a81921e732b811889",
-      "word_count": 372,
-      "change": "new",
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
+      "changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "content_hash": "64d17f9a1fc8646d0158b5a156c7d9e31d4551e3365cbbb2d6c17c516729b382",
+      "review_hash": "64d17f9a1fc8646d0158b5a156c7d9e31d4551e3365cbbb2d6c17c516729b382",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "word_count": 369,
+      "listing_quality": "listings_found",
+      "coverage": "unknown",
+      "flags": [],
+      "job_links": 12,
+      "claimed_total": null,
+      "boilerplate_share": 0.0,
+      "change": "changed",
+      "review_change": "new",
       "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
+        "at": "2026-10-26T14:29:11.386986+00:00",
         "result": "usable",
-        "reason": "372 words",
+        "reason": "369 words",
         "http_status": 200,
-        "final_url": "https://automattic.com/work-with-us/jobs/"
+        "final_url": "https://automattic.com/work-with-us/jobs/",
+        "browser_requests": {
+          "seen": 33,
+          "blocked": 0,
+          "over_cap": 0
+        }
       }
     },
     {
@@ -55,18 +81,32 @@
       "official_url": "https://www.todoist.com/careers",
       "capture_file": "public/pages/captures/doist-careers.md",
       "capture_status": "usable",
-      "captured_at": "2026-10-26T02:06:10.744606+00:00",
-      "changed_at": "2026-10-26T02:06:10.744606+00:00",
-      "content_hash": "d37791dc2f19896a308d7d0875c51a9a077501f9dbe3f3bca1c6d1a2e134578c",
-      "word_count": 1100,
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
+      "changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "content_hash": "6d984f3988e7d66fa2e5d9f8cdb9f868af694e9e8bc4db40725045d665a65d7c",
+      "review_hash": "99b9346c6fdeb5a5ff94e0f47eeea170aac92af811c2db83dece0a12314f146c",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "word_count": 1092,
+      "listing_quality": "listings_found",
+      "coverage": "unknown",
+      "flags": [],
+      "job_links": 2,
+      "claimed_total": null,
+      "boilerplate_share": 0.03,
       "change": "changed",
+      "review_change": "new",
       "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
+        "at": "2026-10-26T14:29:11.386986+00:00",
         "result": "usable",
-        "reason": "1100 words",
+        "reason": "1092 words",
         "http_status": 200,
-        "final_url": "https://www.todoist.com/careers"
+        "final_url": "https://www.todoist.com/careers",
+        "browser_requests": {
+          "seen": 59,
+          "blocked": 0,
+          "over_cap": 0
+        }
       }
     },
     {
@@ -75,18 +115,36 @@
       "official_url": "https://toggl.com/jobs",
       "capture_file": "public/pages/captures/toggl-jobs.md",
       "capture_status": "usable",
-      "captured_at": "2026-10-26T02:06:10.744606+00:00",
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
       "changed_at": "2026-10-26T01:59:38.589359+00:00",
       "content_hash": "4d1212960a541af2eb0c9bcedd6a289f59dca40c306dde560819d4918bd7d136",
+      "review_hash": "4900a9dfac65a1c4e5407b0cd170db27e0a526be03691c557a10065e83b12347",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
       "word_count": 7744,
+      "listing_quality": "no_listings_detected",
+      "coverage": "none_detected",
+      "flags": [
+        "cookie_heavy",
+        "no_job_links",
+        "openings_section_empty"
+      ],
+      "job_links": 0,
+      "claimed_total": null,
+      "boilerplate_share": 0.5,
       "change": "unchanged",
+      "review_change": "new",
       "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
+        "at": "2026-10-26T14:29:11.386986+00:00",
         "result": "usable",
         "reason": "7744 words",
         "http_status": 200,
-        "final_url": "https://toggl.com/jobs"
+        "final_url": "https://toggl.com/jobs",
+        "browser_requests": {
+          "seen": 38,
+          "blocked": 3,
+          "over_cap": 0
+        }
       }
     },
     {
@@ -95,38 +153,66 @@
       "official_url": "https://www.atlassian.com/company/careers/all-jobs",
       "capture_file": "public/pages/captures/atlassian-all-jobs.md",
       "capture_status": "usable",
-      "captured_at": "2026-10-26T02:06:10.744606+00:00",
-      "changed_at": "2026-10-26T02:06:10.744606+00:00",
-      "content_hash": "feb3d29e3b9e657816e44b34abeb5caed13785af7ba012312a3b9cf82bf32bb8",
-      "word_count": 6186,
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
+      "changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "content_hash": "0633ad4b6ce69a80292fcf1bae5862e6919be157198f15bd27d9c4b98e8e72d1",
+      "review_hash": "24900580e622c1f1d4143d04248c89d8404fe68c6134ab8da555028191263371",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "word_count": 6401,
+      "listing_quality": "listings_found",
+      "coverage": "appears_complete",
+      "flags": [],
+      "job_links": 335,
+      "claimed_total": 334,
+      "boilerplate_share": 0.1,
       "change": "changed",
+      "review_change": "new",
       "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
+        "at": "2026-10-26T14:29:11.386986+00:00",
         "result": "usable",
-        "reason": "6186 words",
+        "reason": "6401 words",
         "http_status": 200,
-        "final_url": "https://www.atlassian.com/company/careers/all-jobs"
+        "final_url": "https://www.atlassian.com/company/careers/all-jobs",
+        "browser_requests": {
+          "seen": 130,
+          "blocked": 1,
+          "over_cap": 0
+        }
       }
     },
     {
       "id": "canonical-careers",
       "employer": "Canonical",
       "official_url": "https://canonical.com/careers/all",
-      "capture_file": null,
-      "capture_status": null,
-      "captured_at": null,
-      "changed_at": null,
-      "content_hash": null,
-      "word_count": null,
-      "change": "no_capture",
-      "fresh_this_run": false,
+      "capture_file": "public/pages/captures/canonical-careers.md",
+      "capture_status": "usable",
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
+      "changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "content_hash": "292276a9a6280b7a10ee5e4f93bdf2380bfda9cc67b867a6ea2ca412bf207a38",
+      "review_hash": "8a23d3bc74336a78aa92f34a7b92affdff15c3e04710a31e759ab033d0074170",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "word_count": 13898,
+      "listing_quality": "listings_found",
+      "coverage": "appears_complete",
+      "flags": [],
+      "job_links": 333,
+      "claimed_total": 313,
+      "boilerplate_share": 0.02,
+      "change": "new",
+      "review_change": "new",
+      "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
-        "result": "failed",
-        "reason": "Unexpected error in _crawl_web at line 778 in _crawl_web (../../../../../opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/crawl4ai/async_crawler_strategy.py):\nError: Failed on navigating ACS-GOTO:\nPage.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://canonical.",
-        "http_status": null,
-        "final_url": "https://canonical.com/careers/all"
+        "at": "2026-10-26T14:29:11.386986+00:00",
+        "result": "usable",
+        "reason": "13898 words",
+        "http_status": 200,
+        "final_url": "https://canonical.com/careers/all",
+        "browser_requests": {
+          "seen": 41,
+          "blocked": 4,
+          "over_cap": 0
+        }
       }
     },
     {
@@ -135,18 +221,34 @@
       "official_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
       "capture_file": "public/pages/captures/salesforce-workday.md",
       "capture_status": "usable",
-      "captured_at": "2026-10-26T02:06:10.744606+00:00",
-      "changed_at": "2026-10-26T01:59:38.589359+00:00",
-      "content_hash": "ae09c2540581d4e8bd5586a44f23916b186b9da164f71b056dad03fd55fb1603",
-      "word_count": 603,
-      "change": "unchanged",
+      "captured_at": "2026-10-26T14:29:11.386986+00:00",
+      "changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "content_hash": "e222fa32875a8a062e89175d7d0a9a16bd4fd38dea1e2f5ce40a996fc2dc0556",
+      "review_hash": "9a65bacffbfff2978032bd4feb5529e03e636a9f2e1821ccd939d98f9595e22d",
+      "review_changed_at": "2026-10-26T14:29:11.386986+00:00",
+      "word_count": 568,
+      "listing_quality": "partial_listings",
+      "coverage": "partial",
+      "flags": [
+        "paginated_or_truncated"
+      ],
+      "job_links": 20,
+      "claimed_total": 1571,
+      "boilerplate_share": 0.07,
+      "change": "changed",
+      "review_change": "new",
       "fresh_this_run": true,
       "last_attempt": {
-        "at": "2026-10-26T02:06:10.744606+00:00",
+        "at": "2026-10-26T14:29:11.386986+00:00",
         "result": "usable",
-        "reason": "603 words",
+        "reason": "568 words",
         "http_status": 200,
-        "final_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site"
+        "final_url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
+        "browser_requests": {
+          "seen": 20,
+          "blocked": 0,
+          "over_cap": 0
+        }
       }
     }
   ]
