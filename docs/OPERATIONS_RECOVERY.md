@@ -2,7 +2,7 @@
 
 ## Normal operation
 
-- Hourly tick at minute 23. `collect.py --trigger schedule` collects only sources whose `checked_at` is at least `poll_interval_hours` old (15 minutes slack for tick drift). If none is due, the job summary says **Collection skipped: no source is due**, no request is made and no file changes. This is a correct skip, not a failure.
+- Five scheduled runs a day at 01:37, 06:37, 11:37, 16:37 and 21:37 UTC (owner's schedule, 2026-10-26). `collect.py --trigger schedule` collects every enabled source, except one that sets its own `poll_interval_hours`, which waits until its last real attempt is that old (15 minutes slack for drift). If every source is waiting, the job summary says **Collection skipped: no source is due**, no request is made and no file changes. With the current registry, where no source sets an interval, every scheduled run collects.
 - Manual run: Actions → *Collect public job feeds* → Run workflow (collects all enabled sources). Local: `python collect.py` (all) or `python collect.py --ids a,b`.
 - Each real run writes a job summary table and annotations: `::warning::` for partial, `::error::` and exit 1 for failed. Exit 2 means `sources.json` or `employers.json` is invalid and no requests were made.
 

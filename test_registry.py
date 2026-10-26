@@ -24,7 +24,7 @@ class RegistryTests(unittest.TestCase):
     def test_url_derived_and_defaults_applied(self):
         _,sources,warns=check(reg())
         self.assertEqual(sources[0]['url'],'https://api.lever.co/v0/postings/acme?mode=json')
-        self.assertEqual((sources[0]['enabled'],sources[0]['poll_interval_hours']),(True,5))
+        self.assertEqual((sources[0]['enabled'],sources[0]['poll_interval_hours']),(True,None))  # every scheduled run
         self.assertIn('employer acme has no verified careers_url',warns)
     def test_duplicate_board_detected_case_insensitively(self):
         r=reg()
@@ -51,6 +51,7 @@ class RegistryTests(unittest.TestCase):
     def test_poll_interval_bounds(self):
         self.assertIn('poll_interval_hours',self.errors(reg(source={'poll_interval_hours':0.1})))
         self.assertIn('poll_interval_hours',self.errors(reg(source={'poll_interval_hours':True})))
+        check(reg(source={'poll_interval_hours':24}))
     def test_geography_requires_explicit_evidence(self):
         self.assertIn('remote wording alone',self.errors(reg(employer={'geography':[{'region':'IN','basis':'remote','evidence':EVIDENCE}]})))
         self.assertIn('needs evidence',self.errors(reg(employer={'geography':[{'region':'IN','basis':'explicit_statement'}]})))

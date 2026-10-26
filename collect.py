@@ -8,7 +8,7 @@ from adapters import normalize,extract_jobs,Skip
 import registry
 ROOT=Path(__file__).resolve().parent
 HOSTS={p:feed[0] for p,feed in registry.FEEDS.items()}
-DUE_SLACK=timedelta(minutes=15)  # hourly ticks drift; without slack a 5-hour interval becomes 6
+DUE_SLACK=timedelta(minutes=15)  # scheduled runs drift; without slack a 24-hour interval can slip a whole run
 NOTICE='Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.'
 def read(path,default):
     return json.loads(path.read_text(encoding='utf-8')) if path.exists() else default
@@ -54,13 +54,15 @@ def _time(v):
     try: return datetime.fromisoformat(v) if v else None
     except (TypeError,ValueError): return None
 def due_sources(sources,status,now):
-    """Ids whose last real attempt is at least poll_interval_hours old. Never-attempted sources are due."""
+    """Ids to collect on a scheduled run. A source without poll_interval_hours is collected on every run; one with an
+    interval only once its last real attempt is that old. Never-attempted sources are always due."""
     last={s.get('source'):_time(s.get('checked_at')) for s in (status or {}).get('sources',[])}
     return {s['id'] for s in sources
-            if not last.get(s['id']) or now-last[s['id']]>=timedelta(hours=s.get('poll_interval_hours',5))-DUE_SLACK}
+            if not s.get('poll_interval_hours') or not last.get(s['id'])
+            or now-last[s['id']]>=timedelta(hours=s['poll_interval_hours'])-DUE_SLACK}
 def next_due(sources,status):
     last={s.get('source'):_time(s.get('checked_at')) for s in (status or {}).get('sources',[])}
-    times=[last[s['id']]+timedelta(hours=s.get('poll_interval_hours',5))-DUE_SLACK for s in sources if last.get(s['id'])]
+    times=[last[s['id']]+timedelta(hours=s['poll_interval_hours'])-DUE_SLACK for s in sources if s.get('poll_interval_hours') and last.get(s['id'])]
     return min(times).isoformat() if times else None
 def publish(output,files):
     """Stage every file first, then move boards, index and finally status.json into place.
@@ -121,8 +123,8 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
             status['consecutive_failures']=0 if status['status']=='ok' else failures+1
         status.setdefault('last_success_at',status['checked_at'] if status['status']=='ok' else None)
         status.setdefault('consecutive_failures',1 if status['status']=='failed' else 0)
-        hours=source.get('poll_interval_hours',5)
-        status.update(poll_interval_hours=hours,next_due_at=(_time(status['checked_at'])+timedelta(hours=hours)).isoformat())
+        hours=source.get('poll_interval_hours')
+        status.update(poll_interval_hours=hours,next_due_at=(_time(status['checked_at'])+timedelta(hours=hours)).isoformat() if hours else None)
         statuses.append(status)
         if not status['attempted_this_run']: change='not_checked'
         else: change=None if status['status']=='ok' else 'unknown_after_failure'
