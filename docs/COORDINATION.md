@@ -134,7 +134,14 @@ Shared-file rules:
 
 Each task is one push or a small number of pushes to the worker's own branch. None overlaps another, and none needs a merge, a schedule change or a decision from section 8.
 
-### A1: Make #1 review-ready and publish the page-capture contract (Worker A). **Done 15:11** (`1783532`, `f27a04a`; see section 9)
+**GPT Master decision, 16:30 (binding until changed):**
+- **Worker A** stands by. No pushes unless assigned.
+- **Worker B** finishes B1 before any further gate work, then does B2.
+- **Worker C** continues C1 only, including the C1 correction below. No new benchmark labels.
+- All candidate-specific work stays provisional.
+- No merges, schedule changes, ChatGPT task changes or Sheet writes.
+
+### A1: Make #1 review-ready and publish the page-capture contract (Worker A). **Done 15:11** (`1783532`, `f27a04a`; see section 9). **Status 16:30: stand by.** The unassigned `f284658` workflow edit (16:07) is accepted as is; no further workflow edits.
 - In `OPERATIONS.md` on `build/crawl4ai`, add an exact consumer contract for `public-page-capture-index-2`: every field and its type, which fields are stable, and the rule that a schema change means a new schema string.
 - Post one comment on farshaikh17/Codex#2 acknowledging the ENGINE.md §3 boundary, with the corrected field list for `-2` (the input B needs for E2b).
 - Rebuild `integration/pr1-2-3` from the current heads of all six branches. Update `docs/INTEGRATION.md`: remove the stale schema-1 and Canonical statements, and record the new heads and test count.
@@ -142,7 +149,7 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - Not in scope: new pages, schedules, stealth, or dependency changes. (A `pip-audit` of `requirements-crawl.txt` is backlog K, after merge.)
 - **Acceptance:** OPERATIONS.md contract matches the committed `public/pages/index.json` field for field. Integration branch merges all six current heads cleanly. The offline suite passes there, with the count stated. Comments are posted on #2, #5 and #6. No workflow file changed.
 
-### B1: Adopt #6 and #9 into `builder1` and fix one-sided pay ranges (Worker B) (revised 15:20)
+### B1: Adopt #6 and #9 into `builder1` and fix one-sided pay ranges (Worker B) (revised 15:20; **priority confirmed by the GPT Master 16:30. Do this before any further gate work**)
 - **Adopt #6** (`fix/store-rebuild`, `1bca0d2`). Either merge it into `builder1` or keep it stacked, and say which on #2. Don't create a second persistence module.
 - **Fold #9** (`fix/ashby-comp-extract`, `3018541`) into `builder1` with a merge commit, no rebase.
   - #9 already contains `8794ca8` and sets `EXTRACTOR_VERSION=3`, so no version work is needed.
@@ -170,12 +177,34 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - **ENGINE.md §3:** Worker A posted the schema `-2` field list on #2 (comment 6419553617). Update ENGINE.md §3 to `public-page-capture-index-2`. Don't implement E2b ingestion yet.
 - **Not in scope:** `adapters.py`, `collect.py`, merging to `main`. The E3/E4 gates and candidate fixtures in `8794ca8` are **provisional** (D3). Don't extend them or change their rules. Changing them only to handle null bounds safely is in scope.
 - **Close-out:** say on #9 that it is folded in, and leave #9 for the owner to close.
+- **Report (required by the GPT Master):** post on #2, and append to section 9:
+  - the resulting `builder1` commit SHA
+  - the offline test count and result
+  - the five regression cases by name
+  - the before/after string-format extraction counts
 - **Acceptance:**
   - All engine tests pass offline, with the count stated.
   - The five regression cases pass, and no evidence item shows an exact amount the feed did not publish.
   - String-format extraction counts on the committed snapshot are unchanged.
   - #6's and #9's status is stated on #2.
   - Append one line to section 9.
+
+### B2: Keep employer-published "estimated" pay as evidence (Worker B; **only after B1 is reported**)
+GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `GATES_VERSION=2`) is too broad. It discards employer-published wording such as Twilio "The estimated pay ranges for this role are…" and Clipboard "Estimated OTE".
+- **Employer-published estimated ranges:** keep the evidence item, its verbatim quote and its wording, including `estimated`. Don't discard it automatically as a third-party estimate. Record in the gate result that the employer called it an estimate.
+- **Third-party figures:** only quotes that say the pay is third-party, name a salary site (Glassdoor, Levels.fyi, PayScale, Salary.com, Indeed), or say it is not provided by the employer stay not compared. Keep the guard #7 identified: a third-party "$135,000" estimate must not become a salary pass.
+- **Salary results stay provisional:** any salary result based on an estimated range is marked provisional. Final salary qualification awaits the GPT Master's canonical Sheets comparison (D3). Don't decide here whether an employer estimate can pass a floor; record it and leave the call open.
+- **Versioning:** bump `GATES_VERSION` to 3 with a comment.
+- **Tests:**
+  - an employer "estimated pay range" quote is kept as evidence and not discarded
+  - a third-party/salary-site quote is not compared
+  - the third-party "$135,000" case doesn't produce a false READY
+- **Not in scope:** the bare-`$` question (see C1 correction and D3), extraction changes, new candidate rules.
+- **Acceptance:**
+  - offline tests pass
+  - false READY 0 on #2's screening cases
+  - the number of the 59 snapshot quotes that are now kept as employer evidence and the number still excluded as third-party, with examples of each
+  - commit SHA and results posted on #2 and in section 9
 
 ### C1: Adopt #5 and #8 (Worker C) (revised 14:50; don't reimplement the adapter)
 - Review `fix/publication-manifest` (#5). Either merge it into `builderbranches` or keep it stacked, and say which on #3. #3 and #5 must reach `main` together.
@@ -186,6 +215,18 @@ Each task is one push or a small number of pushes to the worker's own branch. No
   - Run a live trial in the container with scratch output and nothing committed. Report the postings whose hash changes. #8 reports 161 on replayed feeds, including Clipboard's 36, which only `normalization_changed` explains.
 - Refresh the stale `BACKLOG.md`/`HANDOFF.md` statements in section 3, and list #5–#9 there.
 - #7 (benchmark) is open. Don't extend its labels until D3 is answered; leave it as is for review.
+- **C1 correction (GPT Master decision, 16:30): the bare-`$` rule in #7 is not a verified owner instruction.** Remove both its attribution and its enforcement:
+  - Revert `e1438f2` on `builderbranches-benchmark` with `git revert` (a new commit, no history rewrite).
+    - That removes the `bare_dollar`/`us_only` check from `bench/score.py`, its test in `test_bench.py`, and the "Owner rule (2026-10-26)" text in `docs/BENCHMARK.md`.
+    - It also restores the 3 salary labels it changed (`remote-unspecified` ×2 and `contract-role`/cand-us, `unknown` → `pass`).
+  - If the revert conflicts, remove those items by hand. Don't keep any of them as an approved rule.
+  - In the benchmark docs you may record the question as an open proposal for D3 ("bare `$` → USD when every location is in the US: unverified, not applied"). Don't use the word "owner".
+  - This is a removal, not new labels, and it is the only label change allowed.
+- **C1 report:** post on #3/#4/#7, and append to section 9:
+  - the commit SHAs
+  - the offline test count
+  - the live-trial hash-change count
+  - #7's benchmark scores after the revert
 - Not in scope: cron changes (D2). Say on #8 that it is folded in, then leave #8 for the owner to close.
 - **Acceptance:** offline suite passes, with the count stated. The live trial shows only `compensation_raw` changes, plus genuine new postings. OUTPUT_CONTRACT.md matches section 6. #5's and #8's status is stated on #3/#4.
 
@@ -236,8 +277,8 @@ Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gat
 
 **Added 16:20, more provisional candidate work, for the Sheets comparison:**
 - **#2 `8f026c4`:** a per-candidate review queue (E5, `engine/review.py`).
-- **#2 `5c87de2`:** the salary gate never compares pay quoted as an estimate, third-party or not employer-provided (`GATES_VERSION=2`). It is broader than intended: 59 quotes on the snapshot match, mostly *employer-published* wording such as Twilio "The estimated pay ranges…" and Clipboard "Estimated OTE". Worker B flags narrowing it as a D3 question.
-- **#7 `e1438f2`:** a reported **"owner rule (2026-10-26)"**, that a bare `$` means USD only when every listed location is in the US. Otherwise currency is unestablished and salary is `unknown`.
+- **#2 `5c87de2`** (**GPT Master decision, 16:30: too broad; employer-published estimated ranges must keep their evidence and wording. Fixed under B2, after B1**): the salary gate never compares pay quoted as an estimate, third-party or not employer-provided (`GATES_VERSION=2`). It is broader than intended: 59 quotes on the snapshot match, mostly *employer-published* wording such as Twilio "The estimated pay ranges…" and Clipboard "Estimated OTE". Worker B flags narrowing it as a D3 question.
+- **#7 `e1438f2`:** a bare-`$` rule, labelled in the code as an "owner rule (2026-10-26)": a bare `$` means USD only when every listed location is in the US. **GPT Master decision, 16:30: not verified as an owner instruction. Remove the attribution; don't implement it as an approved rule. Worker C reverts it under C1.** It stays an open D3 proposal only. Otherwise currency is unestablished and salary is `unknown`.
   - The Master has no record of this rule from the owner or the GPT Master; please confirm it.
   - It is consistent with section 6 only if it lives in the gates. The extractor still never reads `$` as USD.
   - Today only #7's label checker enforces it; #2's gates don't. #7 measures salary agreement 22/30, with 5 mismatches on exactly this rule.
@@ -273,3 +314,8 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Recorded capture run 40356103511 (6/6 usable; first meaningful `review_change`).
   - Recorded new provisional candidate work under D3: E5 queue, the estimate guard, and the reported bare-`$` owner rule.
   - A1/B1/C1 continue unchanged. No merges or schedule changes.
+- 2026-10-26 16:30 Master (GPT Master decision):
+  - B finishes B1 first, and reports the commit and offline test results; B2 (keep employer-published estimated pay as evidence, results provisional) comes after.
+  - The bare-`$` rule in #7 is unverified: C reverts `e1438f2` under C1, with no "owner" attribution.
+  - C does C1 only, with no new labels. A stands by.
+  - All candidate work stays provisional. No merges, schedule, task or Sheet changes.
