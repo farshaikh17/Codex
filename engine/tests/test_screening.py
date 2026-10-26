@@ -140,6 +140,23 @@ class StabilityTests(unittest.TestCase):
         self.assertEqual(places('work from anywhere in the US'),{'US'})
         self.assertTrue(covers(places('Remote (APAC)'),{'IN'}))
         self.assertFalse(covers(places('Remote - EMEA'),{'IN'}))
+class EstimateTests(unittest.TestCase):
+    def salary(self,text):
+        from engine.tests.screening_cases import us
+        p=us('e',None,extra='\n'+text)
+        return screen(people()['synthetic-cs-us'],p|{'content_hash':'h'},extract(p|{'content_hash':'h','first_seen_at':'2026-10-26T00:00:00+00:00'}))['gates']['salary']
+    def test_employer_estimate_keeps_quote_and_qualifier_but_does_not_decide(self):
+        quote='The estimated pay range for this role is $130,000 - $150,000 USD per year base salary.'
+        g=self.salary(quote)
+        self.assertEqual(g['result'],'unknown')
+        [ev]=g['evidence']
+        self.assertEqual((ev['qualifier'],ev['provisional_result']),('employer-published estimate','pass'))
+        self.assertIn(quote,ev['quote'])  # the employer's own wording is kept verbatim
+        self.assertIn('not a salary qualification',ev['basis'])
+    def test_third_party_figure_is_still_not_compared(self):
+        g=self.salary('Salary estimate (third-party, not provided by the employer): $135,000 - $150,000 USD per year')
+        self.assertEqual((g['result'],g['evidence']),('unknown',[]))
+        self.assertTrue(any('third-party' in n for n in g['notes']))
 class StoreScreeningTests(unittest.TestCase):
     def test_screening_reads_the_store_and_writes_nothing(self):
         from engine.screen import run as screen_store

@@ -23,15 +23,20 @@ from engine.places import covers,places
 #    limited to residents of places that exclude the candidate is not compared
 # 6: a range with one published bound is open-ended: 'at least X' can pass but never fail, 'up to Y' can fail but never
 #    pass; a missing bound is never copied from the other
-GATES_VERSION=6
+# 7: only third-party or salary-site pay is excluded; an employer-published estimate is compared and kept as evidence
+#    with its wording and an 'employer-published estimate' qualifier, but its result is provisional and never decides the gate
+GATES_VERSION=7
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
 UNIT_MULTIPLIER={'lakh':100000,'crore':10000000}
-# Pay the employer did not publish, or calls an estimate, is not compared with a floor: a third-party figure or an
-# estimate could otherwise turn into a salary pass. Read from the quote itself, so it holds whatever the extractor flags say.
-NOT_EMPLOYER_PAY=re.compile(r"(?i)\b(?:estimat(?:e|es|ed|ion)|third[- ]party|not (?:provided|published|stated|set|confirmed) by (?:the )?(?:employer|company|hiring (?:company|team))|"
+# Pay the employer did not publish (a third-party figure or a salary site) is never compared with a floor.
+# Read from the quote itself, so it holds whatever the extractor flags say.
+NOT_EMPLOYER_PAY=re.compile(r"(?i)\b(?:third[- ]party|not (?:provided|published|stated|set|confirmed) by (?:the )?(?:employer|company|hiring (?:company|team))|"
                             r"glassdoor|levels\.fyi|payscale|salary\.com|indeed)\b")
+# Pay the employer itself calls an estimate ('The estimated pay ranges for this role are...', 'Estimated OTE') keeps its
+# evidence and wording and is compared, but the comparison is provisional: on its own it never passes or fails the gate.
+EMPLOYER_ESTIMATE=re.compile(r"(?i)\bestimat(?:e|es|ed|ion)\b")
 SCOPE=re.compile(r"(?i)\b(located|based|reside|residents?|live|eligible to work|authori[sz]ed to work|right to work|open to|candidates (?:in|from)|hire in|hiring in|only)\b")
 NEGATION=re.compile(r"(?i)\b(not|cannot|can't|unable|outside(?: of)?|except|excluding|exclude)\b")
 YEARS=re.compile(r'(?i)\b(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?(?:years?|yrs?)\b')
@@ -213,14 +218,15 @@ def salary(fields,rules,posting=None,profile=None):
     if comp['state']!='stated':
         if no_base: return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base,desc)
         return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
-    outcomes,notes=[],[]
+    outcomes,notes,provisional=[],[],[]
     us_posting=us_only(fields)
     for i in comp['items']:
         pay=i['interpretation']
         if not pay: continue
         if NOT_EMPLOYER_PAY.search(i['quote']):
-            notes.append('%s: an estimate or not employer-published pay; not compared'%i['quote'][:120])
+            notes.append('%s: third-party or not employer-published pay; not compared'%i['quote'][:120])
             continue
+        estimate=bool(EMPLOYER_ESTIMATE.search(i['quote']))  # the wording, not the extractor's 'estimated' flag, which also marks 'expected' ranges
         limit=residency_limit(i['quote'],countries)
         if limit:
             notes.append('"%s": pay for residents elsewhere; not compared (eligible countries: %s)'%(limit,', '.join(countries or ['unknown'])))
@@ -256,14 +262,24 @@ def salary(fields,rules,posting=None,profile=None):
             if verdict=='open':
                 notes.append('%s: open-ended range (%s-%s); the unstated bound is not assumed'%(r.get('text') or i['quote'],_bound(low),_bound(high))); continue
             if verdict=='incomparable': notes.append('%s: basis %s%s cannot be compared with a %s floor'%(r.get('text') or i['quote'],kind,' with variable pay' if pay.get('variable_mentioned') else '',basis)); continue
+            if estimate:
+                provisional.append(ev|{'qualifier':'employer-published estimate','provisional_result':verdict,
+                                       'basis':ev['basis']+'; employer-published estimate: recorded as %s, provisional, not a salary qualification'%verdict})
+                continue
             outcomes.append((verdict,ev))
     if no_base:
         if any(o[0]=='pass' for o in outcomes):
             return _gate('unknown','the posting says there is no base pay but also states a base range at or above the floor',no_base+[o[1] for o in outcomes],desc,notes=notes)
         return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base+[o[1] for o in outcomes],desc,notes=notes)
-    if not outcomes: return _gate('unknown','no stated range is comparable: '+('; '.join(notes) or 'no parsed amount'),[],desc,notes=notes)
+    if provisional: notes=notes+['employer-published estimate kept as provisional evidence (%d range%s); it does not decide this gate'%(
+        len(provisional),'' if len(provisional)==1 else 's')]
+    if not outcomes:
+        if provisional:
+            return _gate('unknown','only employer-published estimates are comparable; recorded as provisional, not a salary qualification',
+                         provisional,desc,notes=notes)
+        return _gate('unknown','no stated range is comparable: '+('; '.join(notes) or 'no parsed amount'),[],desc,notes=notes)
     kinds={o[0] for o in outcomes}
-    evidence=[o[1] for o in outcomes]
+    evidence=[o[1] for o in outcomes]+provisional  # estimate evidence is kept, flagged, but only the stated ranges decide
     if kinds=={'pass'}: return _gate('pass','every comparable range starts at or above the floor',evidence,desc,notes=notes)
     if kinds=={'fail'}: return _gate('fail','every comparable range ends below the floor',evidence,desc,notes=notes)
     return _gate('unknown','ranges span the floor or disagree' if 'span' in kinds else 'ranges disagree',evidence,desc,notes=notes)
