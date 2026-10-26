@@ -1,0 +1,38 @@
+[
+  {
+    "id": "automattic-work-with-us",
+    "employer": "Automattic",
+    "url": "https://automattic.com/work-with-us/",
+    "why": "Custom WordPress careers page; no Greenhouse, Lever or Ashby board configured"
+  },
+  {
+    "id": "doist-careers",
+    "employer": "Doist",
+    "url": "https://www.todoist.com/careers",
+    "why": "doist.com/careers redirects here; no configured ATS feed"
+  },
+  {
+    "id": "toggl-jobs",
+    "employer": "Toggl",
+    "url": "https://toggl.com/jobs",
+    "why": "Custom jobs page; no configured ATS feed"
+  },
+  {
+    "id": "atlassian-all-jobs",
+    "employer": "Atlassian",
+    "url": "https://www.atlassian.com/company/careers/all-jobs",
+    "why": "JavaScript-rendered listing; no Greenhouse, Lever or Ashby board"
+  },
+  {
+    "id": "canonical-careers",
+    "employer": "Canonical",
+    "url": "https://canonical.com/careers/all",
+    "why": "JavaScript-rendered listing; roles.json is disallowed by robots.txt so only the page is captured"
+  },
+  {
+    "id": "salesforce-workday",
+    "employer": "Salesforce",
+    "url": "https://salesforce.wd12.myworkdayjobs.com/External_Career_Site",
+    "why": "Workday single-page app; Workday has no public feed in this collector"
+  }
+]
