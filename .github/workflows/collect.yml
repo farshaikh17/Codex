@@ -21,16 +21,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Test incremental publishing and adapters
-        run: python -m unittest -v
-      - name: Collect official employer feeds
-        run: python collect.py
+      - name: Test incremental publishing, adapters and the source registry
+        # Collector and registry tests only. Engine tests run in engine.yml on demand, so they never add minutes to collections.
+        run: python -m unittest -v test_collect test_registry
+      - name: Validate source registry before any request
+        run: python registry.py
+      - name: Collect official employer feeds (every enabled source; one with its own poll_interval_hours waits until due)
+        env:
+          EVENT: ${{ github.event_name }}
+        run: python collect.py --trigger "$EVENT"
       - name: Publish public data and failure status
         if: always()
         run: |
           if [ ! -f public/status.json ]; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ -n "$(git status --porcelain public/)" ] && ! python collect.py --verify; then
+            git checkout -- public/ && git clean -fdq public/
+            echo '::error::Publication was interrupted or inconsistent; public/ reverted to the last committed snapshot'
+            exit 1
+          fi
           git add public/
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update public ATS snapshots'
