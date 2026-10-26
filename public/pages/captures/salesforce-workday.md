@@ -2,7 +2,7 @@
 
 - official_url: https://salesforce.wd12.myworkdayjobs.com/External_Career_Site
 - final_url: https://salesforce.wd12.myworkdayjobs.com/External_Career_Site
-- captured_at: 2026-10-26T22:30:15.131372+00:00
+- captured_at: 2026-10-26T22:35:07.192500+00:00
 - content_hash: sha256:38b7f4129804fe261c774dd814847873b3ed8d74d178eea30be9afd1b6ce2108
 - review_hash: sha256:450166a7f053622fb9608ab68040d94209b5a81f05b8efc847fb4027b2a60100 (basis: job_links)
 - capture_status: usable

@@ -2,8 +2,8 @@
 
 - official_url: https://automattic.com/work-with-us/jobs/
 - final_url: https://automattic.com/work-with-us/jobs/
-- captured_at: 2026-10-26T22:30:15.131372+00:00
-- content_hash: sha256:26c12ccd8cb979def38e795c3b1525e5b9bab975862e9b270cfee16003c6d648
+- captured_at: 2026-10-26T22:35:07.192500+00:00
+- content_hash: sha256:e7b0d6a91405ab9b36d689a1b600c06a43d28013070301e1d8799e3ce6d1a8fd
 - review_hash: sha256:6e1eaa2699253abd3d8340ad23f9f48b6adf3b359fcead1826cb34dad4d6d702 (basis: job_links)
 - capture_status: usable
 - listing_quality: listings_found (coverage: unknown; flags: none)
@@ -62,4 +62,4 @@ Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirec
 [Report this content](https://wordpress.com/abuse/?report_url=https://automattic.com/work-with-us/jobs/)
 [Collapse this bar](https://automattic.com/work-with-us/jobs/)
 
-![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.5178210262959247)
+![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.040546440529453665)
