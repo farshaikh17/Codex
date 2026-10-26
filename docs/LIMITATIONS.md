@@ -1,6 +1,6 @@
 # Known limitations
 
-- Ten feeds are a migrated coverage trial. Selection rationale wasn't recorded, so every employer's `inclusion.reason` says so. `careers_url`, `job_families` and `geography` are empty until verified with evidence.
+- Ten feeds are a migrated coverage trial. Selection rationale wasn't recorded, so every employer's `inclusion.reason` says so. `careers_url` is verified for Oyster, Zapier and Weave only. `job_families` and `geography` stay empty until verified with evidence.
 - No relevance routing, eligibility assessment, review queue or candidate configuration exists yet (BACKLOG E3–E5). Nothing here marks a job READY.
 - Compensation is requested from every Greenhouse and Ashby feed. On 2026-10-26 it was present for GitLab 106/239, Clipboard 36/39, Zapier 12/12, Oyster 7/23 and Resilinc (Lever) 2/11, and absent for the other feeds. Absent means the feed didn't publish it; it doesn't mean the employer has no published pay elsewhere. `compensation_raw` is unparsed (E2).
 - No evidence objects or extraction-quality warnings for ATS postings yet (E2). Descriptions are stored complete, but section structure (mandatory vs preferred) isn't separated.

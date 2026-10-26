@@ -38,7 +38,13 @@
     {
       "id": "oyster",
       "name": "Oyster",
-      "careers_url": null,
+      "careers_url": "https://www.oysterhr.com/careers",
+      "careers_url_evidence": {
+        "url": "https://www.oysterhr.com/careers",
+        "checked_at": "2026-10-26",
+        "quote": "https://jobs.ashbyhq.com/oyster/embed",
+        "basis": "discover.py found this link to the configured Ashby board on the page; approved by the repository owner 2026-10-26"
+      },
       "job_families": [],
       "geography": [],
       "inclusion": {
@@ -49,7 +55,13 @@
     {
       "id": "zapier",
       "name": "Zapier",
-      "careers_url": null,
+      "careers_url": "https://zapier.com/jobs",
+      "careers_url_evidence": {
+        "url": "https://zapier.com/jobs",
+        "checked_at": "2026-10-26",
+        "quote": "https://jobs.ashbyhq.com/zapier/cb1aec2c-05cd-4598-8117-bd1f7ed9a49f",
+        "basis": "discover.py found this link to the configured Ashby board on the page; approved by the repository owner 2026-10-26"
+      },
       "job_families": [],
       "geography": [],
       "inclusion": {
@@ -93,7 +105,13 @@
     {
       "id": "weave",
       "name": "Weave",
-      "careers_url": null,
+      "careers_url": "https://www.getweave.com/careers/",
+      "careers_url_evidence": {
+        "url": "https://www.getweave.com/careers/",
+        "checked_at": "2026-10-26",
+        "quote": "https://jobs.ashbyhq.com/weave/form/weave-talent-community",
+        "basis": "discover.py found this link to the configured Ashby board on the page; approved by the repository owner 2026-10-26"
+      },
       "job_families": [],
       "geography": [],
       "inclusion": {

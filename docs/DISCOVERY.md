@@ -43,7 +43,7 @@ Each board gets one status:
 | `feed_failed` | The page links to a board, but its feed didn't answer. The error is reported and nothing is proposed. |
 | `not_verified` | The run halted before the feed could be checked. |
 
-**`careers_url_proposal`:** when a page links to a board that is already configured for the same employer, and that employer has no `careers_url`, the run proposes that page as `careers_url`. The evidence is `{url, checked_at, quote}`, where the quote is the board link. The proposal is applied only if a person reviews it and edits `employers.json`.
+**`careers_url_proposal`:** when a page links to a board that is already configured for the same employer, and that employer has no `careers_url`, the run proposes that page as `careers_url`. The evidence is `{url, checked_at, quote}`, where the quote is the board link. The proposal is applied only if a person reviews it and copies it into `employers.json` as `careers_url` plus `careers_url_evidence`. `registry.py` rejects a `careers_url` without evidence. Applied so far (owner-approved 2026-10-26): Oyster, Zapier, Weave.
 
 ## Adding a discovered source
 

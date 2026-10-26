@@ -24,7 +24,7 @@ FEEDS={
 DEFAULT_URL={'greenhouse':'?content=true&pay_transparency=true','lever':'?mode=json','ashby':'?includeCompensation=true'}
 COMPENSATION_OPTION={'greenhouse':'pay_transparency','ashby':'includeCompensation'}
 GEO_BASIS={'explicit_statement','posting_location'}
-EMPLOYER_KEYS={'id','name','careers_url','job_families','geography','inclusion','notes'}
+EMPLOYER_KEYS={'id','name','careers_url','careers_url_evidence','job_families','geography','inclusion','notes'}
 SOURCE_KEYS={'id','employer','provider','board','url','enabled','poll_interval_hours','notes'}
 LIMITS={'min_poll_hours':1,'max_poll_hours':168}
 class RegistryError(ValueError):
@@ -68,6 +68,7 @@ def validate(source_list,employer_doc):
         if not str(e.get('name','')).strip(): errs.append(where+' needs name')
         if e.get('careers_url') is None: warns.append(where+' has no verified careers_url')
         elif urlparse(str(e['careers_url'])).scheme!='https': errs.append(where+' careers_url must be https')
+        else: errs+=_evidence_errors(where+' careers_url',e.get('careers_url_evidence'))
         inc=e.get('inclusion')
         if not isinstance(inc,dict) or not str(inc.get('reason','')).strip(): errs.append(where+' needs inclusion.reason')
         for f in e.get('job_families') or []:
