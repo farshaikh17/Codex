@@ -2,6 +2,7 @@ name: Collect public job feeds
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
   schedule:
     # Five daily collections: gaps of 5, 5, 5, 5 and 4 hours (UTC).
