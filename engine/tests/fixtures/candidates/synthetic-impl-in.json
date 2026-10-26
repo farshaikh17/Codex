@@ -1,0 +1,27 @@
+{
+  "schema": "candidate-config-1",
+  "candidate_id": "synthetic-impl-in",
+  "synthetic": true,
+  "profile_version": "synthetic-1",
+  "rules_version": "synthetic-1",
+  "profile": {
+    "eligible_countries": ["IN"],
+    "experience_years": 7,
+    "languages": ["English", "Hindi"],
+    "application_history": [
+      {"posting_id": "synthetic:acme:applied-1", "employer": "acme", "title": "Onboarding Lead", "status": "applied", "date": "2026-09-01"},
+      {"employer": "globex", "title": "Solutions Consultant", "status": "rejected", "date": "2026-10-01"}
+    ]
+  },
+  "rules": {
+    "required_gates": ["geography", "engagement", "qualifications", "salary", "application_history"],
+    "relevance": {
+      "title_keywords": ["Implementation", "Onboarding", "Customer Success", "Solutions Consultant"],
+      "description_keywords": ["SaaS", "implementation", "onboarding", "SQL"],
+      "minimum_score": 3
+    },
+    "engagement": {"workplace": ["remote"], "employment_types": ["full_time", "contract"]},
+    "salary": {"minimum": 2500000, "currency": "INR", "period": "year", "basis": "base"},
+    "application_history": {"employer_cooldown_days": 90}
+  }
+}
