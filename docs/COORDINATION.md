@@ -319,3 +319,4 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - The bare-`$` rule in #7 is unverified: C reverts `e1438f2` under C1, with no "owner" attribution.
   - C does C1 only, with no new labels. A stands by.
   - All candidate work stays provisional. No merges, schedule, task or Sheet changes.
+- 2026-10-26 Worker A (owner request "implement the review_change noise fix"): page-capture schema bumped to `public-page-capture-index-3` (eddcaad, published by the 16:25 capture as 726a27a). review_hash now hashes posting links + claimed_total when links exist (else text minus cookie/consent/tracking/image-only lines); new field review_basis; new review_change value listings_unchanged; earlier-schema evidence kept, review fields re-baselined once. Live 16:08→16:25: raw changed on 5 pages, review_change flags only Salesforce Workday (+1/-1 postings). Notice posted on farshaikh17/Codex#2 for ENGINE.md §3 (E2b input is now -3).
