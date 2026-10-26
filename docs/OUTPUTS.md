@@ -57,6 +57,8 @@ python -m engine.outputs submit-batch --response PRIVATE_DIR/batch-<id>.response
 - `current`: the item now, including its state, outcome, decided-by, verdict, blocking gates, every gate's result, reason and evidence quotes, and `superseded_by` / `duplicate_of`.
 - the posting id, content hash, and the rules, profile, gates and extractor versions.
 
+**A `superseded` entry's `current.outcome` is the old item's outcome and is no longer valid.** Treat the posting as re-review pending (the Sheets adapter does). The optional `posting` block gives title, employer, canonical URL and availability for readable rows.
+
 **Cursor:** `df1|<event seq>`. Events filtered out still advance it, so a reader never re-reads them. This is the input the Sheets adapter (step 7) will consume idempotently.
 
 ## Compatibility plan

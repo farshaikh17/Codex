@@ -160,7 +160,7 @@ def submit_batch(store,queue,people,response,worker,now=None):
     return {'batch_id':doc.get('batch_id'),'results':results,'errors':sum(r['result']=='error' for r in results)}
 # ---- private decision feed ---------------------------------------------------------------------------------
 FEED_EVENTS=('created','reviewed','decided_by_duplicate_review','superseded')
-def write_decisions(queue,out,candidate_id,since=None,limit=200,now=None):
+def write_decisions(queue,out,candidate_id,since=None,limit=200,now=None,store=None):
     """Decision events after the cursor, oldest first. `event` holds what was true when it happened (from the
     queue's append-only log); `current` holds the item as it is now. Creation events are included only when the
     item was decided automatically at creation. The cursor is the private queue's event sequence ('df1|<seq>'),
@@ -177,7 +177,12 @@ def write_decisions(queue,out,candidate_id,since=None,limit=200,now=None):
         detail=json.loads(r['detail']) if r['detail'] else {}
         if r['event']=='created' and detail.get('state')!='completed': continue
         s=json.loads(r['screening'])
-        entries.append({'seq':r['seq'],'at':r['at'],'event':r['event'],'actor':r['actor'],'detail':detail,'item_id':r['item_id'],
+        posting=None
+        if store is not None:  # optional, additive: what a human-readable ledger row needs
+            v=store.execute('''select v.title,p.board,p.canonical_url,p.availability from postings p join posting_versions v
+                               on v.posting_id=p.posting_id and v.content_hash=? where p.posting_id=?''',(r['content_hash'],r['posting_id'])).fetchone()
+            posting=dict(v) if v else None
+        entries.append({'posting':posting,'seq':r['seq'],'at':r['at'],'event':r['event'],'actor':r['actor'],'detail':detail,'item_id':r['item_id'],
                         'posting_id':r['posting_id'],'content_hash':r['content_hash'],
                         'versions':{'rules':r['rules_version'],'profile':r['profile_version'],'gates':r['gates_version'],'extractor':r['extractor_version']},
                         'current':{'state':r['state'],'outcome':r['outcome'],'decided_by':r['decided_by'],'verdict':s['verdict'],'blocking':s['blocking'],
@@ -220,7 +225,7 @@ def main(argv=None):
     queue=rq.connect(args.review_db or rq.default_path())
     if args.command=='batch': out=write_batch(store,queue,people,args.out,args.candidate,args.worker,args.batch_size,args.per_employer_cap)
     elif args.command=='submit-batch': out=submit_batch(store,queue,people,args.response,args.worker)
-    else: out=write_decisions(queue,args.out,args.candidate,args.since,args.limit)
+    else: out=write_decisions(queue,args.out,args.candidate,args.since,args.limit,store=store)
     print(json.dumps(out,indent=1,ensure_ascii=False))
     return 1 if isinstance(out,dict) and out.get('errors') else 0
 if __name__=='__main__':
