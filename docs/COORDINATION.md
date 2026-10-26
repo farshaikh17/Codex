@@ -25,7 +25,7 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 - Push only to your own branch. Never force-push someone else's branch.
 - Before pushing, run the offline test guard from `docs/INTEGRATION.md` (sockets disabled) and say the result in the commit or PR.
 
-## 3. Verified state (2026-10-26 ~14:40 UTC; heads and combined tree refreshed 15:20)
+## 3. Verified state (2026-10-26 ~14:40 UTC; heads and combined tree refreshed 15:20; main and Actions refreshed 15:30)
 
 **Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
@@ -43,10 +43,22 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 The per-PR table below keeps the 14:40 heads for history.
 
-### main
-- Head `456397a` (bot snapshot, 07:55 UTC). 10 feeds, 533 listings, status `ok`, 10/10 sources.
-- Feed collector on `main`: *Live collection verified* (push runs) and *Scheduled execution verified once*: run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346), event `schedule`, 07:55 UTC.
-- **The hourly cron is effectively not firing.** `collect.yml` uses `23 * * * *` with the five-hour gate inside a step, so every tick that fires creates a run, even one that skips. Actions history holds exactly one `schedule` run since the repository was created (01:33 UTC). The 12:23, 13:23 and 14:23 ticks would each have collected. They created no run. At 14:40 the feed data is about 6¾ hours old. *No schedule change is proposed here*; see decision D2.
+### main (refreshed 15:30)
+- **Head `4225d8e`** (bot snapshot, committed 15:18 UTC). It was written by scheduled run [40347918405](https://github.com/farshaikh17/Codex/actions/runs/40347918405): event `schedule`, created 15:17:48, success, on `456397a`, original (pre-P2) collector code.
+  - `public/status.json`: `attempted_at` 15:17:54, status `ok`, 10/10 sources, **536 listings** (533 at 07:55).
+  - The diff touches only `public/` (12 files). No code changed on `main`.
+  - This happened after the GPT Master's 15:20 confirmation of "`main` unchanged at `456397a`" was relayed. That statement held for `456397a` and is now superseded.
+- **Previous head:** `456397a` (07:55 UTC, 533 listings), from scheduled run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346).
+- **Feed collector on `main`:**
+  - *Live collection verified* (push runs).
+  - *Scheduled execution verified* on two runs, 07:55 and 15:17, both with the original collector code. No P2 code has run on a schedule.
+- **The hourly cron is still unreliable.**
+  - `collect.yml` uses `23 * * * *`, with the five-hour gate inside a step. Every tick that fires therefore creates a run, even one that skips.
+  - Since the repository was created at 01:33 UTC, Actions holds **two** `schedule` runs in about 14 hourly ticks.
+  - The 15:17 run did not start at minute 23. GitHub doesn't say which tick it served, most likely 14:23 about 55 minutes late.
+  - The feed data was about 7 h 20 m old when it ran, and is fresh again from 15:17.
+  - *No schedule change is proposed here*; see decision D2.
+- **Combined tree on the new `main`:** all nine current heads merge onto `4225d8e`. There is the same single doc-only `docs/ENGINE.md` conflict between #6 and #9 (keep both), and **132 offline tests pass**, 0 failures and 0 errors (Master check, 15:30). The new snapshot conflicts with no PR.
 
 ### Open PRs (none merged, none reviewed; no review comments on any PR)
 
@@ -68,13 +80,13 @@ The per-PR table below keeps the 14:40 heads for history.
 
 Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all six for compatibility testing, with `docs/INTEGRATION.md`. Do not merge it.
 
-### Actions history (all 11 runs)
+### Actions history (18 runs at 15:30; was 11 at 14:40)
 
 | Workflow | Runs | Notes |
 |---|---|---|
-| Collect public job feeds | 5 | 1 skipped (gate), 1 failure (05a82e3, before the gate fix), 2 push successes on main, 1 push success on `build/crawl4ai` (01:38, before #1 restricted push to main), 1 schedule success (07:55) |
+| Collect public job feeds | 6 | 1 skipped (gate), 1 failure (05a82e3, before the gate fix), 2 push successes on main, 1 push success on `build/crawl4ai` (01:38, before #1 restricted push to main), **2 schedule successes** (07:55 run 40288776346; 15:17 run 40347918405 → `4225d8e`) |
 | Capture allowlisted career pages | 3 | All push on `build/crawl4ai`. Latest [40339903525](https://github.com/farshaikh17/Codex/actions/runs/40339903525) (14:28, `ea1935f`): 6/6 usable, 12 operations of 25, schema `public-page-capture-index-2` committed as `29d0290` |
-| Offline tests | 3 | Success on `585061c` and `ea1935f`. Run 40340180047 on the bot commit `29d0290` is `action_required`: GitHub holds bot-triggered `pull_request` runs for approval. Not a failure; code is identical to `ea1935f` |
+| Offline tests | 9 | 8 successes. These are `585061c` and `ea1935f`, plus 6 pushes to #1 between 14:36 and 15:17: coordination commits `352357c`, `f957fc8`, `a731e04`, `f27a04a`, `70c5398` and A1's `1783532`. Run 40340180047 on the bot commit `29d0290` is `action_required`: GitHub holds bot-triggered `pull_request` runs for approval. Not a failure; code is identical to `ea1935f` |
 
 ### Combined tree
 - **Master check, 15:20, all nine current heads** (listed above), merged sequentially onto `main` in the section 7 order:
@@ -204,7 +216,7 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 | # | Decision or blocker | Who decides | Blocks |
 |---|---|---|---|
 | D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via GPT Master | All merges |
-| D2 | Scheduled collection is not firing: 1 schedule run in about 13 hourly ticks, and data is about 6¾ h old. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
+| D2 | Scheduled collection is unreliable: 2 schedule runs (07:55, 15:17) in about 14 hourly ticks, the second about 55 minutes late, and data reached about 7 h 20 m old before it. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
 | D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. **GPT Master direction, 15:20:**
 - All candidate-specific gates and labels (`8794ca8` on #2 and the whole of #7) are **provisional** until compared with the canonical Google Sheets.
 - No Claude session reads or edits the Sheets. The comparison is the GPT Master's.
@@ -231,3 +243,4 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Revised B1: no version step (#9 already took v3), plus the fix for the one-sided pay-range collapse in `_ashby_tiers`, reproduced in both directions.
   - Re-validated all nine current heads: 132 offline tests OK, one doc-only ENGINE.md conflict between #6 and #9.
   - Marked A1 done. A1, B1 and C1 continue; no merges or schedule changes.
+- 2026-10-26 15:30 Master: section 3 refreshed. `main` is now `4225d8e`, from scheduled run 40347918405 (15:17, 10/10 sources, 536 listings, `public/` only). That is the second schedule run in about 14 ticks. Actions now has 18 runs. All nine heads re-validated on the new `main`: 132 offline tests OK. D2 wording updated; still no schedule change.
