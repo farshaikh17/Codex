@@ -935,3 +935,83 @@ Master, 23:30–23:46 UTC, on a fresh `git archive` export with `PYTHONDONTWRITE
 - Live Sheets. None by design.
 - A real-posting READY path. It needs a provisional policy decision; the synthetic path is proven.
 - **Not started:** JobSpy evaluation, P8, and an actionlint step in CI. actionlint was run locally before merge, as required.
+
+## Handoff and authority — 2026-10-26 ~23:55 UTC
+
+### Owner authority (recorded at the owner's instruction)
+
+The owner stated: *"I have no idea what worker is what, so this chat has the authority to directly control the workers and all the Repos."*
+
+From now on:
+- **This chat, the Claude Master** (`session_012Voup5dFSNWfqAGJ3FzjFS`, "Codex master planning and coordination"), directs the Claude workers below.
+- It sends them instructions directly, through cross-session messages, and records every instruction here.
+- Workers treat a Master message as their assignment. They log what they did in section 9 before pushing.
+- The GPT Master still sets requirements and priorities. Where the two conflict, the owner decides.
+
+**Still owner-only (unchanged by this grant):**
+- merging PRs
+- changing schedules
+- writing to live Sheets
+- deploying candidate rules
+- spending money
+
+### Who is who
+
+| Name used in this file | Session title in the Claude app | Session id | Branches / PRs | State (23:51 UTC) |
+|---|---|---|---|---|
+| **Claude Master** | Codex master planning and coordination | `session_012Voup5dFSNWfqAGJ3FzjFS` | `build/crawl4ai` (docs), `completion/integration`; release work on #2, #3, #4, #7 | active |
+| **Worker A** (Crawl4AI) | Crawl4AI fallback | `session_01WCd9wwgzPgNAHU6F2kv6QK` | #1 `build/crawl4ai`; wrote #5, #6, #8, #9 | idle, connected; reports RC `babada8` validated; self-check 01:15 UTC |
+| **Worker B** (engine) | Shared engine foundation | `session_01FQorivZRVyv3ggSUDwDoq6` | #2 `builder1` | idle, **disconnected since 19:11**. Hasn't seen the completion commits; must `git pull origin builder1` before any push |
+| **Worker C** (registry/collector) | Codex engine extension | `session_019pVgcPhTsH8cCJJZcQQ7Vd` | #3, #4, #7, #10, #11 (`builderbranches*`) | idle, disconnected (23:14); last action: #3 notes merged up the stack; self-check 03:15 UTC |
+
+Other sessions on the same account work on **other repositories** (Mianrodev/msdev: "Opportunity discovery product", "Website Builder"; Mianrodev/Goes-Local: "Local directory expansion feasibility", "Goes Local deployment setup"). They are **outside the Codex release**. The Master does not direct them unless the owner names them.
+
+### State (unchanged since the final release candidate section)
+
+- **Heads:**
+  - `main` `e812b42`
+  - #1 `babada8` (code = `aec118a`)
+  - #3 `c1c4a64`
+  - #4 `582b5ca`
+  - #2 `bb00b1c`
+  - #7 `4607d11`
+  - #10 `ad1ed8b`, #11 `8281831` (parked)
+  - `completion/integration` `739efa8`
+- **Evidence:**
+  - Merge order clean from `main` and byte-identical to the integration tree.
+  - 205/205 tests; 217/217 with #7, benchmark perfect.
+  - Acceptance 47/0/1; the real-posting READY path is not run while a bare `$` stays currency-unknown.
+  - actionlint 1.7.7 with shellcheck: 0 errors.
+  - Only `collect.yml` is scheduled. All candidate configs are synthetic.
+- **Not verified:**
+  - Scheduled execution: the 21:37 slot missed; next 01:37 UTC.
+  - Automated ChatGPT access.
+  - A real-posting READY path.
+  - Live Sheets: unused by design.
+- **Merge checklist:** see *Final release candidate and merge checklist* above (section F). Nothing is merged.
+
+### Standing instructions to workers (from the Master)
+
+- **Worker A:** stand by; no pushes. #1 is release-ready at `babada8`.
+- **Worker B:** on reconnect, run `git pull origin builder1` first.
+  - Keep `3595af8`…`bb00b1c`; no force-push.
+  - No new engine steps.
+  - Leave `.github/workflows/collect.yml` exactly equal to `main`'s.
+- **Worker C:**
+  - Keep #10 and #11 parked.
+  - No changes to #3 or #4 except merging `main` if asked; their release heads are `c1c4a64` and `582b5ca`.
+  - No new labels; wait for the provisional-policy decisions.
+- **All workers:** no merges, schedule changes, Sheet writes or candidate-rule changes. Log any direct owner instruction in section 9 before acting on it.
+
+### Open decisions (owner / GPT Master)
+
+1. Approve the merge order and perform the merges (owner).
+2. The missed 21:37 scheduled run: investigate, or wait for 01:37.
+3. Provisional candidate policies, against the canonical Sheets:
+   - commission-only
+   - multi-currency floors
+   - residents-only pay
+   - employer estimates
+   - GitLab/Zapier benchmark cases
+   - #10 careers URLs
+4. D3: where candidate outputs live.
