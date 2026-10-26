@@ -1,0 +1,35 @@
+{
+  "schema": "bench-candidates-1",
+  "notice": "Synthetic candidates for benchmark labels only. Not real people. Plain descriptive fields; an assessor maps them to its own configuration format.",
+  "candidates": [
+    {
+      "id": "cand-in",
+      "synthetic": true,
+      "resides_in": "IN",
+      "work_authorization": ["IN"],
+      "engagement": ["full_time", "contract"],
+      "salary_floor": [
+        {"currency": "INR", "amount": 3000000, "period": "year", "basis": "base"},
+        {"currency": "USD", "amount": 60000, "period": "year", "basis": "base"}
+      ],
+      "experience_years": {"customer_success": 6, "sql": 2, "implementation": 4},
+      "job_families": ["customer-success", "implementation"],
+      "applications": []
+    },
+    {
+      "id": "cand-us",
+      "synthetic": true,
+      "resides_in": "US",
+      "work_authorization": ["US"],
+      "engagement": ["full_time"],
+      "salary_floor": [
+        {"currency": "USD", "amount": 120000, "period": "year", "basis": "base"}
+      ],
+      "experience_years": {"customer_success": 3, "sql": 1, "implementation": 3},
+      "job_families": ["customer-success", "implementation"],
+      "applications": [
+        {"posting_key": "lever:bench:already-applied", "status": "applied", "at": "2026-09-14"}
+      ]
+    }
+  ]
+}

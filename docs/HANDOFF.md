@@ -30,4 +30,4 @@ Use exactly one of these per claim. Never substitute one for another.
 3. Run CONSUMER_TEST.md from the original chat.
 4. Decide on P10 (cron frequency).
 5. Compensation inputs (E2a): stacked PR on `builderbranches-compensation`. Retarget it to `main` once #3 merges.
-6. E2 (evidence records on the store) is being built by the PR #2 session. Next here: H benchmark fixtures. Their labels are independent of E2's implementation and become E2's acceptance tests.
+6. E2 (evidence records) and E3+E4 (candidate config and gates) are being built in the PR #2 session. The H benchmark (`builderbranches-benchmark`, stacked on E2a) is how they get measured: `python -m bench score`. Two real-posting labels need a person to confirm them.

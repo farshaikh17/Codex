@@ -29,6 +29,15 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Live trial from `main`'s 07:55 snapshot (local container, scratch output): 125 postings changed, every one only in `compensation_raw` (GitLab 106, Zapier 12, Oyster 7). No other hash moved apart from 1 genuinely new PostHog posting. PR #2's store ingested it as 125 new versions with no warnings.
 - [ ] First Actions collection after merge shows the same 125 (or current equivalent) as `changed_fields: [compensation_raw]`
 
+## Benchmark (H)
+- [x] Labels are internally consistent: every decision follows the decision rule, and every pass/fail basis is quoted from the posting: `test_labels_are_internally_consistent`, `test_validator_catches_bad_labels`
+- [x] Every difficult case from the extension request is present: `test_required_difficult_cases_present`
+- [x] Metrics separate trivial assessors (always-READY, always-exclude, always-review): `test_baselines_are_separated`
+- [x] Collector meets all 6 collection scenarios (29 checks), and the runner catches a wrong expectation: `test_collector_meets_every_scenario`, `test_runner_detects_a_wrong_expectation`
+- [x] PR #2's extractor measured on a scratch merge (see BENCHMARK.md current measurements)
+- [ ] A person confirms or corrects the two `needs_human_review` real cases
+- [ ] ENGINE step 3+4 gates scored with `python -m bench score` (false READY must be 0)
+
 ## Consumer (G)
 - [ ] Original chat completes [CONSUMER_TEST.md](CONSUMER_TEST.md) and reports results
 - [ ] End-to-end tracker ingestion verified (out of scope here)
