@@ -2,9 +2,9 @@
 
 - official_url: https://automattic.com/work-with-us/jobs/
 - final_url: https://automattic.com/work-with-us/jobs/
-- captured_at: 2026-10-26T14:29:11.386986+00:00
-- content_hash: sha256:64d17f9a1fc8646d0158b5a156c7d9e31d4551e3365cbbb2d6c17c516729b382
-- review_hash: sha256:64d17f9a1fc8646d0158b5a156c7d9e31d4551e3365cbbb2d6c17c516729b382
+- captured_at: 2026-10-26T16:08:59.031996+00:00
+- content_hash: sha256:c167a3212ee35e7a3cc3b2635c75201e5509241457fc4f00f4d60890afbaae8f
+- review_hash: sha256:c167a3212ee35e7a3cc3b2635c75201e5509241457fc4f00f4d60890afbaae8f
 - capture_status: usable
 - listing_quality: listings_found (coverage: unknown; flags: none)
 - job_links: 12; claimed_total: None
@@ -53,7 +53,7 @@ Stay safe out there, everyone!
 _© Automattic Inc., purveyors of fine blogging and site-building services since 2005. Thank you for your time._
 * [ Subscribe ](https://automattic.com/work-with-us/jobs/) [ Subscribed ](https://automattic.com/work-with-us/jobs/)
 [![](https://automattic.com/wp-content/uploads/2026/10/a8c-favicon-1.png?w=50)Automattic](https://automattic.com)
-Join 11,740 other subscribers
+Join 11,739 other subscribers
 Sign me up
 Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirect_to=https%3A%2F%2Fr-login.wordpress.com%2Fremote-login.php%3Faction%3Dlink%26back%3Dhttps%253A%252F%252Fautomattic.com%252Fwork-with-us%252Fjobs%252F)
 * [![](https://automattic.com/wp-content/uploads/2026/10/a8c-favicon-1.png?w=50)Automattic](https://automattic.com)
@@ -62,4 +62,4 @@ Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirec
 [Report this content](https://wordpress.com/abuse/?report_url=https://automattic.com/work-with-us/jobs/)
 [Collapse this bar](https://automattic.com/work-with-us/jobs/)
 
-![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.3572718552500035)
+![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.7140125040815528)
