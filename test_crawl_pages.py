@@ -199,6 +199,18 @@ class CaptureTests(unittest.TestCase):
             got=entry(go(Path(folder),page(WORDS+'\n## Our current openings\n')))
             self.assertEqual((got['capture_status'],got['listing_quality']),('usable','no_listings_detected'))
             self.assertIn('listing_quality: no_listings_detected',(Path(folder)/'captures'/'sample-careers.md').read_text())
+    def test_committed_index_matches_documented_contract(self):
+        index=json.loads((Path(__file__).resolve().parent/'public'/'pages'/'index.json').read_text())
+        if index.get('schema')!='public-page-capture-index-2': self.skipTest('committed index predates schema 2')
+        doc=(Path(__file__).resolve().parent/'OPERATIONS.md').read_text()
+        contract=doc[doc.index('### Consumer contract: public-page-capture-index-2'):doc.index('### ChatGPT consumer instructions')]
+        documented=lambda title:[r.split('|')[1].strip() for r in contract.split(title)[1].split('\n\n')[1].splitlines()[2:] if r.startswith('|')]
+        self.assertEqual(documented('Top level of public/pages/index.json'),list(index))
+        self.assertEqual(documented('Page object:'),list(PAGE_KEYS))
+        self.assertEqual(documented('Attempt object (last_attempt):'),list(ATTEMPT_KEYS))
+        for p in index['pages']:
+            self.assertEqual(list(p),list(PAGE_KEYS))
+            if p['last_attempt']: self.assertEqual(list(p['last_attempt']),list(ATTEMPT_KEYS))
     def test_classify_keeps_job_pages_with_invisible_recaptcha_script(self):
         got={'status_code':200,'html':'<script src="https://www.google.com/recaptcha/api.js?render=k"></script>','text':WORDS}
         self.assertEqual(classify(PAGE,got,150)[0],'usable')

@@ -58,6 +58,62 @@ Schema 1 indexes (written before this change) are read for continuity; their pag
 
 change and review_change values: new, changed, unchanged, boilerplate_only (review_change only), unknown_after_failure, no_capture, not_checked (not in this batch), never_attempted.
 
+### Consumer contract: public-page-capture-index-2
+
+Stability rule: the fields below are stable for this schema string. A field may be added (consumers must ignore unknown fields). Removing or renaming a field, changing its type, or changing the meaning of a value means a new schema string (public-page-capture-index-3), documented here alongside -2 during any transition. test_crawl_pages.py checks the committed index against the field lists below.
+
+Top level of public/pages/index.json (types as JSON types; "or null" is stated explicitly):
+
+| Field | Type | Meaning |
+|---|---|---|
+| schema | string | Always "public-page-capture-index-2". Refuse anything else. |
+| attempted_at | string (ISO 8601 UTC) | Start of the run that wrote this file. |
+| batch | array of string | Page ids attempted in this run. |
+| results | object {usable, thin, failed, blocked, skipped: integer} | Counts for this run's batch. |
+| operations | object {robots_fetches: integer, page_navigations: integer, limit: integer, counts: string} | Enforced operation cap; not network requests. |
+| browser_requests | object {requests_seen: integer, requests_blocked: integer, per_page_limit: integer, counts: string} | Routable browser traffic for this run. |
+| halted | string or null | Why the batch stopped early, if it did. |
+| limits | object {batch_size, max_batch_size, max_operations, max_browser_requests_per_page, page_timeout_s, robots_timeout_s, pause_s, min_words: integer} | Limits in force. |
+| notice | string | Not a job, eligibility or READY evidence. |
+| pages | array of page objects | Every allowlisted page, attempted this run or not, in pages.json order. |
+
+Page object:
+
+| Field | Type | Meaning |
+|---|---|---|
+| id | string | Stable allowlist id. |
+| employer | string | Employer name from pages.json. |
+| official_url | string | Allowlisted URL. If it changes, earlier evidence is discarded. |
+| capture_file | string or null | Repository path of the capture; null if never captured. |
+| capture_status | "usable", "thin" or null | Text volume of the latest stored capture. |
+| captured_at | string or null | When the stored text was fetched. Never refreshed by a failed or blocked attempt. |
+| changed_at | string or null | When content_hash last changed. |
+| content_hash | string (hex SHA-256) or null | Hash of the complete normalised capture. |
+| review_hash | string (hex SHA-256) or null | Hash with cookie, consent and tracking lines removed. Use this to decide what to review. |
+| review_changed_at | string or null | When review_hash last changed. |
+| word_count | integer or null | Words in the stored capture. |
+| listing_quality | "listings_found", "partial_listings", "no_listings_detected" or null | Whether the stored capture holds postings. |
+| coverage | "appears_complete", "partial", "none_detected", "unknown" or null | How much of the listing the capture holds. |
+| flags | array of "cookie_heavy", "no_job_links", "openings_section_empty", "paginated_or_truncated", or null | Quality flags. |
+| job_links | integer or null | Distinct posting-like links in the capture. |
+| claimed_total | integer or null | Largest job count the page states, if any. |
+| boilerplate_share | number (0 to 1) or null | Share of words on cookie, consent or tracking lines. |
+| change | "new", "changed", "unchanged", "unknown_after_failure", "no_capture", "not_checked" or "never_attempted" | Raw content change in this run. |
+| review_change | same values as change, plus "boilerplate_only" | Review-relevant change in this run. |
+| fresh_this_run | boolean | True only if this run stored new text for the page. |
+| last_attempt | attempt object or null | Latest attempt; null if never attempted. |
+
+Attempt object (last_attempt):
+
+| Field | Type | Meaning |
+|---|---|---|
+| at | string | When the attempt was made. |
+| result | "usable", "thin", "failed", "blocked" or "skipped" | Outcome. |
+| reason | string | Plain explanation (word count, error, block reason). |
+| http_status | integer or null | Status of the page response; null if no response. |
+| final_url | string | URL after redirects (the official URL if none). |
+| browser_requests | object {seen, blocked, over_cap: integer} or null | Routable browser traffic for this page; null if no navigation. |
+
 ### ChatGPT consumer instructions
 
 1. Read public/pages/index.json only. Refuse a schema other than public-page-capture-index-2. Remember the review_hash you last processed per id.
