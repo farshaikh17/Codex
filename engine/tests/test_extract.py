@@ -113,6 +113,35 @@ class CompensationTests(unittest.TestCase):
         self.assertIn('compensation_signalled_not_found',signalled['warnings'])
         quiet=extract(version(FILLER+'\nRequirements\nSQL.\nEnjoy 40 days off per year.'))
         self.assertNotIn('compensation_signalled_not_found',quiet['warnings'])
+class PayBoundTests(unittest.TestCase):
+    """A published bound is kept as published; a missing one stays None and is never copied from the other bound."""
+    def ashby(self,low,high):
+        tiers={'source':'ashby.compensationTiers','summary':None,'tiers':[{'title':'United States','summary':None,'additional_information':None,
+               'components':[{'compensationType':'Salary','currencyCode':'USD','interval':'1 YEAR','minValue':low,'maxValue':high,'summary':None}]}]}
+        return interps(extract(version(FILLER,compensation_raw=json.dumps(tiers))),'compensation')[0]['ranges']
+    def test_ashby_minimum_only_stays_open_ended(self):
+        self.assertEqual([(r['min'],r['max']) for r in self.ashby(90000,None)],[(90000,None)])
+    def test_ashby_maximum_only_stays_open_ended(self):
+        self.assertEqual([(r['min'],r['max']) for r in self.ashby(None,110000)],[(None,110000)])
+    def test_ashby_both_bounds_missing_gives_no_range(self):
+        self.assertEqual(self.ashby(None,None),[])
+    def test_ashby_both_bounds_kept_as_published(self):
+        self.assertEqual([(r['min'],r['max']) for r in self.ashby(90000,110000)],[(90000,110000)])
+    def test_ashby_published_exact_figure_stays_exact(self):
+        self.assertEqual([(r['min'],r['max']) for r in self.ashby(100000,100000)],[(100000,100000)])
+    def test_greenhouse_one_sided_ranges(self):
+        for given,want in (({'min_cents':9000000},(90000,None)),({'max_cents':11000000},(None,110000))):
+            raw=json.dumps([given|{'currency_type':'USD','title':'Salary'}])
+            r=interps(extract(version(FILLER,compensation_raw=raw)),'compensation')[0]['ranges']
+            self.assertEqual([(x['min'],x['max']) for x in r],[want])
+        empty=extract(version(FILLER,compensation_raw=json.dumps([{'currency_type':'USD','title':'Salary'}])))
+        self.assertNotIn('ats_field:pay_input_ranges',[i['method'] for i in empty['fields']['compensation']['items']])
+    def test_lever_one_sided_and_empty_ranges(self):
+        raw=json.dumps({'min':90000,'max':None,'currency':'USD','interval':'per-year-salary'})
+        r=interps(extract(version(FILLER,compensation_raw=raw)),'compensation')[0]['ranges']
+        self.assertEqual([(x['min'],x['max']) for x in r],[(90000,None)])
+        none=extract(version(FILLER,compensation_raw=json.dumps({'min':None,'max':None,'currency':'USD','interval':'per-year-salary'})))
+        self.assertTrue(all(not (i['interpretation'] or {}).get('ranges') for i in none['fields']['compensation']['items']))
 class WorkplaceAndTypeTests(unittest.TestCase):
     def test_explicit_disagreement_is_conflicting(self):
         r=extract(version(FILLER,locations=[{'text':'Remote (US)','source':'location'}],workplace_type='OnSite'))

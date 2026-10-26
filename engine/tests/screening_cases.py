@@ -22,6 +22,10 @@ def us(pid,pay,locations=('Remote - United States',),extra=''):
     return {'posting_id':'synthetic:umbrella:'+pid,'board':'umbrella','title':'Customer Success Manager','canonical_url':'https://jobs.example/umbrella/'+pid,
             'locations':[{'text':l,'source':'location.name'} for l in locations],'workplace_type':'Remote',
             'description':INTRO+REQS+extra,'compensation_raw':pay}
+def ashby_pay(low,high):
+    """Ashby compensationTiers as the collector stores it (normalization_version 2): one USD base salary component."""
+    return json.dumps({'source':'ashby.compensationTiers','summary':None,'tiers':[{'title':'United States','summary':None,'additional_information':None,
+        'components':[{'compensationType':'Salary','currencyCode':'USD','interval':'1 YEAR','minValue':low,'maxValue':high,'summary':None}]}]})
 EU_POSTING={'posting_id':'synthetic:initech:eu','board':'initech','title':'Product Designer','canonical_url':'https://jobs.example/initech/eu',
             'locations':[{'text':'Remote - Germany','source':'location.name'}],'workplace_type':'Remote',
             'description':'About the role\nDesign our onboarding product with Figma and a shared design system.\nRequirements\n3+ years of product design experience\nPortfolio of shipped work',
@@ -174,6 +178,19 @@ CASES=[
          expected={'verdict':'conditional','gates':{'salary':'pass'}}),
     dict(id='residents_of_unrecognised_place_compared',about='"residents of listed locations" names no place, so nothing is excluded',candidate=M,
          posting=posting('m8',compensation_raw=gh_range(70000,90000,'<p>For residents of listed locations only.</p>')),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
+    # One-sided ranges against U's USD 120,000 base floor: a missing bound is unknown, never copied from the other.
+    dict(id='pay_minimum_only_above_floor',about='"at least 130,000 USD": every possible amount clears the floor',candidate=U,posting=us('min-hi',ashby_pay(130000,None)),
+         expected={'verdict':'conditional','gates':{'salary':'pass'}}),
+    dict(id='pay_minimum_only_below_floor',about='"at least 100,000 USD": the maximum is unstated, so it may or may not reach the floor',candidate=U,posting=us('min-lo',ashby_pay(100000,None)),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='pay_maximum_only_below_floor',about='"up to 110,000 USD": every possible amount is below the floor',candidate=U,posting=us('max-lo',ashby_pay(None,110000)),
+         expected={'verdict':'excluded','gates':{'salary':'fail'}}),
+    dict(id='pay_maximum_only_above_floor',about='"up to 150,000 USD": the minimum is unstated, so it is not known to clear the floor',candidate=U,posting=us('max-hi',ashby_pay(None,150000)),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='pay_both_bounds_missing',about='a salary component with no amounts: no range is stated',candidate=U,posting=us('none',ashby_pay(None,None)),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='pay_published_exact_figure',about='min and max both published as 125,000 USD: a genuine exact figure above the floor',candidate=U,posting=us('exact',ashby_pay(125000,125000)),
          expected={'verdict':'conditional','gates':{'salary':'pass'}}),
     dict(id='emea_for_eu_candidate',about='EMEA includes Germany; B has no salary gate requirement listed, so default all five are required',candidate=B,
          posting=EU_POSTING|{'posting_id':'synthetic:initech:emea','locations':[{'text':'Remote - EMEA','source':'location.name'}]},

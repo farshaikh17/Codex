@@ -21,7 +21,9 @@ from engine.places import covers,places
 # 4: owner rule: an explicit commission-only or no-base-salary statement fails a base floor
 # 5: owner rule: several floors, one per currency, each range compared only with its own currency's floor; a range
 #    limited to residents of places that exclude the candidate is not compared
-GATES_VERSION=5
+# 6: a range with one published bound is open-ended: 'at least X' can pass but never fail, 'up to Y' can fail but never
+#    pass; a missing bound is never copied from the other
+GATES_VERSION=6
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -156,6 +158,14 @@ OTHER_DOLLARS=re.compile(r'[A-Za-z]\$|\b(?:CAD|AUD|NZD|SGD|HKD|MXN|TWD|BRL)\b')
 def _magnitude(r,quote):
     """True when the amount is written in millions or billions ('$1B', '$2.5 million'): a company figure, not pay."""
     return bool(r.get('text')) and bool(re.search(re.escape(r['text'])+r'\s?(?:[MB]\b|bn\b|mn\b|million\b|billion\b)',quote,re.I))
+def _bound(v):
+    return 'unstated' if v is None else v
+def _against(low,high,floor):
+    """pass, fail or span for a range against a floor. A missing bound is unknown, never copied from the other: 'at
+    least low' can pass but never fail, 'up to high' can fail but never pass, and anything else is 'open'."""
+    if low is not None and low>=floor: return 'pass'
+    if high is not None and high<floor: return 'fail'
+    return 'span' if low is not None and high is not None else 'open'
 def us_only(fields):
     """True when the job board lists at least one location and every listed location is recognised as the United
     States. City-only entries ('San Francisco, CA') are not recognised, so they leave this False."""
@@ -230,18 +240,21 @@ def salary(fields,rules,posting=None,profile=None):
             why=[n for n in (cur_note,period_note) if n]
             if period!=rule['period']: notes.append('%s: period %s, not annualised or converted'%(r.get('text') or i['quote'],period or 'unstated')); continue
             mult=UNIT_MULTIPLIER.get(pay.get('amount_unit'),1)
-            low,high=r['min']*mult,r['max']*mult
+            low,high=(None if r.get('min') is None else r['min']*mult),(None if r.get('max') is None else r['max']*mult)
             kind=pay.get('basis','unspecified')
             plain=kind=='unspecified' and not pay.get('variable_mentioned')
-            ev=_item(i,'compensation')|{'basis':'; '.join(why+['range %s-%s %s per %s, basis %s, against the %s floor %s (%s)'%(low,high,cur,period,kind,cur,floor,basis)])}
+            ev=_item(i,'compensation')|{'basis':'; '.join(why+['range %s-%s %s per %s, basis %s, against the %s floor %s (%s)'%(
+                _bound(low),_bound(high),cur,period,kind,cur,floor,basis)])}
             if basis=='base':
-                if kind=='base' or plain: verdict='pass' if low>=floor else 'fail' if high<floor else 'span'
-                elif kind=='ote' and high<floor: verdict='fail'  # base is below OTE, so below the floor too
+                if kind=='base' or plain: verdict=_against(low,high,floor)
+                elif kind=='ote' and high is not None and high<floor: verdict='fail'  # base is below OTE, so below the floor too
                 else: verdict='incomparable'
             else:
-                if kind=='ote' or plain: verdict='pass' if low>=floor else 'fail' if high<floor else 'span'
-                elif kind=='base' and low>=floor: verdict='pass'  # total pay is at least base
+                if kind=='ote' or plain: verdict=_against(low,high,floor)
+                elif kind=='base' and low is not None and low>=floor: verdict='pass'  # total pay is at least base
                 else: verdict='incomparable'
+            if verdict=='open':
+                notes.append('%s: open-ended range (%s-%s); the unstated bound is not assumed'%(r.get('text') or i['quote'],_bound(low),_bound(high))); continue
             if verdict=='incomparable': notes.append('%s: basis %s%s cannot be compared with a %s floor'%(r.get('text') or i['quote'],kind,' with variable pay' if pay.get('variable_mentioned') else '',basis)); continue
             outcomes.append((verdict,ev))
     if no_base:

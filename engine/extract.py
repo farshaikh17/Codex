@@ -103,16 +103,18 @@ def _text(fragment):
 def _ashby_tiers(data):
     """One item per tier component, exactly as Ashby states it. Currency only from currencyCode (never from '$'),
     period only from interval ('NONE' or an unknown interval is not stated), basis from compensationType.
-    Null amounts give no range. The quote is the component's own JSON as it appears in compensation_raw.
+    minValue and maxValue are kept independently: a missing bound stays None and is never copied from the other, so a
+    one-sided figure is open-ended ('at least' or 'up to'), never an exact amount. Both null give no range.
+    Published values are never swapped or reordered. The quote is the component's own JSON as it appears in compensation_raw.
     A tier's additional_information is quoted verbatim with no interpretation."""
     tiers=data.get('tiers') or []
     out=[]
     for tier in tiers:
         for c in tier.get('components') or []:
-            amounts=(c.get('minValue'),c.get('maxValue'))
+            low,high=c.get('minValue'),c.get('maxValue')
             kind=c.get('compensationType')
-            interp={'ranges':[{'min':min(a for a in amounts if a is not None),'max':max(a for a in amounts if a is not None),
-                               'currency':c.get('currencyCode'),'currency_symbol':None,'text':c.get('summary')}] if any(a is not None for a in amounts) else [],
+            interp={'ranges':[{'min':low,'max':high,'currency':c.get('currencyCode'),'currency_symbol':None,'text':c.get('summary')}]
+                             if low is not None or high is not None else [],
                     'period':ASHBY_INTERVALS.get(c.get('interval')),'interval_raw':c.get('interval'),
                     'basis':ASHBY_BASIS.get(kind,'unspecified'),'component_type':kind,'estimated':False,
                     'variable_mentioned':kind in ('Bonus','Commission'),'equity_mentioned':(kind or '').startswith('Equity'),
@@ -127,14 +129,16 @@ def _structured_pay(raw):
     except (TypeError,ValueError): return None
     if isinstance(data,dict) and data.get('source')=='ashby.compensationTiers': return _ashby_tiers(data)
     if isinstance(data,dict) and {'min','max'}<=set(data):
-        interp={'ranges':[{'min':data['min'],'max':data['max'],'currency':data.get('currency'),'currency_symbol':None,'text':None}]}
+        bounded=data['min'] is not None or data['max'] is not None  # each bound kept as published; never filled from the other
+        interp={'ranges':[{'min':data['min'],'max':data['max'],'currency':data.get('currency'),'currency_symbol':None,'text':None}] if bounded else []}
         return [(interp|_pay_flags(data.get('interval') or '')|{'multiple_ranges':False},raw,'ats_field:salaryRange')]
     if isinstance(data,list):
         out=[]
         for r in data:
-            if not isinstance(r,dict) or r.get('min_cents') is None: continue
+            if not isinstance(r,dict) or (r.get('min_cents') is None and r.get('max_cents') is None): continue
             label=' '.join(x for x in (_text(r.get('title')),_text(r.get('blurb'))) if x)
-            interp={'ranges':[{'min':r['min_cents']/100,'max':(r.get('max_cents') or r['min_cents'])/100,'currency':r.get('currency_type'),
+            cents=lambda k: None if r.get(k) is None else r[k]/100  # a missing bound stays None, never copied from the other
+            interp={'ranges':[{'min':cents('min_cents'),'max':cents('max_cents'),'currency':r.get('currency_type'),
                                'currency_symbol':None,'text':None}]}|_pay_flags(label)|{'multiple_ranges':len(data)>1,'label':label or None}
             out.append((interp,json.dumps(r,ensure_ascii=False),'ats_field:pay_input_ranges'))
         return out
