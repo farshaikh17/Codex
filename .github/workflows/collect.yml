@@ -2,6 +2,7 @@ name: Collect public job feeds
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
   schedule:
     - cron: '23 * * * *'
@@ -21,24 +22,12 @@ jobs:
           python-version: '3.12'
       - name: Test incremental publishing and adapters
         run: python -m unittest -v
-      - name: Collect when five hours have elapsed
+      - name: Validate source registry before any request
+        run: python registry.py
+      - name: Collect sources that are due (scheduled) or all enabled sources (manual, push)
         env:
           EVENT: ${{ github.event_name }}
-        run: |
-          python - <<'PY'
-          import json,os,subprocess
-          from datetime import datetime,timezone
-          from pathlib import Path
-          status=Path('public/status.json')
-          due=True
-          if os.environ['EVENT']=='schedule' and status.exists():
-              last=json.loads(status.read_text())
-              age=(datetime.now(timezone.utc)-datetime.fromisoformat(last['attempted_at'])).total_seconds()
-              due=age>=5*3600
-          if due:
-              raise SystemExit(subprocess.call(['python','collect.py']))
-          print('Last attempt less than five hours ago; no employer requests.')
-          PY
+        run: python collect.py --trigger "$EVENT"
       - name: Publish public data and failure status
         if: always()
         run: |
@@ -48,5 +37,5 @@ jobs:
           git add public/
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update public ATS snapshots'
-          git pull --rebase origin main
-          git push
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
