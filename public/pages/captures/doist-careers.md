@@ -2,7 +2,7 @@
 
 - official_url: https://www.todoist.com/careers
 - final_url: https://www.todoist.com/careers
-- captured_at: 2026-10-26T18:02:06.108346+00:00
+- captured_at: 2026-10-26T22:30:15.131372+00:00
 - content_hash: sha256:6d984f3988e7d66fa2e5d9f8cdb9f868af694e9e8bc4db40725045d665a65d7c
 - review_hash: sha256:54f1e315da6c42c95b3a4f3023ad87f21aff7cc430d31c7ac12df78c006cb626 (basis: job_links)
 - capture_status: usable

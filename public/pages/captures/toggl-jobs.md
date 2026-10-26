@@ -2,7 +2,7 @@
 
 - official_url: https://toggl.com/jobs
 - final_url: https://toggl.com/jobs
-- captured_at: 2026-10-26T18:02:06.108346+00:00
+- captured_at: 2026-10-26T22:30:15.131372+00:00
 - content_hash: sha256:4d1212960a541af2eb0c9bcedd6a289f59dca40c306dde560819d4918bd7d136
 - review_hash: sha256:d51cde6aa4d70e1441b823c2f7a1794e152157ec7108a1ee0ef663405bb2e57a (basis: text)
 - capture_status: usable
