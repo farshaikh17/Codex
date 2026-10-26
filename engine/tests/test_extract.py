@@ -74,7 +74,7 @@ class CompensationTests(unittest.TestCase):
             {'title':'United States','summary':'$54.6K – $61.2K • Offers Equity','additional_information':None,'components':[
                 {'compensationType':'Salary','currencyCode':'USD','interval':'1 YEAR','minValue':54600,'maxValue':61200,'summary':'$54.6K – $61.2K'},
                 {'compensationType':'EquityCashValue','currencyCode':'USD','interval':'1 YEAR','minValue':None,'maxValue':None,'summary':'Offers Equity'}]},
-            {'title':'Canada','summary':'CA$50K – CA$58K','additional_information':None,'components':[
+            {'title':'Canada','summary':'CA$50K – CA$58K','additional_information':'Estimated OTE:  65K-80K USD','components':[
                 {'compensationType':'Salary','currencyCode':'CAD','interval':'1 YEAR','minValue':50000,'maxValue':58000,'summary':'CA$50K – CA$58K'},
                 {'compensationType':'Commission','currencyCode':None,'interval':'NONE','minValue':5000,'maxValue':5000,'summary':'5K'},
                 {'compensationType':'EquityPercentage','currencyCode':None,'interval':'2 YEAR','minValue':0.05,'maxValue':0.1,'summary':'0.05% – 0.1%'}]}]}
@@ -82,7 +82,9 @@ class CompensationTests(unittest.TestCase):
         r=extract(version(FILLER,compensation_raw=raw))
         items=r['fields']['compensation']['items']
         self.assertEqual(r['fields']['compensation']['state'],'stated')
-        self.assertEqual({i['method'] for i in items},{'ats_field:compensationTiers'})
+        note=[i for i in items if i['method']=='ats_field:compensationTiers.additional_information']
+        self.assertEqual([(i['quote'],i['interpretation']) for i in note],[('Estimated OTE:  65K-80K USD',None)])  # quoted, never parsed
+        items=[i for i in items if i['method']=='ats_field:compensationTiers']
         got=[(i['interpretation']['label'],i['interpretation']['component_type'],i['interpretation']['basis'],i['interpretation']['period'],
               [(x['min'],x['max'],x['currency']) for x in i['interpretation']['ranges']]) for i in items]
         self.assertEqual(got,[('United States','Salary','base','year',[(54600,61200,'USD')]),

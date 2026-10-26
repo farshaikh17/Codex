@@ -6,8 +6,9 @@ Field states: stated, not_stated, conflicting (explicit statements disagree), no
 Nothing here decides fit, eligibility or READY.
 """
 import html,json,re
-# 2: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text.
-EXTRACTOR_VERSION=2
+# 2: 'advantage'/'beneficial' wording is preferred; 'this role is based in X' is a location statement
+# 3: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text
+EXTRACTOR_VERSION=3
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
@@ -30,7 +31,7 @@ HEADINGS=[(kind,re.compile('^(?:%s)$'%pattern)) for kind,pattern in (
         r"benefits to support your health, finances, and well-being|hiring (?:and how we work|process)|how to apply|application deadline.*|"
         r"travel|what success looks like|success factors|what this role is not|how we work.*|how you work|stay alert to recruitment fraud|"
         r"quick note on scammers|equal opportunity.*|eeo.*|see yourself at [a-z]+|[a-z]+ thinks big\. do you"))]
-INLINE_PREFERRED=re.compile(r"\b(nice[- ]to[- ]have|preferred|is a plus|a plus|bonus points?|helpful,? but not required|not required|ideally|desirable)\b",re.I)
+INLINE_PREFERRED=re.compile(r"\b(nice[- ]to[- ]have|preferred|is a plus|a plus|bonus points?|helpful,? but not required|not required|ideally|desirable|(?:an?|distinct|big|strong) advantage|advantageous|beneficial)\b",re.I)
 CURRENCY_CODES='USD|EUR|GBP|INR|CAD|AUD|NZD|SGD|CHF|SEK|NOK|DKK|PLN|BRL|MXN|JPY|ZAR|AED'
 _NUM=r'\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:[,.]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?'  # 12,00,000 (Indian grouping) | 120,000 | 120
 _CUR=r'R\$|[$€£₹¥]|zł|\b(?:%s)\b'%CURRENCY_CODES
@@ -44,6 +45,7 @@ WORKPLACE_TEXT=((r'\b(?:fully remote|100% remote|this (?:role|position) is (?:fu
                 (r'\b(?:hybrid (?:role|position|work(?:ing)? (?:model|arrangement|schedule))|this (?:role|position) is hybrid|\d days? (?:a|per) week in (?:the |our )?office)\b','hybrid'),
                 (r'\b(?:on-?site (?:role|position)|in[- ]office (?:role|position)|this (?:role|position) is (?:on-?site|in[- ]office))\b','onsite'))
 RESTRICTION=re.compile(r"\b((?:must|need to|needs to|required to|should) (?:be )?(?:located|based|reside|live|work from)|eligible to work|"
+                       r"(?:role|position|job|you) (?:is|are|will be) (?:remote(?:ly)?,? (?:and )?)?(?:based|located) in|"
                        r"work(?:ing)? authori[sz]ation|right to work|(?:visa|immigration) sponsorship|sponsor (?:a |your )?(?:visa|work permit)|(?:only|unable to) (?:hire|consider|accept)|"
                        r"(?:candidates|applicants) (?:must be|located|based) in|time ?zones?\b|overlap with|\b(?:utc|gmt)\s?[+±-])",re.I)
 TITLE_TYPE=((r'\bpart[- ]time\b','part_time'),(r'\b(?:contract|contractor|freelance)\b','contract'),(r'\bintern(?:ship)?\b','internship'),
@@ -101,7 +103,8 @@ def _text(fragment):
 def _ashby_tiers(data):
     """One item per tier component, exactly as Ashby states it. Currency only from currencyCode (never from '$'),
     period only from interval ('NONE' or an unknown interval is not stated), basis from compensationType.
-    Null amounts give no range. The quote is the component's own JSON as it appears in compensation_raw."""
+    Null amounts give no range. The quote is the component's own JSON as it appears in compensation_raw.
+    A tier's additional_information is quoted verbatim with no interpretation."""
     tiers=data.get('tiers') or []
     out=[]
     for tier in tiers:
@@ -115,6 +118,8 @@ def _ashby_tiers(data):
                     'variable_mentioned':kind in ('Bonus','Commission'),'equity_mentioned':(kind or '').startswith('Equity'),
                     'amount_unit':'percent' if kind=='EquityPercentage' else None,'multiple_ranges':len(tiers)>1,'label':tier.get('title')}
             out.append((interp,json.dumps(c,ensure_ascii=False,separators=(',',':')),'ats_field:compensationTiers'))
+        if tier.get('additional_information'):  # free text such as 'Estimated OTE: 65K-80K USD': quoted, never parsed into amounts
+            out.append((None,tier['additional_information'],'ats_field:compensationTiers.additional_information'))
     return out
 def _structured_pay(raw):
     """Greenhouse pay_input_ranges, Lever salaryRange and Ashby compensationTiers arrive as JSON text from the collector."""

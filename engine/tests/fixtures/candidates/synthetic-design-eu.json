@@ -1,0 +1,18 @@
+{
+  "schema": "candidate-config-1",
+  "candidate_id": "synthetic-design-eu",
+  "synthetic": true,
+  "profile_version": "synthetic-1",
+  "rules_version": "synthetic-1",
+  "profile": {
+    "eligible_countries": ["DE", "NL"],
+    "experience_years": 4,
+    "languages": ["English", "German"],
+    "application_history": []
+  },
+  "rules": {
+    "relevance": {"title_keywords": ["Designer", "Design"], "description_keywords": ["Figma", "design system"]},
+    "engagement": {"workplace": ["remote", "hybrid"], "employment_types": null},
+    "salary": {"minimum": 60000, "currency": "EUR", "period": "year", "basis": "base", "assume_period": "year"}
+  }
+}
