@@ -14,7 +14,10 @@ GitHub rounds each job up to a whole minute. Private repositories get 2,000 free
 
 ### Two `collect.yml` fixes (applied at the owner's request, 2026-10-26)
 
-`collect.yml` belongs to the collector, outside the engine boundary (docs/ENGINE.md section 3). The owner asked for these two changes, and they are the only engine-side edits to it.
+`collect.yml` belongs to the collector, outside the engine boundary (docs/ENGINE.md section 3). The owner asked for these two changes. **Where they live now:**
+- The branch filter is on `main` (`709948e`).
+- The test-scope change is carried by the collector PR (#3), which runs `test_collect` and `test_registry`.
+- This branch no longer edits `collect.yml`: it matches `main`, so merging it can't conflict with or undo #3's workflow.
 
 1. **Test scope.** The test step was `python -m unittest -v`. Unittest discovery would also find `engine/tests`, so once the engine merged, every collection would run the engine suite: about 1.5 min instead of 40 s, so 2 billable minutes instead of 1, or about 300 instead of 150 a month at 5 runs a day. The step is now `python -m unittest -v test_collect`, and the engine suite runs only in `engine.yml`.
 2. **Branch filter.** The push trigger had no branch filter, so a push to any branch touching root `*.py`, `sources.json` or the workflow started a **live** employer collection. Its publish step (`git pull --rebase origin main`, `git push`) then failed on that branch. This happened once, when main was merged into `builder1` on 2026-10-26: run 40377774005 passed its tests, collected 10/10 sources and failed to publish, and nothing was pushed. The push trigger is now `branches: [main]`. Schedule and manual runs are unchanged.
