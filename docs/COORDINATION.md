@@ -29,17 +29,19 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 **Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
-**Current heads, 15:20:**
-- #1 `f27a04a`
-- #2 `8794ca8`
+**Current heads, 16:20** (15:20 values in brackets where changed):
+- #1 `a4867d0` [`f27a04a`]: bot capture commit from run 40356103511 on top of Worker A's `f284658` (16:07, job-summary review-queue line in `crawl-pages.yml`)
+- #2 `5c87de2` [`8794ca8`]: `8f026c4` (15:14, per-candidate review queue, E5) and `5c87de2` (16:08, salary gate never compares estimates, `GATES_VERSION=2`)
 - #3 `d11f691`
 - #4 `a43890a`
 - #5 `48ff370`
 - #6 `1bca0d2`
-- #7 `c965b35` (15:13, "Score PR #2's gates, fix a wrong label, align with the shipped gate vocabulary")
+- #7 `e1438f2` [`c965b35`]: 16:08, "Apply owner rule: bare `$` is USD only on US-only postings"
 - #8 `5932c0d`
-- #9 `3018541` (merges `8794ca8`; `EXTRACTOR_VERSION=3`)
-- `integration/pr1-2-3` `4331322` (15:11). It predates #7's `c965b35`.
+- #9 `3018541`: merges `8794ca8`, not yet `8f026c4`/`5c87de2`; `EXTRACTOR_VERSION=3`
+- `integration/pr1-2-3` `4331322` (15:11). It is now behind #1, #2, #7 and `main`.
+
+**Re-sent instruction, 16:20:** the GPT Master's 15:20 message arrived a second time. Everything in it had already been applied at 15:20 (`70c5398`). Its "`main` unchanged" no longer holds (see *main* below).
 
 The per-PR table below keeps the 14:40 heads for history.
 
@@ -58,7 +60,11 @@ The per-PR table below keeps the 14:40 heads for history.
   - The 15:17 run did not start at minute 23. GitHub doesn't say which tick it served, most likely 14:23 about 55 minutes late.
   - The feed data was about 7 h 20 m old when it ran, and is fresh again from 15:17.
   - *No schedule change is proposed here*; see decision D2.
-- **Combined tree on the new `main`:** all nine current heads merge onto `4225d8e`. There is the same single doc-only `docs/ENGINE.md` conflict between #6 and #9 (keep both), and **132 offline tests pass**, 0 failures and 0 errors (Master check, 15:30). The new snapshot conflicts with no PR.
+- **Combined tree, Master check 16:20, all nine heads listed above, on `4225d8e`:**
+  - The same single doc-only `docs/ENGINE.md` conflict between #6 and #9 (keep both). No other conflicts.
+  - **149 offline tests pass**, 0 failures, 0 errors, 0 skipped. That was 132 at 15:30 and 147 at 16:10; the growth is #2's review-queue and gate tests and #7's tests.
+  - `registry.py` OK. `EXTRACTOR_VERSION=3`, `GATES_VERSION=2`.
+  - The one-sided pay-range collapse **still reproduces**: min-only 90000 → 90000–90000, max-only 110000 → 110000–110000. B1 isn't done yet.
 
 ### Open PRs (none merged, none reviewed; no review comments on any PR)
 
@@ -80,13 +86,18 @@ The per-PR table below keeps the 14:40 heads for history.
 
 Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all six for compatibility testing, with `docs/INTEGRATION.md`. Do not merge it.
 
-### Actions history (18 runs at 15:30; was 11 at 14:40)
+### Actions history (21 runs at 16:20; was 11 at 14:40)
 
 | Workflow | Runs | Notes |
 |---|---|---|
 | Collect public job feeds | 6 | 1 skipped (gate), 1 failure (05a82e3, before the gate fix), 2 push successes on main, 1 push success on `build/crawl4ai` (01:38, before #1 restricted push to main), **2 schedule successes** (07:55 run 40288776346; 15:17 run 40347918405 → `4225d8e`) |
-| Capture allowlisted career pages | 3 | All push on `build/crawl4ai`. Latest [40339903525](https://github.com/farshaikh17/Codex/actions/runs/40339903525) (14:28, `ea1935f`): 6/6 usable, 12 operations of 25, schema `public-page-capture-index-2` committed as `29d0290` |
-| Offline tests | 9 | 8 successes. These are `585061c` and `ea1935f`, plus 6 pushes to #1 between 14:36 and 15:17: coordination commits `352357c`, `f957fc8`, `a731e04`, `f27a04a`, `70c5398` and A1's `1783532`. Run 40340180047 on the bot commit `29d0290` is `action_required`: GitHub holds bot-triggered `pull_request` runs for approval. Not a failure; code is identical to `ea1935f` |
+| Capture allowlisted career pages | 4 | All push on `build/crawl4ai`. **Latest [40356103511](https://github.com/farshaikh17/Codex/actions/runs/40356103511)** (16:07–16:10, success). It was triggered by Worker A's `crawl-pages.yml` edit: 6/6 usable, 12 operations of 25, committed as `a4867d0`. It is the first run with a schema-2 baseline, so `review_change` means something:
+  - `changed`: Automattic, Atlassian, Canonical, Salesforce Workday
+  - `boilerplate_only`: Doist
+  - `unchanged`: Toggl (still `no_listings_detected`)
+
+  Previous run [40339903525](https://github.com/farshaikh17/Codex/actions/runs/40339903525) (14:28, `ea1935f`): 6/6 usable, 12 operations of 25, schema `public-page-capture-index-2` committed as `29d0290` |
+| Offline tests | 11 | 10 successes (the 9 below plus `c0ba63f` and `fa1af1b`). Earlier: These are `585061c` and `ea1935f`, plus 6 pushes to #1 between 14:36 and 15:17: coordination commits `352357c`, `f957fc8`, `a731e04`, `f27a04a`, `70c5398` and A1's `1783532`. Run 40340180047 on the bot commit `29d0290` is `action_required`: GitHub holds bot-triggered `pull_request` runs for approval. Not a failure; code is identical to `ea1935f` |
 
 ### Combined tree
 - **Master check, 15:20, all nine current heads** (listed above), merged sequentially onto `main` in the section 7 order:
@@ -221,7 +232,19 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 - All candidate-specific gates and labels (`8794ca8` on #2 and the whole of #7) are **provisional** until compared with the canonical Google Sheets.
 - No Claude session reads or edits the Sheets. The comparison is the GPT Master's.
 
-Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gate vocabulary. It is recorded as provisional too. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
+Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gate vocabulary. It is recorded as provisional too.
+
+**Added 16:20, more provisional candidate work, for the Sheets comparison:**
+- **#2 `8f026c4`:** a per-candidate review queue (E5, `engine/review.py`).
+- **#2 `5c87de2`:** the salary gate never compares pay quoted as an estimate, third-party or not employer-provided (`GATES_VERSION=2`). It is broader than intended: 59 quotes on the snapshot match, mostly *employer-published* wording such as Twilio "The estimated pay ranges…" and Clipboard "Estimated OTE". Worker B flags narrowing it as a D3 question.
+- **#7 `e1438f2`:** a reported **"owner rule (2026-10-26)"**, that a bare `$` means USD only when every listed location is in the US. Otherwise currency is unestablished and salary is `unknown`.
+  - The Master has no record of this rule from the owner or the GPT Master; please confirm it.
+  - It is consistent with section 6 only if it lives in the gates. The extractor still never reads `$` as USD.
+  - Today only #7's label checker enforces it; #2's gates don't. #7 measures salary agreement 22/30, with 5 mismatches on exactly this rule.
+  - #7 notes that once the rule is in the gates, `5c87de2`'s estimate guard is what prevents a false READY on a third-party "$135,000" estimate.
+  - If the rule is confirmed, it belongs in #2's salary gate (Worker B), with #7's labels unchanged.
+
+Neither worker extends these further. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
 | D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
@@ -244,3 +267,9 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Re-validated all nine current heads: 132 offline tests OK, one doc-only ENGINE.md conflict between #6 and #9.
   - Marked A1 done. A1, B1 and C1 continue; no merges or schedule changes.
 - 2026-10-26 15:30 Master: section 3 refreshed. `main` is now `4225d8e`, from scheduled run 40347918405 (15:17, 10/10 sources, 536 listings, `public/` only). That is the second schedule run in about 14 ticks. Actions now has 18 runs. All nine heads re-validated on the new `main`: 132 offline tests OK. D2 wording updated; still no schedule change.
+- 2026-10-26 16:20 Master:
+  - Re-sent GPT Master instruction received. Already applied at 15:20; its "`main` unchanged" is superseded by `4225d8e`.
+  - Re-validated all nine heads (#1 `a4867d0`, #2 `5c87de2`, #7 `e1438f2`, others unchanged) on `main` `4225d8e`: 149 offline tests OK. The one-sided pay-range bug still reproduces (B1 pending).
+  - Recorded capture run 40356103511 (6/6 usable; first meaningful `review_change`).
+  - Recorded new provisional candidate work under D3: E5 queue, the estimate guard, and the reported bare-`$` owner rule.
+  - A1/B1/C1 continue unchanged. No merges or schedule changes.
