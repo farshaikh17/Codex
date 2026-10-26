@@ -1,6 +1,6 @@
 {
  "schema": "bench-cases-1",
- "notice": "Synthetic postings use example.invalid URLs and invented employers. Labels on author_constructed cases are true by construction: each label quotes the posting text that makes it true. needs_human_review cases are excluded from gating metrics until a person confirms them.",
+ "notice": "Synthetic postings use example.invalid URLs and invented employers. Labels on author_constructed cases are true by construction: each label quotes the posting text that makes it true. human_confirmed cases are real excerpts whose labels the repository owner confirmed; needs_human_review cases are excluded from gating metrics until confirmed.",
  "gates": [
   "geography",
   "engagement",
@@ -1592,7 +1592,7 @@
   },
   {
    "id": "real-gitlab-us-range",
-   "label_status": "needs_human_review",
+   "label_status": "human_confirmed",
    "covers": [
     "real posting: salary range restricted to US residents"
    ],
@@ -1614,6 +1614,11 @@
    },
    "expected_extraction": {
     "compensation": "stated"
+   },
+   "confirmed": {
+    "by": "repository owner",
+    "on": "2026-10-26",
+    "scope": "all labels on this case as shown in PR #7"
    },
    "expected_compensation": {
     "currency": "USD",
@@ -1653,7 +1658,7 @@
   },
   {
    "id": "real-zapier-bonus-equity",
-   "label_status": "needs_human_review",
+   "label_status": "human_confirmed",
    "covers": [
     "real posting: Ashby summary with bonus and equity"
    ],
@@ -1679,6 +1684,11 @@
    },
    "expected_extraction": {
     "compensation": "stated"
+   },
+   "confirmed": {
+    "by": "repository owner",
+    "on": "2026-10-26",
+    "scope": "all labels on this case as shown in PR #7"
    },
    "expected_compensation": {
     "variable_mentioned": true,

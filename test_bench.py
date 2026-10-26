@@ -50,7 +50,7 @@ class MetricTests(unittest.TestCase):
         self.assertTrue(review['missed_ready'])  # never committing is not free either
     def test_perfect_predictions_score_clean(self):
         perfect=[{'case':c['id'],'candidate':cid,'verdict':e['verdict'],'gates':{g:v['value'] for g,v in e['gates'].items()}}
-                 for c,cid,e in score.pairs(score.load('cases.json'))]
+                 for c,cid,e in score.pairs(score.load('cases.json')) if 'verdict' in e]
         r=score.score_assessments(perfect)
         self.assertEqual((r['false_ready'],r['missed_ready'],r['incorrect_exclusions'],r['missed_exclusions'],r['missing']),([],[],[],[],[]))
         self.assertTrue(all(a.split('/')[0]==a.split('/')[1] for a in r['gate_agreement'].values()))
@@ -58,9 +58,19 @@ class MetricTests(unittest.TestCase):
         r=score.score_assessments([])
         self.assertEqual(len(r['missing']),r['pairs'])
         self.assertEqual(r['false_ready'],[])
-    def test_unreviewed_real_cases_excluded_from_gating(self):
-        ids={c['id'] for c,_,_ in score.pairs(score.load('cases.json'))}
-        self.assertFalse({i for i in ids if i.startswith('real-')})
+    def test_only_confirmed_labels_count(self):
+        cases=score.load('cases.json')
+        real={c['id']:c['label_status'] for c in cases['cases'] if c['id'].startswith('real-')}
+        self.assertEqual(set(real.values()),{'human_confirmed'})
+        ids={c['id'] for c,_,_ in score.pairs(cases)}
+        self.assertTrue(set(real)<=ids)
+        pending=copy.deepcopy(cases)
+        for c in pending['cases']:
+            if c['id'].startswith('real-'): c['label_status']='needs_human_review'
+        self.assertFalse({c['id'] for c,_,_ in score.pairs(pending)}&set(real))
+        unsigned=copy.deepcopy(cases)
+        next(c for c in unsigned['cases'] if c['id'].startswith('real-')).pop('confirmed')
+        self.assertIn('human_confirmed needs confirmed.by',' '.join(score.validate(unsigned)))
     def test_extraction_duplicates_and_queue_scoring(self):
         ex=score.score_extraction([{'case':'missing-salary','fields':{'compensation':'stated'}}])
         self.assertEqual((ex['fields_checked'],ex['fields_agreed']),(1,0))

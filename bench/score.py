@@ -1,7 +1,7 @@
 """Benchmark fixtures and scoring. Standard library only; no network.
 
-Labels are test expectations written with the fixtures, never model output. Gating metrics use only
-author_constructed cases; needs_human_review cases are reported separately until a person confirms them.
+Labels are test expectations written with the fixtures, never model output. Gating metrics use
+author_constructed and human_confirmed cases; needs_human_review cases are reported separately until a person confirms them.
 """
 import json,re
 from pathlib import Path
@@ -19,7 +19,8 @@ def us_only(posting):
     return bool(locs) and all(re.search(r'\b(United States|USA|US)\b',t) for t in locs)
 EVIDENCE_STATES={'stated','not_stated','conflicting','not_retrieved'}
 AVAILABILITY={'listed','missing','closed_stated'}
-LABEL_STATUS={'author_constructed','needs_human_review'}
+LABEL_STATUS={'author_constructed','human_confirmed','needs_human_review'}
+GATING=('author_constructed','human_confirmed')  # needs_human_review never counts until a person confirms it
 def load(name):
     return json.loads((FIXTURES/name).read_text(encoding='utf-8'))
 def decide(gates):
@@ -39,6 +40,7 @@ def validate(cases=None,candidates=None):
         if c.get('id') in seen: problems.append(where+': duplicate id')
         seen.add(c.get('id'))
         if c.get('label_status') not in LABEL_STATUS: problems.append(where+': bad label_status')
+        if c.get('label_status')=='human_confirmed' and not (c.get('confirmed') or {}).get('by'): problems.append(where+': human_confirmed needs confirmed.by and confirmed.on')
         p=c.get('posting') or {}
         if not p.get('key') or 'description' not in p: problems.append(where+': posting needs key and description')
         if c['label_status']=='author_constructed' and not str(p.get('url','')).startswith('https://jobs.example.invalid/'):
@@ -71,11 +73,11 @@ def validate(cases=None,candidates=None):
             elif c['label_status']=='author_constructed': problems.append('%s/%s: author_constructed labels need a verdict'%(where,cid))
             if exp.get('relevance') not in ('match','no_match'): problems.append('%s/%s: relevance must be match or no_match'%(where,cid))
     return problems
-def pairs(cases,status=('author_constructed',)):
+def pairs(cases,status=GATING):
     for c in cases['cases']:
         if c['label_status'] in status:
             for cid,exp in (c.get('expected') or {}).items(): yield c,cid,exp
-def score_assessments(predictions,cases=None,status=('author_constructed',)):
+def score_assessments(predictions,cases=None,status=GATING):
     """predictions: [{case, candidate, verdict, gates?:{gate: value}}]. Missing predictions count as not ready and are listed."""
     cases=cases or load('cases.json')
     got={(p['case'],p['candidate']):p for p in predictions}
@@ -103,7 +105,7 @@ def score_assessments(predictions,cases=None,status=('author_constructed',)):
                 r['gate_agreement'][g][0]+=p['gates'][g]==exp['gates'][g]['value']
     r['gate_agreement']={g:'%d/%d'%tuple(v) for g,v in r['gate_agreement'].items() if v[1]}
     return r
-def score_extraction(predictions,cases=None,status=('author_constructed',)):
+def score_extraction(predictions,cases=None,status=GATING):
     """predictions: [{case, fields:{field: state}, warnings?:[...], compensation?:{flag: value}}]."""
     cases=cases or load('cases.json')
     got={p['case']:p for p in predictions}
