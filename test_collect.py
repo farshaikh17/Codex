@@ -43,6 +43,14 @@ class CollectionTests(unittest.TestCase):
 OTHER={'id':'other-ashby','provider':'ashby','board':'other','url':'https://api.ashbyhq.com/posting-api/job-board/other'}
 def ashby():
     return {'jobs':[{'id':'two','title':'Support Lead','jobUrl':'https://jobs.ashbyhq.com/other/two','descriptionPlain':'JD','location':'Remote'}]}
+TIERS={'compensationTierSummary':'$54.6K – $61.2K • Offers Equity • Multiple Ranges',
+       'compensationTiers':[
+           {'id':'t1','title':'United States','tierSummary':'$54.6K – $61.2K • Offers Equity','additionalInformation':None,
+            'components':[{'id':'c1','summary':'$54.6K – $61.2K','compensationType':'Salary','interval':'1 YEAR','currencyCode':'USD','minValue':54600,'maxValue':61200},
+                          {'id':'c2','summary':'Offers Equity','compensationType':'EquityCashValue','interval':'1 YEAR','currencyCode':'USD','minValue':None,'maxValue':None}]},
+           {'id':'t2','title':'Canada','tierSummary':'CA$50K – CA$58K','additionalInformation':None,
+            'components':[{'id':'c3','summary':'CA$50K – CA$58K','compensationType':'Salary','interval':'1 YEAR','currencyCode':'CAD','minValue':50000,'maxValue':58000},
+                          {'id':'c4','summary':'0.05%','compensationType':'EquityPercentage','interval':'NONE','currencyCode':None,'minValue':0.05,'maxValue':0.05}]}]}
 def by_source(data):
     return lambda source:data[source['id']]() if callable(data[source['id']]) else data[source['id']]
 def snapshot(path):
@@ -158,6 +166,38 @@ class ReliabilityTests(unittest.TestCase):
         again=collect([SOURCE,moved],self.out,fetch,lambda _:None)
         self.assertFalse(again['sources'][1]['endpoint_changed'])
         self.assertNotIn('changed_fields',{k for j in again['jobs'] for k in j})
+    def test_ashby_tiers_kept_verbatim(self):
+        from adapters import normalize
+        job={'id':'x','title':'Role','jobUrl':'https://jobs.ashbyhq.com/o/x','descriptionPlain':'JD','location':'Remote'}
+        raw=normalize('ashby','o',job|{'compensation':TIERS})['compensation_raw']
+        data=json.loads(raw)
+        self.assertEqual(data['source'],'ashby.compensationTiers')
+        self.assertEqual([t['title'] for t in data['tiers']],['United States','Canada'])
+        canada=data['tiers'][1]['components']
+        self.assertEqual((canada[0]['currencyCode'],canada[0]['interval'],canada[0]['minValue'],canada[0]['maxValue']),('CAD','1 YEAR',50000,58000))
+        self.assertEqual((canada[1]['compensationType'],canada[1]['currencyCode'],canada[1]['interval']),('EquityPercentage',None,'NONE'))
+        self.assertNotIn('id',canada[0])
+        self.assertEqual(data['summary'],TIERS['compensationTierSummary'])
+        summary_only={'compensationTierSummary':'€50K – €60K','compensationTiers':[]}
+        self.assertEqual(normalize('ashby','o',job|{'compensation':summary_only})['compensation_raw'],'€50K – €60K')
+        self.assertIsNone(normalize('ashby','o',job)['compensation_raw'])
+        self.assertEqual(raw,normalize('ashby','o',job|{'compensation':TIERS})['compensation_raw'])  # deterministic
+    def test_normalization_change_attributed_not_an_employer_edit(self):
+        old_board={'schema':'public-job-board-1','source':'other-ashby','collected_at':'2026-10-26T07:55:27+00:00',
+                   'jobs':[public_job(OTHER,ashby()['jobs'][0]|{'compensation':{'compensationTierSummary':TIERS['compensationTierSummary']}},
+                                      '2026-10-26T07:55:27+00:00')|{'change':'new'}]}
+        (self.out/'boards').mkdir(parents=True)
+        (self.out/'boards/other-ashby.json').write_text(json.dumps(old_board))
+        with_tiers=lambda source:{'jobs':[ashby()['jobs'][0]|{'compensation':TIERS}]}
+        first=collect([OTHER],self.out,with_tiers,lambda _:None)
+        src=first['sources'][0]
+        self.assertEqual((src['normalization_changed'],src['endpoint_changed']),(True,False))
+        self.assertEqual(first['jobs'][0]['changed_fields'],['compensation_raw'])
+        board=json.loads((self.out/'boards/other-ashby.json').read_text())
+        self.assertEqual(board['normalization_version'],2)
+        again=collect([OTHER],self.out,with_tiers,lambda _:None)
+        self.assertFalse(again['sources'][0]['normalization_changed'])
+        self.assertEqual(again['jobs'][0]['change'],'unchanged')
     def test_due_selection(self):
         now=datetime(2026,10,26,12,tzinfo=timezone.utc)
         status={'sources':[{'source':'sample-lever','checked_at':(now-timedelta(hours=4,minutes=50)).isoformat()},

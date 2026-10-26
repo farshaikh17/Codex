@@ -27,6 +27,8 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Greenhouse and Ashby URLs request compensation by default, with a warning when missing: `test_compensation_requested_by_default_and_warned_when_missing`
 - [x] `changed_fields` and `endpoint_changed` attribute a pay-only change to the endpoint change, and the original currency and wording are kept: `test_changed_fields_and_endpoint_change_attributed`
 - [x] Live trial from `main`'s 07:55 snapshot (local container, scratch output): 125 postings changed, every one only in `compensation_raw` (GitLab 106, Zapier 12, Oyster 7). No other hash moved apart from 1 genuinely new PostHog posting. PR #2's store ingested it as 125 new versions with no warnings.
+- [x] Ashby tiers kept verbatim and a format change attributed by `normalization_changed`: `test_ashby_tiers_kept_verbatim`, `test_normalization_change_attributed_not_an_employer_edit`
+- [x] Replay of real feed responses saved 2026-10-26 ~11:57 UTC from `main`'s 07:55 snapshot: 161 postings changed, all only in `compensation_raw` (GitLab 106, Clipboard 36, Zapier 12, Oyster 7); Clipboard has `endpoint_changed: false` and `normalization_changed: true`; all 171 Ashby pay components in the feeds (Clipboard 44, Oyster 57, Zapier 70) are present in `compensation_raw` with type, currency, interval and amounts unchanged
 - [ ] First Actions collection after merge shows the same 125 (or current equivalent) as `changed_fields: [compensation_raw]`
 
 ## Consumer (G)
