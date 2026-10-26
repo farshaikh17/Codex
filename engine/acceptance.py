@@ -38,18 +38,23 @@ def _copy_snapshot(src,dst):
     (dst/'boards').mkdir(parents=True)
     shutil.copy(src/'status.json',dst/'status.json')
     for f in (src/'boards').glob('*.json'): shutil.copy(f,dst/'boards'/f.name)
-def _follow_up(snap1,snap2,when):
+def _follow_up(snap1,snap2,when,prefer=()):
     """A second collection derived from the real one: one posting's text changes, one disappears, one source fails,
-    everything else is re-fetched unchanged. Returns what was changed, for the checks."""
+    everything else is re-fetched unchanged. Returns what was changed, for the checks. The changed posting is taken
+    from `prefer` (postings that already have a ledger row) when any qualifies, so the ledger checks don't depend on
+    which posting happens to come first in a real snapshot."""
     _copy_snapshot(snap1,snap2)
     status=json.loads((snap2/'status.json').read_text())
     ok=[s for s in status['sources'] if s['status']=='ok']
     boards={s['source']:json.loads((snap2/'boards'/(s['source']+'.json')).read_text()) for s in ok}
-    edit=next(s['source'] for s in ok if len(boards[s['source']]['jobs'])>=3)
+    big=[s['source'] for s in ok if len(boards[s['source']]['jobs'])>=3]
+    edit=next((sid for sid in big if any(j['key'] in prefer for j in boards[sid]['jobs'])),big[0])
     fail=next(s['source'] for s in ok if s['source']!=edit and boards[s['source']]['jobs'])
     jobs=boards[edit]['jobs']
-    changed,removed=jobs[0]['key'],jobs[1]['key']
-    jobs[0]['description']+='\nRequirements\nExperience with acceptance-test fixtures.'
+    target=next((j for j in jobs if j['key'] in prefer),jobs[0])
+    changed=target['key']
+    removed=next(j['key'] for j in jobs if j['key']!=changed)
+    target['description']+='\nRequirements\nExperience with acceptance-test fixtures.'
     boards[edit]['jobs']=[j for j in jobs if j['key']!=removed]
     status['attempted_at']=when
     for s in status['sources']:
@@ -220,7 +225,8 @@ def run(out,root=ROOT,fixtures=FIXTURES):
             r.check('8 sheets','the READY decision reaches the ledger',rows()[ready_item['posting_id']][6]=='ready',rows()[ready_item['posting_id']][6:8])
         # 1/2/6 follow-up collection: change, disappearance, failure ----------------------------------------
         snap2=work/'snap2'
-        info=_follow_up(snap1,snap2,(datetime.fromisoformat(max(s['checked_at'] for s in status1['sources']))+timedelta(days=1)).isoformat())
+        info=_follow_up(snap1,snap2,(datetime.fromisoformat(max(s['checked_at'] for s in status1['sources']))+timedelta(days=1)).isoformat(),
+                        prefer=set(rows()))
         ing2=ingest_snapshot(store,snap2,sources)
         avail=lambda pid:store.execute('select availability from postings where posting_id=?',(pid,)).fetchone()[0]
         failed_ids=[x[0] for x in store.execute('select posting_id from postings where source_id=?',(info['failed_source'],))]
