@@ -25,6 +25,21 @@ Overlap already resolved:
 - PR #3 delivers most of E8 (run lock, freshness and partial-run reporting, per-source failure counts). E8 narrows to per-source backoff and request budgets.
 - Storage decision (K, DuckDB): PR #2 chose SQLite (stdlib). No DuckDB code exists, so none is added.
 
+## Status refresh (2026-10-26 ~23:00 UTC; supersedes the State column below where they differ)
+
+| Row | State | Where |
+|---|---|---|
+| P2 registry + reliable runs | Implemented and tested offline. Consolidated with #5 (manifest) and current `main` (owner's five-daily cron, `branches: [main]`, no age gate). Every scheduled run collects every source without its own `poll_interval_hours` | #3 `0c76b85` |
+| E2a compensation inputs | Implemented and tested offline. Live collection verified in a container, scratch only: 162 compensation-only changes, all attributed to the collector. Includes #8 (Ashby tiers verbatim, `normalization_version` 2) | #4 `c4e38fc` |
+| E1/E2 store + extraction | Implemented and tested offline. Includes #6 (rebuild from Git history) and #9 (tiers). Extractor version 4 (B3): K/M/B suffixes, coded dollars, per-unit ranges, company figures not pay | #2 `23922ab` |
+| E3–E7 gates, review queue, outputs, Sheets interface | Implemented and tested offline. **Provisional**: candidate policy awaits the canonical Sheets comparison (see HANDOFF.md, *Provisional candidate-policy rules*). Sheets adapter is a fake only; no live writes | #2 `23922ab` |
+| H benchmark | Implemented and tested offline. Bare-`$` labels corrected (`2bae921`). **Provisional** labels: see HANDOFF.md | #7 `2bae921` |
+| B discovery | Implemented and tested offline. **Parked** outside the minimum release | #10 `51d450d` |
+| E8 backoff and budgets | Implemented and tested offline; keeps #5's manifest. **Parked**; backoff policy unapproved | #11 `5c26659` |
+| P8 fold `pages.json` into the registry | Not started | – |
+| K tool evaluations | Trafilatura evaluated, not adopted (`docs/ENGINE.md` §6). JobSpy: not started. actionlint: not started. Bounded assignments are in `docs/COORDINATION.md` on `build/crawl4ai` | – |
+| P10/E9 schedule + acceptance | Schedule set by the owner on `main` (`562baaf`, `709948e`). **Scheduled execution of the new cron not yet verified**: the 21:37 UTC slot created no run. End-to-end acceptance passes offline; the READY path is proven on a synthetic posting only | – |
+
 ## Dependency order
 
 ```
