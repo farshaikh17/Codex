@@ -39,11 +39,12 @@ Use exactly one of these per claim. Never substitute one for another.
 - The GitLab and Zapier benchmark labels are confirmed.
 - Oyster, Zapier and Weave `careers_url` are applied. Clipboard's is applied on the owner's instruction, after ownership was verified.
 - jobs.twilio.com is allowed. clipboard.com and resilinc.ai are allowed after ownership was verified.
+- Five scheduled collections a day at 37 1,6,11,16,21 UTC, without the age-gate skip (owner's commit on `main`).
 
 ## Still open
 
 1. Owner review and merge of the PR chain above.
 2. CONSUMER_TEST.md from the original chat (consumer access).
-3. P10: hourly cron cost (about 720 of 2,000 free minutes a month). Change to `23 */5 * * *` after #1 merges.
+3. P10 is done by the owner on `main` (562baaf): five daily runs, no age-gate skip. All four of my PRs were merged with it, and `poll_interval_hours` is now opt-in, so every scheduled run collects every source without its own interval.
 4. PR #2 follow-up: US$ range parsing (the last salary disagreement in the benchmark).
 5. Boards on JavaScript-only careers pages (GitLab, Remote, Twilio, Resilinc) can't be found from static HTML. That would need PR #1's browser capture, not discovery.
