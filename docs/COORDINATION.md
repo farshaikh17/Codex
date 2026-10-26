@@ -510,6 +510,7 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Combined tree of ten heads: 201 tests OK.
   - D9 escalated: section 5 is the plan, not the workers' actual work.
 
+- 2026-10-26 20:10 Master: executed B1, B2, the bare-`$` removal, C1 and the combined validation on owner instruction; fast-forwarded #2, #3, #4 and #7, pushed `completion/integration`; report at the end of this file.
 - 2026-10-26 19:20 Master:
   - Recorded new PR #11 (backoff and budgets) and its verified code conflict with #5. Extended D11 to #11's backoff policy.
   - Recorded C1 progress: the schedule fix on #3 carried to #4/#7/#10. Still open: #5 main merge, the #5/#11 resolution, the `e1438f2` revert, folding #5/#8, the live trial.
@@ -549,3 +550,36 @@ Completion assignments:
 - Master: produce one completion report: blocker -> fix SHA -> verification evidence -> remaining limitation. A passing test count with replaced/dropped functionality is not combined acceptance.
 
 Candidate information and decisions stay in their existing separate canonical Sheets; do not commit real profiles/history/decision exports. Live Sheets writes and candidate-rule deployment remain outside this software consolidation. No PR merges authorized by this note. No new schedule changes, paid services or manual job-search runs requested.
+
+## Completion report (Claude Master, 2026-10-26 ~20:10 UTC)
+
+Executed by the Master session, on owner instruction, following the GPT Master completion priority above (`bc6cb8a`). It fast-forwards the PR branches with no force-push. Nothing is merged, and no schedule, ChatGPT task or Sheet was changed. #10 and #11 are parked and untouched.
+
+**Branch heads after this work:**
+- `builder1` (#2): `fc68672` → **`2fab32a`**
+- `builderbranches` (#3): `4f26692` → **`0c76b85`**
+- `builderbranches-compensation` (#4): `6527a5f` → **`c4e38fc`**
+- `builderbranches-benchmark` (#7): `bd8eb53` → **`2bae921`**
+- new **`completion/integration`**: **`f1d31c8`**. Not a PR; do not merge. It is `main` `e812b42` + #1 `bc6cb8a` + #3/#4 `c4e38fc` + #2 `2fab32a`.
+
+**Workers B and C must `git pull` before their next push.** #5, #6, #8 and #9 are now folded into #3, #2, #4 and #2 respectively. The owner may close them as superseded.
+
+**Production workflow preserved:** the integrated `collect.yml` keeps `main`'s `branches: [main]` (`709948e`), the cron `37 1,6,11,16,21 * * *`, and no age gate. On top of that it adds only #3's registry, `--trigger` and branch-relative publish steps, #5's verify-and-revert, and #2's collector-only test step. It is byte-identical on the #4 branch and in the integration tree. No other workflow has a schedule: `crawl-pages.yml` and `engine.yml` are manual or branch-limited.
+
+| # | Blocker | Fix commit(s) | Verification evidence | Remaining limitation |
+|---|---|---|---|---|
+| 1 | #6 (store rebuild) and #9 (tier parser) not in #2 | `3a4acb7`, `e679b03` (merges; `docs/ENGINE.md`: both sections kept, §6 before §7) | B branch: 138 → 140 offline tests OK. Rebuild from real history twice: 13/13 tables identical; `extractions` differ only in `extracted_at` (wall-clock run time); integrity ok; ~2.7 s; 534 listed postings | `extracted_at` is run time, so whole-store dumps after `extract` are not byte-identical. Rebuild itself is |
+| 2 | One-sided pay collapsed to an exact salary. Also present in Greenhouse `max_cents or min_cents`; and a null bound would have crashed the gate | `3595af8` (`EXTRACTOR_VERSION` stays 3, unshipped; `GATES_VERSION=6`) | 8 new tests: Ashby min-only, max-only, both null, both present, published min==max; Greenhouse and Lever one-sided and empty; 6 labelled gate cases. **Against the old code, 5 of 8 fail, including an incorrect exclusion.** Extraction of main's 534 board postings unchanged (0 differ) | Today's live feeds contain **0** one-sided components in 171 Ashby tier components (2 genuine min==max, kept exact). The fix is preventive, proven synthetically |
+| 3 | Estimate guard too broad | `640a8fb` (`GATES_VERSION=7`) | Only third-party, salary-site or "not provided by the employer" quotes are excluded. Employer estimates are compared and kept with verbatim quote, `qualifier: employer-published estimate` and `provisional_result`, but never decide the gate. On main's snapshot all **60** previously excluded quotes (Twilio 57, Clipboard 3) are employer estimates and are now kept as evidence; 0 are third-party. The third-party "$135,000" case still never compares | Whether an employer estimate may ever qualify a candidate is open (D3, Sheets comparison) |
+| 4 | Unverified bare-`$` owner rule in #2's gates | `4cc3fce` | `us_only`, `OTHER_DOLLARS` and the US-only branch removed. 2 labelled cases now expect salary `unknown`. Commission-only, multi-currency, residents-only and the millions/billions rule are untouched (separate D7 items) | **End-to-end acceptance loses its READY path on the real snapshot.** The only postings that could become READY for the synthetic US candidate had bare-`$` pay. Acceptance reports it `not_run`, never pass. Not restored via a fixture opt-in, which would re-add the rejected rule |
+| 5 | Unverified bare-`$` owner rule in #7's benchmark | `2bae921` (a correction, not a plain revert of `e1438f2`: labels before `e1438f2` read bare `$` as USD everywhere) | `validate()` flags any salary label resting on a bare `$`. 5 labels `pass`→`unknown`; only `remote-us-only`/cand-us verdict changes (ready→conditional). No case added. Scored against #2 at gates v7: false READY 0, incorrect exclusions 0, missed exclusions 0, missed ready 1 (`US$` parsing), salary 32/34. #7 alone: 48 tests OK | Other "owner" items in #7 (multi-currency floors, GitLab/Zapier `human_confirmed`) are unchanged pending D7 |
+| 6 | Acceptance failed on main's 19:23 snapshot, also on unmodified `builder1` | `2fab32a` | The follow-up simulation edited a posting with no ledger row. It now prefers one with a row. Acceptance: 42/0 on the B branch; **44 passed / 0 failed / 1 not run in the integration tree** | — |
+| 7 | #5 (manifest) not in #3, and #3/#4/#5 not on current `main` | `f11dd5f`, `0c76b85` (#3); `c4e38fc` (#4, includes #8) | #3+#5: 32 tests OK. #4+#8: 36 tests OK. #8's `compensation_raw` shape equals section 6 exactly. **Real publish step from `collect.yml`** in a scratch repo: a complete generation publishes; **a mixed generation is refused, `public/` reverted, HEAD unchanged**; the next real live collection verifies and publishes; page captures untouched | #5 vs #11 conflict is unresolved because #11 is parked; a future #11 resolution must keep the manifest |
+| 8 | C1 live trial | none (scratch only, nothing committed) | 10/10 sources in 23 s, 532 listings. **162 changed, all `changed_fields: ["compensation_raw"]`**; each changing source has `endpoint_changed` or `normalization_changed`. Clipboard's 36 rewrites are explained only by `normalization_changed`. 2 genuinely new postings; all 10 boards at normalization version 2; manifest of 11 files; `--verify` consistent | The first production run after merge publishes this one-time wave |
+| 9 | Combined validation | `f1d31c8` (integration) | **195 offline tests, 0 failures, 0 errors, 0 skipped**, outbound sockets disabled; #1's captures make the leads test run. Cache invalidation on real data: main snapshot 534 extracted → live v2 snapshot re-extracts only **164** (162 changed + 2 new) → rerun 0; store records 126 `compensation_source_added` and 36 `content_changed`. Two rebuilds from real history identical (14 tables, 539 postings, integrity ok). Candidate isolation: all 5 acceptance isolation checks pass (no shared-store writes, private outputs refused in repo, per-candidate items, cross-candidate sheet sync refused, no candidate id in public outputs) | Candidate gates, review queue, outputs and the fake Sheets adapter remain provisional (D3); only neutral synthetic behaviour is demonstrated. Live Sheets, scheduled execution of the integrated code and automated ChatGPT access are not verified |
+
+**Not done by this work:**
+- B3 extractor follow-ups: "$1B annually" extracted as pay, and `US$x - US$y` not parsed as one range.
+- The C1 `BACKLOG.md`/`HANDOFF.md` refresh.
+- D7 decisions on the remaining "owner rules".
+- Any merge.
