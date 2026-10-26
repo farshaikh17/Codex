@@ -1366,6 +1366,181 @@
    }
   },
   {
+   "id": "us-dollar-code-range",
+   "label_status": "author_constructed",
+   "covers": [
+    "currency code repeated on both ends of a range"
+   ],
+   "notes": "Found on real data by the PR #2 session: \"US$100,000 - US$150,000\" was parsed as 100,000-100,000. A wrong lower bound can falsely fail a floor.",
+   "posting": {
+    "key": "lever:bench:us-dollar-code-range",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/us-dollar-code-range",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nOwn renewals for a regional book of business.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "US$130,000 - US$150,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "US$130,000 - US$150,000 per year base salary"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "US$130,000 - US$150,000 per year base salary"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    }
+   }
+  },
+  {
+   "id": "company-revenue-not-pay",
+   "label_status": "author_constructed",
+   "covers": [
+    "company figures are not compensation"
+   ],
+   "notes": "Found on real data by the PR #2 session: Twilio's \"generates nearly $1B annually\" was parsed as $1. Under the bare-$ rule it would have failed a USD floor (an incorrect exclusion).",
+   "posting": {
+    "key": "lever:bench:company-revenue-not-pay",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/company-revenue-not-pay",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the company\nOur company generates nearly $1B annually in revenue.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated; \"$1B annually\" is company revenue"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated; \"$1B annually\" is company revenue"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
    "id": "expired-page-200",
    "label_status": "author_constructed",
    "covers": [

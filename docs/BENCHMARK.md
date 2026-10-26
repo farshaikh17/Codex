@@ -15,7 +15,7 @@ python -m bench score PREDICTIONS.json
 | File | Content |
 |---|---|
 | `bench/fixtures/candidates.json` | Two synthetic candidates (`cand-in`, `cand-us`): residence, work authorization, accepted engagement, salary floors per currency (base, per year), years of experience, job families, prior applications. Not real people. |
-| `bench/fixtures/cases.json` | 17 synthetic postings plus 2 permitted public excerpts. Each has expected evidence states and, per candidate, expected relevance, the five gates and a verdict. |
+| `bench/fixtures/cases.json` | 19 synthetic postings plus 2 permitted public excerpts. Each has expected evidence states and, per candidate, expected relevance, the five gates and a verdict. |
 | `bench/fixtures/collection.json` | 6 multi-step feed scenarios with exact expected collector outputs, downstream labels (duplicate groups, relisting, salary-only recheck), and 1 queue-interruption scenario. |
 
 ## How the labels are made
@@ -47,10 +47,10 @@ python -m bench score PREDICTIONS.json
 | Duplicates | Pairwise precision and recall against the labelled duplicate groups. |
 | Queue | All items completed, each exactly once, correct pending set after interruption. |
 
-Baselines on the 30 labelled verdicts (5 ready, 10 conditional, 15 excluded):
-- **Always-READY:** 25 false READYs.
-- **Always-exclude:** 15 incorrect exclusions.
-- **Always-review:** 0 false READYs and 0 incorrect exclusions, but all 5 READYs missed.
+Baselines on the 34 labelled verdicts (6 ready, 11 conditional, 17 excluded):
+- **Always-READY:** 28 false READYs.
+- **Always-exclude:** 17 incorrect exclusions.
+- **Always-review:** 0 false READYs and 0 incorrect exclusions, but all 6 READYs missed.
 
 ## Prediction format
 
@@ -70,6 +70,7 @@ Baselines on the 30 labelled verdicts (5 ready, 10 conditional, 15 excluded):
 | Extractor (`engine/extract.py`) | Evidence states 93/93. Expected warning 1/1. Compensation details 36/38. Misses: `estimated-salary` gives `estimated: false` for "Salary estimate (third-party, not provided by the employer)"; `ote-only` gives `variable_mentioned: false` for "OTE $160,000". Unreviewed real cases: GitLab "does not include any bonuses, equity" read as variable pay mentioned; Zapier "Offers Bonus" / "Offers Equity" not reflected in the range's flags. | Measured offline |
 | Gates (`engine/gates.screen`, `python -m bench engine`) | 30 verdicts. **False READY 0**, incorrect exclusions 0, retained unknowns 10/10. Missed ready 1 (`remote-us-only/cand-us`: a bare "$" is treated as an unstated currency, so a US-only "$130,000 – $150,000 per year base salary" isn't compared with a USD floor; a policy choice for the owner). Missed exclusions 2 (`commission-only`: "commission-only role with no base salary" gives salary `unknown`, not `fail`). Gate agreement: geography, engagement, qualifications and application history 30/30; salary 19/30. Salary causes: bare "$" (8), the single-currency floor in `candidate-config-1` that can't express cand-in's USD floor (1), commission-only (2). Qualifications reviews are supplied from these labels, so qualifications agreement measures only the automatic years check. | Measured offline |
 | Gates re-scored after the bare-"$" label update (PR #2 at 8f026c4) | False READY 0, incorrect exclusions 0. Salary agreement 22/30. Remaining: bare "$" on US-only postings still treated as unstated (5; the owner rule says USD), commission-only (2), single-currency floor (1). Guard: once "$" means USD on US-only postings, `estimated-salary/cand-us` ("Salary estimate (third-party…): $135,000") turns into a false READY unless the salary gate also checks `estimated`. | Measured offline |
+| Gates and extractor at dbfdf1f (bare-"$" rule, GATES_VERSION 3), 21 cases / 34 verdicts | **False READY 0**, incorrect exclusions 0. Missed ready 1 (`us-dollar-code-range`: "US$130,000 - US$150,000" isn't parsed yet; known follow-up in PR #2). Missed exclusions 2 (`commission-only`). Salary agreement 26/34; the rest is the one-floor config (4), commission-only (2) and US$ (2). `company-revenue-not-pay`: the gate correctly stays `unknown`, but the extractor marks compensation `stated` from "$1B annually" (evidence states 104/105). | Measured offline |
 | Review queue, duplicate grouping, availability | No implementation yet | Unmeasured |
 
 ## Label corrections
