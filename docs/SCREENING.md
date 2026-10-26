@@ -1,6 +1,6 @@
 # Candidate configuration and evidence-based screening (engine steps 3 and 4)
 
-Status: implemented and tested offline. Screening is deterministic and read-only. Decisions are not stored yet; that is the review queue (step 5). The engine is **not** proven end to end.
+Status: implemented and tested offline. Screening is deterministic and read-only. Decisions are stored by the review queue (step 5, `docs/REVIEW_QUEUE.md`). The engine is **not** proven end to end.
 
 This corresponds to BACKLOG E3+E4, plus the gate-relevant part of H (labelled benchmark cases) from farshaikh17/Codex#3. It builds only on the posting store and extraction (farshaikh17/Codex#2) and adds new files only. `engine/__main__.py`, `engine/store.py` and `docs/ENGINE.md` are untouched, so it doesn't conflict with farshaikh17/Codex#6.
 
@@ -8,6 +8,7 @@ This corresponds to BACKLOG E3+E4, plus the gate-relevant part of H (labelled be
 
 - **Real profiles never go in this repository.** Keep one JSON file per candidate in a private directory, and point `JOB_ENGINE_CANDIDATES` at it (or pass `--candidates DIR`).
 - `engine/candidates.py` refuses any file inside the work tree unless it says `"synthetic": true`. It also refuses an application-history file inside the work tree for a real profile.
+- Keep only candidate files, `*.history.json` files and the review database (`docs/REVIEW_QUEUE.md`) in that directory. Any other JSON there is refused as an invalid candidate.
 - The only committed candidates are the two synthetic fixtures in `engine/tests/fixtures/candidates/`. A test fails if any committed candidate config is not synthetic.
 - Screening output contains candidate facts (history entries, salary floor, eligible countries). `python -m engine.screen` prints it and writes nothing. Where stored candidate outputs live is an owner decision before step 6; they must never go under `public/`.
 
@@ -102,7 +103,7 @@ The primary metric is **false READY**, reported next to incorrect exclusions, mi
 
 Current result: 37 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 25. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
 
-The queue-related H cases (duplicates across URLs, reopened requisitions, an expired page returning HTTP 200, a failed retrieval after success, interruption recovery) belong to step 5.
+The queue-related H cases are handled in step 5 (`docs/REVIEW_QUEUE.md`): interruption recovery and identical reposts. Reopened requisitions are partly covered by the application-history gate. An expired page returning HTTP 200 and a failed retrieval after success are store and collector concerns (availability states), not queue rules.
 
 ## Measured on the committed snapshot (532 open postings, unreviewed)
 
@@ -131,4 +132,4 @@ The queue-related H cases (duplicates across URLs, reopened requisitions, an exp
 - Work authorisation is modelled only as `eligible_countries`; sponsorship wording isn't interpreted.
 - Language and year rules use English wording only.
 - Ashby compensation tiers (currency, interval, component type) are lost by the collector adapter. The fix proposed in `docs/INTEGRATION.md` needs an adapter change plus an extractor branch, so Ashby pay mostly stays unknown for salary gates.
-- Nothing is persisted. Review decisions, leases, rechecks and counts of assessed, newly qualified and open READY postings are step 5.
+- Screening itself persists nothing. The review queue (step 5) stores items, review decisions, leases and the separate counts.
