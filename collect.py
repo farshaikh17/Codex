@@ -62,18 +62,39 @@ def next_due(sources,status):
     last={s.get('source'):_time(s.get('checked_at')) for s in (status or {}).get('sources',[])}
     times=[last[s['id']]+timedelta(hours=s.get('poll_interval_hours',5))-DUE_SLACK for s in sources if last.get(s['id'])]
     return min(times).isoformat() if times else None
-def publish(output,files):
+def sha256_file(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+def publish(output,files,keep=()):
     """Stage every file first, then move boards, index and finally status.json into place.
-    A crash or error before the moves leaves the previous publication untouched."""
+    status.json carries a manifest: the SHA-256 of every file in this snapshot, including carried board files
+    (keep) that were not rewritten. A crash before the moves leaves the previous publication untouched; a crash
+    during the moves leaves files that no longer match the status.json manifest, which verify_publication reports."""
     output.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='.collect-staging-',dir=output.parent))
     try:
-        for rel,value in files.items(): write(stage/rel,value)
+        for rel,value in files.items():
+            if rel!='status.json': write(stage/rel,value)
+        manifest={rel:sha256_file(stage/rel) for rel in files if rel!='status.json'}
+        manifest|={rel:sha256_file(output/rel) for rel in keep if rel not in files and (output/rel).exists()}
+        if 'status.json' in files: write(stage/'status.json',files['status.json']|{'manifest':dict(sorted(manifest.items()))})
         for rel in sorted(files,key=lambda r:(r=='status.json',r=='index.json',r)):
             (output/rel).parent.mkdir(parents=True,exist_ok=True)
             os.replace(stage/rel,output/rel)
     finally:
         shutil.rmtree(stage,ignore_errors=True)
+def verify_publication(output):
+    """Problems that make the published files a mix of generations. Empty list means consistent.
+    Consumers and the publish step must refuse a snapshot with any problem."""
+    status=read(output/'status.json',None)
+    if status is None: return ['status.json missing']
+    manifest=status.get('manifest')
+    if not isinstance(manifest,dict) or 'index.json' not in manifest: return ['status.json has no manifest (written by an older collector)']
+    problems=[]
+    for rel,digest in sorted(manifest.items()):
+        path=output/rel
+        if not path.exists(): problems.append('%s missing'%rel)
+        elif sha256_file(path)!=digest: problems.append('%s does not match status.json run %s'%(rel,status.get('run_id')))
+    return problems
 def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,trigger='local'):
     if not sources: raise ValueError('No sources to collect; previous output left unchanged')
     now=datetime.now(timezone.utc).isoformat()
@@ -143,7 +164,7 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
             'orphan_board_files':orphans,'sources':statuses,'jobs':index,'notice':NOTICE}
     staged['index.json']=result
     staged['status.json']={k:result[k] for k in result if k!='jobs'}
-    publish(output,staged)
+    publish(output,staged,keep=['boards/'+s['id']+'.json' for s in sources])
     return result
 def summary(lines,level=None,message=None):
     """Prints to the log and, under GitHub Actions, to the job summary and annotations."""
@@ -169,7 +190,13 @@ def main(argv=None):
     ap=argparse.ArgumentParser(description='Collect official ATS feeds from sources.json')
     ap.add_argument('--trigger',default='local',help='GitHub event name; "schedule" collects only sources that are due')
     ap.add_argument('--ids',default='',help='comma-separated source ids to collect now regardless of schedule')
+    ap.add_argument('--verify',action='store_true',help='check public/ against the status.json manifest; no requests')
     args=ap.parse_args(argv)
+    if args.verify:
+        problems=verify_publication(ROOT/'public')
+        for p in problems: print('publication problem:',p)
+        print('publication consistent' if not problems else 'publication INCONSISTENT')
+        return 1 if problems else 0
     try: _,sources,warnings=registry.load(ROOT/'sources.json',ROOT/'employers.json')
     except registry.RegistryError as e:
         summary(['## Collection not started: invalid sources.json or employers.json','']+['- '+redact(m) for m in e.errors],'error','Invalid source registry; no requests made')
