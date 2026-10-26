@@ -10,6 +10,13 @@ GATES=('geography','engagement','qualifications','salary','application_history')
 GATE_VALUES={'pass','fail','unknown'}
 VERDICTS={'ready','conditional','excluded'}
 YEARS=re.compile(r'(\d+)\+ years of ([a-z ]+?) experience')
+def bare_dollar(text):
+    """"$130,000" with no currency code anywhere in the quote; "US$130,000" and "$125,000 USD" name the currency."""
+    return '$' in text and not re.search(r'\bUSD\b|US\$',text)
+def us_only(posting):
+    """Owner rule (2026-10-26): a bare "$" means USD only when every listed location is in the United States."""
+    locs=[l['text'] for l in posting.get('locations') or []]
+    return bool(locs) and all(re.search(r'\b(United States|USA|US)\b',t) for t in locs)
 EVIDENCE_STATES={'stated','not_stated','conflicting','not_retrieved'}
 AVAILABILITY={'listed','missing','closed_stated'}
 LABEL_STATUS={'author_constructed','needs_human_review'}
@@ -51,6 +58,8 @@ def validate(cases=None,candidates=None):
                     text=' '.join([p.get('description') or '',p.get('compensation_raw') or '']+[l['text'] for l in p.get('locations') or []])
                     if g!='application_history' and quote not in text:
                         problems.append('%s/%s: %s basis %r is not quoted from the posting'%(where,cid,g,quote))
+                    if g=='salary' and v['value']=='pass' and bare_dollar(quote) and not us_only(p):
+                        problems.append('%s/%s: salary pass on a bare "$" needs a US-only posting (owner rule 2026-10-26)'%(where,cid))
                     m=YEARS.search(quote) if g=='qualifications' else None
                     years=(people.get(cid) or {}).get('experience_years',{}).get(m.group(2).replace(' ','_')) if m else None
                     if years is not None and (v['value']=='pass')!=(years>=int(m.group(1))):
