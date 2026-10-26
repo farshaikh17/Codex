@@ -2,8 +2,8 @@
   {
     "id": "automattic-work-with-us",
     "employer": "Automattic",
-    "url": "https://automattic.com/work-with-us/",
-    "why": "Custom WordPress careers page; no Greenhouse, Lever or Ashby board configured"
+    "url": "https://automattic.com/work-with-us/jobs/",
+    "why": "Custom WordPress jobs list (work-with-us is only a landing page); no Greenhouse, Lever or Ashby board"
   },
   {
     "id": "doist-careers",

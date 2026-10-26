@@ -97,6 +97,9 @@ def run(pages,output,fetcher,limits=LIMITS,ids=None,robots=robots_allows,pause=t
     requests,robots_cache,halted,entries=0,{},None,{}
     for page in pages:
         old=previous.get(page['id'])
+        if old and old.get('official_url')!=page['url']:  # URL changed: earlier evidence is for another page
+            old=None
+            (output/'captures'/(page['id']+'.md')).unlink(missing_ok=True)
         entries[page['id']]={k:(old or {}).get(k) for k in PAGE_KEYS}|{'id':page['id'],'employer':page['employer'],
             'official_url':page['url'],'fresh_this_run':False,'change':'not_checked' if old else 'never_attempted'}
     for n,page in enumerate(batch):

@@ -45,6 +45,14 @@ class CaptureTests(unittest.TestCase):
                 self.assertEqual(failed['change'],'unknown_after_failure')
                 self.assertNotEqual(failed['last_attempt']['at'],failed['captured_at'])
                 self.assertEqual((path/'captures'/'sample-careers.md').read_text(),capture)
+    def test_changed_allowlist_url_discards_old_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)
+            go(path,page())
+            def boom(p,limits):raise TimeoutError('page timeout 30s')
+            moved=entry(go(path,boom,pages=(dict(PAGE,url='https://careers.example.com/openings'),)))
+            self.assertEqual((moved['change'],moved['captured_at'],moved['content_hash']),('no_capture',None,None))
+            self.assertFalse((path/'captures'/'sample-careers.md').exists())
     def test_failure_without_prior_capture_has_no_evidence(self):
         with tempfile.TemporaryDirectory() as folder:
             failed=entry(go(Path(folder),page(status=404,text='')))
