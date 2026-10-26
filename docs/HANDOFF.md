@@ -19,7 +19,7 @@ Use exactly one of these per claim. Never substitute one for another.
 | ATS feed collector on `main` | `main` | Live collection verified (push runs). Scheduled execution verified once: run 40288776346 (07:55 UTC). GitHub dropped the five earlier hourly ticks |
 | P2 registry and reliable runs | farshaikh17/Codex#3 | Implemented and tested offline; live collection verified (local container). Not yet run in Actions |
 | E2a compensation inputs | farshaikh17/Codex#4 (on #3) | Implemented and tested offline; live collection verified (local): +125 postings with employer-published pay |
-| H benchmark | farshaikh17/Codex#7 (on #4) | Implemented and tested offline. 21 cases, 34 verdicts. Owner rules encoded (bare "$", commission-only, multi-currency floors); real cases confirmed |
+| H benchmark | farshaikh17/Codex#7 (on #4) | Implemented and tested offline. 21 cases, 34 verdicts. Owner rules encoded (commission-only, multi-currency floors); real cases confirmed. Bare "$" rule removed by 2bae921, see below |
 | B source discovery | farshaikh17/Codex#10 (on #7) | Implemented and tested offline; live discovery verified (local container: 6 runs over 16 employers, 51 requests through `discover.py`, plus 9 manual requests for the ownership checks). Verified `careers_url` applied for Oyster, Zapier, Weave and Clipboard |
 | Posting store, extraction, gates, review queue | farshaikh17/Codex#2 and follow-ups #6, #9 (other session) | Implemented and tested offline (per that session). Scored here at 877b6aa: false READY 0, incorrect exclusions 0, salary 32/34 |
 | Crawl4AI page fallback | farshaikh17/Codex#1 (other session) | Implemented and tested offline; live capture verified on its branch. No schedule |
@@ -33,7 +33,7 @@ Use exactly one of these per claim. Never substitute one for another.
 
 ## Decided by the owner (2026-10-26)
 
-- A bare "$" means USD only on US-only postings.
+- A bare "$" means USD only on US-only postings. Given directly by the user in this session, but commit 2bae921 (completion session) removed it from the benchmark as unverified. **Not applied in code now; waiting on the owner to say which stands.**
 - Commission-only pay fails a base salary floor.
 - Salary floors may be set in several currencies, compared per currency, never converted.
 - The GitLab and Zapier benchmark labels are confirmed.
