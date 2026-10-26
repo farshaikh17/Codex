@@ -12,7 +12,12 @@ BASE={'posting_id':'synthetic:acme:1','board':'acme','title':'Implementation Man
 REVIEWED={'met':'profile: 7 years implementing SaaS platforms (synthetic)'}
 def posting(pid,**changes):
     return BASE|{'posting_id':'synthetic:acme:'+pid}|changes
-A,B='synthetic-impl-in','synthetic-design-eu'
+A,B,U='synthetic-impl-in','synthetic-design-eu','synthetic-cs-us'
+def us(pid,pay,locations=('Remote - United States',),extra=''):
+    """A US customer-success posting for candidate U (USD floor 120,000 per year, base, no symbol assumptions)."""
+    return {'posting_id':'synthetic:umbrella:'+pid,'board':'umbrella','title':'Customer Success Manager','canonical_url':'https://jobs.example/umbrella/'+pid,
+            'locations':[{'text':l,'source':'location.name'} for l in locations],'workplace_type':'Remote',
+            'description':INTRO+REQS+extra,'compensation_raw':pay}
 EU_POSTING={'posting_id':'synthetic:initech:eu','board':'initech','title':'Product Designer','canonical_url':'https://jobs.example/initech/eu',
             'locations':[{'text':'Remote - Germany','source':'location.name'}],'workplace_type':'Remote',
             'description':'About the role\nDesign our onboarding product with Figma and a shared design system.\nRequirements\n3+ years of product design experience\nPortfolio of shipped work',
@@ -110,6 +115,26 @@ CASES=[
          posting=posting('glob',locations=[{'text':'Remote (Global)','source':'location'}],
                          description=INTRO+'Please note: We are currently accepting applications only from candidates based in North America, South America or Europe.\n'+REQS),
          expected={'verdict':'conditional','gates':{'geography':'unknown'}}),
+    # Owner rule (gates version 3): a bare "$" is USD when every listed location is in the United States.
+    dict(id='bare_dollar_us_only_above_floor',about='US-only posting, bare $ range above 120k',candidate=U,posting=us('a','$130,000 - $150,000 per year base salary'),
+         expected={'verdict':'conditional','gates':{'geography':'pass','salary':'pass'}}),
+    dict(id='bare_dollar_us_only_below_floor',about='US-only posting, bare $ range below 120k',candidate=U,posting=us('b','$90,000 - $110,000 per year base salary'),
+         expected={'verdict':'excluded','gates':{'salary':'fail'}}),
+    dict(id='bare_dollar_location_unstated',about='location is just "Remote": not US-only, so $ stays unknown',candidate=U,
+         posting=us('c','$130,000 - $150,000 per year base salary',('Remote',)),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='bare_dollar_mixed_locations',about='India and United States listed: not US-only',candidate=U,
+         posting=us('d','$130,000 - $150,000 per year base salary',('India','United States')),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='bare_dollar_city_only',about='"San Francisco, CA" is not recognised as the US, so US-only is not confirmed',candidate=U,
+         posting=us('e','$130,000 - $150,000 per year base salary',('San Francisco, CA',)),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='us_dollar_prefix_not_compared_yet',about='"US$x - US$y" is not parsed as one range by the extractor yet; unknown, never a broken comparison',
+         candidate=U,posting=us('f','US$100,000 - US$150,000 per year base salary'),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='company_revenue_is_not_pay',about='"generates nearly $1B annually" on a US-only posting must not fail the floor (found on a real posting)',candidate=U,
+         posting=us('rev',None,extra='\nOur business serves 300,000 customers and generates nearly $1B annually.'),expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='other_dollar_on_us_posting',about='CA$ on a US-only posting is not USD',candidate=U,posting=us('g','CA$130,000 - CA$150,000 per year base salary'),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
+    dict(id='bare_dollar_estimate_us_only',about='third-party estimate on a US-only posting: the estimate rule wins, never compared',candidate=U,
+         posting=us('h',None,extra='\nSalary estimate (third-party, not provided by the employer): $135,000 per year'),
+         expected={'verdict':'conditional','gates':{'salary':'unknown'}}),
     dict(id='emea_for_eu_candidate',about='EMEA includes Germany; B has no salary gate requirement listed, so default all five are required',candidate=B,
          posting=EU_POSTING|{'posting_id':'synthetic:initech:emea','locations':[{'text':'Remote - EMEA','source':'location.name'}]},
          expected={'verdict':'conditional','gates':{'geography':'pass'}}),

@@ -9,7 +9,7 @@ This corresponds to BACKLOG E3+E4, plus the gate-relevant part of H (labelled be
 - **Real profiles never go in this repository.** Keep one JSON file per candidate in a private directory, and point `JOB_ENGINE_CANDIDATES` at it (or pass `--candidates DIR`).
 - `engine/candidates.py` refuses any file inside the work tree unless it says `"synthetic": true`. It also refuses an application-history file inside the work tree for a real profile.
 - Keep only candidate files, `*.history.json` files and the review database (`docs/REVIEW_QUEUE.md`) in that directory. Any other JSON there is refused as an invalid candidate.
-- The only committed candidates are the two synthetic fixtures in `engine/tests/fixtures/candidates/`. A test fails if any committed candidate config is not synthetic.
+- The only committed candidates are the three synthetic fixtures in `engine/tests/fixtures/candidates/`. A test fails if any committed candidate config is not synthetic.
 - Screening output contains candidate facts (history entries, salary floor, eligible countries). `python -m engine.screen` prints it and writes nothing. Where stored candidate outputs live is an owner decision before step 6; they must never go under `public/`.
 
 ## Configuration (`candidate-config-1`)
@@ -78,7 +78,13 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 
 **Salary.**
 - Never converted between currencies, never annualised. Pay quoted per month or per hour doesn't count against an annual floor.
-- Currency comes from an explicit code or an unambiguous symbol (₹ € £ zł R$). A bare `$` counts only if the candidate's own `assume_currency_for_symbol` maps it.
+- Currency comes from an explicit code or an unambiguous symbol (₹ € £ zł R$).
+- **Bare `$` (owner rule, gates version 3):** a `$` with no currency code in the quote counts as USD when **every location the job board lists is recognised as the United States**.
+  - A location that is just "Remote", a mix such as India plus the United States, or a city-only entry such as "San Francisco, CA" (cities aren't recognised) is not confirmed US-only. There, `$` stays currency-unknown unless the candidate's own `assume_currency_for_symbol` maps it.
+  - Other dollars (`CA$`, `A$`, `HK$`, or a CAD/AUD/… code) are never USD.
+  - `US$` is left unknown for now: the extractor doesn't yet read "US$x - US$y" as one range, and comparing a broken range could fail a floor wrongly. That's an extractor follow-up, after farshaikh17/Codex#9.
+  - Estimates are excluded before this rule applies, so a third-party "$135,000" on a US-only posting stays unknown.
+- **Amounts in millions or billions** ("generates nearly $1B annually") are company figures, never pay, and are not compared. Found on a real Twilio posting, where the `$` rule would otherwise have failed a floor on "$1".
 - A missing period counts only if the candidate's `assume_period` says so. Every such assumption is written into the evidence.
 - Lakh and crore are applied as units.
 - **Estimates and pay the employer didn't publish are never compared** (gates version 2). This covers any pay quote that says "estimate", "estimated", "third-party", "not provided by the employer" or names a salary site. Such a quote can't pass or fail the gate; it's listed in `notes` and the gate stays unknown. An employer's "expected base salary range" is still compared. The check reads the quote itself, so it holds even where the extractor's `estimated` flag misses (that flag misses "estimate", which is a known E2 gap).
@@ -92,9 +98,9 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 
 ## Benchmark (`python -m engine.benchmark`)
 
-There are 40 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
+There are 49 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
 - remote US-only; India explicitly allowed; worldwide with a conflicting country; a negated eligible country; a city-only location
-- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed; missing period
+- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed for an INR floor; missing period; estimates; the bare-`$` rule (US-only above and below the floor, unstated, mixed and city-only locations, `CA$`, `US$`, an estimate on a US-only posting, company revenue)
 - mandatory years unmet; preferred years unmet; "or equivalent"; a required language missing; reviewer `not_met`
 - already applied; same employer and title; employer cooldown
 - onsite in an eligible country; conflicting workplace; employment type unstated; empty description; EMEA
@@ -103,7 +109,7 @@ There are 40 hand-labelled synthetic cases in `engine/tests/screening_cases.py`.
 
 The primary metric is **false READY**, reported next to incorrect exclusions, missed exclusions, retained unknowns and gate mismatches.
 
-Current result: 40 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 28. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
+Current result: 49 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 36. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
 
 The queue-related H cases are handled in step 5 (`docs/REVIEW_QUEUE.md`): interruption recovery and identical reposts. Reopened requisitions are partly covered by the application-history gate. An expired page returning HTTP 200 and a failed retrieval after success are store and collector concerns (availability states), not queue rules.
 

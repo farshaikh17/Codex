@@ -15,7 +15,10 @@ requirement needs a review decision with profile evidence (input `reviews`), whi
 import hashlib,re
 from datetime import date
 from engine.places import covers,places
-GATES_VERSION=2  # 2: pay described as an estimate, third-party or not employer-provided is never compared
+# 2: pay described as an estimate, third-party or not employer-provided is never compared
+# 3: owner rule: a bare '$' is USD when every listed location is in the United States; amounts in millions or
+#    billions ('$1B annually') are company figures, never pay
+GATES_VERSION=3
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -144,10 +147,23 @@ def qualifications(fields,profile,reviews):
     met=[u['source']|{'basis':o['basis']} for u,o in zip(units,out) if o['status']=='met']
     if not met: return _gate('unknown','no requirement was confirmed as met',units=out)
     return _gate('pass','every mandatory requirement reviewed; %d met, %d not requirements'%(len(met),len(out)-len(met)),met,'review decisions',units=out)
-def _currency(r,rule):
+# CA$, A$, HK$ ... are not US dollars. US$ is, but the extractor does not yet parse 'US$x - US$y' as one range,
+# so it is left unknown here rather than compared on a broken range.
+OTHER_DOLLARS=re.compile(r'[A-Za-z]\$|\b(?:CAD|AUD|NZD|SGD|HKD|MXN|TWD|BRL)\b')
+def _magnitude(r,quote):
+    """True when the amount is written in millions or billions ('$1B', '$2.5 million'): a company figure, not pay."""
+    return bool(r.get('text')) and bool(re.search(re.escape(r['text'])+r'\s?(?:[MB]\b|bn\b|mn\b|million\b|billion\b)',quote,re.I))
+def us_only(fields):
+    """True when the job board lists at least one location and every listed location is recognised as the United
+    States. City-only entries ('San Francisco, CA') are not recognised, so they leave this False."""
+    listed=[places(i['quote']) for i in fields['location']['items'] if i['method'].startswith('ats_field:')]
+    return bool(listed) and all(found=={'US'} for found in listed)
+def _currency(r,rule,quote='',us_posting=False):
     if r.get('currency'): return r['currency'],None
     sym=r.get('currency_symbol')
     if sym in SYMBOL_CURRENCY and SYMBOL_CURRENCY[sym]: return SYMBOL_CURRENCY[sym],'currency from unambiguous symbol %s'%sym
+    if sym=='$' and us_posting and not OTHER_DOLLARS.search(quote):
+        return 'USD','bare "$" read as USD because every listed location is in the United States (owner rule)'
     assumed=(rule.get('assume_currency_for_symbol') or {}).get(sym)
     if assumed: return assumed,'currency %s assumed for symbol %s by rules.salary.assume_currency_for_symbol'%(assumed,sym)
     return None,None
@@ -159,6 +175,7 @@ def salary(fields,rules):
     comp=fields['compensation']
     if comp['state']!='stated': return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
     outcomes,notes=[],[]
+    us_posting=us_only(fields)
     for i in comp['items']:
         pay=i['interpretation']
         if not pay: continue
@@ -166,7 +183,10 @@ def salary(fields,rules):
             notes.append('%s: an estimate or not employer-published pay; not compared'%i['quote'][:120])
             continue
         for r in pay['ranges']:
-            cur,cur_note=_currency(r,rule)
+            if _magnitude(r,i['quote']):
+                notes.append('%s: an amount in millions or billions, not pay; not compared'%r['text'])
+                continue
+            cur,cur_note=_currency(r,rule,i['quote'],us_posting)
             period,period_note=pay.get('period'),None
             if period is None and rule.get('assume_period'):
                 period,period_note=rule['assume_period'],'period %s assumed by rules.salary.assume_period'%rule['assume_period']
