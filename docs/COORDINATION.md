@@ -584,3 +584,73 @@ Executed by the Master session, on owner instruction, following the GPT Master c
 - D7 decisions on the remaining "owner rules".
 - Any merge.
 - 2026-10-26 Worker A: independently reproduced `completion/integration` `f1d31c8` in a fresh worktree (owner note bc6cb8a assigned this integration to A; Master built it first, so no duplicate tree was made). It contains main `e812b42`, #1 `bc6cb8a`, #3/#4 `c4e38fc` and #2 `2fab32a`; #1's own files are byte-identical to `bc6cb8a`. Offline suite with outbound sockets disabled: **195 run, 0 failures, 0 errors, 0 skipped**. `collect.yml` keeps `branches: [main]`, cron `37 1,6,11,16,21 * * *` and #5's verify step. Named tests present for each owner-required check: mixed-generation rejection (`test_crash_during_replacement_is_detected_not_silent`), rebuild idempotency and resume (`test_persist.py`), one-sided pay bounds (`screening_cases.py` pay_minimum_only/pay_maximum_only), extractor cache invalidation (`test_extraction_is_cached_by_content_and_incremental`), Ashby tiers (`test_ashby_tiers_keep_currency_period_and_basis_per_component`) and candidate isolation (shared-posting screening cases, acceptance second candidate).
+
+## Handoff — Claude Master recheck, 2026-10-26 ~22:35 UTC
+
+Sources:
+- each session's status record
+- every branch head
+- offline test runs by the Master in temporary worktrees, outbound sockets disabled
+
+No merges, schedule, task or Sheet changes.
+
+### Sessions
+
+| Worker | Session (title) | State | Last activity |
+|---|---|---|---|
+| A | `session_01WCd9…` "Crawl4AI fallback" | idle, connected | 22:23. `5a08f51` independently reproduced `completion/integration` `f1d31c8` (195 tests, 0 failures). `4301da0`: navigation links beside postings no longer count as job links (Canonical 333 → 313, Atlassian 335 → 334). Reports PR #1 CI green on `4301da0`; next self-check 01:15 UTC |
+| B | `session_01FQor…` "Shared engine foundation" | idle, **disconnected since 19:11** | Last report: step 8 on PR #2. **Has not seen the completion work**: `builder1` moved `fc68672` → `2fab32a` at 19:52, after it went idle |
+| C | `session_019pVg…` "Codex engine extension" | idle, connected | 22:21. Merged the consolidated #3/#4/#5/#8/#7 work up into the parked #10 (`51d450d`) and #11 (`5c26659`). Updated HANDOFF.md: the bare-`$` rule is not applied. Status: "bare-$ rule decision pending"; next self-check 23:13 UTC |
+
+### Heads
+
+| Branch | Head |
+|---|---|
+| main | `e812b42` (unchanged since 19:23) |
+| #1 | `4301da0` |
+| #2 | `2fab32a` |
+| #3 | `0c76b85` |
+| #4 | `c4e38fc` |
+| #7 | `2bae921` |
+| #10 | `51d450d` |
+| #11 | `5c26659` |
+| `completion/integration` | `f1d31c8` |
+
+#5, #6, #8 and #9 are unchanged and superseded: their content is folded into #3, #2, #4 and #2.
+
+### Verified now
+
+- **#11 alone (`5c26659`): 74 tests OK.** It keeps #5's manifest: `verify()`, the manifest code, all three manifest tests, and `collect.yml`'s `--verify` step, cron and branch filter. So its resolution with #5 did **not** discard the manifest, as the completion note requires. #10 and #11 stay parked; the backoff policy is unapproved.
+- **`completion/integration` + #1 `4301da0`:** merges cleanly; **196 tests, 2 failures**:
+  - `test_leads.CommittedCaptureTests`
+  - `test_acceptance` (its leads check)
+- **Cause of the 2 failures.** The engine reuses #1's `job_links()` by design, and `4301da0` changed it. The **committed** `public/pages/index.json` still holds the counts from the previous capture run (Atlassian 335, Canonical 333), while the code now finds 334 and 313. The engine correctly refuses mismatched pages ("no leads taken"). No capture run followed `4301da0`, because `crawl-pages.yml` triggers on `pages.json` and workflow-file pushes only.
+  - Production (`main`) is unaffected.
+  - At `bc6cb8a`, the integration was 195/195.
+
+### Open items, by owner
+
+- **Worker A (A2, new):** republish captures with the `4301da0` counter. That's one capture run on `build/crawl4ai`, using the existing manual/branch trigger, with no schedule. Then confirm `job_links` in `index.json` equals what `job_links()` returns, and post the run id. No other changes.
+- **Worker B (on reconnect):**
+  - `git pull origin builder1` before anything else. It now holds B1 (`3595af8`), the estimate fix (`640a8fb`), the bare-`$` gate removal (`4cc3fce`) and the acceptance fix (`2fab32a`); see the completion report above.
+  - Then review those commits and say on #2 whether it accepts them.
+  - Not yet assigned: B3 extractor follow-ups ("$1B annually" read as pay; `US$x - US$y` not parsed as one range).
+  - No new engine steps.
+- **Worker C:**
+  - C1 is done on #3/#4/#7, apart from the `BACKLOG.md`/`HANDOFF.md` refresh on #3.
+  - Keep #10 and #11 parked; don't extend them.
+  - Wait for D7.
+- **Owner / GPT Master:**
+  - **D7, bare `$`. Conflicting records:**
+    - Worker C's HANDOFF.md (`51d450d`) says the rule was "given directly by the user" in its session.
+    - The GPT Master's 16:30 decision treated it as unverified, and `4cc3fce`/`2bae921` removed it from #2's gates and #7's benchmark.
+    - Only the owner can settle which stands. If it stands, it should be re-added once, in #2's gates, with the US-only definition, plus matching #7 labels.
+  - D7, other "owner rules": commission-only, multi-currency floors, residents-only pay, `human_confirmed` cases, and #10's careers URLs. Still unconfirmed.
+  - D1: merge order `#1 → #3 → #4 → #2`, then #7. Every candidate-specific part stays provisional.
+  - Close the superseded #5, #6, #8 and #9.
+  - D3: candidate rules after the Sheets comparison, and where outputs live.
+  - The new cron hasn't been verified on the integrated code. `main` has had no scheduled run logged since the 16:59 change; the 21:37 slot should have fired.
+
+### Recheck schedule
+
+Worker A self-checks at 01:15 UTC and Worker C at 23:13 UTC. Neither check replaces the actions above.
