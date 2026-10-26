@@ -29,6 +29,53 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 **Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
+**Update, 19:20 UTC (supersedes the 18:55, 17:40 and 17:10 blocks below where they differ):**
+
+**State:**
+- `main` still `084bafb`. No `schedule` run on the new cron yet; the first slot is 21:37 UTC.
+- **No further off-`main` collections.** The only one is still run 40377774005. Worker C's merges of `main` into #3/#4/#7/#10 (18:52–18:56) carried `branches: [main]` and triggered no collection. **D10 is still open**: `main` itself still lacks the filter.
+- **Eleven PRs are open.** New: farshaikh17/Codex#11.
+
+| PR | Head | Change since 18:55 |
+|---|---|---|
+| #1 | `e482c00` | Worker A's section 9 entry (18:56), **the first use of the interim "log the owner instruction" rule**: every Worker A push after A1 was a direct owner request. The 13-minute capture run 40364258754 is explained (see below). On owner request, #5 and #6 are marked ready for review, still stacked. |
+| #2 | `fc68672` | Worker B, `fc68672` (19:08): **engine step 8, engine side** (`engine/lock.py`, `engine/run.py`, run history, freshness and partial-run reporting; edits `engine/store.py`). **B1 still not done:** #6 (`1bca0d2`) and #9 (`3018541`) aren't in `builder1`, and the pay-range collapse remains. Each further `engine/store.py` change makes folding #6 and #9 harder. `GATES_VERSION=5`. |
+| #3 | `4f26692` | Worker C, `4f26692` (18:55): adopts #2's `collect.yml` lines, which Worker C's commit message calls "owner-requested" (branch filter; workflow tests limited to `test_collect`), and leaves the `DUE_SLACK` line unchanged. `collect.yml` vs `main` now: owner's cron kept, age gate stays removed, plus `branches: [main]`, `test_collect` only, `registry.py` before any request, `--trigger "$EVENT"`, branch-relative publish. |
+| #4, #7, #10 | `6527a5f`, `bd8eb53`, `de656d4` | Worker C merged #3 (with `main`) up the stack: #3 → #4 → #7 → #10. #10 also has `cedc767`, "P10 done by the owner". |
+| #5 | `48ff370` | Unchanged. **`main` not merged in yet** (C1). |
+| **#11** | `2c4b3ba` | **New, Worker C (opened 19:02):** "Collector backoff and request/time budgets" (backlog E8), stacked on #10. **Not part of C1.** Details below. |
+| #6, #8, #9 | unchanged | |
+
+**Worker A's finding on the 13-minute capture run:** `playwright install --with-deps` spent 10 min 16 s fetching 21.1 MB of fonts and system libraries over apt, at about 34 kB/s; pip took 36 s. It is fixed in `5d652b3`: pip and Playwright caches, with apt only if a Chromium launch check fails. Capture run 40374013855 (18:02) hit both caches, skipped apt, and took 1 min 42 s in total. Worker A also re-tested #6 merged onto `builder1` at `5d420e9`: 115 tests, 0 failures.
+
+**PR #11 (backoff and budgets): what it does and what's undecided.**
+- **Backoff:** on `schedule` runs only, a *failing* source is skipped until its `backoff_until`.
+  - The first failure is retried on the next run. After that the wait is 10 h, doubling up to 7 days.
+  - A 404/410 waits from 24 h, doubling. A 429 waits at least 24 h, or `Retry-After` if longer.
+  - Manual, push and `--ids` runs ignore backoff. A success clears it.
+  - **Healthy sources are collected on every scheduled run, so this isn't an age gate** (Master review of `collect.py`).
+- **Budgets:** at most 40 feed requests per run, never-attempted sources first, then the least recently checked. No new request starts after 8 minutes. A skipped source republishes its unchanged last attempt with `not_attempted_reason` (`not_due`, `backoff`, `request_budget`, `time_budget`).
+- **Policy question (D11):** after a second failure, a source sits out about two of the five daily runs. Confirm, or set a shorter first wait.
+- **Live-run claim:** the commit says "a live scheduled run collected 10/10". Actions shows no such `schedule` run, so it must have been a container trial with `--trigger schedule`.
+- **Conflict (verified 19:10):** #11 conflicts with **#5** in `collect.py`, `test_collect.py` and `docs/OUTPUT_CONTRACT.md` (3 hunks; #11 isn't stacked on #5). Both are Worker C's. Resolve it when folding #5 into #3, keeping #5's manifest/`--verify` logic **and** #11's backoff and budgets.
+
+**Combined tree, Master check 19:10, all eleven heads on `084bafb`:**
+- Conflicts:
+  - `docs/ENGINE.md` (#6 vs #9, keep both)
+  - `collect.yml` (#2 and #3 vs #1/`main`)
+  - `collect.py`, `test_collect.py`, `docs/OUTPUT_CONTRACT.md` (#5 vs #11)
+- With the branch side taken for each, **205 tests pass**.
+- **This isn't a true combined validation:** taking #11's side replaced #5's manifest code in those three files. A real result needs Worker C's #5/#11 resolution.
+- The resulting `collect.yml` keeps `37 1,6,11,16,21 * * *` and `branches: [main]`. `registry.py` OK.
+- `fc68672` (19:08) came after this check.
+
+**C1 progress:** the schedule integration is done on #3 and carried to #4/#7/#10. Still open:
+- merge `main` into #5, and resolve #5 against #11
+- revert `e1438f2`
+- fold #5 and #8 in
+- the live trial
+- the C1 report
+
 **Update, 18:55 UTC (supersedes the 17:40 and 17:10 blocks below where they differ):**
 
 **Urgent: a live employer collection ran from a development branch.**
@@ -213,7 +260,7 @@ Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all 
 |---|---|---|---|---|---|---|
 | A | Crawl4AI page capture, PR CI, integration testing | Claude Worker A | `session_01WCd9wwgzPgNAHU6F2kv6QK` | `build/crawl4ai` (#1), `integration/pr1-2-3`; authored #5 and #6 (hand off, see below) | `crawl_pages.py`, `pages.json`, `test_crawl_pages.py`, `requirements-crawl.txt`, `.github/workflows/crawl-pages.yml`, `.github/workflows/tests.yml`, `public/pages/**`, root `OPERATIONS.md`/`README.md`/`MIGRATION.md`, `docs/INTEGRATION.md` | – |
 | B | Shared posting store, extraction (engine E-steps) | Claude Worker B | `session_01FQorivZRVyv3ggSUDwDoq6` | `builder1` (#2); adopts `fix/store-rebuild` (#6) | `engine/**`, `docs/ENGINE.md`, `data/posting-events.jsonl` | #4 for pay inputs; A for the page-capture contract (E2b) |
-| C | Source registry and collection reliability | Claude Worker C | `session_019pVgcPhTsH8cCJJZcQQ7Vd` | `builderbranches` (#3), `builderbranches-compensation` (#4), `builderbranches-benchmark` (#7), `builderbranches-discovery` (#10, from 18:09); adopts `fix/publication-manifest` (#5) and `fix/ashby-comp-tiers` (#8) | `registry.py`, `test_registry.py`, `employers.json`, `sources.json`, `collect.py`, `adapters.py`, `test_collect.py`, `docs/` except `ENGINE.md`, `INTEGRATION.md` and this file | #1 lands first (shared `collect.yml` hunk) |
+| C | Source registry and collection reliability | Claude Worker C | `session_019pVgcPhTsH8cCJJZcQQ7Vd` | `builderbranches` (#3), `builderbranches-compensation` (#4), `builderbranches-benchmark` (#7), `builderbranches-discovery` (#10, from 18:09), `builderbranches-reliability` (#11, from 19:02); adopts `fix/publication-manifest` (#5) and `fix/ashby-comp-tiers` (#8) | `registry.py`, `test_registry.py`, `employers.json`, `sources.json`, `collect.py`, `adapters.py`, `test_collect.py`, `docs/` except `ENGINE.md`, `INTEGRATION.md` and this file | #1 lands first (shared `collect.yml` hunk) |
 | M | Coordination | Claude Master | this chat | this file only | `docs/COORDINATION.md` | – |
 
 Shared-file rules:
@@ -368,6 +415,7 @@ When Ashby `compensationTiers` holds at least one object, `compensation_raw` is 
 4. **#2 with #6 and #9 folded in.** Its pay evidence only matters after step 3. Its E3/E4 content (`8794ca8`) waits on D3.
 5. **#7** (benchmark), after D3 confirms its labels.
 6. **#10** (discovery, stacked on #7), after #7 and D11.
+7. **#11** (backoff and budgets, stacked on #10), after #10 and D11. Its conflict with #5 must be resolved by Worker C first (see section 3, 19:20).
 
 **18:55:** before any of 1–6, D10 (the one-line branch filter on `main`) closes the stray-collection risk. #2's `5d420e9` and #3's `c01163a` both edit `collect.yml` and will conflict with #1's hunk. Whoever merges second keeps `main`'s cron, keeps the age gate removed, keeps `branches: [main]`, and takes #3's `registry.py`/`--trigger`/branch-relative publish steps. #2's narrowing of the test step to `test_collect` is a separate choice for Worker C to accept or drop.
 
@@ -411,7 +459,7 @@ Neither worker extends these further.
 - #7 `e63d3fa`: GitLab and Zapier cases "confirmed by the repository owner"
 - #10 `055c390`: "owner-approved" careers URLs | Owner, via GPT Master | B2; merge of #2's gates and #7 |
 | D10 | **Branch filter on `main`'s `collect.yml` (new 18:55, urgent).** The stray live collection (run 40377774005) can recur from any branch that merges `main` and pushes `*.py`, `sources.json` or `collect.yml`, and C1 requires such merges. Proposal: the owner adds `branches: [main]` under `push:` on `main` now, as a production-only change like `562baaf`, with the cron untouched. Until then, the interim rule at the top of section 3 applies. | Owner / GPT Master | Safe C1/B1 merges of `main` |
-| D11 | **PR #10 (bounded source discovery, new 18:09).** Keep it as provisional review material, or park it until C1 is reported. Verify the "owner-approved" careers URLs in `055c390` (Oyster, Zapier, Weave). | GPT Master | #10 |
+| D11 | **PR #10 (bounded source discovery, new 18:09) and PR #11 (backoff and budgets, new 19:02).** Keep each as provisional review material, or park it until C1 is reported. For #10, verify the "owner-approved" careers URLs in `055c390` (Oyster, Zapier, Weave). For #11, decide the backoff policy: 10 h after a second failure, doubling to 7 days, which is about two missed runs of five daily; budgets are 40 requests and 8 minutes. | GPT Master | #10 |
 | D8 | Keep or drop #7's provisional cases added after the decision window: `6e5ae79` (2 cases for the `US$` range and company-revenue hazards; neither needs the bare-`$` rule). | GPT Master | #7 |
 | D9 | **Instruction channel (18:55: now the main blocker; see section 3).** The owner is instructing workers directly. That has given us the bare-`$` rule, the schema-3 bump and the "owner rule" labels, while the coordination plan assumed the GPT Master channel. Choose one: (a) the owner routes worker instructions through the GPT Master, or (b) workers log any direct owner instruction in section 9 before acting on it (the interim rule in section 5). | Owner / GPT Master | Coordination reliability |
 | B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the GPT Master chat (interactive). **Automated consumer access** (the scheduled ChatGPT task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | GPT Master | Consumer access verified |
@@ -461,6 +509,14 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Worker A's caching changes and two capture runs recorded.
   - Combined tree of ten heads: 201 tests OK.
   - D9 escalated: section 5 is the plan, not the workers' actual work.
+
+- 2026-10-26 19:20 Master:
+  - Recorded new PR #11 (backoff and budgets) and its verified code conflict with #5. Extended D11 to #11's backoff policy.
+  - Recorded C1 progress: the schedule fix on #3 carried to #4/#7/#10. Still open: #5 main merge, the #5/#11 resolution, the `e1438f2` revert, folding #5/#8, the live trial.
+  - Recorded #3's current `collect.yml` and Worker A's interim-rule log entry, including the cause of and fix for the 13-minute capture run.
+  - Recorded #2 `fc68672` (engine step 8; B1 still not done).
+  - No further off-`main` collections.
+  - Combined tree of eleven heads: 205 tests OK, but not a true combined result because of the #5/#11 conflict.
 
 ## GPT Master production schedule update — 2026-10-26
 
