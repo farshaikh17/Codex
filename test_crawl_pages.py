@@ -1,6 +1,6 @@
 import json,tempfile,unittest
 from pathlib import Path
-from crawl_pages import Halt,classify,listing_quality,robots_allows,robots_rules,run,validate,PAGE_KEYS,ATTEMPT_KEYS
+from crawl_pages import SCHEMA,Halt,classify,listing_quality,robots_allows,robots_rules,run,validate,PAGE_KEYS,ATTEMPT_KEYS
 PAGE={'id':'sample-careers','employer':'Sample','url':'https://careers.example.com/jobs','why':'private note never published'}
 OTHER={'id':'other-careers','employer':'Other','url':'https://other.example.com/jobs'}
 ALLOW=lambda url,timeout:(lambda target:(True,'allowed by robots.txt'))
@@ -166,17 +166,54 @@ class CaptureTests(unittest.TestCase):
         self.assertNotIn('requests_made',result)
         self.assertEqual(entry(result)['last_attempt']['browser_requests']['seen'],40)
     def test_cookie_banner_change_is_boilerplate_only(self):
-        listing=WORDS+'\n* [Data Engineer](https://careers.example.com/jobs/27443)'
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)
-            first=entry(go(path,page(listing+'\nWe use cookies. Accept Deny Non-Essential Manage Preferences')))
-            second=entry(go(path,page(listing+'\nThis website uses cookies for analytics and advertising. Manage Preferences')))
+            first=entry(go(path,page(WORDS+'\nWe use cookies. Accept Deny Non-Essential Manage Preferences')))
+            self.assertEqual(first['review_basis'],'text')
+            second=entry(go(path,page(WORDS+'\nThis website uses cookies for analytics and advertising. Manage Preferences')))
             self.assertEqual((second['change'],second['review_change']),('changed','boilerplate_only'))
             self.assertEqual(second['review_changed_at'],first['review_changed_at'])
             self.assertNotEqual(second['content_hash'],first['content_hash'])
             self.assertIn('analytics and advertising',(path/'captures'/'sample-careers.md').read_text())
-            third=entry(go(path,page(listing+'\n* [ML Engineer](https://careers.example.com/jobs/27356)')))
-            self.assertEqual(third['review_change'],'changed')
+            pixel=entry(go(path,page(WORDS+'\nThis website uses cookies for analytics and advertising. Manage Preferences\n![](https://pixel.example/g.gif?rand=0.71)')))
+            self.assertEqual(pixel['review_change'],'boilerplate_only')  # image-only lines are not review content
+            edited=entry(go(path,page(WORDS+' We are hiring a Support Engineer.')))
+            self.assertEqual(edited['review_change'],'changed')
+    def test_listing_pages_review_on_job_links_not_page_noise(self):
+        """Shapes taken from the 14:29 and 16:08 live captures: Canonical's per-request Bing pixel, Automattic's
+        subscriber counter, Atlassian's reshuffled navigation, Workday's changed postings and job count."""
+        jobs=lambda ids:'\n'.join('* [Role %s](https://careers.example.com/jobs/%s)'%(i,i) for i in ids)
+        def capture(nav,ids,claimed='20 jobs',extra=''):
+            return page(WORDS+'\n'+nav+'\n'+claimed+'\n'+jobs(ids)+'\n'+extra)
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)
+            base=entry(go(path,capture('* [AI](https://www.example.com/ai)\n## AI platform',range(20),
+                                       extra='Join 11,740 other subscribers\n![](https://bat.bing.com/action/0?mid=87ea&sid=bb13)')))
+            self.assertEqual((base['review_basis'],base['review_change']),('job_links','new'))
+            noise=entry(go(path,capture('## Platform\n* [Build with Forge](https://dev.example.com/forge)',range(20),
+                                        extra='Join 11,739 other subscribers\n![](https://bat.bing.com/action/0?mid=9c08&sid=ab25)')))
+            self.assertEqual((noise['change'],noise['review_change']),('changed','listings_unchanged'))
+            self.assertEqual((noise['review_hash'],noise['review_changed_at']),(base['review_hash'],base['review_changed_at']))
+            count=entry(go(path,capture('## Platform',range(20),claimed='1567 JOBS FOUND')))
+            self.assertEqual(count['review_change'],'changed')  # a stated job count change is listing evidence
+            swapped=entry(go(path,capture('## Platform',list(range(10))+list(range(30,40)),claimed='1567 JOBS FOUND')))
+            self.assertEqual(swapped['review_change'],'changed')
+            relabelled=entry(go(path,page(WORDS+'\n## Platform\n1567 JOBS FOUND\n'+jobs(list(range(10))+list(range(30,40))).replace('Role 30','Senior Role 30'))))
+            self.assertEqual(relabelled['review_change'],'changed')
+    def test_schema_change_keeps_evidence_and_rebaselines_review(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)
+            first=entry(go(path,page()))
+            index=json.loads((path/'index.json').read_text())
+            index['schema']='public-page-capture-index-2'
+            for p in index['pages']: p.pop('review_basis',None)
+            (path/'index.json').write_text(json.dumps(index))
+            def boom(p,limits):raise TimeoutError('page timeout 30s')
+            failed=entry(go(path,boom))
+            self.assertEqual((failed['captured_at'],failed['content_hash']),(first['captured_at'],first['content_hash']))  # evidence kept
+            self.assertIsNone(failed['review_hash'])
+            again=entry(go(path,page()))
+            self.assertEqual((again['change'],again['review_change']),('unchanged','new'))
     def test_listing_quality_is_separate_from_text_volume(self):
         p=dict(PAGE)
         roles='\n'.join('* [Role %d](https://careers.example.com/jobs/%d)'%(i,i) for i in range(20))
@@ -201,9 +238,9 @@ class CaptureTests(unittest.TestCase):
             self.assertIn('listing_quality: no_listings_detected',(Path(folder)/'captures'/'sample-careers.md').read_text())
     def test_committed_index_matches_documented_contract(self):
         index=json.loads((Path(__file__).resolve().parent/'public'/'pages'/'index.json').read_text())
-        if index.get('schema')!='public-page-capture-index-2': self.skipTest('committed index predates schema 2')
+        if index.get('schema')!=SCHEMA: self.skipTest('committed index predates %s'%SCHEMA)
         doc=(Path(__file__).resolve().parent/'OPERATIONS.md').read_text()
-        contract=doc[doc.index('### Consumer contract: public-page-capture-index-2'):doc.index('### ChatGPT consumer instructions')]
+        contract=doc[doc.index('### Consumer contract: '+SCHEMA):doc.index('### ChatGPT consumer instructions')]
         documented=lambda title:[r.split('|')[1].strip() for r in contract.split(title)[1].split('\n\n')[1].splitlines()[2:] if r.startswith('|')]
         self.assertEqual(documented('Top level of public/pages/index.json'),list(index))
         self.assertEqual(documented('Page object:'),list(PAGE_KEYS))

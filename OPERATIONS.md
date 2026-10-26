@@ -45,28 +45,36 @@ Trial captures labelled this way: Atlassian listings_found, appears_complete (33
 
 ### Raw and review hashes
 
-content_hash is SHA-256 of the complete normalised capture, kept as raw evidence; change (new, changed, unchanged) and changed_at follow it. review_hash is SHA-256 of the same text with cookie, consent and tracking lines removed; review_change and review_changed_at follow it. review_change is boilerplate_only when the raw text changed but the review text did not. On the two trial captures of Doist the raw hashes differ and the review hashes are identical (the only difference was the consent banner).
+content_hash is SHA-256 of the complete normalised capture, kept as raw evidence; change (new, changed, unchanged) and changed_at follow it.
+
+review_hash decides what needs review; review_change and review_changed_at follow it. Its input depends on review_basis:
+- job_links (the capture has posting links): the sorted (URL, label) pairs of the posting links plus claimed_total. Navigation, counters, pixels and banners elsewhere on the page never change it. If the raw text changed but this did not, review_change is listings_unchanged.
+- text (no posting links): the capture with cookie, consent and tracking lines and image-only lines (tracking pixels, banners) removed. If the raw text changed but this did not, review_change is boilerplate_only.
+
+Why: on the live captures of 14:29 and 16:08 UTC (2026-10-26), the schema 2 review hash flagged 4 pages, but only Salesforce Workday had different postings (10 added, 10 removed, 1571 to 1567 jobs). Atlassian (navigation menu reshuffled), Canonical (per-request Bing pixel URL) and Automattic (tracking pixel and a subscriber counter) had identical posting links. Recomputed with schema 3 rules on the same two captures, only Workday is flagged.
 
 Failed, blocked and skipped attempts never touch the capture file, captured_at, content_hash, review_hash, changed_at or review_changed_at; change and review_change become unknown_after_failure (or no_capture if nothing was ever captured).
 
 ### Output paths
 
-- public/pages/index.json, schema public-page-capture-index-2, no page text. Top level: schema, attempted_at, batch, results (usable, thin, failed, blocked, skipped), operations {robots_fetches, page_navigations, limit, counts}, browser_requests {requests_seen, requests_blocked, per_page_limit, counts}, halted, limits, notice, pages. Per page: id, employer, official_url, capture_file, capture_status, captured_at, changed_at, content_hash, review_hash, review_changed_at, word_count, listing_quality, coverage, flags, job_links, claimed_total, boilerplate_share, change, review_change, fresh_this_run, last_attempt {at, result, reason, http_status, final_url, browser_requests}.
-- public/pages/captures/<id>.md: one readable file per page. Header lists official_url, final_url, captured_at, content_hash, review_hash, capture_status, listing_quality with coverage and flags, job_links, claimed_total, word_count and the notice, then the complete extracted page text (Crawl4AI markdown, links kept).
+- public/pages/index.json, schema public-page-capture-index-3, no page text. Top level: schema, attempted_at, batch, results (usable, thin, failed, blocked, skipped), operations {robots_fetches, page_navigations, limit, counts}, browser_requests {requests_seen, requests_blocked, per_page_limit, counts}, halted, limits, notice, pages. Per page: id, employer, official_url, capture_file, capture_status, captured_at, changed_at, content_hash, review_hash, review_changed_at, review_basis, word_count, listing_quality, coverage, flags, job_links, claimed_total, boilerplate_share, change, review_change, fresh_this_run, last_attempt {at, result, reason, http_status, final_url, browser_requests}.
+- public/pages/captures/<id>.md: one readable file per page. Header lists official_url, final_url, captured_at, content_hash, review_hash with its basis, capture_status, listing_quality with coverage and flags, job_links, claimed_total, word_count and the notice, then the complete extracted page text (Crawl4AI markdown, links kept).
 
-Schema 1 indexes (written before this change) are read for continuity; their pages lack review_hash, so the first schema 2 capture reports review_change new.
+Indexes written under an earlier schema (1 or 2) are read for continuity: captures, captured_at, changed_at and content_hash carry over. Review fields are only comparable within one schema, so the first schema 3 run re-baselines every page with review_change new (and review_hash null for pages not fetched in that run).
 
-change and review_change values: new, changed, unchanged, boilerplate_only (review_change only), unknown_after_failure, no_capture, not_checked (not in this batch), never_attempted.
+change and review_change values: new, changed, unchanged, boilerplate_only and listings_unchanged (review_change only), unknown_after_failure, no_capture, not_checked (not in this batch), never_attempted.
 
-### Consumer contract: public-page-capture-index-2
+### Consumer contract: public-page-capture-index-3
 
-Stability rule: the fields below are stable for this schema string. A field may be added (consumers must ignore unknown fields). Removing or renaming a field, changing its type, or changing the meaning of a value means a new schema string (public-page-capture-index-3), documented here alongside -2 during any transition. test_crawl_pages.py checks the committed index against the field lists below.
+Schema 3 replaced 2 on 2026-10-26: review_hash changed meaning (see Raw and review hashes) and review_basis was added. Everything else is unchanged from 2.
+
+Stability rule: the fields below are stable for this schema string. A field may be added (consumers must ignore unknown fields). Removing or renaming a field, changing its type, or changing the meaning of a value means a new schema string (public-page-capture-index-4), documented here alongside -3 during any transition. test_crawl_pages.py checks the committed index against the field lists below.
 
 Top level of public/pages/index.json (types as JSON types; "or null" is stated explicitly):
 
 | Field | Type | Meaning |
 |---|---|---|
-| schema | string | Always "public-page-capture-index-2". Refuse anything else. |
+| schema | string | Always "public-page-capture-index-3". Refuse anything else. |
 | attempted_at | string (ISO 8601 UTC) | Start of the run that wrote this file. |
 | batch | array of string | Page ids attempted in this run. |
 | results | object {usable, thin, failed, blocked, skipped: integer} | Counts for this run's batch. |
@@ -89,8 +97,9 @@ Page object:
 | captured_at | string or null | When the stored text was fetched. Never refreshed by a failed or blocked attempt. |
 | changed_at | string or null | When content_hash last changed. |
 | content_hash | string (hex SHA-256) or null | Hash of the complete normalised capture. |
-| review_hash | string (hex SHA-256) or null | Hash with cookie, consent and tracking lines removed. Use this to decide what to review. |
+| review_hash | string (hex SHA-256) or null | Hash of the review basis. Use this to decide what to review. |
 | review_changed_at | string or null | When review_hash last changed. |
+| review_basis | "job_links", "text" or null | job_links: posting links and claimed_total; text: capture without cookie, consent, tracking and image-only lines. |
 | word_count | integer or null | Words in the stored capture. |
 | listing_quality | "listings_found", "partial_listings", "no_listings_detected" or null | Whether the stored capture holds postings. |
 | coverage | "appears_complete", "partial", "none_detected", "unknown" or null | How much of the listing the capture holds. |
@@ -99,7 +108,7 @@ Page object:
 | claimed_total | integer or null | Largest job count the page states, if any. |
 | boilerplate_share | number (0 to 1) or null | Share of words on cookie, consent or tracking lines. |
 | change | "new", "changed", "unchanged", "unknown_after_failure", "no_capture", "not_checked" or "never_attempted" | Raw content change in this run. |
-| review_change | same values as change, plus "boilerplate_only" | Review-relevant change in this run. |
+| review_change | same values as change, plus "boilerplate_only" (text basis) and "listings_unchanged" (job_links basis) | Review-relevant change in this run. |
 | fresh_this_run | boolean | True only if this run stored new text for the page. |
 | last_attempt | attempt object or null | Latest attempt; null if never attempted. |
 
@@ -116,8 +125,8 @@ Attempt object (last_attempt):
 
 ### ChatGPT consumer instructions
 
-1. Read public/pages/index.json only. Refuse a schema other than public-page-capture-index-2. Remember the review_hash you last processed per id.
-2. Queue for AI review only pages whose review_hash differs from your stored value. Do not queue boilerplate_only, unchanged, not_checked or never_attempted pages; the raw text is still available if a person asks.
+1. Read public/pages/index.json only. Refuse a schema other than public-page-capture-index-3. Remember the review_hash you last processed per id; discard review hashes stored under an earlier schema.
+2. Queue for AI review only pages whose review_hash differs from your stored value. Do not queue boilerplate_only, listings_unchanged, unchanged, not_checked or never_attempted pages; the raw text is still available if a person asks.
 3. Within the queue, prefer listing_quality listings_found, then partial_listings. A no_listings_detected page needs a person to look at official_url, not an AI summary.
 4. Read only those public/pages/captures/<id>.md files.
 5. Freshness: captured_at is when the text was fetched. If fresh_this_run is false or last_attempt.at is later than captured_at, the text is historical; say so and never call it freshly fetched. Blocked or failed pages need a person to check the official_url.
