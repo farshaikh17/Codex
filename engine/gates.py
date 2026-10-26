@@ -18,7 +18,8 @@ from engine.places import covers,places
 # 2: pay described as an estimate, third-party or not employer-provided is never compared
 # 3: owner rule: a bare '$' is USD when every listed location is in the United States; amounts in millions or
 #    billions ('$1B annually') are company figures, never pay
-GATES_VERSION=3
+# 4: owner rule: an explicit commission-only or no-base-salary statement fails a base floor
+GATES_VERSION=4
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -167,13 +168,26 @@ def _currency(r,rule,quote='',us_posting=False):
     assumed=(rule.get('assume_currency_for_symbol') or {}).get(sym)
     if assumed: return assumed,'currency %s assumed for symbol %s by rules.salary.assume_currency_for_symbol'%(assumed,sym)
     return None,None
-def salary(fields,rules):
+COMMISSION_ONLY=re.compile(r"(?i)\b(?:commission[- ]only|100% commission|straight commission|(?:no|without(?: a| any)?) (?:base salary|base pay|fixed salary|guaranteed salary)(?! (?:cap|limit|range|band|ranges|information|info|details|data|figure|amount|is (?:listed|disclosed|stated|provided|shown|published)|has been))\b)")
+# "no base salary range is listed" says pay is undisclosed, not absent: never a commission-only statement
+COMMISSION_NEGATED=re.compile(r"(?i)\b(?:not|isn't|is not|never)\b[^.;]{0,25}(?:commission[- ]only|100% commission|straight commission)")
+def commission_only(posting,fields):
+    """Verbatim description lines that explicitly say the role has no base pay. OTE-only wording does not count:
+    it leaves the base unstated rather than saying there is none."""
+    retrieved=next((i.get('retrieved_at') for f in fields.values() for i in f['items'] if i.get('retrieved_at')),None)
+    lines=[l.strip() for l in (posting.get('description') or '').split('\n')]
+    return [{'field':'compensation','quote':l,'method':'description_text','source_url':posting.get('canonical_url'),'retrieved_at':retrieved}
+            for l in lines if COMMISSION_ONLY.search(l) and not COMMISSION_NEGATED.search(l)]
+def salary(fields,rules,posting=None):
     rule=rules.get('salary')
     if rule is None: return _gate('unknown','candidate salary rule not provided; not assumed')
     floor,basis=rule['minimum'],rule.get('basis','base')
     desc='rules.salary minimum %s %s per %s (%s)'%(floor,rule['currency'],rule['period'],basis)
     comp=fields['compensation']
-    if comp['state']!='stated': return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
+    no_base=commission_only(posting or {},fields) if basis=='base' else []
+    if comp['state']!='stated':
+        if no_base: return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base,desc)
+        return _gate('unknown','compensation %s in the posting'%comp['state'].replace('_',' '),basis=desc)
     outcomes,notes=[],[]
     us_posting=us_only(fields)
     for i in comp['items']:
@@ -208,6 +222,10 @@ def salary(fields,rules):
                 else: verdict='incomparable'
             if verdict=='incomparable': notes.append('%s: basis %s%s cannot be compared with a %s floor'%(r.get('text') or i['quote'],kind,' with variable pay' if pay.get('variable_mentioned') else '',basis)); continue
             outcomes.append((verdict,ev))
+    if no_base:
+        if any(o[0]=='pass' for o in outcomes):
+            return _gate('unknown','the posting says there is no base pay but also states a base range at or above the floor',no_base+[o[1] for o in outcomes],desc,notes=notes)
+        return _gate('fail','the posting states there is no base pay; the candidate requires a base floor (owner rule)',no_base+[o[1] for o in outcomes],desc,notes=notes)
     if not outcomes: return _gate('unknown','no stated range is comparable: '+('; '.join(notes) or 'no parsed amount'),[],desc,notes=notes)
     kinds={o[0] for o in outcomes}
     evidence=[o[1] for o in outcomes]
@@ -253,7 +271,7 @@ def screen(candidate,posting,extraction,reviews=None,today=None):
     profile,rules,fields=candidate['profile'],candidate['rules'],extraction['fields']
     required=set(rules.get('required_gates') or ('geography','engagement','qualifications','salary','application_history'))
     gates={'geography':geography(fields,profile),'engagement':engagement(fields,rules),
-           'qualifications':qualifications(fields,profile,reviews),'salary':salary(fields,rules),
+           'qualifications':qualifications(fields,profile,reviews),'salary':salary(fields,rules,posting),
            'application_history':application_history(posting,profile,rules,today)}
     for name,g in gates.items(): g['required']=name in required
     results={g['result'] for g in gates.values() if g['required']}

@@ -85,6 +85,13 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
   - `US$` is left unknown for now: the extractor doesn't yet read "US$x - US$y" as one range, and comparing a broken range could fail a floor wrongly. That's an extractor follow-up, after farshaikh17/Codex#9.
   - Estimates are excluded before this rule applies, so a third-party "$135,000" on a US-only posting stays unknown.
 - **Amounts in millions or billions** ("generates nearly $1B annually") are company figures, never pay, and are not compared. Found on a real Twilio posting, where the `$` rule would otherwise have failed a floor on "$1".
+- **Commission-only (owner rule, gates version 4):** an explicit statement that the role has no base pay ("commission-only", "100% commission", "no base salary", "without a base salary") **fails a base floor**. The failing line is quoted verbatim as evidence.
+  - A negated statement ("not a commission-only role") doesn't count.
+  - Wording about undisclosed pay ("no base salary range is listed", "no base salary information") doesn't count.
+  - OTE-only pay doesn't count: it leaves the base unstated, so it stays unknown.
+  - A posting that says there is no base but also states a base range at or above the floor is contradictory, and stays unknown.
+  - A `total` floor is not failed by this rule.
+  - No committed real posting matches today.
 - A missing period counts only if the candidate's `assume_period` says so. Every such assumption is written into the evidence.
 - Lakh and crore are applied as units.
 - **Estimates and pay the employer didn't publish are never compared** (gates version 2). This covers any pay quote that says "estimate", "estimated", "third-party", "not provided by the employer" or names a salary site. Such a quote can't pass or fail the gate; it's listed in `notes` and the gate stays unknown. An employer's "expected base salary range" is still compared. The check reads the quote itself, so it holds even where the extractor's `estimated` flag misses (that flag misses "estimate", which is a known E2 gap).
@@ -98,9 +105,9 @@ Each gate returns `pass`, `fail` or `unknown`, with a `reason`, `evidence` and t
 
 ## Benchmark (`python -m engine.benchmark`)
 
-There are 49 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
+There are 54 hand-labelled synthetic cases in `engine/tests/screening_cases.py`. Labels were written from the case text before running the code. They cover:
 - remote US-only; India explicitly allowed; worldwide with a conflicting country; a negated eligible country; a city-only location
-- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed for an INR floor; missing period; estimates; the bare-`$` rule (US-only above and below the floor, unstated, mixed and city-only locations, `CA$`, `US$`, an estimate on a US-only posting, company revenue)
+- missing salary; variable-only pay; a range spanning the floor; a range below it; lakh units; OTE below the floor; `$` not assumed for an INR floor; missing period; estimates; the bare-`$` rule (US-only above and below the floor, unstated, mixed and city-only locations, `CA$`, `US$`, an estimate on a US-only posting, company revenue); commission-only (explicit, negated, undisclosed pay, OTE-only, contradicted by a base range)
 - mandatory years unmet; preferred years unmet; "or equivalent"; a required language missing; reviewer `not_met`
 - already applied; same employer and title; employer cooldown
 - onsite in an eligible country; conflicting workplace; employment type unstated; empty description; EMEA
@@ -109,7 +116,7 @@ There are 49 hand-labelled synthetic cases in `engine/tests/screening_cases.py`.
 
 The primary metric is **false READY**, reported next to incorrect exclusions, missed exclusions, retained unknowns and gate mismatches.
 
-Current result: 49 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 36. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
+Current result: 54 cases, false READY 0, incorrect exclusions 0, missed exclusions 0, gate mismatches 0, unknowns retained 40. The `BenchmarkTests` test fails on any false READY, incorrect exclusion or mismatch.
 
 The queue-related H cases are handled in step 5 (`docs/REVIEW_QUEUE.md`): interruption recovery and identical reposts. Reopened requisitions are partly covered by the application-history gate. An expired page returning HTTP 200 and a failed retrieval after success are store and collector concerns (availability states), not queue rules.
 

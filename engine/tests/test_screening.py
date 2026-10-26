@@ -98,6 +98,13 @@ class MissingFactTests(unittest.TestCase):
         self.assertEqual(screen(person,BASE,extract(BASE))['gates']['application_history']['result'],'pass')
         del person['profile']['application_history']
         self.assertEqual(screen(person,BASE,extract(BASE))['gates']['application_history']['result'],'unknown')
+    def test_commission_only_rule_applies_to_base_floors_only(self):
+        person=copy.deepcopy(people()['synthetic-impl-in'])
+        posting=BASE|{'compensation_raw':None,'description':INTRO+REQS+'\nThis is a commission-only role with no base salary.'}
+        g=screen(person,posting,extract(posting))['gates']['salary']
+        self.assertEqual((g['result'],g['evidence'][0]['quote']),('fail','This is a commission-only role with no base salary.'))
+        person['rules']['salary']['basis']='total'
+        self.assertEqual(screen(person,posting,extract(posting))['gates']['salary']['result'],'unknown','a total-pay floor is not failed by "no base"')
     def test_gate_not_required_does_not_block(self):
         person=copy.deepcopy(people()['synthetic-impl-in'])
         person['rules']['required_gates']=['geography','engagement','qualifications','application_history']
