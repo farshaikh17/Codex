@@ -1,29 +1,29 @@
 {
   "schema": "public-job-index-1",
-  "attempted_at": "2026-10-26T19:22:17.478441+00:00",
+  "attempted_at": "2026-10-26T23:56:30.585639+00:00",
   "status": "ok",
   "successful_sources": 10,
   "total_sources": 10,
-  "listing_count": 534,
+  "listing_count": 533,
   "sources": [
     {
       "source": "gitlab-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 238,
       "skipped": 0,
       "new": 2,
       "changed": 0,
       "no_longer_listed": [
-        "greenhouse:gitlab:8782306002",
-        "greenhouse:gitlab:8860302002"
+        "greenhouse:gitlab:8644572002",
+        "greenhouse:gitlab:8842584002"
       ]
     },
     {
       "source": "remote-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 2,
       "skipped": 0,
@@ -34,29 +34,33 @@
     {
       "source": "clipboard-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
-      "jobs": 42,
+      "jobs": 39,
       "skipped": 0,
       "new": 0,
       "changed": 0,
-      "no_longer_listed": []
+      "no_longer_listed": [
+        "ashby:clipboard:86679ead-020d-4a8c-a205-d8300a64188e",
+        "ashby:clipboard:875a2615-be51-4347-b16a-82869173d548",
+        "ashby:clipboard:f6081a39-cbcd-4040-8be6-e8d5979f22e6"
+      ]
     },
     {
       "source": "oyster-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/oyster",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
-      "jobs": 23,
+      "jobs": 24,
       "skipped": 0,
-      "new": 0,
+      "new": 1,
       "changed": 0,
       "no_longer_listed": []
     },
     {
       "source": "zapier-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/zapier",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 12,
       "skipped": 0,
@@ -67,7 +71,7 @@
     {
       "source": "posthog-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/posthog",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 11,
       "skipped": 0,
@@ -78,7 +82,7 @@
     {
       "source": "drivetrain-lever",
       "endpoint": "https://api.lever.co/v0/postings/drivetrain?mode=json",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 35,
       "skipped": 0,
@@ -89,7 +93,7 @@
     {
       "source": "resilinc-lever",
       "endpoint": "https://api.lever.co/v0/postings/resilinc?mode=json",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
       "jobs": 11,
       "skipped": 0,
@@ -100,28 +104,26 @@
     {
       "source": "weave-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/weave",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
-      "jobs": 27,
+      "jobs": 26,
       "skipped": 0,
       "new": 0,
       "changed": 0,
       "no_longer_listed": [
-        "ashby:weave:013e628a-f4eb-4d2e-b447-e323da373fd1"
+        "ashby:weave:b1a4c2e0-a645-4f1d-b537-163793333443"
       ]
     },
     {
       "source": "twilio-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true",
-      "checked_at": "2026-10-26T19:22:17.478441+00:00",
+      "checked_at": "2026-10-26T23:56:30.585639+00:00",
       "status": "ok",
-      "jobs": 133,
+      "jobs": 135,
       "skipped": 0,
-      "new": 0,
+      "new": 2,
       "changed": 0,
-      "no_longer_listed": [
-        "greenhouse:twilio:8096642"
-      ]
+      "no_longer_listed": []
     }
   ]
 }
