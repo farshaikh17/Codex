@@ -25,7 +25,23 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 - Push only to your own branch. Never force-push someone else's branch.
 - Before pushing, run the offline test guard from `docs/INTEGRATION.md` (sockets disabled) and say the result in the commit or PR.
 
-## 3. Verified state (2026-10-26 ~14:40 UTC)
+## 3. Verified state (2026-10-26 ~14:40 UTC; heads and combined tree refreshed 15:20)
+
+**Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
+
+**Current heads, 15:20:**
+- #1 `f27a04a`
+- #2 `8794ca8`
+- #3 `d11f691`
+- #4 `a43890a`
+- #5 `48ff370`
+- #6 `1bca0d2`
+- #7 `c965b35` (15:13, "Score PR #2's gates, fix a wrong label, align with the shipped gate vocabulary")
+- #8 `5932c0d`
+- #9 `3018541` (merges `8794ca8`; `EXTRACTOR_VERSION=3`)
+- `integration/pr1-2-3` `4331322` (15:11). It predates #7's `c965b35`.
+
+The per-PR table below keeps the 14:40 heads for history.
 
 ### main
 - Head `456397a` (bot snapshot, 07:55 UTC). 10 feeds, 533 listings, status `ok`, 10/10 sources.
@@ -47,7 +63,7 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 | farshaikh17/Codex#9 | `fix/ashby-comp-extract` → `builder1` | `1412f62` | yes | Worker A, **in Worker B's area** | E2 parses the section 6 tier JSON per component |
 
 **Update 14:50:** `builder1` (#2) has moved to `8794ca8` (Worker B, 14:40, "Add candidate configuration and evidence-based screening gates"). That adds `engine/candidates.py`, `gates.py`, `screen.py`, `places.py`, `benchmark.py`, `docs/SCREENING.md` and synthetic candidate fixtures, which is E3/E4 work. Two consequences:
-- It sets `EXTRACTOR_VERSION=2` for a wording change. #9 is based on `5d31675` and *also* sets `EXTRACTOR_VERSION=2`, for the tier parser. The extraction cache is keyed on extractor version, so the two must not share a number. Whichever lands second on `builder1` takes **3**.
+- It sets `EXTRACTOR_VERSION=2` for a wording change. #9 was based on `5d31675` and also set `EXTRACTOR_VERSION=2`, for the tier parser. **Resolved 14:49:** #9 merged `8794ca8` and took version 3 (`3018541`).
 - E3/E4 sat behind decision D3. See D3 in section 8.
 
 Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all six for compatibility testing, with `docs/INTEGRATION.md`. Do not merge it.
@@ -61,6 +77,14 @@ Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all 
 | Offline tests | 3 | Success on `585061c` and `ea1935f`. Run 40340180047 on the bot commit `29d0290` is `action_required`: GitHub holds bot-triggered `pull_request` runs for approval. Not a failure; code is identical to `ea1935f` |
 
 ### Combined tree
+- **Master check, 15:20, all nine current heads** (listed above), merged sequentially onto `main` in the section 7 order:
+  - One conflict: `docs/ENGINE.md` between #6 and #9. It is doc-only; both append after §6. Resolved by keeping both.
+  - No other conflicts.
+  - **132 tests, 0 failures, 0 errors, 0 skipped**, with outbound sockets disabled.
+  - `registry.py` OK (10 sources).
+  - `EXTRACTOR_VERSION=3`.
+  - This matches Worker A's `4331322` (132 tests) and adds #7's later `c965b35`.
+  - The same tree reproduced the one-sided pay-range collapse in B1.
 - Master check, 14:40: `integration/pr1-2-3` plus the current #1 head (`29d0290`, which integration does not include yet) merges with no conflicts. **97 tests, 0 failures, 0 errors** with outbound sockets disabled. `registry.py`: OK, 10 sources, 10 warnings that are all "no verified careers_url".
 - All six PRs merge into `main` conflict-free in any order (Worker A's integration run at 12:05, re-confirmed above for #1's new head).
 
@@ -87,7 +111,7 @@ Shared-file rules:
 
 Each task is one push or a small number of pushes to the worker's own branch. None overlaps another, and none needs a merge, a schedule change or a decision from section 8.
 
-### A1: Make #1 review-ready and publish the page-capture contract (Worker A)
+### A1: Make #1 review-ready and publish the page-capture contract (Worker A). **Done 15:11** (`1783532`, `f27a04a`; see section 9)
 - In `OPERATIONS.md` on `build/crawl4ai`, add an exact consumer contract for `public-page-capture-index-2`: every field and its type, which fields are stable, and the rule that a schema change means a new schema string.
 - Post one comment on farshaikh17/Codex#2 acknowledging the ENGINE.md §3 boundary, with the corrected field list for `-2` (the input B needs for E2b).
 - Rebuild `integration/pr1-2-3` from the current heads of all six branches. Update `docs/INTEGRATION.md`: remove the stale schema-1 and Canonical statements, and record the new heads and test count.
@@ -95,24 +119,40 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - Not in scope: new pages, schedules, stealth, or dependency changes. (A `pip-audit` of `requirements-crawl.txt` is backlog K, after merge.)
 - **Acceptance:** OPERATIONS.md contract matches the committed `public/pages/index.json` field for field. Integration branch merges all six current heads cleanly. The offline suite passes there, with the count stated. Comments are posted on #2, #5 and #6. No workflow file changed.
 
-### B1: Adopt #6 and #9 into `builder1` (Worker B) (revised 14:50; don't reimplement the tier parser)
-- Review `fix/store-rebuild` (#6). Either merge it into `builder1` or keep it stacked, and say which on #2. Don't create a second persistence module.
-- Review `fix/ashby-comp-extract` (#9) against section 6 and merge it into `builder1` (a merge commit, no rebase). Then:
-  - Resolve the `EXTRACTOR_VERSION` clash: the tier parser becomes **3**, with a comment naming both changes.
-  - Check that format detection is by `data.get('source') == 'ashby.compensationTiers'`, not by a leading `{`. Lever `salaryRange` JSON must still take the Lever path.
-  - Check that `additional_information` is kept as a verbatim quote and is never parsed into amounts.
-  - Check that #9's tests and `8794ca8`'s screening tests pass together.
-- Mapping rules, as in #9 (verify, don't change):
-  - one range per tier and component
-  - currency from `currencyCode`, never from `$`
-  - period from `interval` (`1 YEAR` → year, also month, week, day and hour; `NONE` or unknown → `not_stated`, with `interval_raw` kept)
-  - basis from `compensationType` (Salary → base; Bonus and Commission → variable; Equity* → equity)
-  - null min or max → `not_stated`
-  - no conversion, no annualizing, no merging of tiers
-- After A1's comment, update `docs/ENGINE.md` §3 to schema `-2`. Don't implement E2b ingestion yet.
-- Not in scope: `adapters.py`, `collect.py`. No further E3+ work until D3 is answered.
-- Say on #9 that it is folded in, then leave #9 for the owner to close.
-- **Acceptance:** all engine tests pass offline, with the count stated. The extractor version is distinct from `8794ca8`'s 2. Existing string-format extraction counts on the committed snapshot are unchanged. #6's and #9's status is stated on #2.
+### B1: Adopt #6 and #9 into `builder1` and fix one-sided pay ranges (Worker B) (revised 15:20)
+- **Adopt #6** (`fix/store-rebuild`, `1bca0d2`). Either merge it into `builder1` or keep it stacked, and say which on #2. Don't create a second persistence module.
+- **Fold #9** (`fix/ashby-comp-extract`, `3018541`) into `builder1` with a merge commit, no rebase.
+  - #9 already contains `8794ca8` and sets `EXTRACTOR_VERSION=3`, so no version work is needed.
+  - The one conflict, with #6, is in `docs/ENGINE.md`: both append after §6. Keep both sections, §7 persistence first.
+  - Before merging, check:
+    - Format detection is only by `data.get('source') == 'ashby.compensationTiers'`. Lever `salaryRange` JSON must still take the Lever path.
+    - `additional_information` stays a verbatim quote and is never parsed into amounts.
+    - #9's tests and `8794ca8`'s screening tests pass together.
+- **Fix the missing-bound collapse (GPT Master review finding, reproduced by the Master at 15:20 on all nine heads).**
+  - **Bug:** `_ashby_tiers` builds a range with `min()` and `max()` over the non-null amounts. A component that publishes only one bound becomes an exact salary. `minValue 90000, maxValue null` gives `{min: 90000, max: 90000}`, and `minValue null, maxValue 110000` gives `{min: 110000, max: 110000}`.
+  - **Fix:**
+    - Keep each bound independently. Take `min` from `minValue` and `max` from `maxValue`, and leave a missing bound `null`, never copied from the other.
+    - A range with one known bound is open-ended ("at least" or "up to"). It is never an exact amount.
+    - Both bounds null → no range, as today.
+    - Never swap or reorder published values to make a range look valid.
+  - **Regression tests:**
+    - minimum only
+    - maximum only
+    - both null
+    - both present, as a control
+    - min equal to max as published (a genuine exact figure; must stay exact)
+  - **Downstream check:** make sure every consumer of `ranges` in `8794ca8` (`gates.py`, `screen.py`, `benchmark.py`) treats a `null` bound as unknown. It must not read it as zero, as equal to the other bound, or as a pass or fail. A salary gate with one bound below the threshold and the other unknown stays `unknown` unless the known bound settles it.
+  - **Other paths:** apply the same rule to any other structured path that can carry one bound (Lever `salaryRange`, Greenhouse `pay_input_ranges`) if it can collapse the same way. Say on #2 which paths you checked.
+  - **Version:** keep `EXTRACTOR_VERSION=3`. Version 3 has not shipped to `main` or to any persisted store, so it needs no bump. Bump to 4 only if a v3 store exists anywhere you know of.
+- **ENGINE.md §3:** Worker A posted the schema `-2` field list on #2 (comment 6419553617). Update ENGINE.md §3 to `public-page-capture-index-2`. Don't implement E2b ingestion yet.
+- **Not in scope:** `adapters.py`, `collect.py`, merging to `main`. The E3/E4 gates and candidate fixtures in `8794ca8` are **provisional** (D3). Don't extend them or change their rules. Changing them only to handle null bounds safely is in scope.
+- **Close-out:** say on #9 that it is folded in, and leave #9 for the owner to close.
+- **Acceptance:**
+  - All engine tests pass offline, with the count stated.
+  - The five regression cases pass, and no evidence item shows an exact amount the feed did not publish.
+  - String-format extraction counts on the committed snapshot are unchanged.
+  - #6's and #9's status is stated on #2.
+  - Append one line to section 9.
 
 ### C1: Adopt #5 and #8 (Worker C) (revised 14:50; don't reimplement the adapter)
 - Review `fix/publication-manifest` (#5). Either merge it into `builderbranches` or keep it stacked, and say which on #3. #3 and #5 must reach `main` together.
@@ -140,6 +180,7 @@ When Ashby `compensationTiers` holds at least one object, `compensation_raw` is 
 ```
 
 - **Without tiers:** the plain `compensationTierSummary` string, else `scrapeableCompensationSalarySummary`, else null, as before. Greenhouse and Lever are unchanged.
+- **Missing bounds (E2 rule, added 15:20):** `minValue` and `maxValue` are interpreted independently. A missing bound stays `null` in the extracted range and is never filled from the other, so a one-sided figure is "at least" or "up to", never an exact salary. Both null → no range. (#9 at `3018541` violates this; the fix is in B1.)
 - **Detection (E2):** only by `"source":"ashby.compensationTiers"`. A leading `{` is not enough, because Lever `salaryRange` JSON also starts with `{`.
 - **Why `additional_information`:** on the 2026-10-26 feeds, 3 of 98 Ashby tiers carry pay facts only there (for example Clipboard "Estimated OTE: 65K-80K USD"). E2 keeps it as a verbatim quote and doesn't parse amounts out of it.
 - **Versioning:** board files carry `normalization_version` 2. The first v2 run reports `normalization_changed: true` per source, so rewrites where the URL is unchanged (Clipboard's 36) aren't read as employer edits. On the extraction side, this parser is `EXTRACTOR_VERSION` 3 once merged onto `builder1` (see section 3).
@@ -164,12 +205,16 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 |---|---|---|---|
 | D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via GPT Master | All merges |
 | D2 | Scheduled collection is not firing: 1 schedule run in about 13 hourly ticks, and data is about 6¾ h old. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
-| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
+| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. **GPT Master direction, 15:20:**
+- All candidate-specific gates and labels (`8794ca8` on #2 and the whole of #7) are **provisional** until compared with the canonical Google Sheets.
+- No Claude session reads or edits the Sheets. The comparison is the GPT Master's.
+
+Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gate vocabulary. It is recorded as provisional too. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
 | D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
 | B-1 | The $0 Actions budget (MIGRATION.md) can't be re-checked from any Claude session. It needs one look at the billing UI before any schedule change. | Owner | D2 |
-| B-2 | ChatGPT's authenticated read of this private repo is unproven (`docs/CONSUMER_TEST.md`). | GPT Master | Consumer access verified |
+| B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the GPT Master chat (interactive). **Automated consumer access** (the scheduled ChatGPT task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | GPT Master | Consumer access verified |
 
 ## 9. Handoff log
 
@@ -179,3 +224,10 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
 - 2026-10-26 Worker A (on the owner's direct request "implement the Ashby compensation tier fix"): opened farshaikh17/Codex#8 (adapter, stacked on #4) and farshaikh17/Codex#9 (extractor v2, stacked on #2) before this board was read; offered to C and B to adopt or replace. Their shape differs from section 6 in two keys, for evidence-based reasons, for the Master to decide: (1) it keeps `additional_information` per tier, because on the 2026-10-26 feeds 3 of 98 Ashby tiers carry pay facts only there (Clipboard: "Estimated OTE:  65K-80K USD", "Uncapped commissions. Base salary range is $90,000-$110,000.", "Uncapped Commission + Base Salary"); (2) it adds `"source":"ashby.compensationTiers"` and E2 detects the format by that key, because Lever `salaryRange` JSON also starts with `{`, so a leading `{` cannot identify it. #8 also adds `normalization_version`/`normalization_changed` so Clipboard's 36 rewrites (URL unchanged) are not read as employer edits. Verified: 161 compensation-only changes on replayed real feeds, 171/171 components kept, 0 non-verbatim quotes; #7+#8+#9 together 83 tests OK, bench scores unchanged.
 - 2026-10-26 14:50 Master (on owner instruction): adopted the #8/#9 shape as section 6. Revised B1 to "adopt #6 and #9" and C1 to "adopt #5 and #8". Recorded #7–#9, `builder1` at `8794ca8`, the `EXTRACTOR_VERSION=2` clash (tier parser becomes 3), and D3's new urgency.
 - 2026-10-26 Worker A: A1 done. Contract for `public-page-capture-index-2` in OPERATIONS.md, test-enforced against the committed index (1783532). Field list posted on farshaikh17/Codex#2 (comment 6419553617). `integration/pr1-2-3` rebuilt from all nine open heads (4331322): 132 offline tests, 0 failures; one doc-only conflict between #6 and #9 in ENGINE.md (keep both); stale schema-1/Canonical statements removed from docs/INTEGRATION.md. Handoff comments posted: #5 and #8 to Worker C, #6 to Worker B (#9 handed to B earlier, comment 6419022846). Worker A no longer pushes to #5, #6, #8 or #9. No workflow file changed.
+- 2026-10-26 15:20 Master:
+  - Recorded the GPT Master's independent confirmation: nine PRs, `main` unchanged, extractor v3 in #9.
+  - Recorded that interactive private-repo reading works; automated consumer access is still unverified (B-2).
+  - Recorded that candidate gates and labels are provisional pending the canonical Sheets comparison (D3).
+  - Revised B1: no version step (#9 already took v3), plus the fix for the one-sided pay-range collapse in `_ashby_tiers`, reproduced in both directions.
+  - Re-validated all nine current heads: 132 offline tests OK, one doc-only ENGINE.md conflict between #6 and #9.
+  - Marked A1 done. A1, B1 and C1 continue; no merges or schedule changes.
