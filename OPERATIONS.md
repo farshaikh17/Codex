@@ -53,7 +53,7 @@ review_hash decides what needs review; review_change and review_changed_at follo
 
 Why: on the live captures of 14:29 and 16:08 UTC (2026-10-26), the schema 2 review hash flagged 4 pages, but only Salesforce Workday had different postings (10 added, 10 removed, 1571 to 1567 jobs). Atlassian (navigation menu reshuffled), Canonical (per-request Bing pixel URL) and Automattic (tracking pixel and a subscriber counter) had identical posting links. Recomputed with schema 3 rules on the same two captures, only Workday is flagged.
 
-Failed, blocked and skipped attempts never touch the capture file, captured_at, content_hash, review_hash, changed_at or review_changed_at; change and review_change become unknown_after_failure (or no_capture if nothing was ever captured).
+Failed, blocked and skipped attempts never touch the capture file, captured_at, content_hash, review_hash, changed_at or review_changed_at; change and review_change become unknown_after_failure (or no_capture if nothing was ever captured). Listing labels (job_links, claimed_total, listing_quality, coverage, flags, boilerplate_share) are not evidence: they are re-derived from every stored capture on every run, including pages whose fetch failed or that were not in the batch, so the index always matches the current code. The capture file is not rewritten; its header keeps the labels as of captured_at. (Run of 22:30 UTC: Canonical timed out after the job_links change in 4301da0, and its stored entry still showed the old count of 333 while the code derives 313; this rule closes that gap.)
 
 ### Output paths
 

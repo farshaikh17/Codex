@@ -265,6 +265,22 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(listing_quality(WORDS+'\n'+mixed,p)['job_links'],7)  # no dominant shape: keep everything
         few='* [Role](https://careers.example.com/careers/123)\n* [Engineering 5 roles](https://careers.example.com/careers/engineering)'
         self.assertEqual(listing_quality(WORDS+'\n'+few,p)['job_links'],2)  # under 5 candidates: keep everything
+    def test_listing_labels_follow_the_code_even_when_a_fetch_fails(self):
+        """A counter change (4301da0) followed by a failed fetch (Canonical, 22:30) must not leave old counts in the index."""
+        roles='\n'.join('* [Role %d](https://careers.example.com/jobs/%d)'%(i,i) for i in range(12))
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)
+            first=entry(go(path,page(WORDS+'\n12 jobs\n'+roles)))
+            capture=(path/'captures'/'sample-careers.md').read_text()
+            index=json.loads((path/'index.json').read_text())
+            index['pages'][0].update(job_links=13,coverage='unknown',listing_quality='partial_listings')  # counts from older code
+            (path/'index.json').write_text(json.dumps(index))
+            def boom(p,limits):raise TimeoutError('page timeout 30s')
+            failed=entry(go(path,boom))
+            self.assertEqual((failed['job_links'],failed['coverage'],failed['listing_quality']),(12,'appears_complete','listings_found'))
+            for k in ('captured_at','content_hash','review_hash','review_changed_at','changed_at'): self.assertEqual(failed[k],first[k],k)
+            self.assertEqual((failed['change'],failed['review_change'],failed['fresh_this_run']),('unknown_after_failure','unknown_after_failure',False))
+            self.assertEqual((path/'captures'/'sample-careers.md').read_text(),capture)  # capture file untouched
     def test_classify_keeps_job_pages_with_invisible_recaptcha_script(self):
         got={'status_code':200,'html':'<script src="https://www.google.com/recaptcha/api.js?render=k"></script>','text':WORDS}
         self.assertEqual(classify(PAGE,got,150)[0],'usable')

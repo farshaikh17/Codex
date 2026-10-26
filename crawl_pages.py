@@ -243,6 +243,15 @@ def run(pages,output,fetcher,limits=LIMITS,ids=None,robots=robots_rules,pause=ti
             entry['change']=entry['review_change']='unknown_after_failure' if entry['content_hash'] else 'no_capture'
         entry['last_attempt']=attempt
         if n<len(batch)-1 and not halted: pause(limits['pause_s'])
+    # Listing labels are deterministic functions of the stored text, so they are re-derived from every stored capture
+    # on every run, including pages whose fetch failed or that were not in the batch. The index then always matches
+    # the current code. Evidence and change fields (captured_at, hashes, *_changed_at, change) are not touched, and
+    # neither is the capture file, whose header keeps the labels as of captured_at.
+    for page in pages:
+        entry=entries[page['id']]
+        stored=output/'captures'/(page['id']+'.md')
+        if not entry['fresh_this_run'] and entry.get('capture_status') and stored.exists():
+            entry.update(listing_quality(normalize_text(stored.read_text(encoding='utf-8').split('\n---\n',1)[-1]),page))
     counts={r:sum(entries[p['id']]['last_attempt']['result']==r for p in batch) for r in ('usable','thin','failed','blocked','skipped')}
     result={'schema':SCHEMA,'attempted_at':now,'batch':[p['id'] for p in batch],'results':counts,
             'operations':ops|{'limit':limits['max_operations'],
