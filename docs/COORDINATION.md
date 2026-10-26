@@ -29,6 +29,22 @@ The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 **Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
+**Update, 17:40 UTC (supersedes the 17:10 snapshot below where they differ):**
+- **`main`** still `084bafb`. No `schedule` event on the new cron yet; the first slot after the change is 21:37 UTC.
+- **#1 → `c93190e`:** bot capture commit (17:11). It came from capture run [40364258754](https://github.com/farshaikh17/Codex/actions/runs/40364258754), triggered by Worker A's 16:58 `1441d0f` workflow edit. **It took 13 minutes (16:58:41–17:11:18), against about 2.5 for every earlier capture run.** Cause not investigated. The run stays within its operation cap, and nothing suggests extra spend, since the budget is $0 with usage blocked.
+- **#2 → `d3056d2`.** B1 still not started. Two more commits:
+  - `897ddbe` (17:07): "Fail a base salary floor on explicit commission-only pay (**owner rule**)". It **takes `GATES_VERSION=4`.**
+  - `d3056d2` (17:12): **E7 Google Sheets ledger adapter interface** (`engine/sheets.py`). Journaled, idempotent upserts by posting id, a per-candidate private target, and owned columns only.
+    - **No live Google client.** Nothing imports a Google or HTTP library or opens a connection; tests use `FakeSheets`.
+    - No Sheet was written. It is provisional (D3): where candidate outputs live, and the mapping to the canonical Sheets, are undecided.
+- **Others** unchanged: #3 `d11f691`, #4 `a43890a`, #5 `48ff370`, #6 `1bca0d2`, #7 `ea69b67`, #8 `5932c0d`, #9 `3018541`.
+- **Combined tree, Master check 17:40, all nine heads on `084bafb`:**
+  - The same conflicts as 17:10: `docs/ENGINE.md` (doc-only, keep both) and `.github/workflows/collect.yml` (#3 vs `main`). For this check only, #3's side of `collect.yml` was taken, because workflow files aren't tested.
+  - **170 offline tests pass**, 0 failures, 0 errors.
+  - `EXTRACTOR_VERSION=3`, `GATES_VERSION=4`.
+  - The one-sided pay-range collapse is still present.
+- **Actions:** 34 runs. Capture runs: 6. Two more bot-commit Offline tests runs are held as `action_required` (726a27a, c93190e); like D4, they aren't failures.
+
 **Snapshot, 17:10 UTC (supersedes the 16:20 heads and the main block below where they differ):**
 
 *main:* **`084bafb`** (bot snapshot, 16:59). It was produced by push-verification run [40364324592](https://github.com/farshaikh17/Codex/actions/runs/40364324592) after the owner's **`562baaf`** (16:59 UTC, Farhan Shaikh): "Schedule five daily feed collections without the age-gate skip".
@@ -177,7 +193,7 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - **Pushes after the decision:** all three workers pushed after the 16:30 decision was written. None shows the decision was received. Re-send the 16:30 messages, and the 17:10 additions below.
 - **Owner instructions:** they are reaching workers directly ("owner rule", "owner request"). Until D9 is settled, a worker acting on an owner instruction that isn't in this file records it in section 9 **before** pushing, quoting the instruction.
 - **Schema:** page capture is now **schema 3**. Every reference to `-2` in B1 means `-3`.
-- **B2 version:** B2's gate version is **4**, because `dbfdf1f` already took 3.
+- **B2 version (revised 17:40):** B2 takes **the next unused `GATES_VERSION` at the moment it lands**, never a fixed number. `dbfdf1f` took 3 and `897ddbe` took 4, so it is 5 as of 17:40. Any worker bumping `GATES_VERSION` or `EXTRACTOR_VERSION` first checks the current value on `builder1`.
 - **C1 has a new requirement:** see *C1 schedule integration* below.
 
 **GPT Master decision, 16:30 (binding until changed):**
@@ -244,7 +260,7 @@ GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `G
 - **Employer-published estimated ranges:** keep the evidence item, its verbatim quote and its wording, including `estimated`. Don't discard it automatically as a third-party estimate. Record in the gate result that the employer called it an estimate.
 - **Third-party figures:** only quotes that say the pay is third-party, name a salary site (Glassdoor, Levels.fyi, PayScale, Salary.com, Indeed), or say it is not provided by the employer stay not compared. Keep the guard #7 identified: a third-party "$135,000" estimate must not become a salary pass.
 - **Salary results stay provisional:** any salary result based on an estimated range is marked provisional. Final salary qualification awaits the GPT Master's canonical Sheets comparison (D3). Don't decide here whether an employer estimate can pass a floor; record it and leave the call open.
-- **Versioning:** bump `GATES_VERSION` to **4** with a comment (17:10: `dbfdf1f` already took 3).
+- **Versioning:** bump `GATES_VERSION` to **the next unused number when B2 lands** (5 as of 17:40; 3 and 4 were taken by `dbfdf1f` and `897ddbe`), with a comment naming the change.
 - **Tests:**
   - an employer "estimated pay range" quote is kept as evidence and not discarded
   - a third-party/salary-site quote is not compared
@@ -344,12 +360,14 @@ Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gat
 
 Neither worker extends these further.
 
+**Added 17:40:** #2 `d3056d2` (17:12) adds an **E7 Google Sheets adapter interface**: fake only, no live client, no network, nothing written. It is provisional until the canonical Sheets comparison and the output-location decision. Commit `897ddbe` (commission-only rule) is listed under D7.
+
 **Added 17:10:** #2 `5cc7334` (17:02) adds **E6 consumer outputs** (`engine/outputs.py`, `docs/OUTPUTS.md`: posting records, cursor pages, review batches, decision feed). It is provisional; where candidate outputs live is still open here. #2 `dbfdf1f` and #7 `98773d9`/`ea69b67` are listed under D7. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
 | D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
 | B-1 | **Resolved 17:10:** the GPT Master re-verified the Actions budget at $0 paid usage, with usage blocked, before `562baaf`. Claude sessions still can't check it. | Owner | – |
-| D7 | **Origin of the "owner rules".** Workers B and C cite owner instructions that the GPT Master hasn't verified. The bare-`$` → USD on US-only postings rule is in #7 `e1438f2` and, since 16:25, in #2's live gates (`dbfdf1f`). Also: commission-only fails a base floor (#7 `98773d9`), and multi-currency floors compared per currency (#7 `ea69b67`). The GPT Master's 16:30 decision rejected only the bare-`$` rule, and only in #7. Needed: confirmation from the owner, per rule, and whether #2's `dbfdf1f` is removed too. | Owner, via GPT Master | B2; merge of #2's gates and #7 |
+| D7 | **Origin of the "owner rules".** Workers B and C cite owner instructions that the GPT Master hasn't verified. The bare-`$` → USD on US-only postings rule is in #7 `e1438f2` and, since 16:25, in #2's live gates (`dbfdf1f`). Also: commission-only fails a base floor (#7 `98773d9`, and since 17:07 in #2's live gates as `897ddbe`, `GATES_VERSION=4`), multi-currency floors compared per currency (#7 `ea69b67`), and amounts in millions or billions are never pay (#2 `dbfdf1f`). The GPT Master's 16:30 decision rejected only the bare-`$` rule, and only in #7. Needed: confirmation from the owner, per rule, and for each rejected rule whether its #2 commit (`dbfdf1f`, `897ddbe`) is removed too. | Owner, via GPT Master | B2; merge of #2's gates and #7 |
 | D8 | Keep or drop #7's provisional cases added after the decision window: `6e5ae79` (2 cases for the `US$` range and company-revenue hazards; neither needs the bare-`$` rule). | GPT Master | #7 |
 | D9 | **Instruction channel.** The owner is instructing workers directly. That has given us the bare-`$` rule, the schema-3 bump and the "owner rule" labels, while the coordination plan assumed the GPT Master channel. Choose one: (a) the owner routes worker instructions through the GPT Master, or (b) workers log any direct owner instruction in section 9 before acting on it (the interim rule in section 5). | Owner / GPT Master | Coordination reliability |
 | B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the GPT Master chat (interactive). **Automated consumer access** (the scheduled ChatGPT task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | GPT Master | Consumer access verified |
@@ -382,6 +400,13 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - C does C1 only, with no new labels. A stands by.
   - All candidate work stays provisional. No merges, schedule, task or Sheet changes.
 - 2026-10-26 Worker A (owner request "implement the review_change noise fix"): page-capture schema bumped to `public-page-capture-index-3` (eddcaad, published by the 16:25 capture as 726a27a). review_hash now hashes posting links + claimed_total when links exist (else text minus cookie/consent/tracking/image-only lines); new field review_basis; new review_change value listings_unchanged; earlier-schema evidence kept, review fields re-baselined once. Live 16:08→16:25: raw changed on 5 pages, review_change flags only Salesforce Workday (+1/-1 postings). Notice posted on farshaikh17/Codex#2 for ENGINE.md §3 (E2b input is now -3).
+
+- 2026-10-26 17:40 Master:
+  - Recorded #2 `897ddbe` (commission-only "owner rule", `GATES_VERSION=4`) and `d3056d2` (E7 Sheets adapter interface, fake only, no live client or network).
+  - Recorded #1 `c93190e` from the 13-minute capture run 40364258754 (cause not investigated).
+  - B2 now takes the next unused gate version (5 as of 17:40), and version bumps check `builder1` first. D7 extended to the #2 commits.
+  - Combined tree: 170 offline tests OK, same two conflicts, pay-range collapse still present.
+  - From now on Master log lines are kept in section 9, above the owner's appended section.
 
 ## GPT Master production schedule update — 2026-10-26
 
