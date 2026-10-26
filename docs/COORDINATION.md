@@ -821,3 +821,23 @@ None of these started; none blocks the release.
 Other open items:
 - C1's `BACKLOG.md`/`HANDOFF.md` refresh is now **done by the Master on #3 (`95bdcd1`)**.
 - P8 (fold `pages.json` into the registry) is **not started**.
+
+### 11. Head update, 23:28 UTC (Master)
+
+At 23:14 Worker C merged the #3 notes commit `95bdcd1` up its stack. **Every change is docs only.** `git diff --name-only` outside `docs/` is 0 files for each branch against its section 2 head, so the section 3 results stand unchanged.
+
+| PR | Section 2 head | Current head |
+|---|---|---|
+| #4 `builderbranches-compensation` | `c4e38fc` | **`21fba41`** (contains #3 `95bdcd1`) |
+| #7 `builderbranches-benchmark` | `2bae921` | **`4607d11`** |
+| #10 (parked) | `51d450d` | **`ad1ed8b`** |
+| #11 (parked) | `5c26659` | **`8281831`** |
+
+Unchanged:
+- `main` `e812b42`
+- #1 `5ba8ab6` (code identical to `0591b23`)
+- #3 `95bdcd1`
+- #2 `23922ab`
+- `completion/integration` `05a3ba3`
+
+The merge order in section 8 uses these current heads. No collection run has started since run 40386117652 (19:22, `main`). No `schedule` run has appeared since 15:17; the next slot is 01:37 UTC.
