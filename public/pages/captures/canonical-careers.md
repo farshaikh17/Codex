@@ -2,8 +2,8 @@
 
 - official_url: https://canonical.com/careers/all
 - final_url: https://canonical.com/careers/all
-- captured_at: 2026-10-26T16:25:40.831239+00:00
-- content_hash: sha256:b706694ef75802ad75b7e7c63493df9c7c3f9ece261a72efa207c24830aa93b7
+- captured_at: 2026-10-26T17:10:12.668225+00:00
+- content_hash: sha256:5c857d9da42616df3c6240b7e96508f6daa9cc39f85e5b6ccbc6c55df081b780
 - review_hash: sha256:1f930bde7adf250fe6d7c521d406fda10108e69bb668cd646ffae7ff97754c17 (basis: job_links)
 - capture_status: usable
 - listing_quality: listings_found (coverage: appears_complete; flags: none)
@@ -1822,4 +1822,4 @@ please refer to our [recruitment privacy notice](https://canonical.com/legal/dat
 ## Your tracker settings
 We use cookies and similar methods to recognize visitors and remember preferences. We also use them to measure campaign effectiveness and analyze traffic on our websites. By selecting ‘Accept‘, you consent to the use of these methods by us and trusted third parties. For further details or to change your consent choices at any time see our [cookie policy](https://canonical.com/legal/data-privacy?cp=hide#cookies).
 Manage your tracker settings Accept all
-![](https://bat.bing.com/action/0?ti=343268575&tm=gtm002&Ver=2&mid=3ddfd5a2-543b-495a-a021-2dd14db4e202&bo=1&sid=fe78c590d15911f1a0689dd456c99dde&vid=fe78e040d15911f1af1d9f8089d746a1&vids=1&msclkid=N&gtm_tag_source=1&uach=pv%3D&pi=0&lg=en-US&sw=1080&sh=600&sc=24&tl=All%20job%20roles%20%7C%20Careers%20%7C%20Canonical&p=https%3A%2F%2Fcanonical.com%2Fcareers%2Fall&r=&lt=3291&evt=pageLoad&sv=2&cdb=AQAQ&rn=466055)![](https://bat.bing.com/action/0?ti=343268575&tm=gtm002&Ver=2&mid=3ddfd5a2-543b-495a-a021-2dd14db4e202&bo=2&sid=fe78c590d15911f1a0689dd456c99dde&vid=fe78e040d15911f1af1d9f8089d746a1&vids=0&msclkid=N&gtm_tag_source=awct&gc=USD&tpp=1&ea=608589488%2FCtdfCMqn5NoBELCtmaIC&en=Y&p=https%3A%2F%2Fcanonical.com%2Fcareers%2Fall&sw=1080&sh=600&sc=24&evt=custom&cdb=AQAQ&rn=128556)
+![](https://bat.bing.com/action/0?ti=343268575&tm=gtm002&Ver=2&mid=2a51b00c-a39f-4cc3-9696-b570c15a6df1&bo=1&sid=388f4320d16011f1866285472f7579d8&vid=388f7780d16011f189d005dcd521dc63&vids=1&msclkid=N&gtm_tag_source=1&uach=pv%3D&pi=0&lg=en-US&sw=1080&sh=600&sc=24&tl=All%20job%20roles%20%7C%20Careers%20%7C%20Canonical&p=https%3A%2F%2Fcanonical.com%2Fcareers%2Fall&r=&lt=1365&evt=pageLoad&sv=2&cdb=AQAQ&rn=402181)![](https://bat.bing.com/action/0?ti=343268575&tm=gtm002&Ver=2&mid=2a51b00c-a39f-4cc3-9696-b570c15a6df1&bo=2&sid=388f4320d16011f1866285472f7579d8&vid=388f7780d16011f189d005dcd521dc63&vids=0&msclkid=N&gtm_tag_source=awct&gc=USD&tpp=1&ea=608589488%2FCtdfCMqn5NoBELCtmaIC&en=Y&p=https%3A%2F%2Fcanonical.com%2Fcareers%2Fall&sw=1080&sh=600&sc=24&evt=custom&cdb=AQAQ&rn=112128)
