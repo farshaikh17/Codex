@@ -9,6 +9,7 @@ import registry
 ROOT=Path(__file__).resolve().parent
 HOSTS={p:feed[0] for p,feed in registry.FEEDS.items()}
 DUE_SLACK=timedelta(minutes=15)  # hourly ticks drift; without slack a 5-hour interval becomes 6
+FIELDS=('key','provider','board','req_id','title','locations','workplace_type','url','apply_url','published','description','compensation_raw')
 NOTICE='Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.'
 def read(path,default):
     return json.loads(path.read_text(encoding='utf-8')) if path.exists() else default
@@ -44,8 +45,7 @@ def fetch(source):
     return json.loads(body)
 def public_job(source,raw,now):
     rec=normalize(source['provider'],source['board'],raw)
-    keys=('key','provider','board','req_id','title','locations','workplace_type','url','apply_url','published','description','compensation_raw')
-    job={k:rec[k] for k in keys}
+    job={k:rec[k] for k in FIELDS}
     if not job['title'] or not job['url']: raise ValueError('Missing title or primary URL')
     job['content_hash']=hashlib.sha256(json.dumps(job,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     job['observed_at']=now
@@ -97,7 +97,8 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
             jobs=previous['jobs']
             status=dict(prior)|{'attempted_this_run':False}
         else:
-            status={'source':source['id'],'endpoint':source['url'],'checked_at':now,'attempted_this_run':True}
+            status={'source':source['id'],'endpoint':source['url'],'checked_at':now,'attempted_this_run':True,
+                    'endpoint_changed':bool(prior.get('endpoint')) and prior.get('endpoint')!=source['url']}
             try:
                 jobs,skipped,seen=[],0,set()
                 for raw in extract_jobs(source['provider'],fetcher(source)):
@@ -108,6 +109,7 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
                     if job['key'] in seen: raise ValueError('Duplicate requisition in source')
                     seen.add(job['key'])
                     job['change']='new' if job['key'] not in old else ('unchanged' if job['content_hash']==old[job['key']]['content_hash'] else 'changed')
+                    if job['change']=='changed': job['changed_fields']=sorted(k for k in FIELDS if job[k]!=old[job['key']].get(k))
                     jobs.append(job)
                 staged[rel]={'schema':'public-job-board-1','source':source['id'],'run_id':run_id,'collected_at':now,'jobs':jobs}
                 status.update(status='ok',jobs=len(jobs),skipped=skipped,new=sum(j['change']=='new' for j in jobs),changed=sum(j['change']=='changed' for j in jobs),no_longer_listed=sorted(set(old)-seen))
@@ -128,7 +130,8 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
         else: change=None if status['status']=='ok' else 'unknown_after_failure'
         for j in jobs:
             index.append({k:j[k] for k in ('key','title','locations','url','content_hash','observed_at')}|{
-                'board_file':'public/'+rel,'source_status':status['status'],'change':change or j.get('change')})
+                'board_file':'public/'+rel,'source_status':status['status'],'change':change or j.get('change')}|(
+                {'changed_fields':j['changed_fields']} if not change and j.get('changed_fields') else {}))
     success=sum(s['attempted_this_run'] and s['status']=='ok' for s in statuses)
     failed=sum(s['attempted_this_run'] and s['status']=='failed' for s in statuses)
     state='ok' if success==len(attempted) else ('partial' if success else 'failed')

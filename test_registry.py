@@ -26,6 +26,14 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(sources[0]['url'],'https://api.lever.co/v0/postings/acme?mode=json')
         self.assertEqual((sources[0]['enabled'],sources[0]['poll_interval_hours']),(True,5))
         self.assertIn('employer acme has no verified careers_url',warns)
+    def test_compensation_requested_by_default_and_warned_when_missing(self):
+        _,sources,warns=check(reg(source={'provider':'greenhouse','board':'acme'}))
+        self.assertEqual(sources[0]['url'],'https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&pay_transparency=true')
+        _,sources,_=check(reg(source={'provider':'ashby','board':'acme'}))
+        self.assertEqual(sources[0]['url'],'https://api.ashbyhq.com/posting-api/job-board/acme?includeCompensation=true')
+        self.assertFalse([w for w in warns if 'compensation' in w])
+        _,_,warns=check(reg(source={'provider':'greenhouse','board':'acme','url':'https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true'}))
+        self.assertIn('source acme-lever does not request employer-published compensation (pay_transparency=true)',warns)
     def test_duplicate_board_detected_case_insensitively(self):
         r=reg()
         r['sources'].append({'id':'acme-lever-2','employer':'acme','provider':'lever','board':'ACME'})

@@ -28,4 +28,6 @@ Use exactly one of these per claim. Never substitute one for another.
 1. Review and merge PR #1, PR #2 and this PR (farshaikh17/Codex#3) in any order. A local three-way test merge was clean, and all suites passed on the merged tree.
 2. After merge, dispatch *Collect public job feeds* once and confirm the job summary table. Then watch for the first `schedule` event run.
 3. Run CONSUMER_TEST.md from the original chat.
-4. Decide on P10 (cron frequency). Next build step: E2 (evidence and extraction records on PR #2's store, Greenhouse pay transparency), then H fixtures.
+4. Decide on P10 (cron frequency).
+5. Compensation inputs (E2a): stacked PR on `builderbranches-compensation`. Retarget it to `main` once #3 merges.
+6. E2 (evidence records on the store) is being built by the PR #2 session. Next here: H benchmark fixtures. Their labels are independent of E2's implementation and become E2's acceptance tests.

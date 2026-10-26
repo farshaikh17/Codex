@@ -139,6 +139,25 @@ class ReliabilityTests(unittest.TestCase):
         other=result['sources'][1]
         self.assertEqual((other['status'],other['consecutive_failures'],other['attempted_this_run']),('failed',1,False))
         self.assertEqual(result['failed_sources'],0)
+    def test_changed_fields_and_endpoint_change_attributed(self):
+        self.run_both()
+        moved=OTHER|{'url':OTHER['url']+'?includeCompensation=true'}
+        def fetch(source):
+            if source['id']=='other-ashby':
+                data=ashby(); data['jobs'][0]['compensation']={'compensationTierSummary':'€50K – €60K • Offers Bonus'}
+                return data
+            return [posting('edited by employer')]
+        result=collect([SOURCE,moved],self.out,fetch,lambda _:None)
+        lever,other=result['sources']
+        self.assertEqual((lever['endpoint_changed'],other['endpoint_changed']),(False,True))
+        rows={j['key']:j for j in result['jobs']}
+        self.assertEqual(rows['ashby:other:two']['changed_fields'],['compensation_raw'])
+        self.assertEqual(rows['lever:sample:one']['changed_fields'],['description'])
+        board=json.loads((self.out/'boards/other-ashby.json').read_text())
+        self.assertEqual(board['jobs'][0]['compensation_raw'],'€50K – €60K • Offers Bonus')  # original currency and wording kept
+        again=collect([SOURCE,moved],self.out,fetch,lambda _:None)
+        self.assertFalse(again['sources'][1]['endpoint_changed'])
+        self.assertNotIn('changed_fields',{k for j in again['jobs'] for k in j})
     def test_due_selection(self):
         now=datetime(2026,10,26,12,tzinfo=timezone.utc)
         status={'sources':[{'source':'sample-lever','checked_at':(now-timedelta(hours=4,minutes=50)).isoformat()},

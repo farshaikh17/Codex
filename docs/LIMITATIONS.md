@@ -2,7 +2,7 @@
 
 - Ten feeds are a migrated coverage trial. Selection rationale wasn't recorded, so every employer's `inclusion.reason` says so. `careers_url`, `job_families` and `geography` are empty until verified with evidence.
 - No relevance routing, eligibility assessment, review queue or candidate configuration exists yet (BACKLOG E3–E5). Nothing here marks a job READY.
-- Compensation: Greenhouse feeds don't currently request `pay_transparency=true`, so Greenhouse compensation is missing even where the employer publishes it (measured: 106 GitLab jobs). Ashby compensation is requested for one board only. See E2.
+- Compensation is requested from every Greenhouse and Ashby feed. On 2026-10-26 it was present for GitLab 106/239, Clipboard 36/39, Zapier 12/12, Oyster 7/23 and Resilinc (Lever) 2/11, and absent for the other feeds. Absent means the feed didn't publish it; it doesn't mean the employer has no published pay elsewhere. `compensation_raw` is unparsed (E2).
 - No evidence objects or extraction-quality warnings for ATS postings yet (E2). Descriptions are stored complete, but section structure (mandatory vs preferred) isn't separated.
 - `no_longer_listed` reports disappearance from a feed after one successful fetch. It is not confirmed closure, and reopened requisitions aren't detected yet.
 - Duplicate detection is per source and requisition id. Cross-URL duplicates are indexed by PR #2's canonical URL but aren't handled in review yet (H, E5).
