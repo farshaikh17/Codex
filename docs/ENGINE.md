@@ -119,6 +119,15 @@ python -m engine show --posting greenhouse:gitlab:8860302002   # one readable re
 - **Synthetic comparison:** on ATS description fragments, the shape every current source delivers, the standard-library `html_to_text` and Trafilatura both kept 5/5 requirement bullets and the pay line. On a full page with navigation and footer, Trafilatura removed the boilerplate and the standard library leaked it.
 - **Decision: not adopted.** The engine has no full-page HTML input today. Crawl4AI captures arrive as its own markdown, and ATS feeds are fragments. Trafilatura would add 18 packages and break the install-free CI for no measured gain.
 - **Revisit when** primary-posting-page verification fetches single job pages. Swapping converters changes text (for example, it adds `- ` bullets), so it needs a `CONTENT_HASH_VERSION` and `EXTRACTOR_VERSION` bump to avoid false content changes. This was one synthetic comparison, not a benchmark; the step H fixtures should repeat it.
+
+**Extractor version 3 (Ashby tiers, Greenhouse labels).** When the collector writes Ashby pay as `{"source":"ashby.compensationTiers",...}` (collector normalization_version 2), each tier component becomes one evidence item, method `ats_field:compensationTiers`, quoting the component's JSON exactly as it appears in `compensation_raw`:
+- Currency comes from `currencyCode` only; null stays null, and `$` is never read as USD.
+- Period comes from `interval` (`1 YEAR` → year; `NONE` or an unknown interval → null, kept in `interval_raw`).
+- Basis comes from `compensationType` (Salary → base; Bonus and Commission → variable; Equity* → equity). `EquityPercentage` amounts carry `amount_unit: percent`.
+- Null amounts give no range. `label` is the tier title (for example "Canada"). A tier's `additional_information` (for example "Estimated OTE:  65K-80K USD") is a separate item, quoted verbatim with no interpretation, never parsed into amounts. Nothing is converted, annualized or merged across tiers.
+
+Greenhouse labels (title and blurb) are now plain text instead of HTML; period stays null because Greenhouse publishes none. On real feeds saved 2026-10-26, Oyster pay went from one range with currency null to Salary ranges in 12 stated currencies, and Zapier gained its INR tier. Bumping `EXTRACTOR_VERSION` makes `extract` redo stored versions lazily.
+
 ## 7. Persistence and recovery (before any scheduled use)
 
 The SQLite file is a cache, not the record. The record is (a) every collector snapshot already committed to Git and (b) `data/posting-events.jsonl`, a committed journal for facts no snapshot contains (today only expiry evidence). Nothing else needs to persist between Actions runs, and no binary database is committed.

@@ -69,6 +69,41 @@ class CompensationTests(unittest.TestCase):
         self.assertEqual([(g['ranges'][0]['min'],g['ranges'][0]['currency'],g['basis'],g['multiple_ranges']) for g in got],
                          [(90000,'USD','base',True),(70000,'CAD','base',True)])
         self.assertEqual(got[0]['period'],'year')
+    def test_ashby_tiers_keep_currency_period_and_basis_per_component(self):
+        tiers={'source':'ashby.compensationTiers','summary':'$54.6K – $61.2K • Offers Equity • Multiple Ranges','tiers':[
+            {'title':'United States','summary':'$54.6K – $61.2K • Offers Equity','additional_information':None,'components':[
+                {'compensationType':'Salary','currencyCode':'USD','interval':'1 YEAR','minValue':54600,'maxValue':61200,'summary':'$54.6K – $61.2K'},
+                {'compensationType':'EquityCashValue','currencyCode':'USD','interval':'1 YEAR','minValue':None,'maxValue':None,'summary':'Offers Equity'}]},
+            {'title':'Canada','summary':'CA$50K – CA$58K','additional_information':'Estimated OTE:  65K-80K USD','components':[
+                {'compensationType':'Salary','currencyCode':'CAD','interval':'1 YEAR','minValue':50000,'maxValue':58000,'summary':'CA$50K – CA$58K'},
+                {'compensationType':'Commission','currencyCode':None,'interval':'NONE','minValue':5000,'maxValue':5000,'summary':'5K'},
+                {'compensationType':'EquityPercentage','currencyCode':None,'interval':'2 YEAR','minValue':0.05,'maxValue':0.1,'summary':'0.05% – 0.1%'}]}]}
+        raw=json.dumps(tiers,ensure_ascii=False,separators=(',',':'))
+        r=extract(version(FILLER,compensation_raw=raw))
+        items=r['fields']['compensation']['items']
+        self.assertEqual(r['fields']['compensation']['state'],'stated')
+        note=[i for i in items if i['method']=='ats_field:compensationTiers.additional_information']
+        self.assertEqual([(i['quote'],i['interpretation']) for i in note],[('Estimated OTE:  65K-80K USD',None)])  # quoted, never parsed
+        items=[i for i in items if i['method']=='ats_field:compensationTiers']
+        got=[(i['interpretation']['label'],i['interpretation']['component_type'],i['interpretation']['basis'],i['interpretation']['period'],
+              [(x['min'],x['max'],x['currency']) for x in i['interpretation']['ranges']]) for i in items]
+        self.assertEqual(got,[('United States','Salary','base','year',[(54600,61200,'USD')]),
+                              ('United States','EquityCashValue','equity','year',[]),
+                              ('Canada','Salary','base','year',[(50000,58000,'CAD')]),
+                              ('Canada','Commission','variable',None,[(5000,5000,None)]),
+                              ('Canada','EquityPercentage','equity',None,[(0.05,0.1,None)])])
+        commission=items[3]['interpretation']
+        self.assertEqual((commission['interval_raw'],commission['ranges'][0]['currency'],commission['ranges'][0]['currency_symbol']),('NONE',None,None))  # no period and no currency are inferred
+        self.assertEqual((items[4]['interpretation']['interval_raw'],items[4]['interpretation']['amount_unit']),('2 YEAR','percent'))
+        self.assertTrue(all(i['interpretation']['multiple_ranges'] for i in items))
+        for i in items: self.assertIn(i['quote'],raw)  # each quote is the component exactly as published
+    def test_greenhouse_label_is_text_not_html(self):
+        gh=json.dumps([{'min_cents':13920000,'max_cents':23520000,'currency_type':'USD','title':'United States Salary Range',
+                        'blurb':'<p><em>The base salary range is for residents of the&nbsp;United States only.</em></p>'}])
+        g=interps(extract(version(FILLER,compensation_raw=gh)),'compensation')[0]
+        self.assertEqual(g['label'],'United States Salary Range The base salary range is for residents of the United States only.')
+        self.assertNotIn('<',g['label'])
+        self.assertEqual((g['basis'],g['period'],g['ranges'][0]['currency']),('base',None,'USD'))  # no pay period is published, none inferred
     def test_description_pay_section_and_signal_without_amount(self):
         r=extract(version(FILLER+'\nUnited States Salary Range\n$139,200—$235,200 USD\nBenefits\nHealth.'))
         self.assertEqual(r['fields']['compensation']['state'],'stated')
