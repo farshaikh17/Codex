@@ -39,19 +39,25 @@ def gates_available():
         return True
     except ImportError:
         return False
-BENCH_PEOPLE={  # bench/fixtures/candidates.json in candidate-config-1, which holds one salary floor; cand-in's USD floor is dropped until it holds several (owner rule 2026-10-26).
-    'cand-in':{'countries':['IN'],'years':6,'types':['full_time','contract'],'floor':(3000000,'INR'),'history':[]},
-    'cand-us':{'countries':['US'],'years':3,'types':['full_time'],'floor':(120000,'USD'),
+BENCH_PEOPLE={  # bench/fixtures/candidates.json in candidate-config-1. Several floors per candidate (owner rule 2026-10-26).
+    'cand-in':{'countries':['IN'],'years':6,'types':['full_time','contract'],'floors':[(3000000,'INR'),(60000,'USD')],'history':[]},
+    'cand-us':{'countries':['US'],'years':3,'types':['full_time'],'floors':[(120000,'USD')],
                'history':[{'posting_id':'lever:bench:already-applied','status':'applied','date':'2026-09-14'}]}}
 def _config(cid,p):
+    """rules.salary is a list of floors from GATES_VERSION 5 (PR #2 at 877b6aa). Older gates accept one floor, so they get the first."""
     from engine import candidates as cfg
+    floors=[{'minimum':m,'currency':cur,'period':'year','basis':'base'} for m,cur in p['floors']]
     c={'schema':'candidate-config-1','candidate_id':cid,'synthetic':True,'profile_version':'bench-1','rules_version':'bench-1',
        'profile':{'eligible_countries':p['countries'],'experience_years':p['years'],'application_history':p['history']},
        'rules':{'required_gates':['geography','engagement','qualifications','salary','application_history'],
                 'engagement':{'workplace':['remote'],'employment_types':p['types']},
-                'salary':{'minimum':p['floor'][0],'currency':p['floor'][1],'period':'year','basis':'base'},
+                'salary':floors if len(floors)>1 else floors[0],
                 'application_history':{'employer_cooldown_days':90}}}
-    cfg.validate(c)
+    try: cfg.validate(c)
+    except cfg.ConfigError:
+        if len(floors)==1: raise
+        c['rules']['salary']=floors[0]
+        cfg.validate(c)
     return c
 def gate_predictions(cases=None):
     """Scores engine.gates.screen (ENGINE steps 3+4). Its qualifications gate needs a person's review of each requirement,
