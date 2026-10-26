@@ -27,6 +27,18 @@ GitHub rounds each job up to a whole minute. Private repositories get 2,000 free
 +        run: python -m unittest -v test_collect
 ```
 
+### Second issue: `collect.yml` runs on pushes to any branch
+
+Its push trigger has no branch filter. A feature-branch push that touches root `*.py`, `sources.json` or `collect.yml` therefore starts a **live** employer collection and spends minutes. Its publish step (`git pull --rebase origin main`, `git push`) then fails on that branch.
+
+This happened once: when main was merged into `builder1` on 2026-10-26, run 40377774005 passed its tests, collected 10/10 sources and then failed to publish. Nothing was pushed. Proposed fix, also for the owner:
+
+```diff
+   push:
++    branches: [main]
+     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
+```
+
 ## Billing verification (required before any new schedule)
 
 MIGRATION.md records that the account billing page showed an Actions budget of $0.00 with **Usage blocked**. This session has no billing access and **has not re-verified it**. Before anything new is scheduled, the owner should check in the account's Billing → Budgets and alerts:
