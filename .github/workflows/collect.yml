@@ -21,9 +21,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Test incremental publishing and adapters
-        # Collector tests only. Engine tests run in engine.yml on demand, so they never add minutes to collections.
-        run: python -m unittest -v test_collect
+      - name: Test incremental publishing, adapters and the source registry
+        # Collector and registry tests only. Engine tests run in engine.yml on demand, so they never add minutes to collections.
+        run: python -m unittest -v test_collect test_registry
       - name: Validate source registry before any request
         run: python registry.py
       - name: Collect official employer feeds (every enabled source; one with its own poll_interval_hours waits until due)
