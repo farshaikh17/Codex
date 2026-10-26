@@ -2,8 +2,8 @@
 
 - official_url: https://automattic.com/work-with-us/jobs/
 - final_url: https://automattic.com/work-with-us/jobs/
-- captured_at: 2026-10-26T18:02:06.108346+00:00
-- content_hash: sha256:d565aa8054813d39a2205f3fa5aec9862a58f5c5abddbdc0dcc5ef7e5a0a1f79
+- captured_at: 2026-10-26T22:35:07.192500+00:00
+- content_hash: sha256:e7b0d6a91405ab9b36d689a1b600c06a43d28013070301e1d8799e3ce6d1a8fd
 - review_hash: sha256:6e1eaa2699253abd3d8340ad23f9f48b6adf3b359fcead1826cb34dad4d6d702 (basis: job_links)
 - capture_status: usable
 - listing_quality: listings_found (coverage: unknown; flags: none)
@@ -53,7 +53,7 @@ Stay safe out there, everyone!
 _© Automattic Inc., purveyors of fine blogging and site-building services since 2005. Thank you for your time._
 * [ Subscribe ](https://automattic.com/work-with-us/jobs/) [ Subscribed ](https://automattic.com/work-with-us/jobs/)
 [![](https://automattic.com/wp-content/uploads/2026/10/a8c-favicon-1.png?w=50)Automattic](https://automattic.com)
-Join 11,739 other subscribers
+Join 11,738 other subscribers
 Sign me up
 Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirect_to=https%3A%2F%2Fr-login.wordpress.com%2Fremote-login.php%3Faction%3Dlink%26back%3Dhttps%253A%252F%252Fautomattic.com%252Fwork-with-us%252Fjobs%252F)
 * [![](https://automattic.com/wp-content/uploads/2026/10/a8c-favicon-1.png?w=50)Automattic](https://automattic.com)
@@ -62,4 +62,4 @@ Have a WordPress.com account? [Log in now.](https://wordpress.com/log-in?redirec
 [Report this content](https://wordpress.com/abuse/?report_url=https://automattic.com/work-with-us/jobs/)
 [Collapse this bar](https://automattic.com/work-with-us/jobs/)
 
-![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.23228799989295412)
+![](https://pixel.wp.com/g.gif?blog=54117&v=wpcom&tz=0&user_id=0&post=387642&subd=automattic&host=automattic.com&ref=&rand=0.040546440529453665)

@@ -95,15 +95,29 @@ def review_basis(text,page):
         body=json.dumps({'job_links':sorted(links.items()),'claimed_total':max(claims) if claims else None},ensure_ascii=False,sort_keys=True)
         return 'job_links',hashlib.sha256(body.encode()).hexdigest()
     return 'text',hashlib.sha256(review_text(text).encode()).hexdigest()
+def link_shape(url):
+    """Parent path (at most two segments) and the kind of the last segment: numeric, containing a digit, or words."""
+    segs=[s for s in urlparse(url).path.split('/') if s]
+    last=segs[-1] if segs else ''
+    kind='numeric' if re.fullmatch(r'\d+',last) else ('has_digit' if re.search(r'\d',last) else 'word')
+    return '/'.join(segs[:min(2,len(segs)-1)]),kind
 def job_links(text,page):
     """Distinct links that look like individual postings: a job-ish path segment followed by an identifier,
-    excluding the listing page itself and in-page anchors."""
+    excluding the listing page itself and in-page anchors. Postings on one site share a URL shape; when one shape
+    holds at least 80% of at least 5 candidates, the rest are navigation (department pages such as 'Engineering
+    167 roles', culture pages, fraud notices) and are dropped."""
     base=urldefrag(page['url'])[0].rstrip('/')
     found={}
     for label,url in LINK.findall(text):
         url=urldefrag(url)[0]
         if url.rstrip('/')!=base and JOB_PATH.search(urlparse(url).path) and len(label.split())<=40:
             found.setdefault(url,' '.join(label.split()))
+    shapes={u:link_shape(u) for u in found}
+    counts={}
+    for sh in shapes.values(): counts[sh]=counts.get(sh,0)+1
+    if len(found)>=5:
+        top=max(counts,key=counts.get)
+        if counts[top]>=0.8*len(found): found={u:l for u,l in found.items() if shapes[u]==top}
     return found
 def listing_quality(text,page):
     """Labels whether the capture holds job listings, separately from whether it holds substantial text."""
@@ -229,6 +243,15 @@ def run(pages,output,fetcher,limits=LIMITS,ids=None,robots=robots_rules,pause=ti
             entry['change']=entry['review_change']='unknown_after_failure' if entry['content_hash'] else 'no_capture'
         entry['last_attempt']=attempt
         if n<len(batch)-1 and not halted: pause(limits['pause_s'])
+    # Listing labels are deterministic functions of the stored text, so they are re-derived from every stored capture
+    # on every run, including pages whose fetch failed or that were not in the batch. The index then always matches
+    # the current code. Evidence and change fields (captured_at, hashes, *_changed_at, change) are not touched, and
+    # neither is the capture file, whose header keeps the labels as of captured_at.
+    for page in pages:
+        entry=entries[page['id']]
+        stored=output/'captures'/(page['id']+'.md')
+        if not entry['fresh_this_run'] and entry.get('capture_status') and stored.exists():
+            entry.update(listing_quality(normalize_text(stored.read_text(encoding='utf-8').split('\n---\n',1)[-1]),page))
     counts={r:sum(entries[p['id']]['last_attempt']['result']==r for p in batch) for r in ('usable','thin','failed','blocked','skipped')}
     result={'schema':SCHEMA,'attempted_at':now,'batch':[p['id'] for p in batch],'results':counts,
             'operations':ops|{'limit':limits['max_operations'],

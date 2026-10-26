@@ -36,12 +36,12 @@ robots.txt is fetched once per origin and parsed; permission is evaluated separa
 
 capture_status says whether text loaded: usable (at least 150 words) or thin (fewer). It says nothing about jobs. listing_quality says whether the text holds postings, from deterministic heuristics:
 
-- job_links: distinct links whose path has a job-like segment (jobs, careers, positions, openings, details, roles ...) followed by an identifier, excluding the page itself and in-page anchors.
+- job_links: distinct links whose path has a job-like segment (jobs, careers, positions, openings, details, roles ...) followed by an identifier, excluding the page itself and in-page anchors. Postings on one site share a URL shape (parent path plus whether the last segment is numeric, contains a digit, or is words); when one shape holds at least 80% of at least 5 candidates, the other links are navigation and are not counted. On the 17:44 captures this removed Canonical's 13 department pages ("Engineering 167 roles") and 7 culture pages (333 to 313, matching its claimed 313) and Atlassian's recruitment-fraud notice (335 to 334, matching 334). Because review_hash on job_links basis covers these links, the first capture after this change reports review_change changed once for Canonical and Atlassian.
 - claimed_total: the largest "N jobs / N results / N JOBS FOUND" count on the page, if any.
 - flags: cookie_heavy (at least 30% of words are on cookie, consent or tracking lines), no_job_links, openings_section_empty (an "open/current openings/positions/roles" heading with no job links), paginated_or_truncated (claimed_total well above job_links, or load-more / next-page markers).
 - listing_quality: listings_found, partial_listings (paginated_or_truncated) or no_listings_detected. coverage: appears_complete (claimed_total matches the links), partial, none_detected or unknown (links found, no count to compare).
 
-Trial captures labelled this way: Atlassian listings_found, appears_complete (335 links, 334 claimed); Automattic and Doist listings_found, coverage unknown; Salesforce Workday partial_listings (20 of 1568); Toggl no_listings_detected with cookie_heavy and openings_section_empty.
+Trial captures labelled this way: Atlassian listings_found, appears_complete (334 links, 334 claimed); Automattic and Doist listings_found, coverage unknown; Salesforce Workday partial_listings (20 of 1568); Toggl no_listings_detected with cookie_heavy and openings_section_empty.
 
 ### Raw and review hashes
 
@@ -53,7 +53,7 @@ review_hash decides what needs review; review_change and review_changed_at follo
 
 Why: on the live captures of 14:29 and 16:08 UTC (2026-10-26), the schema 2 review hash flagged 4 pages, but only Salesforce Workday had different postings (10 added, 10 removed, 1571 to 1567 jobs). Atlassian (navigation menu reshuffled), Canonical (per-request Bing pixel URL) and Automattic (tracking pixel and a subscriber counter) had identical posting links. Recomputed with schema 3 rules on the same two captures, only Workday is flagged.
 
-Failed, blocked and skipped attempts never touch the capture file, captured_at, content_hash, review_hash, changed_at or review_changed_at; change and review_change become unknown_after_failure (or no_capture if nothing was ever captured).
+Failed, blocked and skipped attempts never touch the capture file, captured_at, content_hash, review_hash, changed_at or review_changed_at; change and review_change become unknown_after_failure (or no_capture if nothing was ever captured). Listing labels (job_links, claimed_total, listing_quality, coverage, flags, boilerplate_share) are not evidence: they are re-derived from every stored capture on every run, including pages whose fetch failed or that were not in the batch, so the index always matches the current code. The capture file is not rewritten; its header keeps the labels as of captured_at. (Run of 22:30 UTC: Canonical timed out after the job_links change in 4301da0, and its stored entry still showed the old count of 333 while the code derives 313; this rule closes that gap.)
 
 ### Output paths
 

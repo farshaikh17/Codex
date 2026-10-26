@@ -1,7 +1,8 @@
 name: Capture allowlisted career pages (manual, bounded)
 # No schedule on purpose: recurring browser crawling is not enabled.
 # The push trigger only fires on the build branch so the live trial can run before merge
-# (workflow_dispatch needs the file on the default branch). It is inert on main.
+# (workflow_dispatch needs the file on the default branch). It is inert on main. crawl_pages.py is included so a
+# change to the capture logic republishes the committed index instead of leaving counts the code no longer produces.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +16,7 @@ on:
         default: '3'
   push:
     branches: [build/crawl4ai]
-    paths: ['pages.json', '.github/workflows/crawl-pages.yml']
+    paths: ['pages.json', 'crawl_pages.py', '.github/workflows/crawl-pages.yml']
 permissions:
   contents: write
 concurrency:
