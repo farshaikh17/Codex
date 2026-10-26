@@ -6,38 +6,18 @@ No new schedule is enabled by the engine. This page records what runs today, wha
 
 | Workflow | Trigger | Owner | Runtime | Billable minutes |
 |---|---|---|---|---|
-| `collect.yml` | `37 1,6,11,16,21 * * *` (5 a day), push to root `*.py`/`sources.json`, manual | collector (not engine) | 34–41 s per run in recent history | 1 per run, about 150 a month |
+| `collect.yml` | `37 1,6,11,16,21 * * *` (5 a day), push to `main` touching root `*.py`/`sources.json`/the workflow, manual | collector (not engine) | 34–41 s per run in recent history | 1 per run, about 150 a month |
 | `engine.yml` | **manual only** (`workflow_dispatch`) | engine | about 1 min (unit tests about 41 s, acceptance about 11 s, measured locally) | about 2 per manual run |
 | `crawl-pages.yml` (farshaikh17/Codex#1) | manual | page capture | not measured here | — |
 
 GitHub rounds each job up to a whole minute. Private repositories get 2,000 free minutes a month on the Free plan.
 
-### Cost issue for the owner to decide: `collect.yml` will run the engine tests
+### Two `collect.yml` fixes (applied at the owner's request, 2026-10-26)
 
-`collect.yml` runs `python -m unittest -v` before each collection. Unittest discovery finds `engine/tests`, so once the engine is merged to main every scheduled collection also runs the engine suite:
+`collect.yml` belongs to the collector, outside the engine boundary (docs/ENGINE.md section 3). The owner asked for these two changes, and they are the only engine-side edits to it.
 
-- runtime goes from about 40 s to about 1.5 min, so 2 billable minutes instead of 1;
-- about 150 → about 300 minutes a month at 5 runs a day, still inside 2,000 but double for no collection benefit.
-
-`collect.yml` is outside the engine's boundary (docs/ENGINE.md section 3), so this PR does not change it. The proposed one-line fix keeps the collector's own tests and leaves the engine suite to `engine.yml`:
-
-```diff
-       - name: Test incremental publishing and adapters
--        run: python -m unittest -v
-+        run: python -m unittest -v test_collect
-```
-
-### Second issue: `collect.yml` runs on pushes to any branch
-
-Its push trigger has no branch filter. A feature-branch push that touches root `*.py`, `sources.json` or `collect.yml` therefore starts a **live** employer collection and spends minutes. Its publish step (`git pull --rebase origin main`, `git push`) then fails on that branch.
-
-This happened once: when main was merged into `builder1` on 2026-10-26, run 40377774005 passed its tests, collected 10/10 sources and then failed to publish. Nothing was pushed. Proposed fix, also for the owner:
-
-```diff
-   push:
-+    branches: [main]
-     paths: ['*.py', 'sources.json', '.github/workflows/collect.yml']
-```
+1. **Test scope.** The test step was `python -m unittest -v`. Unittest discovery would also find `engine/tests`, so once the engine merged, every collection would run the engine suite: about 1.5 min instead of 40 s, so 2 billable minutes instead of 1, or about 300 instead of 150 a month at 5 runs a day. The step is now `python -m unittest -v test_collect`, and the engine suite runs only in `engine.yml`.
+2. **Branch filter.** The push trigger had no branch filter, so a push to any branch touching root `*.py`, `sources.json` or the workflow started a **live** employer collection. Its publish step (`git pull --rebase origin main`, `git push`) then failed on that branch. This happened once, when main was merged into `builder1` on 2026-10-26: run 40377774005 passed its tests, collected 10/10 sources and failed to publish, and nothing was pushed. The push trigger is now `branches: [main]`. Schedule and manual runs are unchanged.
 
 ## Billing verification (required before any new schedule)
 
