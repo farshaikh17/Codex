@@ -52,6 +52,23 @@ jobs:
           IDS: ${{ inputs.ids }}
           BATCH: ${{ inputs.batch_size || '6' }}
         run: timeout 900 python crawl_pages.py --ids "$IDS" --batch-size "$BATCH"
+      - name: Summarise capture and listing quality
+        if: always()
+        run: |
+          if [ ! -f public/pages/index.json ]; then exit 0; fi
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('public/pages/index.json'))
+          print('## Career page capture %s (%s)\n'%(d.get('attempted_at'),d.get('schema')))
+          print('Operations: %s. Browser requests: %s. Halted: %s.\n'%(d.get('operations'),d.get('browser_requests'),d.get('halted')))
+          print('| page | result | listing quality | coverage | flags | job links | review change |')
+          print('|---|---|---|---|---|---|---|')
+          for p in d['pages']:
+              if p['id'] in d.get('batch',[]):
+                  a=p['last_attempt']
+                  print('| %s | %s | %s | %s | %s | %s | %s |'%(p['id'],a['result'],p.get('listing_quality'),p.get('coverage'),
+                        ', '.join(p.get('flags') or []),p.get('job_links'),p.get('review_change')))
+          PY
       - name: Publish captures and failure status
         if: always()
         run: |
