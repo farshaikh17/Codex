@@ -1,15 +1,15 @@
 {
   "schema": "public-job-index-1",
-  "attempted_at": "2026-10-26T07:55:27.405017+00:00",
+  "attempted_at": "2026-10-26T15:17:54.755482+00:00",
   "status": "ok",
   "successful_sources": 10,
   "total_sources": 10,
-  "listing_count": 533,
+  "listing_count": 536,
   "sources": [
     {
       "source": "gitlab-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 239,
       "skipped": 0,
@@ -20,7 +20,7 @@
     {
       "source": "remote-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 2,
       "skipped": 0,
@@ -31,29 +31,29 @@
     {
       "source": "clipboard-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
-      "jobs": 39,
+      "jobs": 41,
       "skipped": 0,
-      "new": 0,
-      "changed": 0,
+      "new": 2,
+      "changed": 2,
       "no_longer_listed": []
     },
     {
       "source": "oyster-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/oyster",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 23,
       "skipped": 0,
       "new": 0,
-      "changed": 0,
+      "changed": 1,
       "no_longer_listed": []
     },
     {
       "source": "zapier-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/zapier",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 12,
       "skipped": 0,
@@ -64,18 +64,18 @@
     {
       "source": "posthog-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/posthog",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
-      "jobs": 10,
+      "jobs": 11,
       "skipped": 0,
-      "new": 0,
+      "new": 1,
       "changed": 0,
       "no_longer_listed": []
     },
     {
       "source": "drivetrain-lever",
       "endpoint": "https://api.lever.co/v0/postings/drivetrain?mode=json",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 35,
       "skipped": 0,
@@ -86,7 +86,7 @@
     {
       "source": "resilinc-lever",
       "endpoint": "https://api.lever.co/v0/postings/resilinc?mode=json",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 11,
       "skipped": 0,
@@ -97,22 +97,22 @@
     {
       "source": "weave-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/weave",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 28,
       "skipped": 0,
       "new": 0,
-      "changed": 2,
+      "changed": 0,
       "no_longer_listed": []
     },
     {
       "source": "twilio-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true",
-      "checked_at": "2026-10-26T07:55:27.405017+00:00",
+      "checked_at": "2026-10-26T15:17:54.755482+00:00",
       "status": "ok",
       "jobs": 134,
       "skipped": 0,
-      "new": 1,
+      "new": 0,
       "changed": 0,
       "no_longer_listed": []
     }
