@@ -533,3 +533,19 @@ Farhan and Sana ChatGPT tasks were independently read: both enabled, RRULE hourl
   - Opened D7 (origin of the "owner rules"), D8 (#7's new cases) and D9 (instruction channel).
   - Placement note: the owner's *GPT Master production schedule update* section follows this log and is kept as written.
 - 2026-10-26 Worker A: every Worker A push after A1 was a direct owner request in this chat (captures to check review_change, the schema 3 review fix, pip caching, cache-hit confirmation, PR #1/#5/#6 ready for review). Cause of the 13-minute capture run 40364258754 (§ #1 c93190e) was investigated: `playwright install --with-deps` spent 10 min 16 s fetching 21.1 MB of fonts and system libraries via apt at 34 kB/s; pip took 36 s. Fixed in 5d652b3 (pip and Playwright caches, apt only if a Chromium launch check fails). Run 40374013855 (18:02): both caches hit, apt skipped, whole job 1 min 42 s. #6 re-tested merged onto builder1 5d420e9: 115 tests, 0 failures; #5 and #6 marked ready for review on owner request (still stacked; fold into #3 and #2).
+
+
+## GPT Master completion priority — 26 October 2026 (after a2a4e0f)
+
+Owner now requests completion of Claude work before further manual job-search tests. Consolidate the existing engine; no new engine, feature steps or PR expansion until the blockers below are closed. Direct later owner instructions still take precedence; record their exact scope before acting.
+
+D10 resolved in production: main commit 709948e adds only push.branches: [main] to collect.yml. The five daily cron slots and no-age-gate collection remain unchanged. All worker branches must preserve this on integration.
+
+Completion assignments:
+- B: B1 FIRST. Adopt #6 and #9 onto current builder1, resolve store/docs conflicts without losing either feature, fix independent nullable pay bounds and add regression coverage. Prove the combined persistence/recovery + extractor behavior and report final SHA. No additional engine steps before this report. Then fix the overly broad estimated-pay guard: employer-published estimates retain source/qualifier; no automatic salary qualification.
+- C: finish C1: adopt #5 and #8, preserve current main workflow, remove the unverified bare-$ owner attribution/approved behavior in both benchmark and gate coordination with B. Run scratch-only live collection and report normalization changes. Do not add labels or discovery sources.
+- #10 and #11 are parked outside the minimum release for now. Do not merge their behavior merely because they have tests. In particular no #11-side resolution may discard #5 manifest safety. Backoff policy remains unapproved.
+- A: after B/C final heads, build ONE integration tree against current main with #1 + consolidated #3/#4/#2. Record exact SHAs, resolve conflicts preserving both behaviors, run outbound-network-disabled tests. Explicitly test mixed-generation rejection/recovery, missing pay bounds, extractor cache invalidation, rebuild idempotency and candidate isolation. Candidate-specific gates/outputs and fake Sheets interface remain provisional; demonstrate neutral synthetic behavior only.
+- Master: produce one completion report: blocker -> fix SHA -> verification evidence -> remaining limitation. A passing test count with replaced/dropped functionality is not combined acceptance.
+
+Candidate information and decisions stay in their existing separate canonical Sheets; do not commit real profiles/history/decision exports. Live Sheets writes and candidate-rule deployment remain outside this software consolidation. No PR merges authorized by this note. No new schedule changes, paid services or manual job-search runs requested.
