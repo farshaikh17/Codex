@@ -64,13 +64,13 @@ jobs:
           queue=[p['id'] for p in d['pages'] if p['id'] in d.get('batch',[]) and p.get('review_change') in ('new','changed')]
           quiet=[p['id'] for p in d['pages'] if p['id'] in d.get('batch',[]) and p.get('review_change') in ('unchanged','boilerplate_only','listings_unchanged')]
           print('Queue for review (review_change new/changed): %s. Not queued (unchanged/boilerplate_only/listings_unchanged): %s.\n'%(', '.join(queue) or 'none',', '.join(quiet) or 'none'))
-          print('| page | result | listing quality | coverage | flags | job links | review change |')
-          print('|---|---|---|---|---|---|---|')
+          print('| page | result | listing quality | coverage | flags | job links | review basis | review change |')
+          print('|---|---|---|---|---|---|---|---|')
           for p in d['pages']:
               if p['id'] in d.get('batch',[]):
                   a=p['last_attempt']
-                  print('| %s | %s | %s | %s | %s | %s | %s |'%(p['id'],a['result'],p.get('listing_quality'),p.get('coverage'),
-                        ', '.join(p.get('flags') or []),p.get('job_links'),p.get('review_change')))
+                  print('| %s | %s | %s | %s | %s | %s | %s | %s |'%(p['id'],a['result'],p.get('listing_quality'),p.get('coverage'),
+                        ', '.join(p.get('flags') or []),p.get('job_links'),p.get('review_basis'),p.get('review_change')))
           PY
       - name: Publish captures and failure status
         if: always()
