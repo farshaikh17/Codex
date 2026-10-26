@@ -50,3 +50,16 @@ GitHub Actions, "Capture allowlisted career pages (manual, bounded)", Run workfl
 Locally: pip install -r requirements-crawl.txt, python -m playwright install chromium, python crawl_pages.py --ids automattic-work-with-us --batch-size 1.
 
 Tests: python -m unittest -v covers both collectors and needs no Crawl4AI install (crawl4ai is imported only when a real browser fetch runs).
+
+## Schedule status (not yet verified)
+
+As of 2026-10-26 02:08 UTC no schedule-triggered run exists in this repository. Every recorded run was a push. Reasons:
+
+- The workflow reached main at 01:33 UTC and was gated off until 01:35. The first hourly tick (minute 23) after that is 02:23 UTC, which had not happened yet.
+- GitHub runs schedule triggers only from the default branch (main). Runs on build branches are never scheduled.
+- GitHub can delay or drop scheduled runs at busy times, and a newly added schedule can take time to start firing.
+- The five-hour gate means scheduled runs before 5 hours after main's last attempted_at (01:36 UTC) should appear but print "Last attempt less than five hours ago; no employer requests." The first scheduled run that collects is the first tick at or after 06:36 UTC.
+
+Verification: in Actions, filter "Collect public job feeds" by event schedule, then confirm a github-actions commit on main that changes public/status.json attempted_at. Until both exist, treat scheduling as unverified.
+
+Cost: in a private repository every job is rounded up to a whole minute, so 24 hourly ticks use about 720 of the 2,000 free monthly minutes even when nothing is collected. A five-hourly cron would avoid most of that; not changed here.
