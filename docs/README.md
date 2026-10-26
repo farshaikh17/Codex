@@ -10,6 +10,7 @@
 | `public/status.json`, `public/index.json`, `public/boards/*.json` | Published collection output. See [OUTPUT_CONTRACT.md](OUTPUT_CONTRACT.md). |
 | `.github/workflows/collect.yml` | Hourly tick, collects only due sources; manual and `main` push runs collect all. |
 | `migration/` | Provenance from the `public-job-collector` migration. |
+| `bench/` | Quality benchmark: labelled fixtures, collection scenarios and scorer. See [BENCHMARK.md](BENCHMARK.md). |
 | `test_*.py` | Offline tests: `python -m unittest -v`. |
 | `crawl_pages.py`, `pages.json`, `public/pages/` | Manual Crawl4AI page fallback. **Only after farshaikh17/Codex#1 merges.** |
 | `engine/`, `docs/ENGINE.md` | SQLite posting store over collector snapshots. **Only after farshaikh17/Codex#2 merges.** |
@@ -21,6 +22,7 @@ Docs:
 - [OPERATIONS_RECOVERY.md](OPERATIONS_RECOVERY.md): operations and recovery
 - [ACCEPTANCE.md](ACCEPTANCE.md): acceptance-test checklist
 - [LIMITATIONS.md](LIMITATIONS.md): known limitations
+- [BENCHMARK.md](BENCHMARK.md): quality benchmark, labels, metrics, current measurements
 - [BACKLOG.md](BACKLOG.md): dependency-ordered backlog
 - [HANDOFF.md](HANDOFF.md): current state and status labels
 - [CONSUMER_TEST.md](CONSUMER_TEST.md): steps for the original chat to test its access

@@ -1,0 +1,106 @@
+{
+  "schema": "bench-collection-1",
+  "notice": "Synthetic feed sequences run through collect.collect() with no network. Raw postings use the Lever shape. 'expect' is checked against the collector now; 'downstream' labels are for the posting store and review queue and are scored from predictions.",
+  "scenarios": [
+    {
+      "id": "failed-after-success",
+      "covers": ["failed retrieval after an earlier successful capture"],
+      "sources": [{"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"}],
+      "postings": {"p1": {"id": "p1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/p1", "descriptionPlain": "Requirements: 3+ years of customer success experience.", "categories": {"location": "Remote - India"}}},
+      "steps": [
+        {"feeds": {"bench-a": ["p1"]}, "expect": {"status": "ok", "jobs": {"lever:bench-a:p1": {"change": "new"}}}},
+        {"feeds": {"bench-a": {"error": "HTTP Error 503: Service Unavailable"}},
+         "expect": {"status": "failed", "sources": {"bench-a": {"status": "failed", "consecutive_failures": 1}},
+                    "jobs": {"lever:bench-a:p1": {"change": "unknown_after_failure", "observed_at_step": 0}}}},
+        {"feeds": {"bench-a": ["p1"]}, "expect": {"status": "ok", "sources": {"bench-a": {"consecutive_failures": 0}}, "jobs": {"lever:bench-a:p1": {"change": "unchanged"}}}}
+      ]
+    },
+    {
+      "id": "reopened-requisition",
+      "covers": ["reopened requisitions", "a listing disappearing once is not closure"],
+      "sources": [{"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"}],
+      "postings": {
+        "p1": {"id": "p1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/p1", "descriptionPlain": "Requirements: 3+ years of customer success experience.", "categories": {"location": "Remote - India"}},
+        "p2": {"id": "p2", "text": "Implementation Specialist", "hostedUrl": "https://jobs.lever.co/bench-a/p2", "descriptionPlain": "Requirements: 4+ years of implementation experience.", "categories": {"location": "Remote - India"}}
+      },
+      "steps": [
+        {"feeds": {"bench-a": ["p1", "p2"]}, "expect": {"listing_count": 2}},
+        {"feeds": {"bench-a": ["p1"]}, "expect": {"listing_count": 1, "no_longer_listed": {"bench-a": ["lever:bench-a:p2"]}}},
+        {"feeds": {"bench-a": ["p1", "p2"]}, "expect": {"listing_count": 2, "jobs": {"lever:bench-a:p2": {"change": "new"}}}}
+      ],
+      "downstream": {"availability_after_step": {"1": {"lever:bench-a:p2": "missing"}, "2": {"lever:bench-a:p2": "listed"}},
+                     "relisted": ["lever:bench-a:p2"],
+                     "note": "The collector only compares with the previous snapshot, so a reopened requisition is 'new' there. The store must recognise it as relisted, and the review queue must not treat it as never seen."}
+    },
+    {
+      "id": "duplicate-across-urls",
+      "covers": ["duplicate postings across URLs"],
+      "sources": [
+        {"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"},
+        {"id": "bench-b", "provider": "lever", "board": "bench-b", "url": "https://api.lever.co/v0/postings/bench-b?mode=json"}
+      ],
+      "postings": {
+        "a1": {"id": "a1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/a1", "descriptionPlain": "Requirements: 3+ years of customer success experience. We hire in India and the United States.", "categories": {"location": "Remote - India"}},
+        "b1": {"id": "b1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-b/b1?lever-source=partner", "descriptionPlain": "Requirements: 3+ years of customer success experience. We hire in India and the United States.", "categories": {"location": "Remote - India"}}
+      },
+      "steps": [
+        {"feeds": {"bench-a": ["a1"], "bench-b": ["b1"]}, "expect": {"listing_count": 2, "jobs": {"lever:bench-a:a1": {"change": "new"}, "lever:bench-b:b1": {"change": "new"}}}}
+      ],
+      "downstream": {"duplicate_groups": [["lever:bench-a:a1", "lever:bench-b:b1"]],
+                     "note": "Same role, same text, different boards and URLs. The collector keeps both (it never merges by title); deduplication is downstream and must be reviewed once."}
+    },
+    {
+      "id": "unchanged-review-skipped",
+      "covers": ["unchanged completed review: skip"],
+      "sources": [{"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"}],
+      "postings": {"p1": {"id": "p1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/p1", "descriptionPlain": "Requirements: 3+ years of customer success experience.", "categories": {"location": "Remote - India"}}},
+      "steps": [
+        {"feeds": {"bench-a": ["p1"]}, "expect": {"jobs": {"lever:bench-a:p1": {"change": "new"}}}},
+        {"feeds": {"bench-a": ["p1"]}, "expect": {"jobs": {"lever:bench-a:p1": {"change": "unchanged", "observed_at_step": 1}}}}
+      ]
+    },
+    {
+      "id": "compensation-newly-requested",
+      "covers": ["meaningful change vs collector endpoint change"],
+      "sources": [{"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"}],
+      "postings": {
+        "p1": {"id": "p1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/p1", "descriptionPlain": "Requirements: 3+ years of customer success experience.", "categories": {"location": "Remote - India"}},
+        "p1-paid": {"id": "p1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/p1", "descriptionPlain": "Requirements: 3+ years of customer success experience.", "categories": {"location": "Remote - India"}, "salaryDescriptionPlain": "INR 30,00,000 - 36,00,000 per year"}
+      },
+      "steps": [
+        {"feeds": {"bench-a": ["p1"]}},
+        {"source_urls": {"bench-a": "https://api.lever.co/v0/postings/bench-a?mode=json&bench=compensation"}, "feeds": {"bench-a": ["p1-paid"]},
+         "expect": {"sources": {"bench-a": {"endpoint_changed": true}}, "jobs": {"lever:bench-a:p1": {"change": "changed", "changed_fields": ["compensation_raw"]}}}}
+      ],
+      "downstream": {"recheck_only": {"lever:bench-a:p1": ["salary"]}, "note": "Only the salary gate needs reassessment; experience and geography evidence is unchanged."}
+    },
+    {
+      "id": "not-due-carried",
+      "covers": ["skip collection when not due without losing evidence"],
+      "sources": [
+        {"id": "bench-a", "provider": "lever", "board": "bench-a", "url": "https://api.lever.co/v0/postings/bench-a?mode=json"},
+        {"id": "bench-b", "provider": "lever", "board": "bench-b", "url": "https://api.lever.co/v0/postings/bench-b?mode=json"}
+      ],
+      "postings": {
+        "a1": {"id": "a1", "text": "Customer Success Manager", "hostedUrl": "https://jobs.lever.co/bench-a/a1", "descriptionPlain": "Requirements: 3+ years.", "categories": {"location": "Remote - India"}},
+        "b1": {"id": "b1", "text": "Implementation Specialist", "hostedUrl": "https://jobs.lever.co/bench-b/b1", "descriptionPlain": "Requirements: 4+ years.", "categories": {"location": "Remote - India"}}
+      },
+      "steps": [
+        {"feeds": {"bench-a": ["a1"], "bench-b": ["b1"]}},
+        {"due": ["bench-a"], "feeds": {"bench-a": ["a1"]},
+         "expect": {"status": "ok", "sources": {"bench-b": {"status": "ok", "attempted_this_run": false}},
+                    "jobs": {"lever:bench-b:b1": {"change": "not_checked", "observed_at_step": 0}}}}
+      ]
+    }
+  ],
+  "queue_scenarios": [
+    {
+      "id": "interrupted-batch",
+      "covers": ["queue completion and interruption recovery", "pending reviews survive a new collection"],
+      "items": ["q1", "q2", "q3", "q4", "q5"],
+      "interrupt_after": 2,
+      "collection_between": true,
+      "expected": {"each_processed_exactly_once": true, "pending_after_interrupt": ["q3", "q4", "q5"]}
+    }
+  ]
+}
