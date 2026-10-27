@@ -5,26 +5,52 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-10-27T20:29:45.949737+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "d4fb8dc88c2e4213d3237247d2be3f36901c718e780887541f0c84f9e443f73f",
+   "kind": "content_changed",
+   "to_hash": "94392b03b6b8ace2c4b0b37d5484941e6c1110504c8fcc538cc9e7024eafa763"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs an Engineering Manager, Gitaly at GitLab, you'll guide a deeply technical team focused on building, maintaining, and providing expertise on Gitaly, GitLab's Git data storage tier. The team's work spans development of Gitaly, support for teams across GitLab, new tooling, scalability improvements, new data formats, and ongoing maintenance of the Gitaly codebase.\n\nThis role is a good fit for you if you can guide senior and staff engineers through complex, long-horizon technical work while building a culture of technical rigor, clear accountability, and ownership. You'll help the team balance roadmap delivery with GitLab product and infrastructure priorities, especially as much of the team's work is centered on scaling Git storage and adjacent foundational work. Clear written communication and thoughtful technical judgment are central to how this team succeeds.\n\nProject areas include:\n\nScaling Git storage\n\nGitaly-related infrastructure and foundational performance work\n\nWhat you’ll do\n\nManage a team of senior and staff engineers working on Gitaly and Gitaly-related infrastructure.\n\nBuild a team culture where technical rigor, clear accountability, and ownership are the norm.\n\nDrive execution on complex, long-horizon work across performance, scalability, maintainability, and core Gitaly architecture.\n\nGuide the team in balancing roadmap delivery with GitLab product and infrastructure priorities.\n\nSupport your engineers' growth through feedback, mentoring, career development, and stretch opportunities.\n\nFoster strong written communication and asynchronous alignment across a fully distributed team.\n\nPartner with teams like Git and other stakeholders who rely on Gitaly expertise for performance, feature design, and roadmap clarity.\n\nRepresent the team credibly with cross-functional partners and in stakeholder conversations about Gitaly direction, performance, and scalability.\n\nWhat you’ll bring\n\nExperience managing engineering teams with direct reports, including hiring, performance management, and career development.\n\nA management philosophy centered on building engineer agency and ownership, with credibility grounded in consistency, follow-through, and technical judgment.\n\nProven ability to guide highly specialized engineers through ambiguity, structured debate, high-stakes technical tradeoffs, and the realities of operating a service that is critical to GitLab.\n\nStrong written communication and remote, asynchronous collaboration skills across distributed, multi-timezone teams. You're comfortable moving work forward in documents, issue threads, and asynchronous reviews, not just in meetings.\n\nA track record of delivering under pressure on ambiguous, long-horizon technical projects with clear outcomes, and of reasoning from fundamentals about maintainability, technical debt, and long-term platform viability.\n\nHands-on background in version control systems, distributed systems, storage engines, or other low-level infrastructure domains, with the ability to engage credibly with systems code and architecture, ideally in Go or similarly performance-sensitive environments.\n\nAbout the team\n\nOn the Gitaly team, we build, maintain, and provide expertise on Gitaly, GitLab's Git data storage tier. Our core work includes development of Gitaly, supporting teams across GitLab, and ensuring the long-term viability of the project. We are a deeply technical team that balances long-running technical work with practical delivery. Strong collaboration with partner teams is central to how we succeed.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
   "locations": [
    {
     "source": "location.name",
+    "text": "Remote, Canada"
+   },
+   {
+    "source": "location.name",
     "text": "Remote, United Kingdom"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "Canada"
    },
    {
     "source": "offices.name",
     "text": "United Kingdom"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-10-23T12:05:57-04:00",
   "title": "Engineering Manager, Tenant Scale: Gitaly",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "d4fb8dc88c2e4213d3237247d2be3f36901c718e780887541f0c84f9e443f73f",
+ "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
+ "content_hash": "94392b03b6b8ace2c4b0b37d5484941e6c1110504c8fcc538cc9e7024eafa763",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -42,8 +68,32 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
+      "quote": "Remote, Canada",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, United States",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Canada",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      },
@@ -51,7 +101,15 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      },
@@ -59,7 +117,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Strong written communication and remote, asynchronous collaboration skills across distributed, multi-timezone teams. You're comfortable moving work forward in documents, issue threads, and asynchronous reviews, not just in meetings.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      }
@@ -72,7 +130,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience managing engineering teams with direct reports, including hiring, performance management, and career development.\nA management philosophy centered on building engineer agency and ownership, with credibility grounded in consistency, follow-through, and technical judgment.\nProven ability to guide highly specialized engineers through ambiguity, structured debate, high-stakes technical tradeoffs, and the realities of operating a service that is critical to GitLab.\nStrong written communication and remote, asynchronous collaboration skills across distributed, multi-timezone teams. You're comfortable moving work forward in documents, issue threads, and asynchronous reviews, not just in meetings.\nA track record of delivering under pressure on ambiguous, long-horizon technical projects with clear outcomes, and of reasoning from fundamentals about maintainability, technical debt, and long-term platform viability.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      }
@@ -85,7 +143,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Hands-on background in version control systems, distributed systems, storage engines, or other low-level infrastructure domains, with the ability to engage credibly with systems code and architecture, ideally in Go or similarly performance-sensitive environments.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      }
@@ -97,8 +155,24 @@
      {
       "interpretation": "remote",
       "method": "location_text",
+      "quote": "Remote, Canada",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, United States",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8899972002"
      }

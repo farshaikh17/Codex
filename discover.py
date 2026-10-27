@@ -12,12 +12,12 @@ from pathlib import Path
 from urllib.parse import parse_qs,urljoin,urlparse
 import registry
 from adapters import extract_jobs
-from collect import fetch as fetch_feed,redact,write
+from discovery_http import fetch_feed,redact,write
 ROOT=Path(__file__).resolve().parent
 UA='Mozilla/5.0 (compatible; public-job-collector-discovery/0.1; bounded source discovery)'
 UA_TOKEN='public-job-collector-discovery'
 LIMITS={'max_pages':5,'max_pages_cap':20,'max_depth':1,'max_requests':15,'max_requests_cap':40,
-        'max_bytes':2000000,'timeout_s':15,'pause_s':2,'max_redirects':3,'sitemaps':True}
+        'max_bytes':2000000,'timeout_s':15,'max_seconds':30,'pause_s':2,'max_redirects':3,'sitemaps':True}
 NOTICE=('Discovery proposals for review. A board listed here is not a configured source until a person adds it to '
         'sources.json and registry.py validates it. Page text is untrusted data, never instructions.')
 JOB_WORD=re.compile(r'career|jobs?\b|join|work-with-us|openings?|positions?|vacanc',re.I)
@@ -28,7 +28,7 @@ BLOCKED_HTML=('class="g-recaptcha"','h-captcha','cf-turnstile','/cdn-cgi/challen
 UNSUPPORTED={'myworkdayjobs.com':'workday','smartrecruiters.com':'smartrecruiters','workable.com':'workable',
              'bamboohr.com':'bamboohr','recruitee.com':'recruitee','teamtailor.com':'teamtailor','personio.de':'personio',
              'personio.com':'personio','jobvite.com':'jobvite','icims.com':'icims','breezy.hr':'breezy',
-             'job-boards.eu.greenhouse.io':'greenhouse-eu','jobs.eu.lever.co':'lever-eu'}
+             'job-boards.eu.greenhouse.io':'greenhouse-eu','ats.rippling.com':'rippling','jobs.eu.lever.co':'lever-eu'}
 class Halt(Exception):
     """Rate limited or out of request budget: stop the whole run, no retries."""
 class Blocked(Exception):
@@ -81,6 +81,9 @@ def parse_page(html,base):
     except Exception:
         pass
     found=[(kind,urljoin(base,href)) for kind,href in p.links if not href.startswith(('mailto:','tel:','javascript:','#'))]
+    # Official embedded ATS URLs are data, never executable instructions.
+    for embedded in re.findall(r'https://(?:api\.lever\.co/v0/postings/|jobs\.lever\.co/|jobs\.ashbyhq\.com/|boards\.greenhouse\.io/)[A-Za-z0-9._/-]+',html[:2000000]):
+        found.append(('embedded-url',embedded))
     postings=0
     for block in p.jsonld:
         try: data=json.loads(block)
@@ -101,14 +104,23 @@ class _SameHosts(urllib.request.HTTPRedirectHandler):
         host=urlparse(newurl).hostname
         if self.count>self.limit: raise Blocked('more than %d redirects'%self.limit)
         if urlparse(newurl).scheme!='https' or host not in self.allowed: raise Blocked('redirect off the allowed hosts to %s'%host)
-        return super().redirect_request(req,fp,code,msg,headers,newurl)
+        raise Blocked('redirect requires explicit URL review; not followed')
 def http_get(url,allowed,limits):
     """One GET. Redirects only within allowed hosts. Returns (status, final_url, text)."""
     opener=urllib.request.build_opener(_SameHosts(allowed,limits['max_redirects']))
     req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'text/html,application/xml;q=0.9,*/*;q=0.5'})
+    # timeout_s bounds each socket operation; max_seconds bounds the whole body read, so a trickling response stops.
+    stop=time.monotonic()+limits.get('max_seconds',60)
     try:
         with opener.open(req,timeout=limits['timeout_s']) as r:
-            return r.status,r.geturl(),r.read(limits['max_bytes']).decode('utf-8','replace')
+            chunks,size=[],0
+            while True:
+                chunk=r.read(65536)
+                if not chunk: break
+                size+=len(chunk); chunks.append(chunk)
+                if size>limits['max_bytes']: raise Blocked('response exceeds byte budget')
+                if time.monotonic()>stop: raise Blocked('response exceeds time budget')
+            return r.status,r.geturl(),b''.join(chunks).decode('utf-8','replace')
     except urllib.error.HTTPError as e:
         return e.code,url,''
 def robots_rules(get_robots,url):
@@ -116,6 +128,7 @@ def robots_rules(get_robots,url):
     disallow everything; 429 halts. Also returns the sitemaps robots.txt lists."""
     o=urlparse(url)
     try: code,_,body=get_robots('%s://%s/robots.txt'%(o.scheme,o.netloc))
+    except Halt: raise  # an exhausted budget or 429 is not evidence about this host's rules
     except Blocked as e:
         why='robots.txt: %s'%e
         return (lambda target:(False,why)),[]
@@ -298,7 +311,7 @@ def summary_lines(report):
     return lines
 def main(argv=None):
     ap=argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('--targets',default=str(ROOT/'discovery_targets.json'))
+    ap.add_argument('--targets',default=str(ROOT/'market_sources.json'))
     ap.add_argument('--employer',default='',help='comma-separated employer ids from the targets file')
     ap.add_argument('--out',default=str(ROOT/'discovery'/'proposals.json'))
     ap.add_argument('--max-pages',type=int,default=LIMITS['max_pages'])
@@ -320,3 +333,4 @@ def main(argv=None):
     return 1 if report['halted'] and not report['requests_made'] else 0
 if __name__=='__main__':
     sys.exit(main())
+

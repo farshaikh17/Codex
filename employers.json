@@ -135,6 +135,72 @@
         "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
         "evidence_url": null
       }
+    },
+    {
+      "id": "highlevel",
+      "name": "HighLevel",
+      "careers_url": "https://www.gohighlevel.com/careers",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "CRM, automation and implementation platform employer; official careers page links jobs.lever.co/gohighlevel (checked 2026-10-27).",
+        "evidence_url": "https://www.gohighlevel.com/careers"
+      }
+    },
+    {
+      "id": "cai",
+      "name": "CAI",
+      "careers_url": "https://caiready.com/careers/",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Industrial commissioning, qualification and operational readiness consultancy. Corroborated 2026-10-27: CAI's official job page https://caiready.com/jobs/csv-engineer/ (title 'CSV Engineer | CAI') sends Apply to jobs.lever.co/cagents/628cda60-6eeb-4ce2-a5e2-45617ec25cbe, and that id is in the public cagents posting API with the same title; cagents.com answers 301 to caiready.com; feed descriptions open with 'CAI Overview'. The careers index page itself does not link the board (its 'CAI - Lever API' plugin script is formatting only), so the scanner cannot find it there.",
+        "evidence_url": "https://caiready.com/jobs/csv-engineer/"
+      }
+    },
+    {
+      "id": "cognite",
+      "name": "Cognite",
+      "careers_url": "https://www.cognite.com/en/company/careers",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Industrial data operations software for energy, utilities and manufacturing (Bengaluru hiring). Official careers page links job-boards.eu.greenhouse.io/cognite/jobs/4867423101; that id is in the public boards-api cognite feed (checked 2026-10-27).",
+        "evidence_url": "https://www.cognite.com/en/company/careers"
+      }
+    },
+    {
+      "id": "energyhub",
+      "name": "EnergyHub",
+      "careers_url": "https://www.energyhub.com/careers",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Utility distributed-energy and demand-response platform. Official careers page links job-boards.greenhouse.io/energyhub/jobs/8586008002 and others; those ids are in the public energyhub feed (checked 2026-10-27).",
+        "evidence_url": "https://www.energyhub.com/careers"
+      }
+    },
+    {
+      "id": "voltus",
+      "name": "Voltus",
+      "careers_url": "https://www.voltus.co/careers",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Distributed energy and demand-response market operator. Official https://www.voltus.co/jobs page links jobs.lever.co/voltus/<id>/apply; found by the repository scanner (checked 2026-10-27).",
+        "evidence_url": "https://www.voltus.co/careers"
+      }
+    },
+    {
+      "id": "celigo",
+      "name": "Celigo",
+      "careers_url": "https://www.celigo.com/careers/",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Integration and business-process automation platform (implementation/integration roles; Hyderabad office). Official careers page embeds boards.greenhouse.io/embed/job_board/js?for=celigo; found by the repository scanner (checked 2026-10-27).",
+        "evidence_url": "https://www.celigo.com/careers/"
+      }
     }
   ]
 }

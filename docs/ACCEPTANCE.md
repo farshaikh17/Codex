@@ -49,7 +49,7 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Live trial: 16 targets, 40 requests. Three `careers_url` proposals (Oyster, Zapier, Weave); scope, robots and 429 stops observed (see SOURCE_DISCOVERY.md)
 - [x] Cross-host redirects check the destination's robots.txt, and redirect targets aren't fetched twice: `test_cross_host_redirect_checks_destination_robots`, `test_redirect_target_not_fetched_twice`
 - [x] Scope widened for Twilio (owner approved), Clipboard and Resilinc (ownership verified by 301 chains from the established domains); Clipboard's `careers_url` applied with evidence
-- [x] Owner approved all three `careers_url` proposals. They're applied to `employers.json` with evidence, and a `careers_url` without evidence is rejected: `test_careers_url_requires_evidence`
+- [x] Owner approved all three `careers_url` proposals. They're applied to `employers.json` with evidence, malformed evidence is rejected and missing evidence is warned: `test_careers_url_evidence_warned_when_missing_and_checked_when_given`
 
 ## Collector backoff and budgets (E8)
 - [x] Backoff schedule (10 h doubling to 7 days; 404/410 from 24 h; 429 at least 24 h or Retry-After): `test_backoff_schedule`, `test_rate_limit_honours_retry_after`

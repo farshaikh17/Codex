@@ -164,7 +164,8 @@ class ProposalTests(unittest.TestCase):
         self.assertEqual((b['status'],b['reason']),('feed_failed','Redirect requires source review'))
         self.assertNotIn('proposed_source',b)
     def test_targets_file_is_valid(self):
-        targets=json.loads((ROOT/'discovery_targets.json').read_text())['targets']
+        targets=json.loads((ROOT/'market_sources.json').read_text())['targets']
         discover.validate_targets(targets)
         self.assertTrue(all(t.get('basis') for t in targets))
 if __name__=='__main__':unittest.main()
+

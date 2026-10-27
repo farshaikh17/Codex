@@ -92,6 +92,12 @@ class RunTests(unittest.TestCase):
         self.assertEqual(out['freshness']['counts'],{'stale':2})
         self.assertTrue(any(r.startswith('latest snapshot is 30.0 hours old') for r in out['reasons']))
         self.assertIn('source freshness: 2 stale',out['reasons'])
+    def test_a_daily_source_is_judged_against_its_own_poll_interval(self):
+        self.sources.write_text(json.dumps([A,B|{'poll_interval_hours':24}]))
+        self.collect({'alpha-lever':[posting('a1')],'beta-lever':[posting('b1')]})
+        state=lambda out:{f['source']:f['state'] for f in out['freshness']['sources']}
+        self.assertEqual(state(self.engine_run(hours_after=20)),{'alpha-lever':'stale','beta-lever':'fresh'})
+        self.assertEqual(state(self.engine_run(hours_after=31))['beta-lever'],'stale','a missed daily poll is stale')
     def test_expected_source_never_reported_is_flagged(self):
         self.sources.write_text(json.dumps([A,B,source('gamma')]))
         self.collect({'alpha-lever':[posting('a1')],'beta-lever':[posting('b1')]})

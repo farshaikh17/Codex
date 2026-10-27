@@ -6,7 +6,7 @@
 | `employers.json` | Employer registry (`employer-registry-1`): name, careers URL, evidenced job families and geography, inclusion reason. Public facts only. |
 | `registry.py` | Loads and validates the registry. `python registry.py` before any collection. |
 | `collect.py` | Official ATS feed collector: due scheduling, staged publication, run summary. |
-| `discover.py`, `discovery_targets.json` | Bounded source discovery: proposals for review, never edits the registry. See [SOURCE_DISCOVERY.md](SOURCE_DISCOVERY.md). |
+| `discover.py`, `market_sources.json` | Bounded source discovery: proposals for review, never edits the registry. See [MARKET_DISCOVERY.md](MARKET_DISCOVERY.md) and [SOURCE_DISCOVERY.md](SOURCE_DISCOVERY.md). |
 | `adapters.py` | Greenhouse, Lever, Ashby normalization (MIT, extracted from the earlier local collector). |
 | `public/status.json`, `public/index.json`, `public/boards/*.json` | Published collection output. See [OUTPUT_CONTRACT.md](OUTPUT_CONTRACT.md). |
 | `.github/workflows/collect.yml` | Five scheduled runs a day (owner's schedule). Each collects every enabled source, except one waiting on its own `poll_interval_hours`. Manual and `main` push runs collect all. |
