@@ -1,0 +1,124 @@
+{
+ "availability": {
+  "at": "2026-10-25T21:53:38.150524+00:00",
+  "reason": "first listed",
+  "state": "listed"
+ },
+ "board": "weave",
+ "changes": [],
+ "content": {
+  "compensation_raw": null,
+  "description": "In this role, you will be responsible for building, maintaining, and improving the cloud infrastructure that powers Weave's services. You will work with a modern tech stack, including Google Cloud Platform (GCP), Go, Kubernetes, Terraform, Prometheus, Grafana, and Vault. As an engineer, you will be proficient in core tools and languages, capable of completing routine tasks independently, and will use established patterns to create high-quality, maintainable solutions. You will play a key role in ensuring the reliability, scalability, and performance of our platform.\n\n- This position will be remote\n\n- Reports to: Engineering Manager\n\nWHAT YOU WILL OWN\n\n- Automate away as much of the day-to-day work as possible.\n\n- Design and implement highly available and scalable systems.\n\n- Ensure smooth day-to-day operations of Weave’s infrastructure.\n\n- Build and evolve tools and standards for automation, scaling, monitoring, and alerting.\n\n- Collaborate with product teams to resolve production issues, improve monitoring and leverage cloud services.\n\n- Participate in weekly on-call rotation.\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- Proficiency with at least one cloud platform is required, with GCP services (e.g., GKE, Compute Engine, VPC) being a plus.\n\n- Solid understanding of containerization technologies such as Kubernetes and Docker.\n\n- Experience with automation tools such as Puppet, Salt, Ansible, and Terraform.\n\n- Experience writing automation using Go, Python, etc.\n\n- Experience designing highly available and scalable systems.\n\n- Proficient with version control systems (e.g., Git) and CI/CD concepts.\n\n- Strong problem-solving skills and the ability to troubleshoot complex issues systematically.\n\nWHAT WILL MAKE US LOVE YOU\n\n- A passion for Infrastructure as Code, constantly seeking opportunities to automate, optimize, and manage infrastructure through code.\n\n- Deep expertise in Kubernetes, including cluster design, deployment, and ongoing management for large-scale applications.\n\n- Experience with advanced GCP services and architectures.\n\n- A strong sense of ownership and accountability for the systems you build and maintain.\n\n- Managing infrastructure and applications using IaC, GitOps and ArgoCD.\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+  "locations": [
+   {
+    "source": "location",
+    "text": "Weave - Headquarters (Lehi, UT)"
+   },
+   {
+    "source": "address.addressCountry",
+    "text": "United States"
+   }
+  ],
+  "published": "2026-10-08T18:52:23.665000+00:00",
+  "title": "Site Reliability Engineer, Cloud Infrastructure",
+  "workplace_type": "Remote"
+ },
+ "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
+ "content_hash": "443fd0e8b2ff5b2983e8cb8c3cc3a89e6ce93ffc2da6e381c1e2c68b7b3a74d9",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 4,
+  "fields": {
+   "compensation": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "employment_type": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location",
+      "quote": "Weave - Headquarters (Lehi, UT)",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:address.addressCountry",
+      "quote": "United States",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB",
+      "quote": "- Solid understanding of containerization technologies such as Kubernetes and Docker.\n- Experience with automation tools such as Puppet, Salt, Ansible, and Terraform.\n- Experience writing automation using Go, Python, etc.\n- Experience designing highly available and scalable systems.\n- Proficient with version control systems (e.g., Git) and CI/CD concepts.\n- Strong problem-solving skills and the ability to troubleshoot complex issues systematically.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "inline_marker_in:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB",
+      "quote": "- Proficiency with at least one cloud platform is required, with GCP services (e.g., GKE, Compute Engine, VPC) being a plus.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     },
+     {
+      "interpretation": null,
+      "method": "description_section:WHAT WILL MAKE US LOVE YOU",
+      "quote": "- A passion for Infrastructure as Code, constantly seeking opportunities to automate, optimize, and manage infrastructure through code.\n- Deep expertise in Kubernetes, including cluster design, deployment, and ongoing management for large-scale applications.\n- Experience with advanced GCP services and architectures.\n- A strong sense of ownership and accountability for the systems you build and maintain.\n- Managing infrastructure and applications using IaC, GitOps and ArgoCD.\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     }
+    ],
+    "state": "stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "remote",
+      "method": "ats_field:workplace_type",
+      "quote": "Remote",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+     }
+    ],
+    "state": "stated"
+   }
+  },
+  "state": "ok",
+  "warnings": []
+ },
+ "first_seen_at": "2026-10-25T21:53:38.150524+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "ashby:weave:ce79425d-20fc-4c15-841f-3445b86b05b5",
+ "provider": "ashby",
+ "req_id": "ce79425d-20fc-4c15-841f-3445b86b05b5",
+ "schema": "posting-record-1",
+ "source_id": "weave-ashby",
+ "urls": {
+  "apply_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5/application",
+  "canonical_url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5",
+  "url": "https://jobs.ashbyhq.com/weave/ce79425d-20fc-4c15-841f-3445b86b05b5"
+ }
+}

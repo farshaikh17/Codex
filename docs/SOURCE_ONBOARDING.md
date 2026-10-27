@@ -2,7 +2,7 @@
 
 A source whose ATS is Greenhouse, Lever or Ashby needs only a JSON edit. No Python changes.
 
-1. Find the official board on the employer's own careers page, not a third-party aggregator. Record that page as `careers_url` once you have opened it yourself. A `careers_url` needs `careers_url_evidence` `{url, checked_at, quote}`, for example the board link found on the page. `discover.py` produces it (see DISCOVERY.md).
+1. Find the official board on the employer's own careers page, not a third-party aggregator. Record that page as `careers_url` once you have opened it yourself. A `careers_url` needs `careers_url_evidence` `{url, checked_at, quote}`, for example the board link found on the page. `discover.py` produces it (see SOURCE_DISCOVERY.md).
 2. Add or reuse an employer in `employers.json` → `employers`:
    ```json
    {"id": "acme", "name": "Acme", "careers_url": "https://acme.example/careers",

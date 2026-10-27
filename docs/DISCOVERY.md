@@ -1,80 +1,92 @@
-# Bounded source discovery (backlog B)
+# Candidate-specific discovery effort
 
-`discover.py` finds official Greenhouse, Lever and Ashby boards linked from employer careers pages, and writes **proposals for review**. It is run by hand, separately from scheduled collection, and never edits `sources.json` or `employers.json`.
+The existing collector covers a small employer set. A successful collection is
+not evidence of relevant candidate coverage, completed reviews, or READY jobs.
+Discovery strategy belongs to each private candidate configuration and canonical
+Sheet. It must not be hard-coded as a shared role list or percentage split.
 
+## Implemented here
+
+Optional `rules.discovery` accepts a `lanes` list. Each lane has a unique `id`,
+positive percentage `share`, nonempty `queries` and nonempty `sources` string
+lists. Shares must sum to 100; unknown keys are rejected. Source strings are
+caller-defined identifiers, not automatically trusted or fetched endpoints.
+Existing candidate configurations without discovery remain valid.
+
+`python -m engine.discovery --candidates PRIVATE_DIR --candidate ID --state
+PRIVATE_STATE_JSON --batches 10` proposes a weighted sequence of discovery work.
+Run that command on one shell line. State is optional and is read-only:
+
+```json
+{
+  "completed": {"core": 4, "adjacent": 1, "aspirational": 0},
+  "paused_sources": {"source-a": "2030-01-02T09:00:00Z"}
+}
 ```
-python discover.py                                   # every target in discovery_targets.json
-python discover.py --employer doist,toggl            # selected targets
-python discover.py --max-pages 3 --max-requests 20 --no-sitemaps --out discovery/proposals.json
-```
 
-## Bounds
+The state keys must match that private configuration. The caller records actually
+completed discovery batches in its existing private ledger, over its chosen
+allocation window, and supplies those counts next time. Proposed tasks never
+advance counters. A timezone-aware cooldown skips a source until its due time.
+If every source in one lane is paused, remaining lanes receive capacity and the
+unavailable lane is reported. If all sources are paused, unfilled work is explicit.
 
-| Bound | Default | Hard cap |
-|---|---|---|
-| Pages per target (start page, sitemap and followed links) | 5 | 20 |
-| Link depth from the start page | 1 | 1 |
-| Requests per run (robots.txt, pages, sitemap, feed checks) | 15 | 40 |
-| Response size | 2 MB | |
-| Timeout per request | 15 s | |
-| Pause after each target | 2 s | |
-| Redirects | 3, and only within the target's allowed hosts. After a redirect to another allowed host, that host's robots.txt is checked too, and a disallowed page is discarded. A redirect target counts as visited | |
+`engine.run` includes an initial plan in its **private candidate report** when the
+candidate has a discovery strategy. That initial report does not load counters or
+cooldowns; use the CLI with private state for continuation. Plans never enter the
+shared SQLite run history or public posting exports. CLI stdout is private data.
+Keep real configurations, queries, source preferences and state outside Git;
+the existing candidate loader enforces that boundary for real configurations.
 
-- **Scope:** only `https` links on the target's `allowed_hosts` (default: the start URL's host) are followed. Links on other hosts are scanned for board URLs and recorded, never fetched.
-- **What is followed:** only `<a href>` links whose path looks like a jobs page and isn't a static asset. Scripts, iframes, forms and stylesheets are scanned for board URLs only.
-- **Sitemaps:** at most one sitemap, the first one robots.txt lists on an allowed host. It is read once (no index recursion), and only jobs-like URLs on allowed hosts are queued, within the page budget.
-- **robots.txt:** checked before any page, with the same policy as PR #1's `crawl_pages.robots_rules`. 4xx means no rules. 5xx, unreachable, 401/403 or an off-scope redirect means disallow everything. A 429 halts the run.
-- **Stops:** 401/403/451, CAPTCHA, login or denial pages stop that host. A 429 anywhere halts the whole run, with no retries. When the request budget runs out, the run halts and the unvisited targets are reported as stopped.
+This module performs **no web requests, reviews, eligibility changes, applications
+or Sheet writes**. It does not change the collector's schedule or existing queue
+claim order. Query/source planning is separate from qualification. Native ChatGPT
+workers must use their canonical private Sheet strategies directly; they do not
+depend on a local Python process or this private software queue.
 
-## What a run reports (`source-discovery-1`)
+## Operational requirements for consumers
 
-Per target:
-- `pages`: each page with how it was reached and its result (`read`, `blocked`, `failed`).
-- `boards`: up to 3 pieces of evidence per board, each giving the page, how the URL was found (`a`, `iframe`, `script`, `json-ld`) and the URL itself.
-- `unsupported_ats`: Workday, SmartRecruiters, Workable and others, plus the Greenhouse and Lever EU hosts. Recorded only.
-- `careers_url_proposal`: see below.
+1. Save completed unsaved decisions, then start fresh accessible discovery except
+   urgent deadlines or employer actions. Check canonical identity/history keys
+   before fetching another full JD for a known role.
+2. Allocate most planned full-JD selections to unseen relevant roles; resolve due
+   conditionals separately. A strategy/audit record must point to the actual
+   research cursor rather than erase it.
+3. After a failed primary page, try one appropriate official alternate, then save
+   failure evidence and a normally 24-hour retry. Honor cooldowns across runs.
+   After two distinct identity failures on a source, pause that source and use an
+   independent one. Do not end a functioning invocation on blocked carryovers.
+4. Treat provisional title/location cards, exact requisitions, primary full JDs,
+   exported descriptions, eligibility decisions and READY as separate stages.
+5. Report actual effort by lane and source, new versus carryover full reads,
+   duplicates skipped before retrieval, exact fresh identities, pay-only blockers,
+   other blockers and decisions saved/read back. Missing counters stay unknown.
+6. Keep fixed-income stability as a ranking preference when appropriate, without
+   adding guaranteed-hour requirements to an independently allowed hourly path.
+7. Preserve source hashes and extraction versions. Unseen unchanged records remain
+   unseen; missing feed records are not automatically closed vacancies.
 
-Each board gets one status:
+## Acceptance and remaining integration
 
-| Status | Meaning |
-|---|---|
-| `already_configured` | The provider and board match a source in `sources.json`. No request is spent re-checking it. |
-| `verified_feed` | The official feed answered through `collect.fetch` (pinned host, no redirects, 25 MB cap). The entry carries `feed_jobs`, a `proposed_source` snippet, `registry_problems` from a dry-run `registry.validate` with the snippet added (empty means it would validate), and `employer_entry_needed`. |
-| `feed_failed` | The page links to a board, but its feed didn't answer. The error is reported and nothing is proposed. |
-| `not_verified` | The run halted before the feed could be checked. |
+The offline tests verify different allocations, resumable counters, source
+failover/cooldowns, malformed configuration rejection and private run-report
+isolation. Passing them demonstrates planning behavior, not useful job yield.
 
-**`careers_url_proposal`:** when a page links to a board that is already configured for the same employer, and that employer has no `careers_url`, the run proposes that page as `careers_url`. The evidence is `{url, checked_at, quote}`, where the quote is the board link. The proposal is applied only if a person reviews it and copies it into `employers.json` as `careers_url` plus `careers_url_evidence`. `registry.py` rejects a `careers_url` without evidence. Applied so far (owner-approved 2026-10-26): Oyster, Zapier, Weave, Clipboard.
+Live acceptance requires at least two subsequent research runs per candidate:
+deduplicated fresh relevant identities from independent sources, primary full-JD
+reviews, recorded blockers and verified canonical persistence. Report shortfalls
+even when READY is zero; never loosen eligibility to satisfy a numeric target.
 
-## Adding a discovered source
+Remaining software work for the development owner:
 
-1. Read the proposal. Open the evidence page yourself and confirm it is the employer's own site.
-2. Add the employer to `employers.json` if `employer_entry_needed` is true, with a real `inclusion.reason`.
-3. Paste `proposed_source` into `sources.json`. Run `python registry.py`, and trial it with `python collect.py --ids <id>`.
-4. Open a PR. Recurring collection starts only after the PR merges.
-
-## Targets (`discovery_targets.json`)
-
-- The ten configured employers: start URLs marked `operator_guess`. They are unverified until a run finds the configured board linked from the page.
-- The six PR #1 page-capture employers: the URLs PR #1's allowlist already opens. Discovery checks whether any of them has an official feed, in which case the feed should replace browser capture.
-
-## Live trial (2026-10-26, this container, 40 requests across 16 targets, nothing committed)
-
-| Target | Result |
-|---|---|
-| Oyster, Zapier, Weave | Page links to the configured Ashby board → `careers_url` proposed with evidence |
-| GitLab, Remote, PostHog, Automattic, Doist, Atlassian, Canonical | Pages read, no supported board link in the static HTML (likely added by JavaScript, or no Greenhouse/Lever/Ashby board). Nothing proposed |
-| Toggl | Page embeds `https://jobs.ashbyhq.com/toggl/embed`, but the Ashby posting API returns 404 for `toggl` → `feed_failed`, nothing proposed |
-| Salesforce | Workday, recorded as an unsupported ATS |
-| Clipboard, Resilinc, Twilio (first run) | Redirect to another domain (clipboard.com, resilinc.ai, jobs.twilio.com) → blocked by scope |
-| Clipboard (after the scope was widened) | clipboardhealth.com answers path-preserving 301s to clipboard.com, and the page names "Clipboard Health". It links to the configured Ashby board → `careers_url` proposed and applied |
-| Resilinc (after the scope was widened) | resilinc.com → resilinc.ai → careers.resilinc.com → careers.resilinc.ai, all 301s from the established domain, on a page naming Resilinc 23 times. The careers and openings pages have no Lever link in static HTML → nothing proposed |
-| Twilio (after the scope was widened; owner approved jobs.twilio.com) | jobs.twilio.com/careers is a JavaScript app with no Greenhouse reference in static HTML → nothing proposed |
-| Drivetrain | robots.txt answered 429 → the run halted with no retry. The three targets after it were run separately, later |
-
-Widening a target's `allowed_hosts` needs a recorded basis in the target's `allowed_hosts_basis`: owner approval, or verified ownership (a 301 from the employer's established domain to a page naming the employer).
-
-The trial found four defects, all fixed with regression tests:
-- A redirect to another allowed host skipped that host's robots.txt.
-- A redirect target was fetched again through its own link.
-- A closure in `robots_rules` lost the exception it referenced, so an off-scope robots.txt redirect crashed the run.
-- A Next.js script URL with "careers" in its path was queued as a page.
+- Onboard verified employer sources covering distinct responsibility families and
+  industries; do not treat the existing ten-employer feed as worldwide coverage.
+- Measure incremental plausible fresh-identity yield per source before expanding
+  collection volume. Add engineering/industrial/consultancy sources where needed,
+  and implementation agencies/non-SaaS sources where needed. Verify URLs, access
+  constraints and free functionality before deployment.
+- Any future private consumer integration must feed actual completed counters and
+  cooldowns into the planner, keep the native Sheets canonical and prove it does
+  not duplicate/restart the existing candidate workflow.
+- Do not deploy real candidate configuration or the private software queue merely
+  because these offline tests pass. No such deployment is part of this change.

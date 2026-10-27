@@ -1,0 +1,147 @@
+{
+ "availability": {
+  "at": "2026-10-26T16:59:12.370313+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
+ },
+ "board": "gitlab",
+ "changes": [],
+ "content": {
+  "compensation_raw": null,
+  "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs a Senior Security Engineer on GitLab’s Security Incident Response Team (SIRT), you will play a critical role in defending GitLab.com and the broader GitLab environment against evolving security threats. This role operates on a compressed 4-day work schedule, with a full-time week's hours condensed into four longer working days. Shifts run either Sunday through Wednesday or Wednesday through Saturday to provide 24/7/365 security coverage.\n\nYou will lead high-impact incidents and investigations, drive continuous improvements in defense, detection and response capabilities, and help scale security operations through automation and intelligent workflows.\n\nOperating within a 24/7 global environment (follow the sun model), you will own incidents end-to-end - from detection and triage through containment, eradication, and recovery - while partnering cross-functionally to strengthen GitLab’s overall security posture. A key aspect of this role is leveraging automation and AI-driven approaches to improve detection fidelity, accelerate investigations, and reduce response times. You will help shape how modern tooling and data are applied to stay ahead of evolving adversary tactics.\n\nThis role is ideal for someone who thrives in high-tempo environments, brings strong DFIR expertise, and is equally passionate about operational excellence and building scalable detection and response systems and workflows.\n\nWhat you’ll do\n\nLead and coordinate end-to-end incident response for high-severity security events within a 24/7 global on-call model, with this role operating during EMEA business hours\n\nPrepare clear executive communications that keep stakeholders informed during incidents\n\nInvestigate complex security incidents across cloud environments, applying strong Digital Forensics and Incident Response (DFIR) methodologies\n\nPartnering with Signals Engineering to design and implement detection capabilities, including SIEM use cases, alerting strategies, and telemetry pipelines\n\nBuild and enhance automation and AI-assisted workflows to improve triage, investigation speed, and response consistency\n\nPartner with Threat Intelligence to contextualize threats and improve detection coverage\n\nConduct root cause analysis (RCA) and lead post-incident reviews to drive continuous improvement and risk reduction\n\nDevelop and maintain runbooks, playbooks, and operational documentation\n\nCollaborate cross-functionally (Engineering, Infrastructure, Legal, Product, Communications, etc) during incidents and lead proactive initiatives (e.g. tabletops)\n\nMentor other engineers and help elevate the team’s overall incident response maturity\n\nWhat you’ll bring\n\nStrong experience in security incident response and investigations in cloud-first environments\n\nExperience using or administering Git/GitLab in a security or engineering context\n\nHands-on experience with SIEM, EDR, and/or detection engineering\n\nExperience with cloud platforms (AWS & GCP)\n\nFamiliarity with threat intelligence and adversary tactics (e.g., MITRE ATT&CK)\n\nExperience building or working with automation (e.g., Python, scripting, SOAR platforms)\n\nInterest or experience in applying AI/ML or data-driven techniques to detection, triage, or response workflows\n\nStrong analytical and problem-solving skills; ability to operate effectively during high-severity incidents\n\nExcellent written communication skills with a passion for clear, actionable documentation\n\nGrowth mindset with a proactive approach to identifying and mitigating security risks\n\nAbout the team\n\nThe Security Incident Response Team (SIRT) is a globally distributed team of engineers split across 3 core regions; AMER, APAC and EMEA, and is at the forefront of security events that impact both GitLab.com and GitLab cloud and corporate environments. We are both reactive and proactive, leading security investigations, incident response support and response resolution, through to cyber threat analysis and detection and response engineering. Even though we’re a global team, we work together in a cross-regional manner and have automation and processes to facilitate collaboration when resolving incidents, handovers, and general collaboration for project work as well.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
+  "locations": [
+   {
+    "source": "location.name",
+    "text": "Remote, Israel"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Poland"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, United Kingdom"
+   },
+   {
+    "source": "offices.name",
+    "text": "Israel"
+   }
+  ],
+  "published": "2026-07-10T16:02:45-04:00",
+  "title": "Senior Security Engineer, Security Incident Response Team (SIRT) - EMEA",
+  "workplace_type": null
+ },
+ "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
+ "content_hash": "e33785c01edc10e166e6289f6baccb007b941a645f170d3ba39e4a304804a1a2",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 4,
+  "fields": {
+   "compensation": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "employment_type": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Israel",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Poland",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Israel",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:What you’ll bring",
+      "quote": "Strong experience in security incident response and investigations in cloud-first environments\nExperience using or administering Git/GitLab in a security or engineering context\nHands-on experience with SIEM, EDR, and/or detection engineering\nExperience with cloud platforms (AWS & GCP)\nFamiliarity with threat intelligence and adversary tactics (e.g., MITRE ATT&CK)\nExperience building or working with automation (e.g., Python, scripting, SOAR platforms)\nInterest or experience in applying AI/ML or data-driven techniques to detection, triage, or response workflows\nStrong analytical and problem-solving skills; ability to operate effectively during high-severity incidents\nExcellent written communication skills with a passion for clear, actionable documentation\nGrowth mindset with a proactive approach to identifying and mitigating security risks",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Israel",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Poland",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+     }
+    ],
+    "state": "stated"
+   }
+  },
+  "state": "ok",
+  "warnings": []
+ },
+ "first_seen_at": "2026-10-25T21:53:38.150524+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "greenhouse:gitlab:8628447002",
+ "provider": "greenhouse",
+ "req_id": "8628447002",
+ "schema": "posting-record-1",
+ "source_id": "gitlab-greenhouse",
+ "urls": {
+  "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002",
+  "canonical_url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002",
+  "url": "https://job-boards.greenhouse.io/gitlab/jobs/8628447002"
+ }
+}

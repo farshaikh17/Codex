@@ -1,0 +1,33 @@
+name: Offline tests
+# Runs on pull requests only. Read-only token, no employer requests (outbound sockets are disabled in the
+# test process), no publishing, no browser or pip install. Standard ubuntu-latest runner minutes only.
+on:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: offline-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests with network disabled
+        run: |
+          python - <<'PY'
+          import socket,sys,unittest
+          def offline(*args,**kwargs): raise OSError('network disabled in offline CI')
+          socket.socket.connect=socket.socket.connect_ex=offline
+          socket.create_connection=socket.getaddrinfo=offline
+          suite=unittest.defaultTestLoader.discover('.',pattern='test*.py',top_level_dir='.')
+          sys.exit(0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1)
+          PY
+      - name: Validate source registry (offline)
+        run: if [ -f registry.py ]; then python registry.py; else echo 'No registry.py on this branch'; fi
