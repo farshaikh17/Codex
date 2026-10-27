@@ -1,7 +1,7 @@
 """Bounded public-source discovery and diverse vacancy evidence; no candidate decisions.
 Stdlib only. Reuses the employer-page scanner from parked PR #10.
 """
-import argparse, collections, hashlib, ipaddress, json, re, socket, time
+import argparse, collections, hashlib, ipaddress, json, re, socket, time, urllib.robotparser
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -17,8 +17,13 @@ FAMILIES = {
  "energy-advisory": r"energy|decarbon|sustainab|efficiency|power|utilities",
  "asset-projects": r"reliab|asset|commission|electrical|maintenance|industrial|plant",
 }
+# Software reliability and sales commissions share words with physical asset work; they are not that signal.
+NOT_ASSET=r"site reliability|database reliability|reliability engineer.*(?:cloud|platform|infrastructure|database)|\bSRE\b|commission (?:analyst|plan|specialist)|sales commission"
 def families(title):
-    return [k for k, pattern in FAMILIES.items() if re.search(pattern, title, re.I)]
+    tags=[k for k, pattern in FAMILIES.items() if re.search(pattern, title, re.I)]
+    if "asset-projects" in tags and re.search(NOT_ASSET,title,re.I):
+        tags.remove("asset-projects")
+    return tags
 
 def write(path, value):
     path=Path(path); path.parent.mkdir(parents=True,exist_ok=True)
@@ -36,41 +41,56 @@ def public_url(url):
     return u
 
 class Network:
-    """Every actual GET counted; redirects refused. No retries; total wall deadline."""
-    def __init__(self, max_requests=40, seconds=180):
+    """Every actual GET counted; redirects refused; no retries. Requests start only before the deadline and each
+    body read is time- and byte-bounded. Successive requests to one host wait max(1s, robots Crawl-delay)."""
+    MAX_CRAWL_DELAY=15
+    def __init__(self, max_requests=40, seconds=180, sleep=time.sleep):
         self.requests=0; self.max_requests=min(max_requests,40)
         self.deadline=time.monotonic()+min(seconds,180); self.halted=None
-        self.rules={}
+        self.rules={}; self.last={}; self.delays={}; self.sleep=sleep
+    def _polite(self,host):
+        delay=max(1.0,self.delays.get(host,0))
+        if delay>self.MAX_CRAWL_DELAY: raise discover.Blocked('robots Crawl-delay %ss exceeds this bounded run'%delay)
+        wait=self.last.get(host,-1e9)+delay-time.monotonic()
+        if wait>0:
+            if time.monotonic()+wait>=self.deadline:
+                self.halted="request/time budget reached"; raise discover.Halt(self.halted)
+            self.sleep(wait)
     def get(self,url,allowed,limits):
         if self.halted: raise discover.Halt(self.halted)
         if self.requests>=self.max_requests or time.monotonic()>=self.deadline:
             self.halted="request/time budget reached"; raise discover.Halt(self.halted)
         u=public_url(url)
         if u.hostname not in allowed: raise discover.Blocked("host not approved")
-        self.requests+=1
-        result=discover.http_get(url,allowed,{**limits,"timeout_s":min(10,max(.1,self.deadline-time.monotonic()))})
+        self._polite(u.hostname)
+        self.requests+=1; self.last[u.hostname]=time.monotonic()
+        remaining=max(.1,self.deadline-time.monotonic())
+        result=discover.http_get(url,allowed,{**limits,"timeout_s":min(10,remaining),"max_seconds":min(30,remaining+10)})
+        self.last[u.hostname]=time.monotonic()
+        if u.path=='/robots.txt' and result[0]==200:
+            # Learn Crawl-delay for every caller (including the reused scanner, which keeps its own rule cache).
+            rp=urllib.robotparser.RobotFileParser(); rp.parse(result[2].splitlines())
+            self.delays[u.hostname]=float(rp.crawl_delay(discover.UA_TOKEN) or 0)
         if result[0]==429:
             self.halted="HTTP 429; stop run"; raise discover.Halt(self.halted)
         return result
-    def page(self,url):
+    def _allowed(self,url):
         u=public_url(url); origin=u.scheme+"://"+u.netloc
         if origin not in self.rules:
             self.rules[origin]=discover.robots_rules(lambda target:self.get(target,{u.hostname},discover.LIMITS),url)[0]
         ok,why=self.rules[origin](url)
         if not ok: raise discover.Blocked(why)
+        return u
+    def page(self,url):
+        u=self._allowed(url)
         status, final, body=self.get(url,{u.hostname},discover.LIMITS)
         discover._check_access(status,body)
         if status>=400: raise ValueError("HTTP %s"%status)
-        time.sleep(1)
         return body
     def feed(self,source):
         # API paths also honor robots; registry fixes host/path/options.
-        url=source['url']; u=public_url(url); origin=u.scheme+'://'+u.netloc
-        if origin not in self.rules:
-            self.rules[origin]=discover.robots_rules(lambda target:self.get(target,{u.hostname},discover.LIMITS),url)[0]
-        ok,why=self.rules[origin](url)
-        if not ok: raise discover.Blocked(why)
-        status,final,body=self.get(url,{u.hostname},{**discover.LIMITS,'max_bytes':10000000})
+        u=self._allowed(source['url'])
+        status,final,body=self.get(source['url'],{u.hostname},{**discover.LIMITS,'max_bytes':10000000})
         discover._check_access(status,body)
         if status>=400: raise ValueError('HTTP %s'%status)
         return json.loads(body)
@@ -93,27 +113,39 @@ def directory_leads(html, url, selector):
             for v in sorted(set(parser.links))]
 
 def due_targets(config,state,now,limit=4):
-    due=[]
+    """(selected, deferred). Deferred targets are untouched: no request, no state change, never reported fresh."""
+    due,deferred=[],[]
     for target in config["targets"]:
         prev=state.get(target["employer"],{})
-        if prev.get("retry_after") and datetime.fromisoformat(prev["retry_after"])>now: continue
+        if prev.get("retry_after") and datetime.fromisoformat(prev["retry_after"])>now:
+            deferred.append({"employer":target["employer"],"reason":"cooldown","retry_after":prev["retry_after"],
+                             "last_checked_at":prev.get("checked_at")}); continue
         due.append(target)
     # Stalest first guarantees exploration; observed plausible yield breaks ties only.
-    return sorted(due,key=lambda t:(state.get(t["employer"],{}).get("checked_at",""),
-                  -state.get(t["employer"],{}).get("plausible",0),t["employer"]))[:limit]
+    due.sort(key=lambda t:(state.get(t["employer"],{}).get("checked_at",""),
+             -state.get(t["employer"],{}).get("plausible",0),t["employer"]))
+    deferred+=[{"employer":t["employer"],"reason":"rotation_limit","last_checked_at":state.get(t["employer"],{}).get("checked_at")}
+               for t in due[limit:]]
+    return due[:limit],deferred
 
+CARD=("key","req_id","title","locations","workplace_type","url","apply_url","published","observed_at",
+      "employer","source_id","provenance","freshness","source_status","source_checked_at","source_last_success_at")
+EXCLUDED=r"helpdesk|technical support|customer support|sales representative|account executive"
+PREFERRED=r"implementation|onboarding|commissioning|reliability|maintenance|CRM administrator|automation specialist"
 def diverse(jobs,cap=3,limit=60):
-    """Exact identity dedup precedes selection. No private seen/assessed state."""
+    """Exact identity dedup precedes selection. No private seen/assessed state. Cards are compact: no descriptions."""
     seen=set(); groups=collections.defaultdict(list)
     for job in jobs:
         identity=(job["employer"],job.get("req_id") or job["key"])
         if identity in seen: continue
         seen.add(identity)
         tags=families(job["title"])
-        if tags and not re.search(r"helpdesk|technical support|customer support|sales representative|account executive",job["title"],re.I): groups[job["employer"]].append({**job,"families":tags,"stage":"exact_vacancy_unreviewed"})
+        if tags and not re.search(EXCLUDED,job["title"],re.I):
+            groups[job["employer"]].append({**{k:job[k] for k in CARD if k in job},"responsibility_signals":tags,
+                "signal_basis":"public title keywords only","stage":"exact_vacancy_unreviewed",
+                "eligibility":"not_assessed (private review only; remote/APAC wording is not India eligibility)"})
     for values in groups.values():
-        values.sort(key=lambda j:(
-            not bool(re.search(r'implementation|onboarding|commissioning|reliability|maintenance|CRM administrator|automation specialist',j['title'],re.I)),
+        values.sort(key=lambda j:(not bool(re.search(PREFERRED,j['title'],re.I)),
             bool(re.search(r'staff engineer|principal engineer|architect|data analyst',j['title'],re.I)),j['key']))
     selected=[]
     for i in range(cap):
@@ -133,39 +165,61 @@ def validate_config(config):
         if source['provider'] not in registry.FEEDS or not registry.BOARD.fullmatch(source['board']): raise ValueError('invalid feed')
         if not source['ownership_evidence'].get('url','').startswith('https://'): raise ValueError('ownership evidence required')
 
+def _cooldown(now,status,**extra):
+    return {"checked_at":now.isoformat(),"retry_after":(now+timedelta(days=1)).isoformat(),"status":status,**extra}
+
 def run(config,sources,employers,out,network=None,now=None):
     validate_config(config)
     now=now or datetime.now(timezone.utc)
     net=network or Network(); out=Path(out)
     old=json.loads((out/"state.json").read_text()) if (out/"state.json").exists() else {}
-    state=dict(old); leads=[]; errors=[]; captures=[]; jobs=[]; feeds={}
+    state=dict(old); errors=[]; captures=[]; jobs=[]; feeds={}; deferred=[]
     prior_report=json.loads((out/'report.json').read_text()) if (out/'report.json').exists() else {}
-    leads=list(prior_report.get('employer_leads',[]))
-    # Existing exact vacancies also enter the diverse evidence batch.
+    # Existing exact vacancies also enter the diverse evidence batch, labelled with their source's latest real attempt.
     boardroot=out.parent/"boards"
+    status_doc=json.loads((out.parent/"status.json").read_text()) if (out.parent/"status.json").exists() else {}
+    health={s.get("source"):s for s in status_doc.get("sources",[])}
     bysource={s["id"]:s for s in sources}
     for path in sorted(boardroot.glob("*.json")):
         sid=path.stem
         if sid not in bysource: continue
+        h=health.get(sid,{})
+        fresh="last_observed" if h.get("status")=="ok" else ("last_known_good_after_failure" if h.get("status")=="failed" else "not_reported")
         for job in json.loads(path.read_text(encoding="utf-8")).get("jobs",[]):
             jobs.append({**job,"employer":bysource[sid]["employer"],"source_id":sid,
-                         "provenance":str(path.relative_to(out.parent)),"freshness":"last_observed"})
+                         "provenance":str(path.relative_to(out.parent)),"freshness":fresh,"source_status":h.get("status","not_reported"),
+                         "source_checked_at":h.get("checked_at"),"source_last_success_at":h.get("last_success_at")})
+    # Provisional employer links: one per host, first/last seen kept. A link is never a source or an ownership claim.
+    leads={}
+    for lead in prior_report.get('employer_leads',[]):
+        host=urlparse(lead['url']).hostname
+        if host: leads.setdefault(host,{**lead,"host":host,"first_seen_at":lead.get("first_seen_at") or prior_report.get("generated_at")})
+    def halted(key,what):
+        deferred.append({"source":key,"reason":"not_attempted: "+(net.halted or what)})
     for directory in config.get("directories",[])[:3]:
         key="directory:"+directory["url"]; prev=state.get(key,{})
-        if prev.get("retry_after") and datetime.fromisoformat(prev["retry_after"])>now: continue
+        if prev.get("retry_after") and datetime.fromisoformat(prev["retry_after"])>now:
+            deferred.append({"source":key,"reason":"cooldown","retry_after":prev["retry_after"]}); continue
+        if net.halted: halted(key,"run halted"); continue
         try:
             found=directory_leads(net.page(directory['url']),directory['url'],directory['link_pattern'])
             offset=prev.get('offset',0)%max(1,len(found))
-            leads+=(found[offset:]+found[:offset])[:25]
-            state[key]={"checked_at":now.isoformat(),"retry_after":(now+timedelta(days=1)).isoformat(),"status":"ok","offset":offset+25}
+            for lead in (found[offset:]+found[:offset])[:25]:
+                host=urlparse(lead['url']).hostname
+                leads[host]={**leads.get(host,{"first_seen_at":now.isoformat()}),**lead,"host":host,"last_seen_at":now.isoformat()}
+            state[key]=_cooldown(now,"ok",offset=offset+25,links_found=len(found))
+        except discover.Halt:
+            halted(key,"run halted")  # budget/429: never cool down or mark failed what was not attempted
         except Exception as e:
             errors.append({"source":key,"error":str(e)[:200]})
-            state[key]={"checked_at":now.isoformat(),"retry_after":(now+timedelta(days=1)).isoformat(),"status":"failed"}
+            state[key]=_cooldown(now,"failed")
     configured={(s['provider'],s['board'].lower()) for s in sources if s.get('enabled',True)}
     for approved in config.get('reviewed_feeds',[])[:2]:
         if (approved['provider'],approved['board'].lower()) in configured: continue
         key='feed:'+approved['employer']; prev=state.get(key,{})
-        if prev.get('retry_after') and datetime.fromisoformat(prev['retry_after'])>now: continue
+        if prev.get('retry_after') and datetime.fromisoformat(prev['retry_after'])>now:
+            deferred.append({"source":key,"reason":"cooldown","retry_after":prev["retry_after"]}); continue
+        if net.halted: halted(key,"run halted"); continue
         try:
             source={**approved,'url':registry.feed_url(approved['provider'],approved['board'])}
             data=net.feed(source); rawjobs=extract_jobs(source['provider'],data)
@@ -178,11 +232,14 @@ def run(config,sources,employers,out,network=None,now=None):
                 count+=1
             captures.append({'employer':approved['employer'],'provider':approved['provider'],
                 'board':approved['board'],'exact_vacancies':count,'status':'validated_feed'})
-            state[key]={'checked_at':now.isoformat(),'retry_after':(now+timedelta(days=1)).isoformat(),'status':'ok'}
+            state[key]=_cooldown(now,'ok')
+        except discover.Halt:
+            halted(key,"run halted")
         except Exception as e:
             errors.append({'source':key,'error':str(e)[:200]})
-            state[key]={'checked_at':now.isoformat(),'retry_after':(now+timedelta(days=1)).isoformat(),'status':'failed'}
-    targets=due_targets(config,state,now)
+            state[key]=_cooldown(now,'failed')
+    targets,later=due_targets(config,state,now)
+    deferred+=[{"source":"target:"+d.pop("employer"),**d} for d in later]
     def feed(source):
         data=net.feed(source)
         feeds[(source["provider"],source["board"].lower())]=data
@@ -190,7 +247,8 @@ def run(config,sources,employers,out,network=None,now=None):
     report=discover.discover(targets,sources,employers,get=net.get,feed=feed,
         limits={"max_pages":2,"max_requests":40,"sitemaps":False},pause=lambda _:None,now=now.isoformat())
     for target in report["targets"]:
-        if not target["pages"] and report.get("halted"): continue
+        if not target["pages"] and (report.get("halted") or net.halted):
+            halted("target:"+target["employer"],"run halted"); continue
         plausible=0
         for board in target["boards"]:
             data=feeds.get((board["provider"],board["board"].lower()))
@@ -202,19 +260,23 @@ def run(config,sources,employers,out,network=None,now=None):
                 jobs.append({**rec,"employer":target["employer"],"source_id":None,
                     "provenance":board["evidence"],"observed_at":now.isoformat(),"freshness":"fresh_feed"})
                 plausible+=bool(families(rec["title"]))
-        state[target["employer"]]={"checked_at":now.isoformat(),"plausible":plausible,
-            "retry_after":(now+timedelta(days=1)).isoformat(),
-            "status":"blocked_or_failed" if target["stopped"] or not any(p.get("result")=="read" for p in target["pages"]) else "read"}
-    leads=list({lead['url']:lead for lead in leads}.values())[-500:]
+        state[target["employer"]]=_cooldown(now,"blocked_or_failed" if target["stopped"] or not any(p.get("result")=="read" for p in target["pages"]) else "read",plausible=plausible)
+    leads=sorted(leads.values(),key=lambda l:(l.get("last_seen_at") or "",l["host"]))[-500:]
     batch=diverse(jobs)
+    identities=lambda pred:len({(j["employer"],j.get("req_id") or j["key"]) for j in jobs if pred(j)})
+    by_employer=collections.Counter(j["employer"] for j in batch)
     result={"schema":"market-discovery-1","notice":NOTICE,"generated_at":now.isoformat(),
         "requests":net.requests,"halted":net.halted,"employer_leads":leads,"source_proposals":report,
-        "errors":errors,"validated_feeds":captures,"vacancies":batch,
-        "metrics":{"exact_identities":len({(j["employer"],j["key"]) for j in jobs}),
-            "plausible_title_identities":len({(j["employer"],j["key"]) for j in jobs if families(j["title"])}),
-            "review_batch":len(batch),"review_employers":len({j["employer"] for j in batch}),
-            "new_source_exact_identities":len({(j["employer"],j["key"]) for j in jobs if j["source_id"] is None}),
-            "provisional_employer_links":len(leads)}}
+        "errors":errors,"deferred":deferred,"validated_feeds":captures,"vacancies":batch,
+        "metrics":{"exact_identities":identities(lambda j:True),
+            "plausible_title_identities":identities(lambda j:families(j["title"])),
+            "fresh_feed_identities":identities(lambda j:j["freshness"] in ("fresh_feed","last_observed")),
+            "stale_or_unreported_identities":identities(lambda j:j["freshness"] not in ("fresh_feed","last_observed")),
+            "review_batch":len(batch),"review_employers":len(by_employer),
+            "largest_employer_share":round(max(by_employer.values())/len(batch),3) if batch else None,
+            "new_source_exact_identities":identities(lambda j:j["source_id"] is None),
+            "provisional_employer_links":len(leads),
+            "basis":"public title keywords and source health only; no candidate relevance feedback is integrated"}}
     write(out/"report.json",result); write(out/"state.json",state)
     return result
 

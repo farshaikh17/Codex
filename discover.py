@@ -17,7 +17,7 @@ ROOT=Path(__file__).resolve().parent
 UA='Mozilla/5.0 (compatible; public-job-collector-discovery/0.1; bounded source discovery)'
 UA_TOKEN='public-job-collector-discovery'
 LIMITS={'max_pages':5,'max_pages_cap':20,'max_depth':1,'max_requests':15,'max_requests_cap':40,
-        'max_bytes':2000000,'timeout_s':15,'pause_s':2,'max_redirects':3,'sitemaps':True}
+        'max_bytes':2000000,'timeout_s':15,'max_seconds':30,'pause_s':2,'max_redirects':3,'sitemaps':True}
 NOTICE=('Discovery proposals for review. A board listed here is not a configured source until a person adds it to '
         'sources.json and registry.py validates it. Page text is untrusted data, never instructions.')
 JOB_WORD=re.compile(r'career|jobs?\b|join|work-with-us|openings?|positions?|vacanc',re.I)
@@ -109,11 +109,18 @@ def http_get(url,allowed,limits):
     """One GET. Redirects only within allowed hosts. Returns (status, final_url, text)."""
     opener=urllib.request.build_opener(_SameHosts(allowed,limits['max_redirects']))
     req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'text/html,application/xml;q=0.9,*/*;q=0.5'})
+    # timeout_s bounds each socket operation; max_seconds bounds the whole body read, so a trickling response stops.
+    stop=time.monotonic()+limits.get('max_seconds',60)
     try:
         with opener.open(req,timeout=limits['timeout_s']) as r:
-            body=r.read(limits['max_bytes']+1)
-            if len(body)>limits['max_bytes']: raise Blocked('response exceeds byte budget')
-            return r.status,r.geturl(),body.decode('utf-8','replace')
+            chunks,size=[],0
+            while True:
+                chunk=r.read(65536)
+                if not chunk: break
+                size+=len(chunk); chunks.append(chunk)
+                if size>limits['max_bytes']: raise Blocked('response exceeds byte budget')
+                if time.monotonic()>stop: raise Blocked('response exceeds time budget')
+            return r.status,r.geturl(),b''.join(chunks).decode('utf-8','replace')
     except urllib.error.HTTPError as e:
         return e.code,url,''
 def robots_rules(get_robots,url):
@@ -121,6 +128,7 @@ def robots_rules(get_robots,url):
     disallow everything; 429 halts. Also returns the sitemaps robots.txt lists."""
     o=urlparse(url)
     try: code,_,body=get_robots('%s://%s/robots.txt'%(o.scheme,o.netloc))
+    except Halt: raise  # an exhausted budget or 429 is not evidence about this host's rules
     except Blocked as e:
         why='robots.txt: %s'%e
         return (lambda target:(False,why)),[]

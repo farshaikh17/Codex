@@ -119,7 +119,7 @@
       "job_families": [],
       "geography": [],
       "inclusion": {
-        "reason": "CRM, automation and implementation platform employer; official careers page links to the gohighlevel Lever board.",
+        "reason": "CRM, automation and implementation platform employer; official careers page links jobs.lever.co/gohighlevel (checked 2026-10-27).",
         "evidence_url": "https://www.gohighlevel.com/careers"
       }
     },
@@ -130,8 +130,8 @@
       "job_families": [],
       "geography": [],
       "inclusion": {
-        "reason": "Industrial commissioning and operational readiness consultancy. Official careers page uses the CAI Lever integration and identifies legacy cagents.com; cagents Lever board returns CAI-branded exact vacancies. Board association manually corroborated, not automatically inferred from a directory.",
-        "evidence_url": "https://caiready.com/careers/"
+        "reason": "Industrial commissioning, qualification and operational readiness consultancy. Corroborated 2026-10-27: CAI's official job page https://caiready.com/jobs/csv-engineer/ (title 'CSV Engineer | CAI') sends Apply to jobs.lever.co/cagents/628cda60-6eeb-4ce2-a5e2-45617ec25cbe, and that id is in the public cagents posting API with the same title; cagents.com answers 301 to caiready.com; feed descriptions open with 'CAI Overview'. The careers index page itself does not link the board (its 'CAI - Lever API' plugin script is formatting only), so the scanner cannot find it there.",
+        "evidence_url": "https://caiready.com/jobs/csv-engineer/"
       }
     }
   ]

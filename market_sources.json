@@ -63,9 +63,9 @@
       "provider": "lever",
       "board": "cagents",
       "ownership_evidence": {
-        "url": "https://caiready.com/careers/",
+        "url": "https://caiready.com/jobs/csv-engineer/",
         "checked_at": "2026-10-27",
-        "basis": "Official CAI careers page uses its Lever integration and identifies legacy cagents.com; CAI-branded cagents board manually corroborated. No automated ownership inference."
+        "basis": "Corroborated 2026-10-27: CAI's official job page https://caiready.com/jobs/csv-engineer/ (title 'CSV Engineer | CAI') sends Apply to jobs.lever.co/cagents/628cda60-6eeb-4ce2-a5e2-45617ec25cbe, and that id is in the public cagents posting API with the same title; cagents.com answers 301 to caiready.com; feed descriptions open with 'CAI Overview'. The careers index page itself does not link the board (its 'CAI - Lever API' plugin script is formatting only), so the scanner cannot find it there."
       }
     },
     {
@@ -80,4 +80,3 @@
     }
   ]
 }
-

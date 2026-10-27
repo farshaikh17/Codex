@@ -16,12 +16,15 @@ their workflow changes, their unrelated engine code, or their policies.
 
 1. Keep all ten existing feeds. Add HighLevel (gohighlevel Lever, 107 vacancies in
 the trial) and CAI (cagents Lever, 94). Both new sources poll once per 24 hours.
-HighLevel's official careers Explore Our Jobs link points to Lever. CAI's
-official careers page uses its own CAI Lever plugin and identifies legacy
-cagents.com; the cagents feed is CAI-branded. This is manually corroborated
-ownership evidence, not a generic name match or a newly inferred directory link.
-The CAI page scanner conservatively flags a Cloudflare script; its independently
-accessible official API can be collected without solving or bypassing a challenge.
+HighLevel's official careers page links jobs.lever.co/gohighlevel (checked 2026-10-27).
+CAI's careers index page does not link the board: its "CAI - Lever API" plugin script only
+formats text, and its cagents.com mention is an accessibility-statement link. The stronger
+evidence is that CAI's own job page https://caiready.com/jobs/csv-engineer/ sends Apply to
+jobs.lever.co/cagents/628cda60-6eeb-4ce2-a5e2-45617ec25cbe, that id is in the public cagents
+posting API with the same title, cagents.com answers 301 to caiready.com, and feed descriptions
+open with "CAI Overview". This shows the board is CAI's; it does not show any posting's
+eligibility, pay or currency. The scanner still stops on the careers page's Cloudflare script
+marker (conservative; not a challenge we solve), so this evidence was gathered by hand.
 No country, qualification or pay eligibility is asserted by onboarding.
 
 2. Scan three public directories: HubSpot's October partner announcement,
@@ -64,25 +67,42 @@ reads its public site as evidence and does not install or vendor it.
 
 The existing collection workflow adds a discovery step without changing cron.
 It makes at most 40 actual discovery GETs, refuses redirects, starts no request
-after its 180-second deadline, uses at most a 10-second request timeout, bounds
-HTML responses at 2 MB and feed validation at 10 MB, and performs no retries.
-The deadline is a request-start limit; an in-flight request/OS DNS can finish
-later. The existing job timeout is the outer bound. A 429 stops the discovery
-invocation. Failed targets are cooled down. Existing scheduled feed requests
-remain separately bounded by the 12-entry registry and existing 25-second
-timeout/25 MB feed cap; this does not adopt PR #11's collector budgets.
+after its 180-second deadline, uses at most a 10-second socket timeout plus a
+whole-body read limit (at most 30 s), bounds HTML responses at 2 MB and feed
+validation at 10 MB, and performs no retries. Successive requests to one host
+wait at least 1 s or the host's robots Crawl-delay; a host asking for more than
+15 s is skipped. DNS resolution is outside these limits; the existing job timeout
+is the outer bound. A 429 or exhausted budget stops the invocation: everything
+not yet requested is reported under `deferred` as not attempted and keeps its
+previous state (no failure, no cooldown). Failed targets are cooled down for 24 h.
+Existing scheduled feed requests remain separately bounded by the registry and
+the existing 25-second timeout/25 MB feed cap; this does not adopt PR #11's
+collector budgets.
 
 Robots rules are checked per URL path; rules are cached by origin. Nonpublic
 addresses and credentialed URLs are rejected by the new transport. No browser,
 stealth, proxy, LLM, paid search, CAPTCHA submission or application actions.
 
-public/discovery/report.json is additive: generic employer leads, source
-proposals, errors, exact unreviewed vacancy evidence and metrics.
-public/discovery/state.json contains only public source observations/cooldowns.
-It is not a candidate queue. Existing public/postings schema/hash contract and
-private candidate planner are unchanged. Discovery failure does not prevent
-ordinary snapshot publication. Check report generated_at and errors; a green
-collection alone does not establish fresh discovery.
+public/discovery/report.json is additive and separates four things:
+`employer_leads` (provisional links, one per host, with discovered_from and
+first/last seen; never sources or ownership claims), `vacancies` (compact exact
+vacancy cards: identity, title, location text, URLs, published/observed times,
+provenance and the source's latest real status/checked_at), each card's
+`responsibility_signals` (public title keywords only), and `eligibility`, which is
+always "not_assessed": eligibility is decided only in the private ChatGPT/Sheet
+review. Cards from a failed source are labelled last_known_good_after_failure;
+deferred targets/directories are listed with their reason and are never reported
+fresh. Software "site reliability" and "sales commission" titles are not counted
+as asset/commissioning signals. public/discovery/state.json contains only public
+source observations/cooldowns. It is not a candidate queue. Existing
+public/postings schema/hash contract and private planner are unchanged.
+Discovery files are not in the status.json manifest; discovery failure does not
+prevent ordinary snapshot publication. Check report generated_at, errors and
+deferred; a green collection alone does not establish fresh discovery.
+
+The engine's per-source freshness now judges a source with poll_interval_hours
+against its own interval plus six hours (one run gap), so HighLevel and CAI are
+not reported stale between their daily polls; a missed daily poll is still stale.
 
 ## Live evidence and limits
 
@@ -109,6 +129,22 @@ supplement inaccessible directories and submit reviewed public employer seeds.
 GitHub Actions cannot invoke ChatGPT native search. No complete market coverage,
 candidate counts or READY yield is promised.
 
+### Independent review re-run (27 October 2026, scratch copy of main's public/)
+
+After the review fixes, one scratch invocation made 17 GETs in 30 s. NAESCO and the
+HubSpot community page both returned 403 (recorded as errors, cooled down 24 h; no
+leads claimed). Remote In Tech gave 25 provisional host links. AFRY, Assystem and
+BluLeadz pages were read; Assystem links SmartRecruiters; no supported board was
+found. CAI's careers page stopped on its script marker. HighLevel, iMarc, Smart Joules
+and WebFX were deferred by the four-target rotation (no request). The batch held 16
+cards from 8 employers (largest share 0.19) drawn from the ten existing feeds; HighLevel
+and CAI cards appear only after their first collection. These are title signals, not
+relevance or eligibility.
+
+SmartRecruiters: api.smartrecruiters.com/robots.txt allows only LinkedInBot and
+disallows every other agent, so its Posting API is not adopted for Assystem or any
+employer; the scanner records it as unsupported. AFRY's static jobs page names no ATS.
+
 ## Deployment / acceptance
 
 Merge this PR after CI. The sources.json change triggers the existing main-only
@@ -124,8 +160,8 @@ yield must be measured there and returned as aggregated source-quality feedback.
 The code currently learns only public title-signal yield, freshness and failures;
 it does not claim a private relevance feedback integration.
 
-Offline targeted validation: 48 tests passed (scanner, new market module,
-private planner and registry). Ubuntu PR CI additionally runs the full existing
+Offline validation after review fixes: see the PR description for the full-suite
+count; targeted scanner/market/registry tests pass. Ubuntu PR CI additionally runs the full existing
 suite/export tests; local Windows cannot import the existing fcntl collector.
 No real profiles, private cursors, applications, replacement ledgers, Sheet
 writes or automated READY decisions are introduced.
