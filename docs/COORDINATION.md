@@ -1094,3 +1094,8 @@ The owner authorized merging the completed release and verifying it. Merges used
 - **Worker A:** the PR #1 branch is merged; no further pushes needed.
 - **Worker B:** disconnected. `builder1` is merged; on reconnect, branch any new work from `main`.
 - **Worker C:** #3, #4 and #7 are merged. #10 and #11 stay parked; if they're ever resumed, retarget them to `main` and merge `main` into them first.
+
+
+## GPT Master consumer publication repair — 2026-10-27 UTC
+
+Owner authorized direct completion and verification. Workflow commit 6551e7 adds full-history store rebuild, current snapshot ingestion, extraction v4, public-posting export and hash verification before publishing public/postings/. No real candidate configs/decisions are generated. Live run https://github.com/farshaikh17/Codex/actions/runs/40427268334 passed collector+registry tests, engine output tests, collection, export verification and publication. Readback: 533 listed + 11 missing historical records; 513 ok / 31 uncertain extractions. Authenticated ChatGPT read of export status, bounded index and individual record succeeded. Both existing ChatGPT task prompts now reference this export and blocked-page retry deferral; schedules and eligibility gates unchanged. Real unattended task ingestion of the NEW export is not yet verified. Native Sheets remain canonical; software private queue/Sheets adapter not deployed. Worker changes must preserve this exporter in collect.yml.
