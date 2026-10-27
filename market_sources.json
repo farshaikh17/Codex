@@ -1,0 +1,83 @@
+{
+  "schema": "market-sources-1",
+  "notice": "Generic public employer seeds and directory leads. No candidate policy. New directory links require ownership review before adding targets.",
+  "directories": [
+    {
+      "url": "https://members.naesco.org/accredited-companies/Find",
+      "link_pattern": "^https://(?!(?:members\\.|www\\.)?naesco\\.org|www\\.linkedin\\.com|www\\.youtube\\.com)"
+    },
+    {
+      "url": "https://community.hubspot.com/t/congratulations-to-the-october-2026-partner-tier-promotions/162854",
+      "link_pattern": "^https://(?!(?:[^/]+\\.)?(?:hubspot\\.com|hubspotusercontent[^/]*|youtube\\.com|linkedin\\.com))"
+    },
+    {
+      "url": "https://remoteintech.company/companies/",
+      "link_pattern": "^https://(?!(?:[^/]+\\.)?(?:remoteintech.company|github.com|linkedin.com))"
+    }
+  ],
+  "targets": [
+    {
+      "employer": "cai",
+      "start_url": "https://caiready.com/careers/",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "highlevel",
+      "start_url": "https://www.gohighlevel.com/careers",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "smartjoules",
+      "start_url": "https://www.smartjoules.co.in/careers",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "webfx",
+      "start_url": "https://www.webfx.com/careers/",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "afry",
+      "start_url": "https://afry.com/en/careers",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "assystem",
+      "start_url": "https://www.assystem.com/en/career/our-vacancies/",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "bluleadz",
+      "start_url": "https://www.bluleadz.com/careers",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    },
+    {
+      "employer": "imarc",
+      "start_url": "https://www.imarc.com/careers",
+      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
+    }
+  ],
+  "reviewed_feeds": [
+    {
+      "employer": "cai",
+      "provider": "lever",
+      "board": "cagents",
+      "ownership_evidence": {
+        "url": "https://caiready.com/careers/",
+        "checked_at": "2026-10-27",
+        "basis": "Official CAI careers page uses its Lever integration and identifies legacy cagents.com; CAI-branded cagents board manually corroborated. No automated ownership inference."
+      }
+    },
+    {
+      "employer": "highlevel",
+      "provider": "lever",
+      "board": "gohighlevel",
+      "ownership_evidence": {
+        "url": "https://www.gohighlevel.com/careers",
+        "checked_at": "2026-10-27",
+        "basis": "Official Explore Our Jobs link points to jobs.lever.co/gohighlevel."
+      }
+    }
+  ]
+}
+

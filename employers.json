@@ -111,6 +111,28 @@
         "reason": "Migrated from the public-job-collector ten-feed coverage trial; original selection rationale was not recorded",
         "evidence_url": null
       }
+    },
+    {
+      "id": "highlevel",
+      "name": "HighLevel",
+      "careers_url": "https://www.gohighlevel.com/careers",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "CRM, automation and implementation platform employer; official careers page links to the gohighlevel Lever board.",
+        "evidence_url": "https://www.gohighlevel.com/careers"
+      }
+    },
+    {
+      "id": "cai",
+      "name": "CAI",
+      "careers_url": "https://caiready.com/careers/",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Industrial commissioning and operational readiness consultancy. Official careers page uses the CAI Lever integration and identifies legacy cagents.com; cagents Lever board returns CAI-branded exact vacancies. Board association manually corroborated, not automatically inferred from a directory.",
+        "evidence_url": "https://caiready.com/careers/"
+      }
     }
   ]
 }
