@@ -1,0 +1,1721 @@
+{
+ "schema": "bench-cases-1",
+ "notice": "Synthetic postings use example.invalid URLs and invented employers. Labels on author_constructed cases are true by construction: each label quotes the posting text that makes it true. human_confirmed cases are real excerpts whose labels the repository owner confirmed; needs_human_review cases are excluded from gating metrics until confirmed.",
+ "gates": [
+  "geography",
+  "engagement",
+  "qualifications",
+  "salary",
+  "application_history"
+ ],
+ "verdict_rule": "any gate fail -> excluded; all gates pass -> ready; otherwise conditional. Relevance never changes the verdict.",
+ "cases": [
+  {
+   "id": "remote-us-only",
+   "label_status": "author_constructed",
+   "covers": [
+    "remote US-only"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:remote-us-only",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/remote-us-only",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nYou will own a book of mid-market customers.\n\nRequirements\n- 3+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "$130,000 - $150,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "remote-india-allowed",
+   "label_status": "author_constructed",
+   "covers": [
+    "remote India explicitly allowed",
+    "missing salary"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:remote-india-allowed",
+    "title": "Implementation Specialist",
+    "url": "https://jobs.example.invalid/bench/remote-india-allowed",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nYou will configure the product for new customers.\n\nRequirements\n- 4+ years of implementation experience\n- Candidates must reside in India\n\nNice to have\n- Experience with SQL\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Candidates must reside in India"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "4+ years of implementation experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Candidates must reside in India"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "fail",
+       "basis": "4+ years of implementation experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "worldwide-conflict",
+   "label_status": "author_constructed",
+   "covers": [
+    "worldwide wording with a conflicting country restriction"
+   ],
+   "notes": "Conflicting geography is labelled unknown, not fail: the benchmark penalises unsupported READY first, and auto-excluding on conflicting evidence would hide false exclusions.",
+   "posting": {
+    "key": "lever:bench:worldwide-conflict",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/worldwide-conflict",
+    "locations": [
+     {
+      "text": "Remote - Worldwide",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nWork with customers across time zones.\n\nRequirements\n- 2+ years of customer success experience\n\nLocation\nWe can only hire in the United States and Canada at this time.\n\nThis is a full-time role.",
+    "compensation_raw": "$125,000 - $140,000 USD base per year"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "unknown",
+       "basis": "\"Remote - Worldwide\" conflicts with \"We can only hire in the United States and Canada at this time.\""
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "$125,000 - $140,000 USD base per year"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We can only hire in the United States and Canada at this time."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "$125,000 - $140,000 USD base per year"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    }
+   }
+  },
+  {
+   "id": "missing-salary",
+   "label_status": "author_constructed",
+   "covers": [
+    "missing salary"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:missing-salary",
+    "title": "Senior Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/missing-salary",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nLead renewals for enterprise accounts.\n\nRequirements\n- 3+ years of customer success experience\n\nLocation\nWe hire in India and the United States.\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "commission-only",
+   "label_status": "author_constructed",
+   "covers": [
+    "variable-only compensation"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:commission-only",
+    "title": "Customer Success Associate",
+    "url": "https://jobs.example.invalid/bench/commission-only",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nGrow accounts through upsell.\n\nRequirements\n- 1+ years of customer success experience\n\nCompensation\nThis is a commission-only role with no base salary. Earnings are uncapped.\n\nLocation\nWe hire in India and the United States.\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "basis": "variable_only",
+    "variable_mentioned": true,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "1+ years of customer success experience"
+      },
+      "salary": {
+       "value": "fail",
+       "basis": "This is a commission-only role with no base salary."
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "1+ years of customer success experience"
+      },
+      "salary": {
+       "value": "fail",
+       "basis": "This is a commission-only role with no base salary."
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "ote-only",
+   "label_status": "author_constructed",
+   "covers": [
+    "total compensation is not fixed salary"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:ote-only",
+    "title": "Customer Success Manager, Expansion",
+    "url": "https://jobs.example.invalid/bench/ote-only",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nOwn expansion revenue for a customer segment.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "OTE $160,000 per year"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "ote",
+    "variable_mentioned": true,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "OTE is total target pay; the base is not stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "OTE is total target pay; the base is not stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "range-spans-threshold",
+   "label_status": "author_constructed",
+   "covers": [
+    "salary range spanning a configured threshold"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:range-spans-threshold",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/range-spans-threshold",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nSupport a portfolio of SMB customers.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "$100,000 - $140,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Range $100,000 - $140,000 spans the 120,000 floor"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "mandatory-not-met",
+   "label_status": "author_constructed",
+   "covers": [
+    "mandatory experience not met"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:mandatory-not-met",
+    "title": "Principal Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/mandatory-not-met",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nSet strategy for the customer success team.\n\nRequirements\n- 8+ years of customer success experience\n\nLocation\nWe hire in India and the United States.\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "fail",
+       "basis": "8+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "fail",
+       "basis": "8+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "preferred-not-met",
+   "label_status": "author_constructed",
+   "covers": [
+    "preferred experience not met"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:preferred-not-met",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/preferred-not-met",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nPartner with customers through onboarding and renewal.\n\nRequirements\n- 2+ years of customer success experience\n\nNice to have\n- 5+ years of SQL experience\n\nLocation\nWe hire in India and the United States.\n\nThis is a full-time role.",
+    "compensation_raw": "INR 40,00,000 - 50,00,000 per year base (India); USD 125,000 - 145,000 per year base (United States)"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "stated"
+   },
+   "expected_compensation": {
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false,
+    "multiple_ranges": true
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience (SQL is only preferred)"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "INR 40,00,000 - 50,00,000 per year base (India)"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience (SQL is only preferred)"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "USD 125,000 - 145,000 per year base (United States)"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    }
+   }
+  },
+  {
+   "id": "estimated-salary",
+   "label_status": "author_constructed",
+   "covers": [
+    "estimated salary is not employer-published"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:estimated-salary",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/estimated-salary",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nDrive adoption across a customer portfolio.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nSalary estimate (third-party, not provided by the employer): $135,000 per year\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "estimated": true
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Only a third-party estimate is given"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Only a third-party estimate is given"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "remote-unspecified",
+   "label_status": "author_constructed",
+   "covers": [
+    "remote is not worldwide remote"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:remote-unspecified",
+    "title": "Implementation Manager",
+    "url": "https://jobs.example.invalid/bench/remote-unspecified",
+    "locations": [
+     {
+      "text": "Remote",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nLead implementation projects for new customers.\n\nRequirements\n- 3+ years of implementation experience\n\nThis is a full-time role.",
+    "compensation_raw": "$130,000 - $150,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "unknown",
+       "basis": "\"Remote\" names no country"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of implementation experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" on a posting not limited to the US: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "unknown",
+       "basis": "\"Remote\" names no country"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of implementation experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" on a posting not limited to the US: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "hourly-pay",
+   "label_status": "author_constructed",
+   "covers": [
+    "original pay period preserved"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:hourly-pay",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/hourly-pay",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nSupport customers during business hours.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "$60 - $70 per hour"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "hour",
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Hourly rate; an annual figure needs an hours assumption"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Hourly rate; an annual figure needs an hours assumption"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "contract-role",
+   "label_status": "author_constructed",
+   "covers": [
+    "same posting assessed for two candidates"
+   ],
+   "notes": "A fixed amount with no variable component mentioned counts as base pay for floor comparison.",
+   "posting": {
+    "key": "lever:bench:contract-role",
+    "title": "Implementation Consultant",
+    "url": "https://jobs.example.invalid/bench/contract-role",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nDeliver a fixed-scope implementation.\n\nRequirements\n- 3+ years of implementation experience\n\nLocation\nWe hire in India and the United States.\n\nThis is a 6-month contract position.",
+    "compensation_raw": "₹35,00,000 - ₹40,00,000 per year (India); $130,000 - $150,000 per year (United States)"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "period": "year",
+    "variable_mentioned": false,
+    "estimated": false,
+    "multiple_ranges": true
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a 6-month contract position. (contract accepted)"
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of implementation experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "₹35,00,000 - ₹40,00,000 per year (India)"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "fail",
+       "basis": "This is a 6-month contract position. (full-time only)"
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "3+ years of implementation experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" on a posting not limited to the US: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "already-applied",
+   "label_status": "author_constructed",
+   "covers": [
+    "applied application respected"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:already-applied",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/already-applied",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nOwn onboarding for new accounts.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "$130,000 - $145,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Bare \"$\" names no currency, and no bench candidate maps the symbol: currency not established"
+      },
+      "application_history": {
+       "value": "fail",
+       "basis": "cand-us applied on 2026-09-14"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "off-family",
+   "label_status": "author_constructed",
+   "covers": [
+    "relevance routes but never certifies"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:off-family",
+    "title": "Senior Backend Engineer",
+    "url": "https://jobs.example.invalid/bench/off-family",
+    "locations": [
+     {
+      "text": "Remote - India",
+      "source": "categories.location"
+     },
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nBuild payment services.\n\nRequirements\n- 5+ years of backend software engineering in Go\n\nLocation\nWe hire in India and the United States.\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "no_match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "fail",
+       "basis": "5+ years of backend software engineering in Go"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "no_match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "We hire in India and the United States."
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "fail",
+       "basis": "5+ years of backend software engineering in Go"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    }
+   }
+  },
+  {
+   "id": "us-dollar-code-range",
+   "label_status": "author_constructed",
+   "covers": [
+    "currency code repeated on both ends of a range"
+   ],
+   "notes": "Found on real data by the PR #2 session: \"US$100,000 - US$150,000\" was parsed as 100,000-100,000. A wrong lower bound can falsely fail a floor.",
+   "posting": {
+    "key": "lever:bench:us-dollar-code-range",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/us-dollar-code-range",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the role\nOwn renewals for a regional book of business.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": "US$130,000 - US$150,000 per year base salary"
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": "year",
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "US$130,000 - US$150,000 per year base salary"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "US$130,000 - US$150,000 per year base salary"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "ready"
+    }
+   }
+  },
+  {
+   "id": "company-revenue-not-pay",
+   "label_status": "author_constructed",
+   "covers": [
+    "company figures are not compensation"
+   ],
+   "notes": "Found on real data by the PR #2 session: Twilio's \"generates nearly $1B annually\" was parsed as $1. Under the bare-$ rule it would have failed a USD floor (an incorrect exclusion).",
+   "posting": {
+    "key": "lever:bench:company-revenue-not-pay",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/company-revenue-not-pay",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "About the company\nOur company generates nearly $1B annually in revenue.\n\nRequirements\n- 2+ years of customer success experience\n- Must be located in the United States\n\nThis is a full-time role.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "stated",
+    "workplace": "stated",
+    "employment_type": "stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "stated",
+    "requirements_preferred": "not_stated"
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated; \"$1B annually\" is company revenue"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "excluded"
+    },
+    "cand-us": {
+     "relevance": "match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Must be located in the United States"
+      },
+      "engagement": {
+       "value": "pass",
+       "basis": "This is a full-time role."
+      },
+      "qualifications": {
+       "value": "pass",
+       "basis": "2+ years of customer success experience"
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "No pay is stated; \"$1B annually\" is company revenue"
+      },
+      "application_history": {
+       "value": "pass",
+       "basis": "No application on record for this posting"
+      }
+     },
+     "verdict": "conditional"
+    }
+   }
+  },
+  {
+   "id": "expired-page-200",
+   "label_status": "author_constructed",
+   "covers": [
+    "expired page returning HTTP 200"
+   ],
+   "notes": "HTTP 200 with closure text. Closure needs this explicit statement; disappearance alone is never closure. No implementation measures availability yet.",
+   "posting": {
+    "key": "lever:bench:expired-page-200",
+    "title": "Customer Success Manager",
+    "url": "https://jobs.example.invalid/bench/expired-page-200",
+    "locations": [
+     {
+      "text": "Remote - United States",
+      "source": "categories.location"
+     }
+    ],
+    "workplace_type": "remote",
+    "description": "This job is no longer accepting applications.\n\nBrowse our other open roles.",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "availability": "closed_stated"
+   }
+  },
+  {
+   "id": "navigation-only-capture",
+   "label_status": "author_constructed",
+   "covers": [
+    "job list captured as a description"
+   ],
+   "notes": "",
+   "posting": {
+    "key": "lever:bench:navigation-only-capture",
+    "title": "Careers",
+    "url": "https://jobs.example.invalid/bench/navigation-only-capture",
+    "locations": [],
+    "workplace_type": "remote",
+    "description": "Careers\nOpen roles\nCustomer Success Manager\nApply now\nImplementation Specialist\nApply now\nSolutions Engineer\nApply now\nView role\nLearn more",
+    "compensation_raw": null
+   },
+   "expected_extraction": {
+    "location": "not_stated",
+    "compensation": "not_stated",
+    "requirements_mandatory": "not_stated"
+   },
+   "expected_warnings": [
+    "list_captured_as_description"
+   ]
+  },
+  {
+   "id": "real-gitlab-us-range",
+   "label_status": "human_confirmed",
+   "covers": [
+    "real posting: salary range restricted to US residents"
+   ],
+   "notes": "Excerpt of the official Greenhouse feed (pay_transparency=true), captured 2026-10-26. Partial gate labels only; no decision label.",
+   "posting": {
+    "key": "greenhouse:gitlab:8638232002",
+    "title": "AI Transformation Owner, CRO",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8638232002",
+    "locations": [
+     {
+      "text": "Remote, United States",
+      "source": "location.name"
+     }
+    ],
+    "workplace_type": null,
+    "compensation_raw": "[{\"min_cents\": 13920000, \"max_cents\": 23520000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
+    "description_is_excerpt": true,
+    "description": "What You’ll Bring\nMid-Senior Experience: Several years of experience in enablement, sales operations, or a related GTM function, with a track record of owning initiatives end-to-end."
+   },
+   "expected_extraction": {
+    "compensation": "stated"
+   },
+   "confirmed": {
+    "by": "repository owner",
+    "on": "2026-10-26",
+    "scope": "all labels on this case as shown in PR #7"
+   },
+   "expected_compensation": {
+    "currency": "USD",
+    "period": null,
+    "basis": "base",
+    "variable_mentioned": false,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "no_match",
+     "gates": {
+      "geography": {
+       "value": "fail",
+       "basis": "Location \"Remote, United States\""
+      },
+      "salary": {
+       "value": "unknown",
+       "basis": "Range is \"for residents of the United States only\""
+      }
+     }
+    },
+    "cand-us": {
+     "relevance": "no_match",
+     "gates": {
+      "geography": {
+       "value": "pass",
+       "basis": "Location \"Remote, United States\""
+      },
+      "salary": {
+       "value": "pass",
+       "basis": "USD 139,200 - 235,200 base (\"does not include any bonuses, equity, or benefits\")"
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "real-zapier-bonus-equity",
+   "label_status": "human_confirmed",
+   "covers": [
+    "real posting: Ashby summary with bonus and equity"
+   ],
+   "notes": "Excerpt of the official Ashby feed (includeCompensation=true), captured 2026-10-26. The summary states bonus and equity, so the range is not shown to be base-only.",
+   "posting": {
+    "key": "ashby:zapier:cb1aec2c-05cd-4598-8117-bd1f7ed9a49f",
+    "title": "Finance Manager, Marketing",
+    "url": "https://jobs.ashbyhq.com/zapier/cb1aec2c-05cd-4598-8117-bd1f7ed9a49f",
+    "locations": [
+     {
+      "text": "NAMER",
+      "source": "location"
+     },
+     {
+      "text": "United States",
+      "source": "address.addressCountry"
+     }
+    ],
+    "workplace_type": "Remote",
+    "compensation_raw": "$158.3K – $237.5K • Offers Equity • Offers Bonus • Multiple Ranges",
+    "description_is_excerpt": true,
+    "description": "ABOUT YOU\n- This isn’t your first rodeo. You have 4-6+ years of accounting/finance-specific experience, with 2+ years of working with Marketing or GTM orgs."
+   },
+   "expected_extraction": {
+    "compensation": "stated"
+   },
+   "confirmed": {
+    "by": "repository owner",
+    "on": "2026-10-26",
+    "scope": "all labels on this case as shown in PR #7"
+   },
+   "expected_compensation": {
+    "variable_mentioned": true,
+    "equity_mentioned": true,
+    "multiple_ranges": true,
+    "estimated": false
+   },
+   "expected": {
+    "cand-in": {
+     "relevance": "no_match",
+     "gates": {
+      "qualifications": {
+       "value": "fail",
+       "basis": "4-6+ years of accounting/finance-specific experience"
+      }
+     }
+    },
+    "cand-us": {
+     "relevance": "no_match",
+     "gates": {
+      "qualifications": {
+       "value": "fail",
+       "basis": "4-6+ years of accounting/finance-specific experience"
+      }
+     }
+    }
+   }
+  }
+ ]
+}

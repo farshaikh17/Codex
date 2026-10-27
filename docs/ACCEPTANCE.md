@@ -31,6 +31,16 @@ Tick only with evidence (test name, run URL or commit). Labels follow [HANDOFF.m
 - [x] Replay of real feed responses saved 2026-10-26 ~11:57 UTC from `main`'s 07:55 snapshot: 161 postings changed, all only in `compensation_raw` (GitLab 106, Clipboard 36, Zapier 12, Oyster 7); Clipboard has `endpoint_changed: false` and `normalization_changed: true`; all 171 Ashby pay components in the feeds (Clipboard 44, Oyster 57, Zapier 70) are present in `compensation_raw` with type, currency, interval and amounts unchanged
 - [ ] First Actions collection after merge shows the same 125 (or current equivalent) as `changed_fields: [compensation_raw]`
 
+## Benchmark (H)
+- [x] Labels are internally consistent: every decision follows the decision rule, and every pass/fail basis is quoted from the posting: `test_labels_are_internally_consistent`, `test_validator_catches_bad_labels`
+- [x] Every difficult case from the extension request is present: `test_required_difficult_cases_present`
+- [x] Metrics separate trivial assessors (always-READY, always-exclude, always-review): `test_baselines_are_separated`
+- [x] Collector meets all 6 collection scenarios (29 checks), and the runner catches a wrong expectation: `test_collector_meets_every_scenario`, `test_runner_detects_a_wrong_expectation`
+- [x] PR #2's extractor and gates (8794ca8) measured on a scratch merge: gates false READY 0, incorrect exclusions 0 (see BENCHMARK.md)
+- [x] Validator catches a qualifications label that contradicts the candidate's years on file (the error found by cross-checking PR #2's gates)
+- [x] Repository owner confirmed the two real-posting cases (2026-10-26); they now count in gating metrics: `test_only_confirmed_labels_count`
+- [ ] Re-score ENGINE steps 3+4 after PR #2 merges, and after each gates change (false READY must stay 0)
+
 ## Consumer (G)
 - [ ] Original chat completes [CONSUMER_TEST.md](CONSUMER_TEST.md) and reports results
 - [ ] End-to-end tracker ingestion verified (out of scope here)
