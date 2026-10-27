@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "weave",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-10-27T20:29:45.949737+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "f92b81731162e5de0dd5443223e95ebf8c49693f8c163f53dc061866449ad486",
+   "kind": "content_changed",
+   "to_hash": "6503a5d57caa4dc2942c80374fad43c56fc9e006660936f9cdd277456398c31e"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "At Weave, the Revenue Enablement team drives meaningful growth and behavior change across our revenue organization by empowering our customer-facing teams to succeed. As our Revenue Enablement Specialist, you will champion the onboarding experience across both sales and post-sales departments, creating a supportive, high-impact environment from day one. In this role, you will facilitate engaging training cohorts—specifically leading onboarding for our Sales Development Representatives (SDRs)—while developing scalable learning materials and tracking ramp performance. Reporting to the Revenue Enablement Team Lead, Sales, you will partner cross-functionally with revenue leadership to ensure every new hire gains the skills and confidence to ramp rapidly.\n\n- This position will be hybrid in Lehi, UT office 3 days a week.\n\n- Reports to: Revenue Enablement Team Lead: Sales\n\nWHAT YOU WILL OWN\n\n- Full admin responsibility over new hire experience\n\n- Scheduling and coordination of all live sessions, course work, and shadow sessions\n\n- Coordination with IT for all tech needs\n\n- Coordination with Content & Product Revenue Enablement Manager for assignment of all courses and certifications\n\n- Management of new hire Slack channels\n\n- Creation/management of all new hire resources\n\n- New hire program management and improvements\n\n- Culture & Retention\n\n- Reporting\n\n- New hire report cards\n\n- New hire shout outs\n\n- New hire certifications\n\n- New hire performance\n\n- Training\n\n- All general sessions\n\n- Spot training for specific teams where needed (Inbound, Outbound, Onboarding CSM, Etc)\n\n- Management of all training decks and materials\n\n- Facilitation of SDR new hire session\n\n- Coordination of all live sessions\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- You confidently collaborate with stakeholders both virtually and in person\n\n- You enjoy coordinating with business partners across the business\n\n- You learn new technologies and find ways to use new tools to improve processes\n\n- You communicate clearly and in a timely manner to keep work moving forward\n\n- You organize data and insights in a way that can clearly be interpreted by others\n\n- 2+ years organizing and facilitating learning\n\nWHAT WILL MAKE US LOVE YOU\n\n- You have a strong drive to identify opportunities for improvement and proactively work to take action\n\n- You make work fun, finding ways to elevate every experience\n\n- You experiment with new tools and AI technology to find better ways to work\n\n- You study the business to understand the broader impact of your work\n\n- You are curious about processes and ask questions to find opportunities to improve them\n\n- You have empathy for those you work with and teach, and find ways to understand them\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+  "description": "At Weave, the Revenue Enablement team drives meaningful growth and behavior change across our revenue organization by empowering our customer-facing teams to succeed. As our Revenue Enablement Specialist, you will champion the onboarding experience across both sales and post-sales departments, creating a supportive, high-impact environment from day one. In this role, you will facilitate engaging training cohorts—specifically leading onboarding for our Sales Development Representatives (SDRs)—while developing scalable learning materials and tracking ramp performance. Reporting to the Revenue Enablement Team Lead, Sales, you will partner cross-functionally with revenue leadership to ensure every new hire gains the skills and confidence to ramp rapidly.\n\n- This position will be hybrid in the Lehi, UT office 3 days a week.\n\n- Reports to: Revenue Enablement Team Lead: Sales\n\nWHAT YOU WILL OWN\n\n- Full admin responsibility over new hire experience\n\n- Scheduling and coordination of all live sessions, coursework, and shadow sessions\n\n- Coordination with IT for all tech needs\n\n- Coordination with Content & Product Revenue Enablement Manager for assignment of all courses and certifications\n\n- Management of new hire Slack channels\n\n- Creation/management of all new hire resources\n\n- New hire program management and improvements\n\n- Culture & Retention\n\n- Reporting\n\n- New hire report cards\n\n- New hire shout-outs\n\n- New hire certifications\n\n- New hire performance\n\n- Training\n\n- All general sessions\n\n- Spot training for specific teams where needed (Inbound, Outbound, Onboarding CSM, Etc)\n\n- Management of all training decks and materials\n\n- Facilitation of SDR new hire session\n\n- Coordination of all live sessions\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- You confidently collaborate with stakeholders both virtually and in person\n\n- You enjoy coordinating with business partners across the business\n\n- You learn new technologies and find ways to use new tools to improve processes\n\n- You communicate clearly and on time to keep work moving forward\n\n- You organize data and insights in a way that can clearly be interpreted by others\n\n- 2+ years organizing and facilitating learning\n\nWHAT WILL MAKE US LOVE YOU\n\n- You have a strong drive to identify opportunities for improvement and proactively work to take action\n\n- You make work fun, finding ways to elevate every experience\n\n- You experiment with new tools and AI technology to find better ways to work\n\n- You study the business to understand the broader impact of your work\n\n- You are curious about processes and ask questions to find opportunities to improve them\n\n- You have empathy for those you work with and teach, and find ways to understand them\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
   "locations": [
    {
     "source": "location",
@@ -23,8 +33,8 @@
   "title": "Revenue Enablement Specialist",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T16:50:41.877596+00:00",
- "content_hash": "f92b81731162e5de0dd5443223e95ebf8c49693f8c163f53dc061866449ad486",
+ "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
+ "content_hash": "6503a5d57caa4dc2942c80374fad43c56fc9e006660936f9cdd277456398c31e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Weave - Headquarters (Lehi, UT)",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/296c554d-b2b9-428f-9635-77532cafdacb"
      },
@@ -51,7 +61,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/296c554d-b2b9-428f-9635-77532cafdacb"
      }
@@ -63,8 +73,8 @@
      {
       "interpretation": null,
       "method": "description_section:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB",
-      "quote": "- You confidently collaborate with stakeholders both virtually and in person\n- You enjoy coordinating with business partners across the business\n- You learn new technologies and find ways to use new tools to improve processes\n- You communicate clearly and in a timely manner to keep work moving forward\n- You organize data and insights in a way that can clearly be interpreted by others\n- 2+ years organizing and facilitating learning",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "quote": "- You confidently collaborate with stakeholders both virtually and in person\n- You enjoy coordinating with business partners across the business\n- You learn new technologies and find ways to use new tools to improve processes\n- You communicate clearly and on time to keep work moving forward\n- You organize data and insights in a way that can clearly be interpreted by others\n- 2+ years organizing and facilitating learning",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/296c554d-b2b9-428f-9635-77532cafdacb"
      }
@@ -77,7 +87,7 @@
       "interpretation": null,
       "method": "description_section:WHAT WILL MAKE US LOVE YOU",
       "quote": "- You have a strong drive to identify opportunities for improvement and proactively work to take action\n- You make work fun, finding ways to elevate every experience\n- You experiment with new tools and AI technology to find better ways to work\n- You study the business to understand the broader impact of your work\n- You are curious about processes and ask questions to find opportunities to improve them\n- You have empathy for those you work with and teach, and find ways to understand them\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/296c554d-b2b9-428f-9635-77532cafdacb"
      }

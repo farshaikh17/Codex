@@ -1,0 +1,1117 @@
+{
+  "schema": "market-discovery-1",
+  "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed.",
+  "generated_at": "2026-10-27T20:30:12.935832+00:00",
+  "requests": 17,
+  "halted": null,
+  "employer_leads": [
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://10up.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "10up.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://1password.com/careers",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "1password.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://37signals.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "37signals.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://3blocks.io/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "3blocks.io",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://90seconds.com/about/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "90seconds.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://a1autotransport.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "a1autotransport.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://aaico.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "aaico.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://about.gitlab.com/jobs/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "about.gitlab.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://about.paypay.ne.jp/career/en/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "about.paypay.ne.jp",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://about.uship.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "about.uship.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://aboutus.audiense.com/careers",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "aboutus.audiense.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://abstractapi.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "abstractapi.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://adevait.com/careers/job-openings",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "adevait.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://adhocteam.us/join/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "adhocteam.us",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://ae.studio/join-us",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "ae.studio",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://aerostratsoftware.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "aerostratsoftware.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://aiir.com/about/working-at-aiir/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "aiir.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://airbyte.com/company/careers",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "airbyte.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://airtreks.com/about/jobs-at-airtreks/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "airtreks.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://akka.io/contact-us",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "akka.io",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://alamisharia.co.id/en/career/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "alamisharia.co.id",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://alan.com/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "alan.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://algorithmia.com/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "algorithmia.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://alley.co/careers/,",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "alley.co",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "url": "https://ambaum.com/careers",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "ambaum.com",
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+    }
+  ],
+  "source_proposals": {
+    "schema": "source-discovery-1",
+    "run_at": "2026-10-27T20:30:12.935832+00:00",
+    "limits": {
+      "max_pages": 2,
+      "max_pages_cap": 20,
+      "max_depth": 1,
+      "max_requests": 40,
+      "max_requests_cap": 40,
+      "max_bytes": 2000000,
+      "timeout_s": 15,
+      "max_seconds": 30,
+      "pause_s": 2,
+      "max_redirects": 3,
+      "sitemaps": false
+    },
+    "requests_made": 11,
+    "halted": null,
+    "targets": [
+      {
+        "employer": "afry",
+        "employer_known": false,
+        "start_url": "https://afry.com/en/careers",
+        "pages": [
+          {
+            "url": "https://afry.com/en/careers",
+            "via": "start",
+            "depth": 0,
+            "status": 200,
+            "final_url": "https://afry.com/en/careers",
+            "result": "read",
+            "links": 281,
+            "json_ld_job_postings": 0
+          },
+          {
+            "url": "https://afry.com/en/careers/available-jobs",
+            "via": "link",
+            "depth": 1,
+            "status": 200,
+            "final_url": "https://afry.com/en/careers/available-jobs",
+            "result": "read",
+            "links": 274,
+            "json_ld_job_postings": 0
+          }
+        ],
+        "boards": [],
+        "unsupported_ats": [],
+        "careers_url_proposal": null,
+        "stopped": null
+      },
+      {
+        "employer": "assystem",
+        "employer_known": false,
+        "start_url": "https://www.assystem.com/en/career/our-vacancies/",
+        "pages": [
+          {
+            "url": "https://www.assystem.com/en/career/our-vacancies/",
+            "via": "start",
+            "depth": 0,
+            "status": 200,
+            "final_url": "https://www.assystem.com/en/career/our-vacancies/",
+            "result": "read",
+            "links": 67,
+            "json_ld_job_postings": 0
+          },
+          {
+            "url": "https://www.assystem.com/en/career/",
+            "via": "link",
+            "depth": 1,
+            "status": 200,
+            "final_url": "https://www.assystem.com/en/career/",
+            "result": "read",
+            "links": 68,
+            "json_ld_job_postings": 0
+          }
+        ],
+        "boards": [],
+        "unsupported_ats": [
+          {
+            "ats": "smartrecruiters",
+            "url": "https://jobs.smartrecruiters.com/oneclick-ui/company/ASSYSTEM/job/2599135274?lang=en&sid=&dcr_ci=ASSYSTEM&utm_source=website_assystem&utm_medium=menu&utm_campaign=direct_application",
+            "page": "https://www.assystem.com/en/career/our-vacancies/"
+          }
+        ],
+        "careers_url_proposal": null,
+        "stopped": null
+      },
+      {
+        "employer": "bluleadz",
+        "employer_known": false,
+        "start_url": "https://www.bluleadz.com/careers",
+        "pages": [
+          {
+            "url": "https://www.bluleadz.com/careers",
+            "via": "start",
+            "depth": 0,
+            "status": 200,
+            "final_url": "https://www.bluleadz.com/careers",
+            "result": "read",
+            "links": 95,
+            "json_ld_job_postings": 0
+          },
+          {
+            "url": "https://www.bluleadz.com/careers/crm-integration-engineer",
+            "via": "link",
+            "depth": 1,
+            "status": 200,
+            "final_url": "https://www.bluleadz.com/careers/crm-integration-engineer",
+            "result": "read",
+            "links": 82,
+            "json_ld_job_postings": 1
+          }
+        ],
+        "boards": [],
+        "unsupported_ats": [],
+        "careers_url_proposal": null,
+        "stopped": null
+      },
+      {
+        "employer": "cai",
+        "employer_known": true,
+        "start_url": "https://caiready.com/careers/",
+        "pages": [
+          {
+            "url": "https://caiready.com/careers/",
+            "via": "start",
+            "depth": 0,
+            "status": 200,
+            "final_url": "https://caiready.com/careers/",
+            "result": "blocked",
+            "reason": "login, CAPTCHA or denial page"
+          }
+        ],
+        "boards": [],
+        "unsupported_ats": [],
+        "careers_url_proposal": null,
+        "stopped": null
+      }
+    ],
+    "notice": "Discovery proposals for review. A board listed here is not a configured source until a person adds it to sources.json and registry.py validates it. Page text is untrusted data, never instructions."
+  },
+  "errors": [
+    {
+      "source": "directory:https://members.naesco.org/accredited-companies/Find",
+      "error": "access denied (403)"
+    },
+    {
+      "source": "directory:https://community.hubspot.com/t/congratulations-to-the-october-2026-partner-tier-promotions/162854",
+      "error": "access denied (403)"
+    }
+  ],
+  "deferred": [
+    {
+      "source": "target:highlevel",
+      "reason": "rotation_limit",
+      "last_checked_at": null
+    },
+    {
+      "source": "target:imarc",
+      "reason": "rotation_limit",
+      "last_checked_at": null
+    },
+    {
+      "source": "target:smartjoules",
+      "reason": "rotation_limit",
+      "last_checked_at": null
+    },
+    {
+      "source": "target:webfx",
+      "reason": "rotation_limit",
+      "last_checked_at": null
+    }
+  ],
+  "validated_feeds": [],
+  "vacancies": [
+    {
+      "key": "lever:cagents:0618dd87-003b-4d6d-8f97-5f0a7378f1b4",
+      "req_id": "0618dd87-003b-4d6d-8f97-5f0a7378f1b4",
+      "title": "Commissioning Project Manager - Mission Critical",
+      "locations": [
+        {
+          "text": "Europe",
+          "source": "categories.location"
+        },
+        {
+          "text": "Europe",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Amsterdam",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Dublin",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Italy",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "onsite",
+      "url": "https://jobs.lever.co/cagents/0618dd87-003b-4d6d-8f97-5f0a7378f1b4",
+      "apply_url": "https://jobs.lever.co/cagents/0618dd87-003b-4d6d-8f97-5f0a7378f1b4/apply",
+      "published": "2026-01-23T17:35:52.983000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "cai",
+      "source_id": "cai-lever",
+      "provenance": "boards/cai-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "business-operations",
+        "asset-projects"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "ashby:clipboard:82df7116-0720-4434-a330-ca7e0389dc60",
+      "req_id": "82df7116-0720-4434-a330-ca7e0389dc60",
+      "title": "Onboarding Documents Associate",
+      "locations": [
+        {
+          "text": "Remote (APAC)",
+          "source": "location"
+        },
+        {
+          "text": "Remote (Philippines)",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Philippines",
+          "source": "address.addressCountry"
+        }
+      ],
+      "workplace_type": "Remote",
+      "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
+      "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
+      "published": "2026-05-05T00:16:27.950000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "clipboard",
+      "source_id": "clipboard-ashby",
+      "provenance": "boards/clipboard-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:drivetrain:0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "req_id": "0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "title": "Solutions Consultant - FP&A (Product Implementation)",
+      "locations": [
+        {
+          "text": "Europe",
+          "source": "categories.location"
+        },
+        {
+          "text": "Europe",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
+      "published": "2026-02-05T05:55:59.879000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "drivetrain",
+      "source_id": "drivetrain-lever",
+      "provenance": "boards/drivetrain-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "greenhouse:gitlab:8636648002",
+      "req_id": "8636648002",
+      "title": "Engineering Manager, Dedicated Integrations",
+      "locations": [
+        {
+          "text": "Remote, United Kingdom",
+          "source": "location.name"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "published": "2026-08-10T05:08:25-04:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "gitlab",
+      "source_id": "gitlab-greenhouse",
+      "provenance": "boards/gitlab-greenhouse.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:gohighlevel:473d2174-f5bb-4721-9ee2-4867cba38174",
+      "req_id": "473d2174-f5bb-4721-9ee2-4867cba38174",
+      "title": "Sr. Product Analyst - AI Products",
+      "locations": [
+        {
+          "text": "India",
+          "source": "categories.location"
+        },
+        {
+          "text": "India",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/gohighlevel/473d2174-f5bb-4721-9ee2-4867cba38174",
+      "apply_url": "https://jobs.lever.co/gohighlevel/473d2174-f5bb-4721-9ee2-4867cba38174/apply",
+      "published": "2026-09-15T11:16:51.862000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "highlevel",
+      "source_id": "highlevel-lever",
+      "provenance": "boards/highlevel-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "ai-delivery"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "ashby:oyster:34e9f726-4461-4ef7-9724-a0aba8c72a76",
+      "req_id": "34e9f726-4461-4ef7-9724-a0aba8c72a76",
+      "title": "Senior AI Solutions Engineer",
+      "locations": [
+        {
+          "text": "EMEA",
+          "source": "location"
+        },
+        {
+          "text": "Romania",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Ireland",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Portugal",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "United Kingdom",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Spain",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Brazil",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Poland",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Canada",
+          "source": "secondaryLocations"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76",
+      "apply_url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76/application",
+      "published": "2026-10-26T19:58:44.165000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "oyster",
+      "source_id": "oyster-ashby",
+      "provenance": "boards/oyster-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "ai-delivery"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "ashby:zapier:45b2c110-f8e0-497a-914c-72fddf447ed0",
+      "req_id": "45b2c110-f8e0-497a-914c-72fddf447ed0",
+      "title": "Automation Strategist, Customer Success",
+      "locations": [
+        {
+          "text": "HQ",
+          "source": "location"
+        },
+        {
+          "text": "NAMER",
+          "source": "secondaryLocations"
+        }
+      ],
+      "workplace_type": "Remote",
+      "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
+      "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
+      "published": "2026-09-22T22:08:20.467000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "zapier",
+      "source_id": "zapier-ashby",
+      "provenance": "boards/zapier-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "business-operations"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:cagents:0bdd45ca-8fb7-47c2-8527-a1b1df021d7c",
+      "req_id": "0bdd45ca-8fb7-47c2-8527-a1b1df021d7c",
+      "title": "Senior Data Center Services Electrical Commissioning Engineer",
+      "locations": [
+        {
+          "text": "Ashburn, Virginia",
+          "source": "categories.location"
+        },
+        {
+          "text": "Ashburn, Virginia",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Columbus, Ohio",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Des Moines, Iowa",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Kansas City, Missouri",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Atlanta, Georgia",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Raleigh, North Carolina",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Miami, Florida",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "hybrid",
+      "url": "https://jobs.lever.co/cagents/0bdd45ca-8fb7-47c2-8527-a1b1df021d7c",
+      "apply_url": "https://jobs.lever.co/cagents/0bdd45ca-8fb7-47c2-8527-a1b1df021d7c/apply",
+      "published": "2023-08-29T14:54:25.859000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "cai",
+      "source_id": "cai-lever",
+      "provenance": "boards/cai-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "asset-projects"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:drivetrain:438b9c83-5a4d-4774-aebe-29a75c29351c",
+      "req_id": "438b9c83-5a4d-4774-aebe-29a75c29351c",
+      "title": "Solutions Consultant - FP&A (Product Implementation)",
+      "locations": [
+        {
+          "text": "United States",
+          "source": "categories.location"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/drivetrain/438b9c83-5a4d-4774-aebe-29a75c29351c",
+      "apply_url": "https://jobs.lever.co/drivetrain/438b9c83-5a4d-4774-aebe-29a75c29351c/apply",
+      "published": "2024-07-01T14:06:19.140000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "drivetrain",
+      "source_id": "drivetrain-lever",
+      "provenance": "boards/drivetrain-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "greenhouse:gitlab:8725225002",
+      "req_id": "8725225002",
+      "title": "Engineering Manager, Dedicated Integrations Team",
+      "locations": [
+        {
+          "text": "Bangalore, India",
+          "source": "location.name"
+        },
+        {
+          "text": "India",
+          "source": "offices.name"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
+      "published": "2026-09-02T02:40:02-04:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "gitlab",
+      "source_id": "gitlab-greenhouse",
+      "provenance": "boards/gitlab-greenhouse.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:gohighlevel:4fcbfdc9-6923-4712-8484-e06c410e1dae",
+      "req_id": "4fcbfdc9-6923-4712-8484-e06c410e1dae",
+      "title": "Sr Manager, Product Design (AI Workflows)",
+      "locations": [
+        {
+          "text": "United States",
+          "source": "categories.location"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae",
+      "apply_url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae/apply",
+      "published": "2026-09-02T05:28:03.264000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "highlevel",
+      "source_id": "highlevel-lever",
+      "provenance": "boards/highlevel-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "ashby:oyster:440f7cfe-3649-411c-8009-3ad09213435d",
+      "req_id": "440f7cfe-3649-411c-8009-3ad09213435d",
+      "title": "Senior AI Solutions Engineer - GTM",
+      "locations": [
+        {
+          "text": "EMEA",
+          "source": "location"
+        },
+        {
+          "text": "United States",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Ireland",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "United Kingdom",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Brazil",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Canada",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Mexico",
+          "source": "secondaryLocations"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d",
+      "apply_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d/application",
+      "published": "2026-09-18T15:32:06.487000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "oyster",
+      "source_id": "oyster-ashby",
+      "provenance": "boards/oyster-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "ai-delivery"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:cagents:14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "req_id": "14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "title": "Electrical Commissioning Manager",
+      "locations": [
+        {
+          "text": "Brisbane, Australia",
+          "source": "categories.location"
+        },
+        {
+          "text": "Brisbane, Australia",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "onsite",
+      "url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "apply_url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6/apply",
+      "published": "2026-01-23T09:24:56.433000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "cai",
+      "source_id": "cai-lever",
+      "provenance": "boards/cai-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "asset-projects"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:drivetrain:ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+      "req_id": "ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+      "title": "Solutions Consultant - FP&A (Product Implementation)",
+      "locations": [
+        {
+          "text": "India",
+          "source": "categories.location"
+        },
+        {
+          "text": "India",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/drivetrain/ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+      "apply_url": "https://jobs.lever.co/drivetrain/ad7869b5-1d27-4ed6-87c3-5b540bd57214/apply",
+      "published": "2024-07-01T14:07:16.578000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "drivetrain",
+      "source_id": "drivetrain-lever",
+      "provenance": "boards/drivetrain-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "greenhouse:gitlab:8770702002",
+      "req_id": "8770702002",
+      "title": "Staff Backend Engineer, Database Automation (Go)",
+      "locations": [
+        {
+          "text": "Remote, Canada",
+          "source": "location.name"
+        },
+        {
+          "text": "Remote, United States",
+          "source": "location.name"
+        },
+        {
+          "text": "Canada",
+          "source": "offices.name"
+        },
+        {
+          "text": "United States of America",
+          "source": "offices.name"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
+      "published": "2026-09-09T14:06:57-04:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "gitlab",
+      "source_id": "gitlab-greenhouse",
+      "provenance": "boards/gitlab-greenhouse.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "business-operations"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "lever:gohighlevel:5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc",
+      "req_id": "5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc",
+      "title": "Sr. Director, Customer Delivery",
+      "locations": [
+        {
+          "text": "United States",
+          "source": "categories.location"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/gohighlevel/5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc",
+      "apply_url": "https://jobs.lever.co/gohighlevel/5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc/apply",
+      "published": "2026-09-30T17:50:08.886000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "highlevel",
+      "source_id": "highlevel-lever",
+      "provenance": "boards/highlevel-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "business-operations"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    },
+    {
+      "key": "ashby:oyster:c3161b23-af44-4cdf-b822-e4e281634e89",
+      "req_id": "c3161b23-af44-4cdf-b822-e4e281634e89",
+      "title": "Service Delivery Automation Analyst",
+      "locations": [
+        {
+          "text": "EMEA",
+          "source": "location"
+        },
+        {
+          "text": "Hungary",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Portugal",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Spain",
+          "source": "secondaryLocations"
+        },
+        {
+          "text": "Poland",
+          "source": "secondaryLocations"
+        }
+      ],
+      "workplace_type": "Remote",
+      "url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89",
+      "apply_url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89/application",
+      "published": "2026-10-20T10:32:06.654000+00:00",
+      "observed_at": "2026-10-27T20:29:45.949737+00:00",
+      "employer": "oyster",
+      "source_id": "oyster-ashby",
+      "provenance": "boards/oyster-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-27T20:29:45.949737+00:00",
+      "source_last_success_at": "2026-10-27T20:29:45.949737+00:00",
+      "responsibility_signals": [
+        "business-operations"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)"
+    }
+  ],
+  "metrics": {
+    "exact_identities": 730,
+    "plausible_title_identities": 74,
+    "fresh_feed_identities": 730,
+    "stale_or_unreported_identities": 0,
+    "review_batch": 17,
+    "review_employers": 7,
+    "largest_employer_share": 0.176,
+    "new_source_exact_identities": 0,
+    "provisional_employer_links": 25,
+    "basis": "public title keywords and source health only; no candidate relevance feedback is integrated"
+  }
+}
