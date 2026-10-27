@@ -68,7 +68,8 @@ def validate(source_list,employer_doc):
         if not str(e.get('name','')).strip(): errs.append(where+' needs name')
         if e.get('careers_url') is None: warns.append(where+' has no verified careers_url')
         elif urlparse(str(e['careers_url'])).scheme!='https': errs.append(where+' careers_url must be https')
-        else: errs+=_evidence_errors(where+' careers_url',e.get('careers_url_evidence'))
+        elif e.get('careers_url_evidence') is None: warns.append(where+' careers_url has no careers_url_evidence')
+        else: errs+=_evidence_errors(where+' careers_url',e['careers_url_evidence'])
         inc=e.get('inclusion')
         if not isinstance(inc,dict) or not str(inc.get('reason','')).strip(): errs.append(where+' needs inclusion.reason')
         for f in e.get('job_families') or []:
