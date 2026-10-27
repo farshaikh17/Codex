@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -30,6 +32,16 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
         run: python collect.py --trigger "$EVENT"
+      - name: Build and verify shared posting records (no candidate data)
+        run: |
+          python -m unittest -v engine.tests.test_outputs
+          python -m engine rebuild --db "$RUNNER_TEMP/postings.sqlite3"
+          python -m engine ingest --db "$RUNNER_TEMP/postings.sqlite3"
+          python -m engine extract --db "$RUNNER_TEMP/postings.sqlite3"
+          python -m engine.outputs postings --db "$RUNNER_TEMP/postings.sqlite3" --out "$RUNNER_TEMP/posting-export" --limit 200
+          python -m engine.outputs verify --out "$RUNNER_TEMP/posting-export"
+          mkdir -p public/postings
+          cp -a "$RUNNER_TEMP/posting-export/." public/postings/
       - name: Publish public data and failure status
         if: always()
         run: |
