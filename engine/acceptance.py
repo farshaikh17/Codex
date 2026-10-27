@@ -152,7 +152,16 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         snap1=work/'snap1';_copy_snapshot(root/'public',snap1)
         status1=json.loads((snap1/'status.json').read_text())
         sources=json.loads((root/'sources.json').read_text())
+        # Replay the source set actually represented in this historical snapshot.
+        # Current registry additions have no historical observations; never invent them.
+        snapshot_ids={s['source'] for s in status1['sources']}
+        snapshot_sources=[s for s in sources if s['id'] in snapshot_ids]
         ing=ingest_snapshot(store,snap1,sources)
+        from engine.store import freshness
+        pending={s['id'] for s in sources if s.get('enabled',True) and s['id'] not in snapshot_ids}
+        observed={s['source']:s['state'] for s in freshness(store,status1['attempted_at'],expected=pending)['sources']}
+        r.check('8 reliability','new registry sources are not reported fresh before collection',
+                all(observed.get(s)=='not_reported' for s in pending),{'not_yet_collected':sorted(pending)})
         expected=sum(s.get('jobs',0) for s in status1['sources'] if s['status']=='ok')
         listed=summary(store)['postings']['listed']
         r.check('1 store','every listing in the committed snapshot is stored',listed==expected and not ing['warnings'],{'listed':listed,'expected':expected})
@@ -346,12 +355,12 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         # 8. reliability: the same two collections through the locked pipeline, on a fresh store -------------
         rdb=work/'run'/'engine.sqlite3'
         hour_after=lambda snap:(datetime.fromisoformat(json.loads((snap/'status.json').read_text())['attempted_at'])+timedelta(hours=1)).isoformat()
-        run1=er.run(rdb,snap1,sources,pages_root=root,now=hour_after(snap1))
+        run1=er.run(rdb,snap1,snapshot_sources,pages_root=root,now=hour_after(snap1))
         r.check('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
                 run1['outcome']=='ok' and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
                 {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected']})
         with RunLock(rdb,'acceptance: a run already in progress'):
-            try: er.run(rdb,snap2,sources,pages_root=root,now=hour_after(snap2));busy=False
+            try: er.run(rdb,snap2,snapshot_sources,pages_root=root,now=hour_after(snap2));busy=False
             except LockBusy: busy=True
         r.check('8 reliability','a second run is refused while one holds the lock',busy,'LockBusy')
         run2=er.run(rdb,snap2,sources,pages_root=root,now=hour_after(snap2))
@@ -389,3 +398,4 @@ def main(argv=None):
     return 0 if doc['result']=='pass' else 1
 if __name__=='__main__':
     sys.exit(main())
+
