@@ -20,7 +20,7 @@ HISTORY_STATUSES=('applied','interviewing','offer','rejected','withdrawn')
 KEYS={
     'top':{'schema','candidate_id','synthetic','profile_version','rules_version','profile','rules'},
     'profile':{'eligible_countries','experience_years','languages','application_history','application_history_file'},
-    'rules':{'required_gates','relevance','engagement','salary','application_history'},
+    'rules':{'required_gates','relevance','engagement','salary','application_history','discovery'},
     'relevance':{'title_keywords','description_keywords','minimum_score'},
     'engagement':{'workplace','employment_types'},
     'salary':{'minimum','currency','period','basis','assume_period','assume_currency_for_symbol'},
@@ -65,6 +65,10 @@ def validate(config,where='config'):
     if 'application_history' in profile and 'application_history_file' in profile: raise ConfigError('%s.profile: give application_history or application_history_file, not both'%where)
     _history(profile.get('application_history'),where+'.profile.application_history')
     _strings(rules.get('required_gates'),where+'.rules.required_gates',GATES)
+    if 'discovery' in rules:
+        from engine.discovery import validate as validate_discovery
+        try: validate_discovery(rules['discovery'])
+        except ValueError as error: raise ConfigError('%s.rules.discovery: %s'%(where,error)) from error
     rel=rules.get('relevance')
     if rel is not None:
         _keys(rel,KEYS['relevance'],where+'.rules.relevance')
@@ -132,3 +136,4 @@ def load_all(directory=None):
         out[c['candidate_id']]=c
     if not out: raise ConfigError('No candidate files in %s'%directory)
     return out
+
