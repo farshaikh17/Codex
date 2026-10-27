@@ -1015,3 +1015,82 @@ Other sessions on the same account work on **other repositories** (Mianrodev/msd
    - GitLab/Zapier benchmark cases
    - #10 careers URLs
 4. D3: where candidate outputs live.
+
+## Release executed — Claude Master, 2026-10-26 23:55 – 2026-10-27 00:06 UTC (owner-authorized)
+
+The owner authorized merging the completed release and verifying it. Merges used merge commits, in the order #1 → #3 → #4 → #2 → #7. Each merge was pinned to its validated head, and the release stopped between merges for verification. No force-push.
+
+**Not changed by this release:**
+- No schedule change.
+- No live Sheets writes.
+- No candidate configuration deployed.
+- No ChatGPT task or candidate rule changed.
+
+### Pre-merge check
+
+- Heads matched the final checklist. #1 had changed only in `docs/COORDINATION.md` since validation.
+- All five merges were simulated from `main` `e812b42`: clean, **217/217 tests**.
+- The collect workflow's state was `active`.
+
+### Merges and verification
+
+| Step | PR | Validated head | Merge commit | Production check | Actions run | Result |
+|---|---|---|---|---|---|---|
+| 1 | farshaikh17/Codex#1 page capture, PR CI, docs | `c38a4cc` | **`a69229b`** | #1 adds root `crawl_pages.py`, so it triggered a push collection (the checklist wrongly said it wouldn't) | [40423113874](https://github.com/farshaikh17/Codex/actions/runs/40423113874) | success. Published `50bc091`: 10/10 ok, 533 listings. Branch-relative publish works on `main` |
+| 2 | farshaikh17/Codex#3 registry, reliable runs, manifest | `c1c4a64` | **`2ca5653`** | collector + registry tests, source health, manifest | [40423220346](https://github.com/farshaikh17/Codex/actions/runs/40423220346) | success. Log shows **32 tests incl. `test_registry`, OK**; `registry.py` OK; 10/10 sources ok, 0 failures; `run_id gh-40423220346-1`, `trigger push`; **first manifest (11 files)**, "publication consistent" in the publish step and again locally. Published `270a637` |
+| 3 | farshaikh17/Codex#4 compensation inputs, Ashby tiers (retargeted to `main`) | `582b5ca` | **`99f14c9`** | normalization v2; collector-format vs employer changes | [40423360906](https://github.com/farshaikh17/Codex/actions/runs/40423360906) | success. **All 10 boards at `normalization_version` 2.** **162 changed postings, all collector-format** (`changed_fields == ["compensation_raw"]` with `endpoint_changed` or `normalization_changed`): GitLab 107, Clipboard 36 (normalization only), Zapier 12, Oyster 7. **0 employer edits, 0 new.** 55 Ashby postings carry tier JSON. Manifest verifies. Published `114a2bf` |
+| 4 | farshaikh17/Codex#2 store, extraction v4, provisional gates/queue/outputs/fake Sheets | `bb00b1c` | **`9c13eab`** | combined tests, acceptance; no collection expected (no root `*.py`, `collect.yml` unchanged by the merge) | — (no run, as expected) | Fresh export of `main`: **205/205**. Acceptance **49 passed, 0 failed, 0 not run** (below) |
+| 5 | farshaikh17/Codex#7 benchmark (retargeted to `main`) | `4607d11` | **`82fde18`** | combined tests, benchmark; push collection (adds root `test_bench.py`) | [40423901236](https://github.com/farshaikh17/Codex/actions/runs/40423901236) | success. Published `254b867`. Fresh export of final `main`: **217/217**. Benchmark: false READY 0, missed READY 0, incorrect exclusions 0, salary 34/34 |
+
+**READY-path coverage changed for the better after #4.** On the production snapshot with normalization v2, the real-snapshot READY path now runs and passes. Synthetic candidate `synthetic-cs-us`, on real posting `ashby:zapier:04838dc8-…`, has its USD stated explicitly by the Ashby tier `currencyCode`, not by a bare `$`. The decision reaches the **fake** ledger. The synthetic READY path also passes. This is offline evidence with synthetic candidates only; nothing was deployed.
+
+### Pull requests after the release
+
+- **Merged:** #1, #3, #4, #2, #7. Each head is in `main`, with its merge commit's second parent equal to the validated head.
+- **Closed as superseded, with a comment naming where the content went:** #5 (manifest, into #3), #6 (rebuild, into #2), #8 (Ashby tiers, into #4), #9 (tier parser, into #2).
+- **Open and parked:** #10 (`ad1ed8b`, base `builderbranches-benchmark`) and #11 (`8281831`, base `builderbranches-discovery`). Neither is in `main`, and the backoff policy is unapproved.
+
+### Production snapshot and controls (`main` `254b867`, 00:03 UTC)
+
+- `status.json` attempted 00:03:39 UTC, status `ok`, 10/10 sources, 533 listings, run `gh-40423901236-1`, manifest of 11 files. `collect.py --verify`: publication consistent.
+- **`collect.yml`:** `push.branches: [main]` and cron `37 1,6,11,16,21 * * *` are **identical** to the owner's `709948e`/`562baaf`, with no age gate. **Only `collect.yml` has a schedule.**
+- **Browser crawling stays manual:** `crawl-pages.yml` triggers only on pushes to `build/crawl4ai` and on `workflow_dispatch`.
+- **$0 controls:** this session did not change any spending setting and can't see billing. The GPT Master's earlier check found $0 paid, with usage blocked. Every run in this release used standard `ubuntu-latest` runners, about 30–60 s each.
+- **Non-blocking warning** in every run: `actions/checkout@v4` and `setup-python@v5` target Node 20, which GitHub has deprecated; it currently forces them onto Node 24. A version bump is a separate, bounded task.
+
+### Scheduling investigation (no schedule changed)
+
+| Event type | Runs of `collect.yml`, all time | Notes |
+|---|---|---|
+| `schedule` | **2**: [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346) (07:55 UTC) and [40347918405](https://github.com/farshaikh17/Codex/actions/runs/40347918405) (15:17 UTC) | Both under the old hourly cron `23 * * * *`, starting 32 and 54 minutes after a tick. That's 2 runs in about 16 hourly ticks (01:23–16:23) |
+| `push` on `main` | 10, all success except the pre-gate failure at 01:35 | They show the workflow, runners and minutes work; **they are not scheduled execution** |
+| `schedule` under the owner's cron `37 1,6,11,16,21` (from 16:59) | **0**. The 21:37 slot created no run | next slots: 01:37, 06:37 UTC |
+
+**Findings:**
+- The workflow is `active`, not disabled for inactivity.
+- It's on the default branch `main`, and the cron is valid; actionlint passes.
+- Push runs succeed, so the account is not blocked from running Actions.
+- **The pattern matches GitHub's documented best-effort scheduling:** scheduled events can be delayed or dropped under load. 14 of about 16 hourly ticks were dropped, and the first slot of the new cron was dropped.
+- Nothing in the repository explains the drops, and **no repository change can guarantee a scheduled run.**
+- **Recommendation (owner/GPT Master decision; nothing changed):** watch 01:37 and 06:37. If they're dropped too, choose a backstop that doesn't change the cron itself. Two options:
+  - the existing `workflow_dispatch` trigger, started by the owner or an external free scheduler with a token;
+  - accept best-effort scheduling and rely on the consumer's freshness checks (`status.json` `attempted_at`).
+
+  Until then, *scheduled execution* stays **not verified**.
+
+### Remaining blockers
+
+1. **Scheduled execution:** not verified, as above.
+2. **ChatGPT ingestion:**
+   - Interactive authenticated reading of this private repo works (GPT Master).
+   - **Automated, unattended consumer access is not verified.** The ChatGPT tasks were read by the GPT Master and are enabled; their schedules weren't changed.
+   - The next step is `docs/CONSUMER_TEST.md` from the consumer chat. The consumer should read `public/status.json`, check `run_id` and `manifest`, and treat the one-time wave of 162 `compensation_raw` changes as collector-format (`endpoint_changed`/`normalization_changed`), not employer edits.
+3. **Candidate policy:** provisional until the canonical Sheets comparison (D3). No candidate rule or configuration is deployed. Gates, queue, outputs and the Sheets adapter run only with private configs, which don't exist in the repository.
+4. **Parked:** #10 and #11.
+5. **Not started:** JobSpy evaluation, P8, actionlint in CI, the Node 20 → 24 action bump.
+
+### Workers after the release
+
+- **Worker A:** the PR #1 branch is merged; no further pushes needed.
+- **Worker B:** disconnected. `builder1` is merged; on reconnect, branch any new work from `main`.
+- **Worker C:** #3, #4 and #7 are merged. #10 and #11 stay parked; if they're ever resumed, retarget them to `main` and merge `main` into them first.
