@@ -1,0 +1,124 @@
+{
+ "availability": {
+  "at": "2026-10-25T21:53:38.150524+00:00",
+  "reason": "first listed",
+  "state": "listed"
+ },
+ "board": "weave",
+ "changes": [],
+ "content": {
+  "compensation_raw": null,
+  "description": "Weave's Users Infra team builds the foundation every other Weave product depends on — how people sign in, who they are, what they can access, and how multi-location businesses are organized inside our platform. As the designer on this team, you'll care for the surfaces thousands of dental, medical, and veterinary offices meet on their first day with Weave and use every day after: single sign-on, user and permissions management, workspaces, and the settings that hold it all together. This is platform work, so the patterns you create are picked up by other product teams and your thinking reaches well past your own roadmap. You'll work in a close triad with a product manager and an engineering manager who both have deep history in this domain, and you'll report to a Product Design Manager who trusts your judgment and will make room for you to use it.\n\n- This position is remote (US-based)\n\n- Reports to: Product Design Manager, Product Design\n\nWHAT YOU WILL OWN\n\n- Design end-to-end experiences for single sign-on and authentication — setup, identity configuration, MFA, and the error and recovery states that determine whether a customer gets in or calls support.\n\n- Enterprise-level user management flows: SSO configuration including group mapping and management of custom roles and access patterns.\n\n- Shape how multi-location organizations are modeled in Weave — workspaces, org hierarchy, and account switching for customers running anywhere from two operatories to a hundred locations.\n\n- Create platform patterns other Weave product teams can build on, and contribute them back to our Design System.\n\n- Partner daily with your product manager and engineering manager to define the Users Infra roadmap, bringing the user's perspective into scoping and sequencing.\n\n- Ground your work in evidence: talk with customers, explore Pendo and Sigma, and use what you learn to guide the team toward or away from a direction.\n\n- Notice connections early. Infra touches every surface at Weave, so part of the role is seeing where your work overlaps another team's before either team ships.\n\n- Help the work around you get better through critique, mentorship, and documentation engineers can build from without guessing.\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- You have 5+ years designing software products, including meaningful time on B2B or platform surfaces such as admin, settings, identity, or permissions.\n\n- You can walk us through two or more case studies that trace your thinking from problem framing through end-to-end user flows and interactions — not just final screens or static states.\n\n- You're comfortable in Figma, including components, variants, and prototyping.\n\n- You design complex, multi-step, cross-platform flows and consider edge, error, and empty states as part of the work rather than after it.\n\n- You explain your design thinking clearly in writing and in conversation with engineers, partners, and leadership.\n\nWHAT WILL MAKE US LOVE YOU\n\n- You've designed identity, access management, or multi-tenant products, and you enjoy talking about what made them hard.\n\n- You've contributed components or patterns to a design system other teams relied on, and you know when to deviate from one.\n\n- You've worked in healthcare, dental, veterinary, or another regulated industry and understand what compliance does to a user flow.\n\n- You've run user interviews and used product analytics (Pendo, Sigma, Domo, or equivalent) to inform your decisions.\n\n- Ambiguity is interesting to you. The problem arrives as \"SSO is confusing\" and you help turn it into a scoped, sequenced plan.\n\n- You're at ease as the only designer on a team, and you bring people along rather than working around them.\n\n- You share work before it's finished and would rather be corrected early than praised late.\n\n- You care about the small centralized IT team, oftimes a team of one, managing users for hundreds of practice locations and thousands of users.\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+  "locations": [
+   {
+    "source": "location",
+    "text": "Weave - Headquarters (Lehi, UT)"
+   },
+   {
+    "source": "address.addressCountry",
+    "text": "United States"
+   }
+  ],
+  "published": "2026-10-06T18:10:10.667000+00:00",
+  "title": "Senior Product Designer,  User Infrastructure",
+  "workplace_type": "Remote"
+ },
+ "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
+ "content_hash": "dd66a6feeeb2d28be566f26b0f3ea9898da0be431d825b19a65a6f578df86aa4",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 4,
+  "fields": {
+   "compensation": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "employment_type": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location",
+      "quote": "Weave - Headquarters (Lehi, UT)",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:address.addressCountry",
+      "quote": "United States",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB",
+      "quote": "- You have 5+ years designing software products, including meaningful time on B2B or platform surfaces such as admin, settings, identity, or permissions.\n- You can walk us through two or more case studies that trace your thinking from problem framing through end-to-end user flows and interactions — not just final screens or static states.\n- You're comfortable in Figma, including components, variants, and prototyping.\n- You design complex, multi-step, cross-platform flows and consider edge, error, and empty states as part of the work rather than after it.\n- You explain your design thinking clearly in writing and in conversation with engineers, partners, and leadership.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:WHAT WILL MAKE US LOVE YOU",
+      "quote": "- You've designed identity, access management, or multi-tenant products, and you enjoy talking about what made them hard.\n- You've contributed components or patterns to a design system other teams relied on, and you know when to deviate from one.\n- You've worked in healthcare, dental, veterinary, or another regulated industry and understand what compliance does to a user flow.\n- You've run user interviews and used product analytics (Pendo, Sigma, Domo, or equivalent) to inform your decisions.\n- Ambiguity is interesting to you. The problem arrives as \"SSO is confusing\" and you help turn it into a scoped, sequenced plan.\n- You're at ease as the only designer on a team, and you bring people along rather than working around them.\n- You share work before it's finished and would rather be corrected early than praised late.\n- You care about the small centralized IT team, oftimes a team of one, managing users for hundreds of practice locations and thousands of users.\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     }
+    ],
+    "state": "stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "remote",
+      "method": "ats_field:workplace_type",
+      "quote": "Remote",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     },
+     {
+      "interpretation": "remote",
+      "method": "description_text",
+      "quote": "- This position is remote (US-based)",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+     }
+    ],
+    "state": "stated"
+   }
+  },
+  "state": "ok",
+  "warnings": []
+ },
+ "first_seen_at": "2026-10-25T21:53:38.150524+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "ashby:weave:5000eb6e-ef0f-4840-af5f-55a8043d5ff6",
+ "provider": "ashby",
+ "req_id": "5000eb6e-ef0f-4840-af5f-55a8043d5ff6",
+ "schema": "posting-record-1",
+ "source_id": "weave-ashby",
+ "urls": {
+  "apply_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6/application",
+  "canonical_url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6",
+  "url": "https://jobs.ashbyhq.com/weave/5000eb6e-ef0f-4840-af5f-55a8043d5ff6"
+ }
+}

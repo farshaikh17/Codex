@@ -1,0 +1,18 @@
+{
+  "schema": "candidate-config-1",
+  "candidate_id": "synthetic-cs-us",
+  "synthetic": true,
+  "profile_version": "synthetic-1",
+  "rules_version": "synthetic-1",
+  "profile": {
+    "eligible_countries": ["US"],
+    "experience_years": 5,
+    "languages": ["English"],
+    "application_history": []
+  },
+  "rules": {
+    "relevance": {"title_keywords": ["Customer Success", "Implementation"], "description_keywords": ["SaaS"]},
+    "engagement": {"workplace": ["remote"], "employment_types": null},
+    "salary": {"minimum": 120000, "currency": "USD", "period": "year", "basis": "base"}
+  }
+}
