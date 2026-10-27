@@ -1159,3 +1159,26 @@ employers, largest share 0.12, all cards source_status ok. The six 24 h sources 
 push runs collect every source, scheduled runs will skip them until due. Cron, push filter and billing unchanged; no
 Sheets, ChatGPT task or candidate changes. Next: confirm a scheduled run lists the daily sources as not due, and the
 unattended ChatGPT read of the export. Rollback if needed: `git revert -m 1 d300f0d` then `5179d6c`, no force-push.
+
+## Discovery expansion — Claude Master, 2026-10-27 ~21:40 UTC (branch discovery/role-search-career-pages)
+
+Not merged. Cron, push filter, billing, Sheets, ChatGPT tasks and candidate rules unchanged; no candidate data.
+Overlap flagged before editing: #10 edits existing employers.json entries and registry.py; #11 rewrites collect.py.
+This branch leaves collect.py and registry.py untouched and only appends one employers.json entry (Avathon).
+
+Implemented (details and evidence: docs/MARKET_DISCOVERY.md, "Discovery expansion"):
+- role_search.py — Himalayas Jobs API role/location queries (10 generic queries, 3 per run, 24 h each).
+  JobSpy evaluated and rejected (private Naukri API with forged headers/signed token; TLS impersonation;
+  Bayt challenge). Remotive/RemoteOK robots-disallowed; Jobicy filters ineffective.
+- career_pages.py — stdlib JSON-LD JobPosting and career RSS extraction with identity, location wording,
+  salary provenance and uncertainty; Siemens Energy and Siemens India feeds (ownership-reviewed).
+- Directory → profile → employer website traversal (Zapier partner directory); profile leads validated first.
+- signals.py — generic responsibility families, strong/weak/excluded strength (sales/support excluded,
+  specialist software/test/named-language weak), India-explicit vs region-only geography.
+- Exposure-based card rotation; same-title grouping keeps all identities; channel cache for cooled channels;
+  failure backoff 1→14 days; per-method request/second cost; new vs repeated identities; compact state.
+- Avathon Greenhouse feed (Bengaluru industrial AI/asset performance), 24 h polling.
+
+Tested: 288 root + 153 engine tests from the working tree (offline). Live (scratch): run 1 31 GETs / 35 s,
+run 2 18 GETs / 24 s; 926 exact + 61→116 provisional identities; 78 cards; 56 new identities in run 2.
+Not integrated: private relevance feedback (documented optional aggregate format only).

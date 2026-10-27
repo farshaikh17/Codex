@@ -109,7 +109,7 @@ class HaltAndHealthTests(unittest.TestCase):
                     {"schema":"employer-registry-1","employers":[{"id":"aa","name":"A","careers_url":None,"inclusion":{"reason":"test"}}]},out,network=Net(),
                     now=datetime(2030,1,1,tzinfo=timezone.utc))
             state=json.loads((out/"state.json").read_text())
-        self.assertEqual(state,prior)  # nothing marked failed or cooled down
+        self.assertEqual({k:v for k,v in state.items() if not k.startswith("_")},prior)  # nothing marked failed or cooled down
         self.assertEqual(r["errors"],[])
         self.assertEqual(len(r["deferred"]),3)
         self.assertTrue(all(d["reason"].startswith("not_attempted") for d in r["deferred"]))
@@ -161,8 +161,8 @@ class HaltAndHealthTests(unittest.TestCase):
     def test_software_reliability_and_sales_commission_are_not_asset_signals(self):
         self.assertEqual(m.families("Senior Site Reliability Engineer (Night Shift)"),[])
         self.assertEqual(m.families("Sales Commission Analyst"),[])
-        self.assertEqual(m.families("Electrical Commissioning Engineer"),["asset-projects"])
-        self.assertEqual(m.families("Reliability Engineer - Rotating Equipment"),["asset-projects"])
+        self.assertEqual(m.families("Electrical Commissioning Engineer"),["asset-reliability-maintenance"])
+        self.assertEqual(m.families("Reliability Engineer - Rotating Equipment"),["asset-reliability-maintenance"])
 
 
 class LeadValidationTests(unittest.TestCase):
