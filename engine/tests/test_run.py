@@ -147,6 +147,22 @@ class RunTests(unittest.TestCase):
         out=self.engine_run(candidates_dir=bad,queue_path=self.dir/'private'/'queue.sqlite3')
         self.assertEqual((out['outcome'],out['stages']['candidates']['error']),('partial','ConfigError'),'the error message (which names the candidate) is not stored')
         self.assertNotIn(ids[0],json.dumps(self.runs()))
+    def test_discovery_plan_is_private_and_not_counted_as_executed_work(self):
+        self.collect({'alpha-lever':[posting('a1')],'beta-lever':[posting('b1')]})
+        directory=self.dir/'discovery-candidates'
+        directory.mkdir()
+        candidate=json.loads(next(FIXTURES.glob('*.json')).read_text())
+        candidate['rules']['discovery']={'lanes':[
+            {'id':'private-lane-canary','share':100,'queries':['private-query-canary'],
+             'sources':['private-source-canary']}]}
+        (directory/'person.json').write_text(json.dumps(candidate))
+        out=self.engine_run(candidates_dir=directory,queue_path=self.dir/'private'/'queue.sqlite3')
+        tasks=out['candidates'][candidate['candidate_id']]['discovery_plan']['tasks']
+        self.assertEqual(len(tasks),10)
+        self.assertTrue(all(t['stage']=='planned_not_executed' for t in tasks))
+        stored=json.dumps(self.runs())
+        for secret in ('private-lane-canary','private-query-canary','private-source-canary',candidate['candidate_id']):
+            self.assertNotIn(secret,stored)
 class LockTests(unittest.TestCase):
     def test_second_holder_is_refused_with_the_holder_named(self):
         with tempfile.TemporaryDirectory() as d:
@@ -176,3 +192,4 @@ class CliTests(unittest.TestCase):
             er.main(['--db','/nonexistent/x.sqlite3','--candidates',str(FIXTURES),'--queue','/tmp/q','--report',str(ROOT/'report.json')])
         self.assertFalse((ROOT/'report.json').exists())
 if __name__=='__main__':unittest.main()
+

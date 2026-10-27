@@ -128,6 +128,10 @@ def _run(conn,report,public,sources_file,pages_root,public_out,candidates_dir,qu
         try:
             enq=rq.enqueue(conn,queue,people,now=now)
             report['candidates']={c:{'enqueue':enq[c],'status':rq.status(conn,queue,c,now=now)} for c in sorted(people)}
+            from engine.discovery import plan
+            for cid, person in people.items():
+                if 'discovery' in person['rules']:
+                    report['candidates'][cid]['discovery_plan'] = plan(person['rules']['discovery'], now=now)
         finally:
             queue.close()
         return {'candidates':len(people),'note':'per-candidate counts are in this report only, never in the store'}
@@ -175,3 +179,4 @@ def main(argv=None):
     return 3 if args.strict and report['outcome']=='partial' else 0
 if __name__=='__main__':
     sys.exit(main())
+
