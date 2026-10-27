@@ -64,8 +64,10 @@ class RegistryTests(unittest.TestCase):
         self.assertIn('remote wording alone',self.errors(reg(employer={'geography':[{'region':'IN','basis':'remote','evidence':EVIDENCE}]})))
         self.assertIn('needs evidence',self.errors(reg(employer={'geography':[{'region':'IN','basis':'explicit_statement'}]})))
         check(reg(employer={'geography':[{'region':'IN','basis':'explicit_statement','evidence':EVIDENCE}]}))
-    def test_careers_url_requires_evidence(self):
-        self.assertIn('careers_url needs evidence',self.errors(reg(employer={'careers_url':'https://acme.example/careers'})))
+    def test_careers_url_evidence_warned_when_missing_and_checked_when_given(self):
+        _,_,warns=check(reg(employer={'careers_url':'https://acme.example/careers'}))
+        self.assertIn('employer acme careers_url has no careers_url_evidence',warns)
+        self.assertIn('careers_url needs evidence',self.errors(reg(employer={'careers_url':'https://acme.example/careers','careers_url_evidence':{'url':'http://acme.example'}})))
         _,_,warns=check(reg(employer={'careers_url':'https://acme.example/careers','careers_url_evidence':EVIDENCE}))
         self.assertNotIn('employer acme has no verified careers_url',warns)
     def test_job_family_requires_evidence(self):
