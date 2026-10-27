@@ -14,11 +14,20 @@
    "from_hash": "90f0033d14a61a14e719ada9752e004b81128856f116e63181fefe4a921e61cc",
    "kind": "content_changed",
    "to_hash": "ff56c2e73654e5d852367c4c622dd7c732c20626666e18ccb78faaf690d0be5b"
+  },
+  {
+   "changed_at": "2026-10-27T16:50:41.877596+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "ff56c2e73654e5d852367c4c622dd7c732c20626666e18ccb78faaf690d0be5b",
+   "kind": "content_changed",
+   "to_hash": "0e85adf3b06f6048de847342c4edfc1378ec4d9755a117800f1d40ac3d238e3f"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$160K – $225K • $50K – $150K Equity\",\"tiers\":[{\"title\":null,\"summary\":\"$160K – $225K • $50K – $150K Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":150000,\"summary\":\"$50K – $150K Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":160000,\"maxValue\":225000,\"summary\":\"$160K – $225K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nTHE ROLE\n\nClipboard https://www.clipboardworks.com/ is a Sequoia-backed marketplace connecting nurses and healthcare professionals with long-term care facilities, with over $800M in annual transactions. We're hiring Senior Product Managers to own core domains of the marketplace. Think pricing, matching, reliability, facility onboarding; all the systems the business runs on!\n\nTHE WORK\n\nYou'll be running a domain where the right answer changes as the marketplace changes, and where your mental model and prioritization are the single most valuable artifact your team has. You will:\n\n- Build the mental model. Grounded in customer conversations, support tickets, Salesforce, and our own data.\n\n- Pick the metrics. The ones that tell you and the org whether you're serving that customer well. When the right metric doesn't exist, you say so and propose the best proxy, limitations stated.\n\n- Steward the improvements. Research, experiments, core flow changes, technical investments. An excellent PM here doesn’t just move metrics, they make prioritization calls that compound.\n\nAll of this gets written down and shared constantly. A one-page mental model your team can reference without you in the room. A monthly check-in. Enough visibility that engineers make autonomous decisions and leadership can push back at \"is this the right bet\" rather than \"what's the bet.\" You'll work alongside an Applied Science https://jobs.ashbyhq.com/clipboard?departmentId=b0a8f86a-7e03-4cd1-a204-deafbabf7893 team that owns the quantitative infrastructure your domain depends on: pricing algorithms, causal models, experiment frameworks.\n\nMINIMUM REQUIREMENTS\n\n- 6+ years of product management, with experience in marketplaces preferred\n\n- You can query data yourself (SQL or equivalent)\n\n- You've shipped meaningful features on a small, fast-moving team\n\n- You write clearly and often\n\n- Ability to work 2-3 days per week out of either our NYC or San Francisco office\n\nWHO THRIVES HERE\n\n- Extreme ownership: the buck stops with you regardless of what anyone else did or didn't do.\n\n- Extreme curiosity: you ask \"why\" five times on the same problem before you're satisfied.\n\n- You hold a clear point of view and update it visibly when the data disagrees.\n\n- Background in marketplace product, ops research, or operating roles at fast-scaling startups is a strong signal.\n\nOur values live here https://www.clipboardworks.com/resources/blog/clipboard-healths-company-values. If this sounds like a team you want to be on, apply!\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nTHE ROLE\n\nClipboard https://www.clipboardworks.com/ is a Sequoia-backed marketplace connecting nurses and healthcare professionals with long-term care facilities, facilitating over 3 million shifts per year. We're hiring Senior Product Managers to own core domains of the marketplace. Think pricing, matching, reliability, facility onboarding; all the systems the business runs on!\n\nTHE WORK\n\nYou'll be running a domain where the right answer changes as the marketplace changes, and where your mental model and prioritization are the single most valuable artifact your team has. You will:\n\n- Build the mental model. Grounded in customer conversations, support tickets, Salesforce, and our own data.\n\n- Pick the metrics. The ones that tell you and the org whether you're serving that customer well. When the right metric doesn't exist, you say so and propose the best proxy, limitations stated.\n\n- Steward the improvements. Research, experiments, core flow changes, technical investments. An excellent PM here doesn’t just move metrics, they make prioritization calls that compound.\n\nAll of this gets written down and shared constantly. A one-page mental model your team can reference without you in the room. A monthly check-in. Enough visibility that engineers make autonomous decisions and leadership can push back at \"is this the right bet\" rather than \"what's the bet.\" You'll work alongside an Applied Science https://jobs.ashbyhq.com/clipboard?departmentId=b0a8f86a-7e03-4cd1-a204-deafbabf7893 team that owns the quantitative infrastructure your domain depends on: pricing algorithms, causal models, experiment frameworks.\n\nMINIMUM REQUIREMENTS\n\n- 6+ years of product management, with experience in marketplaces preferred\n\n- You can query data yourself (SQL or equivalent)\n\n- You've shipped meaningful features on a small, fast-moving team\n\n- You write clearly and often\n\n- Ability to work 2-3 days per week out of either our NYC or San Francisco office\n\nWHO THRIVES HERE\n\n- Extreme ownership: the buck stops with you regardless of what anyone else did or didn't do.\n\n- Extreme curiosity: you ask \"why\" five times on the same problem before you're satisfied.\n\n- You hold a clear point of view and update it visibly when the data disagrees.\n\n- Background in marketplace product, ops research, or operating roles at fast-scaling startups is a strong signal.\n\nINTERVIEW PROCESS:\n\n1. Case Study via MeritFirst\n\n2. Case Study Interview\n\n3. Cross-functional Interview\n\n4. CPO Interview\n\n5. Offer!\n\nOUR VALUES LIVE HERE https://www.clipboardworks.com/resources/blog/clipboard-healths-company-values. IF THIS SOUNDS LIKE A TEAM YOU WANT TO BE ON, APPLY!\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -37,8 +46,8 @@
   "title": "Senior Product Manager",
   "workplace_type": "Hybrid"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "ff56c2e73654e5d852367c4c622dd7c732c20626666e18ccb78faaf690d0be5b",
+ "content_changed_at": "2026-10-27T16:50:41.877596+00:00",
+ "content_hash": "0e85adf3b06f6048de847342c4edfc1378ec4d9755a117800f1d40ac3d238e3f",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -69,7 +78,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":150000,\"summary\":\"$50K – $150K Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      },
@@ -97,7 +106,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":160000,\"maxValue\":225000,\"summary\":\"$160K – $225K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      }
@@ -114,7 +123,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Hybrid (San Francisco, CA)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      },
@@ -122,7 +131,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Hybrid (New York, NY)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      },
@@ -130,7 +139,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      }
@@ -142,8 +151,8 @@
      {
       "interpretation": null,
       "method": "description_section:MINIMUM REQUIREMENTS",
-      "quote": "- You can query data yourself (SQL or equivalent)\n- You've shipped meaningful features on a small, fast-moving team\n- You write clearly and often\n- Ability to work 2-3 days per week out of either our NYC or San Francisco office\nWHO THRIVES HERE\n- Extreme ownership: the buck stops with you regardless of what anyone else did or didn't do.\n- Extreme curiosity: you ask \"why\" five times on the same problem before you're satisfied.\n- You hold a clear point of view and update it visibly when the data disagrees.\n- Background in marketplace product, ops research, or operating roles at fast-scaling startups is a strong signal.\nOur values live here https://www.clipboardworks.com/resources/blog/clipboard-healths-company-values. If this sounds like a team you want to be on, apply!",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "- You can query data yourself (SQL or equivalent)\n- You've shipped meaningful features on a small, fast-moving team\n- You write clearly and often\n- Ability to work 2-3 days per week out of either our NYC or San Francisco office\nWHO THRIVES HERE\n- Extreme ownership: the buck stops with you regardless of what anyone else did or didn't do.\n- Extreme curiosity: you ask \"why\" five times on the same problem before you're satisfied.\n- You hold a clear point of view and update it visibly when the data disagrees.\n- Background in marketplace product, ops research, or operating roles at fast-scaling startups is a strong signal.\nINTERVIEW PROCESS:\n1. Case Study via MeritFirst\n2. Case Study Interview\n3. Cross-functional Interview\n4. CPO Interview\n5. Offer!\nOUR VALUES LIVE HERE https://www.clipboardworks.com/resources/blog/clipboard-healths-company-values. IF THIS SOUNDS LIKE A TEAM YOU WANT TO BE ON, APPLY!",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      }
@@ -156,7 +165,7 @@
       "interpretation": null,
       "method": "inline_marker_in:MINIMUM REQUIREMENTS",
       "quote": "- 6+ years of product management, with experience in marketplaces preferred",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      }
@@ -169,7 +178,7 @@
       "interpretation": "hybrid",
       "method": "location_text",
       "quote": "Hybrid (San Francisco, CA)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      },
@@ -177,7 +186,7 @@
       "interpretation": "hybrid",
       "method": "location_text",
       "quote": "Hybrid (New York, NY)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      },
@@ -185,7 +194,7 @@
       "interpretation": "hybrid",
       "method": "ats_field:workplace_type",
       "quote": "Hybrid",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/b2dd9381-765e-4633-bd64-087551a7bfea"
      }
