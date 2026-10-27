@@ -28,7 +28,7 @@ BLOCKED_HTML=('class="g-recaptcha"','h-captcha','cf-turnstile','/cdn-cgi/challen
 UNSUPPORTED={'myworkdayjobs.com':'workday','smartrecruiters.com':'smartrecruiters','workable.com':'workable',
              'bamboohr.com':'bamboohr','recruitee.com':'recruitee','teamtailor.com':'teamtailor','personio.de':'personio',
              'personio.com':'personio','jobvite.com':'jobvite','icims.com':'icims','breezy.hr':'breezy',
-             'job-boards.eu.greenhouse.io':'greenhouse-eu','jobs.eu.lever.co':'lever-eu'}
+             'job-boards.eu.greenhouse.io':'greenhouse-eu','ats.rippling.com':'rippling','jobs.eu.lever.co':'lever-eu'}
 class Halt(Exception):
     """Rate limited or out of request budget: stop the whole run, no retries."""
 class Blocked(Exception):

@@ -17,18 +17,8 @@
   ],
   "targets": [
     {
-      "employer": "cai",
-      "start_url": "https://caiready.com/careers/",
-      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
-    },
-    {
-      "employer": "highlevel",
-      "start_url": "https://www.gohighlevel.com/careers",
-      "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
-    },
-    {
       "employer": "smartjoules",
-      "start_url": "https://www.smartjoules.co.in/careers",
+      "start_url": "https://smartjoules.co.in/life-at-smartjoules",
       "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
     },
     {
@@ -53,7 +43,7 @@
     },
     {
       "employer": "imarc",
-      "start_url": "https://www.imarc.com/careers",
+      "start_url": "https://www.imarc.com/about/careers",
       "basis": "Public careers discovery seed; validate supported feed and ownership before activation."
     }
   ],

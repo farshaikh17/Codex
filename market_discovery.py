@@ -11,10 +11,10 @@ from adapters import normalize, extract_jobs
 
 NOTICE = "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed."
 FAMILIES = {
- "implementation": r"implementation|onboarding|CRM|highlevel|workflow|webhook|integration|UAT|quality assurance",
+ "implementation": r"implementation|onboarding|CRM|highlevel|hubspot|salesforce admin|workflow|webhook|integration|UAT|quality assurance",
  "business-operations": r"business systems|technical operations|automation|delivery|project manager",
  "ai-delivery": r"AI implementation|AI product|AI solutions|technical product",
- "energy-advisory": r"energy|decarbon|sustainab|efficiency|power|utilities",
+ "energy-advisory": r"energy|decarbon|sustainab|efficiency|power|utilit|demand response|battery|grid\b",
  "asset-projects": r"reliab|asset|commission|electrical|maintenance|industrial|plant",
 }
 # Software reliability and sales commissions share words with physical asset work; they are not that signal.
@@ -144,6 +144,15 @@ def diverse(jobs,cap=3,limit=60):
             groups[job["employer"]].append({**{k:job[k] for k in CARD if k in job},"responsibility_signals":tags,
                 "signal_basis":"public title keywords only","stage":"exact_vacancy_unreviewed",
                 "eligibility":"not_assessed (private review only; remote/APAC wording is not India eligibility)"})
+    # One card per employer and title: same-title requisitions in other places are listed on it, not given slots.
+    for employer,values in groups.items():
+        merged={}
+        for card in values:
+            title=re.sub(r"\W+"," ",card["title"].lower()).strip()
+            if title not in merged: merged[title]={**card,"same_title_elsewhere":[]}
+            else: merged[title]["same_title_elsewhere"].append({"key":card["key"],"url":card.get("url"),
+                    "locations":[l.get("text") for l in card.get("locations") or []][:3]})
+        groups[employer]=list(merged.values())
     for values in groups.values():
         values.sort(key=lambda j:(not bool(re.search(PREFERRED,j['title'],re.I)),
             bool(re.search(r'staff engineer|principal engineer|architect|data analyst',j['title'],re.I)),j['key']))
@@ -164,6 +173,27 @@ def validate_config(config):
         if set(source)!={'employer','provider','board','ownership_evidence'}: raise ValueError('invalid reviewed feed')
         if source['provider'] not in registry.FEEDS or not registry.BOARD.fullmatch(source['board']): raise ValueError('invalid feed')
         if not source['ownership_evidence'].get('url','').startswith('https://'): raise ValueError('ownership evidence required')
+
+LEAD_RECHECK=timedelta(days=7)
+def lead_id(host):
+    return ("lead-"+re.sub(r"[^a-z0-9]+","-",host.lower()))[:63].strip("-")
+def leads_to_validate(leads,now,limit=2):
+    """Never-validated leads first (oldest seen first), then the stalest validation past its recheck time."""
+    due=[l for l in leads if not l.get("validation") or datetime.fromisoformat(l["validation"]["retry_after"])<=now]
+    return sorted(due,key=lambda l:(bool(l.get("validation")),(l.get("validation") or {}).get("checked_at",""),
+                                    l.get("first_seen_at") or "",l["host"]))[:limit]
+def validation_result(target):
+    read=sum(p.get("result")=="read" for p in target["pages"])
+    boards=[{k:b.get(k) for k in ("provider","board","status","feed_jobs","source_id") if b.get(k) is not None} for b in target["boards"]]
+    if any(b["status"] in ("verified_feed","already_configured") for b in boards): result="supported_board_found"
+    elif boards: result="board_found_unverified"  # e.g. feed robots/access refused: evidence, not a usable source
+    elif target["unsupported_ats"]: result="unsupported_ats"
+    elif not read or target["stopped"]: result="blocked_or_failed"
+    else: result="no_board_found"
+    return {"result":result,"pages_read":read,"boards":boards,"unsupported_ats":sorted({u["ats"] for u in target["unsupported_ats"]}),
+            "evidence":[e for b in target["boards"] for e in b.get("evidence",[])][:3],
+            "reasons":[p.get("reason") for p in target["pages"] if p.get("reason")][:3],
+            "ownership":"unverified: a board linked from this host is a lead for human source review, not a source"}
 
 def _cooldown(now,status,**extra):
     return {"checked_at":now.isoformat(),"retry_after":(now+timedelta(days=1)).isoformat(),"status":status,**extra}
@@ -261,12 +291,24 @@ def run(config,sources,employers,out,network=None,now=None):
                     "provenance":board["evidence"],"observed_at":now.isoformat(),"freshness":"fresh_feed"})
                 plausible+=bool(families(rec["title"]))
         state[target["employer"]]=_cooldown(now,"blocked_or_failed" if target["stopped"] or not any(p.get("result")=="read" for p in target["pages"]) else "read",plausible=plausible)
+    # Bounded lead validation: scan a few provisional links' own sites for supported ATS boards.
+    # Results stay on the lead; no source is enabled and lead-board vacancies never enter the review cards.
+    lead_report=None
+    picked=[] if net.halted else leads_to_validate(list(leads.values()),now)
+    if picked:
+        lead_targets=[{"employer":lead_id(l["host"]),"start_url":l["url"]} for l in picked]
+        lead_report=discover.discover(lead_targets,sources,employers,get=net.get,feed=net.feed,
+            limits={"max_pages":2,"max_requests":40,"sitemaps":False},pause=lambda _:None,now=now.isoformat())
+        for lead,target in zip(picked,lead_report["targets"]):
+            if not target["pages"] and (lead_report.get("halted") or net.halted):
+                halted("lead:"+lead["host"],"run halted"); continue
+            lead["validation"]={"checked_at":now.isoformat(),"retry_after":(now+LEAD_RECHECK).isoformat(),**validation_result(target)}
     leads=sorted(leads.values(),key=lambda l:(l.get("last_seen_at") or "",l["host"]))[-500:]
     batch=diverse(jobs)
     identities=lambda pred:len({(j["employer"],j.get("req_id") or j["key"]) for j in jobs if pred(j)})
     by_employer=collections.Counter(j["employer"] for j in batch)
     result={"schema":"market-discovery-1","notice":NOTICE,"generated_at":now.isoformat(),
-        "requests":net.requests,"halted":net.halted,"employer_leads":leads,"source_proposals":report,
+        "requests":net.requests,"halted":net.halted,"employer_leads":leads,"source_proposals":report,"lead_validation":lead_report,
         "errors":errors,"deferred":deferred,"validated_feeds":captures,"vacancies":batch,
         "metrics":{"exact_identities":identities(lambda j:True),
             "plausible_title_identities":identities(lambda j:families(j["title"])),
@@ -276,6 +318,8 @@ def run(config,sources,employers,out,network=None,now=None):
             "largest_employer_share":round(max(by_employer.values())/len(batch),3) if batch else None,
             "new_source_exact_identities":identities(lambda j:j["source_id"] is None),
             "provisional_employer_links":len(leads),
+            "leads_validated_this_run":sum((l.get("validation") or {}).get("checked_at")==now.isoformat() for l in leads),
+            "lead_validation_results":dict(collections.Counter((l.get("validation") or {}).get("result","not_validated") for l in leads)),
             "basis":"public title keywords and source health only; no candidate relevance feedback is integrated"}}
     write(out/"report.json",result); write(out/"state.json",state)
     return result
