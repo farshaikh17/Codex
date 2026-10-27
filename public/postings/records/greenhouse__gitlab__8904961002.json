@@ -1,0 +1,193 @@
+{
+ "availability": {
+  "at": "2026-10-25T21:53:38.150524+00:00",
+  "reason": "first listed",
+  "state": "listed"
+ },
+ "board": "gitlab",
+ "changes": [],
+ "content": {
+  "compensation_raw": null,
+  "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAs a Contract Talent Acquisition Sourcer at GitLab, you'll help build strong candidate pipelines for our sales team in the APJ region in a fully remote, distributed company. You'll focus on finding and engaging passive talent for sales roles, while partnering closely with recruiters, hiring managers, and business leaders to understand hiring needs and local market dynamics.\n\nThis is a highly outbound role where your research, outreach, and judgment will directly influence hiring outcomes. You'll also help strengthen sourcing practices by mapping talent markets, building pipelines, and improving how we identify and connect with great candidates in a values-driven environment. In this role, you will primarily focus on engaging with Account Executive talent to build proactive pipelines and benches, in addition to working active requisitions.\n\nPlease note this is a 12 month contract.\n\nWhat you'll do\n\nSource, screen and engage passive candidates for sales roles across the APJ region using LinkedIn, online research, and other outbound channels.\n\nBuild representative candidate pipelines with meaningful focus on identifying talent from a wide range of backgrounds and experiences.\n\nPartner with recruiters and hiring managers to understand role requirements, business priorities, and ideal candidate profiles.\n\nMap talent markets and gather intelligence on competitors, locations, and candidate pools to inform sourcing strategies.\n\nAssess candidate alignment for specific roles, teams, and GitLab's values, and share clear recommendations with recruiting partners.\n\nScreen and qualify candidates, building and maintaining talent benches across multiple countries in the APJ region to ensure strong pipeline depth and readiness for evolving business needs.\n\nDeliver a strong candidate experience through thoughtful outreach, timely communication, and professional relationship building.\n\nContinuously improve sourcing workflows, outreach approaches, and research methods to increase efficiency and quality.\n\nMaintain accurate activity and candidate data in applicant tracking and recruiting systems, and stay open to learning new tools and processes.\n\nWhat you'll bring\n\nRelevant experience in recruiting and/or sourcing, including direct experience sourcing passive candidates in a fully outbound environment.\n\nExperience sourcing for Account Executive and other sales roles, ideally within the software industry.\n\nStrong research skills and the ability to identify, map, and engage talent across competitive regional and global markets.\n\nExperience working directly with recruiters and hiring managers to align on hiring needs and adjust sourcing strategies as priorities change.\n\nClear written and verbal communication skills, with the ability to build trust across teams, candidates, and time zones.\n\nStrong organization skills and comfort managing multiple searches, deadlines, and competing priorities.\n\nFamiliarity with applicant tracking systems and recruiting tools. Experience with Greenhouse or LinkedIn Recruiter is ideal.\n\nComfort working remotely in an asynchronous environment, along with willingness to learn and use tools such as GitLab.\n\nAbout the team\n\nThe Talent Acquisition team at GitLab helps the company grow by finding people who can contribute to our mission and thrive in our all-remote environment. Within that group, sourcing plays a key role in reaching talent that may not be actively applying, especially in competitive markets and business-critical functions. You'll work with teammates who care deeply about candidate experience, thoughtful partnership, and inclusive hiring practices. The team values clear communication, strong market insight, and steady iteration in how we work. This role is especially important as GitLab continues to grow go-to-market teams in APJ, where strong regional knowledge and effective collaboration across time zones can help teams hire with more focus and confidence.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
+  "locations": [
+   {
+    "source": "location.name",
+    "text": "Remote, Australia"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Singapore"
+   },
+   {
+    "source": "offices.name",
+    "text": "Australia"
+   },
+   {
+    "source": "offices.location",
+    "text": "Singapore"
+   },
+   {
+    "source": "offices.name",
+    "text": "Singapore"
+   }
+  ],
+  "published": "2026-10-22T11:29:27-04:00",
+  "title": "Contract Talent Acquisition Sourcer, Sales (APJ)",
+  "workplace_type": null
+ },
+ "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
+ "content_hash": "3b90dd582e1016a7adc00fb323abe460a50b87918fb01fd4b0f994b33b3af29a",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 4,
+  "fields": {
+   "compensation": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "employment_type": {
+    "items": [
+     {
+      "interpretation": "contract",
+      "method": "title",
+      "quote": "Contract Talent Acquisition Sourcer, Sales (APJ)",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     }
+    ],
+    "state": "stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Australia",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Singapore",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Australia",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.location",
+      "quote": "Singapore",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "description_text",
+      "quote": "Clear written and verbal communication skills, with the ability to build trust across teams, candidates, and time zones.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "description_text",
+      "quote": "The Talent Acquisition team at GitLab helps the company grow by finding people who can contribute to our mission and thrive in our all-remote environment. Within that group, sourcing plays a key role in reaching talent that may not be actively applying, especially in competitive markets and business-critical functions. You'll work with teammates who care deeply about candidate experience, thoughtful partnership, and inclusive hiring practices. The team values clear communication, strong market insight, and steady iteration in how we work. This role is especially important as GitLab continues to grow go-to-market teams in APJ, where strong regional knowledge and effective collaboration across time zones can help teams hire with more focus and confidence.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:What you'll bring",
+      "quote": "Relevant experience in recruiting and/or sourcing, including direct experience sourcing passive candidates in a fully outbound environment.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": null,
+      "method": "description_section:What you'll bring",
+      "quote": "Strong research skills and the ability to identify, map, and engage talent across competitive regional and global markets.\nExperience working directly with recruiters and hiring managers to align on hiring needs and adjust sourcing strategies as priorities change.\nClear written and verbal communication skills, with the ability to build trust across teams, candidates, and time zones.\nStrong organization skills and comfort managing multiple searches, deadlines, and competing priorities.\nFamiliarity with applicant tracking systems and recruiting tools. Experience with Greenhouse or LinkedIn Recruiter is ideal.\nComfort working remotely in an asynchronous environment, along with willingness to learn and use tools such as GitLab.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "inline_marker_in:What you'll bring",
+      "quote": "Experience sourcing for Account Executive and other sales roles, ideally within the software industry.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     }
+    ],
+    "state": "stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Australia",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Singapore",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "description_text",
+      "quote": "As a Contract Talent Acquisition Sourcer at GitLab, you'll help build strong candidate pipelines for our sales team in the APJ region in a fully remote, distributed company. You'll focus on finding and engaging passive talent for sales roles, while partnering closely with recruiters, hiring managers, and business leaders to understand hiring needs and local market dynamics.",
+      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+     }
+    ],
+    "state": "stated"
+   }
+  },
+  "state": "ok",
+  "warnings": []
+ },
+ "first_seen_at": "2026-10-25T21:53:38.150524+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "greenhouse:gitlab:8904961002",
+ "provider": "greenhouse",
+ "req_id": "8904961002",
+ "schema": "posting-record-1",
+ "source_id": "gitlab-greenhouse",
+ "urls": {
+  "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002",
+  "canonical_url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002",
+  "url": "https://job-boards.greenhouse.io/gitlab/jobs/8904961002"
+ }
+}
