@@ -1,5 +1,5 @@
 import copy,json,tempfile,unittest
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from unittest.mock import patch
 import market_discovery as m
@@ -13,7 +13,7 @@ class MarketTests(unittest.TestCase):
         self.assertEqual(leads[0]["ownership"],"unverified")
 
     def test_exact_dedup_and_employer_cap_do_not_change_input_or_assess_jobs(self):
-        jobs=[{"key":"lever:a:"+str(i),"employer":"a","title":"Implementation Manager"} for i in range(10)]
+        jobs=[{"key":"lever:a:"+str(i),"employer":"a","title":"Implementation Manager "+chr(65+i)} for i in range(10)]
         jobs += [{"key":"lever:b:1","employer":"b","title":"Electrical Commissioning Engineer"}]
         jobs += [copy.deepcopy(jobs[0])]
         before=copy.deepcopy(jobs)
@@ -163,5 +163,61 @@ class HaltAndHealthTests(unittest.TestCase):
         self.assertEqual(m.families("Sales Commission Analyst"),[])
         self.assertEqual(m.families("Electrical Commissioning Engineer"),["asset-projects"])
         self.assertEqual(m.families("Reliability Engineer - Rotating Equipment"),["asset-projects"])
+
+
+class LeadValidationTests(unittest.TestCase):
+    def run_once(self,out,now,pages):
+        class Net:
+            requests=0; halted=None; log=[]
+            def get(self,url,allowed,limits):
+                self.log.append(url); self.requests+=1
+                if url.endswith("/robots.txt"): return 200,url,"User-agent: *\nAllow: /\n"
+                return pages.get(url,(404,url,""))
+            def feed(self,source): self.log.append(source["url"]); return [{"id":"x1","text":"Implementation Manager","hostedUrl":"https://jobs.lever.co/acmeco/x1"}]
+        net=Net()
+        src=[{"id":"aa","employer":"aa","provider":"lever","board":"aa"}]
+        emp={"schema":"employer-registry-1","employers":[{"id":"aa","name":"A","careers_url":None,"inclusion":{"reason":"test"}}]}
+        return m.run({"schema":"market-sources-1","targets":[]},src,emp,out,network=net,now=now),net
+
+    def test_leads_are_scanned_for_boards_but_stay_provisional(self):
+        pages={"https://acme.example/":(200,"https://acme.example/",'<a href="/careers">Careers</a>'),
+               "https://acme.example/careers":(200,"https://acme.example/careers",'<a href="https://jobs.lever.co/acmeco">Jobs</a>')}
+        lead={"url":"https://acme.example/","discovered_from":"https://directory.example/","stage":"provisional_employer_link",
+              "ownership":"unverified","collection_enabled":False}
+        before=Path("sources.json").read_bytes()
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/"discovery"; out.mkdir()
+            (out/"report.json").write_text(json.dumps({"generated_at":"2029-12-01T00:00:00+00:00","employer_leads":[lead]}))
+            now=datetime(2030,1,1,tzinfo=timezone.utc)
+            r,net=self.run_once(out,now,pages)
+            got=r["employer_leads"][0]
+            self.assertEqual(got["validation"]["result"],"supported_board_found")
+            self.assertEqual(got["validation"]["boards"][0]["board"],"acmeco")
+            self.assertTrue(got["validation"]["ownership"].startswith("unverified"))
+            self.assertEqual((got["ownership"],got["collection_enabled"],got["stage"]),("unverified",False,"provisional_employer_link"))
+            self.assertEqual(got["first_seen_at"],"2029-12-01T00:00:00+00:00")
+            self.assertFalse(any(v["employer"].startswith("lead-") for v in r["vacancies"]),"lead boards never become review cards")
+            self.assertEqual(r["metrics"]["lead_validation_results"],{"supported_board_found":1})
+            r2,net2=self.run_once(out,now+timedelta(days=1),pages)
+            self.assertEqual(net2.log,[],"a validated lead waits for its recheck time")
+            self.assertEqual(r2["employer_leads"][0]["validation"]["checked_at"],now.isoformat())
+        self.assertEqual(Path("sources.json").read_bytes(),before)
+
+    def test_lead_order_prefers_never_validated(self):
+        now=datetime(2030,1,1,tzinfo=timezone.utc)
+        leads=[{"host":"b","validation":{"checked_at":"2029-01-01","retry_after":"2029-01-08T00:00:00+00:00"}},{"host":"c","first_seen_at":"2029-06-01"},
+               {"host":"a","validation":{"checked_at":"2029-12-30","retry_after":"2030-01-06T00:00:00+00:00"}}]
+        self.assertEqual([l["host"] for l in m.leads_to_validate(leads,now)],["c","b"])
+
+    def test_same_title_requisitions_share_one_card(self):
+        jobs=[{"key":"gh:c:%d"%i,"req_id":str(i),"employer":"c","title":"Senior Project Manager","locations":[{"text":t}]} for i,t in enumerate(["UK","France","UAE"])]
+        jobs+=[{"key":"gh:c:9","req_id":"9","employer":"c","title":"Implementation Lead","locations":[]}]
+        batch=m.diverse(jobs)
+        self.assertEqual([c["title"] for c in batch],["Implementation Lead","Senior Project Manager"])
+        self.assertEqual([e["locations"] for e in batch[1]["same_title_elsewhere"]],[["France"],["UAE"]])
+
+    def test_detected_but_unverifiable_board_is_not_reported_as_absent(self):
+        target={"pages":[{"result":"read"}],"boards":[{"provider":"ashby","board":"x","status":"feed_failed"}],"unsupported_ats":[],"stopped":None}
+        self.assertEqual(m.validation_result(target)["result"],"board_found_unverified")
 
 if __name__=='__main__':unittest.main()

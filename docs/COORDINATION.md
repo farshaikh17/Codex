@@ -1099,3 +1099,47 @@ The owner authorized merging the completed release and verifying it. Merges used
 ## GPT Master consumer publication repair — 2026-10-27 UTC
 
 Owner authorized direct completion and verification. Workflow commit 6551e7 adds full-history store rebuild, current snapshot ingestion, extraction v4, public-posting export and hash verification before publishing public/postings/. No real candidate configs/decisions are generated. Live run https://github.com/farshaikh17/Codex/actions/runs/40427268334 passed collector+registry tests, engine output tests, collection, export verification and publication. Readback: 533 listed + 11 missing historical records; 513 ok / 31 uncertain extractions. Authenticated ChatGPT read of export status, bounded index and individual record succeeded. Both existing ChatGPT task prompts now reference this export and blocked-page retry deferral; schedules and eligibility gates unchanged. Real unattended task ingestion of the NEW export is not yet verified. Native Sheets remain canonical; software private queue/Sheets adapter not deployed. Worker changes must preserve this exporter in collect.yml.
+
+## Claude Master review of PR #13 and coverage extension — 2026-10-27 ~19:45 UTC
+
+Nothing merged. Cron, push filter and billing unchanged. No candidate data, Sheets or ChatGPT task changes.
+
+**PR #13 (release candidate), head f1f31c7** — reviewed independently from b21609f; fixes pushed:
+- robots_rules swallowed `Halt`, so an exhausted budget/429 was recorded as "robots.txt unreachable" and the
+  target was blocked and cooled down without a request. Fixed; un-requested directories, feeds and targets now keep
+  their state and appear under `deferred` (not_attempted / cooldown / rotation_limit).
+- The reused scanner had no pause between same-host requests. Network now waits max(1 s, robots Crawl-delay) and
+  skips hosts asking for more than 15 s. Body reads are bounded in time (≤30 s) as well as bytes.
+- Vacancy cards were full job records (descriptions included) with no source health. Now compact, with location
+  text, provenance, observed/published times, the source's latest real status/checked_at, `eligibility:
+  not_assessed`, and last_known_good_after_failure for failed sources. Leads dedupe by host with first/last seen.
+- Software "Site Reliability Engineer" and "Sales Commission Analyst" were counted as asset/commissioning signals.
+  Fixed.
+- Engine freshness would report the new 24-hour sources stale for half of each day. A source with
+  poll_interval_hours is now judged against its interval + 6 h; a missed daily poll is still stale.
+- CAI evidence was overstated (the careers index does not link the board; the "plugin" is formatting JS). Now: CAI's
+  own job page links the exact cagents Lever posting id present in the API; cagents.com 301 → caiready.com.
+- SmartRecruiters (Assystem): api.smartrecruiters.com/robots.txt disallows all agents except LinkedInBot. Not adopted.
+- Verified: 260 root + 153 engine tests from a clean export; PR CI green
+  https://github.com/farshaikh17/Codex/actions/runs/40569567137. Scratch discovery: 17 GETs, NAESCO and HubSpot 403.
+
+**Coverage PR (stacked on #13), branch coverage/energy-crm-sources** — Cognite, EnergyHub, Voltus, Celigo feeds
+(ownership confirmed on each careers page), bounded directory-lead validation, same-title card merging. Live trial:
+six feed GETs, 302 exact vacancies; export 835 records verified; discovery 23 then 8 GETs, 25 cards from 11 employers.
+264 root + 153 engine tests from a clean export.
+
+**Scheduling**: schedule events now arrive — 00:45, 06:47, 16:50 UTC on 27 Oct (runs 40428414921, 40463178019,
+40544864597), all success, 10–13 min to ~3 h late; the 11:37 slot (and likely 01:37) did not fire. Best-effort
+delivery, no change made.
+
+**Overlaps**: discover.py came from parked PR #10; this work changes its robots Halt handling, body time bound and
+unsupported-ATS list, so #10 would conflict on discover.py/test_discover.py. #11 stays parked; its collector budgets
+are not adopted.
+
+**Post-merge checks (owner merges #13, then the coverage PR)**: the sources.json push starts one collection — do not
+dispatch another. Confirm: registry 12 (then 16) sources; new board files with jobs; `collect.py --verify` consistent
+in the log; posting export verify problems=[]; public/discovery/report.json generated_at from that run, errors and
+deferred listed, vacancies carry source_status; no Sheets/task changes. Then watch the next scheduled run: the 24 h
+sources show `not due` and discovery reports cooled targets as deferred. Rollback: `git revert -m 1 <merge sha>` on
+main (no force-push); the next collection drops nothing it has not re-fetched, and orphan board files are listed in
+status.json, not deleted.

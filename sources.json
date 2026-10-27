@@ -84,5 +84,37 @@
     "board": "cagents",
     "poll_interval_hours": 24,
     "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
+  },
+  {
+    "id": "cognite-greenhouse",
+    "employer": "cognite",
+    "provider": "greenhouse",
+    "board": "cognite",
+    "poll_interval_hours": 24,
+    "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
+  },
+  {
+    "id": "energyhub-greenhouse",
+    "employer": "energyhub",
+    "provider": "greenhouse",
+    "board": "energyhub",
+    "poll_interval_hours": 24,
+    "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
+  },
+  {
+    "id": "voltus-lever",
+    "employer": "voltus",
+    "provider": "lever",
+    "board": "voltus",
+    "poll_interval_hours": 24,
+    "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
+  },
+  {
+    "id": "celigo-greenhouse",
+    "employer": "celigo",
+    "provider": "greenhouse",
+    "board": "celigo",
+    "poll_interval_hours": 24,
+    "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
   }
 ]

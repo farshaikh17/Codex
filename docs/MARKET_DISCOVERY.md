@@ -166,3 +166,68 @@ suite/export tests; local Windows cannot import the existing fcntl collector.
 No real profiles, private cursors, applications, replacement ledgers, Sheet
 writes or automated READY decisions are introduced.
 
+
+## Coverage extension (stacked on PR #13)
+
+### Newly verified official feeds (24-hour polling)
+
+Each board was found by probing official ATS APIs for relevant employers and then
+confirmed against the employer's own careers page (2026-10-27). No eligibility, pay or
+currency is asserted.
+
+| Source | Sector fit | Ownership evidence | Trial vacancies |
+|---|---|---|---|
+| cognite-greenhouse | Industrial data for energy, utilities, manufacturing (Bengaluru hiring) | cognite.com/en/company/careers links job id 4867423101, present in the boards-api `cognite` feed | 52 |
+| energyhub-greenhouse | Utility DER / demand-response platform | energyhub.com/careers links job ids such as 8586008002, present in the feed | 13 |
+| voltus-lever | Distributed energy / demand-response market operator | voltus.co/jobs links jobs.lever.co/voltus/<id>/apply (repository scanner) | 16 |
+| celigo-greenhouse | Integration / business-process automation (Hyderabad office) | celigo.com/careers embeds the Greenhouse `celigo` board (repository scanner) | 22 |
+
+Probed but not added: Budderfly (careers page uses Rippling, unsupported), Augury,
+Arcadia, Tulip and Workato (boards exist but their careers pages do not link them in
+static HTML, so ownership is not shown), Aptitude 8 (verified HubSpot partner board, but
+its only posting is a contractor talent community, not a vacancy). Cognite's page links
+the EU Greenhouse host; the same job ids are served by the supported US API.
+
+### Directory lead validation
+
+Each invocation now scans up to two provisional directory leads (never-validated
+first, otherwise the stalest past a seven-day recheck) with the same bounded scanner,
+inside the same 40-GET / 180-second budget and only after allowlisted targets. Results
+stay on the lead: `supported_board_found`, `board_found_unverified` (detected but the
+feed could not be checked, e.g. Ashby's API robots.txt answers 401), `unsupported_ats`,
+`no_board_found` or `blocked_or_failed`, with evidence. A lead never becomes a source,
+its ownership stays `unverified`, and vacancies from lead boards never enter review cards.
+
+### Review cards
+
+Same-title requisitions at one employer now share one card, listing the other
+locations under `same_title_elsewhere`, so a single employer cannot spend several of
+its three slots on one role. Title signals now also recognise demand response,
+battery and grid wording, and HubSpot/Salesforce administration.
+
+### SmartRecruiters, other directories
+
+Not adopted. api.smartrecruiters.com/robots.txt disallows every agent except
+LinkedInBot, so Assystem's SmartRecruiters jobs are recorded as unsupported. AFRY's
+static jobs page names no ATS. The HubSpot community page and NAESCO both answered 403
+on 27 October 2026; Make's partner directory answered 403; Zapier's and n8n's partner
+directories link only same-host profile pages, so they give no employer hosts without
+a second hop, which is not implemented.
+
+### Bounded live trial (scratch copy, 27 October 2026)
+
+- Collector, the six new sources only (`--ids`): six feed GETs, 302 exact vacancies
+  (HighLevel 105, CAI 94, Cognite 52, Celigo 22, Voltus 16, EnergyHub 13);
+  `collect.py --verify` reports the publication consistent. Posting export (ingest,
+  extract, outputs, verify) over the 16 sources: 835 records, no problems.
+- Discovery, first invocation: 23 GETs. Second invocation: 8 GETs (directories and
+  four targets on cooldown, listed as deferred). The batch held 25 cards from
+  11 employers (largest share 0.12), including CAI electrical-commissioning roles,
+  Celigo's Hyderabad AI integration engineer, Voltus's Salesforce administrator and
+  EnergyHub's energy data scientist. Four Remote In Tech leads were validated:
+  10up, 37signals (no board), 1password (Ashby board detected, unverifiable), 3blocks
+  (blocked). These are public title signals, not candidate relevance or eligibility.
+
+The candidate-relevant yield of these sources can only be measured in the private
+ChatGPT/Sheet review and returned as aggregate source-quality feedback; no such
+feedback is integrated in the repository.
