@@ -354,10 +354,12 @@ def summary(conn):
             'duplicate_canonical_urls':dupes,'sources':per}
 def _hours(later,earlier):
     return round((datetime.fromisoformat(later)-datetime.fromisoformat(earlier)).total_seconds()/3600,2)
-def freshness(conn,now,stale_after_hours=12,expected=()):
-    """Per-source freshness from the retrieval history. States: fresh (last success within stale_after_hours),
-    stale (older), failing (latest attempt failed), never_succeeded, not_reported (an expected source with no
-    retrieval in the store). Postings of a stale or failing source are not evidence of anything current."""
+def freshness(conn,now,stale_after_hours=12,expected=(),windows=None):
+    """Per-source freshness from the retrieval history. States: fresh (last success within stale_after_hours, or
+    within windows[source] hours for a source polled less often by design), stale (older), failing (latest attempt
+    failed), never_succeeded, not_reported (an expected source with no retrieval in the store). Postings of a stale
+    or failing source are not evidence of anything current."""
+    windows=windows or {}
     out=[]
     ids=sorted({r[0] for r in conn.execute('select source_id from sources')}|set(expected))
     for sid in ids:
@@ -368,7 +370,7 @@ def freshness(conn,now,stale_after_hours=12,expected=()):
         fails=next((n for n,r in enumerate(runs) if r['status']=='ok'),len(runs))
         ok=runs[fails]['checked_at'] if fails<len(runs) else None
         age=None if ok is None else _hours(now,ok)
-        state='never_succeeded' if ok is None else 'failing' if fails else 'stale' if age>stale_after_hours else 'fresh'
+        state='never_succeeded' if ok is None else 'failing' if fails else 'stale' if age>max(stale_after_hours,windows.get(sid,0)) else 'fresh'
         out.append({'source':sid,'state':state,'last_attempt_at':runs[0]['checked_at'],'last_success_at':ok,'hours_since_success':age,
                     'consecutive_failures':fails,'last_error':runs[0]['error'] if fails else None})
     counts={}

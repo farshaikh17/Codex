@@ -32,6 +32,11 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
         run: python collect.py --trigger "$EVENT"
+      - name: Bounded public employer discovery and diverse vacancy evidence
+        # Shares the five-daily invocation; each target/directory has a 24h cooldown.
+        # Proposals never activate sources. Preserve ordinary feed publishing on discovery failure.
+        continue-on-error: true
+        run: python market_discovery.py
       - name: Build and verify shared posting records (no candidate data)
         run: |
           python -m unittest -v engine.tests.test_outputs
