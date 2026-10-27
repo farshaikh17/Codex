@@ -96,7 +96,10 @@ def _run(conn,report,public,sources_file,pages_root,public_out,candidates_dir,qu
     ex=_stage(report,'extract',lambda:st.extract_pending(conn,max_seconds=budget,clock=clock),clock,core=True)
     if ex['budget_exhausted']: report['reasons'].append('extraction stopped on its %ss time budget; %d version(s) pending'%(budget,ex['pending']))
     if ex['failed']: report['reasons'].append('%d extraction(s) failed'%ex['failed'])
-    fresh=st.freshness(conn,now,stale_after_hours,[s['id'] for s in sources if s.get('enabled',True) is not False])
+    enabled=[s for s in sources if s.get('enabled',True) is not False]
+    # A source with its own poll_interval_hours is only stale once it misses its own schedule (plus one run gap).
+    fresh=st.freshness(conn,now,stale_after_hours,[s['id'] for s in enabled],
+                       {s['id']:s['poll_interval_hours']+6 for s in enabled if s.get('poll_interval_hours')})
     bad={k:v for k,v in fresh['counts'].items() if k!='fresh'}
     if bad: report['reasons'].append('source freshness: '+', '.join('%d %s'%(v,k) for k,v in sorted(bad.items())))
     report['freshness']=fresh
