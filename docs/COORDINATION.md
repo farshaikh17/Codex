@@ -1143,3 +1143,19 @@ deferred listed, vacancies carry source_status; no Sheets/task changes. Then wat
 sources show `not due` and discovery reports cooled targets as deferred. Rollback: `git revert -m 1 <merge sha>` on
 main (no force-push); the next collection drops nothing it has not re-fetched, and orphan board files are listed in
 status.json, not deleted.
+
+## Merged and verified — #13 and #14, 2026-10-27 ~20:35 UTC (owner-authorized)
+
+| PR | Head | Merge commit | Collection run | Result |
+|---|---|---|---|---|
+| #13 | f1f31c7 | 5179d6c | https://github.com/farshaikh17/Codex/actions/runs/40578528233 | 12/12 ok, 730 listings (HighLevel 105, CAI 94); discovery 17 GETs; published 46d52d8 |
+| #14 (retargeted to main; simulated merge 264+153 tests green) | ffac14d | d300f0d | https://github.com/farshaikh17/Codex/actions/runs/40579210761 | 16/16 ok, 833 listings (Cognite 52, Celigo 22, Voltus 16, EnergyHub 13); published 0f0c7bf |
+
+Verified on 0f0c7bf from a fresh export: `collect.py --verify` consistent (manifest 17 files); posting export
+verify problems=[] (extraction ok 692 / uncertain 162 — uncertain rose from 103 with the new sources' descriptions);
+discovery report generated in that run: 13 GETs, no errors, NAESCO/HubSpot/Remote In Tech and three targets listed as
+cooldown deferrals, two leads validated (10up no board; 1password Ashby board unverifiable), 25 cards from 11
+employers, largest share 0.12, all cards source_status ok. The six 24 h sources show next_due_at 2026-10-28 20:34 UTC;
+push runs collect every source, scheduled runs will skip them until due. Cron, push filter and billing unchanged; no
+Sheets, ChatGPT task or candidate changes. Next: confirm a scheduled run lists the daily sources as not due, and the
+unattended ChatGPT read of the export. Rollback if needed: `git revert -m 1 d300f0d` then `5179d6c`, no force-push.
