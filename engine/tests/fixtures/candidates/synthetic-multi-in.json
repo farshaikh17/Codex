@@ -1,0 +1,21 @@
+{
+  "schema": "candidate-config-1",
+  "candidate_id": "synthetic-multi-in",
+  "synthetic": true,
+  "profile_version": "synthetic-1",
+  "rules_version": "synthetic-1",
+  "profile": {
+    "eligible_countries": ["IN"],
+    "experience_years": 7,
+    "languages": ["English", "Hindi"],
+    "application_history": []
+  },
+  "rules": {
+    "relevance": {"title_keywords": ["Implementation"], "description_keywords": ["SaaS"]},
+    "engagement": {"workplace": ["remote"], "employment_types": null},
+    "salary": [
+      {"minimum": 2500000, "currency": "INR", "period": "year", "basis": "base"},
+      {"minimum": 60000, "currency": "USD", "period": "year", "basis": "base"}
+    ]
+  }
+}
