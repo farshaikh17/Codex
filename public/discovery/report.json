@@ -1,7 +1,7 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed.",
-  "generated_at": "2026-10-28T07:20:18.742074+00:00",
+  "generated_at": "2026-10-28T17:20:33.461335+00:00",
   "requests": 4,
   "halted": null,
   "employer_leads": [
@@ -167,7 +167,20 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "aaico.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-28T17:20:33.461335+00:00",
+        "retry_after": "2026-11-04T17:20:33.461335+00:00",
+        "result": "blocked_or_failed",
+        "pages_read": 0,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [
+          "robots.txt: redirect off the allowed hosts to www.aaico.com"
+        ],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -177,7 +190,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "about.gitlab.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-28T17:20:33.461335+00:00",
+        "retry_after": "2026-11-04T17:20:33.461335+00:00",
+        "result": "no_board_found",
+        "pages_read": 2,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -352,7 +376,7 @@
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-28T07:20:18.742074+00:00",
+    "run_at": "2026-10-28T17:20:33.461335+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -373,7 +397,7 @@
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-28T07:20:18.742074+00:00",
+    "run_at": "2026-10-28T17:20:33.461335+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -391,29 +415,16 @@
     "halted": null,
     "targets": [
       {
-        "employer": "lead-90seconds-com",
+        "employer": "lead-aaico-com",
         "employer_known": false,
-        "start_url": "https://90seconds.com/about/careers/",
+        "start_url": "https://aaico.com",
         "pages": [
           {
-            "url": "https://90seconds.com/about/careers/",
+            "url": "https://aaico.com",
             "via": "start",
             "depth": 0,
-            "status": 200,
-            "final_url": "https://90seconds.com/about/careers/",
-            "result": "read",
-            "links": 67,
-            "json_ld_job_postings": 0
-          },
-          {
-            "url": "https://90seconds.com/about/careers/positions/",
-            "via": "link",
-            "depth": 1,
-            "status": 200,
-            "final_url": "https://90seconds.com/about/careers/positions/",
-            "result": "read",
-            "links": 63,
-            "json_ld_job_postings": 0
+            "result": "blocked",
+            "reason": "robots.txt: redirect off the allowed hosts to www.aaico.com"
           }
         ],
         "boards": [],
@@ -422,16 +433,29 @@
         "stopped": null
       },
       {
-        "employer": "lead-a1autotransport-com",
+        "employer": "lead-about-gitlab-com",
         "employer_known": false,
-        "start_url": "https://a1autotransport.com",
+        "start_url": "https://about.gitlab.com/jobs/",
         "pages": [
           {
-            "url": "https://a1autotransport.com",
+            "url": "https://about.gitlab.com/jobs/",
             "via": "start",
             "depth": 0,
-            "result": "blocked",
-            "reason": "robots.txt: redirect off the allowed hosts to www.a1autotransport.com"
+            "status": 200,
+            "final_url": "https://about.gitlab.com/jobs/",
+            "result": "read",
+            "links": 264,
+            "json_ld_job_postings": 0
+          },
+          {
+            "url": "https://about.gitlab.com/jobs/all-jobs/",
+            "via": "link",
+            "depth": 1,
+            "status": 200,
+            "final_url": "https://about.gitlab.com/jobs/all-jobs/",
+            "result": "read",
+            "links": 239,
+            "json_ld_job_postings": 0
           }
         ],
         "boards": [],
@@ -605,14 +629,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -707,14 +731,14 @@
       "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
       "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
       "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -800,14 +824,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
       "published": "2026-08-10T05:08:25-04:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -896,14 +920,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76",
       "apply_url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76/application",
       "published": "2026-10-26T19:58:44.165000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -964,14 +988,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1094,14 +1118,14 @@
       "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
       "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
       "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1166,14 +1190,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
       "published": "2026-09-02T02:40:02-04:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1254,14 +1278,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d",
       "apply_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d/application",
       "published": "2026-09-18T15:32:06.487000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1366,14 +1390,14 @@
       "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
       "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
       "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1408,14 +1432,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
       "published": "2026-09-09T14:06:57-04:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1488,14 +1512,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89",
       "apply_url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89/application",
       "published": "2026-10-20T10:32:06.654000+00:00",
-      "observed_at": "2026-10-28T07:19:58.134244+00:00",
+      "observed_at": "2026-10-28T17:20:08.294293+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-28T07:19:58.134244+00:00",
-      "source_last_success_at": "2026-10-28T07:19:58.134244+00:00",
+      "source_checked_at": "2026-10-28T17:20:08.294293+00:00",
+      "source_last_success_at": "2026-10-28T17:20:08.294293+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1540,9 +1564,9 @@
     }
   ],
   "metrics": {
-    "exact_identities": 827,
+    "exact_identities": 828,
     "plausible_title_identities": 87,
-    "fresh_feed_identities": 827,
+    "fresh_feed_identities": 828,
     "stale_or_unreported_identities": 0,
     "review_batch": 25,
     "review_employers": 11,
@@ -1551,10 +1575,10 @@
     "provisional_employer_links": 25,
     "leads_validated_this_run": 2,
     "lead_validation_results": {
-      "no_board_found": 3,
+      "no_board_found": 4,
       "board_found_unverified": 1,
-      "blocked_or_failed": 2,
-      "not_validated": 19
+      "blocked_or_failed": 3,
+      "not_validated": 17
     },
     "basis": "public title keywords and source health only; no candidate relevance feedback is integrated"
   }
