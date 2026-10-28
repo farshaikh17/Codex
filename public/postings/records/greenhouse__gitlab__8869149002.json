@@ -14,6 +14,16 @@
    "from_hash": "f072a2354170708b655d948b8d7b6b3217e76bd19088239e8ef368d0e4bd8246",
    "kind": "compensation_source_added",
    "to_hash": "d57e25eab11da54fcefa249ceb411e027f14b0e160448b4f9205901506312af4"
+  },
+  {
+   "changed_at": "2026-10-28T00:42:44.013366+00:00",
+   "fields": [
+    "locations",
+    "title"
+   ],
+   "from_hash": "d57e25eab11da54fcefa249ceb411e027f14b0e160448b4f9205901506312af4",
+   "kind": "content_changed",
+   "to_hash": "656def8a0f3ef74906124e7c1674f16306944614e975f3024b150a2dfc9beb61"
   }
  ],
  "content": {
@@ -22,43 +32,15 @@
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote Ireland"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, Australia"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, Canada"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, India"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, Mexico"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, Poland"
-   },
-   {
-    "source": "location.name",
-    "text": "Remote, United Kingdom"
-   },
-   {
-    "source": "location.name",
     "text": "Remote, United States"
    }
   ],
   "published": "2026-10-08T10:39:54-04:00",
-  "title": "Recruiter,  GTM",
+  "title": "Recruiter,  Sales (AMER)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "d57e25eab11da54fcefa249ceb411e027f14b0e160448b4f9205901506312af4",
+ "content_changed_at": "2026-10-28T00:42:44.013366+00:00",
+ "content_hash": "656def8a0f3ef74906124e7c1674f16306944614e975f3024b150a2dfc9beb61",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -87,7 +69,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 8640000, \"max_cents\": 14640000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      },
@@ -112,7 +94,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$86,400—$146,400 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -128,64 +110,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, Australia",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, India",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, Mexico",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      },
@@ -193,7 +119,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Strong organization across multiple requisitions and clear written and verbal communication across time zones, with attention to detail and candidate care.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -206,7 +132,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Intermediate-level recruiting experience, with a track record of owning full-cycle searches independently.\nSales or go-to-market recruiting experience, or a strong interest in learning sales segments, quotas, OTE, ramp time, territory design, and sales cycles.\nDeveloping advisor skills: building stakeholder trust, influencing without authority, and managing hiring team expectations.\nExperience building proactive, diversity-focused sourcing strategies and balanced pipelines.\nA data-informed approach that turns funnel insights into practical actions.\nStrong organization across multiple requisitions and clear written and verbal communication across time zones, with attention to detail and candidate care.\nExperience with an applicant tracking system and recruiting tools such as Greenhouse, Metaview, LinkedIn Recruiter, LinkedIn Insights, SeekOut, or comparable platforms; ability to evaluate AI-generated work, protect confidential information, and share responsible workflows with team members.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -219,7 +145,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you'll bring",
       "quote": "Technology or business-to-business (B2B) software recruiting experience is helpful, not required.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -231,64 +157,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, Australia",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, India",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, Mexico",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }

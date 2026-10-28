@@ -14,6 +14,15 @@
    "from_hash": "648528272b1adc62bdbbd7d792c3dcc1a9c839989ff75c21af82583437e793ce",
    "kind": "content_changed",
    "to_hash": "d6b157b121f37c22130f4859dec2aebaef35c7c2a5bdb39c5af51e504adafdb6"
+  },
+  {
+   "changed_at": "2026-10-28T00:42:44.013366+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "d6b157b121f37c22130f4859dec2aebaef35c7c2a5bdb39c5af51e504adafdb6",
+   "kind": "content_changed",
+   "to_hash": "1b813af9d1a2415144d104f36ed13e141c02401f20500a2c1541432f3baa120e"
   }
  ],
  "content": {
@@ -25,6 +34,10 @@
     "text": "Remote (Canada)"
    },
    {
+    "source": "secondaryLocations",
+    "text": "U.S. (Remote)"
+   },
+   {
     "source": "address.addressCountry",
     "text": "Canada"
    }
@@ -33,8 +46,8 @@
   "title": "Account Manager",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "d6b157b121f37c22130f4859dec2aebaef35c7c2a5bdb39c5af51e504adafdb6",
+ "content_changed_at": "2026-10-28T00:42:44.013366+00:00",
+ "content_hash": "1b813af9d1a2415144d104f36ed13e141c02401f20500a2c1541432f3baa120e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -65,7 +78,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":45000,\"maxValue\":55000,\"summary\":\"Base Salary: $45K – $55K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -85,7 +98,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -105,7 +118,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Commission\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -113,7 +126,7 @@
       "interpretation": null,
       "method": "ats_field:compensationTiers.additional_information",
       "quote": "Estimated OTE:  65K-80K USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      }
@@ -130,7 +143,15 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "U.S. (Remote)",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -138,7 +159,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      }
@@ -151,7 +172,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications:",
       "quote": "- Excellent verbal and written communication skills\n- Willingness to try / lack of fear\n- Bachelor's Degree",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      }
@@ -164,7 +185,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Qualifications:",
       "quote": "- Relationship management experience not required but strongly preferred",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      }
@@ -177,7 +198,15 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "U.S. (Remote)",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -185,7 +214,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -193,7 +222,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Since this role is remote and requires a high degree of autonomy, the case study helps us understand how you operate in an asynchronous environment. Specifically, we’re looking at how you interpret written context, navigate ambiguity, and identify opportunities independently. This ensures our first conversation is grounded in your actual work style rather than just a resume walkthrough.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      },
@@ -201,7 +230,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- Fully Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/ed1c171f-8327-40c8-8612-f3a4c4547ab1"
      }
