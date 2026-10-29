@@ -14,6 +14,15 @@
    "from_hash": "fd37bd4356938431a1ed46511588ab9dc823ad6b6543baa535f11fd04c4f4a6c",
    "kind": "compensation_source_added",
    "to_hash": "56ed9a8745f5939286169df725d160e0fa6b78c30d9df3f1b4ae09f696881804"
+  },
+  {
+   "changed_at": "2026-10-29T01:11:58.821444+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "56ed9a8745f5939286169df725d160e0fa6b78c30d9df3f1b4ae09f696881804",
+   "kind": "content_changed",
+   "to_hash": "fc4a87127ea65ec910bf9fe5e244bc8bb452ed922d1a80475b952a62195ecfe0"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-07-02T13:43:11-04:00",
-  "title": "Director, Strategic Partnerships",
+  "title": "Strategic Partnerships Director",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "56ed9a8745f5939286169df725d160e0fa6b78c30d9df3f1b4ae09f696881804",
+ "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
+ "content_hash": "fc4a87127ea65ec910bf9fe5e244bc8bb452ed922d1a80475b952a62195ecfe0",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -63,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 16800000, \"max_cents\": 28560000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      },
@@ -88,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$168,000—$285,600 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      }
@@ -105,7 +114,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, US",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      },
@@ -113,7 +122,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "United States of America",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      },
@@ -121,7 +130,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Preferred: candidates based in US Eastern or Central time zones, given close cross-functional coordination needs.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      }
@@ -134,7 +143,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Significant experience owning strategic partnerships, alliance relationships, or vendor/commercial relationships in enterprise software, cloud, and/or AI, with a track record of being in the details, not just setting direction. This experience should reflect owning one or a small number of relationships in depth, not administering a large multi-partner channel ecosystem.\nDirect experience managing enterprise cloud commercial agreements (e.g., EDP, MACC, or similar consumption/spend commitments) with at least one major hyperscaler, including experience owning a renewal cycle from expiration planning through negotiation and close.\nExperience driving product or technical integrations with a cloud partner, and shaping joint go-to-market strategy that connects a product roadmap to partner initiatives.\nStrong ownership mindset with the ability to operate as a single-threaded owner who is accountable for both strategy and execution, and comfortable doing the hands-on work personally rather than handing it off.\nExcellent written and verbal communication skills, with the ability to distill complex commercial and partnership topics into clear recommendations for executives and cross-functional stakeholders.\nStrong project and program management skills, including the ability to organize complex workstreams, prioritize effectively, and keep multiple initiatives moving through direct, hands-on management.\nGenuine technical fluency in software development, platform integrations, and cloud infrastructure, with comfort engaging engineering and product counterparts in substantive conversations, not just positioning technology commercially.\nExperience working with senior stakeholders on high-visibility initiatives, including preparing executive briefings, framing recommendations, and driving follow-through.\nAbility to influence without formal authority, build strong working relationships across internal and external teams, and navigate multiple priorities with sound judgment.\nFamiliarity with the DevSecOps ecosystem and a results-oriented approach to measuring partnership impact through spend efficiency and business/product outcomes rather than partner-sourced revenue or quota attainment.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      }
@@ -147,7 +156,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you'll bring",
       "quote": "Preferred: candidates based in US Eastern or Central time zones, given close cross-functional coordination needs.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      }
@@ -160,7 +169,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, US",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8615811002"
      }

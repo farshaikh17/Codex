@@ -14,6 +14,15 @@
    "from_hash": "02a39a98a9aa37217720a32d873741cd06e4d2b942543ba0328d7b6b3d32015c",
    "kind": "content_changed",
    "to_hash": "cd29dacc85f1f7dfa5472f96b00a003e5a23c90f1fb7c4230a433990b97ce2c0"
+  },
+  {
+   "changed_at": "2026-10-29T01:11:58.821444+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "cd29dacc85f1f7dfa5472f96b00a003e5a23c90f1fb7c4230a433990b97ce2c0",
+   "kind": "content_changed",
+   "to_hash": "3a92c8f38d1784eb58f0e3818b08aa2c30f953b0d1f47d5f96d801aa46017c23"
   }
  ],
  "content": {
@@ -22,19 +31,19 @@
   "locations": [
    {
     "source": "location",
-    "text": "Remote (Canada, UK, EU)"
+    "text": "Remote (Canada)"
    },
    {
     "source": "address.addressCountry",
-    "text": "United Kingdom"
+    "text": "Canada"
    }
   ],
   "published": "2026-05-19T15:01:16.894000+00:00",
   "title": "Customer Experience Specialist",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "cd29dacc85f1f7dfa5472f96b00a003e5a23c90f1fb7c4230a433990b97ce2c0",
+ "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
+ "content_hash": "3a92c8f38d1784eb58f0e3818b08aa2c30f953b0d1f47d5f96d801aa46017c23",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -65,7 +74,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":24000,\"maxValue\":36000,\"summary\":\"$24K – $36K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      },
@@ -93,7 +102,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":35000,\"maxValue\":40000,\"summary\":\"$35K – $40K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      }
@@ -109,16 +118,16 @@
      {
       "interpretation": null,
       "method": "ats_field:location",
-      "quote": "Remote (Canada, UK, EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Remote (Canada)",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      },
      {
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
-      "quote": "United Kingdom",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Canada",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      }
@@ -131,7 +140,7 @@
       "interpretation": null,
       "method": "description_section:WHO WE’RE LOOKING FOR",
       "quote": "- Fluent, professional-level English communication skills, both written and verbal\n- Strong customer service instincts and the ability to communicate clearly, empathetically, and professionally\n- Comfortable learning new tools, systems, and workflows quickly\n- Thrives in fast-paced, high-ownership environments where priorities can shift quickly\n- Proactive problem-solver who takes initiative without waiting for direction\n- Strong attention to detail and ability to stay composed under pressure\n- Collaborative teammate who communicates clearly and contributes positively to team performance\n- Comfortable working across chat, voice, and email channels",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      }
@@ -147,8 +156,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote (Canada, UK, EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Remote (Canada)",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      },
@@ -156,7 +165,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d43bf22d-8219-4265-b061-87aab63d13e9"
      }

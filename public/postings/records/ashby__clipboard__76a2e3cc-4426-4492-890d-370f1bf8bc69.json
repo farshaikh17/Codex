@@ -14,6 +14,15 @@
    "from_hash": "3841ade33ac030ec25c9c40268090cbd236feccba38c5015fdb19b4f0ce775f9",
    "kind": "content_changed",
    "to_hash": "ba7f43e316669393ca56297d096dd68ad29883cd7148cc54e97680a21ca6a6dd"
+  },
+  {
+   "changed_at": "2026-10-29T01:11:58.821444+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "ba7f43e316669393ca56297d096dd68ad29883cd7148cc54e97680a21ca6a6dd",
+   "kind": "content_changed",
+   "to_hash": "80b488bb52179c3173518ec73112319a8750fbcbf837499b71dd1c3bfaf6781f"
   }
  ],
  "content": {
@@ -22,19 +31,19 @@
   "locations": [
    {
     "source": "location",
-    "text": "Remote (Canada, UK, EU)"
+    "text": "Remote (Canada)"
    },
    {
     "source": "address.addressCountry",
-    "text": "United Kingdom"
+    "text": "Canada"
    }
   ],
   "published": "2026-03-13T16:25:20.978000+00:00",
   "title": "Client Support Specialist (Workplaces - B2B)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "ba7f43e316669393ca56297d096dd68ad29883cd7148cc54e97680a21ca6a6dd",
+ "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
+ "content_hash": "80b488bb52179c3173518ec73112319a8750fbcbf837499b71dd1c3bfaf6781f",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -65,7 +74,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":45000,\"summary\":\"Annual Compensation $30K – $45K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }
@@ -81,16 +90,16 @@
      {
       "interpretation": null,
       "method": "ats_field:location",
-      "quote": "Remote (Canada, UK, EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Remote (Canada)",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
      {
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
-      "quote": "United Kingdom",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Canada",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }
@@ -110,8 +119,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote (Canada, UK, EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "Remote (Canada)",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
@@ -119,7 +128,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
@@ -127,7 +136,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- 100% Remote – Always. Work from anywhere in the world.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }
