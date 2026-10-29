@@ -14,6 +14,15 @@
    "from_hash": "83cc04ad7952510fb3b0e86348d61781eb7dad1e8d7b8afc4ec5f17bbedfdb87",
    "kind": "compensation_source_added",
    "to_hash": "3ae23d8f498a39f9e79f6cda55b24e0da6a185b6ae491d8a32737f0413d15651"
+  },
+  {
+   "changed_at": "2026-10-29T17:31:35.200593+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "3ae23d8f498a39f9e79f6cda55b24e0da6a185b6ae491d8a32737f0413d15651",
+   "kind": "content_changed",
+   "to_hash": "eb9ed61fb32b2d828a8ea4589c3bdce1cc1cd22b1088fdfc3358f5663dd467b8"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-10-05T15:24:21-04:00",
-  "title": "Support Engineer, U.S. Government Support",
+  "title": "Support Engineer, U.S. Government Support (SHIFT)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "3ae23d8f498a39f9e79f6cda55b24e0da6a185b6ae491d8a32737f0413d15651",
+ "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
+ "content_hash": "eb9ed61fb32b2d828a8ea4589c3bdce1cc1cd22b1088fdfc3358f5663dd467b8",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -63,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 9520000, \"max_cents\": 16080000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      },
@@ -88,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$95,200—$160,800 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      }
@@ -105,7 +114,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      },
@@ -113,7 +122,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Federal",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      },
@@ -121,7 +130,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "We are embedded within Support Engineering and work closely with Product, Development, Infrastructure, Customer Success, and Sales to solve complex, high-impact technical challenges. Our team frequently dives into code, logs, and architectural behavior to understand not just what is failing, but why; especially in environments with sanitized data, limited visibility, and strict compliance controls such as FedRAMP. We collaborate asynchronously across time zones and through structured pairing and discussion to share knowledge, strengthen solutions, and continuously improve how GitLab supports secure, air-gapped, and regulated deployments, while upholding GitLab's standards for rigor, transparency, and technical excellence.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      }
@@ -134,7 +143,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Due to government security requirements, you must be a United States Citizen (defined as any individual who is a citizen of the United States by law, birth, or naturalization) to be eligible for this position\nExperience managing customer-facing cases across the full support lifecycle, from initial inquiry and triage through reproduction, escalation, and resolution\nStrong Linux systems administration knowledge, with the ability to troubleshoot performance and configuration issues in complex environments\nFamiliarity with AI/LLM-powered developer tooling and gateway architectures (for example GitLab Duo, AI gateway configurations, or similar model-serving/proxy layers), including how they're deployed and troubleshot in self-managed or air-gapped environments\nAbility to use scripting languages (preferably Ruby or Bash) and work within model-view-controller frameworks (preferably Ruby on Rails) to investigate and resolve issues\nPractical experience with Git and continuous integration/continuous delivery (CI/CD) workflows\nSkill in creating and maintaining clear, accurate support content and technical documentation\nAbility to explain complex technical topics in a clear, empathetic way to customers and coworkers with varying technical backgrounds\nFamiliarity with DevOps practices and container-orchestration technologies such as OpenShift and Kubernetes\nUnderstanding of common information security and compliance concepts and controls (for example DISA STIG and SELinux), and eligibility to work on United States federal customer environments as required for this role",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      }
@@ -151,7 +160,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      },
@@ -159,7 +168,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "In this role, you will engage deeply with GitLab through the command line; analyzing logs, system behavior, and application performance with strong Linux fundamentals and an understanding of how GitLab’s components interact end-to-end. You may partner with Product and Engineering to reproduce and document edge-case defects using sanitized or redacted data, or contribute directly to the product by opening merge requests that resolve customer-impacting issues. Beyond resolving individual cases, you’ll help strengthen GitLab by improving documentation, support workflows, and institutional knowledge, ensuring that lessons learned in highly regulated environments benefit the broader platform; all while working in a fully remote, highly collaborative environment built on trust, autonomy, and shared ownership.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859063002"
      }

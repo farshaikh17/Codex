@@ -24,6 +24,15 @@
    "from_hash": "d57e25eab11da54fcefa249ceb411e027f14b0e160448b4f9205901506312af4",
    "kind": "content_changed",
    "to_hash": "656def8a0f3ef74906124e7c1674f16306944614e975f3024b150a2dfc9beb61"
+  },
+  {
+   "changed_at": "2026-10-29T17:31:35.200593+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "656def8a0f3ef74906124e7c1674f16306944614e975f3024b150a2dfc9beb61",
+   "kind": "content_changed",
+   "to_hash": "1e8f7bf60117c712b59e76961709262098f6e19a404c6b994e1aed1208a7ab24"
   }
  ],
  "content": {
@@ -33,14 +42,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-10-08T10:39:54-04:00",
   "title": "Recruiter,  Sales (AMER)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-28T00:42:44.013366+00:00",
- "content_hash": "656def8a0f3ef74906124e7c1674f16306944614e975f3024b150a2dfc9beb61",
+ "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
+ "content_hash": "1e8f7bf60117c712b59e76961709262098f6e19a404c6b994e1aed1208a7ab24",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -69,7 +82,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 8640000, \"max_cents\": 14640000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      },
@@ -94,7 +107,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$86,400—$146,400 USD",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -111,7 +124,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      },
@@ -119,7 +140,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Strong organization across multiple requisitions and clear written and verbal communication across time zones, with attention to detail and candidate care.",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -132,7 +153,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Intermediate-level recruiting experience, with a track record of owning full-cycle searches independently.\nSales or go-to-market recruiting experience, or a strong interest in learning sales segments, quotas, OTE, ramp time, territory design, and sales cycles.\nDeveloping advisor skills: building stakeholder trust, influencing without authority, and managing hiring team expectations.\nExperience building proactive, diversity-focused sourcing strategies and balanced pipelines.\nA data-informed approach that turns funnel insights into practical actions.\nStrong organization across multiple requisitions and clear written and verbal communication across time zones, with attention to detail and candidate care.\nExperience with an applicant tracking system and recruiting tools such as Greenhouse, Metaview, LinkedIn Recruiter, LinkedIn Insights, SeekOut, or comparable platforms; ability to evaluate AI-generated work, protect confidential information, and share responsible workflows with team members.",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -145,7 +166,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you'll bring",
       "quote": "Technology or business-to-business (B2B) software recruiting experience is helpful, not required.",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }
@@ -158,7 +179,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-28T00:42:44.013366+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8869149002"
      }

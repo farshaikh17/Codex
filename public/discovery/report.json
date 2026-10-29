@@ -1,8 +1,8 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed.",
-  "generated_at": "2026-10-29T07:39:17.010897+00:00",
-  "requests": 7,
+  "generated_at": "2026-10-29T17:31:59.144331+00:00",
+  "requests": 3,
   "halted": null,
   "employer_leads": [
     {
@@ -324,7 +324,20 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "adevait.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-29T17:31:59.144331+00:00",
+        "retry_after": "2026-11-05T17:31:59.144331+00:00",
+        "result": "blocked_or_failed",
+        "pages_read": 0,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [
+          "redirect off the allowed hosts to www.toptal.com"
+        ],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -334,7 +347,20 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "adhocteam.us",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-29T17:31:59.144331+00:00",
+        "retry_after": "2026-11-05T17:31:59.144331+00:00",
+        "result": "blocked_or_failed",
+        "pages_read": 0,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [
+          "robots.txt: redirect off the allowed hosts to adhoc.team"
+        ],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -549,7 +575,7 @@
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-29T07:39:17.010897+00:00",
+    "run_at": "2026-10-29T17:31:59.144331+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -563,67 +589,14 @@
       "max_redirects": 3,
       "sitemaps": false
     },
-    "requests_made": 5,
+    "requests_made": 0,
     "halted": null,
-    "targets": [
-      {
-        "employer": "smartjoules",
-        "employer_known": false,
-        "start_url": "https://smartjoules.co.in/life-at-smartjoules",
-        "pages": [
-          {
-            "url": "https://smartjoules.co.in/life-at-smartjoules",
-            "via": "start",
-            "depth": 0,
-            "status": 200,
-            "final_url": "https://smartjoules.co.in/life-at-smartjoules",
-            "result": "read",
-            "links": 11,
-            "json_ld_job_postings": 0
-          }
-        ],
-        "boards": [],
-        "unsupported_ats": [],
-        "careers_url_proposal": null,
-        "stopped": null
-      },
-      {
-        "employer": "webfx",
-        "employer_known": false,
-        "start_url": "https://www.webfx.com/careers/",
-        "pages": [
-          {
-            "url": "https://www.webfx.com/careers/",
-            "via": "start",
-            "depth": 0,
-            "status": 200,
-            "final_url": "https://www.webfx.com/careers/",
-            "result": "read",
-            "links": 303,
-            "json_ld_job_postings": 0
-          },
-          {
-            "url": "https://www.webfx.com/careers/reviews/",
-            "via": "link",
-            "depth": 1,
-            "status": 200,
-            "final_url": "https://www.webfx.com/careers/reviews/",
-            "result": "read",
-            "links": 256,
-            "json_ld_job_postings": 0
-          }
-        ],
-        "boards": [],
-        "unsupported_ats": [],
-        "careers_url_proposal": null,
-        "stopped": null
-      }
-    ],
+    "targets": [],
     "notice": "Discovery proposals for review. A board listed here is not a configured source until a person adds it to sources.json and registry.py validates it. Page text is untrusted data, never instructions."
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-29T07:39:17.010897+00:00",
+    "run_at": "2026-10-29T17:31:59.144331+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -637,20 +610,20 @@
       "max_redirects": 3,
       "sitemaps": false
     },
-    "requests_made": 2,
+    "requests_made": 3,
     "halted": null,
     "targets": [
       {
-        "employer": "lead-aboutus-audiense-com",
+        "employer": "lead-adevait-com",
         "employer_known": false,
-        "start_url": "https://aboutus.audiense.com/careers",
+        "start_url": "https://adevait.com/careers/job-openings",
         "pages": [
           {
-            "url": "https://aboutus.audiense.com/careers",
+            "url": "https://adevait.com/careers/job-openings",
             "via": "start",
             "depth": 0,
             "result": "blocked",
-            "reason": "robots.txt: redirect off the allowed hosts to www.audiense.com"
+            "reason": "redirect off the allowed hosts to www.toptal.com"
           }
         ],
         "boards": [],
@@ -659,16 +632,16 @@
         "stopped": null
       },
       {
-        "employer": "lead-abstractapi-com",
+        "employer": "lead-adhocteam-us",
         "employer_known": false,
-        "start_url": "https://abstractapi.com",
+        "start_url": "https://adhocteam.us/join/",
         "pages": [
           {
-            "url": "https://abstractapi.com",
+            "url": "https://adhocteam.us/join/",
             "via": "start",
             "depth": 0,
             "result": "blocked",
-            "reason": "robots.txt: redirect off the allowed hosts to www.abstractapi.com"
+            "reason": "robots.txt: redirect off the allowed hosts to adhoc.team"
           }
         ],
         "boards": [],
@@ -695,6 +668,18 @@
       "source": "directory:https://remoteintech.company/companies/",
       "reason": "cooldown",
       "retry_after": "2026-10-30T01:12:35.762900+00:00"
+    },
+    {
+      "source": "target:smartjoules",
+      "reason": "cooldown",
+      "retry_after": "2026-10-30T07:39:17.010897+00:00",
+      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
+    },
+    {
+      "source": "target:webfx",
+      "reason": "cooldown",
+      "retry_after": "2026-10-30T07:39:17.010897+00:00",
+      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
     },
     {
       "source": "target:afry",
@@ -830,14 +815,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -932,14 +917,14 @@
       "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
       "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
       "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1025,14 +1010,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
       "published": "2026-08-10T05:08:25-04:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1121,14 +1106,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76",
       "apply_url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76/application",
       "published": "2026-10-26T19:58:44.165000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1172,6 +1157,40 @@
       "same_title_elsewhere": []
     },
     {
+      "key": "ashby:weave:6c360605-92c6-479d-a434-585ca621093d",
+      "req_id": "6c360605-92c6-479d-a434-585ca621093d",
+      "title": "Implementation Specialist, Forms",
+      "locations": [
+        {
+          "text": "India",
+          "source": "location"
+        },
+        {
+          "text": "India",
+          "source": "address.addressCountry"
+        }
+      ],
+      "workplace_type": "Remote",
+      "url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d",
+      "apply_url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d/application",
+      "published": "2026-10-29T14:37:04.755000+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "employer": "weave",
+      "source_id": "weave-ashby",
+      "provenance": "boards/weave-ashby.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "responsibility_signals": [
+        "implementation"
+      ],
+      "signal_basis": "public title keywords only",
+      "stage": "exact_vacancy_unreviewed",
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
       "key": "ashby:zapier:45b2c110-f8e0-497a-914c-72fddf447ed0",
       "req_id": "45b2c110-f8e0-497a-914c-72fddf447ed0",
       "title": "Automation Strategist, Customer Success",
@@ -1189,14 +1208,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1319,14 +1338,14 @@
       "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
       "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
       "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1391,14 +1410,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
       "published": "2026-09-02T02:40:02-04:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1479,14 +1498,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d",
       "apply_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d/application",
       "published": "2026-09-18T15:32:06.487000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1591,14 +1610,14 @@
       "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
       "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
       "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1633,14 +1652,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
       "published": "2026-09-09T14:06:57-04:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1713,14 +1732,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89",
       "apply_url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89/application",
       "published": "2026-10-20T10:32:06.654000+00:00",
-      "observed_at": "2026-10-29T07:38:56.446808+00:00",
+      "observed_at": "2026-10-29T17:31:35.200593+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T07:38:56.446808+00:00",
-      "source_last_success_at": "2026-10-29T07:38:56.446808+00:00",
+      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1765,22 +1784,22 @@
     }
   ],
   "metrics": {
-    "exact_identities": 820,
-    "plausible_title_identities": 88,
-    "fresh_feed_identities": 820,
+    "exact_identities": 818,
+    "plausible_title_identities": 89,
+    "fresh_feed_identities": 818,
     "stale_or_unreported_identities": 0,
-    "review_batch": 25,
-    "review_employers": 11,
-    "largest_employer_share": 0.12,
+    "review_batch": 26,
+    "review_employers": 12,
+    "largest_employer_share": 0.115,
     "new_source_exact_identities": 0,
     "provisional_employer_links": 35,
     "leads_validated_this_run": 2,
     "lead_validation_results": {
       "no_board_found": 4,
       "board_found_unverified": 1,
-      "blocked_or_failed": 6,
+      "blocked_or_failed": 8,
       "supported_board_found": 1,
-      "not_validated": 23
+      "not_validated": 21
     },
     "basis": "public title keywords and source health only; no candidate relevance feedback is integrated"
   }

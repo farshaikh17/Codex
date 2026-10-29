@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-10-29T17:31:35.200593+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "b9a958664685627a51e6aacf8709bd7f29dd7dd9a40c1a8220229bb46e98c20b",
+   "kind": "content_changed",
+   "to_hash": "8f04fbf50c84a553a7928264b7e049c1971ba10d38f5b6a7119f3221d8bd23e6"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs an Engineering Manager, you’ll guide GitLab’s dedicated Software Supply Chain Security (SSCS) Add-On engineering team as it develops core capabilities including Dependency Firewall, Build Provenance, Malicious Packages detection, and Artifact Signing. This is a founding management role where you’ll help shape how the team works, partner closely with the Staff Backend Engineer, Product Manager, and SSCS stage management, and turn a defined roadmap into steady, high-quality delivery for enterprise customers with strict security and compliance needs. You’ll focus on developing the team, creating a healthy operating rhythm, and establishing predictable execution for the SSCS SKU.\n\nYou’ll join a product area where customers in regulated industries are already validating the need, and your work will help GitLab deliver software supply chain security features that customers can rely on. While technical credibility matters, your main focus will be growing a strong backend engineering team, enabling team members in their development, and creating the conditions for long-term delivery and quality.\n\nWhat you’ll do\n\nGuide a backend engineering team building the SSCS Add-On across dependency enforcement, build provenance, malicious package detection, and artifact signing.\n\nBe responsible for Drive engineering delivery for general availability milestones by aligning sequencing, scope, and dependencies with the Staff Backend Engineer and Product Manager.\n\nDevelop the team by partnering with Talent Acquisition on sourcing, interview design, candidate evaluation, and hiring decisions.\n\nRun regular 1:1s, performance reviews, and career development conversations that enable growth and clear expectations.\n\nAdvance engineering quality by monitoring cycle time, defect rates, and test coverage, and by addressing risks early.\n\nCoordinate quarterly planning and roadmap tradeoff discussions with SSCS stage leadership and Product.\n\nWork with Finance and other partners on headcount pacing and team planning as the Add-On scales.\n\nRepresent the SSCS Add-On team within stage leadership discussions and help ensure strong communication across functions.\n\nWhat you’ll bring\n\nOver 3 years of experience guiding backend product engineering teams in security, DevOps, or platform engineering environments.\n\nAbility to hire and grow backend or security engineers in distributed team environments, with practical understanding of the talent landscape for these roles.\n\nTechnical credibility to contribute to architecture discussions involving package registries, CI/CD pipeline security, and signing infrastructure.\n\nExperience managing predictable delivery across multi-quarter product roadmaps and managing cross-team dependencies.\n\nComfort working in an asynchronous, documentation-driven organization with clear written communication.\n\nFamiliarity with supply chain security, artifact management, or compliance-focused product areas, or transferable experience from related domains.\n\nWorking knowledge of concepts related to frameworks and ecosystems such as SLSA and Sigstore.\n\nAbility to build credibility with engineers, product partners, and customer-facing stakeholders through clear judgment, coaching, and teamwork.\n\nAbout the team\n\nThe SSCS Add-On team is a product engineering team within GitLab’s Software Supply Chain Security stage. We work on key capabilities in the SSCS Add-On SKU and collaborate closely with product and engineering partners to deliver security features for customers operating in regulated environments. You’ll report to the SSCS Senior Engineering Manager and partner directly with the Staff Backend Engineer and Product Manager. As a distributed team working asynchronously across regions, we are focused on strong delivery practices, team health, and scaling the product area with clarity and accountability. For more on how related teams work, see Team Handbook Page.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -16,15 +26,19 @@
    },
    {
     "source": "location.name",
-    "text": "Remote, Australia"
-   },
-   {
-    "source": "location.name",
     "text": "Remote, Canada"
    },
    {
     "source": "location.name",
     "text": "Remote, Israel"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Poland"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, United Kingdom"
    },
    {
     "source": "location.name",
@@ -39,8 +53,8 @@
   "title": "Engineering Manager, SSCS: Supply Chain",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "b9a958664685627a51e6aacf8709bd7f29dd7dd9a40c1a8220229bb46e98c20b",
+ "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
+ "content_hash": "8f04fbf50c84a553a7928264b7e049c1971ba10d38f5b6a7119f3221d8bd23e6",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -59,15 +73,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Bangalore, India",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
-      "quote": "Remote, Australia",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -75,7 +81,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -83,7 +89,23 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Poland",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -91,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -99,7 +121,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "India",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }
@@ -112,7 +134,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Over 3 years of experience guiding backend product engineering teams in security, DevOps, or platform engineering environments.\nAbility to hire and grow backend or security engineers in distributed team environments, with practical understanding of the talent landscape for these roles.\nTechnical credibility to contribute to architecture discussions involving package registries, CI/CD pipeline security, and signing infrastructure.\nExperience managing predictable delivery across multi-quarter product roadmaps and managing cross-team dependencies.\nComfort working in an asynchronous, documentation-driven organization with clear written communication.\nFamiliarity with supply chain security, artifact management, or compliance-focused product areas, or transferable experience from related domains.\nWorking knowledge of concepts related to frameworks and ecosystems such as SLSA and Sigstore.\nAbility to build credibility with engineers, product partners, and customer-facing stakeholders through clear judgment, coaching, and teamwork.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }
@@ -128,16 +150,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote, Australia",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -145,7 +159,23 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Poland",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -153,7 +183,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }

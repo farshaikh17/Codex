@@ -1,0 +1,117 @@
+{
+ "availability": {
+  "at": "2026-10-29T17:31:35.200593+00:00",
+  "reason": "first listed",
+  "state": "listed"
+ },
+ "board": "weave",
+ "changes": [],
+ "content": {
+  "compensation_raw": null,
+  "description": "As the Lead Compensation Analyst, you will lead the design, development, administration, and continuous improvement of Weave’s compensation programs, including base pay, variable incentives, and equity. You will serve as a subject matter expert and strategic partner to the business, HR Business Partners, Finance, and other cross-functional teams, ensuring compensation practices remain competitive, equitable, scalable, and aligned with business objectives. Through advanced market analysis, financial modeling, and workforce analytics, you will independently develop recommendations that influence compensation strategy and key business decisions. You will own major compensation initiatives, drive process improvements, and lead the successful execution of annual compensation cycles. You will also guide and educate business leaders, helping ensure compensation programs are understood and effectively support Weave’s evolving business needs.\n\n- This position reports to the Head of People Operations.\n\n- This role is in-office Tuesday, Wednesday, and Thursday at our Lehi, UT HQ, with the option to work from home Monday and Friday.\n\nWhat You Will Own:\n\n- Lead market benchmarking and salary survey analyses to develop recommendations that maintain competitive and equitable compensation practices.\n\n- Own complex compensation analyses, including financial modelling, employee impact assessments, pay equity, compression, and market competitiveness evaluations.\n\n- Develop and maintain compensation dashboards and reporting to identify workforce trends, evaluate program effectiveness, and provide actionable insights to leadership.\n\n- Lead the planning, administration, and execution of annual compensation cycles, including merit increases, promotions, bonus programs, and equity awards.\n\n- Serve as a subject matter expert and trusted advisor to HR Business Partners and business leaders on compensation decisions, salary benchmarking, job levelling, and internal equity.\n\n- Partner with HRIS, Payroll, and Finance to ensure accurate compensation data, incentive payment processing, financial modelling, and effective program administration.\n\n- Lead the evaluation, development, and implementation of compensation strategies, policies, and processes that align with organizational objectives.\n\n- Independently develop and present compensation analyses, strategic recommendations, and business cases to People Team leadership and key stakeholders.\n\n- Lead executive compensation.\n\n- Own and continuously improve compensation processes, tools, and controls to increase efficiency, accuracy, and scalability.\n\n- Develop and deliver compensation training, resources, and communications to improve understanding and consistency across the organization.\n\n- Partner with Finance to develop compensation forecasts, cost models, and financial analyses that support workforce planning and business decisions.\n\n- Guide job evaluations, job architecture, grade assignments, and Fair Labour Standards Act (FLSA) classifications to support consistent compensation practices.\n\n- Lead the administration, analysis, and ongoing evaluation of incentive and bonus programs, ensuring alignment with business performance and organizational goals.\n\n- Provide functional leadership and mentorship to team members and cross-functional partners, sharing expertise and establishing best practices.\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB:\n\n- Bachelor’s degree in Human Resources, Finance, Business, or a related field, or equivalent relevant experience.\n\n- 7+ years of progressive compensation experience, including demonstrated ownership of complex compensation programs and initiatives.\n\n- Advanced knowledge of compensation principles, market benchmarking, job evaluation, incentive programs, and compensation practices.\n\n- Demonstrated ability to independently lead complex projects, develop strategic recommendations, and influence business decisions.\n\n- Advanced analytical and financial modelling skills, including expertise in Excel and/or Google Sheets.\n\n- Experience translating complex compensation data into actionable insights and presenting recommendations to business leaders.\n\n- Strong understanding of compensation-related regulations, compliance requirements, and internal equity considerations.\n\n- Proven ability to partner effectively with HR, Finance, and business leaders while managing competing priorities.\n\n- Strong written and verbal communication skills, including the ability to explain complex compensation concepts to diverse audiences.\n\n- Demonstrated ability to identify opportunities, improve processes, and implement scalable solutions with minimal oversight.\n\nWhat Will Make Us Love You.\n\n- Experience with salary survey data and market benchmarking platforms, particularly Radford.\n\n- Experience with Workday, including compensation administration and reporting.\n\n- Experience designing, administering, or evaluating sales compensation and incentive programs.\n\n- Experience with equity compensation programs and administration.\n\n- Experience leading compensation projects or programs in a high-growth or rapidly evolving organization.\n\n- Ability to balance strategic thinking with hands-on execution and a proactive, solutions-oriented approach.\n\n- Ability to present to executive leadership.\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+  "locations": [
+   {
+    "source": "location",
+    "text": "Weave - Headquarters (Lehi, UT)"
+   },
+   {
+    "source": "address.addressCountry",
+    "text": "United States"
+   }
+  ],
+  "published": "2026-10-29T16:22:04.796000+00:00",
+  "title": "Lead Compensation Analyst",
+  "workplace_type": "Hybrid"
+ },
+ "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
+ "content_hash": "f802b8b62aa0cd7269f7e6deae6adf5b7f497d704e9bd7378a21bbdda6ead7ec",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 4,
+  "fields": {
+   "compensation": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "employment_type": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location",
+      "quote": "Weave - Headquarters (Lehi, UT)",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:address.addressCountry",
+      "quote": "United States",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB:",
+      "quote": "- Bachelor’s degree in Human Resources, Finance, Business, or a related field, or equivalent relevant experience.\n- 7+ years of progressive compensation experience, including demonstrated ownership of complex compensation programs and initiatives.\n- Advanced knowledge of compensation principles, market benchmarking, job evaluation, incentive programs, and compensation practices.\n- Demonstrated ability to independently lead complex projects, develop strategic recommendations, and influence business decisions.\n- Advanced analytical and financial modelling skills, including expertise in Excel and/or Google Sheets.\n- Experience translating complex compensation data into actionable insights and presenting recommendations to business leaders.\n- Strong understanding of compensation-related regulations, compliance requirements, and internal equity considerations.\n- Proven ability to partner effectively with HR, Finance, and business leaders while managing competing priorities.\n- Strong written and verbal communication skills, including the ability to explain complex compensation concepts to diverse audiences.\n- Demonstrated ability to identify opportunities, improve processes, and implement scalable solutions with minimal oversight.\nWhat Will Make Us Love You.\n- Experience with salary survey data and market benchmarking platforms, particularly Radford.\n- Experience with Workday, including compensation administration and reporting.\n- Experience designing, administering, or evaluating sales compensation and incentive programs.\n- Experience with equity compensation programs and administration.\n- Experience leading compensation projects or programs in a high-growth or rapidly evolving organization.\n- Ability to balance strategic thinking with hands-on execution and a proactive, solutions-oriented approach.\n- Ability to present to executive leadership.\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "hybrid",
+      "method": "ats_field:workplace_type",
+      "quote": "Hybrid",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+     },
+     {
+      "interpretation": "onsite",
+      "method": "description_text",
+      "quote": "- This role is in-office Tuesday, Wednesday, and Thursday at our Lehi, UT HQ, with the option to work from home Monday and Friday.",
+      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+     }
+    ],
+    "state": "conflicting"
+   }
+  },
+  "state": "uncertain",
+  "warnings": [
+   "compensation_signalled_not_found"
+  ]
+ },
+ "first_seen_at": "2026-10-29T17:31:35.200593+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "ashby:weave:e6b7bd70-cf73-4bd8-ac2b-a1e856582477",
+ "provider": "ashby",
+ "req_id": "e6b7bd70-cf73-4bd8-ac2b-a1e856582477",
+ "schema": "posting-record-1",
+ "source_id": "weave-ashby",
+ "urls": {
+  "apply_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477/application",
+  "canonical_url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477",
+  "url": "https://jobs.ashbyhq.com/weave/e6b7bd70-cf73-4bd8-ac2b-a1e856582477"
+ }
+}
