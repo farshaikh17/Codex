@@ -17,7 +17,7 @@ python experiments/weekend_trial.py --candidate farhan --limit 30
 python experiments/weekend_trial.py --candidate sana --limit 30
 ```
 
-The report appears in `trial-output/`. It is a read-only offline triage snapshot, not a list of verified READY jobs. Only the first N unique records in sorted board order appear in the sample; it is **not a relevance-ranked sample**. No live URL, pay, or work-authorization verification is performed. The trial does not compare against Gmail or the private application ledger.
+The report appears in `trial-output/`. It is a read-only offline triage snapshot, not a list of verified READY jobs. The sample contains the highest-ranked N unique records across all board files using deterministic title/description keyword scores. These scores are relevance hints, not verified eligibility. No live URL, pay, or work-authorization verification is performed. The trial does not compare against Gmail or the private application ledger.
 
 ## Weekend acceptance
 - Unit tests pass for candidate separation, exclusions, duplicates, and schema validation.
