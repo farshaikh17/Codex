@@ -70,6 +70,13 @@ class StateTests(unittest.TestCase):
     def test_regional_copies_group_without_losing_requisitions(self):
         out=q.run({'synthetic-remote':person()},[job(),job(loc='Remote, United States',key='synthetic:acme:2')])['synthetic-remote']
         self.assertEqual(out['groups'],1); self.assertEqual(out['jobs'][0]['regional_variants'][0]['key'],'synthetic:acme:2')
+    def test_aggregator_copy_of_ats_posting_merges_and_other_employers_do_not(self):
+        ats=job(key='lever:acme:1');copy=dict(job(key='himalayas:acme-inc:chief-of-staff'),description=ats['description']+' Originally posted on Himalayas')
+        other=job(key='himalayas:other:chief-of-staff',desc='About the role\n'+'Bake bread and run the shop floor. '*30+'\nRequirements\n- pastry\n')
+        out=q.run({'synthetic-remote':person()},[ats,copy,other])['synthetic-remote']
+        self.assertEqual(out['groups'],2)
+        g=next(j for j in out['jobs']+[{}] if j.get('key')=='lever:acme:1')
+        self.assertEqual([d['key'] for d in g['cross_source_duplicates']],['himalayas:acme-inc:chief-of-staff'])
     def test_outputs_must_stay_outside_repository(self):
         with self.assertRaises(SystemExit): q.main(['--candidates',str(Path(__file__).parent/'fixtures'/'candidates'),'--out',str(Path(__file__).parent/'tmp-out')])
 class ConfigTests(unittest.TestCase):

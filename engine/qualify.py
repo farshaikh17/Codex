@@ -63,16 +63,39 @@ def load_jobs(boards,extras=()):
 def group_key(r):
     board=r['key'].split(':')[1] if r['key'].count(':')>=2 else r['source']
     return board,re.sub(r'\W+',' ',(r['title'] or '').lower()).strip()
+AGGREGATORS=('himalayas',)
+def _tokens(text): return set(re.findall(r'[a-z0-9]{3,}',(text or '').lower()))
+def cross_source_duplicates(jobs,threshold=0.75):
+    """{aggregator key: employer-ATS key} for an aggregator listing with the same title and a near-identical
+    description (token Jaccard >= threshold) as a posting on the employer's own ATS. Measured on the live corpus:
+    true copies 0.81-0.99, different employers with the same title <= 0.21. ATS-to-ATS pairs are never merged
+    (identical text there is usually a separate requisition per location)."""
+    norm=lambda t:re.sub(r'\W+',' ',(t or '').lower()).strip()
+    ats={}
+    for j in jobs:
+        if str(j['key']).split(':')[0] not in AGGREGATORS: ats.setdefault(norm(j.get('title')),[]).append(j)
+    out={}
+    for j in jobs:
+        if str(j['key']).split(':')[0] not in AGGREGATORS: continue
+        A=_tokens(j.get('description'))
+        best=max(((len(A&_tokens(c.get('description')))/len(A|_tokens(c.get('description'))) if A else 0,c['key']) for c in ats.get(norm(j.get('title')),[])),default=(0,None))
+        if best[0]>=threshold: out[j['key']]=best[1]
+    return out
 def run(people,jobs):
     out={}
+    dup=cross_source_duplicates(jobs)
     for cid,person in sorted(people.items()):
         df,n=document_frequency([j.get('description') for j in jobs],person['profile'])
         rows=[qualify(person,j,None,df,n) for j in jobs]
         rank={s:i for i,s in enumerate(STATES)}
-        groups={}
-        for r in sorted(rows,key=lambda r:(rank[r['state']],-r['fit'],r['key'])):
-            g=groups.setdefault(group_key(r),{**r,'regional_variants':[]})
+        groups,by_key={},{}
+        for r in sorted((r for r in rows if r['key'] not in dup),key=lambda r:(rank[r['state']],-r['fit'],r['key'])):
+            g=groups.setdefault(group_key(r),{**r,'regional_variants':[],'cross_source_duplicates':[]})
+            by_key[r['key']]=g
             if g is not r and g['key']!=r['key']: g['regional_variants'].append({'key':r['key'],'state':r['state'],'locations':r['locations']})
+        for r in rows:
+            if r['key'] in dup:  # the aggregator copy is kept as evidence on the employer's own posting, never dropped
+                by_key[dup[r['key']]]['cross_source_duplicates'].append({'key':r['key'],'url':r['url'],'state':r['state'],'source':r['source']})
         reps=list(groups.values())
         out[cid]={'counts':dict(Counter(r['state'] for r in rows)),'groups':len(reps),
                   'group_counts':dict(Counter(r['state'] for r in reps)),'sources':dict(Counter(r['source'] for r in reps if r['state'] in STATES[:4])),
