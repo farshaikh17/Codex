@@ -41,7 +41,8 @@ def group_results(items):
 def diverse_shortlist(groups,limit,per_employer=None):
     if limit<1:raise ValueError('limit must be positive')
     cap=per_employer or max(2,(limit+4)//5);counts={};selected=[]
-    for x in sorted(groups,key=lambda x:(-x['priority_score'],x['key'])):
+    # Clear evidence (tier A) before unresolved (tier B); relevance orders within a tier. Not padded.
+    for x in sorted(groups,key=lambda x:(x['evidence'].get('review_tier') or 'C',-x['priority_score'],x['key'])):
         if not x['evidence']['shortlist_eligible'] or x['priority_score']<4:continue
         employer=x['company']
         if counts.get(employer,0)>=cap:continue

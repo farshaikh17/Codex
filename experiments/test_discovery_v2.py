@@ -9,32 +9,41 @@ def job(title='CRM Implementation Specialist',location='India remote',descriptio
     return {'title':title,'location':location,'url':url,'description':description or 'Configure workflows and lead customer implementation. '*90}
 
 class EligibilityTests(unittest.TestCase):
+    # v3: an unknown qualification is listed for review and never removes a job from the review queue.
     def test_specialist_years_gap(self):
-        self.assertFalse(triage(job('Mechanical Engineer','India','15 + years of experience in commissioning. '+'maintenance '*100),'sana').evidence['shortlist_eligible'])
+        d=triage(job('Mechanical Engineer','India','15 + years of experience in commissioning. '+'maintenance '*100),'sana')
+        self.assertTrue(d.evidence['shortlist_eligible']);self.assertIn('15+ years stated in unsectioned description',d.evidence['qualification_gaps'])
     def test_sql_not_inferred_from_crm(self):
-        self.assertFalse(triage(job(description='Advanced proficiency in Excel and SQL. '+'workflow '*100)).evidence['shortlist_eligible'])
+        d=triage(job(description='Advanced proficiency in Excel and SQL. '+'workflow '*100))
+        self.assertTrue(d.evidence['shortlist_eligible']);self.assertIn('SQL named in unsectioned description',d.evidence['qualification_gaps'])
     def test_preferred_bi_does_not_hide_required_sql(self):
         d=triage(job(description='Advanced proficiency in SQL; BI tools strongly preferred. '+'workflow '*100))
-        self.assertIn('advanced SQL requirement not established by candidate evidence',d.evidence['qualification_gaps'])
+        self.assertIn('SQL named in unsectioned description',d.evidence['qualification_gaps'])
     def test_role_location_india_is_evidence(self):
         d=triage(job(location='Remote',description='Location: Bangalore, India. '+'workflow '*100))
         self.assertTrue(d.evidence['shortlist_eligible'])
     def test_company_india_office_is_not_role_location(self):
         d=triage(job(location='Remote',description='We have an office in India. '+'workflow '*100))
-        self.assertFalse(d.evidence['shortlist_eligible'])
+        self.assertFalse(d.evidence['india_location']);self.assertEqual(d.evidence['review_tier'],'B')
     def test_sana_specialist_design_needs_review(self):
-        self.assertFalse(triage(job('Electrical Design Engineer','India hybrid'),'sana').evidence['shortlist_eligible'])
-    def test_seniority_gap_stays_out_of_shortlist(self):
-        self.assertFalse(triage(job('Director, Professional Services')).evidence['shortlist_eligible'])
-    def test_sana_network_reliability_is_excluded(self):
-        self.assertEqual(triage(job('Manager, Network and Infrastructure Reliability'),'sana').status,'REJECT')
+        d=triage(job('Electrical Design Engineer','India hybrid'),'sana')
+        self.assertTrue(d.evidence['shortlist_eligible']);self.assertEqual(d.status,'HOLD')
+    def test_seniority_gap_stays_reviewable(self):
+        d=triage(job('Director, Professional Services'))
+        self.assertTrue(d.evidence['shortlist_eligible']);self.assertIn('seniority level in title',d.evidence['qualification_gaps'])
+    def test_sana_network_reliability_is_below_relevance(self):
+        d=triage(job('Manager, Network and Infrastructure Reliability'),'sana')
+        self.assertEqual((d.status,d.evidence['queue']),('HOLD','below_relevance'))
     def test_preferred_etap_does_not_become_required(self):
         d=triage(job('Energy Efficiency Engineer','India hybrid','ETAP experience is preferred. '+'energy '*100),'sana')
         self.assertFalse(d.evidence['qualification_gaps'])
-    def test_short_description_stays_out(self):
-        self.assertFalse(triage(job(description='Short teaser.')).evidence['shortlist_eligible'])
+    def test_short_description_is_unresolved_not_excluded(self):
+        d=triage(job(description='Short teaser.'))
+        self.assertEqual(d.evidence['review_tier'],'B');self.assertIn('full job description not established',d.reasons)
     def test_conflicting_auth_in_india_requires_review(self):
-        self.assertFalse(triage(job(description='Candidates must be authorized to work in the US. '+'workflow '*100)).evidence['shortlist_eligible'])
+        d=triage(job(description='Candidates must be authorized to work in the US. '+'workflow '*100))
+        self.assertEqual((d.status,d.evidence['review_tier']),('HOLD','B'))
+        self.assertTrue(any('manual resolution' in r for r in d.reasons))
     def test_closed_notice_is_rejected(self):
         self.assertEqual(triage(job(description='This position is no longer accepting applications. '+'workflow '*100)).status,'REJECT')
     def test_us_location_not_global_remote(self):
@@ -47,7 +56,7 @@ class EligibilityTests(unittest.TestCase):
         self.assertEqual(triage(job('Energy Efficiency Consultant','India hybrid'),'sana').status,'HOLD')
     def test_company_remote_boilerplate_not_enough(self):
         d=triage(job(location='India',description='We are a remote-first company. '+'workflow '*100))
-        self.assertFalse(d.evidence['shortlist_eligible'])
+        self.assertEqual(d.evidence['review_tier'],'B');self.assertIn('remote arrangement not affirmatively established',d.reasons)
     def test_role_specific_remote_evidence(self):
         d=triage(job(location='India',description='This position is remote in India. '+'workflow '*100))
         self.assertTrue(d.evidence['shortlist_eligible'])
@@ -58,15 +67,16 @@ class EligibilityTests(unittest.TestCase):
         self.assertEqual(triage(job(location='Remote',description='Candidates must be authorized to work in the US or Canada.')).status,'REJECT')
     def test_sana_tool_gap(self):
         d=triage(job('Energy Efficiency Engineer','India hybrid','Proficiency in ETAP is required. '+'energy '*100),'sana')
-        self.assertFalse(d.evidence['shortlist_eligible']);self.assertTrue(d.evidence['qualification_gaps'])
+        self.assertTrue(d.evidence['shortlist_eligible']);self.assertTrue(d.evidence['qualification_gaps'])
     def test_salary_floor_only_explicit_fixed_inr(self):
         d=triage(job(description='Fixed annual salary: INR 1,200,000 per year. '+'workflow '*100),minimum_fixed_annual_inr=1440000)
         self.assertEqual(d.status,'REJECT')
         d=triage(job(description='Total CTC INR 1,200,000 per year. '+'workflow '*100),minimum_fixed_annual_inr=1440000)
         self.assertEqual(d.status,'HOLD')
     def test_role_separation(self):
-        self.assertEqual(triage(job('CRM Product Manager')).status,'REJECT')
-        self.assertEqual(triage(job('Site Reliability Engineer'),'sana').status,'REJECT')
+        self.assertEqual(triage(job('CRM Product Manager')).evidence['role_family'],'adjacent')
+        self.assertEqual(triage(job('Site Reliability Engineer'),'sana').evidence['queue'],'below_relevance')
+        self.assertEqual(triage(job('Software Development Engineer II - CRM')).evidence['queue'],'below_relevance')
     def test_no_ready(self):
         for candidate,title in [('farhan','CRM Implementation'),('sana','Energy Efficiency Engineer')]:
             self.assertEqual(triage(job(title),candidate).status,'HOLD')

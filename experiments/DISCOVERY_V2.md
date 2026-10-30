@@ -14,6 +14,8 @@ python experiments/weekend_trial.py --candidate farhan --limit 50
 python experiments/weekend_trial.py --candidate sana --limit 50
 ```
 
+**v3 note:** SmartRecruiters fetching is disabled (its robots.txt disallows automated access) and the triage semantics changed; see `DISCOVERY_V3_REPAIR.md`.
+
 Discovery explicitly fetches the curated public employer feeds in `experiments/discovery_sources.json`. The source registry explains candidate-specific reasons. It does not change the production `sources.json`. Greenhouse and Lever feeds are read in full within a 15 MB response bound. SmartRecruiters is India-only and bounded to two 100-record pages; its board artifact records the total and whether truncated. Errors are recorded and never replaced with invented jobs. No anti-bot bypass or paid fallbacks are used.
 
 To reproduce a before/after evaluation, obtain the experiment Python files from baseline commit `fea7e5c8af29b920089a9636b6ae3d4369365041` in a separate local directory named `before-v2`. Keep the same `public/boards` snapshot for both versions. Then:

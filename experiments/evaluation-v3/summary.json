@@ -1,0 +1,380 @@
+{
+ "corpus": {
+  "commit": "09fa535e",
+  "records": 818,
+  "boards": 16
+ },
+ "labelled_jobs": {
+  "farhan": 90,
+  "sana": 63
+ },
+ "scores": {
+  "fea7e5c (v1 baseline)": {
+   "dev,india corrected": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 16,
+     "correctly_selected": 2,
+     "wrongly_excluded": 14,
+     "unsuitable_selected": 4,
+     "hard_blockers_rejected": "0/13",
+     "corpus_selected": 50,
+     "corpus_rejected": 29
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 11,
+     "correctly_selected": 5,
+     "wrongly_excluded": 6,
+     "unsuitable_selected": 7,
+     "hard_blockers_rejected": "0/10",
+     "corpus_selected": 50,
+     "corpus_rejected": 0
+    }
+   },
+   "dev,india original_labels": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 17,
+     "correctly_selected": 3,
+     "wrongly_excluded": 14,
+     "unsuitable_selected": 3,
+     "hard_blockers_rejected": "0/12",
+     "corpus_selected": 50,
+     "corpus_rejected": 29
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 15,
+     "correctly_selected": 7,
+     "wrongly_excluded": 8,
+     "unsuitable_selected": 5,
+     "hard_blockers_rejected": "0/6",
+     "corpus_selected": 50,
+     "corpus_rejected": 0
+    }
+   },
+   "holdout corrected": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 1,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "0/7",
+     "corpus_selected": 50,
+     "corpus_rejected": 29
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 5,
+     "correctly_selected": 4,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 5,
+     "hard_blockers_rejected": "0/6",
+     "corpus_selected": 50,
+     "corpus_rejected": 0
+    }
+   },
+   "holdout original_labels": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 1,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "0/7",
+     "corpus_selected": 50,
+     "corpus_rejected": 29
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 9,
+     "correctly_selected": 8,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 1,
+     "hard_blockers_rejected": "0/2",
+     "corpus_selected": 50,
+     "corpus_rejected": 0
+    }
+   }
+  },
+  "a2458ea (v2 experiment)": {
+   "dev,india corrected": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 16,
+     "correctly_selected": 0,
+     "wrongly_excluded": 16,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "12/13",
+     "corpus_selected": 0,
+     "corpus_rejected": 801
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 11,
+     "correctly_selected": 3,
+     "wrongly_excluded": 8,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "0/10",
+     "corpus_selected": 4,
+     "corpus_rejected": 779
+    }
+   },
+   "dev,india original_labels": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 17,
+     "correctly_selected": 0,
+     "wrongly_excluded": 17,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "11/12",
+     "corpus_selected": 0,
+     "corpus_rejected": 801
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 15,
+     "correctly_selected": 3,
+     "wrongly_excluded": 12,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "0/6",
+     "corpus_selected": 4,
+     "corpus_rejected": 779
+    }
+   },
+   "holdout corrected": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 0,
+     "wrongly_excluded": 2,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "6/7",
+     "corpus_selected": 0,
+     "corpus_rejected": 801
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 5,
+     "correctly_selected": 1,
+     "wrongly_excluded": 4,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "1/6",
+     "corpus_selected": 4,
+     "corpus_rejected": 779
+    }
+   },
+   "holdout original_labels": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 0,
+     "wrongly_excluded": 2,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "6/7",
+     "corpus_selected": 0,
+     "corpus_rejected": 801
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 9,
+     "correctly_selected": 1,
+     "wrongly_excluded": 8,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "1/2",
+     "corpus_selected": 4,
+     "corpus_rejected": 779
+    }
+   }
+  },
+  "repaired (v3)": {
+   "dev,india corrected": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 16,
+     "correctly_selected": 16,
+     "wrongly_excluded": 0,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "12/13",
+     "corpus_selected": 28,
+     "corpus_rejected": 642
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 11,
+     "correctly_selected": 10,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "10/10",
+     "corpus_selected": 19,
+     "corpus_rejected": 69
+    }
+   },
+   "dev,india original_labels": {
+    "farhan": {
+     "labelled": 70,
+     "expected_review": 17,
+     "correctly_selected": 16,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "11/12",
+     "corpus_selected": 28,
+     "corpus_rejected": 642
+    },
+    "sana": {
+     "labelled": 43,
+     "expected_review": 15,
+     "correctly_selected": 10,
+     "wrongly_excluded": 5,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "6/6",
+     "corpus_selected": 19,
+     "corpus_rejected": 69
+    }
+   },
+   "holdout corrected": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 1,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "7/7",
+     "corpus_selected": 28,
+     "corpus_rejected": 642
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 5,
+     "correctly_selected": 5,
+     "wrongly_excluded": 0,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "6/6",
+     "corpus_selected": 19,
+     "corpus_rejected": 69
+    }
+   },
+   "holdout original_labels": {
+    "farhan": {
+     "labelled": 20,
+     "expected_review": 2,
+     "correctly_selected": 1,
+     "wrongly_excluded": 1,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "7/7",
+     "corpus_selected": 28,
+     "corpus_rejected": 642
+    },
+    "sana": {
+     "labelled": 20,
+     "expected_review": 9,
+     "correctly_selected": 5,
+     "wrongly_excluded": 4,
+     "unsuitable_selected": 0,
+     "hard_blockers_rejected": "2/2",
+     "corpus_selected": 19,
+     "corpus_rejected": 69
+    }
+   }
+  }
+ },
+ "repaired_recommendations": {
+  "farhan": {
+   "review_queue": 28,
+   "queue_audit": {
+    "pre-registered: review": 17,
+    "post-hoc: unsuitable": 2,
+    "post-hoc: relevant": 9
+   },
+   "shortlist_size": 24,
+   "shortfall_vs_50": 26,
+   "shortlist_tiers": {
+    "A": 20,
+    "B": 4
+   },
+   "shortlist_sources": {
+    "drivetrain-lever": 5,
+    "highlevel-lever": 10,
+    "weave-ashby": 2,
+    "gitlab-greenhouse": 2,
+    "resilinc-lever": 1,
+    "clipboard-ashby": 1,
+    "cognite-greenhouse": 2,
+    "celigo-greenhouse": 1
+   },
+   "largest_source_share": 0.42,
+   "review_groups": 715,
+   "exact_url_duplicates": 0,
+   "multi_variant_groups_in_shortlist": [
+    {
+     "title": "Solutions Consultant - FP&A (Product Implementation)",
+     "variants": 4,
+     "locations": [
+      "India / India remote",
+      "Europe / Europe remote",
+      "United States / United States remote",
+      "Canada / Canada remote"
+     ]
+    },
+    {
+     "title": "Principal Technical Program Manager",
+     "variants": 2,
+     "locations": [
+      "Bangalore, India / India ",
+      "Remote, Canada / Remote, United States "
+     ]
+    },
+    {
+     "title": "Senior Project Manager",
+     "variants": 5,
+     "locations": [
+      "India (Bengaluru) / India (Bengaluru) ",
+      "England, United Kingdom / England, United Kingdom / UK England ",
+      "France / France ",
+      "UAE Abu Dhabi / UAE Abu Dhabi ",
+      "France / France "
+     ]
+    }
+   ],
+   "v2_shortlist_size": 0,
+   "v2_shortlist_sources": {}
+  },
+  "sana": {
+   "review_queue": 19,
+   "queue_audit": {
+    "post-hoc: relevant": 3,
+    "pre-registered: review": 15,
+    "post-hoc: unsuitable": 1
+   },
+   "shortlist_size": 12,
+   "shortfall_vs_50": 38,
+   "shortlist_tiers": {
+    "A": 5,
+    "B": 7
+   },
+   "shortlist_sources": {
+    "cai-lever": 10,
+    "cognite-greenhouse": 2
+   },
+   "largest_source_share": 0.83,
+   "review_groups": 715,
+   "exact_url_duplicates": 0,
+   "multi_variant_groups_in_shortlist": [
+    {
+     "title": "Electrical Commissioning Manager",
+     "variants": 2,
+     "locations": [
+      "Brisbane, Australia / Brisbane, Australia onsite",
+      "Sydney / Sydney / Melbourne hybrid"
+     ]
+    }
+   ],
+   "v2_shortlist_size": 4,
+   "v2_shortlist_sources": {
+    "cai-lever": 4
+   }
+  }
+ }
+}

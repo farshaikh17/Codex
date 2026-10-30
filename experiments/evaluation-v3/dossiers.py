@@ -6,7 +6,7 @@ import json,re,sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from engine.extract import extract
-GEO=re.compile(r'(?i)\b(india|remote|work from home|anywhere|worldwide|relocat|visa|sponsor|authori[sz]|right to work|eligible to work|resid|citizen|based in|located in|onsite|on-site|hybrid|in[- ]office|travel)\b')
+GEO=re.compile(r'(?i)\b(india|remote|work from home|anywhere|worldwide|relocat\w*|visa|sponsor\w*|authori[sz]\w*|right to work|(?:eligible|able|permitted) to work|resid\w*|citizens?\w*|based in|located in|onsite|on-site|hybrid|in[- ]office|travel)\b')  # v3.1: suffixes (authorized, residents, relocation) were missed by v3.0
 PAY=re.compile(r'(?i)(salary|compensation|pay range|base pay|ote|₹|inr|lakh|\$|usd|eur|gbp)')
 def sentences(text):
     return [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n',text or '') if s.strip()]

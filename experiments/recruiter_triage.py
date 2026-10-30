@@ -1,76 +1,140 @@
-"""Evidence-preserving offline eligibility checks. Never declares READY."""
+"""Evidence-preserving offline triage. Never declares READY.
+
+Repair (v3) restores the established engine semantics (engine/gates.py) that the v2 experiment had dropped:
+- separate states for relevance, eligibility blockers, qualifications, pay and application history;
+- relevance routes priority and never rejects (outside-target jobs are `below_relevance`, not REJECT);
+- only a confirmed, documented hard restriction rejects; an UNKNOWN qualification (SQL, certification, tools,
+  years, seniority) is listed for review and never removes a job from the review queue;
+- evidence comes from the established deterministic extractor (engine.extract) and geography gate
+  (engine.gates.geography, engine.places), not new regex copies.
+Candidate policies are generic public discovery rules; private facts (CV, pay floor, history) are never read here.
+"""
 from dataclasses import dataclass
-import re
+import hashlib,re,sys
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from engine.extract import extract  # noqa: E402
+from engine.gates import geography as engine_geography  # noqa: E402
+from engine.places import places,covers  # noqa: E402
 from candidate_match import role_match
+
+RULES_VERSION='triage-v3'
+POLICIES={
+ 'farhan':{'eligible_countries':['IN'],'workplace':('remote',),'india_must_be_explicit':True,'foreign_location_is_blocker':True,
+           'title_blockers':((r'\b(support (?:engineer|representative|specialist|agent|associate)|customer support|help ?desk|service desk|'
+                              r'technical support|csr\b)','support-first primary duty (documented candidate rule)'),
+                             (r'\b(account executive|sales (?:manager|director|representative|specialist|development)|bdr|sdr|'
+                              r'business development)','quota-carrying sales (documented candidate rule)'))},
+ 'sana':{'eligible_countries':['IN'],'workplace':None,'india_must_be_explicit':False,'foreign_location_is_blocker':False,
+         'title_blockers':()},
+}
+# Statements that only people who already hold foreign work rights (or are located there) can be hired.
+EXISTING_RIGHTS=re.compile(r"(?i)(?:\b(?:must|need to|needs to) (?:be|have)[^.\n]{0,40}?(?:authori[sz]ed|eligible|legal(?:ly)? (?:able|right)|right|full working rights) to work (?:in|from their home location \(in)|"
+                           r"\b(?:able|eligible|authori[sz]ed) to work in (?:the )?[A-Z][\w ]{1,30}? without (?:the need for )?(?:visa )?sponsorship|"
+                           r"\b(?:candidates|applicants) (?:must|need to) be (?:either )?(?:an? )?[A-Z]\w+ citizens?|\bcitizen or (?:an? )?(?:PR|permanent resident)|"
+                           r"\bmust be (?:located|based) in|\bopen to candidates based in [^.\n]{0,60}\bonly|^[\s\-–•·*]*eligible to work (?:full-time )?in)[^.\n]{0,120}",re.M)
+MANDATORY_CREDENTIAL=re.compile(r"(?i)\b(?:master'?s|m\.?\s?tech|m\.?e\.)\b[^.\n]{0,60}\b(?:required|mandatory|must)\b|\b(?:required|mandatory|must have)\b[^.\n]{0,40}\bmaster'?s\b|"
+                                r"\bBEE\b[^.\n]{0,60}\b(?:certified|certification)\b[^.\n]{0,40}\b(?:required|mandatory|must)\b|"
+                                r"\b(?:required|mandatory)\b[^.\n]{0,40}\bBEE\b[^.\n]{0,40}\b(?:certified|certification|auditor|manager)\b")
+CHECKS=((r'\bsql\b','SQL'),(r'\b(?:certification|certified)\b','certification'),(r'\bepm\b','EPM'),(r'\b(?:ansi x12|edifact|edi)\b','EDI standards'),
+        (r'\b(?:sap|cmms|plc|scada|autocad|matlab|etap|revit|dialux|aspen|python|java|go|ruby|node\.?js|typescript)\b','named tool or language'),
+        (r'\b(?:fluent|native)\b[^.\n]{0,20}\b(?:german|french|japanese|spanish|dutch|italian|portuguese|mandarin)\b','language'))
+YEARS=re.compile(r'(?i)\b(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?(?:years?|yrs?)\b')
 
 @dataclass(frozen=True)
 class Decision:
-    status:str
+    status:str          # REJECT only for a confirmed hard restriction; HOLD otherwise. Never READY.
     reasons:tuple[str,...]
     evidence:dict
 
-def triage(job,candidate='farhan',minimum_fixed_annual_inr=None):
-    if candidate not in ('farhan','sana'):raise ValueError('unknown candidate')
-    title=str(job.get('title') or '');desc=str(job.get('description') or '');loc=str(job.get('location') or '')
-    lower=desc.lower();location=loc.lower();reasons=[];blocks=[]
+def _version(job,raw):
+    if raw is not None:
+        return {'title':job.get('title'),'locations':raw.get('locations') or [],'workplace_type':raw.get('workplace_type'),
+                'description':job.get('description') or '','compensation_raw':raw.get('compensation_raw')}
+    loc=str(job.get('location') or '')
+    return {'title':job.get('title'),'locations':[{'text':loc,'source':'location'}] if loc else [],'workplace_type':job.get('workplace_type'),
+            'description':job.get('description') or '','compensation_raw':None}
+
+def _explicit_india(quotes):
+    return any('IN' in places(q) for q in quotes)
+
+def review_key(candidate,key,content_hash):
+    """Stable receipt key: a private review of this candidate, posting content and rules version stays completed
+    across repeated runs; any change to content or rules makes it due again."""
+    return hashlib.sha256('|'.join([candidate,str(key),str(content_hash or ''),RULES_VERSION]).encode()).hexdigest()[:24]
+
+def triage(job,candidate='farhan',minimum_fixed_annual_inr=None,raw=None):
+    if candidate not in POLICIES:raise ValueError('unknown candidate')
+    policy=POLICIES[candidate]
+    title=str(job.get('title') or '');desc=str(job.get('description') or '')
+    version=_version(job,raw);fields=extract(version,job.get('url'))['fields']
     score,family,role_reason=role_match(job,candidate)
-    evidence={'title':title,'location':loc,'role_family':family,'role_reason':role_reason,'excerpts':[]}
-    if not title or not str(job.get('url') or '').startswith('https://'):blocks.append('missing title or HTTPS posting URL')
-    if len(desc.split())<80:reasons.append('full job description not established')
-    if family=='outside target':blocks.append('excluded role family')
-    if re.search(r'\b(no longer accepting applications|position (has been |is )?filled|this (job|position) is closed)\b',lower):blocks.append('posting contains a closed-vacancy notice')
-    sentences=[s.strip() for s in re.split(r'(?<=[.!?])\s+|\n',lower) if s.strip()]
-    hiring=[s for s in sentences if not re.search(r'\b(salary|compensation|pay range)\b',s) or re.search(r'\b(applicants?|candidates?) (must|need|are required)',s)]
-    auth=next((s for s in hiring if re.search(r'(authorized|authorised|eligible|able|right) to work in (the )?(us\b|united states|canada|uk\b|united kingdom|europe|australia)',s)),None)
-    explicit=next((s for s in hiring if re.search(r'\b(us only|united states only|must reside in the us|europe only)\b',s)),None)
-    india=bool(re.search(r'\bindia\b',location))
-    india_statement=re.search(r'location\s*[:\-]\s*[^.\n]{0,100}\bindia\b|(?:this (?:role|position) is|remote)\s+(?:based )?(?:in|within|across)\s+india\b',lower)
-    if india_statement:
-        india=True;evidence['excerpts'].append({'field':'india','text':india_statement.group(0)})
-    if auth and india:reasons.append('conflicting location and foreign work authorization; manual resolution required')
-    global_scope=bool(re.search(r'\b(worldwide|anywhere in the world|global remote)\b',location))
-    foreign=bool(re.search(r'\b(united states|usa|us|canada|europe|emea|united kingdom|uk|australia|singapore|netherlands|germany|france|norway|mexico)\b',location))
-    if (auth or explicit) and not india:
-        evidence['excerpts'].append({'field':'work_authorization','text':(auth or explicit)[:700]})
-        if candidate=='farhan':blocks.append('explicit geography exclusion')
-        else:reasons.append('foreign work authorization required; not established for candidate')
-    if re.search(r'\b(us only|united states only|europe only)\b',location):blocks.append('explicit geography exclusion')
-    if foreign and not india and not global_scope:
-        if candidate=='farhan':blocks.append('posting location excludes India')
-        else:reasons.append('overseas relocation and work authorization not established')
-    remote=bool(re.search(r'\b(remote|work from home|distributed)\b',location))
-    role_remote=next((s for s in sentences if re.search(r'(this (position|role)|work (model|location)|location:)\b',s) and re.search(r'\b(remote|work from home)\b',s)),None)
-    if role_remote:
-        remote=True;evidence['excerpts'].append({'field':'remote','text':role_remote[:700]})
-    hybrid=bool(re.search(r'\b(hybrid|on[ -]?site)\b',location))
-    if candidate=='farhan':
-        if hybrid:blocks.append('onsite or hybrid arrangement conflicts with fully remote requirement')
-        if not india:reasons.append('India work eligibility not affirmatively established')
-        if not remote:reasons.append('remote arrangement not affirmatively established')
-        reasons.extend(['compensation threshold not independently verified','candidate experience and actual JD require recruiter review'])
-    else:
-        if not india and not global_scope:reasons.append('India hiring or supported relocation not established')
-        if re.search(r'\b(on[ -]?site|field|shift)\b',location+' '+title.lower()):reasons.append('site load, shifts and office/hybrid preference require review')
-        reasons.append('technical fit, work authorization and compensation require recruiter review')
-    pay=re.search(r'(?:fixed (?:annual )?(?:salary|pay)[ :]+(?:inr|rs\.?|₹)\s*)([\d,]+)\s*(?:per year|p\.?a\.?|annually)',lower)
+    blockers,unresolved,checks=[],[],[]
+    evidence={'title':title,'location':str(job.get('location') or ''),'role_family':family,'role_reason':role_reason,'excerpts':[]}
+    if not title or not str(job.get('url') or '').startswith('https://'):blockers.append('missing title or HTTPS posting URL')
+    if re.search(r'(?i)\b(no longer accepting applications|position (has been |is )?filled|this (job|position) is closed)\b',desc):
+        blockers.append('posting contains a closed-vacancy notice')
+    if len(desc.split())<80:unresolved.append('full job description not established')
+    for pattern,why in policy['title_blockers']:
+        if re.search(pattern,title,re.I):blockers.append(why)
+    # Geography: the established gate (clause-level, negation-aware, union of listed places).
+    geo=engine_geography(fields,{'eligible_countries':policy['eligible_countries']})
+    quotes=[e['quote'] for e in geo['evidence']]
+    rights=[m.group(0).strip() for m in EXISTING_RIGHTS.finditer(desc)]
+    rights=[r for r in rights if not covers(places(r) or {'NONE'},policy['eligible_countries'])]
+    india=geo['result']=='pass' and (_explicit_india(quotes) or not policy['india_must_be_explicit'])
+    for r in rights[:2]:evidence['excerpts'].append({'field':'work_authorization','text':r[:300]})
+    if rights and india:unresolved.append('India is named but the posting also requires existing foreign work rights; manual resolution')
+    elif rights:blockers.append('posting requires existing work rights or location outside India')
+    if geo['result']=='fail':
+        if policy['foreign_location_is_blocker']:blockers.append('every listed location is outside India')
+        else:unresolved.append('overseas location: relocation and work authorisation not established')
+    elif geo['result']=='pass' and not india:unresolved.append('only region/worldwide wording; India not named (insufficient on its own)')
+    elif geo['result']=='unknown':unresolved.append('India eligibility not established: %s'%geo['reason'])
+    for q in quotes[:2]:evidence['excerpts'].append({'field':'location','text':q[:300]})
+    # Arrangement: explicit workplace values from the extractor (ATS field or location text).
+    work={i['interpretation'] for i in fields['workplace']['items'] if i['interpretation']}
+    remote=work=={'remote'} or bool(re.search(r'(?i)\b(this (position|role) (will be|is) (fully )?remote|all of our roles are remote|remote in india)\b',desc))
+    if policy['workplace']:
+        if work and not work&set(policy['workplace']):blockers.append('onsite or hybrid arrangement conflicts with the fully remote requirement')
+        elif not remote:unresolved.append('remote arrangement not affirmatively established')
+    elif work&{'onsite','hybrid'}:unresolved.append('site/office arrangement: preference review')
+    # Qualifications: listed for review against private evidence. Never a blocker, except a genuinely mandatory
+    # credential under a documented candidate rule (Sana: mandatory master's degree or BEE certification).
+    mandatory='\n'.join(i['quote'] for i in fields['requirements_mandatory']['items'])
+    where='mandatory requirements'
+    if fields['requirements_mandatory']['state']!='stated':  # no requirement headings: read the whole text, say so
+        where='unsectioned description'
+        mandatory='\n'.join(x for x in re.split(r'(?<=[.!?;])\s+|\n',desc)
+                             if not re.search(r'(?i)\b(preferred|nice to have|a plus|is a bonus|bonus|desirable|advantage\w*|not required)\b',x))
+    for pattern,label in CHECKS:
+        if re.search(pattern,mandatory,re.I):checks.append('%s named in %s'%(label,where))
+    years=[int(m.group(1)) for m in YEARS.finditer(mandatory) if int(m.group(1))<=40]
+    if years:checks.append('%d+ years stated in %s'%(max(years),where))
+    if re.search(r'\b(director|head of|vice president|vp|principal|staff|group product)\b',title,re.I):checks.append('seniority level in title')
+    if candidate=='sana':
+        m=MANDATORY_CREDENTIAL.search(mandatory)
+        if m:blockers.append('mandatory credential not established (documented rule: master\'s/BEE): '+m.group(0)[:120])
+    pay=re.search(r'(?:fixed (?:annual )?(?:salary|pay)[ :]+(?:inr|rs\.?|₹)\s*)([\d,]+)\s*(?:per year|p\.?a\.?|annually)',desc.lower())
+    pay_state={'state':fields['compensation']['state'],'note':'no private floor supplied; never assumed'}
     if pay:
         evidence['fixed_annual_inr']=int(pay.group(1).replace(',',''))
-        if minimum_fixed_annual_inr and evidence['fixed_annual_inr']<minimum_fixed_annual_inr:blocks.append('explicit fixed INR salary below supplied minimum')
-    gaps=[]
-    high_years=[int(m.group(1)) for s in sentences if not re.search(r'\b(company|founded|established|combined)\b',s) for m in re.finditer(r'\b(\d{1,2})\s*\+?\s*years?\b.{0,80}\bexperience\b',s)]
-    if high_years and max(high_years)>=12:gaps.append('requires '+str(max(high_years))+' years of specialist experience; exceeds documented candidate scope')
-    if candidate=='farhan':
-        if re.search(r'\b(director|head of|vice president|vp)\b',title.lower()):gaps.append('leadership seniority exceeds verified candidate scope; recruiter review required')
-        if any(re.search(r'\b(certification|certified)\b',s) and re.search(r'\b(required|mandatory)\b',s) and not re.search(r'\b(preferred|not required|nice to have)\b',s) for s in sentences):gaps.append('mandatory certification must be checked against candidate evidence')
-        if 'epm' in lower and re.search(r'(expertise|experience).{0,70}(required|must)',lower):gaps.append('specialist EPM experience requires verification')
-        if re.search(r'\b(ansi x12|edifact)\b',lower):gaps.append('specialist EDI standards experience not established')
-        if any('sql' in s and re.search(r'\b(advanced|proficien\w*|strong)\b',s) and not re.search(r'\b(preferred|plus|not required)\b',s) for line in sentences for s in re.split(';',line)):gaps.append('advanced SQL requirement not established by candidate evidence')
-        if 'product solution engineer' in title.lower() and 'technical support' in lower:gaps.append('primary technical-support work requires candidate preference review')
-    else:
-        if re.search(r'\b(layout|bim|designer|design engineer|piping|high voltage|substation|hv primary|hv secondary|automation engineer)\b',title.lower()):gaps.append('specialist design/modelling experience not established; qualification review required')
-        for tool in ('sap','cmms','autocad','matlab','etap','revit','amtech','dialux','aspen','unisim','htri'):
-            if any(re.search(r'\b'+tool+r'\b',s) and re.search(r'\b(required|must|proficien\w*|expertise)',s) and not re.search(r'\b(preferred|nice to have|not required)\b',s) for s in sentences):gaps.append(tool.upper()+' requirement exceeds documented tool evidence')
-    reasons.extend(gaps)
-    evidence.update({'india_location':india,'remote_advertised':remote,'geography_conflict':bool(foreign and not india and not global_scope),'qualification_gaps':gaps})
-    evidence['shortlist_eligible']=not blocks and len(desc.split())>=80 and score>=4 and (india or global_scope) and (candidate=='sana' or remote) and not gaps and family in ('target','adjacent') and not auth
-    return Decision('REJECT' if blocks else 'HOLD',tuple(dict.fromkeys(blocks+reasons)),evidence)
+        if minimum_fixed_annual_inr:
+            below=evidence['fixed_annual_inr']<minimum_fixed_annual_inr
+            pay_state={'state':'fail' if below else 'pass','note':'explicit fixed INR annual salary against the supplied minimum'}
+            if below:blockers.append('explicit fixed INR salary below supplied minimum')
+    relevant=family in ('target','adjacent') and score>=4
+    queue='excluded' if blockers else 'review' if relevant else 'below_relevance'
+    tier=None
+    if queue=='review':
+        clear=india and not rights and (remote or not policy['workplace']) and len(desc.split())>=80
+        tier='A' if clear else 'B'
+    evidence.update({'india_location':india,'remote_advertised':remote,'geography_gate':{'result':geo['result'],'reason':geo['reason']},
+                     'states':{'relevance':{'family':family,'score':score},'eligibility':{'blockers':blockers,'unresolved':unresolved},
+                               'qualifications':{'state':'unknown','checks':checks,'note':'review against private evidence; not a blocker'},
+                               'pay':pay_state,'application_history':{'state':'not_provided','note':'private; checked in the private review'}},
+                     'qualification_gaps':checks,'queue':queue,'review_tier':tier,'shortlist_eligible':queue=='review',
+                     'rules_version':RULES_VERSION})
+    if pay_state['state']!='pass':unresolved.append('compensation threshold not independently verified')
+    reasons=blockers+unresolved+checks+['READY needs private eligibility, pay, history and qualification review']
+    return Decision('REJECT' if blockers else 'HOLD',tuple(dict.fromkeys(reasons)),evidence)

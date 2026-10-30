@@ -13,7 +13,11 @@ from recruiter_triage import triage
 from recruiter_priority import rank
 from job_text import clean_text
 
-def analyze(board, candidate):
+from recruiter_triage import review_key
+
+def analyze(board, candidate, health=None):
+    """health: {source_id: latest status.json entry}. A source whose latest real attempt failed keeps its jobs
+    (last known good), but they are flagged unresolved; feed presence is never treated as a live-vacancy check."""
     if board.get('schema') != 'public-job-board-1' or not isinstance(board.get('jobs'), list):
         raise ValueError('unsupported collector board schema')
     seen = set()
@@ -33,9 +37,16 @@ def analyze(board, candidate):
             'description': clean_description,
             'location': f'{loc} {workplace}',
         }
-        decision = triage(normalized, candidate)
+        decision = triage(normalized, candidate, raw=job)
+        source_state = (health or {}).get(board.get('source')) or {}
+        reasons = list(decision.reasons)
+        if source_state.get('status') == 'failed':
+            reasons.insert(0, 'source failed at its latest attempt; job is last-known-good, not freshly observed')
         results.append({'key': key, 'title': job.get('title'), 'url': job.get('url'),
-                        'status': decision.status, 'reasons': list(decision.reasons),
+                        'review_key': review_key(candidate, key, job.get('content_hash')),
+                        'source_status': source_state.get('status', 'not_reported'), 'source_checked_at': source_state.get('checked_at'),
+                        'observed_at': job.get('observed_at'),
+                        'status': decision.status, 'reasons': reasons, 'queue': decision.evidence['queue'],
                         'source':board.get('source'), 'company':job.get('company') or (str(key).split(':')[1] if ':' in str(key) else board.get('source')),
                         'location':normalized['location'],'evidence':decision.evidence,
                         **rank(normalized, candidate)})

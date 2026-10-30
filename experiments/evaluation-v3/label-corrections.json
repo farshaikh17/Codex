@@ -1,0 +1,68 @@
+{
+ "reason": "v3.0 dossiers used authori[sz]\\b, resid\\b and relocat\\b, which never match \"authorized\", \"residents\" or \"relocation\", so these authorisation sentences were not shown when labelling. Found while reading a2458ea's reasons; then every labelled job was re-scanned with a fixed pattern and the pre-registered rule applied uniformly (existing work rights / no sponsorship now or in future = hard blocker). Holdout corrections were made before any holdout scoring. Original labels.json is unchanged; score.py reports both.",
+ "corrections": [
+  {
+   "candidate": "farhan",
+   "key": "lever:voltus:9ba19cdd-827f-45fb-809e-5f1203885494",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Candidates must be authorized to work in the US or Canada"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:4d46a548-a11d-421c-aaf2-72df8aea49c5",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:bd1c3c9d-d324-4c94-81a6-3ffd23827b02",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:0bdd45ca-8fb7-47c2-8527-a1b1df021d7c",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:babbaaf5-0051-49fa-8239-64794524d2aa",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:83c6890e-d553-4c8f-8516-e6d57221c061",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:19882404-3327-4e1c-b51d-d47d33beed79",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:cc226e00-f733-4a64-944f-959a66cf72af",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  },
+  {
+   "candidate": "sana",
+   "key": "lever:cagents:b000aaef-abb0-4be4-8771-008e30b8a5c0",
+   "from": "review",
+   "to": "exclude",
+   "hard_blocker": "Able to work in the US without sponsorship now or any time in the future"
+  }
+ ]
+}

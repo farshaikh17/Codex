@@ -29,7 +29,10 @@ def normalize(data,provider,board):
 
 def fetch(source):
     p,b=source['provider'],source['board']
-    if p=='smartrecruiters':return fetch_smart(source)
+    if p=='smartrecruiters':
+        # api.smartrecruiters.com/robots.txt disallows every agent except LinkedInBot (verified 2026-10-27; recorded in
+        # docs/MARKET_DISCOVERY.md on main). Not fetched without new evidence of permission. fetch_smart is kept unused.
+        raise ValueError('smartrecruiters disabled: robots.txt disallows automated access')
     if p not in ('greenhouse','lever') or not re.fullmatch('[a-z0-9-]+',b):raise ValueError('unsupported source')
     url=f'https://boards-api.greenhouse.io/v1/boards/{b}/jobs?content=true' if p=='greenhouse' else f'https://api.lever.co/v0/postings/{b}?mode=json'
     req=urllib.request.Request(url,headers={'User-Agent':'read-only-recruiter-experiment/2','Accept':'application/json'})
