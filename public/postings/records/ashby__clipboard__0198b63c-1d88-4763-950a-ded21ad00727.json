@@ -23,6 +23,15 @@
    "from_hash": "3a0863fc41a820510aba6f9b5bcb9b88e572cfc38bf5a33a72965562d75f3a6a",
    "kind": "content_changed",
    "to_hash": "bacfee784cd5e4aefc3be019ba7c28bf350c97256cb546f170b637a4e7751b97"
+  },
+  {
+   "changed_at": "2026-10-30T17:08:51.165636+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "bacfee784cd5e4aefc3be019ba7c28bf350c97256cb546f170b637a4e7751b97",
+   "kind": "content_changed",
+   "to_hash": "ac2285f542f818a597078aa4ba8c4fecbee71cc5d14b0ad9f8bf01de2c80c313"
   }
  ],
  "content": {
@@ -34,6 +43,14 @@
     "text": "Remote (Africa, Central & South America, the Caribbean)"
    },
    {
+    "source": "secondaryLocations",
+    "text": "Remote (UK)"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Remote (EU)"
+   },
+   {
     "source": "address.addressCountry",
     "text": "Nigeria"
    }
@@ -42,8 +59,8 @@
   "title": "Collections Account Manager",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-30T01:19:44.291401+00:00",
- "content_hash": "bacfee784cd5e4aefc3be019ba7c28bf350c97256cb546f170b637a4e7751b97",
+ "content_changed_at": "2026-10-30T17:08:51.165636+00:00",
+ "content_hash": "ac2285f542f818a597078aa4ba8c4fecbee71cc5d14b0ad9f8bf01de2c80c313",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -74,7 +91,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":50000,\"summary\":\"Estimated base salary (paid in USD): $30K – $50K\"}",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -106,7 +123,7 @@
       },
       "method": "description_text",
       "quote": "Although Clipboard provides a service where workplaces can find qualified professionals to fill shifts, we are in many ways a lending company at our core since we pay professionals immediately after they work a shift. For illustrative purposes: a nurse works a shift → we pay the nurse $100 immediately with our cash → the workplace pays us $120 a month later. We extend debt to workplaces using cash we borrow, with interest, from an Asset-Backed Line (ABL) of credit – workplaces use that debt to pay their staffing costs, and we expect to be paid back by the workplaces at a later date based on agreed-upon net terms.",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -123,7 +140,23 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (Africa, Central & South America, the Caribbean)",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Remote (UK)",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Remote (EU)",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -131,7 +164,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Nigeria",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -139,7 +172,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "NOTE: This is an active job posting for non-US candidates and requires an overlap of at least 5 hours with the PST (UTC-8) time zone. There is a separate posting for US candidates on the Clipboard Careers page.",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -152,7 +185,7 @@
       "interpretation": null,
       "method": "description_section:To succeed in this role, you must have:",
       "quote": "- A reliable laptop/desktop (no Chromebooks or Linux OS).\n- Minimum 20 Mbps wired internet connection.\n- Wired headset for clear communication.\n- A quiet, distraction-free workspace.\n- Stable power and internet connectivity.",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -169,7 +202,23 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Africa, Central & South America, the Caribbean)",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote (UK)",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote (EU)",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -177,7 +226,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -185,7 +234,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- Fully remote",
-      "retrieved_at": "2026-10-30T01:19:44.291401+00:00",
+      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
