@@ -1,0 +1,102 @@
+{
+  "farhan": {
+    "before": {
+      "total_source_records": 818,
+      "unique_identities": 818,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 49,
+        "REJECT": 1
+      }
+    },
+    "fixed": {
+      "total_source_records": 818,
+      "unique_identities": 818,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 15,
+        "REJECT": 35
+      },
+      "all_counts": {
+        "REJECT": 801,
+        "HOLD": 17
+      },
+      "shortlist_size": 0,
+      "shortfall": 50,
+      "shortlist_sources": {},
+      "review_groups": 715,
+      "exact_url_duplicates": 0,
+      "unique_urls": 818
+    },
+    "expanded": {
+      "total_source_records": 1272,
+      "unique_identities": 1272,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 23,
+        "REJECT": 27
+      },
+      "all_counts": {
+        "REJECT": 1247,
+        "HOLD": 25
+      },
+      "shortlist_size": 0,
+      "shortfall": 50,
+      "shortlist_sources": {},
+      "review_groups": 1123,
+      "exact_url_duplicates": 0,
+      "unique_urls": 1272
+    }
+  },
+  "sana": {
+    "before": {
+      "total_source_records": 818,
+      "unique_identities": 818,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 50
+      }
+    },
+    "fixed": {
+      "total_source_records": 818,
+      "unique_identities": 818,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 30,
+        "REJECT": 20
+      },
+      "all_counts": {
+        "REJECT": 779,
+        "HOLD": 39
+      },
+      "shortlist_size": 4,
+      "shortfall": 46,
+      "shortlist_sources": {
+        "cai-lever": 4
+      },
+      "review_groups": 715,
+      "exact_url_duplicates": 0,
+      "unique_urls": 818
+    },
+    "expanded": {
+      "total_source_records": 1272,
+      "unique_identities": 1272,
+      "sample_size": 50,
+      "sample_counts": {
+        "HOLD": 50
+      },
+      "all_counts": {
+        "REJECT": 1180,
+        "HOLD": 92
+      },
+      "shortlist_size": 4,
+      "shortfall": 46,
+      "shortlist_sources": {
+        "cai-lever": 4
+      },
+      "review_groups": 1123,
+      "exact_url_duplicates": 0,
+      "unique_urls": 1272
+    }
+  }
+}

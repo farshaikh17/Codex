@@ -5,10 +5,13 @@ No network, AI, applications, credentials, or ledger writes.
 """
 import json
 import sys
+import html
+import re
 from pathlib import Path
 from collections import Counter
 from recruiter_triage import triage
 from recruiter_priority import rank
+from job_text import clean_text
 
 def analyze(board, candidate):
     if board.get('schema') != 'public-job-board-1' or not isinstance(board.get('jobs'), list):
@@ -23,15 +26,19 @@ def analyze(board, candidate):
         locations = job.get('locations') or []
         loc = ' / '.join(x.get('text', '') for x in locations if isinstance(x, dict))
         workplace = job.get('workplace_type') or ''
-        decision = triage({
+        clean_description = clean_text(job.get('description'))
+        normalized = {
             'title': job.get('title'),
             'url': job.get('url'),
-            'description': job.get('description'),
+            'description': clean_description,
             'location': f'{loc} {workplace}',
-        }, candidate)
+        }
+        decision = triage(normalized, candidate)
         results.append({'key': key, 'title': job.get('title'), 'url': job.get('url'),
                         'status': decision.status, 'reasons': list(decision.reasons),
-                        **rank(job, candidate)})
+                        'source':board.get('source'), 'company':job.get('company') or (str(key).split(':')[1] if ':' in str(key) else board.get('source')),
+                        'location':normalized['location'],'evidence':decision.evidence,
+                        **rank(normalized, candidate)})
     return {'candidate': candidate, 'source': board.get('source'),
             'jobs_seen': len(board['jobs']), 'unique_jobs': len(results),
             'counts': dict(Counter(x['status'] for x in results)), 'results': results}

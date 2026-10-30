@@ -8,6 +8,7 @@ import json
 from collections import Counter
 from pathlib import Path
 from triage_collector import analyze
+from recruiter_dedup import group_results,diverse_shortlist
 
 def run(boards_dir: Path, candidate: str, limit: int):
     if limit < 1:
@@ -29,11 +30,17 @@ def run(boards_dir: Path, candidate: str, limit: int):
                 continue
             seen.add(item['key'])
             selected.append(item)
-    selected.sort(key=lambda x: (-x['priority_score'], x['key']))
-    selected = selected[:limit]
+    all_counts=dict(Counter(x['status'] for x in selected))
+    groups,exact_duplicates,unique_urls=group_results(selected)
+    shortlist,cap=diverse_shortlist(groups,limit)
+    groups.sort(key=lambda x:(not x['evidence']['shortlist_eligible'],x['status']=='REJECT',-x['priority_score'],x['key']))
+    selected = groups[:limit]
     return {'candidate': candidate, 'total_source_records': total, 'unique_identities': len(seen),
             'sample_size': len(selected), 'sample_counts': dict(Counter(x['status'] for x in selected)),
-            'sources': source_stats, 'sample': selected,
+            'sources': source_stats, 'sample': selected,'all_counts':all_counts,
+            'unique_urls':unique_urls,'exact_url_duplicates':exact_duplicates,'review_groups':len(groups),
+            'shortlist':shortlist,'shortlist_size':len(shortlist),'shortfall':max(0,limit-len(shortlist)),
+            'per_employer_cap':cap,'shortlist_sources':dict(Counter(x['source'] for x in shortlist)),
             'warning': 'Offline preliminary triage only. HOLD is not READY. No live vacancy, salary, or India work authorization independently verified.'}
 
 def main():
@@ -47,7 +54,7 @@ def main():
     dest = Path(args.output)
     dest.mkdir(parents=True, exist_ok=True)
     (dest / f'{args.candidate}-trial.json').write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding='utf-8')
-    print(json.dumps({k:v for k,v in result.items() if k not in ('sample','sources')}, indent=2))
+    print(json.dumps({k:v for k,v in result.items() if k not in ('sample','sources','shortlist')}, indent=2))
 
 if __name__ == '__main__':
     main()

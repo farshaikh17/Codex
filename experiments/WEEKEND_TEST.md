@@ -1,5 +1,7 @@
 # Weekend recruiter experiment
 
+Updated discovery/eligibility/dedup behavior is documented in `DISCOVERY_V2.md`. The current runner separates a diagnostic `sample` from an unpadded preliminary `shortlist`; neither is verified READY.
+
 Branch: `experiment/recruiter-triage-v1`. No production changes.
 
 ## Run

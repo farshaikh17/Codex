@@ -1,0 +1,98 @@
+{
+  "antora-greenhouse.json": {
+    "sha256": "27b8890a036cb59d5c50d4f3947151468d9b9f982331cbfe6abf1fd0d97f00ed",
+    "records": 40
+  },
+  "cai-lever.json": {
+    "sha256": "b05595f04fd0026ddbcaf3f39f7fff90edd56cfa64956761795e89e0afa50e35",
+    "records": 95
+  },
+  "celigo-greenhouse.json": {
+    "sha256": "631a3a305bea1298beebd6466e63b5f1b3bb608ae7a0080c1bc276d726e1c761",
+    "records": 21
+  },
+  "cfsenergy-lever.json": {
+    "sha256": "69fed349dd6a467d48062beb15933fa442b5a0d2a7a92c584b3a37394f20e185",
+    "records": 136
+  },
+  "cleoindia-greenhouse.json": {
+    "sha256": "12e313eb578d5a67657c884d7814d2b03807375b93e1f178f57e19db9e587b37",
+    "records": 15
+  },
+  "clipboard-ashby.json": {
+    "sha256": "f38f22b7f5ed3bb0b22d844c0d2fc86ec70e925d50be610e1b4d2d9706e62752",
+    "records": 36
+  },
+  "cognite-greenhouse.json": {
+    "sha256": "45c172c3faa3d072ad3f5b00645fd8738912917a7f36e273afa0768bad307057",
+    "records": 54
+  },
+  "drivetrain-lever.json": {
+    "sha256": "9d00d80d552ad423797ff0439c3be894ce402f165e9c3fa0ddeb80bfad18096a",
+    "records": 35
+  },
+  "energyhub-greenhouse.json": {
+    "sha256": "89c2208a96174a422cb9da0deae75e68c162c9614b7ae198fdcb9af0e06088bc",
+    "records": 13
+  },
+  "five9-greenhouse.json": {
+    "sha256": "14dfc42074d291a58891154b74b27e72700a56b19d904c235ac6cbb0ed3362df",
+    "records": 83
+  },
+  "gitlab-greenhouse.json": {
+    "sha256": "b9777b4d2dc4274f9576a02ac39f0abf4293669cbb20be3034894ffe8c5d92c6",
+    "records": 231
+  },
+  "highlevel-lever.json": {
+    "sha256": "0c8076308032f5a5b957b643a4f8efc340866d5d0d66f3aef0b3a55c96cdb547",
+    "records": 104
+  },
+  "oyster-ashby.json": {
+    "sha256": "775865a450b0489a53772e514da5d9e3936d3bcfa9eaf3678ffa2b927080d62a",
+    "records": 22
+  },
+  "posthog-ashby.json": {
+    "sha256": "a90715e136a633ff74213af1f0b5befb73ada563301c31f7cf209592e65e0239",
+    "records": 11
+  },
+  "Ramboll3-smartrecruiters.json": {
+    "sha256": "ea377dd7f08f11b3199ff19808dec116bc535a2fa4c0427473fd1097270bbecc",
+    "records": 105
+  },
+  "remote-greenhouse.json": {
+    "sha256": "7514d842dd7e486ee0c247915b288a69ea5bce5985d40256b107b22630ea9c80",
+    "records": 2
+  },
+  "resilinc-lever.json": {
+    "sha256": "aa406b1e5565941b2733436dbf22cbbf64e960ddf60f7860df7327b4684e7342",
+    "records": 11
+  },
+  "rondoenergy-greenhouse.json": {
+    "sha256": "c8757960c257fe8658ae594d591e1257cd5212dd881954c2cf412c4f6add51fb",
+    "records": 14
+  },
+  "simpplr-greenhouse.json": {
+    "sha256": "cb615ad33d423959cc1313462f250ddf66a94955c744ff56eef8d282190d7f5d",
+    "records": 7
+  },
+  "twilio-greenhouse.json": {
+    "sha256": "a8766d3cfb8b62781c3062bb22d1c13dfb0d1677c89bcb0eb34c2e425247027d",
+    "records": 130
+  },
+  "voltus-lever.json": {
+    "sha256": "2d2e8a6e6e4def40bc7e0554755a2e1bbb95013f9cbdfd1e72536a85d9f54bdf",
+    "records": 15
+  },
+  "weave-ashby.json": {
+    "sha256": "49240cb368a40dabba6711502fcab53011e5245577def7a92096686192c77f7c",
+    "records": 26
+  },
+  "workato-greenhouse.json": {
+    "sha256": "09f090ae838764355723756f1fd35d4e581336beb0b2508119a38d3819101d14",
+    "records": 54
+  },
+  "zapier-ashby.json": {
+    "sha256": "a3d367371a3cc18361abaa0f0054d52106bc8d8d2d6642d3bc30c82a8d929738",
+    "records": 12
+  }
+}
