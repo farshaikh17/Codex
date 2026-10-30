@@ -16,7 +16,10 @@ def run(boards_dir: Path, candidate: str, limit: int):
     selected = []
     source_stats = []
     total = 0
-    for path in sorted(boards_dir.glob('*.json')):
+    paths = sorted(boards_dir.glob('*.json'))
+    if not boards_dir.is_dir() or not paths:
+        raise ValueError('boards directory must exist and contain at least one JSON board')
+    for path in paths:
         board = json.loads(path.read_text(encoding='utf-8'))
         data = analyze(board, candidate)
         total += data['jobs_seen']

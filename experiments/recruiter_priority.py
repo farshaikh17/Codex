@@ -14,6 +14,10 @@ SANA_POSITIVE = (
 FARHAN_NEGATIVE = r'\b(affiliate|sales|account executive|customer support|customer success|recruiter|marketing|finance|security engineer|backend engineer|frontend engineer)\b'
 SANA_NEGATIVE = r'\b(software engineer|devops|cloud engineer|sales|marketing|account executive|customer support)\b'
 
+# Domain collisions are ranking hints only; they must never reject a vacancy.
+FARHAN_DOMAIN_MISMATCH = r'\b(software development engineer|software engineer|sde|staff engineer|platform engineer|operations engineer|engineering manager|manufacturing|csv engineer|equipment support engineer)\b'
+SANA_DOMAIN_MISMATCH = r'\b(site reliability|database reliability|sre|dbre|data scientist)\b'
+
 def rank(job, candidate):
     if candidate not in ('farhan','sana'):
         raise ValueError('unknown candidate')
@@ -25,5 +29,8 @@ def rank(job, candidate):
     if re.search(negative,title):
         score -= 8
     score += min(2,sum(1 for pattern,_ in positive if re.search(pattern,description)))
+    mismatch = FARHAN_DOMAIN_MISMATCH if candidate == 'farhan' else SANA_DOMAIN_MISMATCH
+    if re.search(mismatch, title):
+        score = min(score, 0)
     return {'priority_score':score, 'priority_band':'high' if score>=6 else 'medium' if score>=3 else 'low',
             'priority_only':True}

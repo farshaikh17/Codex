@@ -23,7 +23,10 @@ def triage(job: dict, candidate: str = 'farhan') -> Decision:
     if candidate == 'farhan':
         if re.search(r'\b(devops|site reliability engineer|machine learning engineer|accountant|sales development representative|helpdesk)\b', title.lower()):
             return Decision('REJECT', ('excluded role family',), {'title': title, 'location': location})
-        if re.search(r'\b(us only|united states only|must reside in the us|europe only)\b', f'{location} {description}'.lower()):
+        # A regional salary disclosure is not a restriction on who can be hired.
+        geography_text = ' '.join(sentence for sentence in re.split(r'(?<=[.!?])\s+|\n', description.lower())
+                                  if not re.search(r'\b(salary|compensation|pay range)\b', sentence))
+        if re.search(r'\b(us only|united states only|must reside in the us|europe only)\b', f'{location.lower()} {geography_text}'):
             return Decision('REJECT', ('explicit geography exclusion',), {'title': title, 'location': location})
         if not re.search(r'\bindia\b', location.lower()):
             reasons.append('India work eligibility not affirmatively established')

@@ -17,4 +17,14 @@ class TriageTests(unittest.TestCase):
     def test_invalid_candidate(self):
         with self.assertRaises(ValueError): triage({},'other')
 
+    def test_salary_region_is_not_hiring_exclusion(self):
+        job={'title':'CRM Implementation','location':'Remote India','url':'https://example.com/1',
+             'description':'The base salary range for this role is for residents of the United States only. '+ 'workflow '*100}
+        self.assertEqual(triage(job).status,'HOLD')
+
+    def test_salary_notice_does_not_hide_separate_hiring_exclusion(self):
+        job={'title':'CRM Implementation','location':'Remote','url':'https://example.com/1',
+             'description':'Salary range is for the United States only. Applicants must reside in the US.'}
+        self.assertEqual(triage(job).status,'REJECT')
+
 if __name__=='__main__': unittest.main()
