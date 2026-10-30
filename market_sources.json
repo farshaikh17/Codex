@@ -1,6 +1,6 @@
 {
   "schema": "market-sources-1",
-  "notice": "Generic public employer seeds and directory leads. No candidate policy. New directory links require ownership review before adding targets.",
+  "notice": "Generic public employer seeds, directories, role queries and ownership-reviewed career feeds. No candidate policy, names, salary floors or private allocations. New directory links require ownership review before adding targets or sources.",
   "directories": [
     {
       "url": "https://members.naesco.org/accredited-companies/Find",
@@ -13,6 +13,12 @@
     {
       "url": "https://remoteintech.company/companies/",
       "link_pattern": "^https://(?!(?:[^/]+\\.)?(?:remoteintech.company|github.com|linkedin.com))"
+    },
+    {
+      "url": "https://zapier.com/partnerdirectory",
+      "link_pattern": "^$",
+      "profile_pattern": "^/partnerdirectory/partner/[a-z0-9-]+$",
+      "profile_exclude": "partnerpage|zapier"
     }
   ],
   "targets": [
@@ -66,6 +72,121 @@
         "url": "https://www.gohighlevel.com/careers",
         "checked_at": "2026-10-27",
         "basis": "Official Explore Our Jobs link points to jobs.lever.co/gohighlevel."
+      }
+    }
+  ],
+  "role_queries": [
+    {
+      "id": "hubspot-india",
+      "channel": "himalayas",
+      "query": "HubSpot",
+      "families": [
+        "crm-implementation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "gohighlevel",
+      "channel": "himalayas",
+      "query": "GoHighLevel",
+      "families": [
+        "crm-implementation"
+      ]
+    },
+    {
+      "id": "crm-implementation-india",
+      "channel": "himalayas",
+      "query": "CRM implementation",
+      "families": [
+        "crm-implementation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "salesforce-admin-india",
+      "channel": "himalayas",
+      "query": "Salesforce administrator",
+      "families": [
+        "crm-implementation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "automation-india",
+      "channel": "himalayas",
+      "query": "automation specialist",
+      "families": [
+        "business-systems-automation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "business-systems-india",
+      "channel": "himalayas",
+      "query": "business systems",
+      "families": [
+        "business-systems-automation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "ai-implementation-india",
+      "channel": "himalayas",
+      "query": "AI implementation",
+      "families": [
+        "ai-implementation"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "energy-india",
+      "channel": "himalayas",
+      "query": "energy",
+      "families": [
+        "power-utilities-energy"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "electrical-india",
+      "channel": "himalayas",
+      "query": "electrical engineer",
+      "families": [
+        "asset-reliability-maintenance"
+      ],
+      "country": "India"
+    },
+    {
+      "id": "reliability-india",
+      "channel": "himalayas",
+      "query": "reliability engineer",
+      "families": [
+        "asset-reliability-maintenance"
+      ],
+      "country": "India"
+    }
+  ],
+  "career_feeds": [
+    {
+      "employer": "siemens-energy",
+      "kind": "rss",
+      "url": "https://jobs.siemens-energy.com/en_US/jobs/Jobs/feed/?folderRecordsPerPage=20&search=India",
+      "id_pattern": "/FolderDetail/[^/]+/(\\d+)$",
+      "ownership_evidence": {
+        "url": "https://www.siemens-energy.com/global/en/home/careers.html",
+        "checked_at": "2026-10-27",
+        "basis": "Siemens Energy's official careers URL redirects to jobs.siemens-energy.com, whose job list links this RSS feed. 'search=India' is a keyword search, not a location filter."
+      }
+    },
+    {
+      "employer": "siemens",
+      "kind": "rss",
+      "url": "https://jobs.siemens.com/en_US/externaljobs/SearchJobs/feed/?folderRecordsPerPage=20&search=India",
+      "id_pattern": "/JobDetail/[^/]+/(\\d+)$",
+      "ownership_evidence": {
+        "url": "https://www.siemens.com/global/en/company/jobs.html",
+        "checked_at": "2026-10-27",
+        "basis": "Siemens' official jobs page links jobs.siemens.com/en_US/externaljobs. 'search=India' is a keyword search, not a location filter."
       }
     }
   ]

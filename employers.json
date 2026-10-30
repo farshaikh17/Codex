@@ -177,6 +177,17 @@
         "reason": "Integration and business-process automation platform (implementation/integration roles; Hyderabad office). Official careers page embeds boards.greenhouse.io/embed/job_board/js?for=celigo; found by the repository scanner (checked 2026-10-27).",
         "evidence_url": "https://www.celigo.com/careers/"
       }
+    },
+    {
+      "id": "avathon",
+      "name": "Avathon",
+      "careers_url": "https://avathon.com/company/careers/",
+      "job_families": [],
+      "geography": [],
+      "inclusion": {
+        "reason": "Industrial AI and asset-performance software (Bengaluru hiring). Every job in the public boards-api 'avathon' feed has absolute_url https://avathon.com/company/careers-job-listing/?gh_jid=<id>, a setting only the board owner controls; avathon.com/company/careers-job-listing redirects to the official careers page (checked 2026-10-27). The careers page renders the board with JavaScript, so the static scanner does not see it.",
+        "evidence_url": "https://avathon.com/company/careers/"
+      }
     }
   ]
 }

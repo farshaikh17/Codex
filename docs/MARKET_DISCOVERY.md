@@ -231,3 +231,122 @@ a second hop, which is not implemented.
 The candidate-relevant yield of these sources can only be measured in the private
 ChatGPT/Sheet review and returned as aggregate source-quality feedback; no such
 feedback is integrated in the repository.
+
+## Discovery expansion (role search, career pages, profile traversal) — 27 October 2026
+
+The configured-employer collector refreshes known boards well but cannot find employers it does not know.
+This change adds routes that start from roles and locations, follow directory profiles to employer sites,
+and read official career pages beyond Greenhouse/Lever/Ashby. Everything runs inside the existing
+`market_discovery.py` step, the same 40-GET / 180-second budget, robots checks, refused redirects and
+per-host spacing. No new dependency (stdlib only), no paid service, no candidate data.
+
+### Pipeline per invocation (in budget order)
+
+1. **Directories** (stalest three per run): direct employer links as before, plus bounded
+   directory → profile → employer website traversal (`profile_pattern`, at most three profiles per
+   directory per run, rotating offset). The website is the most-linked external host on the profile,
+   excluding the directory, CDNs, social, booking and code-hosting hosts; candidates are recorded.
+   Added: Zapier's partner directory (automation/CRM implementation agencies).
+2. **Role-and-location search** (`role_search.py`, Himalayas Jobs API): three queries per run — the two
+   stalest plus the due query with the best public strong-signal rate — each once per 24 h. Ten generic
+   queries (HubSpot, GoHighLevel, CRM implementation, Salesforce administrator, automation, business
+   systems, AI implementation, energy, electrical engineer, reliability engineer; India filter where the API
+   supports it). One page (≤20 results) per query. Listings are `aggregator_listing_provisional`, keep the
+   Himalayas applicationLink as the apply action and attribution (API terms), and are matched to configured
+   employers only as title evidence (`official_evidence`), never as proof.
+3. **Official career feeds** (`career_pages.py`): ownership-reviewed employers only (`career_feeds`, each with
+   evidence). Formats: career-site RSS (Avature) and schema.org JobPosting JSON-LD pages, with optional
+   same-host detail pages. Detail pages already extracted and still listed are reused from a cache; at most
+   three new detail pages per feed per run. Added: Siemens Energy and Siemens India keyword feeds.
+4. **Allowlisted employer seeds** and 5. **lead validation** as before; pages they read are also searched for
+   JobPosting JSON-LD (records stay provisional: ownership not reviewed). Profile-derived leads are validated
+   before bare directory links.
+
+Failures back off 1, 2, 4 … 14 days; a success resets to 24 h. A halted budget leaves everything
+unrequested untouched and listed as `deferred`. A channel not requested this run contributes its last
+records, labelled `cached_from_last_check` / `cached_after_failure` with their real check time; it is never
+reported fresh.
+
+### Records and outputs (public/discovery/report.json)
+
+- `vacancies`: **exact** cards — configured feeds, reviewed feeds and career-feed records with an employer
+  identifier, title, official URL and reviewed ownership. At most three per employer, 60 total.
+- `provisional_cards`: aggregator listings and career-page records missing an identifier, location or
+  reviewed ownership. At most two per employer, 40 total. Every record lists `extraction.uncertainty`.
+- `employer_leads`: provisional links with `discovered_via` (directory_link / directory_profile),
+  profile URL, website candidates and validation result. Never sources.
+- Each card: `responsibility_signals` (generic families), `signal_strength` (strong / weak / excluded),
+  `signal_notes`, `geographic_evidence` (`india_explicit` names India or an Indian city; `remote_or_region_only`
+  is APAC/worldwide/remote wording and is never India eligibility), `freshness`, provenance, salary with
+  provenance, `eligibility: not_assessed`. Sales/marketing and support-first titles are counted but not
+  carded; specialist software, test automation and named-language titles are `weak` even when they contain
+  battery, integration, automation or reliability.
+- Same-title requisitions share a card; every identity (`key`, `req_id`, URL, provenance, locations) stays
+  listed under `same_title_elsewhere`. Different requisitions are never merged into one identity.
+- Rotation: cards shown least often come first and employers least recently shown lead each round, so the
+  first batch does not hide unseen vacancies (state `_shown`, public exposure counts only).
+
+### Measurements (`metrics`)
+
+Exact vs provisional vs cached identities; new identities since the last run vs repeated; strong signals by
+family; geography classes; counts by discovery method; extraction uncertainty reasons; sources
+(enabled, ownership-reviewed career feeds, provisional links by route, leads with a supported board,
+scanner-verified proposals); per-query results / strong / India-explicit / failures; and cost: requests and
+seconds per method. **No candidate relevance feedback is integrated**; the only rotation signal is the
+public strong-title rate per query. `state.json` is written compact (≈200 kB in trials). The first production run after deployment has no `_seen` history, so all identities count as new once (baseline).
+
+### Channels evaluated and not adopted
+
+| Channel | Finding (27 Oct 2026) | Decision |
+|---|---|---|
+| speedyapply/JobSpy (MIT; pandas, pydantic, curl_cffi, bs4, markdownify) | Naukri adapter calls the private `/jobapi/v3/search` with spoofed `appid`/`systemid` headers and an RSA-signed `nkparam` token; all sessions use curl_cffi Chrome TLS impersonation and support proxy rotation. Bayt serves a Cloudflare managed challenge even for robots.txt (403). LinkedIn/Indeed/Glassdoor/ZipRecruiter/Google terms prohibit scraping. | Not adopted; no trial run, because every channel would rely on impersonation or a reverse-engineered private API. |
+| Naukri public search pages | robots.txt does not disallow `/jobapi` for `*`, but the search page is a 38 kB script shell with no JobPosting data; the data path needs the forged headers above. | Not adopted. |
+| Remotive API | robots.txt disallows `/*search=`. | Not adopted. |
+| RemoteOK API | robots.txt `Disallow: /`. | Not adopted. |
+| Jobicy API | Permitted for research tools with attribution, but the tag filter was not applied (unrelated results) and `geo=india` is rejected (400). | Not adopted; revisit if filters work. |
+| Himalayas company profiles | 403 for HTML profiles; only the jobs API is open. | Profile traversal uses Zapier's directory instead. |
+| SmartRecruiters | robots.txt still disallows all but LinkedInBot (unchanged). | Still rejected. |
+| scrapinghub/extruct | JSON-LD + RSS needs ~150 stdlib lines; extruct 0.18.0 adds lxml, lxml-html-clean, rdflib, pyrdfa3, mf2py, w3lib, html-text and jstyleson. | Not adopted. |
+
+Probed official boards: Avathon (Greenhouse, 53 jobs, 17 Bengaluru) added with board-owner URL evidence;
+Fervo Energy (66, Houston) and Antora (38, California) have boards but their careers pages do not show
+ownership statically, so they are not added.
+
+### Bounded live trial (scratch copy of main's public/, fresh discovery state, 27 Oct 2026)
+
+- Collector `--ids avathon-greenhouse`: 1 feed GET, 53 vacancies; publication consistent.
+- Run 1: 31 GETs, 35 s (directories 6, role search 4, career feeds 4, employer seeds 11, lead validation 6).
+  926 exact identities (886 configured feeds + 40 Siemens/Siemens Energy RSS), 61 provisional
+  (60 Himalayas, 1 scanned-page JSON-LD), 78 cards. NAESCO and HubSpot 403 (backed off).
+- Run 2 (cooldowns active): 18 GETs, 24 s; 56 new identities, 986 repeated, 100 cached; 38 of 78 cards
+  had never been shown.
+- Per-query public yield (results / strong / India-explicit): CRM implementation 20/15/15, electrical
+  engineer 20/11/14, AI implementation 20/9/11, business systems 20/9/13, automation 20/4/13, energy 20/1/8.
+- Zapier profiles produced three agency websites (flowmondo, codexsolutionsint, minorco) as provisional
+  leads; lead validation found no supported board on the first four Remote In Tech links.
+- Examples with India named in the location wording and a strong title signal (still unassessed):
+  exact — Siemens Energy "Commissioning Engineer for HVDC - Converter Control", CAI "Lead Commissioning (Cx)
+  Engineer - Electrical", Cognite "NetSuite Systems Analyst" (Bengaluru), Celigo "AI Integration Engineer"
+  (Hyderabad); provisional — "Business Systems & Implementation Manager (Remote - India)", "Zoho Automation
+  Specialist", "Electrical Team Leader" (Clean Energy Associates), "Senior Consultant - Energy" (Kline).
+
+Coverage stays partial: Himalayas is a remote-work board, so on-site Indian utility/ESCO/plant roles come
+mainly from the Siemens feeds, CAI and Avathon; Workday/SuccessFactors/iCIMS employers remain unreadable
+without their own permitted feeds.
+
+### Path into the private review
+
+GitHub publishes only public evidence. The private ChatGPT review tasks read
+`public/discovery/report.json` (authenticated private-repository access) after checking `generated_at`,
+`errors` and `deferred`, and then:
+
+1. Review `vacancies` first (exact identity; open `url`), then `provisional_cards`. For a provisional card,
+   find the employer's own requisition before treating it as a vacancy; apply links for Himalayas listings
+   must stay the Himalayas `apply_url`.
+2. Apply private eligibility and candidate rules in the existing review, never from `signal_strength` or
+   `geographic_evidence`; `remote_or_region_only` is not India eligibility, and a missing listing is not a
+   closure.
+3. Save decisions only to the original Sheets. Nothing in this repository is READY.
+4. Optional, not yet integrated: an aggregate, non-identifying count per source/query of how many reviewed
+   cards were judged relevant, for future rotation weighting. Candidate names, profiles, decisions, cursors
+   and application history must never be returned.
