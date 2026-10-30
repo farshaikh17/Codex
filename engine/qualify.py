@@ -8,6 +8,7 @@ States (one per candidate x posting, from evidence only):
   CLOSED        the store holds expiry evidence (feed absence alone is never closure)
   HOLD          evidence missing (thin or unextracted description)
   NEEDS_REVIEW  promising, but eligibility (geography, work rights, arrangement) is unresolved
+  EXPERIENCE_GAP promising, but a mandatory line asks for more years than profile.experience_years (+1); kept, ranked low
   PAY_UNKNOWN   promising and eligible, compensation not stated or not comparable
   HIGH_FIT      strong career match, eligible, pay at or above the floor; qualifications still need review
   VERIFIED_READY only when every required gate passes, including reviewed qualifications
@@ -20,9 +21,22 @@ from pathlib import Path
 from engine import candidates as cfg
 from engine.extract import extract
 from engine.gates import screen
-from engine.match import document_frequency,match
+from engine.match import match
 ROOT=Path(__file__).resolve().parent.parent
-STATES=('VERIFIED_READY','HIGH_FIT','PAY_UNKNOWN','NEEDS_REVIEW','HOLD','SCREENED','REJECT','APPLIED','CLOSED')
+STATES=('VERIFIED_READY','HIGH_FIT','PAY_UNKNOWN','NEEDS_REVIEW','EXPERIENCE_GAP','HOLD','SCREENED','REJECT','APPLIED','CLOSED')
+YEARS=re.compile(r'(?i)\b(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?(?:years?|yrs?)\b')
+def required_years(fields,description):
+    """Largest years-of-experience figure stated in a mandatory requirement line (company-age phrases need the word
+    'experience' in the same line, so 'over 30 years' of company history does not count)."""
+    from engine.match import _lines
+    best=None
+    for line in _lines(fields,description)[0]:
+        if not re.search(r'(?i)experience|track record|background',line) or re.search(r'(?i)preferred|nice to have|a plus|bonus',line): continue
+        for m in YEARS.finditer(line):
+            n=int(m.group(1))
+            if 0<n<=40 and (best is None or n>best[0]): best=(n,line.strip()[:200])
+    return best
+
 def state_of(result,fit,extraction,availability=None,rules=None):
     m=(rules or {}).get('match') or {}
     high,low=m.get('high_fit',55),m.get('min_fit',25)
@@ -34,6 +48,8 @@ def state_of(result,fit,extraction,availability=None,rules=None):
     if failed: return 'REJECT','; '.join('%s: %s'%(n,g[n]['reason']) for n in failed)
     if extraction['state'] in ('failed','thin'): return 'HOLD','description %s'%extraction['state']
     if fit['score']<low: return 'SCREENED','career match %d below %d'%(fit['score'],low)
+    gap=(rules or {}).get('_years_gap')
+    if gap: return 'EXPERIENCE_GAP','posting requires %d+ years; profile states %s: "%s"'%gap
     if result['verdict']=='ready': return 'VERIFIED_READY','every required gate passed with evidence'
     unresolved=[n for n in ('geography','engagement') if g[n]['required'] and g[n]['result']!='pass']
     if unresolved: return 'NEEDS_REVIEW','; '.join('%s: %s'%(n,g[n]['reason']) for n in unresolved)
@@ -47,7 +63,11 @@ def qualify(person,job,availability=None,df=None,n_docs=None):
              'description':job.get('description')}
     result=screen(person,posting,extraction)
     fit=match(posting,extraction['fields'],person['profile'],df,n_docs)
-    state,why=state_of(result,fit,extraction,availability,person['rules'])
+    rules=person['rules']
+    have=person['profile'].get('experience_years')
+    need=required_years(extraction['fields'],job.get('description')) if have is not None else None
+    if need and need[0]>have+1: rules={**rules,'_years_gap':(need[0],have,need[1])}  # a demotion for review, never a REJECT
+    state,why=state_of(result,fit,extraction,availability,rules)
     return {'key':job['key'],'title':job.get('title'),'url':job.get('url'),'state':state,'why':why,'fit':fit['score'],
             'locations':[l.get('text') for l in job.get('locations') or [] if isinstance(l,dict)][:5],
             'gates':{n:{'result':x['result'],'reason':x['reason']} for n,x in result['gates'].items()},
@@ -81,26 +101,30 @@ def cross_source_duplicates(jobs,threshold=0.75):
         best=max(((len(A&_tokens(c.get('description')))/len(A|_tokens(c.get('description'))) if A else 0,c['key']) for c in ats.get(norm(j.get('title')),[])),default=(0,None))
         if best[0]>=threshold: out[j['key']]=best[1]
     return out
+def group_rows(rows,dup):
+    """Group per-candidate rows: regional copies of one title at one employer, and aggregator copies of an employer's
+    own posting (dup: {aggregator key: ATS key}). Every requisition stays visible on its group."""
+    rank={s:i for i,s in enumerate(STATES)}
+    groups,by_key={},{}
+    for r in sorted((r for r in rows if r['key'] not in dup or dup[r['key']] not in {x['key'] for x in rows}),key=lambda r:(rank[r['state']],-r['fit'],r['key'])):
+        g=groups.setdefault(group_key(r),{**r,'regional_variants':[],'cross_source_duplicates':[]})
+        by_key[r['key']]=g
+        if g is not r and g['key']!=r['key']: g['regional_variants'].append({'key':r['key'],'state':r['state'],'locations':r['locations']})
+    for r in rows:
+        if r['key'] in dup and r['key'] not in by_key and dup[r['key']] in by_key:  # kept as evidence on the employer's own posting
+            by_key[dup[r['key']]]['cross_source_duplicates'].append({'key':r['key'],'url':r['url'],'state':r['state'],'source':r['source']})
+    return list(groups.values())
+def summarise(rows,reps):
+    return {'counts':dict(Counter(r['state'] for r in rows)),'groups':len(reps),
+            'group_counts':dict(Counter(r['state'] for r in reps)),'sources':dict(Counter(r['source'] for r in reps if r['state'] in STATES[:5])),
+            'jobs':[r for r in reps if r['state'] not in ('SCREENED','REJECT')],
+            'rejected_sample':[{k:r[k] for k in ('key','title','why')} for r in reps if r['state']=='REJECT'][:40]}
 def run(people,jobs):
     out={}
     dup=cross_source_duplicates(jobs)
     for cid,person in sorted(people.items()):
-        df,n=document_frequency([j.get('description') for j in jobs],person['profile'])
-        rows=[qualify(person,j,None,df,n) for j in jobs]
-        rank={s:i for i,s in enumerate(STATES)}
-        groups,by_key={},{}
-        for r in sorted((r for r in rows if r['key'] not in dup),key=lambda r:(rank[r['state']],-r['fit'],r['key'])):
-            g=groups.setdefault(group_key(r),{**r,'regional_variants':[],'cross_source_duplicates':[]})
-            by_key[r['key']]=g
-            if g is not r and g['key']!=r['key']: g['regional_variants'].append({'key':r['key'],'state':r['state'],'locations':r['locations']})
-        for r in rows:
-            if r['key'] in dup:  # the aggregator copy is kept as evidence on the employer's own posting, never dropped
-                by_key[dup[r['key']]]['cross_source_duplicates'].append({'key':r['key'],'url':r['url'],'state':r['state'],'source':r['source']})
-        reps=list(groups.values())
-        out[cid]={'counts':dict(Counter(r['state'] for r in rows)),'groups':len(reps),
-                  'group_counts':dict(Counter(r['state'] for r in reps)),'sources':dict(Counter(r['source'] for r in reps if r['state'] in STATES[:4])),
-                  'jobs':[r for r in reps if r['state'] not in ('SCREENED','REJECT')],
-                  'rejected_sample':[{k:r[k] for k in ('key','title','why')} for r in reps if r['state']=='REJECT'][:40]}
+        rows=[qualify(person,j) for j in jobs]  # batch-independent (MATCH_VERSION 3)
+        out[cid]=summarise(rows,group_rows(rows,dup))
     return out
 def main(argv=None):
     ap=argparse.ArgumentParser(prog='python -m engine.qualify')

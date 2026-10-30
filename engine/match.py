@@ -9,18 +9,29 @@ The score routes review effort; it is not a qualification decision (that needs t
 import re
 from engine.gates import requirement_units
 
-MATCH_VERSION=2  # 2: phrase weights by rarity across the batch; specialist titles without career evidence are capped
-import math
+MATCH_VERSION=5  # 5: IT infrastructure/network/cloud titles are specialist; 4: entry-level titles capped; 3: fixed phrase weights (batch-independent); 2 weighted by rarity across the scored batch
+# Phrases so common in job text that one alone does not evidence a requirement. Fixed and versioned, so a posting
+# scores the same whether it is scored alone or among a thousand others (v2's batch rarity weights did not).
+GENERIC=frozenset(p.lower() for p in (
+    'AI','API','APIs','automation','integration','integrations','configuration','documentation','testing','delivery',
+    'operations','business operations','implementation','onboarding','customer-facing','cross-functional','SaaS',
+    'startup','generalist','compliance','safety','equipment','electrical','power','energy','utilities','industrial',
+    'manufacturing','maintenance','inspection','reliability','troubleshooting','operations manager','team lead',
+    'project management','stakeholder management','process improvement','customer support','support manager','QA'))
+GENERIC_WEIGHT=0.25
 # Professions a title can name that need their own evidence. If the career history names none of the title's
 # specialist words, keyword overlap in the body (API, testing, operations...) cannot make the job a strong fit.
 SPECIALIST=re.compile(r'(?i)\b(software|backend|back-end|frontend|front-end|full ?stack|developer|sdet|engineer in test|site reliability|sre|dbre|'
                       r'database|data engineer|data scientist|data analyst|machine learning|\bml\b|ai engineer|research engineer|designer|design|'
                       r'security|devops|platform engineer|architect|counsel|legal|attorney|accountant|accounting|payroll|recruiter|'
                       r'scientist|physician|nurse|clinical|mechanical|chemical|process engineer|validation|cqv|gmp|instructor|content|seo|copywriter|'
-                      r'release engineer|engineering manager|director, engineering|head of engineering|\bsde\b|engineer)\b')
-SOFT=('engineer',)  # a bare 'engineer' can be exempted by a career function in the title ('Implementation Engineer')
+                      r'release engineer|engineering manager|director, engineering|head of engineering|\bsde\b|it infrastructure|it operations|it support|'
+                      r'network engineer|network administrator|system administrator|sysadmin|help ?desk|service desk|cloud|engineer)\b')
+SOFT=('engineer',)
+# Entry-level programmes: not a career move for an experienced candidate, however well the body text matches.
+JUNIOR=re.compile(r'(?i)\b(intern|internship|co-?op|apprentice\w*|trainee|graduate (?:program|programme|trainee|engineer)|campus|fresher|student)\b')  # a bare 'engineer' can be exempted by a career function in the title ('Implementation Engineer')
 def document_frequency(texts,profile):
-    """{phrase: number of texts naming it}; lets common words (API, operations) weigh less than rare ones."""
+    """Diagnostic only since MATCH_VERSION 3: {phrase: number of texts naming it}. match() no longer uses it."""
     ph=_phrases(profile); n=0; df={}
     for t in texts:
         n+=1
@@ -48,8 +59,8 @@ def match(posting,fields,profile,df=None,n_docs=None):
     title,desc=posting.get('title') or '',posting.get('description') or ''
     phrases=_phrases(profile)
     lines,basis=_lines(fields,desc)
-    # Rarity weights need a real batch; on a handful of documents every phrase looks common.
-    weight=lambda p:(math.log((n_docs+1)/(df.get(p,0)+1))/math.log(n_docs+1)) if df and n_docs and n_docs>=20 else 1.0
+    # df and n_docs are accepted for compatibility and ignored: weights never depend on the other postings scored.
+    weight=lambda p:GENERIC_WEIGHT if p.lower() in GENERIC else 1.0
     matched,unmatched=[],[]
     for line in lines:
         hits=sorted({(p,i) for p,rx,i,_ in phrases if rx.search(line)})
@@ -79,8 +90,10 @@ def match(posting,fields,profile,df=None,n_docs=None):
     hard=[w for w in unevidenced if w not in SOFT]
     if hard or (unevidenced and not titled):
         score=min(score,15)  # below any sensible min_fit: screened, not promoted on body keywords
+    junior=JUNIOR.findall(title)
+    if junior and (profile.get('experience_years') is None or profile['experience_years']>=2): score=min(score,15)
     items=sorted({e['experience'] for m in matched for e in m['evidence']})
     return {'match_version':MATCH_VERSION,'score':score,'coverage':round(coverage,2),'basis':basis,
             'requirements':len(lines),'matched':matched[:12],'unmatched_mandatory':[u['requirement'] for u in unmatched][:10],
-            'experience_used':items,'unevidenced_title_profession':unevidenced,'skills_found':found[:20],'title_context':title_hits,'transferable':transferable,
+            'experience_used':items,'entry_level_title':junior,'unevidenced_title_profession':unevidenced,'skills_found':found[:20],'title_context':title_hits,'transferable':transferable,
             'note':'keyword evidence against the career history; routes review, never proves qualification'}

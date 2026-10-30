@@ -1,0 +1,361 @@
+{
+ "schema": "discovery-sources-1",
+ "note": "Public, candidate-agnostic discovery queries. Candidate-specific decisions happen only in engine.qualify with private profiles.",
+ "himalayas": {
+  "per_run": 15,
+  "max_requests": 30,
+  "retain_days": 21,
+  "queries": [
+   {
+    "id": "him:implementation-manager:india",
+    "lane": "business-systems-remote",
+    "q": "implementation manager",
+    "country": "India"
+   },
+   {
+    "id": "him:CRM:india",
+    "lane": "business-systems-remote",
+    "q": "CRM",
+    "country": "India"
+   },
+   {
+    "id": "him:customer-success-manager:india",
+    "lane": "business-systems-remote",
+    "q": "customer success manager",
+    "country": "India"
+   },
+   {
+    "id": "him:program-manager:india",
+    "lane": "business-systems-remote",
+    "q": "program manager",
+    "country": "India"
+   },
+   {
+    "id": "him:operations-manager:india",
+    "lane": "business-systems-remote",
+    "q": "operations manager",
+    "country": "India"
+   },
+   {
+    "id": "him:business-operations:india",
+    "lane": "business-systems-remote",
+    "q": "business operations",
+    "country": "India"
+   },
+   {
+    "id": "him:chief-of-staff:india",
+    "lane": "business-systems-remote",
+    "q": "chief of staff",
+    "country": "India"
+   },
+   {
+    "id": "him:support-manager:india",
+    "lane": "business-systems-remote",
+    "q": "support manager",
+    "country": "India"
+   },
+   {
+    "id": "him:solutions-consultant:india",
+    "lane": "business-systems-remote",
+    "q": "solutions consultant",
+    "country": "India"
+   },
+   {
+    "id": "him:revenue-operations:india",
+    "lane": "business-systems-remote",
+    "q": "revenue operations",
+    "country": "India"
+   },
+   {
+    "id": "him:AI-operations:india",
+    "lane": "business-systems-remote",
+    "q": "AI operations",
+    "country": "India"
+   },
+   {
+    "id": "him:onboarding:india",
+    "lane": "business-systems-remote",
+    "q": "onboarding",
+    "country": "India"
+   },
+   {
+    "id": "him:electrical-engineer:india",
+    "lane": "industrial-energy",
+    "q": "electrical engineer",
+    "country": "India"
+   },
+   {
+    "id": "him:maintenance-engineer:india",
+    "lane": "industrial-energy",
+    "q": "maintenance engineer",
+    "country": "India"
+   },
+   {
+    "id": "him:reliability-engineer:india",
+    "lane": "industrial-energy",
+    "q": "reliability engineer",
+    "country": "India"
+   },
+   {
+    "id": "him:commissioning:india",
+    "lane": "industrial-energy",
+    "q": "commissioning",
+    "country": "India"
+   },
+   {
+    "id": "him:power-plant:india",
+    "lane": "industrial-energy",
+    "q": "power plant",
+    "country": "India"
+   },
+   {
+    "id": "him:energy:india",
+    "lane": "industrial-energy",
+    "q": "energy",
+    "country": "India"
+   },
+   {
+    "id": "him:operations-engineer:india",
+    "lane": "industrial-energy",
+    "q": "operations engineer",
+    "country": "India"
+   },
+   {
+    "id": "him:substation:india",
+    "lane": "industrial-energy",
+    "q": "substation",
+    "country": "India"
+   },
+   {
+    "id": "him:electrical-engineer:united-arab-emirates",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "United Arab Emirates"
+   },
+   {
+    "id": "him:commissioning:united-arab-emirates",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "United Arab Emirates"
+   },
+   {
+    "id": "him:maintenance-engineer:united-arab-emirates",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "United Arab Emirates"
+   },
+   {
+    "id": "him:electrical-engineer:saudi-arabia",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "Saudi Arabia"
+   },
+   {
+    "id": "him:commissioning:saudi-arabia",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "Saudi Arabia"
+   },
+   {
+    "id": "him:maintenance-engineer:saudi-arabia",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "Saudi Arabia"
+   },
+   {
+    "id": "him:electrical-engineer:qatar",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "Qatar"
+   },
+   {
+    "id": "him:commissioning:qatar",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "Qatar"
+   },
+   {
+    "id": "him:maintenance-engineer:qatar",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "Qatar"
+   },
+   {
+    "id": "him:electrical-engineer:germany",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "Germany"
+   },
+   {
+    "id": "him:commissioning:germany",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "Germany"
+   },
+   {
+    "id": "him:maintenance-engineer:germany",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "Germany"
+   },
+   {
+    "id": "him:electrical-engineer:netherlands",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "Netherlands"
+   },
+   {
+    "id": "him:commissioning:netherlands",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "Netherlands"
+   },
+   {
+    "id": "him:maintenance-engineer:netherlands",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "Netherlands"
+   },
+   {
+    "id": "him:electrical-engineer:ireland",
+    "lane": "industrial-energy-international",
+    "q": "electrical engineer",
+    "country": "Ireland"
+   },
+   {
+    "id": "him:commissioning:ireland",
+    "lane": "industrial-energy-international",
+    "q": "commissioning",
+    "country": "Ireland"
+   },
+   {
+    "id": "him:maintenance-engineer:ireland",
+    "lane": "industrial-energy-international",
+    "q": "maintenance engineer",
+    "country": "Ireland"
+   }
+  ]
+ },
+ "workday": {
+  "per_run": 3,
+  "max_requests": 80,
+  "max_details": 45,
+  "retain_days": 21,
+  "tenants": [
+   {
+    "id": "gevernova",
+    "employer": "GE Vernova",
+    "host": "gevernova.wd5.myworkdayjobs.com",
+    "tenant": "gevernova",
+    "site": "Vernova_ExternalSite",
+    "verified": "2026-10-30 search+detail 200; robots allows /Vernova_ExternalSite/, no rule for /wday/cxs"
+   },
+   {
+    "id": "hitachi",
+    "employer": "Hitachi (incl. Hitachi Energy)",
+    "host": "hitachi.wd1.myworkdayjobs.com",
+    "tenant": "hitachi",
+    "site": "hitachi",
+    "verified": "2026-10-30 search 200 (780 India-text hits); robots allows /hitachi/"
+   },
+   {
+    "id": "bakerhughes",
+    "employer": "Baker Hughes",
+    "host": "bakerhughes.wd5.myworkdayjobs.com",
+    "tenant": "bakerhughes",
+    "site": "BakerHughes",
+    "verified": "2026-10-30 search 200; robots allows /BakerHughes/"
+   },
+   {
+    "id": "kbr",
+    "employer": "KBR",
+    "host": "kbr.wd5.myworkdayjobs.com",
+    "tenant": "kbr",
+    "site": "KBR_Careers",
+    "verified": "2026-10-30 search 200; robots allows /KBR_Careers/"
+   }
+  ],
+  "queries": [
+   {
+    "id": "wd:electrical-engineer-india",
+    "lane": "industrial-energy",
+    "text": "electrical engineer India"
+   },
+   {
+    "id": "wd:maintenance-engineer-india",
+    "lane": "industrial-energy",
+    "text": "maintenance engineer India"
+   },
+   {
+    "id": "wd:commissioning-engineer-india",
+    "lane": "industrial-energy",
+    "text": "commissioning engineer India"
+   },
+   {
+    "id": "wd:power-plant-operations-india",
+    "lane": "industrial-energy",
+    "text": "power plant operations India"
+   },
+   {
+    "id": "wd:reliability-engineer-india",
+    "lane": "industrial-energy",
+    "text": "reliability engineer India"
+   },
+   {
+    "id": "wd:field-service-engineer-india",
+    "lane": "industrial-energy",
+    "text": "field service engineer India"
+   },
+   {
+    "id": "wd:substation-engineer-india",
+    "lane": "industrial-energy",
+    "text": "substation engineer India"
+   },
+   {
+    "id": "wd:operations-engineer-india",
+    "lane": "industrial-energy",
+    "text": "operations engineer India"
+   },
+   {
+    "id": "wd:electrical-engineer-bengaluru",
+    "lane": "industrial-energy",
+    "text": "electrical engineer Bengaluru"
+   },
+   {
+    "id": "wd:electrical-engineer-hyderabad",
+    "lane": "industrial-energy",
+    "text": "electrical engineer Hyderabad"
+   },
+   {
+    "id": "wd:electrical-engineer-chennai",
+    "lane": "industrial-energy",
+    "text": "electrical engineer Chennai"
+   },
+   {
+    "id": "wd:electrical-engineer-united-arab-emirates",
+    "lane": "industrial-energy",
+    "text": "electrical engineer United Arab Emirates"
+   },
+   {
+    "id": "wd:commissioning-engineer-saudi-arabia",
+    "lane": "industrial-energy",
+    "text": "commissioning engineer Saudi Arabia"
+   },
+   {
+    "id": "wd:field-service-engineer-qatar",
+    "lane": "industrial-energy",
+    "text": "field service engineer Qatar"
+   },
+   {
+    "id": "wd:electrical-engineer-germany",
+    "lane": "industrial-energy",
+    "text": "electrical engineer Germany"
+   },
+   {
+    "id": "wd:commissioning-engineer-netherlands",
+    "lane": "industrial-energy",
+    "text": "commissioning engineer Netherlands"
+   }
+  ]
+ }
+}

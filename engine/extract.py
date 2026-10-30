@@ -8,7 +8,7 @@ Nothing here decides fit, eligibility or READY.
 import html,json,re
 # 2: 'advantage'/'beneficial' wording is preferred; 'this role is based in X' is a location statement
 # 3: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text
-EXTRACTOR_VERSION=4  # 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
+EXTRACTOR_VERSION=5  # 5: Ashby 'Salary' components summarised as OTE are basis ote; 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
@@ -139,7 +139,8 @@ def _ashby_tiers(data):
             interp={'ranges':[{'min':low,'max':high,'currency':c.get('currencyCode'),'currency_symbol':None,'text':c.get('summary')}]
                              if low is not None or high is not None else [],
                     'period':ASHBY_INTERVALS.get(c.get('interval')),'interval_raw':c.get('interval'),
-                    'basis':ASHBY_BASIS.get(kind,'unspecified'),'component_type':kind,'estimated':False,
+                    # Ashby labels on-target earnings as a 'Salary' component whose summary says OTE: that is not base pay.
+                    'basis':'ote' if re.search(r'\bOTE\b|on[- ]target',c.get('summary') or '',re.I) else ASHBY_BASIS.get(kind,'unspecified'),'component_type':kind,'estimated':False,
                     'variable_mentioned':kind in ('Bonus','Commission'),'equity_mentioned':(kind or '').startswith('Equity'),
                     'amount_unit':'percent' if kind=='EquityPercentage' else None,'multiple_ranges':len(tiers)>1,'label':tier.get('title')}
             out.append((interp,json.dumps(c,ensure_ascii=False,separators=(',',':')),'ats_field:compensationTiers'))
