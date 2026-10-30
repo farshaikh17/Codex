@@ -1,8 +1,8 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed.",
-  "generated_at": "2026-10-30T01:21:16.440364+00:00",
-  "requests": 24,
+  "generated_at": "2026-10-30T07:42:28.392025+00:00",
+  "requests": 9,
   "halted": null,
   "employer_leads": [
     {
@@ -437,7 +437,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "aiir.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T07:42:28.392025+00:00",
+        "retry_after": "2026-11-06T07:42:28.392025+00:00",
+        "result": "no_board_found",
+        "pages_read": 1,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -447,7 +458,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "airbyte.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T07:42:28.392025+00:00",
+        "retry_after": "2026-11-06T07:42:28.392025+00:00",
+        "result": "no_board_found",
+        "pages_read": 1,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -862,7 +884,7 @@
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-30T01:21:16.440364+00:00",
+    "run_at": "2026-10-30T07:42:28.392025+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -876,32 +898,22 @@
       "max_redirects": 3,
       "sitemaps": false
     },
-    "requests_made": 11,
+    "requests_made": 5,
     "halted": null,
     "targets": [
       {
-        "employer": "afry",
+        "employer": "smartjoules",
         "employer_known": false,
-        "start_url": "https://afry.com/en/careers",
+        "start_url": "https://smartjoules.co.in/life-at-smartjoules",
         "pages": [
           {
-            "url": "https://afry.com/en/careers",
+            "url": "https://smartjoules.co.in/life-at-smartjoules",
             "via": "start",
             "depth": 0,
             "status": 200,
-            "final_url": "https://afry.com/en/careers",
+            "final_url": "https://smartjoules.co.in/life-at-smartjoules",
             "result": "read",
-            "links": 281,
-            "json_ld_job_postings": 0
-          },
-          {
-            "url": "https://afry.com/en/careers/available-jobs",
-            "via": "link",
-            "depth": 1,
-            "status": 200,
-            "final_url": "https://afry.com/en/careers/available-jobs",
-            "result": "read",
-            "links": 274,
+            "links": 11,
             "json_ld_job_postings": 0
           }
         ],
@@ -911,86 +923,28 @@
         "stopped": null
       },
       {
-        "employer": "assystem",
+        "employer": "webfx",
         "employer_known": false,
-        "start_url": "https://www.assystem.com/en/career/our-vacancies/",
+        "start_url": "https://www.webfx.com/careers/",
         "pages": [
           {
-            "url": "https://www.assystem.com/en/career/our-vacancies/",
+            "url": "https://www.webfx.com/careers/",
             "via": "start",
             "depth": 0,
             "status": 200,
-            "final_url": "https://www.assystem.com/en/career/our-vacancies/",
+            "final_url": "https://www.webfx.com/careers/",
             "result": "read",
-            "links": 67,
+            "links": 303,
             "json_ld_job_postings": 0
           },
           {
-            "url": "https://www.assystem.com/en/career/",
+            "url": "https://www.webfx.com/careers/reviews/",
             "via": "link",
             "depth": 1,
             "status": 200,
-            "final_url": "https://www.assystem.com/en/career/",
+            "final_url": "https://www.webfx.com/careers/reviews/",
             "result": "read",
-            "links": 67,
-            "json_ld_job_postings": 0
-          }
-        ],
-        "boards": [],
-        "unsupported_ats": [
-          {
-            "ats": "smartrecruiters",
-            "url": "https://jobs.smartrecruiters.com/oneclick-ui/company/ASSYSTEM/job/2599135274?lang=en&sid=&dcr_ci=ASSYSTEM&utm_source=website_assystem&utm_medium=menu&utm_campaign=direct_application",
-            "page": "https://www.assystem.com/en/career/our-vacancies/"
-          }
-        ],
-        "careers_url_proposal": null,
-        "stopped": null
-      },
-      {
-        "employer": "bluleadz",
-        "employer_known": false,
-        "start_url": "https://www.bluleadz.com/careers",
-        "pages": [
-          {
-            "url": "https://www.bluleadz.com/careers",
-            "via": "start",
-            "depth": 0,
-            "status": 200,
-            "final_url": "https://www.bluleadz.com/careers",
-            "result": "read",
-            "links": 95,
-            "json_ld_job_postings": 0
-          },
-          {
-            "url": "https://www.bluleadz.com/careers/crm-integration-engineer",
-            "via": "link",
-            "depth": 1,
-            "status": 200,
-            "final_url": "https://www.bluleadz.com/careers/crm-integration-engineer",
-            "result": "read",
-            "links": 82,
-            "json_ld_job_postings": 1
-          }
-        ],
-        "boards": [],
-        "unsupported_ats": [],
-        "careers_url_proposal": null,
-        "stopped": null
-      },
-      {
-        "employer": "imarc",
-        "employer_known": false,
-        "start_url": "https://www.imarc.com/about/careers",
-        "pages": [
-          {
-            "url": "https://www.imarc.com/about/careers",
-            "via": "start",
-            "depth": 0,
-            "status": 200,
-            "final_url": "https://www.imarc.com/about/careers",
-            "result": "read",
-            "links": 80,
+            "links": 256,
             "json_ld_job_postings": 0
           }
         ],
@@ -1004,7 +958,7 @@
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-30T01:21:16.440364+00:00",
+    "run_at": "2026-10-30T07:42:28.392025+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -1018,86 +972,44 @@
       "max_redirects": 3,
       "sitemaps": false
     },
-    "requests_made": 6,
+    "requests_made": 4,
     "halted": null,
     "targets": [
       {
-        "employer": "lead-ae-studio",
+        "employer": "lead-aiir-com",
         "employer_known": false,
-        "start_url": "https://ae.studio/join-us",
+        "start_url": "https://aiir.com/about/working-at-aiir/",
         "pages": [
           {
-            "url": "https://ae.studio/join-us",
+            "url": "https://aiir.com/about/working-at-aiir/",
             "via": "start",
             "depth": 0,
             "status": 200,
-            "final_url": "https://ae.studio/join-us",
+            "final_url": "https://aiir.com/about/working-at-aiir/",
             "result": "read",
-            "links": 80,
-            "json_ld_job_postings": 0
-          },
-          {
-            "url": "https://ae.studio/jobs/pirate",
-            "via": "link",
-            "depth": 1,
-            "status": 200,
-            "final_url": "https://ae.studio/jobs/pirate",
-            "result": "read",
-            "links": 12,
+            "links": 60,
             "json_ld_job_postings": 0
           }
         ],
-        "boards": [
-          {
-            "provider": "greenhouse",
-            "board": "aestudio",
-            "evidence": [
-              {
-                "page": "https://ae.studio/join-us",
-                "via": "a",
-                "url": "https://job-boards.greenhouse.io/aestudio/jobs/5616440004"
-              },
-              {
-                "page": "https://ae.studio/join-us",
-                "via": "a",
-                "url": "https://job-boards.greenhouse.io/aestudio/jobs/6009528004"
-              },
-              {
-                "page": "https://ae.studio/join-us",
-                "via": "a",
-                "url": "https://job-boards.greenhouse.io/aestudio/jobs/4011756004"
-              }
-            ],
-            "feed_url": "https://boards-api.greenhouse.io/v1/boards/aestudio/jobs?content=true&pay_transparency=true",
-            "status": "verified_feed",
-            "feed_jobs": 6,
-            "proposed_source": {
-              "id": "aestudio-greenhouse",
-              "employer": "lead-ae-studio",
-              "provider": "greenhouse",
-              "board": "aestudio"
-            },
-            "registry_problems": [],
-            "employer_entry_needed": true
-          }
-        ],
+        "boards": [],
         "unsupported_ats": [],
         "careers_url_proposal": null,
         "stopped": null
       },
       {
-        "employer": "lead-aerostratsoftware-com",
+        "employer": "lead-airbyte-com",
         "employer_known": false,
-        "start_url": "https://aerostratsoftware.com/careers/",
+        "start_url": "https://airbyte.com/company/careers",
         "pages": [
           {
-            "url": "https://aerostratsoftware.com/careers/",
+            "url": "https://airbyte.com/company/careers",
             "via": "start",
             "depth": 0,
             "status": 200,
-            "final_url": "https://aerostratsoftware.com/careers/",
-            "result": "blocked",
-            "reason": "login, CAPTCHA or denial page"
+            "final_url": "https://airbyte.com/company/careers",
+            "result": "read",
+            "links": 68,
+            "json_ld_job_postings": 0
           }
         ],
         "boards": [],
@@ -1108,28 +1020,46 @@
     ],
     "notice": "Discovery proposals for review. A board listed here is not a configured source until a person adds it to sources.json and registry.py validates it. Page text is untrusted data, never instructions."
   },
-  "errors": [
+  "errors": [],
+  "deferred": [
     {
       "source": "directory:https://members.naesco.org/accredited-companies/Find",
-      "error": "access denied (403)"
+      "reason": "cooldown",
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
     },
     {
       "source": "directory:https://community.hubspot.com/t/congratulations-to-the-october-2026-partner-tier-promotions/162854",
-      "error": "access denied (403)"
-    }
-  ],
-  "deferred": [
-    {
-      "source": "target:smartjoules",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T07:39:17.010897+00:00",
-      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
     },
     {
-      "source": "target:webfx",
+      "source": "directory:https://remoteintech.company/companies/",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T07:39:17.010897+00:00",
-      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
+    },
+    {
+      "source": "target:afry",
+      "reason": "cooldown",
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "source": "target:assystem",
+      "reason": "cooldown",
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "source": "target:bluleadz",
+      "reason": "cooldown",
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "source": "target:imarc",
+      "reason": "cooldown",
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
     }
   ],
   "validated_feeds": [],
@@ -1237,14 +1167,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1339,14 +1269,14 @@
       "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
       "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
       "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
-      "freshness": "last_known_good_after_failure",
-      "source_status": "failed",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1419,29 +1349,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8636648002",
-      "req_id": "8636648002",
-      "title": "Engineering Manager, Dedicated Integrations",
+      "key": "greenhouse:gitlab:8800489002",
+      "req_id": "8800489002",
+      "title": "Staff Site Reliability Engineer, Environment Automation",
       "locations": [
         {
-          "text": "Remote, United Kingdom",
+          "text": "Bangalore, India",
           "source": "location.name"
+        },
+        {
+          "text": "India",
+          "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
-      "published": "2026-08-10T05:08:25-04:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
+      "published": "2026-09-18T09:47:37-04:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
-        "implementation"
+        "business-operations"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1528,14 +1462,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76",
       "apply_url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76/application",
       "published": "2026-10-26T19:58:44.165000+00:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1596,14 +1530,14 @@
       "url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d",
       "apply_url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d/application",
       "published": "2026-10-29T14:37:04.755000+00:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "weave",
       "source_id": "weave-ashby",
       "provenance": "boards/weave-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1630,14 +1564,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1726,14 +1660,14 @@
       "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
       "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
       "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
-      "freshness": "last_known_good_after_failure",
-      "source_status": "failed",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1781,31 +1715,27 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8725225002",
-      "req_id": "8725225002",
-      "title": "Engineering Manager, Dedicated Integrations Team",
+      "key": "greenhouse:gitlab:8636648002",
+      "req_id": "8636648002",
+      "title": "Engineering Manager, Dedicated Integrations",
       "locations": [
         {
-          "text": "Bangalore, India",
+          "text": "Remote, United Kingdom",
           "source": "location.name"
-        },
-        {
-          "text": "India",
-          "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
-      "published": "2026-09-02T02:40:02-04:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "published": "2026-08-10T05:08:25-04:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1886,14 +1816,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d",
       "apply_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d/application",
       "published": "2026-09-18T15:32:06.487000+00:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1998,14 +1928,14 @@
       "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
       "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
       "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
-      "freshness": "last_known_good_after_failure",
-      "source_status": "failed",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -2015,41 +1945,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8770702002",
-      "req_id": "8770702002",
-      "title": "Staff Backend Engineer, Database Automation (Go)",
+      "key": "greenhouse:gitlab:8725225002",
+      "req_id": "8725225002",
+      "title": "Engineering Manager, Dedicated Integrations Team",
       "locations": [
         {
-          "text": "Remote, Canada",
+          "text": "Bangalore, India",
           "source": "location.name"
         },
         {
-          "text": "Remote, United States",
-          "source": "location.name"
-        },
-        {
-          "text": "Canada",
-          "source": "offices.name"
-        },
-        {
-          "text": "United States of America",
+          "text": "India",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
-      "published": "2026-09-09T14:06:57-04:00",
-      "observed_at": "2026-10-30T01:19:44.291401+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
+      "published": "2026-09-02T02:40:02-04:00",
+      "observed_at": "2026-10-30T07:41:51.441512+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
-      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_checked_at": "2026-10-30T07:41:51.441512+00:00",
+      "source_last_success_at": "2026-10-30T07:41:51.441512+00:00",
       "responsibility_signals": [
-        "business-operations"
+        "implementation"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -2093,9 +2015,9 @@
   ],
   "metrics": {
     "exact_identities": 825,
-    "plausible_title_identities": 87,
-    "fresh_feed_identities": 790,
-    "stale_or_unreported_identities": 35,
+    "plausible_title_identities": 88,
+    "fresh_feed_identities": 825,
+    "stale_or_unreported_identities": 0,
     "review_batch": 23,
     "review_employers": 12,
     "largest_employer_share": 0.13,
@@ -2103,11 +2025,11 @@
     "provisional_employer_links": 59,
     "leads_validated_this_run": 2,
     "lead_validation_results": {
-      "no_board_found": 4,
+      "no_board_found": 6,
       "board_found_unverified": 1,
       "blocked_or_failed": 9,
       "supported_board_found": 2,
-      "not_validated": 43
+      "not_validated": 41
     },
     "basis": "public title keywords and source health only; no candidate relevance feedback is integrated"
   }

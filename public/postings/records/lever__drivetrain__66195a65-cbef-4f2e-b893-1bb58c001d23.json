@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-30T01:19:44.291401+00:00",
-  "reason": "source retrieval failed: The read operation timed out",
-  "state": "inaccessible"
+  "at": "2026-10-30T07:41:51.441512+00:00",
+  "reason": "listed again after inaccessible",
+  "state": "listed"
  },
  "board": "drivetrain",
  "changes": [],
