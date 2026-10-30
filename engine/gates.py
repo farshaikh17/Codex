@@ -30,7 +30,11 @@ from engine.places import covers,places
 # 8: version 3's 'amounts in millions or billions are never pay' is removed. The extractor (version 4) now reads K/M/B
 #    suffixes and drops company figures (revenue, funding, valuation) by sentence context, so real pay written in millions
 #    is compared like any other amount
-GATES_VERSION=8
+# 9: geography: profile.explicit_country_required (region/worldwide wording alone is unknown, never pass);
+#    profile.relocation_countries (a place there is unknown: relocation/work authorisation, never fail); statements
+#    that only people already holding foreign work rights can be hired fail, or are unknown when an eligible country
+#    is also named (consolidated from experiments/recruiter_triage.py v3)
+GATES_VERSION=9
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -81,13 +85,35 @@ def geography(fields,profile):
     if listed:  # listed locations are a union: the role is offered in any of them
         if covers(listed,countries): support+=[ev for found,ev in listed_items if covers(found,countries)]
         else: exclude+=[ev for _,ev in listed_items]
+    rights=[r for r in existing_rights(fields) if not covers(places(r['quote']) or {'?'},countries)]
+    explicit=lambda evs:any(set(places(e['quote']))&set(countries) for e in evs)
+    if rights:
+        if support: return _gate('unknown','the posting names an eligible place but also requires existing foreign work rights or presence',support+rights,basis)
+        return _gate('fail','the posting requires existing work rights or presence outside the eligible countries',rights,basis)
     if negated:
         return _gate('unknown','a negated statement mentions an eligible country; needs a person to read it',negated,basis)
+    reloc=profile.get('relocation_countries') or []
+    if exclude and not support and reloc and all(covers(places(e['quote']) or {'?'},reloc) for e in exclude):
+        return _gate('unknown','location is in a relocation country; relocation and work authorisation must be confirmed',exclude,basis)
+    if support and profile.get('explicit_country_required') and not explicit(support):
+        return _gate('unknown','only region or worldwide wording; an eligible country is not named',support,basis)
     if support and exclude:
         return _gate('unknown','posting statements disagree about where the role can be done',support+exclude,basis)
     if support: return _gate('pass','posting names an eligible country, a region containing one, or worldwide',support,basis)
     if exclude: return _gate('fail','every place the posting names is outside the eligible countries',exclude,basis)
     return _gate('unknown','posting names no recognised country or region (city-only or unstated)')
+EXISTING_RIGHTS=re.compile(r"(?i)(?:\b(?:must|need to|needs to) (?:be|have)[^.\n]{0,40}?(?:authori[sz]ed|eligible|legal(?:ly)? (?:able|right)|right|full working rights) to work (?:in|from their home location \(in)|"
+                           r"\b(?:able|eligible|authori[sz]ed) to work in (?:the )?[A-Z][\w ]{1,30}? without (?:the need for )?(?:visa )?sponsorship|"
+                           r"\b(?:candidates|applicants) (?:must|need to) be (?:either )?(?:an? )?[A-Z]\w+ citizens?|\bcitizen or (?:an? )?(?:PR|permanent resident)|"
+                           r"\bmust be (?:located|based) in|\bopen to candidates based in [^.\n]{0,60}\bonly|^[\s\-–•·*]*eligible to work (?:full-time )?in)[^.\n]{0,120}",re.M)
+def existing_rights(fields):
+    """Verbatim statements that only people already holding work rights (or living) somewhere can be hired."""
+    out=[]
+    for f in ('requirements_mandatory','requirements_preferred','location'):
+        for i in fields.get(f,{}).get('items',[]):
+            for m in EXISTING_RIGHTS.finditer(i['quote']):
+                if not any(o['quote']==m.group(0).strip() for o in out): out.append(_item(i,'location')|{'quote':m.group(0).strip()})
+    return out
 def _allowed(field,allowed,label):
     values={i['interpretation'] for i in field['items'] if i['interpretation']}
     if field['state']=='conflicting': return 'unknown','%s statements conflict'%label,field['items']

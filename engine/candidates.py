@@ -19,8 +19,12 @@ EMPLOYMENT_TYPES=('full_time','part_time','contract','internship','temporary')
 HISTORY_STATUSES=('applied','interviewing','offer','rejected','withdrawn')
 KEYS={
     'top':{'schema','candidate_id','synthetic','profile_version','rules_version','profile','rules'},
-    'profile':{'eligible_countries','experience_years','languages','application_history','application_history_file'},
-    'rules':{'required_gates','relevance','engagement','salary','application_history','discovery'},
+    'profile':{'eligible_countries','experience_years','languages','application_history','application_history_file',
+               'experience','transferable','relocation_countries','explicit_country_required','preferred_cities'},
+    'rules':{'required_gates','relevance','engagement','salary','application_history','discovery','match'},
+    'experience':{'id','title','skills','domains','functions','evidence'},
+    'transferable':{'reason','job_terms','from'},
+    'match':{'min_fit','high_fit'},
     'relevance':{'title_keywords','description_keywords','minimum_score'},
     'engagement':{'workplace','employment_types'},
     'salary':{'minimum','currency','period','basis','assume_period','assume_currency_for_symbol'},
@@ -64,6 +68,25 @@ def validate(config,where='config'):
     _strings(profile.get('languages'),where+'.profile.languages')
     if 'application_history' in profile and 'application_history_file' in profile: raise ConfigError('%s.profile: give application_history or application_history_file, not both'%where)
     _history(profile.get('application_history'),where+'.profile.application_history')
+    # Career history for transferable matching: each item names skills/domains/functions evidenced by real work.
+    ids=set()
+    for n,item in enumerate(profile.get('experience') or []):
+        at='%s.profile.experience[%d]'%(where,n); _keys(item,KEYS['experience'],at)
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}',item.get('id') or ''): raise ConfigError(at+'.id is required')
+        for k in ('skills','domains','functions'): _strings(item.get(k),at+'.'+k)
+        ids.add(item['id'])
+    for n,rule in enumerate(profile.get('transferable') or []):
+        at='%s.profile.transferable[%d]'%(where,n); _keys(rule,KEYS['transferable'],at)
+        _strings(rule.get('job_terms'),at+'.job_terms')
+        if not rule.get('reason') or not rule.get('job_terms'): raise ConfigError(at+' needs reason and job_terms')
+        if set(rule.get('from') or [])-ids: raise ConfigError(at+'.from names unknown experience ids')
+    _strings(profile.get('relocation_countries'),where+'.profile.relocation_countries',COUNTRIES)
+    _strings(profile.get('preferred_cities'),where+'.profile.preferred_cities')
+    if not isinstance(profile.get('explicit_country_required',False),bool): raise ConfigError(where+'.profile.explicit_country_required must be true or false')
+    m=rules.get('match')
+    if m is not None:
+        _keys(m,KEYS['match'],where+'.rules.match')
+        if not all(isinstance(m.get(k,0),(int,float)) and 0<=m.get(k,0)<=100 for k in ('min_fit','high_fit')): raise ConfigError(where+'.rules.match thresholds are 0-100')
     _strings(rules.get('required_gates'),where+'.rules.required_gates',GATES)
     if 'discovery' in rules:
         from engine.discovery import validate as validate_discovery
