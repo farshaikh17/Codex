@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from collections import Counter
 from recruiter_triage import triage
+from recruiter_priority import rank
 
 def analyze(board, candidate):
     if board.get('schema') != 'public-job-board-1' or not isinstance(board.get('jobs'), list):
@@ -29,7 +30,8 @@ def analyze(board, candidate):
             'location': f'{loc} {workplace}',
         }, candidate)
         results.append({'key': key, 'title': job.get('title'), 'url': job.get('url'),
-                        'status': decision.status, 'reasons': list(decision.reasons)})
+                        'status': decision.status, 'reasons': list(decision.reasons),
+                        **rank(job, candidate)})
     return {'candidate': candidate, 'source': board.get('source'),
             'jobs_seen': len(board['jobs']), 'unique_jobs': len(results),
             'counts': dict(Counter(x['status'] for x in results)), 'results': results}
