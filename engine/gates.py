@@ -34,7 +34,7 @@ from engine.places import covers,places
 #    profile.relocation_countries (a place there is unknown: relocation/work authorisation, never fail); statements
 #    that only people already holding foreign work rights can be hired fail, or are unknown when an eligible country
 #    is also named (consolidated from experiments/recruiter_triage.py v3)
-GATES_VERSION=9
+GATES_VERSION=10
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -62,7 +62,7 @@ def _gate(result,reason,evidence=(),basis=None,**extra):
     return {'result':result,'reason':reason,'evidence':list(evidence),'candidate_basis':basis}|extra
 def _unknown_missing(what):
     return _gate('unknown','candidate %s not provided; not assumed'%what)
-def geography(fields,profile):
+def geography(fields,profile,description=None):
     countries=profile.get('eligible_countries')
     if not countries: return _unknown_missing('eligible_countries')
     basis='profile.eligible_countries = %s'%', '.join(countries)
@@ -85,7 +85,7 @@ def geography(fields,profile):
     if listed:  # listed locations are a union: the role is offered in any of them
         if covers(listed,countries): support+=[ev for found,ev in listed_items if covers(found,countries)]
         else: exclude+=[ev for _,ev in listed_items]
-    rights=[r for r in existing_rights(fields) if not covers(places(r['quote']) or {'?'},countries)]
+    rights=[r for r in existing_rights(fields,description) if not covers(places(r['quote']) or {'?'},countries)]
     explicit=lambda evs:any(set(places(e['quote']))&set(countries) for e in evs)
     if rights:
         if support: return _gate('unknown','the posting names an eligible place but also requires existing foreign work rights or presence',support+rights,basis)
@@ -102,17 +102,19 @@ def geography(fields,profile):
     if support: return _gate('pass','posting names an eligible country, a region containing one, or worldwide',support,basis)
     if exclude: return _gate('fail','every place the posting names is outside the eligible countries',exclude,basis)
     return _gate('unknown','posting names no recognised country or region (city-only or unstated)')
-EXISTING_RIGHTS=re.compile(r"(?i)(?:\b(?:must|need to|needs to) (?:be|have)[^.\n]{0,40}?(?:authori[sz]ed|eligible|legal(?:ly)? (?:able|right)|right|full working rights) to work (?:in|from their home location \(in)|"
+EXISTING_RIGHTS=re.compile(r"(?i)(?:\b(?:must|need to|needs to) (?:be|have)[^.\n]{0,40}?(?:authori[sz](?:ed|ation)|eligible|legal(?:ly)? (?:able|right)|right|full working rights) to work (?:in|from their home location \(in)|"
                            r"\b(?:able|eligible|authori[sz]ed) to work in (?:the )?[A-Z][\w ]{1,30}? without (?:the need for )?(?:visa )?sponsorship|"
                            r"\b(?:candidates|applicants) (?:must|need to) be (?:either )?(?:an? )?[A-Z]\w+ citizens?|\bcitizen or (?:an? )?(?:PR|permanent resident)|"
                            r"\bmust be (?:located|based) in|\bopen to candidates based in [^.\n]{0,60}\bonly|^[\s\-–•·*]*eligible to work (?:full-time )?in)[^.\n]{0,120}",re.M)
-def existing_rights(fields):
-    """Verbatim statements that only people already holding work rights (or living) somewhere can be hired."""
+def existing_rights(fields,description=None):
+    """Verbatim statements that only people already holding work rights (or living) somewhere can be hired.
+    The whole description is scanned too: work-rights sentences often sit in benefits or legal footers."""
     out=[]
-    for f in ('requirements_mandatory','requirements_preferred','location'):
-        for i in fields.get(f,{}).get('items',[]):
-            for m in EXISTING_RIGHTS.finditer(i['quote']):
-                if not any(o['quote']==m.group(0).strip() for o in out): out.append(_item(i,'location')|{'quote':m.group(0).strip()})
+    items=[i for f in ('requirements_mandatory','requirements_preferred','location') for i in fields.get(f,{}).get('items',[])]
+    if description: items.append({'quote':description,'method':'description_full_text'})
+    for i in items:
+        for m in EXISTING_RIGHTS.finditer(i['quote']):
+            if not any(o['quote']==m.group(0).strip() for o in out): out.append(_item(i,'location')|{'quote':m.group(0).strip()})
     return out
 def _allowed(field,allowed,label):
     values={i['interpretation'] for i in field['items'] if i['interpretation']}
@@ -226,6 +228,14 @@ def residency_limit(quote,countries):
         found=places(m.group(1))
         if found and (not countries or not covers(found,countries)): return m.group(0).strip()
     return None
+def fx_rate(fx,cur,floors,period):
+    """Operator-supplied, dated conversion only (rules.fx = {as_of, source, rates: {FROM: {TO: rate}}}); never a built-in
+    rate. Converts only into a floor currency whose period matches the posting's period (no hourly/annual annualising)."""
+    if not fx or not fx.get('as_of') or not fx.get('source'): return None
+    for target,rate in ((fx.get('rates') or {}).get(cur) or {}).items():
+        if target in floors and floors[target]['period']==period and isinstance(rate,(int,float)) and rate>0:
+            return target,rate,'converted %s->%s at %s (rules.fx as of %s, source: %s)'%(cur,target,rate,fx['as_of'],fx['source'])
+    return None
 def salary(fields,rules,posting=None,profile=None):
     rule=rules.get('salary')
     if rule is None: return _gate('unknown','candidate salary rule not provided; not assumed')
@@ -252,6 +262,12 @@ def salary(fields,rules,posting=None,profile=None):
             continue
         for r in pay['ranges']:
             cur,cur_note=_currency(r,{'assume_currency_for_symbol':symbols})
+            rate=1
+            if cur and (cur not in floors or floors[cur]['period']!=pay.get('period')):  # no same-period floor in this currency
+                conv=fx_rate(rules.get('fx'),cur,floors,pay.get('period'))
+                if conv:
+                    target,rate,fx_note=conv
+                    cur_note='; '.join(n for n in (cur_note,fx_note) if n);cur=target
             if cur not in floors:
                 notes.append('%s: currency %s has no floor; not converted'%(r.get('text') or i['quote'],cur or 'unstated')); continue
             rule=floors[cur]
@@ -262,7 +278,7 @@ def salary(fields,rules,posting=None,profile=None):
             why=[n for n in (cur_note,period_note) if n]
             if period!=rule['period']: notes.append('%s: period %s, not annualised or converted'%(r.get('text') or i['quote'],period or 'unstated')); continue
             mult=UNIT_MULTIPLIER.get(pay.get('amount_unit'),1)
-            low,high=(None if r.get('min') is None else r['min']*mult),(None if r.get('max') is None else r['max']*mult)
+            low,high=(None if r.get('min') is None else r['min']*mult*rate),(None if r.get('max') is None else r['max']*mult*rate)
             kind=pay.get('basis','unspecified')
             plain=kind=='unspecified' and not pay.get('variable_mentioned')
             ev=_item(i,'compensation')|{'basis':'; '.join(why+['range %s-%s %s per %s, basis %s, against the %s floor %s (%s)'%(
@@ -337,7 +353,7 @@ def screen(candidate,posting,extraction,reviews=None,today=None):
     today=today or date.today()
     profile,rules,fields=candidate['profile'],candidate['rules'],extraction['fields']
     required=set(rules.get('required_gates') or ('geography','engagement','qualifications','salary','application_history'))
-    gates={'geography':geography(fields,profile),'engagement':engagement(fields,rules),
+    gates={'geography':geography(fields,profile,posting.get('description')),'engagement':engagement(fields,rules),
            'qualifications':qualifications(fields,profile,reviews),'salary':salary(fields,rules,posting,profile),
            'application_history':application_history(posting,profile,rules,today)}
     for name,g in gates.items(): g['required']=name in required

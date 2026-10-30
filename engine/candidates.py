@@ -21,7 +21,7 @@ KEYS={
     'top':{'schema','candidate_id','synthetic','profile_version','rules_version','profile','rules'},
     'profile':{'eligible_countries','experience_years','languages','application_history','application_history_file',
                'experience','transferable','relocation_countries','explicit_country_required','preferred_cities'},
-    'rules':{'required_gates','relevance','engagement','salary','application_history','discovery','match'},
+    'rules':{'required_gates','relevance','engagement','salary','application_history','discovery','match','fx'},
     'experience':{'id','title','skills','domains','functions','evidence'},
     'transferable':{'reason','job_terms','from'},
     'match':{'min_fit','high_fit'},
@@ -103,9 +103,17 @@ def validate(config,where='config'):
         _keys(eng,KEYS['engagement'],where+'.rules.engagement')
         _strings(eng.get('workplace'),where+'.rules.engagement.workplace',WORKPLACES)
         _strings(eng.get('employment_types'),where+'.rules.engagement.employment_types',EMPLOYMENT_TYPES)
+    fx=rules.get('fx')
+    if fx is not None:
+        # dated, sourced conversion rates supplied by the operator; the engine has no built-in rate
+        if not isinstance(fx,dict) or set(fx)-{'as_of','source','rates'}: raise ConfigError('%s.rules.fx keys are as_of, source, rates'%where)
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}',str(fx.get('as_of') or '')) or not fx.get('source'): raise ConfigError('%s.rules.fx needs an as_of date (YYYY-MM-DD) and a source'%where)
+        for a,targets in (fx.get('rates') or {}).items():
+            if not re.fullmatch(r'[A-Z]{3}',a) or not isinstance(targets,dict) or not all(re.fullmatch(r'[A-Z]{3}',b) and isinstance(v,(int,float)) and not isinstance(v,bool) and v>0 for b,v in targets.items()):
+                raise ConfigError('%s.rules.fx.rates maps ISO codes to {ISO code: positive rate}'%where)
     sal=rules.get('salary')
     if sal is not None:
-        # one floor (an object) or several (a list), at most one per currency; never converted between currencies
+        # one floor (an object) or several (a list), at most one per currency; converted only through a dated rules.fx
         floors=sal if isinstance(sal,list) else [sal]
         if not floors: raise ConfigError('%s.rules.salary is an empty list; omit it if there is no floor'%where)
         symbols={}

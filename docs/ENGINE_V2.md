@@ -12,10 +12,24 @@ no workflow or schedule change. Candidate profiles stay private (outside Git; `J
   unresolved geography/arrangement -> NEEDS_REVIEW; only a gate failure with evidence rejects. Regional copies of
   one title at one employer are grouped with every requisition kept. Outputs are refused inside the repository.
   `python -m engine.qualify --candidates DIR --boards public/boards --extra himalayas.json --out DIR`
-- `engine/gates.py` (GATES_VERSION 9): `explicit_country_required` (worldwide/region wording alone is unknown),
+- `engine/gates.py` (GATES_VERSION 10; 9 in 1c71c09): `explicit_country_required` (worldwide/region wording alone is unknown),
   `relocation_countries` (unknown, not fail), existing-foreign-work-rights statements (fail; unknown when an
   eligible place is also named). Consolidated from experiments/recruiter_triage.py v3.
 - `engine/candidates.py`: profile keys experience, transferable, relocation_countries, explicit_country_required,
   preferred_cities; rules.match {min_fit, high_fit}. `engine/places.py`: QA, OM, KW, BH; Dubai/Abu Dhabi -> AE.
 - `role_search.py`: `as_jobs()` turns Himalayas listings into collector-shaped jobs (full text, aggregator-reported
   pay); `python role_search.py OUT.json "query|country" ...` fetches within a request budget, robots-aware.
+
+## Sprint additions (GATES_VERSION 10)
+
+- Work-rights statements are scanned across the whole description (benefits/legal footers included), not only
+  requirement and location sections; "existing authorisation to work in X" is recognised.
+- `rules.fx = {as_of: YYYY-MM-DD, source: "...", rates: {USD: {INR: <rate>}}}` (validated; date and source
+  mandatory). The engine ships no rate. A range is converted only into a floor currency with the same period
+  (USD/year -> INR/year); hourly vs annual is never annualised. Without `rules.fx` such pay stays PAY_UNKNOWN.
+
+Known limitations (not fixed): city-only locations outside India (Raleigh, Houston, Tokyo, Sydney, Limerick) are
+not mapped to countries, so they stay NEEDS_REVIEW instead of relocation-review or reject; hybrid/onsite postings
+with no workplace field and no location text are unknown (never pass) for remote-only candidates; a bare
+"engineer" title exempted by a function word (e.g. Solutions/Integration Engineer) can still rank for a
+non-software candidate when the JD requires Python; Sana coverage is still dominated by one employer (CAI).

@@ -52,6 +52,18 @@ class StateTests(unittest.TestCase):
         j=job('Maintenance Engineer','Dubai, UAE','About the role\n'+'Plant role at the site. '*30+'\n'+'Requirements\n- power plant maintenance\n- turbine troubleshooting\n')
         self.assertEqual(self.state(j,p),'NEEDS_REVIEW')
         self.assertEqual(self.state(job('Maintenance Engineer','Houston, United States',j['description']),p),'REJECT')
+    def test_work_rights_outside_requirement_sections_are_found(self):
+        d='About the role\n'+'Run ops for the team. '*30+'\n'+REQ+'Benefits\nHealth cover.\nApplicants must be authorized to work in the United States without sponsorship.\n'
+        self.assertEqual(self.state(job(loc='Remote',desc=d)),'REJECT')
+        self.assertEqual(self.state(job(loc='Remote',desc=d.replace('be authorized to work in the United States without sponsorship','have existing authorisation to work in the Netherlands'))),'REJECT')
+    def test_dated_fx_converts_annual_pay_and_absent_fx_keeps_unknown(self):
+        p=person();self.assertEqual(self.state(job(pay='$20,000 - $25,000 USD per year'),p),'PAY_UNKNOWN')
+        p['rules']['fx']={'as_of':'2026-10-30','source':'synthetic test rate','rates':{'USD':{'INR':80}}};cfg.validate(p)
+        self.assertEqual(self.state(job(pay='$20,000 - $25,000 USD per year'),p),'HIGH_FIT')   # 1.6M-2.0M INR >= 1.44M
+        self.assertEqual(self.state(job(pay='$5,000 - $8,000 USD per year'),p),'REJECT')
+    def test_fx_requires_date_and_source(self):
+        p=person();p['rules']['fx']={'rates':{'USD':{'INR':80}}}
+        with self.assertRaises(cfg.ConfigError): cfg.validate(p)
     def test_thin_description_is_hold(self): self.assertEqual(self.state(job(desc='Chief of staff role.')),'HOLD')
     def test_low_fit_is_screened_not_rejected(self):
         self.assertEqual(self.state(job('Pastry Chef',desc='About the role\n'+'Bake bread for the shop. '*30+'\n'+'Requirements\n- 5 years pastry\n')),'SCREENED')
