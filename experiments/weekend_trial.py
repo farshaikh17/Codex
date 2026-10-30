@@ -27,6 +27,7 @@ def run(boards_dir: Path, candidate: str, limit: int):
             seen.add(item['key'])
             if len(selected) < limit:
                 selected.append(item)
+    selected.sort(key=lambda x: (-x['priority_score'], x['key']))
     return {'candidate': candidate, 'total_source_records': total, 'unique_identities': len(seen),
             'sample_size': len(selected), 'sample_counts': dict(Counter(x['status'] for x in selected)),
             'sources': source_stats, 'sample': selected,
