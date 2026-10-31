@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-27T20:29:45.949737+00:00",
-  "reason": "first listed",
-  "state": "listed"
+  "at": "2026-10-31T00:48:39.757986+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "gohighlevel",
  "changes": [],
@@ -27,7 +27,7 @@
  "content_hash": "e692d274998cde098139194ed8729b28477ba0523070518df0429cc1f08e63a2",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [],

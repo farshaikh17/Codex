@@ -78,14 +78,14 @@
  "content_hash": "876851ac308f3e7a673dc1daffe1fbf10feaf20a0fd8591c1745c18ea6feebf6",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -153,7 +153,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -201,7 +201,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -229,7 +229,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -257,7 +257,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -325,7 +325,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -353,7 +353,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,

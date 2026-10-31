@@ -46,7 +46,7 @@
  "content_hash": "725dc5ae384341f3fcaa7df95f3574adbd3c2e7240aded6c2a0feb431b0b10db",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
@@ -73,7 +73,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -101,7 +101,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,
@@ -169,7 +169,7 @@
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,

@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "energyhub",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-10-31T00:48:39.757986+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "9045500bd0fb1c0aab8f5a5713af5d2ff39dd41b31d67dc9fab2aaf909362167",
+   "kind": "content_changed",
+   "to_hash": "ce65fce9b6a816d1fc1a99a5c1267b3171540e3d432c5633dc790bfaa5eb6bec"
+  }
+ ],
  "content": {
   "compensation_raw": "[{\"min_cents\": 10500000, \"max_cents\": 12000000, \"currency_type\": \"USD\", \"title\": \"Base Salary Range\", \"blurb\": \"<p><span class=\\\"ui-provider jl og jj bme bmf bmg bmh bmi bmj bmk bml bmm bmn bmo bmp bmq bmr bms bmt bmu bmv bmw bmx bmy bmz bna bnb bnc bnd bne bnf bng bnh bni bnj\\\">The base salary range of this opportunity is listed below and is determined within a range based on factors including qualifications, location and experience.&nbsp; This allows opportunity for growth and development within the role.&nbsp; The base salary offered is part of a total compensation package.&nbsp;&nbsp;</span></p>\"}]",
   "description": "About the Role\n\nEnergyHub empowers utilities and their customers to build a cleaner, more distributed energy future — helping consumers turn smart thermostats, EVs, and batteries into virtual power plants that keep the grid stable and expand renewable capacity.\n\nWe're looking for a Senior Accountant to join a growing Finance team at an exciting moment in EnergyHub’s evolution. You'll own key pieces of our close process and financial reporting, serve as the accounting point of contact across both the EnergyHub team and our parent company Alarm.com (Nasdaq: ALRM), and have genuine influence over how our accounting function evolves.\n\nThis is a role for someone who holds themselves to a high standard, communicates clearly across teams, and wants their work to matter beyond the month-end close.\n\nWhat You'll Do\n\nLead EnergyHub's month-end close process — journal entries, account reconciliations, and supporting schedules prepared with accuracy and on time\n\nPrepare and review financial statements and management reports in compliance with U.S. GAAP\n\nReview and evaluate contracts for revenue recognition under ASC 606, working closely with program managers to ensure key terms are captured correctly\n\nSupport external audits, including preparation of workpapers and direct coordination with auditors\n\nAssist with accounts receivable and invoicing processes, including coordination with customer success and operations teams to resolve open items\n\nPartner with FP&A on monthly, quarterly, and annual forecasting\n\nServe as the liaison between EnergyHub and Alarm.com corporate accounting — translating, escalating, and keeping both sides aligned\n\nSupport SOX compliance requirements as part of our public company reporting environment\n\nExplain accounting requirements and the why behind them to non-accounting stakeholders — clearly, without jargon\n\nIdentify process gaps and build scalable solutions that improve how we operate\n\nWhat We're Looking For\n\nMust-haves\n\nBachelor's degree in Accounting or Finance\n\n2-4 years of progressive accounting experience with demonstrated process ownership\n\nSolid, working knowledge of U.S. GAAP\n\nExperience in a public company environment\n\nStrong communicator — able to hold technical standards while explaining requirements in plain language to non-accountants\n\nHigh personal standards for accuracy, documentation, and completeness\n\nNice-to-haves\n\nCPA license (strongly preferred)\n\nExperience in SaaS, software, energy, or tech\n\nComfort building processes in a high-growth or transitional environment\n\nHow You'll Work\n\nYou take ownership of your work and hold the output to a high bar. You understand that accounting isn't just about closing the books — it's about building trust in the numbers, protecting the business, and helping other teams make better decisions. When something doesn't look right, you dig in. When a policy or requirement seems unclear to a colleague, you explain the why — because you know that understanding drives better outcomes than compliance alone.\n\nYou're comfortable working independently and navigating between teams, and you know when to escalate, when to push back, and when to just get it done.\n\nPlease note that sponsorship of new applicants for employment authorization, or any other immigration-related support, is not available for this position at this time.\n\nWhy work for EnergyHub?\n\nCollaborate with outstanding people: Our employees work hard, do great work, and enjoy collaborating and learning from each other.\n\nMake an immediate impact: New employees can expect to be given real responsibility for bringing new technologies to the marketplace. You are empowered to perform as soon as you join the team!\n\nGain well rounded experience: EnergyHub offers a diverse and dynamic environment where you will get the chance to work directly with executives and develop expertise across multiple areas of the business.\n\nWork with the latest technologies: You'll gain exposure to a broad spectrum of IoT, SaaS and machine learning obstacles, including distributed fault-tolerance, device control optimization, and process modeling to support scalable interaction with disparate downstream APIs.\n\nBe part of something important: Help create the future of how energy is produced and consumed. Make a positive impact on our climate.\n\nAbout EnergyHub\n\nEnergyHub empowers utilities and their customers to create a clean, distributed energy future. We help consumers turn their smart thermostats, EVs, batteries, and other products into virtual power plants that keep the grid stable and enable higher penetration of solar and wind power.\n\nTo learn more, visit energyhub.com.\n\nCompany Benefits\n\nEnergyHub offers a generous benefits package including 100% paid medical for employees and a 401(k) with employer match. We offer a casual environment, the flexibility to set your own schedule, a fully stocked fridge and pantry, free Citi Bike membership, secure bike rack, gym subsidy, paid parental leave, and an education assistance program.\n\nEnergyHub is an Equal Opportunity Employer\n\nEOE, Including Disability/Vets. Reasonable accommodations are available for individuals with disabilities throughout the application process. If you are a person with a disability needing assistance with the application process, please contact accommodations.apply@energyhub.net.\n\nIn connection with your application, we collect information that identifies, reasonably relates to or describes you (\"Personal Information\"). The categories of Personal Information that we may collect include your name, government-issued identification number(s), email address, mailing address, other contact information, emergency contact information, employment history, educational history, and demographic information. We collect and use those categories of Personal Information about you for human resources and other business management purposes, including identifying and evaluating you as a candidate for potential or future employment or future positions, recordkeeping in relation to recruiting and hiring, conducting analytics, and ensuring compliance with applicable legal requirements and Company policies. By submitting your application, you acknowledge that we may retain some of the personal data that you provide in your application for our internal operations such as managing our recruitment system and ensuring that we comply with labor laws and regulations even after we have made our employment decision.\n\nNotice To Third Party Agencies:\n\nEnergyHub understands the value of professional recruiting services. However, we are not accepting resumes from recruiters or employment agencies for this position. In the event we receive a resume or candidate referral for this position from a third-party recruiter or agency without a previously signed agreement, we reserve the right to pursue and hire those candidate(s) without any financial obligation to you.\n\nThe base salary range of this opportunity is listed below and is determined within a range based on factors including qualifications, location and experience. This allows opportunity for growth and development within the role. The base salary offered is part of a total compensation package.\n\nBase Salary Range\n\n$105,000—$120,000 USD",
@@ -16,22 +26,22 @@
    },
    {
     "source": "offices.location",
-    "text": "Brooklyn, New York"
+    "text": "Tysons, Virginia"
    },
    {
     "source": "offices.name",
-    "text": "Brooklyn, NY"
+    "text": "Tysons, VA"
    }
   ],
   "published": "2026-08-25T19:58:04-04:00",
   "title": "Senior Subsidiary Accountant",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T20:34:22.271289+00:00",
- "content_hash": "9045500bd0fb1c0aab8f5a5713af5d2ff39dd41b31d67dc9fab2aaf909362167",
+ "content_changed_at": "2026-10-31T00:48:39.757986+00:00",
+ "content_hash": "ce65fce9b6a816d1fc1a99a5c1267b3171540e3d432c5633dc790bfaa5eb6bec",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
@@ -57,7 +67,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 10500000, \"max_cents\": 12000000, \"currency_type\": \"USD\", \"title\": \"Base Salary Range\", \"blurb\": \"<p><span class=\\\"ui-provider jl og jj bme bmf bmg bmh bmi bmj bmk bml bmm bmn bmo bmp bmq bmr bms bmt bmu bmv bmw bmx bmy bmz bna bnb bnc bnd bne bnf bng bnh bni bnj\\\">The base salary range of this opportunity is listed below and is determined within a range based on factors including qualifications, location and experience.&nbsp; This allows opportunity for growth and development within the role.&nbsp; The base salary offered is part of a total compensation package.&nbsp;&nbsp;</span></p>\"}",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      },
@@ -82,7 +92,7 @@
       },
       "method": "description_section:Base Salary Range",
       "quote": "$105,000—$120,000 USD",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      }
@@ -99,23 +109,23 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - United States",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.location",
-      "quote": "Brooklyn, New York",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "quote": "Tysons, Virginia",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "Brooklyn, NY",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "quote": "Tysons, VA",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      }
@@ -128,7 +138,7 @@
       "interpretation": null,
       "method": "description_section:Must-haves",
       "quote": "Bachelor's degree in Accounting or Finance\n2-4 years of progressive accounting experience with demonstrated process ownership\nSolid, working knowledge of U.S. GAAP\nExperience in a public company environment\nStrong communicator — able to hold technical standards while explaining requirements in plain language to non-accountants\nHigh personal standards for accuracy, documentation, and completeness",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      }
@@ -141,7 +151,7 @@
       "interpretation": null,
       "method": "description_section:Nice-to-haves",
       "quote": "CPA license (strongly preferred)\nExperience in SaaS, software, energy, or tech\nComfort building processes in a high-growth or transitional environment\nHow You'll Work\nYou take ownership of your work and hold the output to a high bar. You understand that accounting isn't just about closing the books — it's about building trust in the numbers, protecting the business, and helping other teams make better decisions. When something doesn't look right, you dig in. When a policy or requirement seems unclear to a colleague, you explain the why — because you know that understanding drives better outcomes than compliance alone.\nYou're comfortable working independently and navigating between teams, and you know when to escalate, when to push back, and when to just get it done.\nPlease note that sponsorship of new applicants for employment authorization, or any other immigration-related support, is not available for this position at this time.\nWhy work for EnergyHub?\nCollaborate with outstanding people: Our employees work hard, do great work, and enjoy collaborating and learning from each other.\nMake an immediate impact: New employees can expect to be given real responsibility for bringing new technologies to the marketplace. You are empowered to perform as soon as you join the team!\nGain well rounded experience: EnergyHub offers a diverse and dynamic environment where you will get the chance to work directly with executives and develop expertise across multiple areas of the business.\nWork with the latest technologies: You'll gain exposure to a broad spectrum of IoT, SaaS and machine learning obstacles, including distributed fault-tolerance, device control optimization, and process modeling to support scalable interaction with disparate downstream APIs.\nBe part of something important: Help create the future of how energy is produced and consumed. Make a positive impact on our climate.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      }
@@ -154,7 +164,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - United States",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/energyhub/jobs/8748811002"
      }

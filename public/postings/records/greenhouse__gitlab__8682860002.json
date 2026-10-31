@@ -23,7 +23,7 @@
  "content_hash": "7afad8a11b34b93f6bb1466880bdef186ec7464cbb904b3394363a48a922e687",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [],

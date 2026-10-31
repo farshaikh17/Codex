@@ -33,14 +33,14 @@
  "content_hash": "a891dd20ebe8a8b450f930d78cc4e88fb9186c42abd1e203e5b25d223b0e5aa6",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
      {
       "interpretation": {
        "amount_unit": null,
-       "basis": "base",
+       "basis": "ote",
        "component_type": "Salary",
        "equity_mentioned": false,
        "estimated": false,

@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-25T21:53:38.150524+00:00",
-  "reason": "first listed",
-  "state": "listed"
+  "at": "2026-10-31T00:48:39.757986+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "gitlab",
  "changes": [
@@ -41,7 +41,7 @@
  "content_hash": "8fb5ecc1a6ae0ece4fb9efe333b8f791a455ab924f2350c558732aaa472f7b5c",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [

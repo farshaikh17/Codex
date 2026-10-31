@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-27T20:34:22.271289+00:00",
-  "reason": "first listed",
-  "state": "listed"
+  "at": "2026-10-31T00:48:39.757986+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "energyhub",
  "changes": [],
@@ -31,7 +31,7 @@
  "content_hash": "e376dfd8152223e89182798567d01ebc14108988d072fa85ec51973fd6b525f9",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [

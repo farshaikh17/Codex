@@ -24,6 +24,15 @@
    "from_hash": "9588b5838ecbeb2de3f4995e8d824731d4ad055a703ac45d807aa65741f6ded3",
    "kind": "content_changed",
    "to_hash": "a3fbb66aa4ac658d224d8cd9ee6e6bacfab33fa0538de2b1e938465f75085770"
+  },
+  {
+   "changed_at": "2026-10-31T00:48:39.757986+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "a3fbb66aa4ac658d224d8cd9ee6e6bacfab33fa0538de2b1e938465f75085770",
+   "kind": "content_changed",
+   "to_hash": "6c5e07d9433e616ab00d599d17d19c3e5b643dc223e190f411d5b66b67c6b748"
   }
  ],
  "content": {
@@ -52,14 +61,14 @@
    }
   ],
   "published": "2026-08-26T15:46:24.987000+00:00",
-  "title": "Manager, GTM Analytics",
+  "title": "Manager, Analytics & Strategy",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-30T17:08:51.165636+00:00",
- "content_hash": "a3fbb66aa4ac658d224d8cd9ee6e6bacfab33fa0538de2b1e938465f75085770",
+ "content_changed_at": "2026-10-31T00:48:39.757986+00:00",
+ "content_hash": "6c5e07d9433e616ab00d599d17d19c3e5b643dc223e190f411d5b66b67c6b748",
  "content_hash_version": 1,
  "extraction": {
-  "extractor_version": 4,
+  "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
@@ -87,7 +96,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261300,\"summary\":\"Base Salary $174.2K – $261.3K\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -107,7 +116,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -127,7 +136,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -155,7 +164,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261300,\"summary\":\"Base Salary CA$174.2K – CA$261.3K\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -175,7 +184,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -195,7 +204,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      }
@@ -212,7 +221,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "NAMER",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -220,7 +229,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "India",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -228,7 +237,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "European Union",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -236,7 +245,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "EMEA",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      },
@@ -244,7 +253,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      }
@@ -257,7 +266,7 @@
       "interpretation": null,
       "method": "description_section:ABOUT YOU",
       "quote": "You are a hands-on analytics manager. You have 6+ years of experience in analytics, finance, revenue operations, marketing analytics, sales analytics, business operations, investment banking, or a related field. You have managed analysts or analytics-adjacent teams for at least 3 years, but you are still comfortable rolling up your sleeves to review SQL, inspect a dashboard, pressure-test assumptions, and help frame the answer.\nYou have strong GTM analytics expertise. You understand how marketing, sales, customer operations, and revenue motions fit together. You have worked with funnels, pipeline, bookings or ARR, campaign performance, sales productivity, support performance, forecasting, attribution, segmentation, or lifecycle analytics. You know how to translate GTM questions into metrics, cuts, cohorts, and recommendations that leaders can act on.\nYou are excellent with SQL and analytical reasoning. You read and write SQL, reason about grain and joins, identify data quality issues, and coach analysts toward cleaner, more reliable methods. You are comfortable with statistics and advanced analytics concepts such as confidence intervals, incrementality, cohorting, regression, forecasting, and experiment readouts, and you know when to partner with Data Science for heavier modeling work.\nYou bring finance-grade rigor and urgency. You can operate in a fast-twitch environment where leaders need clear answers quickly. You know how to separate what must be directionally right today from what needs a deeper follow-up, and you keep quality high even when timelines are short. Experience in investment banking, finance, FP&A, revenue analytics, or another high-intensity analytical environment is a strong plus.\nYou set a high bar for quality, trust, and communication. You know that GTM analytics only works when stakeholders trust the numbers. You build review mechanisms, documentation habits, and QA standards that make dashboards and analyses easier to trust. You can explain caveats without hiding behind them, and you help teams align on source-of-truth metrics across Data, Finance, Marketing, Sales, and Customer Ops.\nYou are an excellent manager and coach. You raise the performance of analysts through clear expectations, thoughtful feedback, technical coaching, and strong prioritization. You know how to help analysts grow and coach them through ambiguous requests and work that should be automated or moved into self-service.\nYou are AI-native and automation-minded. You actively use modern AI tools to accelerate analysis, QA SQL, summarize stakeholder context, produce documentation, and prototype workflows. You are excited to make AI central to the team's operating model, and to turn repeated analyst workflows into governed self-service assets, AI primitives, reusable dashboards, or model improvements.\nYou can manage across analysts and data engineers. You understand the difference between stakeholder-facing analytics and data foundation work, and you help both groups work together effectively.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      }
@@ -274,7 +283,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/7dd68291-3696-4fd0-a5d0-24ab73d22fff"
      }
