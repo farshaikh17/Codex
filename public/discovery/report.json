@@ -1,8 +1,8 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed.",
-  "generated_at": "2026-10-29T17:31:59.144331+00:00",
-  "requests": 3,
+  "generated_at": "2026-10-30T17:09:11.475276+00:00",
+  "requests": 4,
   "halted": null,
   "employer_leads": [
     {
@@ -370,7 +370,41 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "ae.studio",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T01:21:16.440364+00:00",
+        "retry_after": "2026-11-06T01:21:16.440364+00:00",
+        "result": "supported_board_found",
+        "pages_read": 2,
+        "boards": [
+          {
+            "provider": "greenhouse",
+            "board": "aestudio",
+            "status": "verified_feed",
+            "feed_jobs": 6
+          }
+        ],
+        "unsupported_ats": [],
+        "evidence": [
+          {
+            "page": "https://ae.studio/join-us",
+            "via": "a",
+            "url": "https://job-boards.greenhouse.io/aestudio/jobs/5616440004"
+          },
+          {
+            "page": "https://ae.studio/join-us",
+            "via": "a",
+            "url": "https://job-boards.greenhouse.io/aestudio/jobs/6009528004"
+          },
+          {
+            "page": "https://ae.studio/join-us",
+            "via": "a",
+            "url": "https://job-boards.greenhouse.io/aestudio/jobs/4011756004"
+          }
+        ],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -380,7 +414,20 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "aerostratsoftware.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T01:21:16.440364+00:00",
+        "retry_after": "2026-11-06T01:21:16.440364+00:00",
+        "result": "blocked_or_failed",
+        "pages_read": 0,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [
+          "login, CAPTCHA or denial page"
+        ],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -390,7 +437,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "aiir.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T07:42:28.392025+00:00",
+        "retry_after": "2026-11-06T07:42:28.392025+00:00",
+        "result": "no_board_found",
+        "pages_read": 1,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -400,7 +458,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "airbyte.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T07:42:28.392025+00:00",
+        "retry_after": "2026-11-06T07:42:28.392025+00:00",
+        "result": "no_board_found",
+        "pages_read": 1,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -410,7 +479,20 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "airtreks.com",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T17:09:11.475276+00:00",
+        "retry_after": "2026-11-06T17:09:11.475276+00:00",
+        "result": "blocked_or_failed",
+        "pages_read": 0,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [
+          "redirect requires explicit URL review; not followed"
+        ],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -420,7 +502,18 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "akka.io",
-      "last_seen_at": "2026-10-27T20:30:12.935832+00:00"
+      "last_seen_at": "2026-10-27T20:30:12.935832+00:00",
+      "validation": {
+        "checked_at": "2026-10-30T17:09:11.475276+00:00",
+        "retry_after": "2026-11-06T17:09:11.475276+00:00",
+        "result": "no_board_found",
+        "pages_read": 1,
+        "boards": [],
+        "unsupported_ats": [],
+        "evidence": [],
+        "reasons": [],
+        "ownership": "unverified: a board linked from this host is a lead for human source review, not a source"
+      }
     },
     {
       "first_seen_at": "2026-10-27T20:30:12.935832+00:00",
@@ -570,12 +663,252 @@
       "ownership": "unverified",
       "collection_enabled": false,
       "host": "astronomer.recruitee.com",
-      "last_seen_at": "2026-10-29T01:12:35.762900+00:00"
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://atento.gupy.io",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "atento.gupy.io",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://aulaatcoventry.notion.site/career](https://aulaatcoventry.notion.site/Aula-Work-with-us-b5f19ee874c5435591ac70b804aff8f9",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "aulaatcoventry.notion.site",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://auth0.com/jobs",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "auth0.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://automattic.com/work-with-us/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "automattic.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://balena.workable.com/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "balena.workable.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://balsamiq.com/company/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "balsamiq.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bandcamp.com/jobs",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bandcamp.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bandzoogle.com/jobs",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bandzoogle.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://baremetrics.com/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "baremetrics.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://basecamp.com/about/jobs",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "basecamp.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bestpractical.com/jobs",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bestpractical.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://betapeak.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "betapeak.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://beyondcompany.com.br/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "beyondcompany.com.br",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bharatpe.com/career/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bharatpe.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bigdataboutique.com/careers",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bigdataboutique.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bilsteingroup.com/en/career/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bilsteingroup.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bit.ly/3yz4YLc",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bit.ly",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bitnami.com/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bitnami.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bitwarden.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bitwarden.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bitzesty.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bitzesty.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bizinkonline.com",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bizinkonline.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://blog.arkency.com/join-our-team/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "blog.arkency.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://blog.codepen.io",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "blog.codepen.io",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
+    },
+    {
+      "first_seen_at": "2026-10-30T01:21:16.440364+00:00",
+      "url": "https://bluecatnetworks.com/careers/",
+      "discovered_from": "https://remoteintech.company/companies/",
+      "stage": "provisional_employer_link",
+      "ownership": "unverified",
+      "collection_enabled": false,
+      "host": "bluecatnetworks.com",
+      "last_seen_at": "2026-10-30T01:21:16.440364+00:00"
     }
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-29T17:31:59.144331+00:00",
+    "run_at": "2026-10-30T17:09:11.475276+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -596,7 +929,7 @@
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-10-29T17:31:59.144331+00:00",
+    "run_at": "2026-10-30T17:09:11.475276+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -610,20 +943,20 @@
       "max_redirects": 3,
       "sitemaps": false
     },
-    "requests_made": 3,
+    "requests_made": 4,
     "halted": null,
     "targets": [
       {
-        "employer": "lead-adevait-com",
+        "employer": "lead-airtreks-com",
         "employer_known": false,
-        "start_url": "https://adevait.com/careers/job-openings",
+        "start_url": "https://airtreks.com/about/jobs-at-airtreks/",
         "pages": [
           {
-            "url": "https://adevait.com/careers/job-openings",
+            "url": "https://airtreks.com/about/jobs-at-airtreks/",
             "via": "start",
             "depth": 0,
             "result": "blocked",
-            "reason": "redirect off the allowed hosts to www.toptal.com"
+            "reason": "redirect requires explicit URL review; not followed"
           }
         ],
         "boards": [],
@@ -632,16 +965,19 @@
         "stopped": null
       },
       {
-        "employer": "lead-adhocteam-us",
+        "employer": "lead-akka-io",
         "employer_known": false,
-        "start_url": "https://adhocteam.us/join/",
+        "start_url": "https://akka.io/contact-us",
         "pages": [
           {
-            "url": "https://adhocteam.us/join/",
+            "url": "https://akka.io/contact-us",
             "via": "start",
             "depth": 0,
-            "result": "blocked",
-            "reason": "robots.txt: redirect off the allowed hosts to adhoc.team"
+            "status": 200,
+            "final_url": "https://akka.io/contact-us",
+            "result": "read",
+            "links": 192,
+            "json_ld_job_postings": 0
           }
         ],
         "boards": [],
@@ -657,53 +993,53 @@
     {
       "source": "directory:https://members.naesco.org/accredited-companies/Find",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
     },
     {
       "source": "directory:https://community.hubspot.com/t/congratulations-to-the-october-2026-partner-tier-promotions/162854",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
     },
     {
       "source": "directory:https://remoteintech.company/companies/",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00"
     },
     {
       "source": "target:smartjoules",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T07:39:17.010897+00:00",
-      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
+      "retry_after": "2026-10-31T07:42:28.392025+00:00",
+      "last_checked_at": "2026-10-30T07:42:28.392025+00:00"
     },
     {
       "source": "target:webfx",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T07:39:17.010897+00:00",
-      "last_checked_at": "2026-10-29T07:39:17.010897+00:00"
+      "retry_after": "2026-10-31T07:42:28.392025+00:00",
+      "last_checked_at": "2026-10-30T07:42:28.392025+00:00"
     },
     {
       "source": "target:afry",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00",
-      "last_checked_at": "2026-10-29T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
     },
     {
       "source": "target:assystem",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00",
-      "last_checked_at": "2026-10-29T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
     },
     {
       "source": "target:bluleadz",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00",
-      "last_checked_at": "2026-10-29T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
     },
     {
       "source": "target:imarc",
       "reason": "cooldown",
-      "retry_after": "2026-10-30T01:12:35.762900+00:00",
-      "last_checked_at": "2026-10-29T01:12:35.762900+00:00"
+      "retry_after": "2026-10-31T01:21:16.440364+00:00",
+      "last_checked_at": "2026-10-30T01:21:16.440364+00:00"
     }
   ],
   "validated_feeds": [],
@@ -738,14 +1074,14 @@
       "url": "https://jobs.lever.co/cagents/0618dd87-003b-4d6d-8f97-5f0a7378f1b4",
       "apply_url": "https://jobs.lever.co/cagents/0618dd87-003b-4d6d-8f97-5f0a7378f1b4/apply",
       "published": "2026-01-23T17:35:52.983000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "business-operations",
         "asset-projects"
@@ -756,37 +1092,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:celigo:8076568",
-      "req_id": "8076568",
-      "title": "AI Integration Engineer",
+      "key": "greenhouse:celigo:8083888",
+      "req_id": "8083888",
+      "title": "Senior Manager, Technical Delivery",
       "locations": [
         {
-          "text": "Hyderabad, India",
+          "text": "US",
           "source": "location.name"
         },
         {
-          "text": "India",
-          "source": "offices.location"
-        },
-        {
-          "text": "India",
+          "text": "US",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/celigo/jobs/8076568",
-      "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8076568",
-      "published": "2026-07-30T10:05:59-04:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
+      "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
+      "published": "2026-08-05T15:55:02-04:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "celigo",
       "source_id": "celigo-greenhouse",
       "provenance": "boards/celigo-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
-        "implementation"
+        "business-operations"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -815,14 +1147,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -832,31 +1164,31 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:cognite:4913317101",
-      "req_id": "4913317101",
+      "key": "greenhouse:cognite:4981029101",
+      "req_id": "4981029101",
       "title": "Senior Project Manager",
       "locations": [
         {
-          "text": "France",
+          "text": "India (Bengaluru)",
           "source": "location.name"
         },
         {
-          "text": "France",
+          "text": "India (Bengaluru)",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913317101",
-      "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913317101",
-      "published": "2026-06-30T12:36:56-04:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4981029101",
+      "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4981029101",
+      "published": "2026-10-09T04:47:01-04:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -881,11 +1213,11 @@
           ]
         },
         {
-          "key": "greenhouse:cognite:4981029101",
-          "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4981029101",
+          "key": "greenhouse:cognite:4913317101",
+          "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913317101",
           "locations": [
-            "India (Bengaluru)",
-            "India (Bengaluru)"
+            "France",
+            "France"
           ]
         },
         {
@@ -917,14 +1249,14 @@
       "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
       "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
       "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -980,14 +1312,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8586008002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8586008002",
       "published": "2026-06-26T12:41:41-04:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "energy-advisory"
       ],
@@ -997,29 +1329,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8636648002",
-      "req_id": "8636648002",
-      "title": "Engineering Manager, Dedicated Integrations",
+      "key": "greenhouse:gitlab:8800489002",
+      "req_id": "8800489002",
+      "title": "Staff Site Reliability Engineer, Environment Automation",
       "locations": [
         {
-          "text": "Remote, United Kingdom",
+          "text": "Bangalore, India",
           "source": "location.name"
+        },
+        {
+          "text": "India",
+          "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
-      "published": "2026-08-10T05:08:25-04:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
+      "published": "2026-09-18T09:47:37-04:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
-        "implementation"
+        "business-operations"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1044,14 +1380,14 @@
       "url": "https://jobs.lever.co/gohighlevel/473d2174-f5bb-4721-9ee2-4867cba38174",
       "apply_url": "https://jobs.lever.co/gohighlevel/473d2174-f5bb-4721-9ee2-4867cba38174/apply",
       "published": "2026-09-15T11:16:51.862000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1106,14 +1442,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76",
       "apply_url": "https://jobs.ashbyhq.com/oyster/34e9f726-4461-4ef7-9724-a0aba8c72a76/application",
       "published": "2026-10-26T19:58:44.165000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1140,50 +1476,16 @@
       "url": "https://jobs.lever.co/voltus/6cb23094-a897-4232-97ba-6275e3540403",
       "apply_url": "https://jobs.lever.co/voltus/6cb23094-a897-4232-97ba-6275e3540403/apply",
       "published": "2026-10-14T21:44:33.795000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "voltus",
       "source_id": "voltus-lever",
       "provenance": "boards/voltus-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "energy-advisory"
-      ],
-      "signal_basis": "public title keywords only",
-      "stage": "exact_vacancy_unreviewed",
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "ashby:weave:6c360605-92c6-479d-a434-585ca621093d",
-      "req_id": "6c360605-92c6-479d-a434-585ca621093d",
-      "title": "Implementation Specialist, Forms",
-      "locations": [
-        {
-          "text": "India",
-          "source": "location"
-        },
-        {
-          "text": "India",
-          "source": "address.addressCountry"
-        }
-      ],
-      "workplace_type": "Remote",
-      "url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d",
-      "apply_url": "https://jobs.ashbyhq.com/weave/6c360605-92c6-479d-a434-585ca621093d/application",
-      "published": "2026-10-29T14:37:04.755000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
-      "employer": "weave",
-      "source_id": "weave-ashby",
-      "provenance": "boards/weave-ashby.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
-      "responsibility_signals": [
-        "implementation"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1208,14 +1510,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1270,50 +1572,16 @@
       "url": "https://jobs.lever.co/cagents/0bdd45ca-8fb7-47c2-8527-a1b1df021d7c",
       "apply_url": "https://jobs.lever.co/cagents/0bdd45ca-8fb7-47c2-8527-a1b1df021d7c/apply",
       "published": "2023-08-29T14:54:25.859000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "asset-projects"
-      ],
-      "signal_basis": "public title keywords only",
-      "stage": "exact_vacancy_unreviewed",
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "greenhouse:celigo:8083888",
-      "req_id": "8083888",
-      "title": "Senior Manager, Technical Delivery",
-      "locations": [
-        {
-          "text": "US",
-          "source": "location.name"
-        },
-        {
-          "text": "US",
-          "source": "offices.name"
-        }
-      ],
-      "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
-      "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
-      "published": "2026-08-05T15:55:02-04:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
-      "employer": "celigo",
-      "source_id": "celigo-greenhouse",
-      "provenance": "boards/celigo-greenhouse.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
-      "responsibility_signals": [
-        "business-operations"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1338,14 +1606,14 @@
       "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
       "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
       "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "business-operations"
       ],
@@ -1376,14 +1644,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "published": "2026-08-31T13:59:29-04:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "energy-advisory"
       ],
@@ -1393,33 +1661,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8725225002",
-      "req_id": "8725225002",
-      "title": "Engineering Manager, Dedicated Integrations Team",
+      "key": "greenhouse:gitlab:8622433002",
+      "req_id": "8622433002",
+      "title": "Senior Professional Services Project Manager (EMEA)",
       "locations": [
         {
-          "text": "Bangalore, India",
+          "text": "Remote, United Kingdom",
           "source": "location.name"
         },
         {
-          "text": "India",
+          "text": "United Kingdom",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8725225002",
-      "published": "2026-09-02T02:40:02-04:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8622433002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8622433002",
+      "published": "2026-07-22T05:41:37-04:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
-        "implementation"
+        "business-operations"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1444,14 +1712,14 @@
       "url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae",
       "apply_url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae/apply",
       "published": "2026-09-02T05:28:03.264000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1498,14 +1766,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d",
       "apply_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d/application",
       "published": "2026-09-18T15:32:06.487000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "ai-delivery"
       ],
@@ -1515,9 +1783,9 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:voltus:9ba19cdd-827f-45fb-809e-5f1203885494",
-      "req_id": "9ba19cdd-827f-45fb-809e-5f1203885494",
-      "title": "Senior Salesforce Administrator",
+      "key": "lever:voltus:e21ff1bb-7465-4a9a-b906-42eccf16a52a",
+      "req_id": "e21ff1bb-7465-4a9a-b906-42eccf16a52a",
+      "title": "PJM Battery Sales Manager",
       "locations": [
         {
           "text": "Remote",
@@ -1529,19 +1797,19 @@
         }
       ],
       "workplace_type": "remote",
-      "url": "https://jobs.lever.co/voltus/9ba19cdd-827f-45fb-809e-5f1203885494",
-      "apply_url": "https://jobs.lever.co/voltus/9ba19cdd-827f-45fb-809e-5f1203885494/apply",
-      "published": "2026-08-17T20:57:26.672000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "url": "https://jobs.lever.co/voltus/e21ff1bb-7465-4a9a-b906-42eccf16a52a",
+      "apply_url": "https://jobs.lever.co/voltus/e21ff1bb-7465-4a9a-b906-42eccf16a52a/apply",
+      "published": "2026-10-14T21:31:17.402000+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "voltus",
       "source_id": "voltus-lever",
       "provenance": "boards/voltus-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
-        "implementation"
+        "energy-advisory"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1566,14 +1834,14 @@
       "url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6",
       "apply_url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6/apply",
       "published": "2026-01-23T09:24:56.433000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "asset-projects"
       ],
@@ -1610,14 +1878,14 @@
       "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
       "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
       "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
         "implementation"
       ],
@@ -1627,41 +1895,29 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8770702002",
-      "req_id": "8770702002",
-      "title": "Staff Backend Engineer, Database Automation (Go)",
+      "key": "greenhouse:gitlab:8636648002",
+      "req_id": "8636648002",
+      "title": "Engineering Manager, Dedicated Integrations",
       "locations": [
         {
-          "text": "Remote, Canada",
+          "text": "Remote, United Kingdom",
           "source": "location.name"
-        },
-        {
-          "text": "Remote, United States",
-          "source": "location.name"
-        },
-        {
-          "text": "Canada",
-          "source": "offices.name"
-        },
-        {
-          "text": "United States of America",
-          "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002",
-      "published": "2026-09-09T14:06:57-04:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8636648002",
+      "published": "2026-08-10T05:08:25-04:00",
+      "observed_at": "2026-10-30T17:08:51.165636+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
+      "source_checked_at": "2026-10-30T17:08:51.165636+00:00",
+      "source_last_success_at": "2026-10-30T17:08:51.165636+00:00",
       "responsibility_signals": [
-        "business-operations"
+        "implementation"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1686,96 +1942,16 @@
       "url": "https://jobs.lever.co/gohighlevel/5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc",
       "apply_url": "https://jobs.lever.co/gohighlevel/5a89b1b8-d958-438f-bcbe-c7a0df1d0dbc/apply",
       "published": "2026-09-30T17:50:08.886000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
+      "observed_at": "2026-10-30T01:19:44.291401+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
+      "source_checked_at": "2026-10-30T01:19:44.291401+00:00",
+      "source_last_success_at": "2026-10-30T01:19:44.291401+00:00",
       "responsibility_signals": [
         "business-operations"
-      ],
-      "signal_basis": "public title keywords only",
-      "stage": "exact_vacancy_unreviewed",
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "ashby:oyster:c3161b23-af44-4cdf-b822-e4e281634e89",
-      "req_id": "c3161b23-af44-4cdf-b822-e4e281634e89",
-      "title": "Service Delivery Automation Analyst",
-      "locations": [
-        {
-          "text": "EMEA",
-          "source": "location"
-        },
-        {
-          "text": "Hungary",
-          "source": "secondaryLocations"
-        },
-        {
-          "text": "Portugal",
-          "source": "secondaryLocations"
-        },
-        {
-          "text": "Spain",
-          "source": "secondaryLocations"
-        },
-        {
-          "text": "Poland",
-          "source": "secondaryLocations"
-        }
-      ],
-      "workplace_type": "Remote",
-      "url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89",
-      "apply_url": "https://jobs.ashbyhq.com/oyster/c3161b23-af44-4cdf-b822-e4e281634e89/application",
-      "published": "2026-10-20T10:32:06.654000+00:00",
-      "observed_at": "2026-10-29T17:31:35.200593+00:00",
-      "employer": "oyster",
-      "source_id": "oyster-ashby",
-      "provenance": "boards/oyster-ashby.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-10-29T17:31:35.200593+00:00",
-      "source_last_success_at": "2026-10-29T17:31:35.200593+00:00",
-      "responsibility_signals": [
-        "business-operations"
-      ],
-      "signal_basis": "public title keywords only",
-      "stage": "exact_vacancy_unreviewed",
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "lever:voltus:e21ff1bb-7465-4a9a-b906-42eccf16a52a",
-      "req_id": "e21ff1bb-7465-4a9a-b906-42eccf16a52a",
-      "title": "PJM Battery Sales Manager",
-      "locations": [
-        {
-          "text": "Remote",
-          "source": "categories.location"
-        },
-        {
-          "text": "Remote",
-          "source": "categories.allLocations"
-        }
-      ],
-      "workplace_type": "remote",
-      "url": "https://jobs.lever.co/voltus/e21ff1bb-7465-4a9a-b906-42eccf16a52a",
-      "apply_url": "https://jobs.lever.co/voltus/e21ff1bb-7465-4a9a-b906-42eccf16a52a/apply",
-      "published": "2026-10-14T21:31:17.402000+00:00",
-      "observed_at": "2026-10-29T01:11:58.821444+00:00",
-      "employer": "voltus",
-      "source_id": "voltus-lever",
-      "provenance": "boards/voltus-lever.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-10-29T01:11:58.821444+00:00",
-      "source_last_success_at": "2026-10-29T01:11:58.821444+00:00",
-      "responsibility_signals": [
-        "energy-advisory"
       ],
       "signal_basis": "public title keywords only",
       "stage": "exact_vacancy_unreviewed",
@@ -1784,22 +1960,22 @@
     }
   ],
   "metrics": {
-    "exact_identities": 818,
-    "plausible_title_identities": 89,
-    "fresh_feed_identities": 818,
+    "exact_identities": 830,
+    "plausible_title_identities": 88,
+    "fresh_feed_identities": 830,
     "stale_or_unreported_identities": 0,
-    "review_batch": 26,
-    "review_employers": 12,
-    "largest_employer_share": 0.115,
+    "review_batch": 22,
+    "review_employers": 11,
+    "largest_employer_share": 0.136,
     "new_source_exact_identities": 0,
-    "provisional_employer_links": 35,
+    "provisional_employer_links": 59,
     "leads_validated_this_run": 2,
     "lead_validation_results": {
-      "no_board_found": 4,
+      "no_board_found": 7,
       "board_found_unverified": 1,
-      "blocked_or_failed": 8,
-      "supported_board_found": 1,
-      "not_validated": 21
+      "blocked_or_failed": 10,
+      "supported_board_found": 2,
+      "not_validated": 39
     },
     "basis": "public title keywords and source health only; no candidate relevance feedback is integrated"
   }

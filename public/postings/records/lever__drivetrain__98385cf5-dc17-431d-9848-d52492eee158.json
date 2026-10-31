@@ -1,7 +1,7 @@
 {
  "availability": {
-  "at": "2026-10-25T21:53:38.150524+00:00",
-  "reason": "first listed",
+  "at": "2026-10-30T07:41:51.441512+00:00",
+  "reason": "listed again after inaccessible",
   "state": "listed"
  },
  "board": "drivetrain",

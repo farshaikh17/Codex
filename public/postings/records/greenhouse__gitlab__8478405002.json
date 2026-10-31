@@ -14,6 +14,15 @@
    "from_hash": "b9a958664685627a51e6aacf8709bd7f29dd7dd9a40c1a8220229bb46e98c20b",
    "kind": "content_changed",
    "to_hash": "8f04fbf50c84a553a7928264b7e049c1971ba10d38f5b6a7119f3221d8bd23e6"
+  },
+  {
+   "changed_at": "2026-10-30T07:41:51.441512+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "8f04fbf50c84a553a7928264b7e049c1971ba10d38f5b6a7119f3221d8bd23e6",
+   "kind": "content_changed",
+   "to_hash": "3a2dda6bec5e22a518d64131860be0c732bd43fc9f56112c2a34ae979f7c23aa"
   }
  ],
  "content": {
@@ -23,6 +32,10 @@
    {
     "source": "location.name",
     "text": "Bangalore, India"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote Ireland"
    },
    {
     "source": "location.name",
@@ -53,8 +66,8 @@
   "title": "Engineering Manager, SSCS: Supply Chain",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
- "content_hash": "8f04fbf50c84a553a7928264b7e049c1971ba10d38f5b6a7119f3221d8bd23e6",
+ "content_changed_at": "2026-10-30T07:41:51.441512+00:00",
+ "content_hash": "3a2dda6bec5e22a518d64131860be0c732bd43fc9f56112c2a34ae979f7c23aa",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 4,
@@ -73,7 +86,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Bangalore, India",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote Ireland",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -81,7 +102,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -89,7 +110,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -97,7 +118,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -105,7 +126,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -113,7 +134,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -121,7 +142,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "India",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }
@@ -134,7 +155,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Over 3 years of experience guiding backend product engineering teams in security, DevOps, or platform engineering environments.\nAbility to hire and grow backend or security engineers in distributed team environments, with practical understanding of the talent landscape for these roles.\nTechnical credibility to contribute to architecture discussions involving package registries, CI/CD pipeline security, and signing infrastructure.\nExperience managing predictable delivery across multi-quarter product roadmaps and managing cross-team dependencies.\nComfort working in an asynchronous, documentation-driven organization with clear written communication.\nFamiliarity with supply chain security, artifact management, or compliance-focused product areas, or transferable experience from related domains.\nWorking knowledge of concepts related to frameworks and ecosystems such as SLSA and Sigstore.\nAbility to build credibility with engineers, product partners, and customer-facing stakeholders through clear judgment, coaching, and teamwork.",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }
@@ -150,8 +171,16 @@
      {
       "interpretation": "remote",
       "method": "location_text",
+      "quote": "Remote Ireland",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -159,7 +188,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -167,7 +196,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -175,7 +204,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      },
@@ -183,7 +212,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8478405002"
      }
