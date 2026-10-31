@@ -1,0 +1,41 @@
+name: Recruiter experiment (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: Candidate to triage
+        required: true
+        type: choice
+        options:
+          - farhan
+          - sana
+      sample_limit:
+        description: Maximum sample records in output
+        required: true
+        default: '30'
+        type: choice
+        options:
+          - '10'
+          - '30'
+          - '50'
+permissions:
+  contents: read
+jobs:
+  offline-trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run isolated regression tests
+        run: python -m unittest discover -s experiments -p 'test_*.py' -v
+      - name: Run offline trial
+        run: python experiments/weekend_trial.py --candidate "${{ inputs.candidate }}" --limit "${{ inputs.sample_limit }}"
+      - name: Save trial report
+        uses: actions/upload-artifact@v4
+        with:
+          name: recruiter-trial-${{ inputs.candidate }}
+          path: trial-output/
+          retention-days: 7

@@ -1,0 +1,9 @@
+[
+ {"provider": "greenhouse", "board": "workato", "candidate": "farhan", "reason": "business process automation and implementation"},
+ {"provider": "greenhouse", "board": "cleoindia", "candidate": "farhan", "reason": "India integration delivery"},
+ {"provider": "greenhouse", "board": "simpplr", "candidate": "farhan", "reason": "SaaS implementation and delivery"},
+ {"provider": "greenhouse", "board": "five9", "candidate": "farhan", "reason": "business systems and integrations"},
+ {"provider": "greenhouse", "board": "antora", "candidate": "sana", "reason": "industrial heat and decarbonisation"},
+ {"provider": "greenhouse", "board": "rondoenergy", "candidate": "sana", "reason": "industrial energy efficiency"},
+ {"provider": "lever", "board": "cfsenergy", "candidate": "sana", "reason": "physical energy systems and technical projects"}
+]

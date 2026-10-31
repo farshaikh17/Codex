@@ -116,5 +116,13 @@
     "board": "celigo",
     "poll_interval_hours": 24,
     "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
+  },
+  {
+    "id": "avathon-greenhouse",
+    "employer": "avathon",
+    "provider": "greenhouse",
+    "board": "avathon",
+    "poll_interval_hours": 24,
+    "notes": "Ownership/access reviewed 2026-10-27; generic discovery only. Per-posting eligibility and compensation unresolved."
   }
 ]

@@ -6,7 +6,7 @@ recognised: a city-only location yields no place, which leaves the gate unknown 
 """
 import re
 COUNTRIES={
- 'AE':['United Arab Emirates','UAE'],'AR':['Argentina'],'AT':['Austria'],'AU':['Australia'],'BD':['Bangladesh'],'BE':['Belgium'],
+ 'AE':['United Arab Emirates','UAE','Dubai','Abu Dhabi'],'BH':['Bahrain'],'KW':['Kuwait'],'OM':['Oman'],'QA':['Qatar'],'AR':['Argentina'],'AT':['Austria'],'AU':['Australia'],'BD':['Bangladesh'],'BE':['Belgium'],
  'BG':['Bulgaria'],'BR':['Brazil','Brasil'],'CA':['Canada'],'CH':['Switzerland'],'CL':['Chile'],'CN':['China'],'CO':['Colombia'],
  'CR':['Costa Rica'],'CY':['Cyprus'],'CZ':['Czech Republic','Czechia'],'DE':['Germany','Deutschland'],'DK':['Denmark'],'EE':['Estonia'],
  'EG':['Egypt'],'ES':['Spain'],'FI':['Finland'],'FR':['France'],'GB':['United Kingdom','UK','Great Britain','England','Scotland','Wales','Northern Ireland'],
@@ -20,7 +20,7 @@ COUNTRIES={
 }
 EU={'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'}
 EUROPE=EU|{'GB','CH','NO','RS','UA','TR'}
-MIDDLE_EAST={'AE','SA','IL','EG','TR'}
+MIDDLE_EAST={'AE','SA','IL','EG','TR','BH','KW','OM','QA'}
 AFRICA={'EG','KE','MA','NG','ZA'}
 APAC={'AU','BD','CN','HK','ID','IN','JP','KR','LK','MY','NZ','PH','PK','SG','TH','TW','VN'}
 LATAM={'AR','BR','CL','CO','CR','MX','PE','UY'}

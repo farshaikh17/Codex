@@ -1,0 +1,89 @@
+{
+ "note": "Post-hoc labels for recommendations of the repaired version that were not in the pre-registered sample. Same criteria as PROTOCOL.md; recorded after seeing the recommendations, so they measure precision only and are reported separately from the pre-registered scores.",
+ "labels": {
+  "farhan": [
+   {
+    "key": "ashby:clipboard:82df7116-0720-4434-a330-ca7e0389dc60",
+    "label": "unsuitable",
+    "note": "document-review onboarding (clerical); APAC/Philippines listing"
+   },
+   {
+    "key": "greenhouse:cognite:5006058101",
+    "label": "relevant",
+    "note": "NetSuite business systems; unknown: accounting degree, arrangement"
+   },
+   {
+    "key": "lever:drivetrain:ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+    "label": "relevant",
+    "note": "product implementation consulting; unknown: EPM expertise, finance domain"
+   },
+   {
+    "key": "lever:gohighlevel:6385dde4-4655-4d9c-91d0-03f89228047e",
+    "label": "relevant",
+    "note": "enablement/QA programmes; unknown: 7+ yrs, team leadership"
+   },
+   {
+    "key": "lever:gohighlevel:13cbdf7e-ec82-4a0f-aec1-3bc55add776d",
+    "label": "relevant",
+    "note": "AI product ownership; unknown: principal seniority"
+   },
+   {
+    "key": "lever:gohighlevel:d53a141f-3f57-4645-8863-1ff377660950",
+    "label": "relevant",
+    "note": "product enablement/technical operations; unknown: escalation-support share"
+   },
+   {
+    "key": "lever:gohighlevel:ba929ad2-f1b4-4ee7-bdb8-e01b74b3969b",
+    "label": "relevant",
+    "note": "revenue operations, India remote"
+   },
+   {
+    "key": "lever:gohighlevel:49e6048a-578a-4af3-a769-e40c0f3ebccd",
+    "label": "unsuitable",
+    "note": "general B2C/events product management"
+   },
+   {
+    "key": "lever:gohighlevel:ffc2572e-12ce-4ad2-a0cd-7e8eca60a185",
+    "label": "relevant",
+    "note": "CRM data platform PM (APIs, webhooks, integrations); unknown: 7+ yrs"
+   },
+   {
+    "key": "lever:gohighlevel:c15f855e-3993-4b13-8561-4a93273112eb",
+    "label": "relevant",
+    "note": "revenue operations; unknown: 5+ yrs"
+   },
+   {
+    "key": "lever:gohighlevel:ff1b1484-a414-4d3a-9a94-d1a542eb7c08",
+    "label": "relevant",
+    "note": "AI product ownership; unknown: 8+ yrs"
+   }
+  ],
+  "sana": [
+   {
+    "key": "lever:cagents:75102a0c-6820-40ec-b6d8-2920ff3d7901",
+    "label": "relevant",
+    "note": "building commissioning (electrical/mechanical); overseas unresolved"
+   },
+   {
+    "key": "lever:cagents:a87f27a6-9391-4d71-9978-23508dfbb75f",
+    "label": "relevant",
+    "note": "building commissioning PM; overseas unresolved"
+   },
+   {
+    "key": "lever:cagents:44ab6c56-9508-4982-a728-55c43822d70a",
+    "label": "hard_blocker",
+    "note": "SGP citizen/PR only: missed by the citizen pattern (fixed after this audit)"
+   },
+   {
+    "key": "lever:cagents:fe9cb63d-6c6c-4d3d-8141-6207cbf4b522",
+    "label": "relevant",
+    "note": "mechanical commissioning; overseas unresolved"
+   },
+   {
+    "key": "greenhouse:cognite:4904787101",
+    "label": "unsuitable",
+    "note": "industrial software field engineering requiring Python; Seoul"
+   }
+  ]
+ }
+}
