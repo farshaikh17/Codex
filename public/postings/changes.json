@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-25T21:53:38.150524+00:00|greenhouse:twilio:8195222",
+ "cursor_to": "pc1|2026-10-25T21:53:38.150524+00:00|greenhouse:twilio:8197328",
  "entries": [
   {
    "availability": "listed",
@@ -97,14 +97,6 @@
    "posting_id": "ashby:oyster:c54574a5-31fb-4f72-9cb2-9431f3c61935",
    "record": "records/ashby__oyster__c54574a5-31fb-4f72-9cb2-9431f3c61935.json",
    "record_sha256": "540cc39a48e85bb05f10575ad346e98b1315cddb51d092c53ae2334f5efe1d41"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "c3061a6a6f9982571e82b08872ac52d5872facf875d664f9cb3132cccb2c827a",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:oyster:d9d3e2c5-73a5-47cd-8490-844645858891",
-   "record": "records/ashby__oyster__d9d3e2c5-73a5-47cd-8490-844645858891.json",
-   "record_sha256": "8602c0928b5279a026239e24dcf02f5502b8f4a58f55e93209eb855fbdda009a"
   },
   {
    "availability": "listed",
@@ -1601,6 +1593,14 @@
    "posting_id": "greenhouse:twilio:8195222",
    "record": "records/greenhouse__twilio__8195222.json",
    "record_sha256": "060686a2cada12e8e3f7f5ea18b9e52630591d79bea8ee8bcf909e7aa3b1b433"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "349df0096abc68b57b0186b6f8d4782f8255fcaeff4b64cac2557df7ac47a791",
+   "last_change": "2026-10-25T21:53:38.150524+00:00",
+   "posting_id": "greenhouse:twilio:8197328",
+   "record": "records/greenhouse__twilio__8197328.json",
+   "record_sha256": "177be638e56d19e76690c19a1b2024381abed0acd59f53093759a678490bf860"
   }
  ],
  "has_more": true,

@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "oyster",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-10-31T16:18:09.116691+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "b93a32b00515e659e2314648efcbb5c3e48da2d8b787d8f40f71109767450abe",
+   "kind": "content_changed",
+   "to_hash": "e6fc4a6f0a979d737d1c3bf9dc1914ed6152ede7de6e7e7bf3b44974ef9e4004"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\n👩‍💻 THE ROLE\n\nLocation: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire this role does require that you are based within EMEA.\n\nContract: 9-month fixed-term contract (FTC)\n\nThe Global Payroll Analyst is a 9-month fixed-term contract (FTC) role responsible for optimizing global payroll processes and analyzing payroll data to support accurate, timely, and compliant operations. As part of the Global Payroll team, this person will identify discrepancies and trends, support payroll processing and audits, improve controls and workflows, and translate complex data into actionable recommendations. The role works closely with external providers and partners across payroll operations, finance, people, and process excellence.\n\nKEY RESPONSIBILITIES:\n\n- Collect, analyze, and interpret multi-country payroll data to support accurate processing, reporting, and decision-making.\n\n- Validate payroll inputs and outputs; identify and resolve discrepancies involving employee records, benefits, taxes, deductions, and payments.\n\n- Support payroll processing and help ensure country-level payroll and tax compliance.\n\n- Conduct regular payroll audits and reconcile payroll records with general-ledger accounts.\n\n- Investigate trends and root causes, then recommend practical improvements to accuracy, efficiency, controls, and compliance.\n\n- Use payroll systems, HR systems, spreadsheets, and data-transformation tools to improve reporting and workflows.\n\n- Coordinate payroll activity and data exchange with external vendors and cross-functional partners.\n\n- Respond to payroll-related questions professionally and resolve issues with appropriate urgency.\n\n- Maintain current knowledge of payroll regulations and industry practices, translating changes into operational updates.\n\n- Strengthen documentation, controls, and team practices so improvements are repeatable and scalable.\n\nCORE REQUIREMENTS:\n\n- 3+ years of experience in payroll analysis or related payroll/finance roles.\n\n- Hands-on multi-country payroll experience and a strong understanding of payroll tax and compliance requirements.\n\n- Demonstrated experience analyzing large datasets, investigating discrepancies, and producing actionable insights.\n\n- Advanced Excel or Google Sheets skills, including lookups, pivot tables, and efficient data manipulation.\n\n- Experience with payroll software, accounting concepts, and basic data-transformation tooling.\n\n- High attention to detail and a strong control mindset, especially in audits and reconciliations.\n\n- Sound problem-solving and judgment under time-sensitive conditions.\n\n- Clear written and verbal communication with technical and non-technical stakeholders.\n\n- Ability to work independently while collaborating effectively across functions and with external providers.\n\nBonus Experience:\n\n- Payroll exposure across continental Europe, Ireland, Spain, Italy, Central and Eastern Europe, APAC, or South Africa.\n\n- Experience coordinating local payroll providers or other third-party vendors.\n\n- Payroll-to-general-ledger reconciliation or broader accounting experience.\n\n- Experience standardizing outputs from different systems into consistent templates such as CSV files.\n\n- Experience improving or automating payroll analytics, reconciliation, reporting, or data-transformation workflows.\n\nThis might not be right for you if...\n\n- You prefer narrowly defined processing tasks and do not enjoy analyzing messy data or investigating root causes.\n\n- You need frequent direction for familiar work rather than independently planning and executing within a team context.\n\n- You are uncomfortable working across countries, vendors, systems, and evolving compliance requirements.\n\n- You do not enjoy documenting processes, improving controls, or explaining detailed findings to non-payroll stakeholders.\n\n- You prefer predictable work without recurring deadlines, exceptions, or competing operational priorities.\n\nYOU'LL ALSO NEED\n\n- A reliable home internet connection (or be able to get one)\n\n- Fluent English - required\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
@@ -20,11 +30,23 @@
    },
    {
     "source": "secondaryLocations",
+    "text": "Hungary"
+   },
+   {
+    "source": "secondaryLocations",
     "text": "Portugal"
    },
    {
     "source": "secondaryLocations",
+    "text": "Slovakia"
+   },
+   {
+    "source": "secondaryLocations",
     "text": "Poland"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "South Africa"
    },
    {
     "source": "address.addressCountry",
@@ -35,8 +57,8 @@
   "title": "Global Payroll Analyst",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-30T17:08:51.165636+00:00",
- "content_hash": "b93a32b00515e659e2314648efcbb5c3e48da2d8b787d8f40f71109767450abe",
+ "content_changed_at": "2026-10-31T16:18:09.116691+00:00",
+ "content_hash": "e6fc4a6f0a979d737d1c3bf9dc1914ed6152ede7de6e7e7bf3b44974ef9e4004",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -55,7 +77,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "EMEA",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      },
@@ -63,7 +85,15 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Romania",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Hungary",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      },
@@ -71,7 +101,15 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Portugal",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Slovakia",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      },
@@ -79,7 +117,15 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Poland",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "South Africa",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      }
@@ -92,7 +138,7 @@
       "interpretation": null,
       "method": "description_section:CORE REQUIREMENTS:",
       "quote": "- 3+ years of experience in payroll analysis or related payroll/finance roles.\n- Hands-on multi-country payroll experience and a strong understanding of payroll tax and compliance requirements.\n- Demonstrated experience analyzing large datasets, investigating discrepancies, and producing actionable insights.\n- Advanced Excel or Google Sheets skills, including lookups, pivot tables, and efficient data manipulation.\n- Experience with payroll software, accounting concepts, and basic data-transformation tooling.\n- High attention to detail and a strong control mindset, especially in audits and reconciliations.\n- Sound problem-solving and judgment under time-sensitive conditions.\n- Clear written and verbal communication with technical and non-technical stakeholders.\n- Ability to work independently while collaborating effectively across functions and with external providers.\nBonus Experience:\n- Payroll exposure across continental Europe, Ireland, Spain, Italy, Central and Eastern Europe, APAC, or South Africa.\n- Experience coordinating local payroll providers or other third-party vendors.\n- Payroll-to-general-ledger reconciliation or broader accounting experience.\n- Experience standardizing outputs from different systems into consistent templates such as CSV files.\n- Experience improving or automating payroll analytics, reconciliation, reporting, or data-transformation workflows.\nThis might not be right for you if...\n- You prefer narrowly defined processing tasks and do not enjoy analyzing messy data or investigating root causes.\n- You need frequent direction for familiar work rather than independently planning and executing within a team context.\n- You are uncomfortable working across countries, vendors, systems, and evolving compliance requirements.\n- You do not enjoy documenting processes, improving controls, or explaining detailed findings to non-payroll stakeholders.\n- You prefer predictable work without recurring deadlines, exceptions, or competing operational priorities.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      },
@@ -100,7 +146,7 @@
       "interpretation": null,
       "method": "description_section:YOU'LL ALSO NEED",
       "quote": "- A reliable home internet connection (or be able to get one)\n- Fluent English - required",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      }
@@ -117,7 +163,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      },
@@ -125,7 +171,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire this role does require that you are based within EMEA.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-10-31T16:18:09.116691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/52e6101c-ebc8-4c08-9bad-f44e3a287148"
      }
