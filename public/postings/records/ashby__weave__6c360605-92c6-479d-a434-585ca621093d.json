@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-30T17:08:51.165636+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-10-31T07:27:30.042915+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "weave",
  "changes": [],
