@@ -53,7 +53,7 @@ class PipelineTests(unittest.TestCase):
         self.assertNotIn('lever:acme:3',remote); self.assertNotIn('lever:acme:3',plant)                 # software: screened for both
         self.assertEqual(plant['lever:acme:2'],'NEEDS_REVIEW')                                          # relocation country
         self.assertEqual(plant['workday:t:R1'],'PAY_UNKNOWN')                                           # no salary floor: never READY
-        rows=list(csv.DictReader(open(self.out/'synthetic-plant'/'jobs.csv')))
+        with open(self.out/'synthetic-plant'/'jobs.csv', encoding='utf-8') as f: rows=list(csv.DictReader(f))
         self.assertTrue(all(r['new_this_run']=='True' for r in rows)); self.assertTrue(all(r['apply_url'].startswith('https://') for r in rows))
         # Second run: nothing new, every assessment reused, no transitions; the search posting is not re-fetched.
         self.f.return_search=False
@@ -70,9 +70,12 @@ class PipelineTests(unittest.TestCase):
         self.run_once(offline=True,now='2026-11-01T10:00:00+00:00')
         j=next(j for j in self.results('synthetic-remote')['jobs'] if j['key']=='lever:acme:1')
         self.assertEqual((j['state'],j['review']['decision']),('APPLIED','applied'))
-        ev=sqlite3.connect(self.state).execute("select from_state,to_state from state_events where posting_id='lever:acme:1' and candidate='synthetic-remote' order by run_id").fetchall()
+        _c=sqlite3.connect(self.state)
+        ev=_c.execute("select from_state,to_state from state_events where posting_id='lever:acme:1' and candidate='synthetic-remote' order by run_id").fetchall()
+        ok_runs=_c.execute('select count(*) from runs where outcome="ok"').fetchone()[0]
+        _c.close()
         self.assertEqual(ev,[(None,'PAY_UNKNOWN'),('PAY_UNKNOWN','APPLIED')])
-        self.assertEqual(sqlite3.connect(self.state).execute('select count(*) from runs where outcome="ok"').fetchone()[0],3)
+        self.assertEqual(ok_runs,3)
     def test_private_paths_refused_inside_repository(self):
         with self.assertRaises(SystemExit): pl.run(self.cand,self.state,pl.ROOT/'tmp-out',self.boards,True,CONFIG)
         with self.assertRaises(tk.TrackerError): tk.connect(pl.ROOT/'state.sqlite')

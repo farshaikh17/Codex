@@ -121,9 +121,9 @@
     "country": "India"
    },
    {
-    "id": "him:substation:india",
+    "id": "him:energy-efficiency:india",
     "lane": "industrial-energy",
-    "q": "substation",
+    "q": "energy efficiency",
     "country": "India"
    },
    {
@@ -233,6 +233,24 @@
     "lane": "industrial-energy-international",
     "q": "maintenance engineer",
     "country": "Ireland"
+   },
+   {
+    "id": "him:clean-technology:india",
+    "lane": "industrial-energy",
+    "q": "clean technology",
+    "country": "India"
+   },
+   {
+    "id": "him:energy-transition:india",
+    "lane": "industrial-energy",
+    "q": "energy transition",
+    "country": "India"
+   },
+   {
+    "id": "him:decarbonization:india",
+    "lane": "industrial-energy",
+    "q": "decarbonization",
+    "country": "India"
    }
   ]
  },
@@ -307,9 +325,9 @@
     "text": "field service engineer India"
    },
    {
-    "id": "wd:substation-engineer-india",
+    "id": "wd:energy-efficiency-engineer-india",
     "lane": "industrial-energy",
-    "text": "substation engineer India"
+    "text": "energy efficiency engineer India"
    },
    {
     "id": "wd:operations-engineer-india",
@@ -355,6 +373,16 @@
     "id": "wd:commissioning-engineer-netherlands",
     "lane": "industrial-energy",
     "text": "commissioning engineer Netherlands"
+   },
+   {
+    "id": "wd:asset-performance-engineer-india",
+    "lane": "industrial-energy",
+    "text": "asset performance engineer India"
+   },
+   {
+    "id": "wd:clean-technology-engineer-india",
+    "lane": "industrial-energy",
+    "text": "clean technology engineer India"
    }
   ]
  }
