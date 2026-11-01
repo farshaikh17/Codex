@@ -118,6 +118,40 @@ def latest_reviews(conn,candidate):
     for r in conn.execute('select posting_id,decision,note,at from reviews where candidate=? order by review_id',(candidate,)):
         out[r['posting_id']]={'decision':r['decision'],'note':r['note'],'at':r['at']}
     return out
+def qualification_units(conn,posting_id):
+    """Public mandatory lines and stable ids for a stored posting; no guessed qualifications."""
+    from engine.extract import extract
+    from engine.gates import requirement_units
+    row=conn.execute('select snapshot from postings where posting_id=?',(posting_id,)).fetchone()
+    if not row: raise TrackerError('unknown posting %s'%posting_id)
+    job=json.loads(row[0])
+    return requirement_units(extract(job,job.get('url'))['fields'])
+def review_qualifications(conn,person,posting_id,decisions,by,at=None):
+    """Append evidence-backed requirement receipts to the existing private reviews journal.
+    Separate from application decisions. A receipt belongs to one candidate and profile version;
+    unchanged requirement ids can survive other posting edits, as in engine.review.unit_reviews.
+    """
+    from engine.gates import REVIEW_DECISIONS
+    if not isinstance(by,str) or not by.strip(): raise TrackerError('qualification review needs a reviewer')
+    if not isinstance(decisions,dict) or not decisions: raise TrackerError('qualification review needs unit decisions')
+    allowed={u['id'] for u in qualification_units(conn,posting_id)}
+    for uid,d in decisions.items():
+        if uid not in allowed: raise TrackerError('unknown or changed requirement id %s'%uid)
+        if not isinstance(d,dict) or set(d)-{'decision','evidence'} or d.get('decision') not in REVIEW_DECISIONS:
+            raise TrackerError('invalid requirement decision')
+        if d['decision'] in ('met','not_met') and not (isinstance(d.get('evidence'),str) and d['evidence'].strip()):
+            raise TrackerError('met/not_met requires profile evidence')
+    note=json.dumps({'schema':'qualification-review-1','profile_version':person['profile_version'],'units':decisions},sort_keys=True)
+    return review(conn,person['candidate_id'],posting_id,'note',note,by,at)
+def qualification_reviews(conn,person,posting_id):
+    out={}
+    for row in conn.execute("select note from reviews where candidate=? and posting_id=? and decision='note' order by review_id",
+                            (person['candidate_id'],posting_id)):
+        try: receipt=json.loads(row['note'] or '')
+        except (ValueError,TypeError): continue
+        if isinstance(receipt,dict) and receipt.get('schema')=='qualification-review-1' and receipt.get('profile_version')==person['profile_version']:
+            out.update(receipt.get('units') or {})
+    return out
 def due_queries(conn,queries,limit):
     """Least recently run first (never-run first), stable by id: incremental rotation across runs."""
     last={r['query_id']:r['last_run_at'] or '' for r in conn.execute('select query_id,last_run_at from discovery')}

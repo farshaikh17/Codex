@@ -56,12 +56,12 @@ def state_of(result,fit,extraction,availability=None,rules=None):
     if g['salary']['required'] and g['salary']['result']!='pass': return 'PAY_UNKNOWN',g['salary']['reason']
     if fit['score']>=high: return 'HIGH_FIT','career match %d; qualifications need review'%fit['score']
     return 'SCREENED','career match %d below high-fit %d'%(fit['score'],high)
-def qualify(person,job,availability=None,df=None,n_docs=None):
+def qualify(person,job,availability=None,df=None,n_docs=None,reviews=None):
     extraction=extract(job,job.get('url'))
     posting={'posting_id':job['key'],'content_hash':job.get('content_hash'),'canonical_url':job.get('url'),
              'board':job.get('board') or str(job['key']).split(':')[1] if ':' in str(job['key']) else '','title':job.get('title'),
              'description':job.get('description')}
-    result=screen(person,posting,extraction)
+    result=screen(person,posting,extraction,reviews=reviews)
     fit=match(posting,extraction['fields'],person['profile'],df,n_docs)
     rules=person['rules']
     have=person['profile'].get('experience_years')

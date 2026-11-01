@@ -34,7 +34,7 @@ from engine.places import covers,places
 #    profile.relocation_countries (a place there is unknown: relocation/work authorisation, never fail); statements
 #    that only people already holding foreign work rights can be hired fail, or are unknown when an eligible country
 #    is also named (consolidated from experiments/recruiter_triage.py v3)
-GATES_VERSION=10
+GATES_VERSION=11  # 11: equivalent month/year base periods; partial history remains unknown
 SCHEMA='screening-1'
 REVIEW_DECISIONS=('met','not_met','not_a_requirement')
 SYMBOL_CURRENCY={'₹':'INR','€':'EUR','£':'GBP','zł':'PLN','¥':None,'$':None,'R$':'BRL'}  # $ and ¥ are ambiguous
@@ -276,7 +276,15 @@ def salary(fields,rules,posting=None,profile=None):
             if period is None and rule.get('assume_period'):
                 period,period_note=rule['assume_period'],'period %s assumed by the %s floor'%(rule['assume_period'],cur)
             why=[n for n in (cur_note,period_note) if n]
-            if period!=rule['period']: notes.append('%s: period %s, not annualised or converted'%(r.get('text') or i['quote'],period or 'unstated')); continue
+            if period!=rule['period']:
+                # Monthly and annual fixed pay are equivalent over 12 months. Never invent hours,
+                # working days or guaranteed contractor utilisation to compare hourly/daily pay.
+                factor={('month','year'):12,('year','month'):1/12}.get((period,rule['period']))
+                if factor is None:
+                    notes.append('%s: period %s, not annualised or converted'%(r.get('text') or i['quote'],period or 'unstated')); continue
+                rate*=factor
+                why.append('converted %s to %s using 12 months per year'%(period,rule['period']))
+                period=rule['period']
             mult=UNIT_MULTIPLIER.get(pay.get('amount_unit'),1)
             low,high=(None if r.get('min') is None else r['min']*mult*rate),(None if r.get('max') is None else r['max']*mult*rate)
             kind=pay.get('basis','unspecified')
@@ -335,6 +343,8 @@ def application_history(posting,profile,rules,today):
     if exact: return _gate('fail','already in the application history',exact,basis)
     if cooling: return _gate('fail','rejected by this employer within rules.application_history.employer_cooldown_days = %d'%cool,cooling,basis)
     if similar: return _gate('unknown','same employer and title in history; may be a reopened or duplicate requisition',similar,basis)
+    if profile.get('_application_history_complete') is False:
+        return _gate('unknown','prior application history is unknown; no match in the partial tracker history',basis=basis)
     return _gate('pass','no matching posting, URL or employer cooldown in the history',
                  [{'field':'application_history','quote':'no match among %d entries'%len(history),'method':'candidate_history'}],basis)
 def relevance(posting,rules):

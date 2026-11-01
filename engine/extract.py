@@ -8,25 +8,25 @@ Nothing here decides fit, eligibility or READY.
 import html,json,re
 # 2: 'advantage'/'beneficial' wording is preferred; 'this role is based in X' is a location statement
 # 3: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text
-EXTRACTOR_VERSION=5  # 5: Ashby 'Salary' components summarised as OTE are basis ote; 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
+EXTRACTOR_VERSION=6  # 6: employer qualification/background headings; 5: Ashby OTE components
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
 def _norm(line):
     return re.sub(r'\s+',' ',re.sub(r'^[\W_]+|[\W_]+$','',line.replace('’',"'").lower())).strip()
 HEADINGS=[(kind,re.compile('^(?:%s)$'%pattern)) for kind,pattern in (
-    ('requirements_preferred',r"desired|nice[- ]to[- ]haves?|preferred(?: qualifications| skills| experience)?|bonus(?: points)?|"
+    ('requirements_preferred',r"desired(?: characteristics)?|nice[- ]to[- ]haves?|preferred(?: qualifications| skills| experience)?|bonus(?: points)?|"
         r"bonus / nice[- ]to[- ]have experience|helpful experience|what will make (?:you|us) (?:stand out|love you)|extra credit|"
         r"good to have|ideally(?:,? you (?:have|bring))?|pluses|it'?s a plus if you have"),
-    ('requirements_mandatory',r"\*?required|requirements|core requirements|minimum requirements|(?:minimum|basic|required) qualifications|"
-        r"qualifications|what you'?(?:ll| will)? (?:bring|need)(?: to accomplish the job)?|what you bring|you'?ll also need|who you are|"
+    ('requirements_mandatory',r"\*?required|requirements|core requirements|minimum requirements|(?:minimum|basic|required) qualifications|required (?:technical )?skills|"
+        r"qualifications?(?:\s*(?:/|&|and)\s*(?:requirements|experience))?|your background|what you'?(?:ll| will)? (?:bring|need)(?: to accomplish the job)?|what you bring|you'?ll also need|who you are|"
         r"about you|what we'?re looking for|who we'?re looking for|to succeed in this role,? you (?:must|will) have|must[- ]haves?|"
         r"you have|you should have|experience|skills(?: and experience)?|what you need"),
     ('compensation',r"compensation(?: range| and benefits| & benefits)?|salary(?: range)?|(?:[a-z ]+ )?(?:salary|pay) range|base (?:pay|salary)(?: range)?|"
         r"pay transparency.*|total rewards|pay"),
     ('location',r"(?:job |work )?location(?: requirements?)?|where (?:you'?ll|you will) (?:work|be based)"),
     ('other',r"responsibilities|key responsibilities|what you'?(?:ll| will) (?:do|own|be doing)|things you'?ll do|in this role,? you'?ll|"
-        r"the role|about the (?:role|job|team|company)|role (?:overview|summary)|overview|an overview of this role|about [a-z0-9 .&-]{2,30}|"
+        r"the role|about the (?:role|job|team|company)|role (?:overview|summary)|overview|additional information|an overview of this role|about [a-z0-9 .&-]{2,30}|"
         r"who we are|we are|benefits|what we offer|perks|why join [a-z0-9 .&-]{2,30}|what'?s in it for you|how [a-z0-9 ]{2,30} supports? .*|"
         r"benefits to support your health, finances, and well-being|hiring (?:and how we work|process)|how to apply|application deadline.*|"
         r"travel|what success looks like|success factors|what this role is not|how we work.*|how you work|stay alert to recruitment fraud|"

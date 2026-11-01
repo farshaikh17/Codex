@@ -23,7 +23,7 @@ from engine.extract import EXTRACTOR_VERSION
 from engine.gates import GATES_VERSION
 from engine.match import MATCH_VERSION
 ROOT=Path(__file__).resolve().parent.parent
-PIPELINE_VERSION=1
+PIPELINE_VERSION=2  # requirement receipts are consumed and invalidate cached qualifications
 SEARCH_PREFIXES=('himalayas:','workday:')
 PROMISING=('VERIFIED_READY','HIGH_FIT','PAY_UNKNOWN','NEEDS_REVIEW','EXPERIENCE_GAP','HOLD')
 SHOWN=PROMISING+('APPLIED',)
@@ -32,9 +32,9 @@ def _private(path,what):
     p=Path(path).resolve()
     if p.is_relative_to(ROOT): raise SystemExit('%s holds candidate data: it must be outside the repository'%what)
     return p
-def inputs_key(job,person,history):
+def inputs_key(job,person,history,qualification_reviews=None):
     parts=[tk._hash(job),'m%s'%MATCH_VERSION,'g%s'%GATES_VERSION,'e%s'%EXTRACTOR_VERSION,'p%s'%PIPELINE_VERSION,
-           person['profile_version'],person['rules_version'],tk.history_hash(history)]
+           person['profile_version'],person['rules_version'],tk.history_hash(history),tk.history_hash(qualification_reviews or {})]
     return hashlib.sha256('|'.join(map(str,parts)).encode()).hexdigest()[:24]
 def discover(conn,run_at,config,boards,offline,fetchers=None):
     """Returns (pool_jobs, report). fetchers: optional {'himalayas': fn(queries)->(jobs,log,requests),
@@ -79,16 +79,18 @@ def discover(conn,run_at,config,boards,offline,fetchers=None):
     return list(pool.values()),rep,set(up['new'])
 def qualify_candidate(conn,cid,person,jobs,dup,run_id,run_at,new_keys):
     history=list(person['profile'].get('application_history') or [])+tk.application_history(conn,cid)
-    p={**person,'profile':{**person['profile'],'application_history':history if (history or person['profile'].get('application_history') is not None) else None}}
+    p={**person,'profile':{**person['profile'],'application_history':history if (history or person['profile'].get('application_history') is not None) else None,
+                         '_application_history_complete':person['profile'].get('application_history') is not None}}
     rows,inputs,reused=[],{},0
     for j in jobs:
-        key=inputs_key(j,p,history); inputs[j['key']]=key
+        receipts=tk.qualification_reviews(conn,p,j['key'])
+        key=inputs_key(j,p,history,receipts); inputs[j['key']]=key
         c=tk.cached(conn,cid,j['key'],key)
         if c:
             d=json.loads(c['detail']); reused+=1
             rows.append({'key':j['key'],'title':j.get('title'),'url':j.get('url'),'state':c['state'],'why':c['why'],'fit':c['fit'],
                          'locations':d['locations'],'gates':d['gates'],'match':d['match'],'source':d['source'],'observed_at':j.get('observed_at')})
-        else: rows.append(q.qualify(p,j))
+        else: rows.append(q.qualify(p,j,reviews=receipts))
     events=tk.record(conn,cid,rows,inputs,run_id,run_at)
     reps=q.group_rows(rows,dup)
     summary=q.summarise(rows,reps)
@@ -109,10 +111,15 @@ def qualify_candidate(conn,cid,person,jobs,dup,run_id,run_at,new_keys):
             'duplicates':[d['key'] for d in r.get('cross_source_duplicates',[])],'variants':len(r.get('regional_variants',[])),
             'preferred_city':any(c.lower() in ' '.join(x for x in r['locations'] if x).lower() for c in p['profile'].get('preferred_cities') or [])})
     newly=[e for e in events if e['to'] in PROMISING]
+    required=set(p['rules'].get('required_gates') or cfg.GATES)
+    gate_counts={g:{s:sum(r['gates'][g]['result']==s for r in rows) for s in ('pass','unknown','fail')} for g in required}
+    warnings=[]
+    if 'salary' in required and not p['rules'].get('salary'): warnings.append('required salary gate has no configured floor')
+    if person['profile'].get('application_history') is None: warnings.append('prior application history is unknown; partial tracker history cannot clear it')
     return {'candidate':cid,'assessed':len(rows),'reused':reused,'recomputed':len(rows)-reused,'counts':summary['counts'],
             'group_counts':summary['group_counts'],'transitions':len(events),'newly_promising':len(newly),
             'new_postings_promising':sum(1 for s in shown if s['new_this_run'] and s['state'] in PROMISING),
-            'verified_ready':sum(1 for s in shown if s['state']=='VERIFIED_READY'),'jobs':shown}
+            'verified_ready':sum(1 for s in shown if s['state']=='VERIFIED_READY'),'gate_counts':gate_counts,'configuration_warnings':warnings,'jobs':shown}
 RANK={s:i for i,s in enumerate(SHOWN)}
 COLS=('state','fit','preferred_city','title','employer','locations','workplace','pay','why','salary_gate','geography_gate','unmatched_mandatory','first_seen','state_since','new_this_run','review','apply_url','url','key','duplicates')
 def _cell(v):
@@ -190,6 +197,11 @@ def main(argv=None):
     v=sub.add_parser('review'); v.add_argument('--state',required=True); v.add_argument('--candidate',required=True)
     v.add_argument('--posting',required=True); v.add_argument('--decision',required=True,choices=tk.DECISIONS); v.add_argument('--note')
     s=sub.add_parser('status'); s.add_argument('--state',required=True); s.add_argument('--candidate')
+    for name in ('qualification-units','review-qualifications'):
+        v=sub.add_parser(name); v.add_argument('--state',required=True); v.add_argument('--posting',required=True)
+        if name=='review-qualifications':
+            v.add_argument('--candidates',required=True); v.add_argument('--candidate',required=True)
+            v.add_argument('--file',required=True); v.add_argument('--reviewer',required=True)
     a=ap.parse_args(argv)
     if a.cmd=='run':
         rep=run(a.candidates,a.state,a.out,a.boards,a.offline)
@@ -198,6 +210,16 @@ def main(argv=None):
     elif a.cmd=='review':
         _private(a.state,'--state'); conn=tk.connect(a.state)
         print('review',tk.review(conn,a.candidate,a.posting,a.decision,a.note,by='cli'))
+    elif a.cmd in ('qualification-units','review-qualifications'):
+        _private(a.state,'--state'); conn=tk.connect(a.state)
+        try:
+            if a.cmd=='qualification-units': print(json.dumps(tk.qualification_units(conn,a.posting),indent=1))
+            else:
+                person=cfg.load_all(a.candidates)[a.candidate]; _private(a.file,'--file')
+                receipt=json.loads(Path(a.file).read_text())
+                if receipt.get('profile_version')!=person['profile_version']: raise tk.TrackerError('receipt profile_version does not match the current profile')
+                print('review',tk.review_qualifications(conn,person,a.posting,receipt['units'],a.reviewer))
+        finally: conn.close()
     else:
         _private(a.state,'--state'); conn=tk.connect(a.state)
         for row in conn.execute('select run_id,started_at,outcome from runs order by run_id desc limit 5'): print(dict(row))

@@ -39,6 +39,38 @@ The run has four stages:
 Reviews: `python -m engine.pipeline review --state FILE --candidate ID --posting KEY --decision applied --note "..."`.
 Status: `python -m engine.pipeline status --state FILE`.
 
+### Qualification review handoff
+
+An operating pipeline is not proof that a vacancy is VERIFIED_READY. Qualification keywords only route review;
+mandatory requirements still need evidence. The pipeline consumes per-requirement receipts from its existing
+private tracker review journal. It does not manufacture receipts or call a paid reviewer service.
+
+1. Inspect the current mandatory lines and their stable ids:
+   `python -m engine.pipeline qualification-units --state FILE --posting KEY`.
+2. Prepare a private JSON file outside the repository:
+   `{"profile_version":"CURRENT_VERSION","units":{"REQUIREMENT_ID":{"decision":"met","evidence":"Verified profile evidence"}}}`.
+   Decisions are `met`, `not_met`, or `not_a_requirement`. A `met` or `not_met` needs nonempty profile evidence.
+3. Append the receipt:
+   `python -m engine.pipeline review-qualifications --state FILE --posting KEY --candidates PRIVATE_DIR --candidate ID --file PRIVATE_JSON --reviewer NAME`.
+4. Run the pipeline against that same tracker. Receipts invalidate cached qualifications and survive encrypted
+   state backup/restore. They are candidate/profile-version scoped. New requirement text stays unreviewed;
+   a missing pay, location, or application-history check is never cleared by a qualification receipt.
+
+For hosted operation, the reviewed tracker must be restored through the existing private encrypted-state path;
+editing a separate local tracker does not update the Actions cache. Existing `engine.review` queue decisions
+are not automatically imported. Never commit a tracker or review file to transport it.
+
+The private candidate results now include per-gate pass/unknown/fail counts and configuration warnings, so
+operators can distinguish missing rules/history from missing vacancies. These details stay in encrypted
+outputs, not public logs. An unknown prior application history remains unknown even after the tracker records
+one new application; known matches still become APPLIED. Monthly and annual fixed-pay figures compare using
+12 months per year. Hourly and daily pay are not annualised, and no foreign-exchange rate is invented.
+
+Requirement extraction recognises singular `Qualification`, `Your background`, and combined
+`Qualifications/Requirements`, `Qualifications & Experience`, or `Required Technical Skills` headings used by employers.
+`Desired Characteristics` remains preferred, and `Additional Information` ends the requirement section.
+This makes the lines reviewable; recognising a heading does not confirm that a requirement is met.
+
 ## Scheduled operation (`.github/workflows/career-pipeline.yml`)
 
 - **When it runs.** Daily at 03:23 UTC, and on manual dispatch. GitHub runs schedules and manual dispatch only from the default branch, so **nothing runs until this branch is merged**.
