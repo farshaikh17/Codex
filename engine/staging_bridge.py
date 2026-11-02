@@ -209,7 +209,9 @@ class D1StagingBridge:
             temp_path = tf.name
 
         try:
-            cmd = ["cmd.exe", "/c", "npx", "wrangler", "d1", "execute", "career-job-engine"]
+            is_windows = os.name == 'nt'
+            cmd = ["cmd.exe", "/c", "npx"] if is_windows else ["npx"]
+            cmd.extend(["wrangler", "d1", "execute", "career-job-engine"])
             if self.mode == "remote":
                 cmd.append("--remote")
             else:

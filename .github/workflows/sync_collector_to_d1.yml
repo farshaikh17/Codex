@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - '.github/workflows/sync_collector_to_d1.yml'
+      - 'engine/collector_importer.py'
+      - 'engine/staging_bridge.py'
   schedule:
     # Runs at :45 UTC, shortly after the collect.yml :37 schedule
     - cron: '45 1,6,11,16,21 * * *'
@@ -30,10 +32,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Setup Node.js for Wrangler
+      - name: Setup Node.js for Wrangler (Node 22 LTS required)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Cloudflare Wrangler
         run: npm install -g wrangler@4.156.1
