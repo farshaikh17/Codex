@@ -2,6 +2,9 @@ name: Sync Collector Postings to Cloudflare D1
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/sync_collector_to_d1.yml'
   schedule:
     # Runs at :45 UTC, shortly after the collect.yml :37 schedule
     - cron: '45 1,6,11,16,21 * * *'
