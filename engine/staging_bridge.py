@@ -236,7 +236,9 @@ class D1StagingBridge:
             raise ValueError(f"Invalid candidate identifier: {candidate_id}")
         
         cf_candidate_id = CODEX_TO_CLOUDFLARE_CANDIDATE.get(candidate_id, candidate_id)
-        statements = ["BEGIN TRANSACTION;"]
+        # Cloudflare D1 batch import API executes the SQL file atomically as a single transaction.
+        # Explicit BEGIN TRANSACTION or COMMIT statements trigger SQLite error code 7500.
+        statements = []
 
         jobs_imported = 0
         quals_updated = 0
@@ -383,8 +385,8 @@ class D1StagingBridge:
             jobs_imported += 1
             quals_updated += 1
 
-        statements.append("COMMIT;")
-        self._execute_sql_file("\n".join(statements))
+        if statements:
+            self._execute_sql_file("\n".join(statements))
         return {
             'candidate_id': cf_candidate_id,
             'jobs_imported': jobs_imported,
