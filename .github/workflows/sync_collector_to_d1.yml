@@ -1,0 +1,43 @@
+name: Sync Collector Postings to Cloudflare D1
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs at :45 UTC, shortly after the collect.yml :37 schedule
+    - cron: '45 1,6,11,16,21 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-collector-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Ingest Collector Snapshots into D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js for Wrangler
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Cloudflare Wrangler
+        run: npm install -g wrangler@4.156.1
+
+      - name: Ingest Collector Snapshots into Cloudflare D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python engine/collector_importer.py --source public --mode remote
