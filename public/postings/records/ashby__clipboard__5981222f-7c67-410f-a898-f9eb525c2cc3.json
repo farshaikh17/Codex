@@ -14,10 +14,19 @@
    "from_hash": "306281a0f454201c6bae68f36bfff0255e2ce3722e3cd146eac927e8ee356f58",
    "kind": "content_changed",
    "to_hash": "ba582680856a8146b58cc39ead8c930cb0fd8a0d940d70a63f18369df9eb1702"
+  },
+  {
+   "changed_at": "2026-11-03T21:56:32.718709+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "ba582680856a8146b58cc39ead8c930cb0fd8a0d940d70a63f18369df9eb1702",
+   "kind": "content_changed",
+   "to_hash": "a50a60fc68e68093a7d138e570a42360cc5f5d363c74ea0980f44bd362662b14"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$75K – $110K\",\"tiers\":[{\"title\":null,\"summary\":\"$75K – $110K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":75000,\"maxValue\":110000,\"summary\":\"$75K – $110K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$75K – $110K\",\"tiers\":[{\"title\":null,\"summary\":\"Base Salary: $75K – $110K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":75000,\"maxValue\":110000,\"summary\":\"Base Salary: $75K – $110K\"}]}]}",
   "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nABOUT THE ROLE\n\nClipboard is looking for a Sales Operations Analyst to help build and run the systems behind our sales organization.\n\nYou'll work across Salesforce, data, automation, and internal tools to help our sales team operate more effectively. That might mean building an automation that eliminates a recurring workflow, investigating a messy data problem, redesigning part of our Salesforce setup, or building a new system from the ground up.\n\nWe are a small team with an unusual operating model. Much of our execution runs through AI agents that we direct and quality-check, allowing each analyst to operate with the leverage of a much larger team.\n\nThis is equal parts builder and operator. You'll own systems end to end, work through ambiguous requests from reps and leadership, and be accountable for making sure the things you build actually work.\n\nWHAT YOU'LL DO\n\n- Own live systems. Take ownership of production systems such as account distribution, deal intelligence, competitor tracking, and data sync pipelines. You'll be accountable for their accuracy and reliability.\n\n- Solve ambiguous problems. Work through requests from sales reps, managers, and leadership, figure out what is actually needed, and execute quickly.\n\n- Direct AI agents. Write specs and prompts, supervise AI agents, and rigorously QA their output before it touches production data.\n\n- Build automations and tools. Create scripts, scheduled jobs, Slack bots, and lightweight web apps that turn recurring manual work into scalable systems.\n\n- Analyze and report. Use SQL and other tools to answer important revenue questions and build reporting the organization can trust.\n\n- Guard data quality. Handle merges, deduplication, account mapping, enrichment, and other work required to keep our systems accurate at scale.\n\nWHAT WE'RE LOOKING FOR\n\n- Evidence of building. You've built scripts, automations, tools, systems, or other solutions to real problems.\n\n- AI-native working style. You already use AI to multiply your output and understand where it can fail and how to verify its work.\n\n- High judgment under ambiguity. You can take a loosely defined problem, figure out what matters, and know when to act versus when to ask.\n\n- Strong attention to detail. You're comfortable being the last line of defense before changes affect production systems and large datasets.\n\n- Bias to ownership. When something you own breaks, you don't just fix the immediate issue. You look for the underlying problem and improve the system.\n\nSQL and Python experience are strong pluses, but we're more interested in your curiosity, judgment, and ability to ship than checking every technical box.\n\nNICE TO HAVE\n\n- Salesforce administration or development experience, including flows, SOQL, or data model design.\n\n- Experience in Sales Operations, Revenue Operations, Business Operations, analytics, or a similar environment.\n\n- Experience building automations with tools, scripts, APIs, or AI agents.\n\nINTERVIEW PROCESS\n\n1. Application Review – We'll review your experience and evidence of things you've built, automated, or owned.\n\n2. Take-Home Assessment – A practical, ~2-hour assessment using a fictional company, mock website, and CRM. You'll have 48 hours to complete it, and AI tools are encouraged.\n\n3. Technical Walkthrough – A 30-minute session where you'll demo what you built, explain your decisions, and make a small live change to your system.\n\n4. Manager Interview – A 30-minute conversation focused on communication, ownership, judgment, and how you operate under ambiguity.\n\n5. Final Steps / Offer! – Some candidates may have an executive conversation, followed by references and an offer.\n\nWHAT WE OFFER\n\n- Competitive base salary\n\n- Insurance benefits + 401k options\n\n- Unlimited PTO and flexible holidays\n\n- Remote-first working environment\n\nTo get a better understanding of the general type of people we want to hire, you can check out our blog here. https://creatingvalue.substack.com/\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
@@ -33,8 +42,8 @@
   "title": "Sales Operations Analyst",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "ba582680856a8146b58cc39ead8c930cb0fd8a0d940d70a63f18369df9eb1702",
+ "content_changed_at": "2026-11-03T21:56:32.718709+00:00",
+ "content_hash": "a50a60fc68e68093a7d138e570a42360cc5f5d363c74ea0980f44bd362662b14",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -58,14 +67,14 @@
          "currency_symbol": null,
          "max": 110000,
          "min": 75000,
-         "text": "$75K – $110K"
+         "text": "Base Salary: $75K – $110K"
         }
        ],
        "variable_mentioned": false
       },
       "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":75000,\"maxValue\":110000,\"summary\":\"$75K – $110K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":75000,\"maxValue\":110000,\"summary\":\"Base Salary: $75K – $110K\"}",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      }
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (North America)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      },
@@ -90,7 +99,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "North America",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      }
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "description_section:WHAT WE'RE LOOKING FOR",
       "quote": "- Evidence of building. You've built scripts, automations, tools, systems, or other solutions to real problems.\n- AI-native working style. You already use AI to multiply your output and understand where it can fail and how to verify its work.\n- High judgment under ambiguity. You can take a loosely defined problem, figure out what matters, and know when to act versus when to ask.\n- Strong attention to detail. You're comfortable being the last line of defense before changes affect production systems and large datasets.\n- Bias to ownership. When something you own breaks, you don't just fix the immediate issue. You look for the underlying problem and improve the system.\nSQL and Python experience are strong pluses, but we're more interested in your curiosity, judgment, and ability to ship than checking every technical box.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      }
@@ -116,7 +125,7 @@
       "interpretation": null,
       "method": "description_section:NICE TO HAVE",
       "quote": "- Salesforce administration or development experience, including flows, SOQL, or data model design.\n- Experience in Sales Operations, Revenue Operations, Business Operations, analytics, or a similar environment.\n- Experience building automations with tools, scripts, APIs, or AI agents.\nINTERVIEW PROCESS\n1. Application Review – We'll review your experience and evidence of things you've built, automated, or owned.\n2. Take-Home Assessment – A practical, ~2-hour assessment using a fictional company, mock website, and CRM. You'll have 48 hours to complete it, and AI tools are encouraged.\n3. Technical Walkthrough – A 30-minute session where you'll demo what you built, explain your decisions, and make a small live change to your system.\n4. Manager Interview – A 30-minute conversation focused on communication, ownership, judgment, and how you operate under ambiguity.\n5. Final Steps / Offer! – Some candidates may have an executive conversation, followed by references and an offer.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      }
@@ -129,7 +138,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (North America)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      },
@@ -137,7 +146,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/5981222f-7c67-410f-a898-f9eb525c2cc3"
      }

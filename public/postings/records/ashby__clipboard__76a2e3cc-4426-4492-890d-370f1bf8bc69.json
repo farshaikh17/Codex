@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-29T17:31:35.200593+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-03T21:56:32.718709+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "clipboard",
  "changes": [
@@ -23,27 +23,37 @@
    "from_hash": "ba7f43e316669393ca56297d096dd68ad29883cd7148cc54e97680a21ca6a6dd",
    "kind": "content_changed",
    "to_hash": "80b488bb52179c3173518ec73112319a8750fbcbf837499b71dd1c3bfaf6781f"
+  },
+  {
+   "changed_at": "2026-11-03T21:56:32.718709+00:00",
+   "fields": [
+    "compensation_raw",
+    "locations"
+   ],
+   "from_hash": "80b488bb52179c3173518ec73112319a8750fbcbf837499b71dd1c3bfaf6781f",
+   "kind": "content_changed",
+   "to_hash": "3865027bf005193382d2cba182394ad9652a0dc82bd82dcae7a9c48cda03e2a7"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$30K – $45K\",\"tiers\":[{\"title\":\"General\",\"summary\":\"Annual Compensation $30K – $45K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":45000,\"summary\":\"Annual Compensation $30K – $45K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$13.2K – $20.4K\",\"tiers\":[{\"title\":\"General\",\"summary\":\"Annual Compensation $13.2K – $20.4K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":13200,\"maxValue\":20400,\"summary\":\"Annual Compensation $13.2K – $20.4K\"}]}]}",
   "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nABOUT THE ROLE\n\nWorking with Workplace customers (B2B) means being at the front line in our efforts to support healthcare facilities in delivering better care. The Workplace team is unified by our common goal: to represent our obsession with the customer experience through thoughtful action.\n\nClipboard is looking for highly motivated, customer-focused individuals to join our team as B2B Client Support Specialists (Workplace Support Agents).\n\nThis role is open to candidates of all experience levels—what matters most is your ability to handle business customers professionally and solve problems effectively. No specific degree required.\n\nSUCCESS FACTORS\n\n- Customer-Centric Mindset – You genuinely care about helping customers and take ownership of their problems.\n\n- Strong Communication Skills – Clear, professional English (both spoken and written) is critical for success in this role.\n\n- Proactive Problem-Solving – You don’t just follow scripts—you think critically and find long-term solutions for customers.\n\n- High Accountability – We value people who hold themselves to high standards and consistently deliver results.\n\nResponsibilities\n\n- You will engage with our Workplace customers over both voice and email correspondence.\n\n- Deliver fast, accurate, and empathetic support to our workplace customers across voice and email, resolving shift, payment, and platform-related issues in real time\n\n- Navigate tools like Zendesk and the Clipboard portal to investigate cases, update form fields, log clear internal notes, and maintain accurate documentation\n\n- Apply sound judgment and critical thinking to troubleshoot issues, follow or adapt workflows, and escalate only when necessary\n\n- Develop deep expertise in our products and processes to identify recurring issues or process gaps, helping improve both customer experiences and internal operations.\n\n- Work cross-functionally with teams such as Billing, Account Management, and Worker Operations to gather the necessary information and ensure customer issues are resolved effectively\n\n- Uphold our values https://www.clipboardhealth.com/careers such as unreasonably fast, ownership, and uncomfortably high standards in every interaction\n\nWhy Join Clipboard?\n\n- 100% Remote – Always. Work from anywhere in the world.\n\n- Fast-Paced Startup Environment. Join a company that values curiosity, independence, and growth.\n\n- A Hiring Process That Rewards Skills, Not Just Experience. Every applicant gets a fair shot—our selection is based on real-world problem-solving ability, not just credentials.\n\n- Opportunity to make a significant impact with our workplace customers\n\nHiring Process\n\n1. Application\n\n2. Case Study\n\n3. Interview with Hiring Manager\n\n4. Executive Interview\n\n5. Offer\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
-    "text": "Remote (Canada)"
+    "text": "Remote (Central & South America)"
    },
    {
     "source": "address.addressCountry",
-    "text": "Canada"
+    "text": "Argentina"
    }
   ],
-  "published": "2026-03-13T16:25:20.978000+00:00",
+  "published": "2026-11-03T21:27:24.067000+00:00",
   "title": "Client Support Specialist (Workplaces - B2B)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
- "content_hash": "80b488bb52179c3173518ec73112319a8750fbcbf837499b71dd1c3bfaf6781f",
+ "content_changed_at": "2026-11-03T21:56:32.718709+00:00",
+ "content_hash": "3865027bf005193382d2cba182394ad9652a0dc82bd82dcae7a9c48cda03e2a7",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -65,16 +75,16 @@
         {
          "currency": "USD",
          "currency_symbol": null,
-         "max": 45000,
-         "min": 30000,
-         "text": "Annual Compensation $30K – $45K"
+         "max": 20400,
+         "min": 13200,
+         "text": "Annual Compensation $13.2K – $20.4K"
         }
        ],
        "variable_mentioned": false
       },
       "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":45000,\"summary\":\"Annual Compensation $30K – $45K\"}",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":13200,\"maxValue\":20400,\"summary\":\"Annual Compensation $13.2K – $20.4K\"}",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }
@@ -90,16 +100,16 @@
      {
       "interpretation": null,
       "method": "ats_field:location",
-      "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "Remote (Central & South America)",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
      {
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
-      "quote": "Canada",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "Argentina",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }
@@ -119,8 +129,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "Remote (Central & South America)",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
@@ -128,7 +138,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      },
@@ -136,7 +146,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- 100% Remote – Always. Work from anywhere in the world.",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/76a2e3cc-4426-4492-890d-370f1bf8bc69"
      }

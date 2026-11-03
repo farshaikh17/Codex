@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "weave",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-03T21:56:32.718709+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "912b4126e613db99581641ad723bdb22da39a24f919d1d202de24a7f51490907",
+   "kind": "content_changed",
+   "to_hash": "d4e87ad734483a81921f9a9639a66c07e5344c7caed790f09f149b7437a1cc00"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Our Payments Risk Management Team is seeking a highly motivated and detail-oriented entry-level Chargeback Specialist to join our growing team. In this role, you will play a critical part in protecting company revenue, managing customer disputes, and ensuring a smooth experience for our merchants.\n\n- This position will be fully remote based out of Mexico\n\n- Reports to our US based Payments Risk Manager\n\nWHAT YOU WILL OWN\n\n- Guided Dispute Resolution: Manage a small, guided caseload, ensuring timely updates and clear communication to merchants for all assigned cases.\n\n- Evidence Collection: Gather evidence and submit responses using established checklists and workflows, focusing strictly on adhering to network regulations.\n\n- Process Management: Own the timely submission of responses to maximize the success rate of assigned disputes.\n\n- Outcome Communication: Clearly communicate both positive and negative dispute outcomes to merchants to maintain transparency and trust.\n\n- Funds Oversight: Oversee the collection and return of disputed funds while maintaining accurate financial records.\n\n- Fraud Monitoring Support: Assist in the proactive monitoring of chargeback volumes to learn how to identify potential fraud trends under senior guidance.\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.\n\nWHAT WILL MAKE US LOVE YOU\n\n- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.\n\n- Salesforce Knowledge: Background with the platform known as Salesforce. Be able to create cases and manage them.\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
+  "description": "Our Payments Risk Management Team is seeking a highly motivated and detail-oriented entry-level Chargeback Specialist to join our growing team. In this role, you will play a critical part in protecting company revenue, managing customer disputes, and ensuring a smooth experience for our merchants.\n\n- This position will be fully remote, based in Mexico\n\n- Reports to our US-based Payments Risk Manager\n\nWHAT YOU WILL OWN\n\n- Guided Dispute Resolution: Manage a small, guided caseload, ensuring timely updates and clear communication to merchants for all assigned cases.\n\n- Evidence Collection: Gather evidence and submit responses using established checklists and workflows, focusing strictly on adhering to network regulations.\n\n- Process Management: Own the timely submission of responses to maximize the success rate of assigned disputes.\n\n- Outcome Communication: Clearly communicate both positive and negative dispute outcomes to merchants to maintain transparency and trust.\n\n- Funds Oversight: Oversee the collection and return of disputed funds while maintaining accurate financial records.\n\n- Fraud Monitoring Support: Assist in the proactive monitoring of chargeback volumes to learn how to identify potential fraud trends under senior guidance.\n\nWHAT YOU WILL NEED TO ACCOMPLISH THE JOB\n\n- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.\n\nWHAT WILL MAKE US LOVE YOU\n\n- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.\n\n- Salesforce Knowledge: Background with the platform known as Salesforce. Be able to create cases and manage them.\n\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\n\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\n\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\n\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
   "locations": [
    {
     "source": "location",
@@ -23,8 +33,8 @@
   "title": "Chargeback Specialist",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
- "content_hash": "912b4126e613db99581641ad723bdb22da39a24f919d1d202de24a7f51490907",
+ "content_changed_at": "2026-11-03T21:56:32.718709+00:00",
+ "content_hash": "d4e87ad734483a81921f9a9639a66c07e5344c7caed790f09f149b7437a1cc00",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Mexico",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/eefb6c13-540f-4f03-aba4-5596c3a26e45"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:WHAT YOU WILL NEED TO ACCOMPLISH THE JOB",
       "quote": "- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/eefb6c13-540f-4f03-aba4-5596c3a26e45"
      }
@@ -69,7 +79,7 @@
       "interpretation": null,
       "method": "description_section:WHAT WILL MAKE US LOVE YOU",
       "quote": "- Exceptional Organization: The ability to prioritize tasks and handle multiple disputes simultaneously with meticulous organization.\n- Unwavering Attention to Detail: A keen eye for detail to ensure all case reviews and evidence submissions are error-free.\n- Strong Communication: Professional written and verbal skills to de-escalate situations with upset merchants and explain complex topics simply.\n- Analytical Mindset: A proven ability to investigate information and formulate effective solutions to problems.\n- Eagerness to Learn: A self-motivated desire to learn major card network regulations (Visa, Mastercard, Discover, Amex) and industry best practices.\n- Salesforce Knowledge: Background with the platform known as Salesforce. Be able to create cases and manage them.\nEmployment with Weave is contingent upon the successful completion of a background check, conducted in accordance with applicable laws.\nAt Weave, we use Artificial Intelligence (AI) tools to help us work more efficiently and create a smoother candidate experience. AI may assist with things like writing job descriptions, scheduling interviews, or reviewing applications against job-related criteria. For additional information, please review the External AI Policy Statement available on our Careers page.\nWeave is an equal opportunity employer that is committed to fostering an inclusive workplace where all individuals are valued and supported. We welcome anyone who is hungry to learn, problem-solve and progress regardless of race, color, ancestry, religion, sex, national origin, sexual orientation, age, citizenship, marital status, disability, gender identity, veteran status, or other applicable legally protected characteristics. If you have a disability or special need that requires accommodation, please let us know.\nBeware of recruitment fraud. All official correspondence will occur through Weave branded email. We will never ask you to share bank account information, cash a check from us, or purchase software or equipment as part of your interview or hiring process.",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/eefb6c13-540f-4f03-aba4-5596c3a26e45"
      }
@@ -82,15 +92,15 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/eefb6c13-540f-4f03-aba4-5596c3a26e45"
      },
      {
       "interpretation": "remote",
       "method": "description_text",
-      "quote": "- This position will be fully remote based out of Mexico",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "- This position will be fully remote, based in Mexico",
+      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/weave/eefb6c13-540f-4f03-aba4-5596c3a26e45"
      }
