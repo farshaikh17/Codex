@@ -120,7 +120,8 @@ def import_collector_postings(
 def run_collector_import(
     collector_dir_or_file: str,
     mode: str = "local",
-    cwd: Optional[str] = None
+    cwd: Optional[str] = None,
+    limit: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Reads collector index or board files and invokes the automated import into D1.
@@ -166,6 +167,10 @@ def run_collector_import(
             seen.add(k)
             deduped.append(p)
             
+    if limit is not None and limit > 0:
+        deduped = deduped[:limit]
+        print(f"[Collector Importer] Bounded import active: clamped to maximum {limit} postings.")
+
     print(f"[Collector Importer] Loaded {len(deduped)} unique postings from {collector_dir_or_file}")
     res = import_collector_postings(deduped, mode=mode, cwd=cwd)
     return res
@@ -176,7 +181,8 @@ if __name__ == "__main__":
     parser.add_argument("--source", type=str, required=True, help="Path to collector repo, public directory, or JSON file")
     parser.add_argument("--mode", type=str, default="local", choices=["local", "remote"], help="Wrangler execution mode")
     parser.add_argument("--cwd", type=str, default=str(REPO_ROOT), help="Working directory containing wrangler.toml")
+    parser.add_argument("--limit", type=int, default=None, help="Maximum number of postings to import in this run")
     args = parser.parse_args()
 
-    result = run_collector_import(args.source, mode=args.mode, cwd=args.cwd)
+    result = run_collector_import(args.source, mode=args.mode, cwd=args.cwd, limit=args.limit)
     print(json.dumps(result, indent=2))

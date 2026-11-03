@@ -3,6 +3,29 @@ import json
 import os
 import sqlite3
 import subprocess
+
+import urllib.parse
+import re
+
+def normalize_posting_url(raw_url: str) -> str:
+    if not raw_url:
+        return ''
+    raw_url = raw_url.strip()
+    lever_match = re.search(r'jobs\.lever\.co/([^/]+)/([a-f0-9\-]+)', raw_url)
+    if lever_match:
+        return f'https://jobs.lever.co/{lever_match.group(1)}/{lever_match.group(2)}'
+    parsed = urllib.parse.urlparse(raw_url)
+    path = parsed.path
+    if path.endswith('/apply'):
+        path = path[:-6]
+    elif path.endswith('/apply/'):
+        path = path[:-7]
+    drop_prefixes = ('utm_', 'gh_src', 'lever-', 'ref', 'source', 'rb', 'sid')
+    query_parts = urllib.parse.parse_qsl(parsed.query, keep_blank_values=False)
+    filtered_parts = [(k, v) for k, v in query_parts if not any(k.lower().startswith(prefix) for prefix in drop_prefixes)]
+    new_query = urllib.parse.urlencode(filtered_parts)
+    return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, path.rstrip('/'), '', new_query, ''))
+
 import tempfile
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Callable
@@ -35,7 +58,7 @@ def codex_to_d1_job(job: Dict[str, Any], observed_at: Optional[str] = None) -> D
         board_display = None
     company = job.get('employer_name') or job.get('company') or board_display or 'Unknown'
     source_url = job.get('url') or ''
-    apply_url = job.get('apply_url') or source_url
+    apply_url = normalize_posting_url(job.get('apply_url') or source_url)
     
     wp_raw = (job.get('workplace_type') or '').lower()
     if 'remote' in wp_raw:
@@ -151,14 +174,18 @@ def codex_to_d1_qualification(
     qualification_reason = f"[GITHUB_PIPELINE raw_state={raw_state}] {decision.get('why') or ''}".strip()
 
     fit = decision.get('fit', 0)
-    if fit >= 40:
-        strategy_lane = 'STRONGEST_FIT'
-    elif fit >= 20:
-        strategy_lane = 'BRIDGE'
-    elif fit > 0:
-        strategy_lane = 'DREAM'
+    explicit_lane = decision.get('lane') or decision.get('strategy_lane')
+    if explicit_lane and explicit_lane in ('STRONGEST_FIT', 'BRIDGE', 'DREAM', 'TECHNICAL_FIT', 'LEADERSHIP_FIT', 'NOT_FIT', 'UNASSIGNED'):
+        strategy_lane = explicit_lane
     else:
-        strategy_lane = 'UNASSIGNED'
+        if fit >= 40:
+            strategy_lane = 'STRONGEST_FIT'
+        elif fit >= 20:
+            strategy_lane = 'BRIDGE'
+        elif fit > 0:
+            strategy_lane = 'DREAM'
+        else:
+            strategy_lane = 'UNASSIGNED'
 
     q_time = qualified_at or decision.get('observed_at') or datetime.now(timezone.utc).isoformat()
 
@@ -184,7 +211,7 @@ def codex_to_d1_qualification(
         'manual_override_reason': None,
         'qualified_at': q_time,
         'last_reverified_at': q_time,
-        'overall_score': fit,
+        'overall_score': int(decision.get('overall_score') or fit or 0),
         'score_breakdown': json.dumps(score_breakdown)
     }
 
