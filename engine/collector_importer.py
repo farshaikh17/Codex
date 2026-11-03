@@ -167,7 +167,9 @@ def run_collector_import(
             seen.add(k)
             deduped.append(p)
             
-    if limit is not None and limit > 0:
+    if limit is not None:
+        if limit <= 0:
+            raise ValueError(f"Invalid limit: {limit}. Limit must be a strictly positive integer.")
         deduped = deduped[:limit]
         print(f"[Collector Importer] Bounded import active: clamped to maximum {limit} postings.")
 
@@ -181,7 +183,16 @@ if __name__ == "__main__":
     parser.add_argument("--source", type=str, required=True, help="Path to collector repo, public directory, or JSON file")
     parser.add_argument("--mode", type=str, default="local", choices=["local", "remote"], help="Wrangler execution mode")
     parser.add_argument("--cwd", type=str, default=str(REPO_ROOT), help="Working directory containing wrangler.toml")
-    parser.add_argument("--limit", type=int, default=None, help="Maximum number of postings to import in this run")
+    def positive_int(value):
+        try:
+            ivalue = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"Limit must be an integer, got '{value}'")
+        if ivalue <= 0:
+            raise argparse.ArgumentTypeError(f"Limit must be a strictly positive integer, got {value}")
+        return ivalue
+
+    parser.add_argument("--limit", type=positive_int, default=None, help="Maximum number of postings to import in this run (must be > 0)")
     args = parser.parse_args()
 
     result = run_collector_import(args.source, mode=args.mode, cwd=args.cwd, limit=args.limit)
