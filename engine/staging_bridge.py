@@ -412,11 +412,39 @@ class D1StagingBridge:
             jobs_imported += 1
             quals_updated += 1
 
+        d1_response = None
+        rows_actually_changed = 0
+        rows_written = 0
+        rows_read = 0
+        status = 'SUCCESS'
+        error_message = None
+
         if statements:
-            self._execute_sql_file("\n".join(statements))
+            try:
+                exec_res = self._execute_sql_file("\n".join(statements))
+                d1_response = exec_res
+                # Check D1 response objects for success and actual row mutations
+                if isinstance(exec_res, list) and len(exec_res) > 0:
+                    first = exec_res[0]
+                    if not first.get("success", False):
+                        status = "FAILED"
+                        error_message = first.get("error") or "D1 execution returned success=False"
+                    meta = first.get("meta", {})
+                    rows_actually_changed = meta.get("changes", 0)
+                    rows_written = meta.get("rows_written", 0)
+                    rows_read = meta.get("rows_read", 0)
+            except Exception as e:
+                status = "FAILED"
+                error_message = str(e)
+
         return {
             'candidate_id': cf_candidate_id,
-            'jobs_imported': jobs_imported,
-            'qualifications_processed': quals_updated,
-            'status': 'SUCCESS'
+            'attempted_postings': jobs_imported,
+            'attempted_qualifications': quals_updated,
+            'rows_actually_changed': rows_actually_changed,
+            'rows_written': rows_written,
+            'rows_read': rows_read,
+            'status': status,
+            'error': error_message,
+            'd1_response': d1_response
         }
