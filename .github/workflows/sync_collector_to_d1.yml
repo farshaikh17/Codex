@@ -2,6 +2,17 @@ name: Sync Collector Postings to Cloudflare D1
 
 on:
   workflow_dispatch:
+    inputs:
+      source:
+        description: 'Target collector path, directory, or JSON file'
+        required: false
+        default: 'public/boards/drivetrain-lever.json'
+        type: string
+      limit:
+        description: 'Maximum number of postings to import (bounded safety cap)'
+        required: false
+        default: '35'
+        type: string
   push:
     paths:
       - '.github/workflows/sync_collector_to_d1.yml'
@@ -45,4 +56,9 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          python engine/collector_importer.py --source public --mode remote
+          SOURCE="${{ inputs.source || 'public' }}"
+          LIMIT_FLAG=""
+          if [ -n "${{ inputs.limit }}" ]; then
+            LIMIT_FLAG="--limit ${{ inputs.limit }}"
+          fi
+          python engine/collector_importer.py --source "$SOURCE" --mode remote $LIMIT_FLAG
