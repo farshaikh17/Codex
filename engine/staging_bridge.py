@@ -286,7 +286,8 @@ class D1StagingBridge:
             else:
                 dec = item.get('decision') or {}
                 d1_job = codex_to_d1_job(job)
-                d1_qual = codex_to_d1_qualification(candidate_id, d1_job['id'], dec)
+                observed = d1_job.get('discovered_at')
+                d1_qual = codex_to_d1_qualification(candidate_id, d1_job['id'], dec, qualified_at=observed)
 
             # Resolve canonical job identity across different source IDs (by matching original_posting_url or source_url)
             src_url = d1_job['source_url']
@@ -354,7 +355,14 @@ class D1StagingBridge:
                 salary_currency = COALESCE(NULLIF(excluded.salary_currency, ''), jobs.salary_currency),
                 salary_period = COALESCE(NULLIF(excluded.salary_period, ''), jobs.salary_period),
                 last_verified_at = excluded.last_verified_at,
-                is_active = 1;"""
+                is_active = 1
+            WHERE jobs.content_sha256 IS NOT excluded.content_sha256
+               OR jobs.title IS NOT excluded.title
+               OR jobs.company IS NOT excluded.company
+               OR jobs.original_posting_url IS NOT excluded.original_posting_url
+               OR jobs.workplace_type IS NOT excluded.workplace_type
+               OR jobs.location_restrictions IS NOT excluded.location_restrictions
+               OR jobs.is_active IS NOT 1;"""
             statements.append(j_sql)
 
             q_sql = f"""INSERT INTO candidate_qualifications (
@@ -391,7 +399,11 @@ class D1StagingBridge:
                     WHEN candidate_qualifications.manual_override_status IS NOT NULL THEN candidate_qualifications.qualification_reason
                     ELSE excluded.qualification_reason
                 END,
-                last_reverified_at = excluded.last_reverified_at;"""
+                last_reverified_at = excluded.last_reverified_at
+            WHERE candidate_qualifications.qualification_status IS NOT excluded.qualification_status
+               OR candidate_qualifications.strategy_lane IS NOT excluded.strategy_lane
+               OR candidate_qualifications.eligibility_status IS NOT excluded.eligibility_status
+               OR candidate_qualifications.qualification_reason IS NOT excluded.qualification_reason;"""
             statements.append(q_sql)
 
             score_sql = f"""INSERT INTO candidate_job_scores (
@@ -406,7 +418,10 @@ class D1StagingBridge:
                 overall_score = excluded.overall_score,
                 strategy_lane = excluded.strategy_lane,
                 score_breakdown = excluded.score_breakdown,
-                calculated_at = excluded.calculated_at;"""
+                calculated_at = excluded.calculated_at
+            WHERE candidate_job_scores.overall_score IS NOT excluded.overall_score
+               OR candidate_job_scores.strategy_lane IS NOT excluded.strategy_lane
+               OR candidate_job_scores.score_breakdown IS NOT excluded.score_breakdown;"""
             statements.append(score_sql)
 
             jobs_imported += 1
