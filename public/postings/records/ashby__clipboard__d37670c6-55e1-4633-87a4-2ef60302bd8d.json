@@ -14,11 +14,20 @@
    "from_hash": "ab24f00d656829d95eea0648afa69ccb7b51ad506a9acd4527c2c4837480d4cf",
    "kind": "content_changed",
    "to_hash": "dd99eb659bf4cc741f8a4a9a381bfc9a1c127234700d05dfc58d3e7595fb7edd"
+  },
+  {
+   "changed_at": "2026-11-04T18:50:19.577531+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "dd99eb659bf4cc741f8a4a9a381bfc9a1c127234700d05dfc58d3e7595fb7edd",
+   "kind": "content_changed",
+   "to_hash": "09a15b72024884921de22a70d8a909863b8740f1d3c5bc2e4306f43253f099d5"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$120K – $140K\",\"tiers\":[{\"title\":null,\"summary\":\"$120K – $140K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":120000,\"maxValue\":140000,\"summary\":\"$120K – $140K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOVERVIEW\n\nWe are hiring an Applied AI Strategy & Ops Lead to own and evolve our internal tooling ecosystem across Ops. This is a hands-on individual contributor role with real ownership. You’ll work across a range of tools including support platforms, AI-driven systems, and internal automations to improve how our day-to-day operations function.\n\nYou'll sit at the intersection of Operations and Engineering, acting as the technical voice of Ops and partner closely with team leadership to execute against defined priorities, refine existing systems, and introduce new tooling where needed ensuring our stack continues to scale effectively with the business.\n\nWHAT YOU’LL DO\n\n- Build and iterate on workflows, integrations, and automations that improve day-to-day efficiency\n\n- Execute against high-priority tooling and automation initiatives across the operational stack.\n\n- Partner with engineers and developers to scope requirements, write technical specs, and prioritize tooling work that matters most to Ops.\n\n- Improve systems across multiple tools, including support platforms and AI-driven solutions\n\n- Translate defined problems into practical, well-scoped technical solutions\n\n- Identify gaps or inefficiencies in current tooling and proactively address them\n\n- Troubleshoot issues, improve system reliability, and ensure tools perform effectively in production\n\n- Contribute to ongoing improvements in how our systems connect and operate together\n\nWHAT WE’RE LOOKING FOR\n\n- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.\n\nNICE TO HAVE\n\n- Experience working with support platforms such as Zendesk\n\n- Familiarity with AI-driven tools and automation workflows\n\n- Background in Ops, Support, or CX environments\n\n- Experience working with evolving or fragmented tooling stacks\n\nHIRING PROCESS\n\n- Application\n\n- Case Study\n\n- Case Interview with a team member\n\n- Interview with Head of Core Services\n\n- Interview with Head of Operations\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOVERVIEW\n\nWe are hiring an Applied AI Strategy & Ops Lead to own and evolve our internal tooling ecosystem across Ops. This is a hands-on individual contributor role with real ownership. You’ll work across a range of tools including support platforms, AI-driven systems, and internal automations to improve how our day-to-day operations function.\n\nYou'll sit at the intersection of Operations and Engineering, acting as the technical voice of Ops and partner closely with team leadership to execute against defined priorities, refine existing systems, and introduce new tooling where needed ensuring our stack continues to scale effectively with the business.\n\nWHAT YOU’LL DO\n\n- Build and iterate on workflows, integrations, and automations that improve day-to-day efficiency\n\n- Execute against high-priority tooling and automation initiatives across the operational stack.\n\n- Partner with engineers and developers to scope requirements, write technical specs, and prioritize tooling work that matters most to Ops.\n\n- Improve systems across multiple tools, including support platforms and AI-driven solutions\n\n- Translate defined problems into practical, well-scoped technical solutions\n\n- Identify gaps or inefficiencies in current tooling and proactively address them\n\n- Troubleshoot issues, improve system reliability, and ensure tools perform effectively in production\n\n- Contribute to ongoing improvements in how our systems connect and operate together\n\nWHAT WE’RE LOOKING FOR\n\n- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.\n\nNICE TO HAVE\n\n- Experience working with support platforms such as Zendesk\n\n- Familiarity with AI-driven tools and automation workflows\n\n- Background in Ops, Support, or CX environments\n\n- Experience working with evolving or fragmented tooling stacks\n\nHIRING PROCESS\n\n- Application\n\n- Interview with Head of Core Services\n\n- Interview with Head of Operations\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -45,8 +54,8 @@
   "title": "Strategy & Ops Lead, Applied AI",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "dd99eb659bf4cc741f8a4a9a381bfc9a1c127234700d05dfc58d3e7595fb7edd",
+ "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
+ "content_hash": "09a15b72024884921de22a70d8a909863b8740f1d3c5bc2e4306f43253f099d5",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -77,7 +86,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":120000,\"maxValue\":140000,\"summary\":\"$120K – $140K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      }
@@ -94,7 +103,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -102,7 +111,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Remote (UK)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -110,7 +119,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Remote (EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -118,7 +127,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Remote (Ireland)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -126,7 +135,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      }
@@ -139,7 +148,7 @@
       "interpretation": null,
       "method": "description_section:WHAT WE’RE LOOKING FOR",
       "quote": "- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      }
@@ -152,7 +161,7 @@
       "interpretation": null,
       "method": "description_section:NICE TO HAVE",
       "quote": "- Experience working with support platforms such as Zendesk\n- Familiarity with AI-driven tools and automation workflows\n- Background in Ops, Support, or CX environments\n- Experience working with evolving or fragmented tooling stacks",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      }
@@ -165,7 +174,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Canada)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -173,7 +182,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (UK)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -181,7 +190,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (EU)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -189,7 +198,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Ireland)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      },
@@ -197,7 +206,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/d37670c6-55e1-4633-87a4-2ef60302bd8d"
      }

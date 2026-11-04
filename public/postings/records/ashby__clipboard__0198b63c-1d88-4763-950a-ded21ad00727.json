@@ -32,11 +32,20 @@
    "from_hash": "bacfee784cd5e4aefc3be019ba7c28bf350c97256cb546f170b637a4e7751b97",
    "kind": "content_changed",
    "to_hash": "ac2285f542f818a597078aa4ba8c4fecbee71cc5d14b0ad9f8bf01de2c80c313"
+  },
+  {
+   "changed_at": "2026-11-04T18:50:19.577531+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "ac2285f542f818a597078aa4ba8c4fecbee71cc5d14b0ad9f8bf01de2c80c313",
+   "kind": "content_changed",
+   "to_hash": "39f3d227a455316ce176fa2d21b882c72b9e6491b3237ef32fffa004dcffffa7"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$30K – $50K\",\"tiers\":[{\"title\":null,\"summary\":\"Estimated base salary (paid in USD): $30K – $50K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":50000,\"summary\":\"Estimated base salary (paid in USD): $30K – $50K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nNOTE: This is an active job posting for non-US candidates and requires an overlap of at least 5 hours with the PST (UTC-8) time zone. There is a separate posting for US candidates on the Clipboard Careers page.\n\nRole overview:\n\nThe Collections Account Manager (CAM) role is a critical role on the Billing team here at Clipboard, and this team ensures the successful management of billing processes for our biggest and most valuable workplace customers, who tend to also be more complex and risky. You will be a vital resource for workplaces, resolving billing issues, maintaining accurate invoicing, and managing financial relationships. Your responsibilities include:\n\n- Managing a portfolio of accounts, addressing billing concerns and ensuring timely invoice payments.\n\n- Conducting high volumes of outbound calls to connect with customers about past-due account balances and resolve them.\n\n- Navigating negotiations and evaluate tradeoffs between risk mitigation and growth potential when making decisions.\n\n- Resolving customer invoice disputes and other billing-related issues.\n\n- Managing customer payments and remittances.\n\n- Building trust with providers and healthcare executives through strong financial acumen.\n\n- Clearly articulating the billing processes and educate stakeholders on invoicing procedures.\n\n- Gathering and relaying feedback to improve billing systems and processes.\n\n- Collaborating with internal teams to execute billing-related initiatives and trials.\n\nQuick background on Billing:\n\nThere’s much to explain to paint the full picture of the Billing machine, but ultimately the core goal is to optimize the speed with which our customers pay us while maintaining their overall experience with us as a vendor. We want to collect money as fast as possible and minimize losses, while preserving the customer experience, in service of reliably converting revenue into cash (the lifeline of a capital-intensive business like ours). This in a way is “ensuring high-quality growth” for the company.\n\nAlthough Clipboard provides a service where workplaces can find qualified professionals to fill shifts, we are in many ways a lending company at our core since we pay professionals immediately after they work a shift. For illustrative purposes: a nurse works a shift → we pay the nurse $100 immediately with our cash → the workplace pays us $120 a month later. We extend debt to workplaces using cash we borrow, with interest, from an Asset-Backed Line (ABL) of credit – workplaces use that debt to pay their staffing costs, and we expect to be paid back by the workplaces at a later date based on agreed-upon net terms.\n\nThe point is: Billing is doing the critical work of actually converting our revenue into cash that we put in the bank. Otherwise, money we cannot collect is money we’ve burned. We consistently fight a multi-faceted battle: a battle wherein we must maximize the speed at which we recognize revenue, maximize the margin associated with each shift, and maximize the customer experience, all without letting one unduly impact the other. Optimizing collections is critical to make sure Clipboard is generating sustainable, high-quality growth and turning top-line revenue into cash that we use to service or grow other parts of the business.\n\nThough the CAM role lives in the realm of finance and numbers, you don’t need to be skilled in finance or accounting – while it’d be a plus, we expect you to learn the basics along the way.\n\nSuccess factors for this role:\n\n- Extreme ownership: Take full responsibility for managing billing issues and solutions.\n\n- Curiosity: Investigate and understand the root cause of billing problems so that you can identify the best solution.\n\n- Scrappiness: Find innovative solutions to overcome obstacles and maintain progress.\n\n- Adaptability: Thrive in a fast-paced, evolving market.\n\nBenefits:\n\n- Competitive pay\n\n- Unlimited PTO\n\n- Fully remote\n\n- Opportunity to make a significant impact with healthcare customers\n\nHiring plan:\n\n1. Application\n\n2. Case Study\n\n3. Case Study Interview\n\n4. Interview(s) with our CAM team\n\n5. Offer!\n\nSystem requirements:\n\nTo succeed in this role, you must have:\n\n- A reliable laptop/desktop (no Chromebooks or Linux OS).\n\n- Minimum 20 Mbps wired internet connection.\n\n- Wired headset for clear communication.\n\n- A quiet, distraction-free workspace.\n\n- Stable power and internet connectivity.\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nNOTE: This is an active job posting for non-US candidates and requires an overlap of at least 5 hours with the PST (UTC-8) time zone. There is a separate posting for US candidates on the Clipboard Careers page.\n\nRole overview:\n\nThe Collections Account Manager (CAM) role is a critical role on the Billing team here at Clipboard, and this team ensures the successful management of billing processes for our biggest and most valuable workplace customers, who tend to also be more complex and risky. You will be a vital resource for workplaces, resolving billing issues, maintaining accurate invoicing, and managing financial relationships. Your responsibilities include:\n\n- Managing a portfolio of accounts, addressing billing concerns and ensuring timely invoice payments.\n\n- Conducting high volumes of outbound calls to connect with customers about past-due account balances and resolve them.\n\n- Navigating negotiations and evaluate tradeoffs between risk mitigation and growth potential when making decisions.\n\n- Resolving customer invoice disputes and other billing-related issues.\n\n- Managing customer payments and remittances.\n\n- Building trust with providers and healthcare executives through strong financial acumen.\n\n- Clearly articulating the billing processes and educate stakeholders on invoicing procedures.\n\n- Gathering and relaying feedback to improve billing systems and processes.\n\n- Collaborating with internal teams to execute billing-related initiatives and trials.\n\nQuick background on Billing:\n\nThere’s much to explain to paint the full picture of the Billing machine, but ultimately the core goal is to optimize the speed with which our customers pay us while maintaining their overall experience with us as a vendor. We want to collect money as fast as possible and minimize losses, while preserving the customer experience, in service of reliably converting revenue into cash (the lifeline of a capital-intensive business like ours). This in a way is “ensuring high-quality growth” for the company.\n\nAlthough Clipboard provides a service where workplaces can find qualified professionals to fill shifts, we are in many ways a lending company at our core since we pay professionals immediately after they work a shift. For illustrative purposes: a nurse works a shift → we pay the nurse $100 immediately with our cash → the workplace pays us $120 a month later. We extend debt to workplaces using cash we borrow, with interest, from an Asset-Backed Line (ABL) of credit – workplaces use that debt to pay their staffing costs, and we expect to be paid back by the workplaces at a later date based on agreed-upon net terms.\n\nThe point is: Billing is doing the critical work of actually converting our revenue into cash that we put in the bank. Otherwise, money we cannot collect is money we’ve burned. We consistently fight a multi-faceted battle: a battle wherein we must maximize the speed at which we recognize revenue, maximize the margin associated with each shift, and maximize the customer experience, all without letting one unduly impact the other. Optimizing collections is critical to make sure Clipboard is generating sustainable, high-quality growth and turning top-line revenue into cash that we use to service or grow other parts of the business.\n\nThough the CAM role lives in the realm of finance and numbers, you don’t need to be skilled in finance or accounting – while it’d be a plus, we expect you to learn the basics along the way.\n\nSuccess factors for this role:\n\n- Extreme ownership: Take full responsibility for managing billing issues and solutions.\n\n- Curiosity: Investigate and understand the root cause of billing problems so that you can identify the best solution.\n\n- Scrappiness: Find innovative solutions to overcome obstacles and maintain progress.\n\n- Adaptability: Thrive in a fast-paced, evolving market.\n\nBenefits:\n\n- Competitive pay\n\n- Unlimited PTO\n\n- Fully remote\n\n- Opportunity to make a significant impact with healthcare customers\n\nHiring plan:\n\n1. CAM Case Study\n\n2. Case Study Interview\n\n3. Customer Simulation Interview (s)\n\n4. Hiring Manager Interview\n\n5. Executive Interview (for US candidates only)\n\n6. Offer!\n\nSystem requirements:\n\nTo succeed in this role, you must have:\n\n- A reliable laptop/desktop (no Chromebooks or Linux OS).\n\n- Minimum 20 Mbps wired internet connection.\n\n- Wired headset for clear communication.\n\n- A quiet, distraction-free workspace.\n\n- Stable power and internet connectivity.\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -59,8 +68,8 @@
   "title": "Collections Account Manager",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-30T17:08:51.165636+00:00",
- "content_hash": "ac2285f542f818a597078aa4ba8c4fecbee71cc5d14b0ad9f8bf01de2c80c313",
+ "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
+ "content_hash": "39f3d227a455316ce176fa2d21b882c72b9e6491b3237ef32fffa004dcffffa7",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -91,7 +100,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":30000,\"maxValue\":50000,\"summary\":\"Estimated base salary (paid in USD): $30K – $50K\"}",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -123,7 +132,7 @@
       },
       "method": "description_text",
       "quote": "Although Clipboard provides a service where workplaces can find qualified professionals to fill shifts, we are in many ways a lending company at our core since we pay professionals immediately after they work a shift. For illustrative purposes: a nurse works a shift → we pay the nurse $100 immediately with our cash → the workplace pays us $120 a month later. We extend debt to workplaces using cash we borrow, with interest, from an Asset-Backed Line (ABL) of credit – workplaces use that debt to pay their staffing costs, and we expect to be paid back by the workplaces at a later date based on agreed-upon net terms.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -140,7 +149,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (Africa, Central & South America, the Caribbean)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -148,7 +157,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Remote (UK)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -156,7 +165,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Remote (EU)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -164,7 +173,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Nigeria",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -172,7 +181,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "NOTE: This is an active job posting for non-US candidates and requires an overlap of at least 5 hours with the PST (UTC-8) time zone. There is a separate posting for US candidates on the Clipboard Careers page.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -185,7 +194,7 @@
       "interpretation": null,
       "method": "description_section:To succeed in this role, you must have:",
       "quote": "- A reliable laptop/desktop (no Chromebooks or Linux OS).\n- Minimum 20 Mbps wired internet connection.\n- Wired headset for clear communication.\n- A quiet, distraction-free workspace.\n- Stable power and internet connectivity.",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }
@@ -202,7 +211,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Africa, Central & South America, the Caribbean)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -210,7 +219,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (UK)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -218,7 +227,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (EU)",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -226,7 +235,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      },
@@ -234,7 +243,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- Fully remote",
-      "retrieved_at": "2026-10-30T17:08:51.165636+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/0198b63c-1d88-4763-950a-ded21ad00727"
      }

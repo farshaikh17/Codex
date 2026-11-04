@@ -14,11 +14,20 @@
    "from_hash": "d3a53cfc01bef50f3ea2759e2b1e0218c8b9c032dac9cb7c68275be8993a2a55",
    "kind": "content_changed",
    "to_hash": "27799c128031bdbae4c5496e746cef14d2d2a827ffab4253a546e4b68dd1f943"
+  },
+  {
+   "changed_at": "2026-11-04T18:50:19.577531+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "27799c128031bdbae4c5496e746cef14d2d2a827ffab4253a546e4b68dd1f943",
+   "kind": "content_changed",
+   "to_hash": "957f81422ee388785bbe506296e99d6557d45d2f22a960339ff42f9f0f0ba4b3"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$130K – $160K\",\"tiers\":[{\"title\":null,\"summary\":\"$130K – $160K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"$130K – $160K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOVERVIEW\n\nWe are hiring an Applied AI Strategy & Ops Lead to own and evolve our internal tooling ecosystem across Ops. This is a hands-on individual contributor role with real ownership. You’ll work across a range of tools including support platforms, AI-driven systems, and internal automations to improve how our day-to-day operations function.\n\nYou'll act like a product manager, sitting at the intersection of Operations, Engineering, and our frontline teams. You’ll partner closely with Ops leadership to set priorities, then turn them into results: refining the systems we already have, introducing new tools where they’re needed, and making sure our stack scales with the business.\n\nThis is not a AI/MI engineer or developer role. You won’t be writing production code. If your background is primarily software development, this role probably isn’t the right fit.\n\nWHAT YOU’LL DO\n\n- Own the roadmap for Ops tooling: gather needs from Ops leadership and frontline teams, prioritize based on impact, and make clear trade-offs.\n\n- Design and improve workflows and automations across our support platform, AI tools, and internal systems, configuring them yourself where it makes sense.\n\n- Partner with engineers and developers to scope requirements, write technical specs, and prioritize tooling work that matters most to Ops.\n\n- Execute against high-priority tooling and automation initiatives across the operational stack.\n\n- Translate defined problems into practical, well-scoped technical solutions\n\n- Identify gaps or inefficiencies in current tooling and proactively address them\n\n- Troubleshoot issues, improve system reliability, and ensure tools perform effectively in production\n\n- Contribute to ongoing improvements in how our systems connect and operate together\n\nWHAT WE’RE LOOKING FOR\n\n- Product thinking: You’ve owned a tool, process, or internal product end to end, from defining the problem to measuring the result.\n\n- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.\n\nNICE TO HAVE\n\n- Experience working with support platforms such as Zendesk\n\n- Familiarity with AI-driven tools and automation workflows\n\n- Background in Ops, Support, or CX environments\n\n- Experience working with evolving or fragmented tooling stacks\n\nHIRING PROCESS\n\n- Application\n\n- Case Study\n\n- Case Interview with a team member\n\n- Interview with Head of Core Services\n\n- Interview with Head of Operations\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOVERVIEW\n\nWe are hiring an Applied AI Strategy & Ops Lead to own and evolve our internal tooling ecosystem across Ops. This is a hands-on individual contributor role with real ownership. You’ll work across a range of tools including support platforms, AI-driven systems, and internal automations to improve how our day-to-day operations function.\n\nYou'll act like a product manager, sitting at the intersection of Operations, Engineering, and our frontline teams. You’ll partner closely with Ops leadership to set priorities, then turn them into results: refining the systems we already have, introducing new tools where they’re needed, and making sure our stack scales with the business.\n\nThis is not a AI/MI engineer or developer role. You won’t be writing production code. If your background is primarily software development, this role probably isn’t the right fit.\n\nWHAT YOU’LL DO\n\n- Own the roadmap for Ops tooling: gather needs from Ops leadership and frontline teams, prioritize based on impact, and make clear trade-offs.\n\n- Design and improve workflows and automations across our support platform, AI tools, and internal systems, configuring them yourself where it makes sense.\n\n- Partner with engineers and developers to scope requirements, write technical specs, and prioritize tooling work that matters most to Ops.\n\n- Execute against high-priority tooling and automation initiatives across the operational stack.\n\n- Translate defined problems into practical, well-scoped technical solutions\n\n- Identify gaps or inefficiencies in current tooling and proactively address them\n\n- Troubleshoot issues, improve system reliability, and ensure tools perform effectively in production\n\n- Contribute to ongoing improvements in how our systems connect and operate together\n\nWHAT WE’RE LOOKING FOR\n\n- Product thinking: You’ve owned a tool, process, or internal product end to end, from defining the problem to measuring the result.\n\n- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.\n\nNICE TO HAVE\n\n- Experience working with support platforms such as Zendesk\n\n- Familiarity with AI-driven tools and automation workflows\n\n- Background in Ops, Support, or CX environments\n\n- Experience working with evolving or fragmented tooling stacks\n\nHIRING PROCESS\n\n- Application\n\n- Interview with Head of Core Services\n\n- Interview with Head of Operations\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -33,8 +42,8 @@
   "title": "Strategy & Ops Lead, Applied AI",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "27799c128031bdbae4c5496e746cef14d2d2a827ffab4253a546e4b68dd1f943",
+ "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
+ "content_hash": "957f81422ee388785bbe506296e99d6557d45d2f22a960339ff42f9f0f0ba4b3",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -65,7 +74,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"$130K – $160K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      }
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "U.S. (Remote)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      },
@@ -90,7 +99,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      }
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "description_section:WHAT WE’RE LOOKING FOR",
       "quote": "- Product thinking: You’ve owned a tool, process, or internal product end to end, from defining the problem to measuring the result.\n- Technical Fluency - You’re comfortable working with APIs, integrations, and automation tooling. You can build and debug independently and hold your own in technical conversations with engineers.\n- Execution Discipline - You take defined problems and drive them through to completion. You manage multiple priorities effectively and maintain a high bar for quality and reliability.\n- Systems Thinking - You understand how tools, workflows, and dependencies connect. You look for ways to improve how systems operate together, not just individual components.\n- Problem Solving - You can take loosely defined or scoped problems and translate them into practical, well-structured solutions.\n- Ownership Mindset - You take responsibility for delivering high-quality work and improving the team’s day-to-day operations through better tooling and processes.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      }
@@ -116,7 +125,7 @@
       "interpretation": null,
       "method": "description_section:NICE TO HAVE",
       "quote": "- Experience working with support platforms such as Zendesk\n- Familiarity with AI-driven tools and automation workflows\n- Background in Ops, Support, or CX environments\n- Experience working with evolving or fragmented tooling stacks",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      }
@@ -129,7 +138,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "U.S. (Remote)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      },
@@ -137,7 +146,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/425e7074-2a46-4e16-abab-d873ac58bc0c"
      }

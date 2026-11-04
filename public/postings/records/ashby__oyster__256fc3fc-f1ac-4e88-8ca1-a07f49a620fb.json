@@ -32,10 +32,19 @@
    "from_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e",
    "kind": "content_changed",
    "to_hash": "ab9c019c1767435b9285bfa25cbcba9dc8b5fad5c1aa36334def088ce4578825"
+  },
+  {
+   "changed_at": "2026-11-04T18:50:19.577531+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "ab9c019c1767435b9285bfa25cbcba9dc8b5fad5c1aa36334def088ce4578825",
+   "kind": "content_changed",
+   "to_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$54.6K – $61.2K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":54600,\"maxValue\":61200,\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K\"},{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Canada\",\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":58000,\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$54.6K – $61.2K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":54600,\"maxValue\":61200,\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K\"}]},{\"title\":\"Canada\",\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":58000,\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K\"}]}]}",
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nTHE ROLE\n\nLocation: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be currently based within the Americas region.\n\nAt Oyster, we’re on a mission to create a more equal world by making it possible for companies everywhere to hire people anywhere.\n\nJoining as a Business Development Representative (BDR) is your chance to break into tech sales and build a career with real growth potential. From day one, you will be supported by dedicated sales enablement, training, and coaching programs designed to help you succeed and grow.\n\nYou will learn how to master outreach, qualify leads, and build relationships that drive business results — all while working with top-tier sales tools like Salesforce, Salesloft, and LinkedIn Sales Navigator.\n\nYou won’t be on your own. You will be surrounded by Business Development leaders, experienced Sales Executives, Revenue Operations experts, and an Enablement team that will invest in your development every step of the way.\n\nThis is an opportunity to learn fast, make an impact, and grow in a global, high-performing sales environment. If you are curious, ambitious, and ready to develop your career in tech sales, we’d love to hear from you.\n\nKey Responsibilities :\n\n- Create awareness and generate interest in Oyster through outbound prospecting (cold calling, email, and social outreach)\n\n- Partner seamlessly with Sales Executives to drive mid-market and SMB pipeline velocity\n\n- Qualify and schedule high-value meetings that convert into tangible sales opportunities\n\n- Present and clearly articulate Oyster’s global employment platform to target buyers\n\n- Organize, optimize, and manage your pipeline for maximum efficiency and predictable results\n\n- Serve as the voice of the market, collaborating with the GTM team (Sales, Marketing, Product, etc.) to translate buyer intelligence into strategy.\n\nWhat we value:\n\n- Driven & Motivated: You have a clear “why” that goes beyond money — whether it’s purpose, product, or personal growth\n\n- Ownership & Accountability: You take initiative, learn from mistakes, and find proactive solutions to move forward\n\n- Growth Mindset: You actively seek and implement feedback, always looking for ways to improve, master your craft, and ensure your career progression.\n\n- Resilient & Persistent: You don’t give up easily. You push through challenges and adapt in turbulent times\n\n- T.E.A.M.Oriented: Together Everyone Achieves More! You thrive in a collaborative environment, consistently seeking to elevate your teammates, celebrate team success, all while maintaining your own high standards for results\n\nWhat will make you successful:\n\n- Strategic Researcher: Finding the information is not your destination; you are naturally curious and synthesize data from diverse sources to strategically guide and focus outreach efforts.\n\n- Organized Precision: You possess exceptional attention to detail and organizational skills, consistently producing accurate work while balancing speed and quality--especially under pressure.\n\n- Creative Problem-Solver: Deconstructing complex challenges into practical steps to generate effective and innovative solutions comes second nature to you.\n\n- Agile and Adaptable: You are open and amenable to change, quickly mastering new tools (including AI) and processes, and swiftly pivoting strategies to progress the pipeline\n\n- Data-Driven Communicator : You view data as your currency for success, leveraging clear and persuasive communication (both written and verbal) as the vehicle to drive action.\n\nCandidates who stand out possess:\n\n- Minimum 6 months of demonstrated success in a customer-centric role (e.g., sales, hospitality, customer success, recruiting) where your results demonstrably relied on proactively engaging people and cultivating genuine relationships to drive a specific, measurable outcome.\n\n- Familiarity with B2B prospecting tools (Salesforce, Salesloft, LinkedIn Sales Navigator, etc.)\n\n- A genuine passion for remote work and an active curiosity about the evolving trends shaping the global workplace\n\nYou'll also need\n\n- A reliable home internet connection (or be able to get one)\n\n- Fluent English language skills\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
   "locations": [
    {
@@ -71,14 +80,34 @@
   "title": "Business Development Representative (Americas)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-30T17:08:51.165636+00:00",
- "content_hash": "ab9c019c1767435b9285bfa25cbcba9dc8b5fad5c1aa36334def088ce4578825",
+ "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
+ "content_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "equity",
+       "component_type": "EquityCashValue",
+       "equity_mentioned": true,
+       "estimated": false,
+       "interval_raw": "1 YEAR",
+       "label": "United States",
+       "multiple_ranges": true,
+       "period": "year",
+       "ranges": [],
+       "variable_mentioned": false
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
      {
       "interpretation": {
        "amount_unit": null,
@@ -103,27 +132,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":54600,\"maxValue\":61200,\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "equity",
-       "component_type": "EquityCashValue",
-       "equity_mentioned": true,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "United States",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -143,7 +152,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -171,7 +180,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":58000,\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -188,7 +197,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -196,7 +205,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Austin",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -204,7 +213,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Chicago",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -212,7 +221,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Nashville",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -220,7 +229,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Denver",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -228,7 +237,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Atlanta",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -241,7 +250,7 @@
       "interpretation": null,
       "method": "description_section:You'll also need",
       "quote": "- A reliable home internet connection (or be able to get one)\n- Fluent English language skills",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -258,7 +267,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -266,7 +275,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be currently based within the Americas region.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
