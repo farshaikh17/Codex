@@ -109,10 +109,23 @@ def import_collector_postings(
             })
         
         if batch:
-            res = bridge.import_batch(cand, batch)
-            summary["candidate_results"][cand] = res
+            try:
+                res = bridge.import_batch(cand, batch)
+                summary["candidate_results"][cand] = res
+                if not isinstance(res, dict) or res.get("status") != "SUCCESS":
+                    summary["status"] = "FAILURE"
+                    summary["error"] = f"Candidate batch for {cand} failed: {res}"
+            except Exception as e:
+                summary["status"] = "FAILURE"
+                summary["error"] = f"Candidate batch for {cand} raised exception: {e}"
+                summary["candidate_results"][cand] = {"status": "FAILURE", "error": str(e)}
         else:
             summary["candidate_results"][cand] = {"status": "EMPTY", "jobs_imported": 0}
+
+    # If any candidate failed, ensure overall status is FAILURE
+    for cand, c_res in summary["candidate_results"].items():
+        if isinstance(c_res, dict) and c_res.get("status") == "FAILURE":
+            summary["status"] = "FAILURE"
             
     return summary
 
@@ -197,3 +210,8 @@ if __name__ == "__main__":
 
     result = run_collector_import(args.source, mode=args.mode, cwd=args.cwd, limit=args.limit)
     print(json.dumps(result, indent=2))
+    if result.get("status") != "SUCCESS":
+        print(f"[Collector Importer Error] Import failed with status: {result.get('status')}", file=sys.stderr)
+        if "error" in result:
+            print(f"[Error Details] {result.get('error')}", file=sys.stderr)
+        sys.exit(1)

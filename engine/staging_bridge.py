@@ -61,10 +61,21 @@ def codex_to_d1_job(job: Dict[str, Any], observed_at: Optional[str] = None) -> D
     apply_url = normalize_posting_url(job.get('apply_url') or source_url)
     
     wp_raw = (job.get('workplace_type') or '').lower()
-    if 'remote' in wp_raw:
-        workplace_type = 'REMOTE'
-    elif 'hybrid' in wp_raw:
+    desc_raw = (job.get('description') or '').lower()
+    loc_raw = (str(job.get('locations') or '')).lower()
+    
+    # Check for explicit hybrid patterns in description or location text
+    # e.g., '3 days in the office per week', 'hybrid work model', 'hybrid schedule'
+    has_hybrid_mandate = bool(
+        re.search(r'\b\d+\s*days?\s+(?:a|per)?\s*week\s+in\s+(?:the\s+)?office\b', desc_raw) or
+        re.search(r'\bhybrid\s+(?:work\s+model|schedule|environment|setup|role|model)\b', desc_raw) or
+        'hybrid' in loc_raw
+    )
+
+    if 'hybrid' in wp_raw or has_hybrid_mandate:
         workplace_type = 'HYBRID'
+    elif 'remote' in wp_raw:
+        workplace_type = 'REMOTE'
     elif 'onsite' in wp_raw or 'on-site' in wp_raw:
         workplace_type = 'ONSITE'
     else:
@@ -229,7 +240,13 @@ class D1StagingBridge:
 
     def _execute_sql_file(self, sql_content: str) -> List[Dict[str, Any]]:
         if self.executor is not None:
-            return self.executor(sql_content)
+            res = self.executor(sql_content)
+            if not isinstance(res, list) or len(res) == 0:
+                raise RuntimeError('Malformed D1 response: Returned empty or non-list JSON payload')
+            for entry in res:
+                if isinstance(entry, dict) and entry.get('success') is False:
+                    raise RuntimeError(f'D1 execution reported statement failure: {entry}')
+            return res
 
         with tempfile.NamedTemporaryFile(suffix='.sql', delete=False, mode='w', encoding='utf-8') as tf:
             tf.write(sql_content)
@@ -251,9 +268,22 @@ class D1StagingBridge:
 
             out = res.stdout.strip()
             start = out.find('[')
-            if start != -1:
-                return json.loads(out[start:])
-            return []
+            if start == -1:
+                raise RuntimeError(f"Malformed or empty D1 response: No JSON array found in stdout.\nSTDOUT: {res.stdout}")
+
+            try:
+                parsed = json.loads(out[start:])
+            except Exception as e:
+                raise RuntimeError(f"Failed to parse D1 execute JSON output: {e}\nRAW OUTPUT: {out[start:]}")
+
+            if not isinstance(parsed, list) or len(parsed) == 0:
+                raise RuntimeError("Malformed D1 response: Returned empty or non-list JSON payload")
+
+            for entry in parsed:
+                if isinstance(entry, dict) and entry.get("success") is False:
+                    raise RuntimeError(f"D1 execution reported statement failure: {entry}")
+
+            return parsed
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
@@ -452,6 +482,9 @@ class D1StagingBridge:
                 status = "FAILED"
                 error_message = str(e)
 
+        if status != 'SUCCESS':
+            raise RuntimeError(f"D1 batch import failed for {cf_candidate_id}: {error_message}")
+
         return {
             'candidate_id': cf_candidate_id,
             'attempted_postings': jobs_imported,
@@ -463,3 +496,4 @@ class D1StagingBridge:
             'error': error_message,
             'd1_response': d1_response
         }
+
