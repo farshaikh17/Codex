@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-30T17:08:51.165636+00:00",
-  "reason": "first listed",
-  "state": "listed"
+  "at": "2026-11-05T14:55:47.355329+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "oyster",
  "changes": [],
