@@ -8,7 +8,7 @@ Nothing below blocks the release. Each item says who decides or what would close
    commercial airport is within about 2 hours; that is a preference to verify per posting, and no list of city names can establish it
    (Mumbai and Pune are examples the owner gave, not a list). Middle East and Europe stay as relocation preferences, without assuming work
    authorization. Consequently the Worker's discovery screen no longer calls an on-site role in a listed Indian city "eligible": it is
-   **unknown** until accessibility is verified, and only a role that is remote in India is affirmatively eligible. Migration 0010 applies
+   **unknown** until accessibility is verified, and only a role that is remote in India is affirmatively eligible. The score-correction script (`scripts/rescore_ranking_v2.mjs`, run by the release) applies
    this to the preliminary rows already stored (reason text exactly "Posting is in an accessible Indian location."), lowering their score
    by the 10 points that eligibility had added.
 2. **Farhan's 12 application records: owner's understanding recorded, nothing changed.** The owner believes they were listings added
@@ -16,11 +16,11 @@ Nothing below blocks the release. Each item says who decides or what would close
    reclassified or excluded) until the owner confirms record by record, in particular the Drivetrain `APPLIED` record `app-803e11ab`, the
    only one with an applied date. Facts: 4 sit on synthetic or test-fixture jobs, 7 are rejections noted "Playwright verified rejection
    test" on real public postings, 1 is the Drivetrain record.
-3. **Relevance scoring: approved and implemented (migration 0010, `worker/discovery.ts`).** For Farhan, a title on his avoid list
+3. **Relevance scoring: approved and implemented (`worker/discovery.ts`; stored rows corrected once by `scripts/rescore_ranking_v2.mjs`).** For Farhan, a title on his avoid list
    (software, SRE/DevOps, ML, security, finance, support, engineering management, test automation) is capped at 40, and a posting
    whose only stated location is outside India loses 15 points unless it affirmatively supports remote work from India. Sana keeps the
    old scoring (she is open to relocation). Eligibility, status and READY rules are unchanged, human overrides and applications are
-   never touched, and scores from the collector's engine are not touched. The migration is idempotent (rows are tagged `ranking_v2`).
+   never touched, and scores from the collector's engine are not touched. The correction uses the Worker's own functions, lowers scores only, skips rows already scored under the new rules (tag `ranking_v2`), refuses to write more than 20,000 rows, and is safe to re-run.
 4. **Application tracker visibility: public is fine for now** (status and dates only, no notes).
 5. **Still open by choice:** one shared operator key for both candidates (not yet), uptime monitoring (not now).
 
