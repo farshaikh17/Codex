@@ -1,3 +1,6 @@
+# Collector use only: lets `wrangler d1 execute career-job-engine --remote` resolve the database binding.
+# DO NOT DEPLOY from this file. The Worker is deployed only from dashboard/wrangler.toml by the manual
+# dashboard-release workflow (a second deploy from here would create a duplicate Worker and cron schedule).
 name = "career-job-engine"
 account_id = "c7e866f95a4275de2719647dd2bc4f34"
 main = "worker/index.ts"

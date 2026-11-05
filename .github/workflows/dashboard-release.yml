@@ -1,0 +1,207 @@
+name: Dashboard release to production (manual)
+# The ONLY path that changes the career-job-engine Worker. Manual, from main, one run at a time, and it re-runs every
+# check itself. Never triggered by a push, a schedule or another workflow (so it cannot create a second schedule).
+# The public dashboard needs NO operator key to deploy or verify: only the Cloudflare secrets below.
+#
+#   mode = preflight (default)  read-only: account, database id, token permissions, rollback points. Changes nothing.
+#   mode = release              preflight, fingerprint, migration 0008 (additive), deploy, public smoke test, real-browser
+#                               check (desktop + 375px mobile), fingerprint comparison.
+#
+# Secrets (repository secrets; the collector's sync workflow already uses the same two):
+#   CLOUDFLARE_API_TOKEN   Account: Workers Scripts Edit, D1 Edit (nothing else). Never printed.
+#   CLOUDFLARE_ACCOUNT_ID  must equal account_id in dashboard/wrangler.toml, or the run stops before any change.
+# ADMIN_API_KEY stays a Cloudflare Worker secret (it is not read here). Rotating it: tick rotate_key and add the
+# NEW_ADMIN_API_KEY repository secret first; it is written to Cloudflare and never used by the verification steps.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'preflight = read-only checks (default). release = change production.'
+        required: true
+        type: choice
+        options: [preflight, release]
+        default: preflight
+      confirm_sha:
+        description: 'Full commit SHA of main you intend to release (must equal the commit this run uses)'
+        required: true
+        type: string
+      rotate_key:
+        description: 'Replace the Worker secret ADMIN_API_KEY with the NEW_ADMIN_API_KEY repository secret'
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+    working-directory: dashboard
+concurrency:
+  group: dashboard-production-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Guard - owner, main only, exact commit
+        env:
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          CONFIRM: ${{ inputs.confirm_sha }}
+          ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          [ "$ACTOR" = "$OWNER" ] || { echo "::error::Only the repository owner may run releases"; exit 1; }
+          [ "$REF" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on $REF)"; exit 1; }
+          [ "$CONFIRM" = "$SHA" ] || { echo "::error::confirm_sha does not match the commit being released ($SHA)"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run verify
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      MODE: ${{ inputs.mode }}
+      ROTATE: ${{ inputs.rotate_key }}
+      SMOKE_BASE: https://career-job-engine.farshaikh17.workers.dev
+    steps:
+      - name: Guard again, in the job that holds the secrets
+        env:
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          CONFIRM: ${{ inputs.confirm_sha }}
+          ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          [ "$ACTOR" = "$OWNER" ] && [ "$REF" = "refs/heads/main" ] && [ "$CONFIRM" = "$SHA" ] || { echo "::error::Not the owner, not main, or confirm_sha mismatch"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+
+      - name: Preflight - account, database, token permissions, rollback points (read-only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          echo "### Dashboard release ($MODE)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- commit: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID repository secrets are missing"; exit 1; }
+          EXPECTED=$(grep -E '^account_id' wrangler.toml | sed -E 's/.*"([0-9a-f]+)".*/\1/')
+          [ "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED" ] || { echo "::error::CLOUDFLARE_ACCOUNT_ID is not the account in dashboard/wrangler.toml; stopping before any change"; exit 1; }
+          echo "- account matches wrangler.toml: yes" >> "$GITHUB_STEP_SUMMARY"
+          DB_ID=$(grep -E '^database_id' wrangler.toml | sed -E 's/.*"([0-9a-f-]+)".*/\1/')
+          npx wrangler d1 info career-job-engine > d1info.txt
+          grep -q "$DB_ID" d1info.txt || { echo "::error::The D1 database named career-job-engine in this account is not the one in wrangler.toml"; exit 1; }
+          echo "- D1 database id matches wrangler.toml: yes" >> "$GITHUB_STEP_SUMMARY"
+          if npx wrangler secret list --format json | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));process.exit(s.some(x=>x.name==='ADMIN_API_KEY')?0:1)"; then
+            echo "- Worker secret ADMIN_API_KEY present (value never read): yes. Protected actions work." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$ROTATE" = "true" ]; then
+            echo "- Worker secret ADMIN_API_KEY present: no (rotation will create it)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::ADMIN_API_KEY is not set on the Worker: public viewing works, but protected actions answer 503 until it is set (re-run with rotate_key)."
+            echo "- Worker secret ADMIN_API_KEY present: **no** (public viewing is unaffected; protected actions are unavailable)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          { echo '- current deployments (rollback target = newest entry before this release):'; echo '```'; npx wrangler deployments list | tail -n 12; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '- D1 restore bookmark (Time Travel):'; echo '```'; npx wrangler d1 time-travel info career-job-engine; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '- live version before this run:'; echo '```'; curl -fsS "$SMOKE_BASE/api/version" || echo '(unreachable)'; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fingerprint protected records before
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/fingerprint.mjs --remote > before.json && cat before.json
+
+      - name: Preflight finished - nothing was changed
+        if: ${{ inputs.mode == 'preflight' }}
+        run: |
+          echo "Preflight passed - token permissions, account, database and rollback records are in order. Run again with mode=release to deploy." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Add the guess-limiter table (additive, idempotent; migrations 0001-0007 are NOT replayed)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 execute career-job-engine --remote --file=migrations/0008_auth_failures.sql
+
+      - name: Rotate operator key (only when requested)
+        if: ${{ inputs.mode == 'release' && inputs.rotate_key }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEW_ADMIN_API_KEY: ${{ secrets.NEW_ADMIN_API_KEY }}
+        run: |
+          [ -n "$NEW_ADMIN_API_KEY" ] || { echo "::error::rotate_key is ticked but the NEW_ADMIN_API_KEY secret is empty"; exit 1; }
+          printf '%s' "$NEW_ADMIN_API_KEY" | npx wrangler secret put ADMIN_API_KEY
+
+      - name: Build the frontend (no Cloudflare credentials in this step)
+        if: ${{ inputs.mode == 'release' }}
+        run: npm run build:frontend
+
+      - name: Deploy (records the commit in the Worker so the live version can be matched)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler deploy --var "GIT_COMMIT:$GITHUB_SHA" --var "DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee deploy.log
+          VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
+          echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Public smoke test (no credentials; includes anonymous write attempts that must be refused)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          SMOKE_EXPECT_COMMIT: ${{ github.sha }}
+        run: |
+          node scripts/post_deploy_smoke.mjs | tee smoke.txt
+          { echo '### Public smoke test'; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Real-browser check of both dashboards, read-only, no credentials (desktop and 375px mobile)
+        if: ${{ inputs.mode == 'release' }}
+        run: |
+          export E2E_BASE="$SMOKE_BASE"
+          npm --prefix frontend ci
+          npx --prefix frontend playwright install --with-deps chromium
+          node test/e2e/production-readonly.e2e.mjs desktop | tee browser.txt
+          node test/e2e/production-readonly.e2e.mjs mobile | tee -a browser.txt
+          { echo '### Browser check (production, read-only)'; echo '```'; grep -E "PASS|FAIL|passed" browser.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fingerprint protected records after and compare
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node scripts/fingerprint.mjs --remote > after.json
+          node -e "
+            const b=require('./before.json'),a=require('./after.json');let bad=0;const lines=['| table | rows before | rows after | identical |','|---|---|---|---|'];
+            for(const t of ['applications','application_history','manual_overrides','candidates']){const same=b[t].sha256===a[t].sha256;if(!same)bad++;lines.push('| '+t+' | '+b[t].rows+' | '+a[t].rows+' | '+(same?'yes':'**NO**')+' |');}
+            for(const t of ['qualifications','scores']){lines.push('| '+t+' (informational: the collector may legitimately write) | '+b[t].rows+' | '+a[t].rows+' | '+(b[t].sha256===a[t].sha256?'yes':'changed')+' |');}
+            require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n### Protected records, field-level\n'+lines.join('\n')+'\n');
+            console.log(lines.join('\n'));
+            if(bad){console.error('Protected records changed during the release');process.exit(1);}"
+
+      - name: How to roll back (only shown on failure)
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "### The run did not complete"
+            echo "If mode was preflight, nothing in production changed."
+            echo "If mode was release: prefer a forward fix. To restore the previous Worker and frontend: \`npx wrangler rollback <previous version id from the preflight list>\` (run from the dashboard folder with the Cloudflare token)."
+            echo "The previous Worker had no API authentication and no public/private split, so use the rollback only if the new Worker is unusable."
+          } >> "$GITHUB_STEP_SUMMARY"

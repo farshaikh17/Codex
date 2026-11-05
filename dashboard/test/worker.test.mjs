@@ -1,0 +1,463 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createDb, loadWorker, makeEnv, call, ADMIN_KEY } from './harness.mjs';
+import { seed } from './fixtures.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const worker = await loadWorker();
+const fresh = (extra) => { const { sqlite, d1 } = createDb(); seed(sqlite); return { sqlite, env: makeEnv(d1, extra) }; };
+const PUBLIC = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+
+// Every route registered in worker/index.ts, with path parameters filled in.
+function routes() {
+  const src = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
+  return [...src.matchAll(/^router\.(get|post|put|delete)\(\s*'([^']+)'/gm)].map((m) => ({ method: m[1].toUpperCase(), path: m[2].replace(/:[a-zA-Z0-9_]+/g, 'x') }));
+}
+
+test('route discovery finds the API surface', () => { assert.ok(routes().length > 40); });
+
+// Routes a visitor may read without a key; the router's allowlist must be exactly this list.
+const PUBLIC_READ = [
+  '/api/candidates', '/api/candidates/x/strategy', '/api/candidates/x/dashboard', '/api/candidates/x/jobs', '/api/candidates/x/applications',
+  '/api/dashboard/overview', '/api/jobs', '/api/jobs/x', '/api/jobs/x/explanation', '/api/applications', '/api/india-remote/summary',
+  '/api/india-remote/jobs', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics',
+  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status',
+];
+const isPublicRead = (r) => r.method === 'GET' && PUBLIC_READ.includes(r.path);
+
+test('every protected route (all writes, audit and sync surfaces) rejects a request with no key (401) and never reaches its handler', async () => {
+  const { env } = fresh();
+  const protectedRoutes = routes().filter((r) => !PUBLIC.has(r.path) && !isPublicRead(r));
+  assert.ok(protectedRoutes.some((r) => r.method !== 'GET') && protectedRoutes.some((r) => r.method === 'GET'));
+  for (const r of protectedRoutes) {
+    const res = await call(worker, env, r.method, r.path, { key: null, body: r.method === 'GET' ? undefined : {} });
+    assert.equal(res.status, 401, `${r.method} ${r.path} answered ${res.status} without a key`);
+    assert.ok(!res.json || Object.keys(res.json).join() === 'error', `${r.method} ${r.path} leaked ${Object.keys(res.json || {})}`);
+  }
+});
+
+test('the public read list matches the registered routes (a new GET route is protected until it is listed on purpose)', () => {
+  const have = new Set(routes().filter((r) => r.method === 'GET').map((r) => r.path));
+  for (const p of PUBLIC_READ) assert.ok(have.has(p), `${p} is not a registered GET route`);
+  const src = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
+  const listed = (src.match(/PUBLIC_READ_PATTERNS: RegExp\[\] = \[([\s\S]*?)\n\];/) || [])[1] || '';
+  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 15);
+  for (const bad of ['history', 'qualification-audit', 'runs', 'backups', 'sync', 'meta', 'pilot', 'canonical-sync', 'url-checks']) assert.ok(!listed.includes(bad), `${bad} must stay protected`);
+});
+
+test('public viewing: every public read works with no key, returns data, and holds no private field or value', async () => {
+  const { env } = fresh();
+  const forbidden = ['PRIVATE-NOTE-7f3', 'PRIVATE-CHANNEL-7f3', 'PRIVATE-RESUME-7f3', 'PRIVATE-COVER-7f3', 'PRIVATE-REJECT-7f3', 'PRIVATE-ACTOR-7f3', 'PRIVATECITY-7f3',
+    'PRIVATE-STAGE-7f3', 'PRIVATE-CATEGORY-7f3', 'PRIVATE-RUNERR-7f3', 'internal.example', 'seed decision', 'RRVUNL', 'Mianro', 'Chhabra', 'Bengaluru', '120000', '1,20,000', 'cash_floor', 'pay_line', 'employment_history', 'location_preferences',
+    'notice_period', 'HTTP 500', unitSecret()];
+  const hits = [];
+  for (const base of PUBLIC_READ) for (const cid of ['farhan_shaikh', 'sana_ansari']) {
+    const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/' + cid);
+    const url = p + (p.includes('?') ? '&' : '?') + 'candidate_id=' + cid;
+    const res = await call(worker, env, 'GET', url, { key: null });
+    assert.equal(res.status, 200, `${url} answered ${res.status} to a visitor: ${JSON.stringify(res.json).slice(0, 120)}`);
+    const text = JSON.stringify(res.json);
+    for (const f of forbidden) if (text.includes(f)) hits.push(`${url} contains ${f}`);
+    if (/"(notes|actor|resume_version|cover_letter_path|rejection_notes|application_channel|manual_override_reason|error_message|rejection_stage|rejection_reason_category)"/.test(text)) hits.push(`${url} has a private key`);
+    if (/[\w.+-]+@[\w-]+\.[\w.]+/.test(text)) hits.push(`${url} has an email address`);
+  }
+  assert.deepEqual(hits, []);
+});
+
+function unitSecret() { return ADMIN_KEY; }
+
+test('public viewing shows the intended content: both candidates, jobs, applications without notes, analytics, a limited profile', async () => {
+  const { env } = fresh();
+  const cands = (await call(worker, env, 'GET', '/api/candidates', { key: null })).json;
+  assert.deepEqual(cands.map((c) => c.id).sort(), ['farhan_shaikh', 'sana_ansari']);
+  assert.ok(cands.every((c) => c.current_location === 'India' && !('cash_floor_inr_monthly' in c)));
+  const jobs = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.ok(jobs.jobs.length > 0 && jobs.status_counts.READY === 1);
+  const apps = (await call(worker, env, 'GET', '/api/applications?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.equal(apps.count, 2); assert.equal(apps.applications[0].application.status !== undefined, true);
+  const prof = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null })).json;
+  assert.equal(prof.public_view, true); assert.match(prof.education, /B\.Tech/); assert.ok(prof.total_years_experience > 8);
+  assert.ok(!('employment_history' in prof) && !('pay_line' in prof));
+  const an = (await call(worker, env, 'GET', '/api/analytics?candidate_id=sana_ansari', { key: null })).status;
+  assert.equal(an, 200);
+  // the operator still gets the full record
+  const op = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
+  assert.equal(op.employment_history[0].employer, 'RRVUNL');
+  const opApps = (await call(worker, env, 'GET', '/api/applications?candidate_id=farhan_shaikh')).json;
+  assert.ok(JSON.stringify(opApps).includes('PRIVATE-NOTE-7f3'));
+});
+
+test('a visitor cannot read audit trails or operational surfaces, and cannot write anything', async () => {
+  const { sqlite, env } = fresh();
+  for (const u of ['/api/applications/app-1/history?candidate_id=farhan_shaikh', '/api/jobs/j1/qualification-audit?candidate_id=farhan_shaikh', '/api/automation/runs', '/api/meta', '/api/backups', '/api/sync/activity-logs', '/api/canonical-sync/status'])
+    assert.equal((await call(worker, env, 'GET', u, { key: null })).status, 401, u);
+  const snap = () => JSON.stringify([sqlite.prepare('SELECT * FROM applications ORDER BY id').all(), sqlite.prepare('SELECT * FROM application_history').all(),
+    sqlite.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), sqlite.prepare('SELECT * FROM candidates ORDER BY id').all(),
+    sqlite.prepare('SELECT * FROM cloud_automation').all(), sqlite.prepare('SELECT COUNT(*) c FROM jobs').get()]);
+  const before = snap();
+  const writes = [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'APPLIED' }], ['POST', '/api/candidates/farhan_shaikh/applications', { job_id: 'j4', status: 'APPLIED' }],
+    ['POST', '/api/jobs/j1/feedback?candidate_id=farhan_shaikh', { rating: 'LIKE' }], ['POST', '/api/jobs/j1/qualification-override', { status: 'INELIGIBLE', reason: 'x', candidate_id: 'farhan_shaikh' }],
+    ['PUT', '/api/profile?candidate_id=farhan_shaikh', { full_name: 'Hijacked' }], ['POST', '/api/profile/import-resume', { text: 'x' }], ['POST', '/api/automation/pause', {}], ['POST', '/api/automation/resume', {}],
+    ['PUT', '/api/automation/config', { is_enabled: false }], ['POST', '/api/automation/trigger', {}], ['POST', '/api/fixtures/reload', {}], ['POST', '/api/qualification/reverify', {}]];
+  for (const [m, u, b] of writes) { const r = await call(worker, env, m, u, { key: null, body: b }); assert.equal(r.status, 401, `${m} ${u} -> ${r.status}`); }
+  for (const [m, u, b] of writes) { const r = await call(worker, env, m, u, { key: 'wrong-key', body: b }); assert.equal(r.status, 403, `${m} ${u} wrong key -> ${r.status}`); }
+  assert.equal(snap(), before);
+});
+
+test('internal error text is never returned to anyone (500 is generic)', async () => {
+  const { sqlite, env } = fresh();
+  sqlite.exec('DROP TABLE jobs');
+  const pub = await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh', { key: null });
+  const op = await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh');
+  for (const r of [pub, op]) { assert.equal(r.status, 500); assert.equal(r.json.error, 'Internal error. The request was not completed.'); }
+});
+
+test('a wrong key is 403 on reads and writes; the right key is accepted', async () => {
+  const { env } = fresh();
+  assert.equal((await call(worker, env, 'GET', '/api/profile', { key: 'wrong' })).status, 403);
+  assert.equal((await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { key: 'wrong', body: { full_name: 'X' } })).status, 403);
+  assert.equal((await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).status, 200);
+});
+
+test('unconfigured server key fails closed (503) while health and version stay public', async () => {
+  const { env } = fresh({ ADMIN_API_KEY: undefined });
+  assert.equal((await call(worker, env, 'GET', '/api/applications', { key: ADMIN_KEY })).status, 503);
+  assert.equal((await call(worker, env, 'GET', '/api/health', { key: null })).status, 200);
+  assert.equal((await call(worker, env, 'GET', '/api/version', { key: null })).status, 200);
+});
+
+test('unauthenticated writes change nothing: applications, overrides and history are preserved', async () => {
+  const { sqlite, env } = fresh();
+  const snap = () => JSON.stringify([
+    sqlite.prepare('SELECT * FROM applications ORDER BY id').all(),
+    sqlite.prepare('SELECT * FROM application_history ORDER BY id').all(),
+    sqlite.prepare('SELECT candidate_id,job_id,qualification_status,manual_override_status,manual_override_reason FROM candidate_qualifications ORDER BY 1,2').all(),
+    sqlite.prepare('SELECT id,full_name,current_location FROM candidates ORDER BY id').all(),
+  ]);
+  const before = snap();
+  await call(worker, env, 'POST', '/api/jobs/j1/qualification-override', { key: null, body: { status: 'INELIGIBLE', reason: 'x', candidate_id: 'farhan_shaikh' } });
+  await call(worker, env, 'POST', '/api/applications', { key: null, body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'APPLIED' } });
+  await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { key: null, body: { full_name: 'Hijacked' } });
+  assert.equal(snap(), before);
+});
+
+test('profile: stored education wins, documented fallback is never the generic placeholder, cross-candidate save refused', async () => {
+  const { sqlite, env } = fresh();
+  const f = await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh');
+  assert.equal(f.json.education, 'BMS in Marketing');
+  const s = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari');
+  assert.equal(s.json.education, 'B.Tech in Electrical Engineering');
+  assert.equal(s.json.full_name, 'Test Sana');
+  sqlite.prepare("UPDATE candidates SET education='Stored Value' WHERE id='farhan_shaikh'").run();
+  assert.equal((await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh')).json.education, 'Stored Value');
+  const bad = await call(worker, env, 'PUT', '/api/profile?candidate_id=sana_ansari', { body: { id: 'farhan_shaikh', full_name: 'Overwrite' } });
+  assert.equal(bad.status, 409);
+  assert.equal(sqlite.prepare("SELECT full_name FROM candidates WHERE id='sana_ansari'").get().full_name, 'Test Sana');
+});
+
+test('analytics: one scope for every figure, inactive jobs excluded, per candidate', async () => {
+  const { env } = fresh();
+  const f = (await call(worker, env, 'GET', '/api/analytics?candidate_id=farhan_shaikh')).json;
+  assert.equal(f.total_jobs, 4);
+  assert.equal(Object.values(f.eligibility_counts).reduce((a, b) => a + b, 0), f.total_jobs);
+  assert.deepEqual(f.application_counts, { APPLIED: 1, SAVED: 1 });
+  const s = (await call(worker, env, 'GET', '/api/analytics?candidate_id=sana_ansari')).json;
+  assert.equal(s.total_jobs, 4);
+  assert.deepEqual(s.application_counts, {});
+  assert.notDeepEqual(f.eligibility_counts, s.eligibility_counts);
+});
+
+test('discovery funnel is computed from the database for the requested candidate (no frozen constants)', async () => {
+  const { sqlite, env } = fresh();
+  const f = (await call(worker, env, 'GET', '/api/analytics/discovery?candidate_id=farhan_shaikh')).json;
+  const s = (await call(worker, env, 'GET', '/api/analytics/discovery?candidate_id=sana_ansari')).json;
+  assert.equal(f.candidate_id, 'farhan_shaikh'); assert.equal(s.candidate_id, 'sana_ansari');
+  assert.equal(f.scope, 'current_active_inventory');
+  assert.equal(f.total_scanned_jobs, 4); assert.equal(f.ready_jobs, 1); assert.equal(f.stretch_ready_jobs, 1);
+  assert.equal(s.ready_jobs, 1); assert.equal(s.stretch_ready_jobs, 0);
+  assert.equal(f.total_employers, 3);
+  assert.deepEqual(f.applications, { total: 2, breakdown: { APPLIED: 1, SAVED: 1 } });
+  assert.deepEqual(s.applications, { total: 0, breakdown: {} });
+  assert.deepEqual(f.geographic_eligibility, { ELIGIBLE: 3, UNKNOWN: 1, INELIGIBLE: 0 });
+  assert.equal(Object.values(f.geographic_eligibility).reduce((a, b) => a + b, 0), f.total_scanned_jobs);
+  assert.notEqual(f.total_scanned_jobs, 1161); assert.notEqual(f.geographic_eligibility.UNKNOWN, 752);
+  // The numbers follow the data: change a row and the funnel changes.
+  sqlite.prepare("UPDATE candidate_qualifications SET qualification_status='READY' WHERE candidate_id='farhan_shaikh' AND job_id='j4'").run();
+  assert.equal((await call(worker, env, 'GET', '/api/analytics/discovery?candidate_id=farhan_shaikh')).json.ready_jobs, 2);
+});
+
+test('source scorecard: real monitoring state, no placeholder URLs, unmonitored sources are labelled as such', async () => {
+  const { env } = fresh();
+  const res = (await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json;
+  const text = JSON.stringify(res);
+  assert.ok(!text.includes('example.com'), 'placeholder feed URL present');
+  const by = Object.fromEntries(res.sources.map((x) => [x.source_id, x]));
+  assert.equal(by['lever:acme'].monitored, true);
+  assert.equal(by['lever:acme'].last_status, 'SUCCESS');
+  assert.equal(by['lever:acme'].feed_url, 'https://api.lever.co/v0/postings/acme?mode=json&skip=0&limit=50'.replace(/limit=\d+/, 'limit=' + by['lever:acme'].feed_url.match(/limit=(\d+)/)[1]));
+  assert.equal(by['greenhouse:beta'].last_status, 'ERROR'); assert.equal(by['greenhouse:beta'].last_error, 'HTTP 500'); assert.equal(by['greenhouse:beta'].consecutive_failures, 3);
+  assert.equal(by['lever:idle'].total_jobs, 0); assert.equal(by['lever:idle'].last_status, 'NEVER_RUN');
+  const un = by['unattributed:ashby'];
+  assert.equal(un.monitored, false); assert.equal(un.last_status, 'NOT_MONITORED'); assert.equal(un.feed_url, null); assert.equal(un.last_latency_ms, null);
+  assert.equal(un.total_jobs, 1, 'inactive job must not be counted');
+  assert.equal(by['lever:acme'].total_jobs, 2); assert.equal(by['lever:acme'].ready_jobs, 1); assert.equal(by['lever:acme'].high_match_jobs, 1);
+  const sana = Object.fromEntries((await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=sana_ansari')).json.sources.map((x) => [x.source_id, x]));
+  assert.equal(sana['lever:acme'].ready_jobs, 0); assert.equal(sana['unattributed:ashby'].ready_jobs, 1);
+});
+
+test('GET requests never modify application history or manual decisions', async () => {
+  const { sqlite, env } = fresh();
+  const before = JSON.stringify(sqlite.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all());
+  for (const r of routes().filter((r) => r.method === 'GET' && !r.path.includes('x'))) await call(worker, env, 'GET', r.path);
+  assert.equal(JSON.stringify(sqlite.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all()), before);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, 2);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM application_history').get().c, 1);
+});
+
+test('india-remote queue follows the requested candidate (no forced Farhan)', async () => {
+  const { env } = fresh();
+  const f = await call(worker, env, 'GET', '/api/india-remote/jobs?candidate_id=farhan_shaikh');
+  const s = await call(worker, env, 'GET', '/api/india-remote/jobs?candidate_id=sana_ansari');
+  assert.ok(f.json.jobs.length > 0 && s.json.jobs.length > 0);
+  assert.ok(f.json.jobs.every((j) => j.candidate_id === 'farhan_shaikh'));
+  assert.ok(s.json.jobs.every((j) => j.candidate_id === 'sana_ansari'), 'Sana received another candidate\'s rows');
+  assert.notDeepEqual(f.json.jobs.map((j) => j.id).sort(), s.json.jobs.map((j) => j.id).sort());
+});
+
+test('a disabled route is not an auth failure (410, not 403), and /auth/verify compares the key safely', async () => {
+  const { env } = fresh();
+  assert.equal((await call(worker, env, 'POST', '/api/fixtures/reload', { body: {} })).status, 410);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: ADMIN_KEY } })).status, 200);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: ADMIN_KEY + 'x' } })).status, 403);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: '' } })).status, 400);
+});
+
+test('source scorecard application counts come from the applications table', async () => {
+  const { env } = fresh();
+  const by = Object.fromEntries((await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.map((x) => [x.source_id, x]));
+  assert.equal(by['lever:acme'].applications_count, 2);
+  assert.equal(by['lever:acme'].interviews_count, 0);
+  assert.equal(by['greenhouse:beta'].applications_count, 0);
+});
+
+// ---- guess limiter -------------------------------------------------------------------------------------------
+const callFrom = async (env, ip, key, method = 'GET', p = '/api/profile?candidate_id=farhan_shaikh') => {
+  const headers = { 'CF-Connecting-IP': ip };
+  if (key) headers.Authorization = `Bearer ${key}`;
+  const res = await worker.fetch(new Request('https://test.invalid' + p, { method, headers }), env, { waitUntil() {} });
+  return { status: res.status, retry: res.headers.get('Retry-After') };
+};
+
+test('repeated wrong keys lock that client out (429 + Retry-After), even for the correct key; other clients are unaffected', async () => {
+  const { env } = fresh();
+  for (let i = 0; i < 8; i++) assert.equal((await callFrom(env, '203.0.113.7', 'guess' + i)).status, 403);
+  const locked = await callFrom(env, '203.0.113.7', 'guess9');
+  assert.equal(locked.status, 429); assert.ok(Number(locked.retry) > 0 && Number(locked.retry) <= 900);
+  assert.equal((await callFrom(env, '203.0.113.7', ADMIN_KEY)).status, 429, 'correct key must not be an oracle during lockout');
+  assert.equal((await callFrom(env, '198.51.100.9', ADMIN_KEY)).status, 200, 'another client is not locked');
+});
+
+test('lockout also covers /api/auth/verify, expires with the window, and a good unlock clears the count', async () => {
+  const { sqlite, env } = fresh();
+  const verify = (ip, key) => worker.fetch(new Request('https://test.invalid/api/auth/verify', { method: 'POST', headers: { 'CF-Connecting-IP': ip, 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) }), env, { waitUntil() {} }).then((r) => r.status);
+  for (let i = 0; i < 8; i++) assert.equal(await verify('192.0.2.1', 'bad' + i), 403);
+  assert.equal(await verify('192.0.2.1', ADMIN_KEY), 429);
+  sqlite.prepare('UPDATE auth_failures SET window_start = window_start - 1000').run();           // window elapsed
+  assert.equal(await verify('192.0.2.1', ADMIN_KEY), 200);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 0, 'success clears the counter');
+  for (let i = 0; i < 3; i++) await verify('192.0.2.2', 'bad' + i);
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 3);
+  assert.ok(!JSON.stringify(sqlite.prepare('SELECT * FROM auth_failures').all()).includes('192.0.2'), 'raw client address must not be stored');
+});
+
+test('a missing limiter table never locks the operator out and never weakens authentication', async () => {
+  const { sqlite, env } = fresh();
+  sqlite.exec('DROP TABLE auth_failures');
+  assert.equal((await callFrom(env, '203.0.113.50', ADMIN_KEY)).status, 200);
+  for (let i = 0; i < 12; i++) assert.equal((await callFrom(env, '203.0.113.50', 'nope')).status, 403);
+  assert.equal((await callFrom(env, '203.0.113.50', null)).status, 200, 'a visitor with no key can still read public pages');
+});
+
+// ---- joins cannot inflate counts ----------------------------------------------------------------------------
+test('several application records for one job cannot inflate source, funnel or summary counts', async () => {
+  const { sqlite, env } = fresh();
+  const read = async () => ({
+    src: (await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.map((x) => [x.source_id, x.total_jobs, x.ready_jobs, x.eligible_jobs]).sort(),
+    funnel: (await call(worker, env, 'GET', '/api/analytics/discovery?candidate_id=farhan_shaikh')).json,
+    summary: (await call(worker, env, 'GET', '/api/india-remote/summary?candidate_id=farhan_shaikh')).json,
+    analytics: (await call(worker, env, 'GET', '/api/analytics?candidate_id=farhan_shaikh')).json,
+  });
+  const before = await read();
+  sqlite.exec('DROP INDEX IF EXISTS idx_app_cand_job');                                         // worst case: no unique index at all
+  for (let i = 0; i < 4; i++) sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)").run('dup-' + i, 'farhan_shaikh', 'j1', i % 2 ? 'REJECTED' : 'INTERVIEWING');
+  const after = await read();
+  assert.deepEqual(after.src, before.src, 'per-source job counts changed');
+  assert.equal(after.funnel.total_scanned_jobs, before.funnel.total_scanned_jobs);
+  assert.equal(after.funnel.ready_jobs, before.funnel.ready_jobs);
+  assert.deepEqual(after.summary, before.summary);
+  assert.equal(after.analytics.total_jobs, before.analytics.total_jobs);
+  assert.equal(after.analytics.application_counts.APPLIED, 1); // application RECORDS are counted as records
+  const acme = (await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.find((x) => x.source_id === 'lever:acme');
+  assert.equal(acme.total_jobs, 2); assert.equal(acme.applications_count, 2 + 4); assert.equal(acme.interviews_count, 1); assert.equal(acme.rejections_count, 1);
+});
+
+test('the job list and its total are not multiplied by duplicate application rows', async () => {
+  const { sqlite, env } = fresh();
+  const before = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh&limit=50')).json;
+  sqlite.exec('DROP INDEX IF EXISTS idx_app_cand_job');
+  for (let i = 0; i < 3; i++) sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)").run('d' + i, 'farhan_shaikh', 'j1', 'REJECTED');
+  const after = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh&limit=50')).json;
+  assert.equal(after.total, before.total); assert.equal(after.jobs.length, before.jobs.length);
+  assert.deepEqual(after.status_counts, before.status_counts);
+});
+
+test('candidate isolation: scoped routes require a known candidate_id and never default to Farhan', async () => {
+  const { env } = fresh();
+  for (const p of ['/api/profile', '/api/jobs', '/api/applications', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness',
+                   '/api/qualification/metrics', '/api/cohorts/metrics', '/api/india-remote/summary', '/api/india-remote/jobs']) {
+    const none = await call(worker, env, 'GET', p);
+    assert.equal(none.status, 400, `${p} without candidate_id answered ${none.status}`);
+    const bad = await call(worker, env, 'GET', p + (p.includes('?') ? '&' : '?') + 'candidate_id=someone_else');
+    assert.equal(bad.status, 400, `${p} with an unknown candidate answered ${bad.status}`);
+  }
+  for (const body of [{ job_id: 'j1', status: 'SAVED' }, { candidate_id: 'nobody', job_id: 'j1', status: 'SAVED' }]) {
+    assert.equal((await call(worker, env, 'POST', '/api/applications', { body })).status, 400);
+  }
+  assert.equal((await call(worker, env, 'POST', '/api/jobs/j1/qualification-override', { body: { status: 'READY', reason: 'because' } })).status, 400);
+});
+
+test('limiter: concurrent wrong guesses are counted exactly; X-Forwarded-For cannot pick a fresh bucket; idle rows are trimmed', async () => {
+  const { sqlite, env } = fresh();
+  const attempt = (xff, i) => worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '203.0.113.99', 'X-Forwarded-For': xff, Authorization: 'Bearer g' + i } }), env, { waitUntil() {} }).then((r) => r.status);
+  const statuses = await Promise.all(Array.from({ length: 30 }, (_, i) => attempt('10.0.0.' + i, i)));
+  assert.equal(statuses.filter((s) => s === 403).length, 8, 'exactly 8 wrong guesses may be answered 403');
+  assert.equal(statuses.filter((s) => s === 429).length, 22);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 1, 'rotating X-Forwarded-For created extra buckets');
+  assert.ok(sqlite.prepare('SELECT failures FROM auth_failures').get().failures >= 8);
+  sqlite.prepare("INSERT INTO auth_failures VALUES ('stale',3,1,1,NULL)").run();
+  for (let i = 0; i < 300; i++) await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '198.51.100.' + (i % 250) + '.' + i, Authorization: 'Bearer n' + i } }), env, { waitUntil() {} });
+  assert.equal(sqlite.prepare("SELECT COUNT(*) c FROM auth_failures WHERE ip_hash='stale'").get().c, 0, 'rows idle for a day must be trimmed');
+});
+
+test('overview and metrics: active-only inventory, applied stage vs tracker records, no placeholder fallbacks', async () => {
+  const { sqlite, env } = fresh();
+  const o = (await call(worker, env, 'GET', '/api/dashboard/overview')).json;
+  assert.equal(o.total_jobs_tracked, 5); assert.equal(o.active_jobs_count, 4);
+  assert.equal(o.farhan.ready_count, 1); assert.equal(o.farhan.stretch_count, 1);
+  assert.equal(o.farhan.application_records, 2); assert.equal(o.farhan.applied_count, 1, 'only the APPLIED stage counts as applied');
+  assert.equal(o.sana.application_records, 0);
+  sqlite.prepare("UPDATE jobs SET is_active=0 WHERE id='j1'").run();                         // closing a READY job removes it from inventory
+  const m = (await call(worker, env, 'GET', '/api/qualification/metrics?candidate_id=farhan_shaikh')).json;
+  assert.equal(m.ready_inventory, 0); assert.equal(m.stretch_ready_inventory, 1);
+  assert.equal((await call(worker, env, 'GET', '/api/dashboard/overview')).json.farhan.ready_count, 0);
+  const empty = createDb(); const e = (await call(worker, makeEnv(empty.d1), 'GET', '/api/dashboard/overview')).json;
+  assert.equal(e.total_jobs_tracked, 0); assert.equal(e.active_jobs_count, 0, 'an empty database must not report invented totals');
+  const c = (await call(worker, env, 'GET', '/api/cohorts/metrics?candidate_id=farhan_shaikh')).json;
+  assert.ok(JSON.stringify(c).length > 10);
+});
+
+test('profile facts: experience is computed from dates for Sana, Farhan keeps his stored value, no private text without the key', async () => {
+  const { env } = fresh();
+  const s = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
+  const years = (Date.now() - Date.UTC(2017, 8, 1)) / (365.25 * 86400000);
+  assert.ok(Math.abs(s.total_years_experience - years) < 0.11, `${s.total_years_experience} vs ${years}`);
+  assert.match(s.years_basis, /computed from career start 2017-09/);
+  assert.deepEqual(s.employment_history.map((e) => [e.employer, e.from, e.to]), [['RRVUNL', '2017-09', '2025-02'], ['RRVUNL', '2025-02', null]]);
+  assert.match(s.pay_line, /unknown/i);
+  const f = (await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh')).json;
+  assert.equal(f.total_years_experience, 4); assert.match(f.years_basis, /stored/);
+  assert.equal(f.education, 'BMS in Marketing');
+  assert.equal(f.employment_history[0].employer, 'Mianro Systems');
+  assert.match(f.pay_line, /1,20,000/); assert.match(f.pay_line, /\$25\/hour/);
+  const anon = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null });
+  assert.equal(anon.status, 200); assert.ok(!JSON.stringify(anon.json).includes('RRVUNL'));
+});
+
+// ---- review round 2 -------------------------------------------------------------------------------------------
+test('a browser repeating the SAME stale key in parallel counts once; different guesses each count', async () => {
+  const { sqlite, env } = fresh();
+  const hit = (key) => worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '203.0.113.201', Authorization: 'Bearer ' + key } }), env, { waitUntil() {} }).then((r) => r.status);
+  const burst = await Promise.all(Array.from({ length: 7 }, () => hit('stale-old-key')));
+  assert.deepEqual(new Set(burst), new Set([403]));
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 1, 'seven identical requests must cost one attempt');
+  assert.equal(await hit(ADMIN_KEY), 200, 'the real key still works after a stale-key burst');
+  for (let i = 0; i < 7; i++) await hit('guess-' + i);                                  // seven different guesses
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 8);
+  assert.equal(await hit('guess-8'), 429);
+  assert.equal(await hit(ADMIN_KEY), 429);
+  assert.ok(!sqlite.prepare('SELECT last_key_hash FROM auth_failures').get().last_key_hash.includes('guess'), 'a wrong key must not be stored');
+});
+
+test('path-scoped candidate routes reject unknown candidates and a body that disagrees with the path', async () => {
+  const { sqlite, env } = fresh();
+  for (const p of ['/api/candidates/unknown/jobs', '/api/candidates/unknown/applications', '/api/candidates/unknown/strategy', '/api/candidates/unknown/dashboard'])
+    assert.equal((await call(worker, env, 'GET', p)).status, 400, p);
+  assert.equal((await call(worker, env, 'GET', '/api/candidates/sana_ansari/strategy')).status, 200);
+  const before = sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c;
+  const mismatch = await call(worker, env, 'POST', '/api/candidates/sana_ansari/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
+  assert.equal(mismatch.status, 409);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, before, 'nothing may be saved on a mismatch');
+});
+
+test('profile save keeps stored values for fields not sent and rejects malformed bodies', async () => {
+  const { sqlite, env } = fresh();
+  const before = sqlite.prepare("SELECT current_location, total_years_experience, qualification_threshold FROM candidates WHERE id='sana_ansari'").get();
+  const ok = await call(worker, env, 'PUT', '/api/profile?candidate_id=sana_ansari', { body: { full_name: 'Test Sana Renamed' } });
+  assert.equal(ok.status, 200);
+  const after = sqlite.prepare("SELECT full_name, current_location, total_years_experience, qualification_threshold FROM candidates WHERE id='sana_ansari'").get();
+  assert.equal(after.full_name, 'Test Sana Renamed');
+  assert.equal(after.current_location, before.current_location); assert.equal(after.total_years_experience, before.total_years_experience); assert.equal(after.qualification_threshold, before.qualification_threshold);
+  const bad = await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=sana_ansari', { method: 'PUT', headers: { Authorization: 'Bearer ' + ADMIN_KEY, 'Content-Type': 'application/json' }, body: '{not json' }), env, { waitUntil() {} });
+  assert.equal(bad.status, 400);
+});
+
+// ---- public viewing release ---------------------------------------------------------------------------------------
+test('the version endpoint reports the deployed commit when the release provides it', async () => {
+  const { env } = fresh({ GIT_COMMIT: 'abc123def', DEPLOYED_AT: '2026-11-05T00:00:00Z' });
+  const v = (await call(worker, env, 'GET', '/api/version', { key: null })).json;
+  assert.equal(v.commit, 'abc123def'); assert.equal(v.deployed_at, '2026-11-05T00:00:00Z');
+  assert.equal((await call(worker, fresh().env, 'GET', '/api/version', { key: null })).json.commit, 'unknown');
+});
+
+test('the read-only public profile summary cannot be saved back over a stored record', async () => {
+  const { sqlite, env } = fresh();
+  const pub = (await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh', { key: null })).json;
+  const before = JSON.stringify(sqlite.prepare('SELECT * FROM candidates ORDER BY id').all());
+  const r = await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: pub });   // even the operator cannot save it
+  assert.equal(r.status, 400);
+  assert.equal(JSON.stringify(sqlite.prepare('SELECT * FROM candidates ORDER BY id').all()), before);
+});
+
+test('an operator key sent with a public read still returns the operator view; a wrong key on a public read is refused and counted', async () => {
+  const { env } = fresh();
+  const op = await call(worker, env, 'GET', '/api/candidates');
+  assert.match(JSON.stringify(op.json), /PRIVATECITY-7f3/);
+  assert.ok(op.json.every((c) => 'cash_floor_inr_monthly' in c), 'the operator view keeps the pay fields');
+  assert.equal((await call(worker, env, 'GET', '/api/candidates', { key: 'wrong' })).status, 403);
+});
+
+test('a visitor-origin CORS preflight is answered and no public route sets credentials', async () => {
+  const { env } = fresh();
+  const res = await worker.fetch(new Request('https://test.invalid/api/jobs', { method: 'OPTIONS', headers: { Origin: 'https://example.org' } }), env, { waitUntil() {} });
+  assert.equal(res.status, 204);
+  assert.ok(!res.headers.get('Access-Control-Allow-Credentials'));
+});
+
+test('weekly target: 100 for Farhan counts only distinct jobs that became READY in the current NY week; older READY and STRETCH_READY are separate', async () => {
+  const { sqlite, env } = fresh();
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const old = new Date(Date.now() - 12 * 86400000).toISOString().replace('T', ' ').slice(0, 19);
+  const set = (id, st, at) => sqlite.prepare(`UPDATE candidate_qualifications SET qualification_status=?, qualified_at=? WHERE candidate_id='farhan_shaikh' AND job_id=?`).run(st, at, id);
+  set('j1', 'READY', now);            // new this week
+  set('j2', 'STRETCH_READY', now);    // stretch is separate
+  set('j3', 'READY', old);            // older READY inventory
+  const m = (await call(worker, env, 'GET', '/api/qualification/metrics?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.equal(m.weekly_research_target, 100);
+  assert.equal(m.new_qualified_this_week, 1, 'only the job that became READY this week');
+  assert.equal(m.stretch_ready_inventory, 1);
+  assert.ok(m.ready_inventory >= 1);
+  assert.equal(m.timezone || 'America/New_York', 'America/New_York');
+});

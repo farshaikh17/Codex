@@ -1,0 +1,34 @@
+name: Dashboard verify
+# Read-only, no secrets. Runs on pull requests that touch the dashboard and on demand: builds the frontend, bundles the
+# Worker (dry run, nothing is deployed) and runs the unit, bundle-privacy, public-view and migration tests.
+on:
+  pull_request:
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/dashboard-*.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dashboard-verify-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+    working-directory: dashboard
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run verify
