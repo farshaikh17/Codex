@@ -122,6 +122,10 @@ if (await row2.count()) {
   check('B3 operator: the change is sent with the key and accepted', wrote.length >= 1 && wrote.every((r) => r.auth && r.status === 200), JSON.stringify(wrote));
 }
 const after = await (await fetch(BASE + '/api/applications?candidate_id=farhan_shaikh', { headers: { Authorization: `Bearer ${KEY}` } })).json();
+await page.keyboard.press('Escape'); await page.evaluate(() => document.querySelector('[aria-label="Close"]')?.click()); await page.waitForTimeout(500);
+await tab('SETTINGS');
+const opInputs = await page.locator('input').evaluateAll((els) => els.map((e) => e.value));
+check('B3b public -> operator on Settings: the full editable record replaces the public summary', opInputs.some((v) => /PRIVATECITY-7f3/.test(v)), opInputs.slice(0, 5).join('|'));
 check('B4 the operator sees stored records; a visitor still sees none of the notes', after.count >= 2 && !JSON.stringify(await apiPublic('/applications?candidate_id=farhan_shaikh')).includes('PRIVATE-'));
 await page.keyboard.press('Escape');
 await goto();
@@ -136,7 +140,7 @@ const staleVerify = apiLog.filter((r) => /auth\/verify/.test(r.url));
 // lock
 await page.locator('button[aria-label*="Viewing only"]').first().click(); await page.fill('#operator-key-input', KEY); await page.getByRole('button', { name: /unlock/i }).last().click(); await page.waitForTimeout(1500);
 await page.locator('button[aria-label*="Operator mode on"]').first().click(); await page.waitForSelector('#operator-logout-btn'); await page.click('#operator-logout-btn'); await page.waitForTimeout(800);
-check('B7 sign out: key removed, public view continues', (await storedKey()) === null && !(await modalOpen()));
+{ const t = await bodyText(); check('B7 sign out: key removed, public view continues, operator data is gone from the screen at once', (await storedKey()) === null && !(await modalOpen()) && !/PRIVATECITY|PRIVATE-/.test(t) && t.length > 200, t.slice(0, 120)); }
 // guess limiter
 await page.locator('button[aria-label*="Viewing only"]').first().click();
 for (let i = 0; i < 9; i++) { await page.fill('#operator-key-input', 'guess-' + i); await page.getByRole('button', { name: /unlock/i }).last().click(); await page.waitForTimeout(350); }

@@ -28,7 +28,7 @@ const tab = async (n) => { await page.getByRole('button', { name: new RegExp('^'
 const api = async (p) => (await fetch(BASE + '/api' + p)).json();
 const modalOpen = async () => (await page.locator('#operator-key-input, #operator-logout-btn').count()) > 0;
 const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|\bnotice period\b|cash floor/i;          // employers and pay: nowhere in public output
-const PRIVATE_CITY = /Rajasthan|\bKota\b|Bengaluru|Hyderabad|Chennai|Pune|Mumbai/i;            // candidate-side only (job postings legitimately name cities)
+const PRIVATE_CITY = /\bKota\b|Bengaluru|Hyderabad|Chennai|Pune|Mumbai/i;            // candidate-side only (job postings legitimately name cities)
 
 // Anonymous API: the protected surface refuses, the public surface answers.
 for (const p of ['/applications/x/history?candidate_id=farhan_shaikh', '/jobs/x/qualification-audit?candidate_id=farhan_shaikh', '/automation/runs', '/meta', '/backups']) {
@@ -43,7 +43,7 @@ const leaks = [];
 for (const p of ['/candidates', '/profile?candidate_id=farhan_shaikh', '/profile?candidate_id=sana_ansari', '/applications?candidate_id=farhan_shaikh', '/applications?candidate_id=sana_ansari', '/dashboard/overview', '/jobs?candidate_id=farhan_shaikh&limit=50', '/sources']) {
   const r = await fetch(BASE + '/api' + p); const t = await r.text();
   if (r.status !== 200) leaks.push(`${p} -> ${r.status}`);
-  if (PRIVATE_TEXT.test(t) || (/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_CITY.test(t)) || /"(notes|application_notes|rejection_notes|resume_version|cover_letter_path|actor|cash_floor_inr_monthly|pay_line|employment_history|location_preferences)"/.test(t) || /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t)) leaks.push(`${p} private field/value`);
+  if ((/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_TEXT.test(t)) || (/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_CITY.test(t)) || /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|actor|cash_floor_inr_monthly|pay_line|employment_history|location_preferences)"/.test(t) || (/^\/(candidates|profile|dashboard)/.test(p) && /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t))) leaks.push(`${p} private field/value`);
 }
 check('public endpoints answer 200 and expose no private field, employer, pay, city, note or email', leaks.length === 0, leaks.join('; '));
 

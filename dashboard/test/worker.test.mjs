@@ -51,7 +51,7 @@ test('the public read list matches the registered routes (a new GET route is pro
 test('public viewing: every public read works with no key, returns data, and holds no private field or value', async () => {
   const { env } = fresh();
   const forbidden = ['PRIVATE-NOTE-7f3', 'PRIVATE-CHANNEL-7f3', 'PRIVATE-RESUME-7f3', 'PRIVATE-COVER-7f3', 'PRIVATE-REJECT-7f3', 'PRIVATE-ACTOR-7f3', 'PRIVATECITY-7f3',
-    'seed decision', 'RRVUNL', 'Mianro', 'Chhabra', 'Bengaluru', '120000', '1,20,000', 'cash_floor', 'pay_line', 'employment_history', 'location_preferences',
+    'PRIVATE-STAGE-7f3', 'PRIVATE-CATEGORY-7f3', 'PRIVATE-RUNERR-7f3', 'internal.example', 'seed decision', 'RRVUNL', 'Mianro', 'Chhabra', 'Bengaluru', '120000', '1,20,000', 'cash_floor', 'pay_line', 'employment_history', 'location_preferences',
     'notice_period', 'HTTP 500', unitSecret()];
   const hits = [];
   for (const base of PUBLIC_READ) for (const cid of ['farhan_shaikh', 'sana_ansari']) {
@@ -61,7 +61,7 @@ test('public viewing: every public read works with no key, returns data, and hol
     assert.equal(res.status, 200, `${url} answered ${res.status} to a visitor: ${JSON.stringify(res.json).slice(0, 120)}`);
     const text = JSON.stringify(res.json);
     for (const f of forbidden) if (text.includes(f)) hits.push(`${url} contains ${f}`);
-    if (/"(notes|actor|resume_version|cover_letter_path|rejection_notes|application_channel|manual_override_reason)"/.test(text)) hits.push(`${url} has a private key`);
+    if (/"(notes|actor|resume_version|cover_letter_path|rejection_notes|application_channel|manual_override_reason|error_message|rejection_stage|rejection_reason_category)"/.test(text)) hits.push(`${url} has a private key`);
     if (/[\w.+-]+@[\w-]+\.[\w.]+/.test(text)) hits.push(`${url} has an email address`);
   }
   assert.deepEqual(hits, []);

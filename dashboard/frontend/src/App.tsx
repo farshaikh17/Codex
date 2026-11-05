@@ -70,6 +70,7 @@ export const App: React.FC = () => {
   const [authOpen, setAuthOpen] = useState<boolean>(false);
   const [isOperator, setIsOperator] = useState<boolean>(isOperatorAuthenticated());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [authEpoch, setAuthEpoch] = useState(0);   // bumped when the operator session ends, so operator data is dropped and reloaded publicly
   useEffect(() => {
     const handleAuthRequired = (e: Event) => {
       const d = (e as CustomEvent).detail || {};
@@ -77,6 +78,8 @@ export const App: React.FC = () => {
         // A stored key was refused (rotated or expired): fall back to the public view and say so.
         logoutOperator();
         setIsOperator(false);
+        setProfile(null); setTrackedJobs([]);
+        setAuthEpoch((n) => n + 1);
         setSessionNotice('The operator session ended. You are viewing the public dashboard; sign in again to make changes.');
       }
       if (d.write) setAuthOpen(true);
@@ -106,6 +109,7 @@ export const App: React.FC = () => {
     // If an operator key is stored, confirm it once before fanning out (a stale key then costs one refused attempt).
     // Without a key, or with a refused one, the page simply loads in public mode: no unlock window, no error.
     const session = await checkStoredOperatorKey();
+    if (session === 'unknown') setSessionNotice('Could not confirm the operator session just now; showing the public view.');
     // These two apply even if a newer load has superseded this one: the stored key is already gone.
     if (session === 'rejected') setSessionNotice('The saved operator key is no longer valid. You are viewing the public dashboard.');
     if (session === 'locked') { logoutOperator(); setSessionNotice('Too many failed sign-in attempts from this address. You are viewing the public dashboard; try signing in again later.'); }
@@ -155,6 +159,7 @@ export const App: React.FC = () => {
     }
   }, [search, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, activeTab, candidateId, currentPage, pageSize]);
 
+  useEffect(() => { if (authEpoch > 0) loadData(); }, [authEpoch]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -181,7 +186,7 @@ export const App: React.FC = () => {
     try {
       await updateApplication({ job_id: jobId, status: newStatus, candidate_id: candidateId });
       await loadData();
-    } catch { setError("Unable to save this job. Please retry."); }
+    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to save this job. Please retry."); }
   };
 
   const handleDismissJob = async (jobId: string, e: React.MouseEvent) => {
@@ -192,8 +197,8 @@ export const App: React.FC = () => {
       // Optimistically remove from visible list and reload fresh state
       setJobs((prev) => prev.filter((j) => j.id !== jobId));
       await loadData();
-    } catch {
-      setError("Unable to dismiss job. Please retry.");
+    } catch (e: any) {
+      if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to dismiss job. Please retry.");
     }
   };
 
@@ -225,7 +230,7 @@ export const App: React.FC = () => {
     try {
       await reloadSyntheticFixtures();
       await loadData();
-    } catch { setError("Unable to reload test jobs. Please retry."); }
+    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to reload test jobs. Please retry."); }
   };
 
   const savedCount = trackedJobs.length;
@@ -253,7 +258,9 @@ export const App: React.FC = () => {
         onClose={() => setAuthOpen(false)}
         onAuthChange={(authed) => {
           setIsOperator(authed);
-          if (authed) loadData();
+          // Signing in loads the operator view; signing out drops operator data at once and reloads the public view.
+          if (!authed) { setProfile(null); setTrackedJobs([]); }
+          loadData();
         }}
       />
 
@@ -462,7 +469,7 @@ export const App: React.FC = () => {
 
             {activeTab === 'profile' && profile && (
               <ProfileModal
-                key={profile.id}
+                key={`${profile.id}-${profile.public_view ? 'public' : 'operator'}`}
                 profile={profile}
                 onUpdate={handleUpdateProfile}
               />

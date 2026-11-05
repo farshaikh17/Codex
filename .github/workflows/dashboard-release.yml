@@ -72,8 +72,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       MODE: ${{ inputs.mode }}
       ROTATE: ${{ inputs.rotate_key }}
       SMOKE_BASE: https://career-job-engine.farshaikh17.workers.dev
@@ -96,6 +94,9 @@ jobs:
       - run: npm ci
 
       - name: Preflight - account, database, token permissions, rollback points (read-only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
           echo "### Dashboard release ($MODE)" >> "$GITHUB_STEP_SUMMARY"
@@ -121,6 +122,9 @@ jobs:
           { echo '- live version before this run:'; echo '```'; curl -fsS "$SMOKE_BASE/api/version" || echo '(unreachable)'; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fingerprint protected records before
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node scripts/fingerprint.mjs --remote > before.json && cat before.json
 
       - name: Preflight finished - nothing was changed
@@ -130,20 +134,31 @@ jobs:
 
       - name: Add the guess-limiter table (additive, idempotent; migrations 0001-0007 are NOT replayed)
         if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler d1 execute career-job-engine --remote --file=migrations/0008_auth_failures.sql
 
       - name: Rotate operator key (only when requested)
         if: ${{ inputs.mode == 'release' && inputs.rotate_key }}
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NEW_ADMIN_API_KEY: ${{ secrets.NEW_ADMIN_API_KEY }}
         run: |
           [ -n "$NEW_ADMIN_API_KEY" ] || { echo "::error::rotate_key is ticked but the NEW_ADMIN_API_KEY secret is empty"; exit 1; }
           printf '%s' "$NEW_ADMIN_API_KEY" | npx wrangler secret put ADMIN_API_KEY
 
-      - name: Build and deploy (records the commit in the Worker so the live version can be matched)
+      - name: Build the frontend (no Cloudflare credentials in this step)
         if: ${{ inputs.mode == 'release' }}
+        run: npm run build:frontend
+
+      - name: Deploy (records the commit in the Worker so the live version can be matched)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          npm run build:frontend
           npx wrangler deploy --var "GIT_COMMIT:$GITHUB_SHA" --var "DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee deploy.log
           VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
           echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
@@ -168,6 +183,9 @@ jobs:
 
       - name: Fingerprint protected records after and compare
         if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           node scripts/fingerprint.mjs --remote > after.json
           node -e "

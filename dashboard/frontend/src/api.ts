@@ -106,17 +106,21 @@ export async function verifyOperatorKey(key: string): Promise<{ status: string; 
 /** One check of the stored key per page load, before any data requests are fanned out. A stale key then costs a
  *  single refused attempt instead of one per parallel request. Returns 'ok', 'none', 'rejected' or 'locked'. */
 let verifiedKey: string | null = null;
-export async function checkStoredOperatorKey(): Promise<'ok' | 'none' | 'rejected' | 'locked'> {
+export async function checkStoredOperatorKey(): Promise<'ok' | 'none' | 'rejected' | 'locked' | 'unknown'> {
   const key = getSessionAuthKey();
   if (!key) return 'none';
   if (verifiedKey === key) return 'ok';
-  const res = await fetch(`${API_BASE}/auth/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key })
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/auth/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+  } catch { return 'unknown'; }                       // network failure: keep the key, load the public view
   if (res.status === 429) return 'locked';
-  if (!res.ok) { clearSessionAuthKey(); verifiedKey = null; return 'rejected'; }
+  if (res.status === 401 || res.status === 403) { clearSessionAuthKey(); verifiedKey = null; return 'rejected'; }
+  if (!res.ok) return 'unknown';                      // a server hiccup must not sign the operator out
   verifiedKey = key;
   return 'ok';
 }

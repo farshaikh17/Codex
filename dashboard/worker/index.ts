@@ -140,6 +140,7 @@ const PRIVATE_KEYS = new Set([
   'cash_floor_inr_monthly', 'cash_floor_inr_annual', 'min_acceptable_salary_usd', 'min_fixed_monthly_inr', 'preferred_inr_range',
   'notice_period_days', 'pay_line', 'employment_history', 'location_preferences', 'relocation_interest', 'unsupported_claims',
   'disqualifying_keywords', 'token', 'secret', 'api_key', 'password', 'authorization', 'cursor_token', 'last_error',
+  'error_message', 'error', 'message', 'rejection_stage', 'rejection_reason_category',
 ]);
 function stripPrivate(value: any): any {
   if (Array.isArray(value)) return value.map(stripPrivate);
@@ -169,7 +170,8 @@ const AUTH_WINDOW_SECONDS = 15 * 60;
 async function clientKey(request: Request): Promise<string> {
   // Only CF-Connecting-IP is trusted: Cloudflare sets it itself. X-Forwarded-For is caller-controlled and would let an
   // attacker pick a fresh bucket for every guess.
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  let ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (ip.includes(':')) ip = ip.split(':').slice(0, 4).join(':');   // IPv6: one bucket per /64, not per address
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('career-job-engine:' + ip));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -323,7 +325,7 @@ class WorkerRouter {
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
     const isApi = pathname.startsWith('/api/');
     if (isApi && !PUBLIC_API_PATHS.has(pathname)) {
-      if (isPublicRead(request.method, pathname) && !request.headers.get('Authorization')) {
+      if (isPublicRead(request.method, pathname) && !/^Bearer\s+\S/i.test(request.headers.get('Authorization') || '')) {
         accessLevel.set(request, 'public');
       } else {
         const denied = await checkOperatorAuth(request, env);
@@ -338,7 +340,7 @@ class WorkerRouter {
       if (match) {
         const params: Record<string, string> = {};
         route.paramNames.forEach((name, i) => {
-          params[name] = decodeURIComponent(match[i + 1]);
+          try { params[name] = decodeURIComponent(match[i + 1]); } catch { params[name] = '\uFFFD'; }
         });
         return await this.finish(request, await route.handler(request, env, params, url));
       }
@@ -866,7 +868,7 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
   if (!candidateId) return badCandidate(request, env, params.id);
   const statusFilter = url.searchParams.get('status') || 'READY,STRETCH_READY';
   const laneFilter = url.searchParams.get('lane') || 'ALL';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), 500);
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), isOperatorRequest(request) ? 500 : 100);
   const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
   try {
@@ -932,7 +934,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
-  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)), 1000);
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)), isOperatorRequest(request) ? 1000 : 100);
   const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
 
   try {
