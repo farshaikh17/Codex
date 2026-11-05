@@ -4,6 +4,7 @@ name: Dashboard release to production (manual)
 # The public dashboard needs NO operator key to deploy or verify: only the Cloudflare secrets below.
 #
 #   mode = preflight (default)  read-only: account, database id, token permissions, rollback points. Changes nothing.
+#   mode = verify              read-only: public smoke test, real-browser check and the protected-record fingerprint of the live system.
 #   mode = release              preflight, fingerprint, migration 0008 (additive), deploy, public smoke test, real-browser
 #                               check (desktop + 375px mobile), fingerprint comparison.
 #
@@ -16,10 +17,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'preflight = read-only checks (default). release = change production.'
+        description: 'preflight = read-only checks (default). release = change production. verify = re-run the post-deploy checks and print the protected-record fingerprint; changes nothing.'
         required: true
         type: choice
-        options: [preflight, release]
+        options: [preflight, release, verify]
         default: preflight
       confirm_sha:
         description: 'Full commit SHA of main you intend to release (must equal the commit this run uses)'
@@ -166,15 +167,16 @@ jobs:
           echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Public smoke test (no credentials; includes anonymous write attempts that must be refused)
-        if: ${{ inputs.mode == 'release' }}
+        if: ${{ inputs.mode == 'release' || inputs.mode == 'verify' }}
         env:
           SMOKE_EXPECT_COMMIT: ${{ github.sha }}
+        # (a verify run right after a release can pass a different SMOKE_EXPECT_COMMIT via a new release; it checks the live commit equals this run's commit)
         run: |
           node scripts/post_deploy_smoke.mjs | tee smoke.txt
           { echo '### Public smoke test'; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Real-browser check of both dashboards, read-only, no credentials (desktop and 375px mobile)
-        if: ${{ inputs.mode == 'release' }}
+        if: ${{ inputs.mode == 'release' || inputs.mode == 'verify' }}
         run: |
           export E2E_BASE="$SMOKE_BASE"
           npm --prefix frontend ci
@@ -182,6 +184,12 @@ jobs:
           node test/e2e/production-readonly.e2e.mjs desktop | tee browser.txt
           node test/e2e/production-readonly.e2e.mjs mobile | tee -a browser.txt
           { echo '### Browser check (production, read-only)'; echo '```'; grep -E "PASS|FAIL|passed" browser.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify mode - live protected-record fingerprint (compare with the release run's 'before' values)
+        if: ${{ inputs.mode == 'verify' }}
+        run: |
+          { echo '### Protected records now (verify mode)'; echo '```'; cat before.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "verify mode: live fingerprint printed above; compare applications, application_history, manual_overrides and candidates with the release run"
 
       - name: Fingerprint protected records after and compare
         if: ${{ inputs.mode == 'release' }}
