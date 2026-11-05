@@ -137,7 +137,7 @@ function isPublicRead(method: string, pathname: string): boolean {
 //   put old data back. Collector and cron updates appear when an entry expires.
 // * Bounds: public misses stop at PUBLIC_DAILY_READ_BUDGET rows read per UTC day (D1's own meta.rows_read), and at most
 //   CACHE_WRITES_PER_DAY entries are written per day, so visitors cannot spend the free read or write allowance.
-// Without a deployed commit (manual or local runs) nothing is cached. A missing or failing cache table means no caching.
+// A missing or failing cache table means no caching.
 const CACHE_TTL_SECONDS = { public: 1800, operator: 600 } as const;
 const STALE_MAX_SECONDS = 86400;
 const CACHE_MAX_KEY = 512;
@@ -162,7 +162,7 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
   exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'),
   limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
-  search: (v) => v === '',
+  search: (v) => /^[a-z0-9][a-z0-9 .+#-]{0,28}[a-z0-9.+#]$/i.test(v),
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
@@ -177,22 +177,39 @@ const STATUS_VALUE: Record<string, (v: string) => boolean> = {
   '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
 };
 const qualList = (v: string) => { const parts = v.split(','); return parts.length <= 6 && parts.every((x) => QUAL.includes(x.trim())); };
-function responseCacheKey(level: 'public' | 'operator', url: URL, commit: string): string | null {
-  if (NOT_CACHED.test(url.pathname)) return null;
-  const allowed = CACHE_PARAMS.find(([re]) => re.test(url.pathname))?.[1] || [];
+// Cache namespace: a code constant (bump it when a response shape changes) plus the deployed commit when the release set one.
+// Caching and metering never depend on the deploy variable, so a plain `wrangler deploy` cannot switch them off.
+const CACHE_SCHEMA = 'c2';
+const CORE_PATHS = new Set(['/api/candidates', '/api/dashboard/overview', '/api/sources', '/api/automation/status', '/api/applications', '/api/jobs',
+  '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics', '/api/cohorts/metrics', '/api/profile',
+  '/api/india-remote/summary']);
+// Percent-encoding aliases of one path (j1, %6a1, %6A1, farhan%5Fshaikh) collapse to a single canonical form.
+function canonicalPath(pathname: string): string | null {
+  try { return pathname.split('/').map((seg) => encodeURIComponent(decodeURIComponent(seg))).join('/'); } catch { return null; }
+}
+function responseCacheKey(level: 'public' | 'operator', url: URL, namespace: string): { key: string; core: boolean } | null {
+  const path = canonicalPath(url.pathname);
+  if (!path || NOT_CACHED.test(path)) return null;
+  const inPath = path.match(/^\/api\/candidates\/([^/]+)\/(strategy|dashboard|jobs|applications)$/);
+  if (inPath && !CANDIDATE_IDS.has(inPath[1])) return null;
+  const allowed = CACHE_PARAMS.find(([re]) => re.test(path))?.[1] || [];
   const params: string[] = [];
   for (const k of allowed) {
     if (!url.searchParams.has(k)) continue;
     const v = url.searchParams.get(k) || '';
-    const ok = k === 'status' ? (STATUS_VALUE[url.pathname] || qualList)(v) : (CACHE_VALUES[k]?.(v) ?? false);
+    const ok = k === 'status' ? (STATUS_VALUE[path] || qualList)(v) : (CACHE_VALUES[k]?.(v) ?? false);
     if (!ok) return null;
-    params.push(`${k}=${encodeURIComponent(v)}`);
+    params.push(`${k}=${encodeURIComponent(k === 'search' ? v.toLowerCase() : v)}`);   // LIKE is case-insensitive for ASCII
   }
-  const key = `${commit}:${level}:${url.pathname}?${params.join('&')}`;
-  return key.length <= CACHE_MAX_KEY ? key : null;
+  const key = `${namespace}:${level}:${path}?${params.join('&')}`;
+  if (key.length > CACHE_MAX_KEY) return null;
+  // Page loads of the dashboard itself (a fixed set of paths, optionally one candidate) stay cacheable after the daily write cap.
+  const core = (CORE_PATHS.has(path) || !!inPath) && params.every((x) => x.startsWith('candidate_id='));
+  return { key, core };
 }
-// The dashboard's own page loads (no parameter but the candidate) stay cacheable even after the daily write cap.
-const isCoreKey = (key: string) => /\?(candidate_id=[a-z_]+)?$/.test(key);
+function cachedResponse(lookup: { body: string | null }, request: Request, env: Env, state: string): Response {
+  return new Response(lookup.body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': state } });
+}
 type CacheLookup = { current: number; body: string | null; created_at: number | null; generation: number | null };
 async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup | null> {
   try {
@@ -210,8 +227,13 @@ async function writeResponseCache(env: Env, key: string, body: string, generatio
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
   } catch { /* D1 unavailable: serve uncached */ }
 }
-async function invalidateResponseCache(env: Env): Promise<void> {
-  try { await env.DB.prepare('UPDATE cache_state SET generation = generation + 1 WHERE id = 1').run(); } catch { /* no cache table */ }
+async function invalidateResponseCache(env: Env, retried = false): Promise<void> {
+  try { await env.DB.prepare('UPDATE cache_state SET generation = generation + 1 WHERE id = 1').run(); }
+  catch (e: any) {
+    if (/no such table/i.test(String(e?.message))) return;          // cache not installed: nothing to invalidate
+    if (!retried) return invalidateResponseCache(env, true);
+    throw e;                                                        // never carry on as if the cache were coherent
+  }
 }
 
 // Read meter: counts accumulate in the isolate and are written at most every 30 s or 5,000 rows, so metering adds few
@@ -503,31 +525,38 @@ class WorkerRouter {
           try { params[name] = decodeURIComponent(match[i + 1]); } catch { params[name] = '\uFFFD'; }
         });
         const level = accessLevel.get(request);
-        const commit = env.GIT_COMMIT;
-        const cacheKey = level && commit && env.RESPONSE_CACHE !== 'off' && request.method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname))
-          ? responseCacheKey(level, url, commit) : null;
+        const readRoute = !!level && request.method === 'GET' && env.RESPONSE_CACHE !== 'off' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
+        // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
+        // (India Remote list) is metered by that inner call, so it is not counted twice.
+        const metered = readRoute && !NOT_CACHED.test(pathname);
+        const keyInfo = readRoute ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const cacheKey = keyInfo?.key ?? null;
         const operatorChange = level === 'operator' && request.method !== 'GET';
         let meter: { db: D1Database; rows: () => number } | null = null;
         let lookup: CacheLookup | null = null;
+        const now = Math.floor(Date.now() / 1000);
         if (cacheKey) {
           lookup = await lookupResponseCache(env, cacheKey);
-          const now = Math.floor(Date.now() / 1000);
-          const cachedResponse = (state: string) => new Response(lookup!.body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': state } });
-          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) return cachedResponse('HIT');
+          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) return cachedResponse(lookup, request, env, 'HIT');
+        }
+        if (metered) {
           if (level === 'public' && (await meterToday(env)).rows_read >= PUBLIC_DAILY_READ_BUDGET) {
-            // Today's public share of the free allowance is used: the last answer from the past day, or a clear refusal.
-            if (lookup?.body != null && lookup.created_at! > now - STALE_MAX_SECONDS) return cachedResponse('STALE');
+            // Today's public share of the free allowance is used. An answer is only reused if no operator change happened since
+            // it was computed; otherwise a clear refusal.
+            if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - STALE_MAX_SECONDS) return cachedResponse(lookup, request, env, 'STALE');
             return jsonResponse({ error: "Today's public viewing capacity is used up. The dashboard is available again after 00:00 UTC.", status: 'limited' },
               503, { ...corsHeaders(request, env), 'Retry-After': String(secondsToUtcMidnight()) });
           }
           meter = meteredDb(env.DB);
         }
-        if (operatorChange) await invalidateResponseCache(env);   // before: reads made while the change runs are not kept
+        if (operatorChange) await invalidateResponseCache(env);   // before: if this fails the change is refused
         let res: Response;
         try {
           res = await this.finish(request, await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
         } finally {
-          if (operatorChange) await invalidateResponseCache(env); // after, whatever the outcome (partial writes included)
+          if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
+            try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
+          }
         }
         if (meter) {
           const rows = meter.rows();
@@ -535,7 +564,7 @@ class WorkerRouter {
         }
         if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (isCoreKey(cacheKey) || (await meterToday(env)).cache_writes < CACHE_WRITES_PER_DAY) await writeResponseCache(env, cacheKey, body, lookup.current);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < CACHE_WRITES_PER_DAY) await writeResponseCache(env, cacheKey, body, lookup.current);
           await flushMeter(env);
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });
