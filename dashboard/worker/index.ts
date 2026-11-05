@@ -187,7 +187,7 @@ const CORE_PATHS = new Set(['/api/candidates', '/api/dashboard/overview', '/api/
 function canonicalPath(pathname: string): string | null {
   try { return pathname.split('/').map((seg) => encodeURIComponent(decodeURIComponent(seg))).join('/'); } catch { return null; }
 }
-function responseCacheKey(level: 'public' | 'operator', url: URL, namespace: string): { key: string; core: boolean } | null {
+function responseCacheKey(level: 'public' | 'operator', url: URL, namespace: string): { key: string; core: boolean; search: boolean } | null {
   const path = canonicalPath(url.pathname);
   if (!path || NOT_CACHED.test(path)) return null;
   const inPath = path.match(/^\/api\/candidates\/([^/]+)\/(strategy|dashboard|jobs|applications)$/);
@@ -205,7 +205,7 @@ function responseCacheKey(level: 'public' | 'operator', url: URL, namespace: str
   if (key.length > CACHE_MAX_KEY) return null;
   // Page loads of the dashboard itself (a fixed set of paths, optionally one candidate) stay cacheable after the daily write cap.
   const core = (CORE_PATHS.has(path) || !!inPath) && params.every((x) => x.startsWith('candidate_id='));
-  return { key, core };
+  return { key, core, search: url.searchParams.has('search') };
 }
 function cachedResponse(lookup: { body: string | null }, request: Request, env: Env, state: string): Response {
   return new Response(lookup.body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': state } });
@@ -380,8 +380,15 @@ async function recordAuthFailure(env: Env, key: string, presented: string): Prom
         window_start = CASE WHEN ? - window_start >= ? THEN ? ELSE window_start END,
         last_key_hash = ?,
         updated_at = ?
+      WHERE ? - window_start >= ? OR last_key_hash != ?
       RETURNING failures
-    `).bind(key, now, now, keyHash, now, AUTH_WINDOW_SECONDS, keyHash, now, AUTH_WINDOW_SECONDS, now, keyHash, now).first<{ failures: number }>();
+    `).bind(key, now, now, keyHash, now, AUTH_WINDOW_SECONDS, keyHash, now, AUTH_WINDOW_SECONDS, now, keyHash, now, now, AUTH_WINDOW_SECONDS, keyHash).first<{ failures: number }>();
+    // The identical wrong key again, inside the window: the conditional update wrote nothing (one row read, no row written), so
+    // a client repeating one bad key cannot spend the free write allowance. The count stays as it was.
+    if (!row) {
+      const current = await env.DB.prepare('SELECT failures FROM auth_failures WHERE ip_hash = ?').bind(key).first<{ failures: number }>();
+      return current?.failures ?? 0;
+    }
     // Retention: rows idle for a day are irrelevant; trimming rides on a failure, so the table cannot grow unbounded.
     if (Math.random() < 0.05) {
       await env.DB.prepare('DELETE FROM auth_failures WHERE updated_at < ?').bind(now - 24 * 3600).run();
@@ -525,11 +532,11 @@ class WorkerRouter {
           try { params[name] = decodeURIComponent(match[i + 1]); } catch { params[name] = '\uFFFD'; }
         });
         const level = accessLevel.get(request);
-        const readRoute = !!level && request.method === 'GET' && env.RESPONSE_CACHE !== 'off' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
+        const readRoute = !!level && request.method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
         // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
         // (India Remote list) is metered by that inner call, so it is not counted twice.
         const metered = readRoute && !NOT_CACHED.test(pathname);
-        const keyInfo = readRoute ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
         const operatorChange = level === 'operator' && request.method !== 'GET';
         let meter: { db: D1Database; rows: () => number } | null = null;
@@ -554,17 +561,17 @@ class WorkerRouter {
         try {
           res = await this.finish(request, await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
         } finally {
+          if (meter) {
+            const rows = meter.rows();
+            if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
+          }
           if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
             try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
           }
         }
-        if (meter) {
-          const rows = meter.rows();
-          if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
-        }
         if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (keyInfo!.core || (await meterToday(env)).cache_writes < CACHE_WRITES_PER_DAY) await writeResponseCache(env, cacheKey, body, lookup.current);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
           await flushMeter(env);
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });

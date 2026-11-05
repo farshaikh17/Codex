@@ -728,3 +728,45 @@ test('read meter: a miss records the rows D1 reports for it', async () => {
   assert.ok(m && m.rows_read >= 6000, `meter recorded ${JSON.stringify(m)}`);
   assert.ok(m.public_misses >= 1);
 });
+
+// ---- re-review of the fixes ---------------------------------------------------------------------------------------
+test('limiter: repeating the identical wrong key writes nothing, so it cannot spend the free write allowance', async () => {
+  const { sqlite, env } = cached();
+  const hit = () => worker.fetch(new Request('https://test.invalid/api/applications?candidate_id=farhan_shaikh', { headers: { Authorization: 'Bearer same-wrong-key', 'CF-Connecting-IP': '203.0.113.9' } }), env, { waitUntil() {} });
+  assert.equal((await hit()).status, 403);
+  sqlite.exec('UPDATE auth_failures SET updated_at = 1');                    // marker: any further write would change it
+  for (let i = 0; i < 20; i++) assert.equal((await hit()).status, 403);
+  assert.equal(sqlite.prepare('SELECT updated_at, failures FROM auth_failures').get().updated_at, 1, 'the row was rewritten by a repeated identical key');
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 1);
+  const other = await worker.fetch(new Request('https://test.invalid/api/applications?candidate_id=farhan_shaikh', { headers: { Authorization: 'Bearer another-wrong-key', 'CF-Connecting-IP': '203.0.113.9' } }), env, { waitUntil() {} });
+  assert.equal(other.status, 403);
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 2, 'a different wrong key still counts');
+});
+
+test('read meter: with the budget used up, every public read route that is not warm answers 503; the cache switch does not disable the budget', async () => {
+  for (const extra of [{}, { RESPONSE_CACHE: 'off' }]) {
+    const { sqlite, env } = cached(extra);
+    sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(today(), 2_500_000);
+    const urls = PUBLIC_READ.flatMap((base) => ['farhan_shaikh', 'sana_ansari'].map((cid) => {
+      const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/' + cid); return p + (p.includes('?') ? '&' : '?') + 'candidate_id=' + cid; }));
+    for (const u of urls) assert.equal((await raw(env, u)).status, 503, `${u} (${JSON.stringify(extra)})`);
+  }
+});
+
+test('read cache: one transient failure to invalidate is retried and the operator change goes through', async () => {
+  const { sqlite, env } = cached();
+  let failed = false;
+  const db = { ...env.DB, prepare: (sql) => {
+    const st = env.DB.prepare(sql);
+    if (/UPDATE cache_state/.test(sql) && !failed) return { run: async () => { failed = true; throw new Error('D1_ERROR: internal error in D1'); } };
+    return st; }, batch: (x) => env.DB.batch(x) };
+  const res = await call(worker, { ...env, DB: db }, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
+  assert.equal(res.status, 200); assert.ok(failed);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM applications WHERE job_id = 'j4'").get().n, 1);
+});
+
+test('search normalisation is lossless: Role and role return the same jobs when nothing is cached', async () => {
+  const { env } = cached({ RESPONSE_CACHE: 'off' });
+  const ids = async (q) => (await (await raw(env, `/api/jobs?candidate_id=farhan_shaikh&search=${q}`)).json()).jobs.map((j) => j.id).join();
+  assert.equal(await ids('Role'), await ids('role')); assert.ok((await ids('role')).length > 0);
+});
