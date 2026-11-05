@@ -1,6 +1,6 @@
-# Final QA report (pre-production)
+# Final QA report
 
-Commit under test: see "Reviewed commit" below. **Production has not been changed.** Environment labels used throughout:
+This report covers the public read-only dashboard release (see "Production release" at the end for the deployed version and production results). Environment labels used throughout:
 
 * **SQLite unit** = the real `worker/index.ts` on in-memory SQLite with the real migrations (Node 22).
 * **Local D1** = `wrangler dev --local` (workerd + Cloudflare's local D1 engine) with disposable seeded data.
@@ -68,3 +68,37 @@ Minor residuals it noted, none blocking:
 3. A key rotated mid-session produces in-flight refusals that carry the same key and count once.
 
 Reviewed commit for this round: `d7b7849` (documentation-only commits follow it).
+
+## Production release (public read-only dashboard)
+
+* Repository: `farshaikh17/Codex` (dashboard under `dashboard/`); released commit `eb3e69a3755509038fc0c224167f7c6c0de638ae`
+  (merge of PR #19 and the workflow fix PR #20). Release run: <https://github.com/farshaikh17/Codex/actions/runs/42063986532>.
+* Deployed Worker version `73ef33b7-274a-4902-8513-e9b0c79afb57` at 2026-11-05T16:25:17Z. `GET /api/version` reports commit
+  `eb3e69a3...` and that timestamp (the `--var DEPLOYED_AT` value with colons is stored intact).
+* Migration `0008_auth_failures.sql` applied (additive; 3 rows written); migrations 0001-0007 were not replayed. No seed migration, restore
+  or second deployment. One schedule (`*/2 * * * *`) is declared.
+* Before the release: preflight (run 42060776309) proved account and database match `wrangler.toml` and that the existing Codex token can read the Worker,
+  its secrets, deployments, D1 and Time Travel.
+* Independent code review (separate reviewer session, read-only): 8 confirmed defects, all fixed before release (public run-error text and rejection
+  detail, sign-out leaving operator data on screen, a server hiccup signing the operator out, a keyless Save replacing the page, public-to-operator
+  profile form, false-positive smoke patterns, one vacuous test removed), plus hardening (public list caps, IPv6 /64 limiter bucket, token scoped to the
+  steps that need it, malformed percent-escapes, non-Bearer Authorization on a public read).
+
+### Production results
+
+| Check | Result |
+|---|---|
+| Release run public smoke test | 2 of ~70 checks flagged `"manual_override_reason"` in `/api/jobs` and `"notes"` in `/api/applications` on the **first** request of each type, within 2-3 seconds of the deploy. Not reproducible: 100 further requests (both candidates, jobs, tracker, profile) found no private key, and the follow-up verify run passed every check. Most likely the previous Worker version still answering briefly during propagation (the previous Worker served those fields to everyone). Not proven. |
+| Verify run (read-only, run 42066342092) | public smoke test passed, including anonymous GETs of audit/run/backup/meta/sync routes (401) and anonymous POST/PUT of applications, profile, automation, override, feedback, resume import (401) |
+| Real-browser check, production, GitHub runner | desktop 26/26, mobile (375 px) 26/26: no unlock window, no key sent, no refused request, both candidates' workspaces, Analytics scope, profile summary and tracker free of private text, bundle holds no profile data, no write attempted, no console errors |
+| Same check from the development environment | desktop 26/26, mobile 26/26 |
+| Protected records, before vs after | identical: applications 12 rows (`d594d21e...`), application_history 44 (`221fc998...`), manual overrides 11 (`43499257...`), candidates 2 (`08c63807...`); qualifications 4246 and scores 4246 also identical (the collector had not changed them) |
+| Collector continuity | manual sync run 42066372766 after the release: success. See the final report for scheduled-run evidence. |
+
+### Limitations observed in production
+
+* The Worker's own discovery cron (`*/2`) writes a run row only when it does work. Today's source-page budget (48/48) was spent by 06:22 UTC and the
+  posting queue is empty, so ticks are idle and leave no evidence until the daily budget resets at 00:00 UTC. The last recorded run (06:22 UTC, a
+  Greenhouse source error) predates the release.
+* Whether the existing Cloudflare token can deploy was proven by the deploy itself; Workers Scripts write permission is therefore confirmed.
+
