@@ -770,3 +770,13 @@ test('search normalisation is lossless: Role and role return the same jobs when 
   const ids = async (q) => (await (await raw(env, `/api/jobs?candidate_id=farhan_shaikh&search=${q}`)).json()).jobs.map((j) => j.id).join();
   assert.equal(await ids('Role'), await ids('role')); assert.ok((await ids('role')).length > 0);
 });
+
+test("Sana's profile keeps remote-preferred and her Middle East / Europe relocation options; the airport wording is a preference to verify", async () => {
+  const { env } = fresh();
+  const op = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
+  const prefs = op.location_preferences.join(' | ');
+  assert.match(prefs, /Remote \(preferred\)/); assert.match(prefs, /Middle East/); assert.match(prefs, /Europe/);
+  assert.match(prefs, /commercial airport is within about 2 hours/); assert.match(prefs, /not established by the city name/);
+  assert.ok(!/Bengaluru|Hyderabad|Chennai/.test(prefs), 'no fixed city list');
+  assert.equal(op.relocation_interest, true);
+});

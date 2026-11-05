@@ -157,3 +157,45 @@ test('Sana: a role in an Indian city is UNKNOWN until accessibility is verified;
   assert.ok(remoteIndia.score > city.score, 'the eligibility bonus no longer applies to an unverified city');
   assert.equal(evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability role. Visa sponsorship available.')).eligibility, 'ELIGIBLE', 'other rules are unchanged');
 });
+
+// ---- re-review fixes ------------------------------------------------------------------------------------------------
+test('Sana correction recomputes the score exactly like evaluate() (clamp at 90) and also covers job-board rows', () => {
+  const w = world();
+  const bd = (n) => JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true, matched_skills: Array.from({ length: n }, (_, i) => 's' + i) });
+  w.job('k1', 'Reliability Engineer', 'Mumbai, India'); w.row(S, 'k1', 90, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON, bd: bd(6) });   // stored min(90,98); new Worker: min(90,88) = 88
+  w.job('k2', 'Reliability Engineer', 'Pune, India'); w.row(S, 'k2', 90, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON, bd: bd(8) });    // clamp: new Worker also 90
+  w.job('k3', 'Reliability Engineer', 'Mumbai, India'); w.row(S, 'k3', 66, { elig: 'UNKNOWN', reason: 'Reported by a job board', bd: bd(2) });  // board row: bonus was added before eligibility was forced to UNKNOWN -> 56
+  w.job('k4', 'Reliability Engineer', 'Remote - India', 'REMOTE_RESTRICTED'); w.row(S, 'k4', 66, { elig: 'UNKNOWN', reason: 'Reported by a job board', bd: bd(2) });     // remote: untouched
+  w.run();
+  assert.deepEqual(['k1', 'k2', 'k3', 'k4'].map((id) => w.score(S, id)), [88, 90, 56, 66]);
+  const fresh = evaluate({ id: 'sana_ansari', primary_skills: JSON.stringify(['s0', 's1', 's2', 's3', 's4', 's5']) }, { id: 'x', title: 'Reliability Engineer', url: 'https://example.com/x', location: 'Mumbai, India', description: 's0 s1 s2 s3 s4 s5 reliability', remote: false });
+  assert.equal(fresh.score, 88, 'a fresh evaluation agrees with the corrected stored row');
+  assert.equal(w.elig(S, 'k3'), 'UNKNOWN');
+});
+
+test('Sana: only unverified airport accessibility becomes unknown. Relocation routes stay eligible, statuses and lanes do not change, the profile keeps its relocation preferences', () => {
+  // routes to ELIGIBLE other than a city name are unchanged
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Remote - India', 'Reliability and Plant Engineering.')).eligibility, 'ELIGIBLE');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Dubai, UAE', 'Reliability and Plant Engineering. Relocation assistance provided.')).eligibility, 'ELIGIBLE');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Berlin, Germany', 'Reliability and Plant Engineering. Visa sponsorship available.')).eligibility, 'ELIGIBLE');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Remote - Worldwide', 'Reliability. Worldwide remote work.')).eligibility, 'ELIGIBLE');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Dubai, UAE', 'Reliability and Plant Engineering.')).eligibility, 'UNKNOWN', 'unchanged: no affirmative evidence');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Mumbai, India', 'Reliability.')).eligibility, 'UNKNOWN');
+  assert.notEqual(evaluate(sana, post('Reliability Engineer', 'Mumbai, India', 'Reliability.')).status, 'INELIGIBLE', 'an unverified city is reviewed, never excluded');
+  assert.equal(evaluate(sana, post('Reliability Engineer', 'Mumbai, India', 'Reliability and Plant Engineering.')).lane, 'STRONGEST_FIT', 'the lane is unchanged');
+});
+
+test('Sana correction changes eligibility_status/eligibility_reason and score only: never the qualification status, lane or any decision', () => {
+  const w = world();
+  w.job('m1', 'Reliability Engineer', 'Mumbai, India'); w.row(S, 'm1', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON });
+  const cols = () => JSON.stringify(w.sqlite.prepare("SELECT qualification_status, strategy_lane, manual_override_status, manual_override_reason, qualified_at FROM candidate_qualifications WHERE candidate_id='sana_ansari' AND job_id='m1'").get());
+  const before = cols(); w.run();
+  assert.equal(cols(), before);
+  assert.equal(w.elig(S, 'm1'), 'UNKNOWN');
+});
+
+test('foreign location: exclusion phrases are not US locations; more places and states are covered; plural target words are recognised', () => {
+  for (const l of ['Remote, excluding the US', 'Worldwide (excluding US)', 'Remote, anywhere except U.S.', 'Remote - outside of the United States']) assert.equal(foreignLocation(l), false, l);
+  for (const l of ['Remote - EU', 'Tokyo, Japan', 'Stockholm, Sweden', 'Manila, Philippines', 'Nashville, TN', 'Las Vegas, NV']) assert.equal(foreignLocation(l), true, l);
+  assert.equal(avoidedTitle('farhan_shaikh', 'Technical Support Engineer – Integrations'), false);
+});

@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { avoidedTitle, foreignLocation, remoteFromStored, roleScore, indianPlace, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 
 const q = (v) => (v === null || v === undefined ? 'NULL' : "'" + String(v).replace(/'/g, "''") + "'");
 export const SELECT_ROWS = `SELECT s.candidate_id AS c, s.job_id AS j, s.overall_score AS score, s.strategy_lane AS lane, s.score_breakdown AS bd,
@@ -44,10 +44,23 @@ export function plan(rows) {
         if (avoid) out.counts.farhan_avoid_cap++;
         if (foreign) out.counts.farhan_foreign_location++;
       }
-    } else if (r.c === 'sana_ansari' && r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && !remoteFromStored(r.wt, r.loc)) {
-      if (r.lane === 'STRONGEST_FIT') { out.statements.push(tagScore(r.c, r.j, Math.max(0, score - 10))); out.counts.score_rows++; }
-      out.statements.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(SANA_UNKNOWN_ACCESS_REASON)} WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
-      out.counts.qualification_rows++; out.counts.sana_accessibility++;
+    } else if (r.c === 'sana_ansari') {
+      // Two stored shapes carry the old bonus: (a) ELIGIBLE with the old city-list reason; (b) job-board rows, whose eligibility the Worker forces to
+      // UNKNOWN ("Reported by ...") after the score was computed with the city-based bonus. Remote-in-India is affirmative and is left alone.
+      const cityOnly = !remoteFromStored(r.wt, r.loc);
+      const oldReason = r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && cityOnly;
+      const boardRow = r.es === 'UNKNOWN' && typeof r.er === 'string' && r.er.startsWith('Reported by ') && cityOnly && indianPlace(r.loc);
+      if (!oldReason && !boardRow) continue;
+      if (r.lane === 'STRONGEST_FIT') {
+        const skills = Array.isArray(bd.matched_skills) ? bd.matched_skills.length : null;
+        const next = skills === null ? Math.max(0, score - 10) : Math.min(score, roleScore(skills, false));   // recompute exactly like evaluate(); never raise
+        if (next !== score) { out.statements.push(tagScore(r.c, r.j, next)); out.counts.score_rows++; }
+      }
+      if (oldReason) {
+        out.statements.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(SANA_UNKNOWN_ACCESS_REASON)} WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
+        out.counts.qualification_rows++;
+      }
+      out.counts.sana_accessibility++;
     }
   }
   out.counts.estimated_rows_written = out.counts.score_rows * 2 + out.counts.qualification_rows;   // the score index includes overall_score
@@ -70,8 +83,12 @@ function main() {
   if (p.counts.estimated_rows_written > maxWrites) { console.error(`refusing: ${p.counts.estimated_rows_written} rows would be written, above --max-writes ${maxWrites}`); process.exit(2); }
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rescore-'));
   const file = path.join(dir, 'rescore.sql');
-  fs.writeFileSync(file, p.statements.join('\n') + '\nUPDATE cache_state SET generation = generation + 1 WHERE id = 1;\n');
+  fs.writeFileSync(file, p.statements.join('\n') + '\n');
+  // wrangler runs a file as one atomic batch ("if the execution fails to complete, your DB will return to its original state"), so a failure leaves
+  // nothing half-applied and a re-run is safe. The cache is invalidated afterwards in every case, so no cached answer outlives a change.
   const w = wr(['--file', file]);
+  const bump = wr(['--command', 'UPDATE cache_state SET generation = generation + 1 WHERE id = 1']);
+  if (bump.status !== 0) console.error('cache invalidation failed (entries expire on their own):', (bump.stderr || bump.stdout).slice(0, 200));
   if (w.status !== 0) { console.error('write failed:', (w.stderr || w.stdout).slice(0, 600)); process.exit(1); }
   console.log(`applied ${p.statements.length} statements`);
 }

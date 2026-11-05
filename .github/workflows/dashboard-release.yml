@@ -203,17 +203,6 @@ jobs:
           # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
           npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0" > /dev/null
 
-      - name: Correct preliminary scores (owner-approved ranking change; dry run first, idempotent, refuses above 20,000 rows written)
-        if: ${{ inputs.mode == 'release' }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          echo '#### Dry run (reads only)'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee rescore.txt
-          echo '#### Apply'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote --apply 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee -a rescore.txt
-          { echo '### Score correction'; echo '```'; cat rescore.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-
       - name: Rotate operator key (only when requested)
         if: ${{ inputs.mode == 'release' && inputs.rotate_key }}
         env:
@@ -237,6 +226,17 @@ jobs:
           npx wrangler deploy --var "GIT_COMMIT:$GITHUB_SHA" --var "DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee deploy.log
           VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
           echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Correct stored preliminary scores AFTER the deploy (owner-approved ranking change; dry run first, idempotent, refuses above 20,000 rows written)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          echo '#### Dry run (reads only)'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee rescore.txt
+          echo '#### Apply'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote --apply 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee -a rescore.txt
+          { echo '### Score correction'; echo '```'; cat rescore.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Flush the read cache (a deploy never reuses an answer computed by the previous code)
         if: ${{ inputs.mode == 'release' }}

@@ -60,25 +60,29 @@ const FARHAN_HARD_AVOID=/\b(software (?:engineer|developer|architect)|software d
 // Soft avoid: finance, support and engineering-management families, capped unless the title also names one of his own target areas
 // (implementation, solutions, onboarding, integration, automation, CRM, RevOps, operations, business systems, technical delivery).
 const FARHAN_SOFT_AVOID=/\b(accountant|accounting (?:manager|analyst)|financial (?:analyst|controller)|finance (?:manager|analyst|controller|director)|controller,? finance|payroll (?:specialist|manager|analyst|administrator|accountant)|customer support|(?:technical |product )?support (?:engineer|specialist|representative|agent)|help ?desk|(?:software )?engineering manager|director of engineering|vp of engineering|head of engineering)\b/i;
-const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integration|automation|crm|revops|operations|business systems|technical delivery)\b/i;
+const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integrations?|automations?|crm|revops|operations|business systems|technical delivery)\b/i;
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
  return FARHAN_HARD_AVOID.test(t)||(FARHAN_SOFT_AVOID.test(t)&&!FARHAN_TARGET_WORDS.test(t));
 }
 const INDIA_PLACE=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram|gurgaon|kolkata|ahmedabad|kochi|jaipur)\b/i;
-const FOREIGN_NAME=/\b(united states|usa|united kingdom|uk|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|north america|americas|mexico|brazil|singapore|dubai|uae|united arab emirates)\b/i;
+const FOREIGN_NAME=/\b(united states|usa|united kingdom|uk|japan|tokyo|stockholm|sweden|philippines|manila|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|north america|americas|mexico|brazil|singapore|dubai|uae|united arab emirates)\b/i;
 const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
-const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])US(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
-const FOREIGN_STATE=/,\s*(?:AL|AZ|CA|CO|CT|DC|FL|GA|IL|MA|MD|MI|MN|NC|NJ|NY|OH|PA|TX|UT|VA|WA)\b/;   // US state codes (OR is omitted: ambiguous with the word "or")
+const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU)(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
+const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code)
+const EXCLUSION_PHRASE=/\b(?:excluding|except|outside(?: of)?|not including|other than)\s+(?:the\s+)?(?:US|U\.S\.|USA|United States|UK|EU|Europe)(?![A-Za-z0-9])/gi;
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
- const l=location||'';if(!l.trim()||INDIA_PLACE.test(l))return false;
+ const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l))return false;   // 'Remote, excluding the US' is not a US location
  return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);
 }
 /** The Worker's remote test, expressed on what is stored: workplace_type REMOTE* (the posting's own remote flag) or remote wording in its location. */
 export function remoteFromStored(workplaceType:string|null|undefined,location:string|null|undefined){
  return /^REMOTE/i.test(workplaceType||'')||/\b(remote|work from home|telecommut)/i.test(location||'');
 }
+/** Skill-based preliminary score, exactly as evaluate() computes it for a role-matched posting. */
+export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+skills*8+(eligible?10:0));}
+export function indianPlace(location:string|null|undefined){return INDIA_PLACE.test(location||'');}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
