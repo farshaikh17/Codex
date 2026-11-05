@@ -256,3 +256,13 @@ test('Sana: relocation interest and worldwide remote are never proof by themselv
   assert.equal(sp.eligibility, 'ELIGIBLE'); assert.match(sp.reason, /requires review/); assert.equal(wr.eligibility, 'ELIGIBLE');
   for (const r of [sp, wr]) { assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(r.status)); assert.match(r.qualification_reason, /review before READY|retained for review/); }
 });
+
+test('review round 4: a denial anywhere beats a welcoming sponsorship phrase; words ending in not/no/ex are not exclusions', () => {
+  const sa = { id: 'sana_ansari', primary_skills: '[]' };
+  const mk = (d) => evaluate(sa, { id: 'x', title: 'Reliability Engineer', url: 'https://e.com/x', location: 'Berlin, Germany', description: d, remote: false });
+  assert.equal(mk('International applicants welcome. We do not offer visa sponsorship.').eligibility, 'UNKNOWN');
+  assert.equal(mk('No relocation assistance, but visa sponsorship available.').eligibility, 'UNKNOWN');
+  assert.equal(mk('Visa sponsorship available.').eligibility, 'ELIGIBLE');
+  assert.equal(foreignLocation('Mexico'), true); assert.equal(foreignLocation('Remote, excluding the US'), false);
+  assert.equal(foreignLocation('Remote, non-US'), false); assert.equal(foreignLocation('Remote, ex-US'), false);
+});

@@ -19,7 +19,7 @@ import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, roleScore, s
 const q = (v) => (v === null || v === undefined ? 'NULL' : "'" + String(v).replace(/'/g, "''") + "'");
 export const SELECT_ROWS = `SELECT s.candidate_id AS c, s.job_id AS j, s.overall_score AS score, s.strategy_lane AS lane, s.score_breakdown AS bd,
   q.eligibility_status AS es, q.eligibility_reason AS er, jb.title AS title, jb.location_restrictions AS loc, jb.workplace_type AS wt,
-  CASE WHEN q.eligibility_reason LIKE 'Reported by %' THEN jb.description END AS descr
+  CASE WHEN q.candidate_id = 'farhan_shaikh' AND q.eligibility_reason LIKE 'Reported by %' THEN jb.description END AS descr
   FROM candidate_job_scores s
   JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
   JOIN jobs jb ON jb.id = s.job_id

@@ -71,7 +71,7 @@ const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
 const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU)(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
 const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code; TN stays, with Tamil Nadu places in INDIA_PLACE so 'Coimbatore, TN' is not foreign)
 const EXCLUSION_PLACE='(?:US|U\\.S\\.|USA|United States|UK|United Kingdom|EU|Europe|Canada|APAC|EMEA)(?![A-Za-z0-9])';
-const EXCLUSION_PHRASE=new RegExp('\\b(?:excluding|excl\\.?|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)[\\s-]*(?:in\\s+)?(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,\\s*)?(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
+const EXCLUSION_PHRASE=new RegExp('\\b(?:excl\\.|(?:excluding|excl|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)\\b)[\\s-]*(?:in\\s+)?(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,\\s*)?(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l))return false;   // 'Remote, excluding the US' is not a US location
@@ -91,7 +91,7 @@ export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a co
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
- const negated=(pattern:RegExp)=>{const m=pattern.exec(lower);if(!m)return false;const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);return /\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after)};
+ const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
  const india=sanaIndiaCity(p.location);
  const remote=p.remote||/\b(remote|work from home|telecommut)/i.test(p.location);
  const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
