@@ -117,6 +117,16 @@ jobs:
             npx wrangler d1 execute career-job-engine --remote --command "SELECT 1 AS ok" --json 2>&1 | tail -n 40
             echo '#### Dashboard read meter, last 3 UTC days (rows read by cache misses; table from migration 0009)'
             npx wrangler d1 execute career-job-engine --remote --command "SELECT day, rows_read, public_misses, operator_misses FROM read_meter ORDER BY day DESC LIMIT 3" --json 2>&1 | grep -E '"(day|rows_read|public_misses|operator_misses)"|error|ERROR' | head -n 20
+            echo '#### Rows read by query (wrangler d1 insights: every client of the database, Worker, cron and collector alike; SQL text only)'
+            for PERIOD in 1h 1d; do
+              echo "--- last $PERIOD, top queries by rows read"
+              npx wrangler d1 insights career-job-engine --time-period "$PERIOD" --sort-type sum --sort-by reads --limit 12 --json 2>/dev/null | node -e "
+                let t='';process.stdin.on('data',d=>t+=d).on('end',()=>{try{const a=JSON.parse(t.slice(t.indexOf('[')));let tot=0;for(const q of a){const o={};for(const [k,v] of Object.entries(q)){if(/^(query|sql)$/i.test(k))o.query=String(v).replace(/\\s+/g,' ').slice(0,110);else if(/row|time|count|times|run/i.test(k)&&typeof v==='number')o[k]=Math.round(v*100)/100;}console.log(JSON.stringify(o));}}catch(e){console.log('insights unavailable: '+String(e.message).slice(0,120)+' '+t.slice(0,160).replace(/token/ig,'***'));}})"
+            done
+            echo '#### Table row counts and job inventory (read-only)'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT 'jobs' t, COUNT(*) n FROM jobs UNION ALL SELECT 'jobs_active', COUNT(*) FROM jobs WHERE is_active=1 UNION ALL SELECT 'candidate_qualifications', COUNT(*) FROM candidate_qualifications UNION ALL SELECT 'candidate_job_scores', COUNT(*) FROM candidate_job_scores UNION ALL SELECT 'applications', COUNT(*) FROM applications UNION ALL SELECT 'application_history', COUNT(*) FROM application_history UNION ALL SELECT 'cloud_discovery_runs', COUNT(*) FROM cloud_discovery_runs UNION ALL SELECT 'response_cache', COUNT(*) FROM response_cache UNION ALL SELECT 'auth_failures', COUNT(*) FROM auth_failures" --json 2>&1 | grep -E '"(t|n)"' | paste - - | head -20
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT COALESCE(source_adapter,'(none)') src, COALESCE(provenance,'(none)') prov, is_active act, COUNT(*) n FROM jobs GROUP BY 1,2,3 ORDER BY n DESC LIMIT 30" --json 2>&1 | grep -E '"(src|prov|act|n)"' | paste - - - - | head -30
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT substr(discovered_at,1,10) day, COUNT(*) n FROM jobs GROUP BY 1 ORDER BY 1 DESC LIMIT 14" --json 2>&1 | grep -E '"(day|n)"' | paste - - | head -14
           } 2>&1 | tee diag.txt
           # The Worker's own error for two requests to /api/health (reads at most one row). Only outcome, exception text and
           # console lines are kept: no request headers, no query strings, no response bodies.
