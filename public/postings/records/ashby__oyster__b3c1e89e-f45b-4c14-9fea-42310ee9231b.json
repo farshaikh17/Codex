@@ -5,7 +5,18 @@
   "state": "listed"
  },
  "board": "oyster",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-05T22:13:41.942088+00:00",
+   "fields": [
+    "locations",
+    "workplace_type"
+   ],
+   "from_hash": "30f8b35ba0d25aa83ac546f653065f147601151052698018b770d048a089c7ad",
+   "kind": "content_changed",
+   "to_hash": "028d02648477c961571ee689f44fc8ee06af5744ef68c2e6856434c07eaa584d"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nTHE OPPORTUNITY\n\nOyster AI is our assistant for customers and team members, and we want it to be genuinely useful: accurate, fast, reliable and safe with the data it touches. In this role you’ll own complex improvements to it end to end, from defining the problem and designing the solution through evaluation, rollout and learning from production.\n\nYour work will span agent capabilities and tools, knowledge retrieval, answer quality and infrastructure, with real trade-offs between model quality, latency, reliability and cost. This is a hands-on product engineering role, not a research-only or prompt-only position. You’ll also help other product teams build AI features well by sharing patterns, pairing with them and improving the reusable foundations they rely on.\n\nOur backend is Ruby on Rails and our frontend is React. Strong AI engineers from other stacks are very welcome, and Rails experience is a bonus, not a prerequisite.\n\nWHAT YOU’LL BUILD & OWN\n\n- End-to-end AI improvements. Connect user needs to architecture, implementation, evaluation and safe rollout for complex Oyster AI work.\n\n- Reliable agents and tools. Design clear tool contracts, robust error handling and bounded execution, with appropriate human control over consequential actions.\n\n- Better knowledge access. Choose retrieval, embedding, indexing and freshness strategies that improve answers while respecting data access boundaries throughout retrieval and generation.\n\n- Evaluation you can trust. Build evaluation loops with representative datasets, experiments, regression checks and, where useful, automated judges calibrated against human judgment.\n\n- Root-cause fixes in production. Diagnose failures across prompts, retrieval, tools, models and infrastructure, fix the underlying cause and verify the fix with evidence.\n\n- Explicit trade-offs. Choose models and system designs deliberately, and document decisions and rollout criteria.\n\n- AI capability across teams. Support other product teams through technical guidance, code review, pairing and mentoring, so they can deliver AI features independently.\n\nWHAT YOU’LL BRING\n\n- Senior-level engineering judgment and a track record of independently leading complex production work from design through operation and improvement.\n\n- Hands-on experience shipping LLM-powered product capabilities to production, with clear personal responsibility for implementation and delivery decisions.\n\n- Real depth in at least some of the following: retrieval/RAG and indexing, evaluation datasets and experiments, LLM-as-judge, or agents and tool calling.\n\n- The ability to tell model, retrieval, tooling and application failures apart, and to validate improvements with evidence.\n\n- Strong fundamentals in coding, debugging, testing, API integration and system design, plus willingness to work in Ruby/Rails and React.\n\n- Sound judgment about sensitive data, access control, model limitations and operational risk.\n\n- Clear communication of trade-offs, effective async collaboration with product and engineering partners, and practical mentoring.\n\nNice to have\n\n- Production experience with Ruby on Rails, especially integrating AI capabilities into an established backend.\n\n- Full-stack delivery of conversational or assistant experiences.\n\n- Slack or in-app assistant integrations with clear user and permission context.\n\n- Operating retrieval pipelines, agent tools, evaluation infrastructure, or model routing and cost controls at production scale.\n\n- Helping multiple teams adopt reusable AI patterns while balancing shared foundations against local needs.\n\nWHY JOIN US\n\n- Real AI in production. You’ll ship to real users, and success is measured by evaluations and user outcomes, not plausible-looking demos.\n\n- Ownership of hard problems. You’ll work across agents, retrieval, evaluation and infrastructure, where engineering judgment matters at every layer.\n\n- Multiplier impact. Your patterns and mentoring will shape how AI is built across multiple product teams.\n\n- Stack-agnostic hiring. We hire for AI engineering depth, and you’ll have room to grow into Rails and React.\n\n- Thoughtful remote culture. You’ll join a fully remote, async-friendly team that values documentation and clear decision-making.\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
@@ -13,14 +24,82 @@
    {
     "source": "location",
     "text": "EMEA"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Romania"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Hungary"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Bulgaria"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Austria"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Ireland"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Portugal"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Latvia"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Chile"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Slovakia"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Spain"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Brazil"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Poland"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Colombia"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Peru"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Argentina"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Germany"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Greece"
    }
   ],
   "published": "2026-11-05T09:19:21.153000+00:00",
   "title": "Senior AI Product Engineer",
-  "workplace_type": null
+  "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-05T14:55:47.355329+00:00",
- "content_hash": "30f8b35ba0d25aa83ac546f653065f147601151052698018b770d048a089c7ad",
+ "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
+ "content_hash": "028d02648477c961571ee689f44fc8ee06af5744ef68c2e6856434c07eaa584d",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -39,7 +118,143 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "EMEA",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Romania",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Hungary",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Bulgaria",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Austria",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Ireland",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Portugal",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Latvia",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Chile",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Slovakia",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Spain",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Brazil",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Poland",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Colombia",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Peru",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Argentina",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Germany",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Greece",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
      }
@@ -52,7 +267,7 @@
       "interpretation": null,
       "method": "description_section:WHAT YOU’LL BRING",
       "quote": "- Senior-level engineering judgment and a track record of independently leading complex production work from design through operation and improvement.\n- Hands-on experience shipping LLM-powered product capabilities to production, with clear personal responsibility for implementation and delivery decisions.\n- Real depth in at least some of the following: retrieval/RAG and indexing, evaluation datasets and experiments, LLM-as-judge, or agents and tool calling.\n- The ability to tell model, retrieval, tooling and application failures apart, and to validate improvements with evidence.\n- Strong fundamentals in coding, debugging, testing, API integration and system design, plus willingness to work in Ruby/Rails and React.\n- Sound judgment about sensitive data, access control, model limitations and operational risk.\n- Clear communication of trade-offs, effective async collaboration with product and engineering partners, and practical mentoring.",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
      }
@@ -65,7 +280,7 @@
       "interpretation": null,
       "method": "description_section:Nice to have",
       "quote": "- Production experience with Ruby on Rails, especially integrating AI capabilities into an established backend.\n- Full-stack delivery of conversational or assistant experiences.\n- Slack or in-app assistant integrations with clear user and permission context.\n- Operating retrieval pipelines, agent tools, evaluation infrastructure, or model routing and cost controls at production scale.\n- Helping multiple teams adopt reusable AI patterns while balancing shared foundations against local needs.",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
      }
@@ -76,9 +291,17 @@
     "items": [
      {
       "interpretation": "remote",
+      "method": "ats_field:workplace_type",
+      "quote": "Remote",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
+     },
+     {
+      "interpretation": "remote",
       "method": "description_text",
       "quote": "- Thoughtful remote culture. You’ll join a fully remote, async-friendly team that values documentation and clear decision-making.",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/b3c1e89e-f45b-4c14-9fea-42310ee9231b"
      }

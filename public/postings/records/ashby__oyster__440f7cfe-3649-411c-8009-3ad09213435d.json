@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "oyster",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-05T22:13:41.942088+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "3b4e8f54e143a5091aae2eaee4294d297c192644c6525a05e03370019d710cd7",
+   "kind": "content_changed",
+   "to_hash": "1491d3961869b44fc9767500caa8725c829a684afde5065b9a7a0b159936604a"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nLocation: Fully remote. To create the best experience for you and to meet our business needs, this role requires you to be based within the EMEA or AMER regions.\n\nYou’ll join Oyster as a Senior AI Solutions Engineer: Go-to-Market, reporting to the AI Director and partnering closely with GTM leadership.\n\nYour mandate goes beyond automating individual tasks. You’ll help make Sales, Marketing, Customer Success, Partnerships, and Revenue Operations AI native. This means rethinking how people work with AI, where agents can take on operational work, and where human judgement creates the most value to build a more effective AI enabled GTM organization.\n\nYou’ll be part of a connected group of Senior AI Solutions Engineers transforming different departments across Oyster. Together, you’ll establish shared standards, reuse successful approaches, and ensure Oyster’s AI transformation is coordinated rather than siloed.\n\nThis is a senior, hands on role. You’ll independently identify high value opportunities, decide where AI should and should not be used, and lead complex solutions from discovery through adoption and measurable business impact.\n\nCORE RESPONSIBILITIES\n\nMake GTM AI native\n\nReimagine how GTM teams work with AI. Move teams from manually operating tools and workflows toward humans orchestrating AI powered ways of working, with human judgement where it matters.\n\nShape the AI roadmap\n\nPartner with GTM leaders to identify, prioritize, and frame high impact transformation opportunities.\n\nLead solutions from start to finish\n\nOwn complex initiatives from an ambiguous problem through design, build, deployment, adoption, and improvement.\n\nBuild best in class AI agents and solutions\n\nDesign, build, test, and continuously improve reliable AI agents, agentic workflows, automations, and integrations using LLMs, orchestration platforms, APIs, tools, and enterprise data sources.\n\nApply sound judgement\n\nBalance value, feasibility, risk, data quality, maintainability, and human oversight. Recognize when AI is not the right solution.\n\nDrive AI adoption and self sufficiency\n\nPartner with GTM leaders, managers, and champions to embed AI into everyday work. Help teams move beyond consuming AI outputs toward confidently creating reusable prompts, workflows, and AI powered ways of working.\n\nOwn solutions beyond launch\n\nMeasure adoption, quality, reliability, and business impact after release. Continuously improve solutions based on real usage and outcomes rather than treating launch as completion.\n\nConnect the organization and raise capability\n\nBuild trust with GTM leadership, share reusable patterns with AI Solutions Engineers supporting other departments, mentor colleagues, and help teams develop the skills and confidence to operate effectively in an AI enabled environment.\n\nMINIMUM REQUIREMENTS\n\n- 3+ years of hands on AI and automation experience, supported by broader experience delivering complex solutions in GTM Engineering, Solutions Engineering, Revenue Operations, systems integration, or a related field.\n\n- A track record of redesigning workflows or operating models, rather than only automating isolated tasks.\n\n- Experience independently leading complex, cross functional initiatives from an ambiguous problem to measurable business impact.\n\n- Strong automation capability using tools such as n8n, Zapier, Make, or comparable orchestration technologies.\n\n- Strong hands on experience designing, building, deploying, and improving production AI agents and agentic workflows using LLMs, APIs, tools, and enterprise data.\n\n- Strong understanding of B2B GTM operations across Sales, Marketing, Customer Success, Partnerships, and Revenue Operations.\n\n- Experience integrating business systems through APIs, webhooks, and authentication mechanisms.\n\n- Strong judgement about where AI can create value, where processes need deeper redesign, and where automation should not be used.\n\n- Ability to influence functional leaders, challenge assumptions constructively, and align technical and nontechnical stakeholders.\n\n- A track record of mentoring others, sharing expertise, and raising standards across a team.\n\nBONUS EXPERIENCE\n\n- Experience with Salesforce, HubSpot, Gong, Clay, or similar GTM platforms.\n\n- JavaScript, Python, or SQL experience.\n\n- Familiarity with RAG, MCP, AI evaluation, observability, governance, or security controls.\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
@@ -28,6 +38,10 @@
    },
    {
     "source": "secondaryLocations",
+    "text": "Spain"
+   },
+   {
+    "source": "secondaryLocations",
     "text": "Brazil"
    },
    {
@@ -39,12 +53,12 @@
     "text": "Mexico"
    }
   ],
-  "published": "2026-09-18T15:32:06.487000+00:00",
+  "published": "2026-11-05T19:15:02.682000+00:00",
   "title": "Senior AI Solutions Engineer - GTM",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "3b4e8f54e143a5091aae2eaee4294d297c192644c6525a05e03370019d710cd7",
+ "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
+ "content_hash": "1491d3961869b44fc9767500caa8725c829a684afde5065b9a7a0b159936604a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +77,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "EMEA",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -71,7 +85,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "United States",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -79,7 +93,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Ireland",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -87,7 +101,15 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Spain",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -95,7 +117,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Brazil",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -103,7 +125,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      },
@@ -111,7 +133,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Mexico",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      }
@@ -124,7 +146,7 @@
       "interpretation": null,
       "method": "description_section:MINIMUM REQUIREMENTS",
       "quote": "- 3+ years of hands on AI and automation experience, supported by broader experience delivering complex solutions in GTM Engineering, Solutions Engineering, Revenue Operations, systems integration, or a related field.\n- A track record of redesigning workflows or operating models, rather than only automating isolated tasks.\n- Experience independently leading complex, cross functional initiatives from an ambiguous problem to measurable business impact.\n- Strong automation capability using tools such as n8n, Zapier, Make, or comparable orchestration technologies.\n- Strong hands on experience designing, building, deploying, and improving production AI agents and agentic workflows using LLMs, APIs, tools, and enterprise data.\n- Strong understanding of B2B GTM operations across Sales, Marketing, Customer Success, Partnerships, and Revenue Operations.\n- Experience integrating business systems through APIs, webhooks, and authentication mechanisms.\n- Strong judgement about where AI can create value, where processes need deeper redesign, and where automation should not be used.\n- Ability to influence functional leaders, challenge assumptions constructively, and align technical and nontechnical stakeholders.\n- A track record of mentoring others, sharing expertise, and raising standards across a team.\nBONUS EXPERIENCE\n- Experience with Salesforce, HubSpot, Gong, Clay, or similar GTM platforms.\n- JavaScript, Python, or SQL experience.\n- Familiarity with RAG, MCP, AI evaluation, observability, governance, or security controls.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      }
@@ -141,7 +163,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: Fully remote. To create the best experience for you and to meet our business needs, this role requires you to be based within the EMEA or AMER regions.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/440f7cfe-3649-411c-8009-3ad09213435d"
      }

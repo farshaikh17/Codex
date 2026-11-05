@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-31T00:48:39.757986+00:00",
-  "reason": "listed again after missing",
-  "state": "listed"
+  "at": "2026-11-05T22:13:41.942088+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "gohighlevel",
  "changes": [],

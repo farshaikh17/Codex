@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-05T22:13:41.942088+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "03cf15543ce2200d613cb5cf10433457de5f44372ec92256335dc391a642b36e",
+   "kind": "content_changed",
+   "to_hash": "027664f61674f0f96a8b5fc7dd3d51f2be217476ef9a9ff0d9cf4f1475d105a7"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs Engineering Manager, Architecture Engineering: Async, you'll lead a distributed group of Site Reliability Engineers and Backend Engineers. You'll support their development and balance production reliability with platform projects, including zero-downtime Redis upgrades, support for single-tenant and cell-based deployments, and the move from queue-based job orchestration to a durable workflow engine.\n\nWhat you'll do\n\nLead, hire, and grow a team of site reliability engineers and backend engineers, supporting career development, promotions, and onboarding.\n\nOwn reliability for the job processing and caching platforms, including service-level objectives, error budgets, alerting, and weekly operational reviews.\n\nManage capacity planning, support escalations, and incident follow-ups, balancing operational work with roadmap projects and rescoping work when deadlines can't be met.\n\nRun the team's part of GitLab.com's first-tier on-call rotation, including shift coverage, onboarding, and handovers, and serve as incident commander for high-severity incidents.\n\nDrive zero-downtime Redis version upgrades and automate operating system patching and reboots.\n\nAdapt job processing to run in single-tenant and cell-based deployments.\n\nOwn the migration from queue-based job orchestration to a durable workflow engine, defining the first use cases, a measurable migration path, and the roadmap.\n\nOwn quarterly planning and the team roadmap, and clarify shared operational responsibilities with partner teams, including Git storage.\n\nWhat you'll bring\n\nExperience managing an engineering team delivering high-performance services at scale, ideally site reliability engineers or infrastructure engineers running production software as a service systems.\n\nTechnical depth in background job processing and caching technologies such as Redis and Sidekiq, sufficient to guide decisions about upgrades, capacity, and failure modes.\n\nExperience managing reliability against service-level objectives, including defining service-level indicators, setting up burn-rate alerting, and planning capacity.\n\nExperience running a 24/7 on-call rotation and coordinating high-severity incidents.\n\nA track record of balancing operational work and incident follow-ups with roadmap projects, and pushing back on scope when deadlines can't be met.\n\nExperience leading a fully remote team across time zones in the Americas, Europe, the Middle East, Africa, and Asia-Pacific.\n\nAbout the team\n\nThe Async team runs GitLab.com's background processing layer, from the Sidekiq infrastructure to the shared code that enqueues jobs. Product teams build the jobs; we keep the platform that runs them fast and reliable. Our Redis clusters support caching, sessions, rate limiting, queues, and shared state. We also support data durability through backup and restore verification, object storage, and operational support for Git repository storage. That work includes restore drills, capacity rebalancing, and provisioning. We staff GitLab.com's first-tier production on-call rotation in 8-hour shifts across the Americas, Europe, the Middle East, Africa, and Asia-Pacific, triaging every paging alert and bringing in the right team when needed.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
+  "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs Engineering Manager, Architecture Engineering: Async, you'll lead a distributed group of Site Reliability Engineers and Backend Engineers. You'll support their development and balance production reliability with platform projects, including zero-downtime Redis upgrades, support for single-tenant and cell-based deployments, and the move from queue-based job orchestration to a durable workflow engine.\n\nWhat you'll do\n\nLead, hire, and grow a team of site reliability engineers and backend engineers, supporting career development, promotions, and onboarding.\n\nOwn reliability for the job processing and caching platforms, including service-level objectives, error budgets, alerting, and weekly operational reviews.\n\nManage capacity planning, support escalations, and incident follow-ups, balancing operational work with roadmap projects and rescoping work when deadlines can't be met.\n\nRun the team's part of GitLab.com's first-tier on-call rotation, including shift coverage, onboarding, and handovers, and serve as incident commander for high-severity incidents.\n\nDrive zero-downtime Redis version upgrades and automate operating system patching and reboots.\n\nAdapt job processing to run in single-tenant and cell-based deployments.\n\nOwn the migration from queue-based job orchestration to a durable workflow engine, defining the first use cases, a measurable migration path, and the roadmap.\n\nOwn quarterly planning and the team roadmap, and clarify shared operational responsibilities with partner teams, including Git storage.\n\nTake part in on-call or operational support where your team’s ownership model requires it.\n\nWhat you'll bring\n\nExperience managing an engineering team delivering high-performance services at scale, ideally site reliability engineers or infrastructure engineers running production software as a service systems.\n\nTechnical depth in background job processing and caching technologies such as Redis and Sidekiq, sufficient to guide decisions about upgrades, capacity, and failure modes.\n\nExperience managing reliability against service-level objectives, including defining service-level indicators, setting up burn-rate alerting, and planning capacity.\n\nExperience running a 24/7 on-call rotation and coordinating high-severity incidents.\n\nA track record of balancing operational work and incident follow-ups with roadmap projects, and pushing back on scope when deadlines can't be met.\n\nExperience leading a fully remote team across time zones in the Americas, Europe, the Middle East, Africa, and Asia-Pacific.\n\nAbout the team\n\nThe Async team runs GitLab.com's background processing layer, from the Sidekiq infrastructure to the shared code that enqueues jobs. Product teams build the jobs; we keep the platform that runs them fast and reliable. Our Redis clusters support caching, sessions, rate limiting, queues, and shared state. We also support data durability through backup and restore verification, object storage, and operational support for Git repository storage. That work includes restore drills, capacity rebalancing, and provisioning. We staff GitLab.com's first-tier production on-call rotation in 8-hour shifts across the Americas, Europe, the Middle East, Africa, and Asia-Pacific, triaging every paging alert and bringing in the right team when needed.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +33,8 @@
   "title": "Engineering Manager, Architecture Engineering: Async",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-28T17:20:08.294293+00:00",
- "content_hash": "03cf15543ce2200d613cb5cf10433457de5f44372ec92256335dc391a642b36e",
+ "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
+ "content_hash": "027664f61674f0f96a8b5fc7dd3d51f2be217476ef9a9ff0d9cf4f1475d105a7",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      },
@@ -51,7 +61,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      },
@@ -59,7 +69,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Experience leading a fully remote team across time zones in the Americas, Europe, the Middle East, Africa, and Asia-Pacific.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      }
@@ -72,7 +82,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Technical depth in background job processing and caching technologies such as Redis and Sidekiq, sufficient to guide decisions about upgrades, capacity, and failure modes.\nExperience managing reliability against service-level objectives, including defining service-level indicators, setting up burn-rate alerting, and planning capacity.\nExperience running a 24/7 on-call rotation and coordinating high-severity incidents.\nA track record of balancing operational work and incident follow-ups with roadmap projects, and pushing back on scope when deadlines can't be met.\nExperience leading a fully remote team across time zones in the Americas, Europe, the Middle East, Africa, and Asia-Pacific.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      }
@@ -85,7 +95,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you'll bring",
       "quote": "Experience managing an engineering team delivering high-performance services at scale, ideally site reliability engineers or infrastructure engineers running production software as a service systems.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      }
@@ -98,7 +108,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      },
@@ -106,7 +116,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      },
@@ -114,7 +124,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Experience leading a fully remote team across time zones in the Americas, Europe, the Middle East, Africa, and Asia-Pacific.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921380002"
      }

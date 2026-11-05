@@ -14,6 +14,15 @@
    "from_hash": "6efdefc591113bcb4ae1a57b753e6d035696b420a1c0b14addf17d703d36d1cd",
    "kind": "compensation_source_added",
    "to_hash": "08cd92fbd77ae32d75ce44949dfe90a1a493277d4937437ff422f57920ba4e8b"
+  },
+  {
+   "changed_at": "2026-11-05T22:13:41.942088+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "08cd92fbd77ae32d75ce44949dfe90a1a493277d4937437ff422f57920ba4e8b",
+   "kind": "content_changed",
+   "to_hash": "c63f7821cc8b80da938857fefd18062eb0d06f35cb3e318d765f8b78a4c1bee0"
   }
  ],
  "content": {
@@ -23,14 +32,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-07-22T13:32:20-04:00",
   "title": "Tech Operations Specialist",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "08cd92fbd77ae32d75ce44949dfe90a1a493277d4937437ff422f57920ba4e8b",
+ "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
+ "content_hash": "c63f7821cc8b80da938857fefd18062eb0d06f35cb3e318d765f8b78a4c1bee0",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -59,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 9520000, \"max_cents\": 16080000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
      },
@@ -84,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$95,200—$160,800 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
      }
@@ -101,7 +114,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
      }
@@ -114,7 +135,7 @@
       "interpretation": null,
       "method": "description_section:What You’ll Bring",
       "quote": "Early-Mid Level Experience: Some experience in enablement, sales/business operations, IT operations, or a similar coordination-heavy function; comfortable owning recurring operational processes.\nOrganized & Detail-Oriented: Strong attention to detail with the ability to track multiple tools, requests, and datasets simultaneously without things falling through the cracks.\nInterest in AI Tooling: Genuine curiosity about AI tools and platforms, with willingness to learn the technical basics of how they're configured, accessed, and maintained. Act as an advocate for AI Adoption and best practices in the field.\nProcess-Minded: Comfortable following and improving structured processes (intake forms, access workflows, tracking dashboards) rather than needing to build strategy from scratch.\nCollaborative: Able to work with enablement, IT, and field stakeholders to gather requirements and resolve access or data issues efficiently.\nData Comfort: Basic comfort working with spreadsheets, dashboards, or simple data tools to track utilization and maintain data quality.\nGitLab Values Alignment: Ability to work in an all-remote, asynchronous environment, leaning heavily on transparency and collaboration as defined in the GitLab Handbook.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
      }
@@ -131,7 +152,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8638246002"
      }
