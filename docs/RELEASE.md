@@ -41,6 +41,10 @@ release workflow edited on another branch cannot run with the production secrets
 * After 8 wrong keys in 15 minutes from one address, that address is refused (HTTP 429) for the rest of the window,
   including with the correct key. Wait up to 15 minutes, or clear it (see Rollback).
 
+If the `auth_failures` table already exists from an earlier draft (without `last_key_hash`), the limiter would fail open;
+run `npx wrangler d1 execute career-job-engine --remote --command "DROP TABLE IF EXISTS auth_failures"` once before the
+release. Production has not had that draft applied.
+
 ## Rollback
 
 | Situation | Action |

@@ -46,3 +46,25 @@ See `KNOWN_ISSUES.md` ("Not verified"): remote D1, billing and usage, production
 The unlock window never opened (the handler was empty); the India Remote "save" wrote to Farhan whoever was selected;
 the Applications ledger showed Farhan's numbers for Sana; the dashboard stayed empty after unlocking (it fetched once,
 before the key existed); the page shipped employer, pay and city text in public JavaScript.
+
+## Re-check of the round-2 fixes (commit `d7b7849`)
+
+The same independent reviewer context re-verified the fixes and found no defects in them. It ran `npm ci && npm run verify`
+(28/28 Worker and privacy tests, DST/authedFetch/settings regressions, migrations 0001-0008, build and Worker dry run) and
+the browser suite on Local D1 (desktop 27/27, mobile 27/27). A single stale-key page load in a real browser made one refused
+data request and one refused key check and left the failure counter at 1. Limiter probes on SQLite: one wrong key sent 60
+times never locks out and then the real key works; alternating A,B,A,B and paired guesses lock after 8 distinct guesses;
+the correct key is refused during lockout on both ordinary routes and `/api/auth/verify`; 20 concurrent requests over 3
+keys are counted. Concurrency was exercised serially, not as true parallel D1 writers.
+
+Minor residuals it noted, none blocking:
+
+1. If an *older* draft of migration 0008 (without `last_key_hash`) had ever been applied somewhere, `CREATE TABLE IF NOT
+   EXISTS` would not add the column and the limiter would fail open (authentication itself is unaffected). It was never
+   applied to production; the release creates the table fresh. If it is ever found in the old shape, run
+   `DROP TABLE auth_failures` first and then the release step.
+2. The overview request still goes out in parallel with the stored-key check when a key is stored; both carry the same
+   stale key and count once.
+3. A key rotated mid-session produces in-flight refusals that carry the same key and count once.
+
+Reviewed commit for this round: `d7b7849` (documentation-only commits follow it).
