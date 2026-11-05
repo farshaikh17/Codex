@@ -5,7 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { seed } from './fixtures.mjs';
-import { evaluate, avoidedTitle, foreignLocation, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY } from '../worker/discovery.ts';
+import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { plan, SELECT_ROWS } from '../scripts/rescore_ranking_v2.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']) };
@@ -42,30 +43,108 @@ test('ranking: a posting whose only stated location is outside India loses point
   assert.equal(sa.score, sb.score);
 });
 
-test('migration 0010: applies the ranking change to stored preliminary scores once, and spares overrides, applications and engine scores', () => {
+
+// ---- title and location rules (shared by the Worker and the correction script) -------------------------------------
+test('avoid list: software/ML/security/test families always; finance/support/management families unless the title names his own target areas', () => {
+  for (const t of ['Software Engineer', 'Senior Backend Engineer', 'Backend|Engineer', 'Software Engineer–Platform', 'Implementation Engineer - Backend/API', 'DevOps Engineer', 'Site Reliability Engineer', 'SRE', 'Machine Learning Engineer', 'Data Scientist', 'Security Engineer', 'SDET', 'QA Engineer', 'Test Automation Lead', 'Finance Manager', 'Financial Controller', 'Payroll Specialist', 'Customer Support Specialist', 'Support Engineer', 'Engineering Manager', 'Director of Engineering', 'Accountant'])
+    assert.ok(avoidedTitle('farhan_shaikh', t), `${t} should be capped`);
+  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Business Systems Analyst', 'Finance Systems Analyst', 'Business Systems Analyst - Finance',
+    'Solutions Engineering Manager', 'Implementation Support Specialist', 'Payroll Implementation Specialist', 'Customer Support Operations Manager', 'Air Traffic Controller', 'Implementation Manager, Software Onboarding', 'Presre Lead'])
+    assert.ok(!avoidedTitle('farhan_shaikh', t), `${t} should not be capped`);
+  assert.ok(!avoidedTitle('sana_ansari', 'Software Engineer'));
+});
+test('foreign location: US/EU/other named places, U.S., bare US, state codes; never a place that also names India', () => {
+  for (const l of ['Austin, TX', 'Plano, TX', 'Palo Alto, CA', 'London, United Kingdom', 'Remote - U.S.', 'U.S.', 'U.S. Remote', 'Remote - US', 'US Remote', 'Remote (US)', 'Remote, North America', 'Remote, Americas', 'Dubai, UAE', 'Singapore', 'Berlin, Germany'])
+    assert.equal(foreignLocation(l), true, l);
+  for (const l of ['Remote', 'Remote - India', 'Bengaluru, India', 'Bangalore / London', 'Noida', 'Gurugram, Haryana', 'Bhubaneswar, OR', 'Hybrid', '', 'Work with us'])
+    assert.equal(foreignLocation(l), false, l);
+  assert.equal(remoteFromStored('REMOTE_RESTRICTED', ''), true); assert.equal(remoteFromStored(null, 'Remote - India'), true); assert.equal(remoteFromStored('ONSITE', 'Mumbai, India'), false);
+});
+
+// ---- the correction script, run against a real database with the real migrations --------------------------------------
+const old = JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true });
+function world() {
   const { sqlite } = createDb(); seed(sqlite);
-  const sql = fs.readFileSync(path.join(root, 'migrations', '0010_ranking_v2.sql'), 'utf8');
-  const bd = JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true });
-  const job = (id, title, loc) => sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,discovered_at) VALUES (?,?,?,?,1,?,'2026-11-01T00:00:00Z')").run(id, title, 'Co', 'lever', loc);
-  const row = (id, score, breakdown = bd, status = 'NEEDS_REVIEW', elig = 'UNKNOWN', override = null) => {
-    sqlite.prepare('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,manual_override_status) VALUES (?,?,?,?,?)').run('farhan_shaikh', id, status, elig, override);
-    sqlite.prepare('INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,?,?)').run('farhan_shaikh', id, score, breakdown); };
-  job('a1', 'Senior Software Engineer', 'Remote'); row('a1', 66);                                  // avoid title -> 40
-  job('a2', 'Implementation Manager', 'Austin, TX'); row('a2', 66);                                // foreign only -> 51
-  job('a3', 'Implementation Manager', 'Remote - India'); row('a3', 66);                            // untouched
-  job('a4', 'DevOps Engineer', 'Remote'); row('a4', 66, bd, 'NEEDS_REVIEW', 'UNKNOWN', 'READY');   // human override -> untouched
-  job('a5', 'DevOps Engineer', 'Remote'); row('a5', 66, JSON.stringify({ rule_version: 'engine-v2' }));  // engine score -> untouched
-  job('a6', 'DevOps Engineer', 'Remote'); row('a6', 66); sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('ax','farhan_shaikh','a6','SAVED')").run();  // has a placeholder tracker record: it must NOT exclude the job from the correction -> 40
-  job('a7', 'Implementation Manager', 'London, UK'); row('a7', 66, bd, 'NEEDS_REVIEW', 'ELIGIBLE');   // affirmatively eligible -> no location penalty
-  job('a8', 'Software Engineer', 'Remote'); row('a8', 30);                                         // already below the cap
-  const score = (id) => sqlite.prepare("SELECT overall_score s FROM candidate_job_scores WHERE candidate_id='farhan_shaikh' AND job_id=?").get(id).s;
-  const sanaBefore = sqlite.prepare("SELECT COUNT(*) n, SUM(overall_score) s FROM candidate_job_scores WHERE candidate_id='sana_ansari'").get();
-  sqlite.exec(sql);
-  assert.deepEqual(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].map(score), [40, 51, 66, 66, 66, 40, 66, 30]);
-  sqlite.exec(sql);                                                                                 // run again: nothing changes
-  assert.deepEqual(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].map(score), [40, 51, 66, 66, 66, 40, 66, 30]);
-  assert.equal(sqlite.prepare("SELECT status FROM (SELECT qualification_status status FROM candidate_qualifications WHERE job_id='a1')").get().status, 'NEEDS_REVIEW');
-  assert.deepEqual(sqlite.prepare("SELECT COUNT(*) n, SUM(overall_score) s FROM candidate_job_scores WHERE candidate_id='sana_ansari'").get(), sanaBefore, "Sana's scores are not touched");
+  const job = (id, title, loc, wt = 'ONSITE') => sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,workplace_type,discovered_at) VALUES (?,?,?,?,1,?,?,'2026-11-01T00:00:00Z')").run(id, title, 'Co', 'lever', loc, wt);
+  const row = (c, id, score, o = {}) => {
+    sqlite.prepare('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,manual_override_status) VALUES (?,?,?,?,?,?,?)')
+      .run(c, id, o.status || 'NEEDS_REVIEW', o.lane || 'STRONGEST_FIT', o.elig || 'UNKNOWN', o.reason || 'x', o.override || null);
+    sqlite.prepare('INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,strategy_lane,score_breakdown) VALUES (?,?,?,?,?)').run(c, id, score, o.lane || 'STRONGEST_FIT', o.bd || old); };
+  const run = () => { const rows = sqlite.prepare(SELECT_ROWS).all(); const p = plan(rows); for (const st of p.statements) sqlite.exec(st); return p; };
+  const score = (c, id) => sqlite.prepare('SELECT overall_score s FROM candidate_job_scores WHERE candidate_id=? AND job_id=?').get(c, id).s;
+  const elig = (c, id) => sqlite.prepare('SELECT eligibility_status e FROM candidate_qualifications WHERE candidate_id=? AND job_id=?').get(c, id).e;
+  return { sqlite, job, row, run, score, elig };
+}
+const F = 'farhan_shaikh', S = 'sana_ansari';
+
+test('correction (Farhan): cap, location penalty and both together match what evaluate() would store; re-running changes nothing', () => {
+  const w = world();
+  w.job('a1', 'Senior Software Engineer', 'Remote'); w.row(F, 'a1', 66);                    // cap -> 40
+  w.job('a2', 'Implementation Manager', 'Austin, TX'); w.row(F, 'a2', 66);                  // foreign -> 51
+  w.job('a3', 'Implementation Manager', 'Remote - India'); w.row(F, 'a3', 66);              // untouched
+  w.job('a4', 'Software Engineer', 'London, UK'); w.row(F, 'a4', 66);                       // cap then penalty -> 25 (as evaluate())
+  w.job('a5', 'Software Engineer', 'Remote'); w.row(F, 'a5', 30);                           // already below the cap
+  w.job('a6', 'Implementation Manager', 'Remote - U.S.'); w.row(F, 'a6', 66);               // SQL used to miss this
+  w.job('a7', 'Implementation Manager', 'Plano, TX'); w.row(F, 'a7', 66);                   // ... and this
+  w.job('a8', 'Backend|Engineer', 'Remote'); w.row(F, 'a8', 66);                            // punctuation
+  w.job('a9', 'Implementation Manager', 'London, UK'); w.row(F, 'a9', 66, { elig: 'ELIGIBLE' });   // affirmatively eligible: no penalty
+  const p1 = w.run();
+  assert.deepEqual(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9'].map((id) => w.score(F, id)), [40, 51, 66, 25, 30, 51, 51, 40, 66]);
+  assert.ok(p1.counts.estimated_rows_written > 0);
+  const p2 = w.run();
+  assert.equal(p2.statements.length, 0, 're-running plans nothing');
+  assert.deepEqual(['a1', 'a2', 'a4', 'a6'].map((id) => w.score(F, id)), [40, 51, 25, 51]);
+});
+
+test('correction: rows already scored under the new rules (tagged) are never penalised again; engine-scored, overridden and non-review rows are untouched', () => {
+  const w = world();
+  const tagged = JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true, ranking_v2: true });
+  w.job('b1', 'Implementation Manager', 'London, UK'); w.row(F, 'b1', 35, { bd: tagged });   // the new Worker already took the 15 off
+  w.job('b2', 'DevOps Engineer', 'Remote'); w.row(F, 'b2', 66, { override: 'READY' });         // human decision
+  w.job('b3', 'DevOps Engineer', 'Remote'); w.row(F, 'b3', 66, { bd: JSON.stringify({ rule_version: 'engine-v2' }) });   // collector engine
+  w.job('b4', 'DevOps Engineer', 'Remote'); w.row(F, 'b4', 66, { status: 'READY' });           // not a review row
+  w.job('b5', 'DevOps Engineer', 'Remote'); w.row(F, 'b5', 66, { bd: 'not json' });
+  w.run();
+  assert.deepEqual(['b1', 'b2', 'b3', 'b4', 'b5'].map((id) => w.score(F, id)), [35, 66, 66, 66, 66]);
+});
+
+test('correction: a tracker record never excludes a job; applications, history and overrides stay byte-identical', () => {
+  const w = world();
+  w.job('c1', 'DevOps Engineer', 'Remote'); w.row(F, 'c1', 66);
+  w.sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES ('c-app','farhan_shaikh','c1','SAVED','placeholder listing')").run();
+  w.sqlite.prepare("INSERT INTO application_history(candidate_id,job_id,application_id,new_status,actor,source) VALUES ('farhan_shaikh','c1','c-app','SAVED','test','test')").run();
+  w.job('c2', 'DevOps Engineer', 'Remote'); w.row(F, 'c2', 66, { override: 'READY' });
+  const snap = () => JSON.stringify([w.sqlite.prepare('SELECT * FROM applications ORDER BY id').all(), w.sqlite.prepare('SELECT * FROM application_history ORDER BY id').all(),
+    w.sqlite.prepare('SELECT candidate_id,job_id,qualification_status,manual_override_status,manual_override_reason FROM candidate_qualifications WHERE manual_override_status IS NOT NULL ORDER BY 1,2').all()]);
+  const before = snap();
+  w.run();
+  assert.equal(w.score(F, 'c1'), 40, 'the job that has a placeholder tracker record is still corrected');
+  assert.equal(w.score(F, 'c2'), 66, 'the overridden one is not');
+  assert.equal(snap(), before);
+  assert.ok(before.includes('placeholder listing'), 'the snapshot really contains the application');
+});
+
+test('correction (Sana): city-list eligibility becomes unknown, remote-in-India stays eligible even under the old reason, score loses the 10 points only where they were added', () => {
+  const w = world();
+  w.job('s1', 'Reliability Engineer', 'Mumbai, India'); w.row(S, 's1', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON });                                   // -> UNKNOWN, 50
+  w.job('s2', 'Reliability Engineer', 'Remote - India', 'REMOTE_RESTRICTED'); w.row(S, 's2', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON });          // remote, old reason: untouched
+  w.job('s3', 'Reliability Engineer', 'Pune, India'); w.row(S, 's3', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON, override: 'READY' });               // override: untouched
+  w.job('s4', 'Reliability Engineer', 'Pune, India'); w.row(S, 's4', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON, status: 'READY' });                  // READY: untouched
+  w.job('s5', 'Reliability Engineer', 'Mumbai, India'); w.row(S, 's5', 60, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON, lane: 'UNASSIGNED' });            // no role bonus to remove
+  w.job('s6', 'Reliability Engineer', 'Remote'); w.row(S, 's6', 60, { elig: 'ELIGIBLE', reason: 'Remote role in India.' });                                      // new-style: untouched
+  w.run();
+  assert.deepEqual(['s1', 's2', 's3', 's4', 's5', 's6'].map((id) => [w.elig(S, id), w.score(S, id)]),
+    [['UNKNOWN', 50], ['ELIGIBLE', 60], ['ELIGIBLE', 60], ['ELIGIBLE', 60], ['UNKNOWN', 60], ['ELIGIBLE', 60]]);
+  assert.equal(w.sqlite.prepare("SELECT eligibility_reason r FROM candidate_qualifications WHERE candidate_id='sana_ansari' AND job_id='s1'").get().r, SANA_UNKNOWN_ACCESS_REASON);
+  assert.equal(w.run().statements.length, 0, 'idempotent');
+});
+
+test('correction: the write estimate counts the score index, and the preliminary scores of other rules are never selected', () => {
+  const w = world();
+  w.job('d1', 'DevOps Engineer', 'Remote'); w.row(F, 'd1', 66);
+  const p = plan(w.sqlite.prepare(SELECT_ROWS).all());
+  assert.equal(p.counts.score_rows, 1); assert.equal(p.counts.estimated_rows_written, 2);
+  assert.ok(!SELECT_ROWS.includes('applications') && !SELECT_ROWS.includes('application_history'), 'the script never reads the tracker');
 });
 
 test('Sana: a role in an Indian city is UNKNOWN until accessibility is verified; only a role that is remote in India is eligible', () => {
@@ -77,34 +156,4 @@ test('Sana: a role in an Indian city is UNKNOWN until accessibility is verified;
   assert.equal(remoteIndia.eligibility, 'ELIGIBLE'); assert.equal(remoteIndia.reason, 'Remote role in India.');
   assert.ok(remoteIndia.score > city.score, 'the eligibility bonus no longer applies to an unverified city');
   assert.equal(evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability role. Visa sponsorship available.')).eligibility, 'ELIGIBLE', 'other rules are unchanged');
-});
-
-test('migration 0010 (Sana): stored city-list eligibility becomes unknown; overrides, other statuses and every application, history and override row are untouched', () => {
-  const { sqlite } = createDb(); seed(sqlite);
-  const sql = fs.readFileSync(path.join(root, 'migrations', '0010_ranking_v2.sql'), 'utf8');
-  const bd = JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true });
-  const OLD = 'Posting is in an accessible Indian location.';
-  const job = (id) => sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,discovered_at) VALUES (?,?,?,?,1,'Mumbai, India','2026-11-01T00:00:00Z')").run(id, 'Reliability Engineer', 'Co', 'lever');
-  const row = (id, score, status, elig, reason, override = null, lane = 'STRONGEST_FIT') => {
-    job(id);
-    sqlite.prepare('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,manual_override_status) VALUES (?,?,?,?,?,?,?)').run('sana_ansari', id, status, lane, elig, reason, override);
-    sqlite.prepare('INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,strategy_lane,score_breakdown) VALUES (?,?,?,?,?)').run('sana_ansari', id, score, lane, bd); };
-  row('s1', 60, 'NEEDS_REVIEW', 'ELIGIBLE', OLD);                                   // city list only -> UNKNOWN, 50
-  row('s2', 60, 'NEEDS_REVIEW', 'ELIGIBLE', 'Remote role in India.');               // affirmative remote -> untouched
-  row('s3', 60, 'NEEDS_REVIEW', 'ELIGIBLE', OLD, 'READY');                          // human override -> untouched
-  row('s4', 60, 'READY', 'ELIGIBLE', OLD);                                           // not a review row -> untouched
-  row('s5', 60, 'NEEDS_REVIEW', 'ELIGIBLE', OLD, null, 'UNASSIGNED');               // not role-matched: eligibility updated, score has no bonus to remove
-  const snap = () => JSON.stringify([sqlite.prepare('SELECT * FROM applications ORDER BY id').all(), sqlite.prepare('SELECT * FROM application_history ORDER BY id').all(),
-    sqlite.prepare('SELECT candidate_id,job_id,manual_override_status,manual_override_reason FROM candidate_qualifications WHERE manual_override_status IS NOT NULL ORDER BY 1,2').all()]);
-  const before = snap();
-  const state = (id) => sqlite.prepare("SELECT q.eligibility_status e, q.eligibility_reason r, s.overall_score s FROM candidate_qualifications q JOIN candidate_job_scores s USING(candidate_id,job_id) WHERE q.candidate_id='sana_ansari' AND q.job_id=?").get(id);
-  sqlite.exec(sql);
-  assert.deepEqual([state('s1').e, state('s1').s], ['UNKNOWN', 50]); assert.match(state('s1').r, /accessibility is unknown/);
-  assert.deepEqual([state('s2').e, state('s2').s], ['ELIGIBLE', 60]);
-  assert.deepEqual([state('s3').e, state('s3').s], ['ELIGIBLE', 60]);
-  assert.deepEqual([state('s4').e, state('s4').s], ['ELIGIBLE', 60]);
-  assert.deepEqual([state('s5').e, state('s5').s], ['UNKNOWN', 60]);
-  assert.equal(snap(), before, 'applications, history and overrides are byte-identical');
-  sqlite.exec(sql);
-  assert.deepEqual([state('s1').e, state('s1').s], ['UNKNOWN', 50], 'idempotent');
 });

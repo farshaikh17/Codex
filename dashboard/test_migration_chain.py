@@ -12,7 +12,6 @@ migrations = [
     '0007_qualification_history.sql',
     '0008_auth_failures.sql',
     '0009_response_cache.sql',
-    '0010_ranking_v2.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:

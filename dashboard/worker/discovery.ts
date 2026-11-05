@@ -52,13 +52,35 @@ export function page(s:Source, raw:any):{items:any[];next:number;complete:boolea
  return {items:all.slice(0,PAGE),next:s.cursor+all.length<total?s.cursor+all.length:0,complete:s.cursor+all.length>=total};
 }
 
-// Farhan's avoid list: software/ML/security/finance/support/engineering-management/test-automation role families.
-export const AVOID_TITLE_CAP=40, FOREIGN_LOCATION_PENALTY=15;
-const FARHAN_AVOID=/\b(software (?:engineer|developer|architect)|(?:back|front)[- ]?end|full[- ]?stack|devops|sre|site reliability|machine learning|ml (?:engineer|scientist)|data scientist|ai engineer|(?:cyber)?security (?:engineer|analyst|architect|specialist)|cyber|infosec|accountant|finance|controller|payroll|customer support|(?:technical |product )?support (?:engineer|specialist|representative)|help ?desk|sdet|qa engineer|test automation|engineering manager|director of engineering|vp of engineering|head of engineering)\b/i;
-export function avoidedTitle(candidateId:string,title:string){return candidateId==='farhan_shaikh'&&FARHAN_AVOID.test(title||'');}
-const FOREIGN_NAME=/\b(united states|usa|u\.s\.|united kingdom|uk|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|mexico|brazil)\b/i;
-const FOREIGN_STATE=/,\s*(?:AL|AZ|CA|CO|CT|DC|FL|GA|IL|MA|MD|MI|MN|NC|NJ|NY|OH|OR|PA|TX|UT|VA|WA)\b/;
-export function foreignLocation(location:string){const l=location||'';return !!l&&!/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(l)&&(FOREIGN_NAME.test(l)||FOREIGN_STATE.test(l));}
+// Ranking quality for Farhan (owner-approved 2026-11-05). The correction script (scripts/rescore_ranking_v2.mjs) uses these same functions,
+// so stored rows and new evaluations can never disagree.
+export const AVOID_TITLE_CAP=40, FOREIGN_LOCATION_PENALTY=15, RANKING_TAG='ranking_v2';
+// Hard avoid: software, ML, security and test-automation role families are always capped.
+const FARHAN_HARD_AVOID=/\b(software (?:engineer|developer|architect)|software development engineer|(?:back|front)[- ]?end|full[- ]?stack|devops|sre|site reliability|machine learning|ml (?:engineer|scientist)|data scientist|ai engineer|(?:cyber)?security (?:engineer|analyst|architect|specialist)|cyber ?security|infosec|sdet|qa engineer|test automation)\b/i;
+// Soft avoid: finance, support and engineering-management families, capped unless the title also names one of his own target areas
+// (implementation, solutions, onboarding, integration, automation, CRM, RevOps, operations, business systems, technical delivery).
+const FARHAN_SOFT_AVOID=/\b(accountant|accounting (?:manager|analyst)|financial (?:analyst|controller)|finance (?:manager|analyst|controller|director)|controller,? finance|payroll (?:specialist|manager|analyst|administrator|accountant)|customer support|(?:technical |product )?support (?:engineer|specialist|representative|agent)|help ?desk|(?:software )?engineering manager|director of engineering|vp of engineering|head of engineering)\b/i;
+const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integration|automation|crm|revops|operations|business systems|technical delivery)\b/i;
+export function avoidedTitle(candidateId:string,title:string){
+ if(candidateId!=='farhan_shaikh')return false;const t=title||'';
+ return FARHAN_HARD_AVOID.test(t)||(FARHAN_SOFT_AVOID.test(t)&&!FARHAN_TARGET_WORDS.test(t));
+}
+const INDIA_PLACE=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram|gurgaon|kolkata|ahmedabad|kochi|jaipur)\b/i;
+const FOREIGN_NAME=/\b(united states|usa|united kingdom|uk|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|north america|americas|mexico|brazil|singapore|dubai|uae|united arab emirates)\b/i;
+const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
+const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])US(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
+const FOREIGN_STATE=/,\s*(?:AL|AZ|CA|CO|CT|DC|FL|GA|IL|MA|MD|MI|MN|NC|NJ|NY|OH|PA|TX|UT|VA|WA)\b/;   // US state codes (OR is omitted: ambiguous with the word "or")
+/** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
+export function foreignLocation(location:string){
+ const l=location||'';if(!l.trim()||INDIA_PLACE.test(l))return false;
+ return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);
+}
+/** The Worker's remote test, expressed on what is stored: workplace_type REMOTE* (the posting's own remote flag) or remote wording in its location. */
+export function remoteFromStored(workplaceType:string|null|undefined,location:string|null|undefined){
+ return /^REMOTE/i.test(workplaceType||'')||/\b(remote|work from home|telecommut)/i.test(location||'');
+}
+export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
+export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
@@ -79,7 +101,7 @@ export function evaluate(candidate:any,p:Posting) {
   // A fixed city list cannot establish that a commercial airport is within about 2 hours of the candidate, so an on-site or
   // hybrid role in an Indian city is UNKNOWN until that is verified. Only a role that is remote in India is affirmative.
   if(remote){eligibility='ELIGIBLE';reason='Remote role in India.';}
-  else reason='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
+  else reason=SANA_UNKNOWN_ACCESS_REASON;
  }
  else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  const role=candidate.id==='farhan_shaikh'?/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery/i.test(p.title):/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarbon/i.test(p.title);
@@ -127,7 +149,7 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
    statements.push(db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
     VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(candidate_id,job_id) DO UPDATE SET overall_score=excluded.overall_score,skill_score=excluded.skill_score,role_score=excluded.role_score,strategy_lane=excluded.strategy_lane,score_breakdown=excluded.score_breakdown,calculated_at=excluded.calculated_at
     WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
-    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
+    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,ranking_v2:true,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
   }
  }
  else if(!p.board)statements.push(db.prepare('UPDATE jobs SET last_verified_at=? WHERE id=?').bind(now,jobId));
