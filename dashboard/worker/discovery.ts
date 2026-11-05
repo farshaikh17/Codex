@@ -51,6 +51,14 @@ export function page(s:Source, raw:any):{items:any[];next:number;complete:boolea
  all=raw.content;total=raw.totalFound;if(all.length===0&&s.cursor<total)throw Error('Incomplete empty source page');
  return {items:all.slice(0,PAGE),next:s.cursor+all.length<total?s.cursor+all.length:0,complete:s.cursor+all.length>=total};
 }
+
+// Farhan's avoid list: software/ML/security/finance/support/engineering-management/test-automation role families.
+export const AVOID_TITLE_CAP=40, FOREIGN_LOCATION_PENALTY=15;
+const FARHAN_AVOID=/\b(software (?:engineer|developer|architect)|(?:back|front)[- ]?end|full[- ]?stack|devops|sre|site reliability|machine learning|ml (?:engineer|scientist)|data scientist|ai engineer|(?:cyber)?security (?:engineer|analyst|architect|specialist)|cyber|infosec|accountant|finance|controller|payroll|customer support|(?:technical |product )?support (?:engineer|specialist|representative)|help ?desk|sdet|qa engineer|test automation|engineering manager|director of engineering|vp of engineering|head of engineering)\b/i;
+export function avoidedTitle(candidateId:string,title:string){return candidateId==='farhan_shaikh'&&FARHAN_AVOID.test(title||'');}
+const FOREIGN_NAME=/\b(united states|usa|u\.s\.|united kingdom|uk|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|mexico|brazil)\b/i;
+const FOREIGN_STATE=/,\s*(?:AL|AZ|CA|CO|CT|DC|FL|GA|IL|MA|MD|MI|MN|NC|NJ|NY|OH|OR|PA|TX|UT|VA|WA)\b/;
+export function foreignLocation(location:string){const l=location||'';return !!l&&!/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(l)&&(FOREIGN_NAME.test(l)||FOREIGN_STATE.test(l));}
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
@@ -71,9 +79,16 @@ export function evaluate(candidate:any,p:Posting) {
  else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  const role=candidate.id==='farhan_shaikh'?/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery/i.test(p.title):/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarbon/i.test(p.title);
  const skills=list(candidate.primary_skills).filter(s=>lower.includes(s.toLowerCase()));
- const score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
+ let score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
+ // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
+ // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
+ // Both only lower the preliminary score. Eligibility, status and READY rules are not touched, and a human override still wins.
+ const avoided=avoidedTitle(candidate.id,p.title);
+ const foreignOnly=candidate.id==='farhan_shaikh'&&eligibility!=='ELIGIBLE'&&foreignLocation(p.location);
+ if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
+ if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // New discoveries are never auto-promoted to READY using a simplified scorer.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.'};
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')};
 }
 async function hash(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');}
 function canonical(url:string){const u=new URL(url),keys:string[]=[];u.searchParams.forEach((_,k)=>keys.push(k));for(const k of keys)if(/^(utm_|gh_src|source|ref|lever-source)/.test(k))u.searchParams.delete(k);u.hash='';u.pathname=u.pathname.replace(/\/$/,'');return u.toString().replace(/\/$/,'');}
@@ -106,7 +121,7 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
     AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)`).bind(candidate.id,jobId,result.status,result.lane,result.eligibility,result.reason,result.qualification_reason,now,candidate.id,jobId));
    statements.push(db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
     VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(candidate_id,job_id) DO UPDATE SET overall_score=excluded.overall_score,skill_score=excluded.skill_score,role_score=excluded.role_score,strategy_lane=excluded.strategy_lane,score_breakdown=excluded.score_breakdown,calculated_at=excluded.calculated_at
-    WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-1%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
+    WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
     AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
   }
  }

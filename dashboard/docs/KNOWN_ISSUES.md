@@ -2,24 +2,25 @@
 
 Nothing below blocks the release. Each item says who decides or what would close it.
 
-## Decisions that only the owner can make (nothing was changed for these)
+## Owner decisions (recorded 2026-11-05)
 
-1. **Sana's preferred Indian cities.** Earlier records disagree (Bengaluru, Hyderabad, Chennai vs Bengaluru, Pune,
-   Mumbai). The stored list (Bengaluru, Hyderabad, Chennai) is preserved and shown as stored.
-2. **Farhan's 12 application records.** The real-world meaning is not confirmed, so none was deleted, reclassified or
-   excluded from counts:
-   * 4 sit on synthetic or test-fixture jobs (`syn-001`, `syn-002`, and two `TEST_FIXTURE` jobs);
-   * 7 are rejections noted "Playwright verified rejection test" on real public postings, with no applied date;
-   * 1 is the Drivetrain `APPLIED` record `app-803e11ab` (the only record with an applied date).
-   Until answered, the tracker total (12) includes them. The dashboard card now shows the *applied-stage* count
-   separately from the tracker record count so the number is not mistaken for 12 submissions.
-3. **Relevance scoring (proposal only, not implemented).** In a read-only sample of Farhan's 200 highest-scoring review
-   items, 71 had titles matching his avoid list (software, SRE/DevOps, ML, security, finance, support, engineering
-   management, SDET) at 58-67%, and 53 named a US or European location with India eligibility unknown. The score is driven
-   by the role label plus one generic keyword and has no title or location negative gate. Proposal: cap the score at 40
-   for avoid-list titles and subtract a fixed amount when the only stated location is outside India; leave eligibility
-   and READY rules alone. Expected effect: those 71 titles drop below the review threshold; the 1 READY and 2 STRETCH
-   jobs and all unknown-eligibility jobs stay in review. Needs the owner's go-ahead because it changes ranking.
+1. **Sana's preferred locations: decided.** Remote is ideal; any city with a commercial airport within 2 hours is acceptable
+   (Mumbai and Pune are examples; the earlier lists, Bengaluru/Hyderabad/Chennai and Bengaluru/Pune/Mumbai, are now both examples of
+   this rule rather than a conflict). Middle East and Europe stay as relocation preferences, without assuming work authorization.
+   The profile shows this rule. The Worker's discovery screen still treats only a fixed list of large Indian cities as an accessible
+   Indian location for Sana; widening that to "any city within 2 hours of an airport" would need an airport list and is not done.
+2. **Farhan's 12 application records: owner's understanding recorded, nothing changed.** The owner believes they were listings added
+   very early on that were not eligible, not real applications. They remain in the tracker and in every count (none was deleted,
+   reclassified or excluded) until the owner confirms record by record, in particular the Drivetrain `APPLIED` record `app-803e11ab`, the
+   only one with an applied date. Facts: 4 sit on synthetic or test-fixture jobs, 7 are rejections noted "Playwright verified rejection
+   test" on real public postings, 1 is the Drivetrain record.
+3. **Relevance scoring: approved and implemented (migration 0010, `worker/discovery.ts`).** For Farhan, a title on his avoid list
+   (software, SRE/DevOps, ML, security, finance, support, engineering management, test automation) is capped at 40, and a posting
+   whose only stated location is outside India loses 15 points unless it affirmatively supports remote work from India. Sana keeps the
+   old scoring (she is open to relocation). Eligibility, status and READY rules are unchanged, human overrides and applications are
+   never touched, and scores from the collector's engine are not touched. The migration is idempotent (rows are tagged `ranking_v2`).
+4. **Application tracker visibility: public is fine for now** (status and dates only, no notes).
+5. **Still open by choice:** one shared operator key for both candidates (not yet), uptime monitoring (not now).
 
 ## Behaviour to be aware of
 

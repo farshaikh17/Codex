@@ -2469,7 +2469,7 @@ router.get('/api/profile', async (request, env, _params, url) => {
       min_fixed_monthly_inr: isSana ? null : 120000,
       preferred_inr_range: isSana ? null : '₹25–30 LPA+',
       notice_period_days: isSana ? null : 30,
-      location_preferences: isSana ? ['Bengaluru', 'Hyderabad', 'Chennai', 'Middle East (Preference)', 'Europe (Preference)'] : ['100% Remote India'],
+      location_preferences: isSana ? ['Remote (preferred)', 'Any city within 2 hours of a commercial airport (for example Mumbai, Pune, Bengaluru, Hyderabad, Chennai)', 'Middle East (Preference)', 'Europe (Preference)'] : ['100% Remote India'],
       relocation_interest: isSana ? true : false,
       work_authorization: ['India Citizen'],
       profile_basis: isSana ? 'Authoritative Candidate Search Brief: Sana Ansari' : 'Authoritative Candidate Search Brief: Farhan Shaikh',
