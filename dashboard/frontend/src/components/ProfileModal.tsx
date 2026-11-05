@@ -108,7 +108,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
           </div>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div><dt className="font-semibold text-slate-700">Education</dt><dd className="text-slate-600">{profile.education || 'Not listed'}</dd></div>
-            <div><dt className="font-semibold text-slate-700">Experience</dt><dd className="text-slate-600">{profile.total_years_experience ?? 'Not listed'} years{profile.years_basis ? ` (${profile.years_basis})` : ''}</dd></div>
+            <div><dt className="font-semibold text-slate-700">Experience</dt><dd className="text-slate-600">{profile.total_years_experience ?? 'Not listed'} years{profile.years_basis ? ` · ${profile.years_basis}` : ''}</dd></div>
             <div><dt className="font-semibold text-slate-700">Based in</dt><dd className="text-slate-600">{profile.current_location || 'Not listed'}</dd></div>
             <div><dt className="font-semibold text-slate-700">Time zone</dt><dd className="text-slate-600">{profile.primary_timezone}</dd></div>
           </dl>

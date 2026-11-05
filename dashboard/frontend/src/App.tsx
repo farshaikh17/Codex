@@ -297,8 +297,8 @@ export const App: React.FC = () => {
                 {/* Candidate Workspace Header */}
                 <div className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm ${
                   candidateId === 'sana_ansari'
-                    ? 'bg-amber-950/20 border-amber-800/40 text-amber-200'
-                    : 'bg-blue-950/20 border-blue-800/40 text-blue-200'
+                    ? 'bg-slate-900 border-amber-700/50 text-amber-200'
+                    : 'bg-slate-900 border-blue-700/50 text-blue-200'
                 }`}>
                   <div>
                     <div className="flex items-center gap-2">
@@ -506,7 +506,7 @@ export const App: React.FC = () => {
       />}
 
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-        Farhan Job Engine MVP • Cloudflare D1 Database • Free Dependencies • No Paid APIs
+        Career Job Engine • Cloudflare Workers + D1 • Free tier • Viewing is public, changes need the operator key
       </footer>
 
       {/* Operator Auth Sign-in / Logout Modal */}
