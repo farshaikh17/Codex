@@ -49,6 +49,11 @@ export function plan(rows) {
       // UNKNOWN ("Reported by ...") after the score was computed with the city-based bonus. Remote-in-India is affirmative and is left alone.
       const cityOnly = !remoteFromStored(r.wt, r.loc);
       const oldReason = r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && cityOnly;
+      if (r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && !cityOnly) {
+        // Remote in India stays ELIGIBLE with the same score; only the stored reason text is brought in line with what the Worker now writes.
+        out.statements.push(`UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
+        out.counts.qualification_rows++; continue;
+      }
       const boardRow = r.es === 'UNKNOWN' && typeof r.er === 'string' && r.er.startsWith('Reported by ') && cityOnly && indianPlace(r.loc);
       if (!oldReason && !boardRow) continue;
       if (r.lane === 'STRONGEST_FIT') {

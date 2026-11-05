@@ -199,3 +199,13 @@ test('foreign location: exclusion phrases are not US locations; more places and 
   for (const l of ['Remote - EU', 'Tokyo, Japan', 'Stockholm, Sweden', 'Manila, Philippines', 'Nashville, TN', 'Las Vegas, NV']) assert.equal(foreignLocation(l), true, l);
   assert.equal(avoidedTitle('farhan_shaikh', 'Technical Support Engineer – Integrations'), false);
 });
+
+test('Sana remote-in-India rows keep ELIGIBLE and their score; only the stored reason text is aligned, once', () => {
+  const w = world();
+  w.job('r1', 'Reliability Engineer', 'Remote - India', 'REMOTE_RESTRICTED');
+  w.row(S, 'r1', 74, { elig: 'ELIGIBLE', reason: SANA_OLD_ACCESS_REASON });
+  const p = w.run();
+  assert.equal(w.score(S, 'r1'), 74); assert.equal(w.elig(S, 'r1'), 'ELIGIBLE');
+  assert.equal(w.sqlite.prepare("SELECT eligibility_reason r FROM candidate_qualifications WHERE job_id='r1'").get().r, 'Remote role in India.');
+  assert.equal(p.counts.sana_accessibility, 0); assert.equal(w.run().statements.length, 0);
+});
