@@ -491,13 +491,57 @@ test('read cache: public and operator answers never cross, and each candidate ke
   assert.equal((await raw(env, '/api/applications?candidate_id=farhan_shaikh', 'wrong-key')).status, 403);
 });
 
-test('read cache: an operator change clears it, so the next read is fresh', async () => {
+test('read cache: an operator change invalidates it, and the change answers with the new values (not a cached copy)', async () => {
   const { env } = cached();
+  await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY);
   await raw(env, '/api/profile?candidate_id=farhan_shaikh');
-  assert.equal((await raw(env, '/api/profile?candidate_id=farhan_shaikh')).headers.get('x-cache'), 'HIT');
-  const put = await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: { candidate_id: 'farhan_shaikh', total_years_experience: 5 } });
+  assert.equal((await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY)).headers.get('x-cache'), 'HIT');
+  const put = await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: { candidate_id: 'farhan_shaikh', full_name: 'Changed Name' } });
   assert.ok(put.status < 400, `profile save answered ${put.status}`);
-  assert.equal((await raw(env, '/api/profile?candidate_id=farhan_shaikh')).headers.get('x-cache'), 'MISS');
+  assert.ok(JSON.stringify(put.json).includes('Changed Name'), 'the save answers with the saved profile');
+  for (const key of [ADMIN_KEY, null]) {
+    const r = await raw(env, '/api/profile?candidate_id=farhan_shaikh', key);
+    assert.equal(r.headers.get('x-cache'), 'MISS');
+  }
+  assert.ok((await (await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY)).text()).includes('Changed Name'));
+});
+
+test('read cache: a read that was in flight during an operator change cannot put old data back', async () => {
+  const { sqlite, env } = cached();
+  const gen = () => sqlite.prepare('SELECT generation FROM cache_state WHERE id = 1').get().generation;
+  // The slow reader looked up the cache (and so the generation) before the change...
+  const before = gen();
+  await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: { candidate_id: 'farhan_shaikh', full_name: 'Changed Name' } });
+  assert.ok(gen() > before);
+  // ...and stores its old answer afterwards, stamped with the generation it saw.
+  sqlite.prepare('INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, ?, ?, ?)')
+    .run('commit-a:public:/api/profile?candidate_id=farhan_shaikh', '{"full_name":"OLD"}', Math.floor(Date.now() / 1000), before);
+  const r = await raw(env, '/api/profile?candidate_id=farhan_shaikh');
+  assert.equal(r.headers.get('x-cache'), 'MISS'); assert.ok(!(await r.text()).includes('OLD'));
+});
+
+test('read cache: unknown parameters and refused requests create no entries', async () => {
+  const { sqlite, env } = cached();
+  for (let i = 0; i < 20; i++) await raw(env, `/api/sources?z=${i}`);
+  for (let i = 0; i < 10; i++) await raw(env, `/api/profile?candidate_id=farhan_shaikh&offset=${i}`);
+  for (let i = 0; i < 10; i++) await raw(env, '/api/profile?candidate_id=bogus');
+  for (let i = 0; i < 10; i++) await raw(env, `/api/jobs/nonexistent-${i}?candidate_id=farhan_shaikh`);
+  const n = sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n;
+  assert.equal(n, 2, `expected one entry each for /api/sources and Farhan's profile, found ${n}`);
+});
+
+test('read cache: no entries are written once the daily write allowance for the cache is used', async () => {
+  const { sqlite, env } = cached();
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, cache_writes) VALUES (?, ?)').run(new Date().toISOString().slice(0, 10), 3000);
+  const r = await raw(env, '/api/candidates');
+  assert.equal(r.status, 200);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 0);
+});
+
+test('read cache: nothing is cached without a deployed commit', async () => {
+  const { sqlite, env } = cached({ GIT_COMMIT: undefined });
+  await raw(env, '/api/candidates'); await raw(env, '/api/candidates');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 0);
 });
 
 test('read cache: entries are scoped to the deployed commit and expire', async () => {
@@ -517,7 +561,8 @@ test('read cache: a missing cache table only means no caching', async () => {
 
 test('database unavailable: every public read answers a controlled 503 with Retry-After, never a crash or internal text', async () => {
   const { env } = fresh();
-  const failing = { prepare() { const s = { bind: () => s, first: async () => { throw new Error('D1_ERROR: simulated read limit exceeded'); }, all: async () => { throw new Error('D1_ERROR: simulated read limit exceeded'); }, run: async () => { throw new Error('D1_ERROR: simulated read limit exceeded'); } }; return s; }, async batch() { throw new Error('D1_ERROR: simulated read limit exceeded'); } };
+  const msg = "D1_ERROR: Your account has exceeded D1's free tier daily row read limit (simulated)";
+  const failing = { prepare() { const s = { bind: () => s, first: async () => { throw new Error(msg); }, all: async () => { throw new Error(msg); }, run: async () => { throw new Error(msg); } }; return s; }, async batch() { throw new Error(msg); } };
   const down = { ...env, DB: failing, RESPONSE_CACHE: 'on' };
   for (const base of [...PUBLIC_READ, '/api/health']) {
     const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/farhan_shaikh');
@@ -535,16 +580,6 @@ test('every API answer names the commit that produced it', async () => {
   for (const p of ['/api/version', '/api/candidates', '/api/meta']) assert.equal((await raw(env, p)).headers.get('x-worker-commit'), 'commit-a');
 });
 
-test('read meter: cache misses record the rows D1 reports, per day and access level', async () => {
-  const { sqlite, env } = cached();
-  await raw(env, '/api/jobs?candidate_id=farhan_shaikh');
-  await raw(env, '/api/jobs?candidate_id=farhan_shaikh');               // a hit records nothing
-  await raw(env, '/api/applications?candidate_id=farhan_shaikh', ADMIN_KEY);
-  const m = sqlite.prepare('SELECT * FROM read_meter').get();
-  assert.equal(m.day, new Date().toISOString().slice(0, 10));
-  assert.equal(m.public_misses, 1); assert.equal(m.operator_misses, 1);
-});
-
 test('read meter: once the public share is used, visitors get the last answer or a clear 503; the operator is not blocked', async () => {
   const { sqlite, env } = cached();
   await raw(env, '/api/candidates');
@@ -556,4 +591,13 @@ test('read meter: once the public share is used, visitors get the last answer or
   assert.equal(none.status, 503); assert.ok(Number(none.headers.get('retry-after')) > 0);
   assert.equal((await none.json()).status, 'limited');
   assert.equal((await raw(env, '/api/analytics?candidate_id=farhan_shaikh', ADMIN_KEY)).status, 200, 'operator reads still work');
+});
+
+test('only D1 availability failures become 503; programming errors stay a generic 500', async () => {
+  const { env } = fresh();
+  const throwing = (msg) => ({ ...env, DB: { prepare() { const s = { bind: () => s, first: async () => { throw new Error(msg); }, all: async () => { throw new Error(msg); }, run: async () => { throw new Error(msg); } }; return s; } } });
+  for (const msg of ["Cannot read properties of undefined (reading 'limit')", "D1_TYPE_ERROR: Type 'undefined' not supported for value 'undefined'", 'D1_ERROR: too many SQL variables'])
+    assert.equal((await raw(throwing(msg), '/api/candidates')).status, 500, msg);
+  for (const msg of ['D1 DB is overloaded. Requests queued for too long.', 'D1_ERROR: Network connection lost.'])
+    assert.equal((await raw(throwing(msg), '/api/candidates')).status, 503, msg);
 });

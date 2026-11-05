@@ -13,7 +13,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const wrongVersion = [];
 async function get(p) {
   for (let i = 0; ; i++) {
-    const r = await fetch(BASE + p);
+    const r = await fetch(BASE + p, { signal: AbortSignal.timeout(20000) });
     const served = r.headers.get('x-worker-commit');
     if (!EXPECT || served === EXPECT || p === '/api/version') return r;
     if (i >= 3) { wrongVersion.push(`${p.split('?')[0]} (served by ${served || 'a version without the header'})`); return r; }
@@ -23,7 +23,7 @@ async function get(p) {
 if (EXPECT) {
   // Gate: no check runs until the live Worker reports the commit being released (up to ~90 s after the deploy).
   let live = '';
-  for (let i = 0; i < 30 && live !== EXPECT; i++) { try { live = (await (await fetch(BASE + '/api/version')).json()).commit; } catch {} if (live !== EXPECT) await sleep(3000); }
+  for (let i = 0; i < 30 && live !== EXPECT; i++) { try { live = (await (await fetch(BASE + '/api/version', { signal: AbortSignal.timeout(10000) })).json()).commit; } catch {} if (live !== EXPECT) await sleep(3000); }
   if (live !== EXPECT) { console.log(`FAIL  the live Worker never reported commit ${EXPECT.slice(0, 10)} (last seen ${live}); no further checks run`); process.exit(1); }
 }
 const PRIVATE_KEYS = /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;

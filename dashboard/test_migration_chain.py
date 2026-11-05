@@ -48,7 +48,8 @@ assert 'auth_failures' in tables and 'candidate_qualifications' in tables, 'migr
 print('migration chain OK')
 
 # 0009 is additive: the read cache and meter tables exist, and applying it twice changes nothing
-assert {'response_cache', 'read_meter'} <= set(r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'"))
+assert {'response_cache', 'read_meter', 'cache_state'} <= set(r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'"))
 with open(os.path.join(base, '0009_response_cache.sql'), 'r', encoding='utf-8') as f:
     conn.executescript(f.read())
 print('0009 re-applied idempotently')
+assert conn.execute('SELECT generation FROM cache_state WHERE id = 1').fetchone() == (0,)
