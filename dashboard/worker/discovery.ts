@@ -71,7 +71,7 @@ const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
 const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU)(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
 const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code; TN stays, with Tamil Nadu places in INDIA_PLACE so 'Coimbatore, TN' is not foreign)
 const EXCLUSION_PLACE='(?:US|U\\.S\\.|USA|United States|UK|United Kingdom|EU|Europe|Canada|APAC|EMEA)(?![A-Za-z0-9])';
-const EXCLUSION_PHRASE=new RegExp('\\b(?:excluding|excl\\.?|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)[\\s-]*(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
+const EXCLUSION_PHRASE=new RegExp('\\b(?:excluding|excl\\.?|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)[\\s-]*(?:in\\s+)?(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,\\s*)?(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l))return false;   // 'Remote, excluding the US' is not a US location

@@ -226,3 +226,8 @@ test('review round 3: exclusion lists, non-US forms, Indian TN, board rows and t
   const p = w.run();
   assert.equal(w.score(S, 'k1'), 58); assert.equal(w.score(F, 'k2'), 58); assert.equal(p.counts.sana_accessibility, 0);
 });
+
+test('exclusion lists with ", and" and "not in the US" are not foreign; real places after an exclusion stay foreign', () => {
+  for (const l of ['Remote, excluding US, Canada, and Europe', 'Remote, not in the US', 'Remote, excluding the US and UK']) assert.equal(foreignLocation(l), false, l);
+  for (const l of ['Remote, excluding Canada, London', 'Remote - not UK, Berlin', 'Mexico City', 'Nottingham, UK']) assert.equal(foreignLocation(l), true, l);
+});
