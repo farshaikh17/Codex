@@ -14,11 +14,12 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { avoidedTitle, foreignLocation, remoteFromStored, roleScore, sanaIndiaCity, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, roleScore, sanaIndiaCity, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 
 const q = (v) => (v === null || v === undefined ? 'NULL' : "'" + String(v).replace(/'/g, "''") + "'");
 export const SELECT_ROWS = `SELECT s.candidate_id AS c, s.job_id AS j, s.overall_score AS score, s.strategy_lane AS lane, s.score_breakdown AS bd,
-  q.eligibility_status AS es, q.eligibility_reason AS er, jb.title AS title, jb.location_restrictions AS loc, jb.workplace_type AS wt
+  q.eligibility_status AS es, q.eligibility_reason AS er, jb.title AS title, jb.location_restrictions AS loc, jb.workplace_type AS wt,
+  CASE WHEN q.eligibility_reason LIKE 'Reported by %' THEN jb.description END AS descr
   FROM candidate_job_scores s
   JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
   JOIN jobs jb ON jb.id = s.job_id
@@ -35,11 +36,14 @@ export function plan(rows) {
     if (!bd || bd[RANKING_TAG]) continue;
     const score = Number(r.score);
     if (r.c === 'farhan_shaikh') {
+      // Job-board rows are stored with eligibility forced to UNKNOWN AFTER the Worker scored them, so the stored value cannot say whether the
+      // penalty applied. The posting is stored, so the Worker's own evaluate() is re-run on it to get the eligibility the score was computed with.
+      const boardRow = typeof r.er === 'string' && r.er.startsWith('Reported by ');
+      let scoredElig = r.es;
+      if (boardRow) scoredElig = typeof r.descr === 'string' ? evaluate({ id: r.c, primary_skills: '[]' }, { id: 'x', title: r.title || '', url: '', location: r.loc || '', description: r.descr, remote: /^REMOTE/i.test(r.wt || '') }).eligibility : 'UNKNOWN_SKIP';
+      const foreign = scoredElig !== 'UNKNOWN_SKIP' && scoredElig !== 'ELIGIBLE' && foreignLocation(r.loc);
       let next = score; const avoid = avoidedTitle(r.c, r.title);
       if (avoid) next = Math.min(next, AVOID_TITLE_CAP);
-      // Job-board rows are stored with eligibility forced to UNKNOWN after the score was computed, so the pre-force eligibility is not recoverable: never penalise them.
-      const boardRow = typeof r.er === 'string' && r.er.startsWith('Reported by ');
-      const foreign = !boardRow && r.es !== 'ELIGIBLE' && foreignLocation(r.loc);
       if (foreign) next = Math.max(0, next - FOREIGN_LOCATION_PENALTY);
       if (next !== score) {
         out.statements.push(tagScore(r.c, r.j, next)); out.counts.score_rows++;

@@ -65,7 +65,7 @@ test('foreign location: US/EU/other named places, U.S., bare US, state codes; ne
 const old = JSON.stringify({ rule_version: 'cloud-conservative-review-1', preliminary: true });
 function world() {
   const { sqlite } = createDb(); seed(sqlite);
-  const job = (id, title, loc, wt = 'ONSITE') => sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,workplace_type,discovered_at) VALUES (?,?,?,?,1,?,?,'2026-11-01T00:00:00Z')").run(id, title, 'Co', 'lever', loc, wt);
+  const job = (id, title, loc, wt = 'ONSITE', desc = null) => sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,workplace_type,description,discovered_at) VALUES (?,?,?,?,1,?,?,?,'2026-11-01T00:00:00Z')").run(id, title, 'Co', 'lever', loc, wt, desc);
   const row = (c, id, score, o = {}) => {
     sqlite.prepare('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,manual_override_status) VALUES (?,?,?,?,?,?,?)')
       .run(c, id, o.status || 'NEEDS_REVIEW', o.lane || 'STRONGEST_FIT', o.elig || 'UNKNOWN', o.reason || 'x', o.override || null);
@@ -221,13 +221,38 @@ test('review round 3: exclusion lists, non-US forms, Indian TN, board rows and t
   w.job('k1', 'Reliability Engineer', 'Kolkata, West Bengal');
   w.row(S, 'k1', 58, { elig: 'UNKNOWN', reason: 'Reported by Some Board; employer availability and eligibility are unverified.', bd: JSON.stringify({ rule_version: 'cloud-conservative-review-1', matched_skills: ['a'] }) });
   // a Farhan board row: eligibility was forced to UNKNOWN after scoring, so no foreign-location penalty
-  w.job('k2', 'Implementation Manager', 'Remote (US)');
+  w.job('k2', 'Implementation Manager', 'Remote (US)', 'REMOTE_RESTRICTED', 'CRM Configuration. Remote in India welcome.');
   w.row(F, 'k2', 58, { elig: 'UNKNOWN', reason: 'Reported by Some Board; employer availability and eligibility are unverified.' });
+  // the Worker scored these with the eligibility evaluate() gave BEFORE the board override, so the script re-runs evaluate() on the stored posting:
+  const BR = 'Reported by Some Board; employer availability and eligibility are unverified.';
+  w.job('k5', 'Implementation Manager', 'London, UK', 'UNKNOWN', 'CRM Configuration and workflow automation.'); w.row(F, 'k5', 64, { elig: 'UNKNOWN', reason: BR });   // not eligible, foreign -> 49
+  w.job('k6', 'Implementation Manager', 'London, UK', 'UNKNOWN', null); w.row(F, 'k6', 64, { elig: 'UNKNOWN', reason: BR });                                         // posting not stored -> left alone
+  w.job('k7', 'Software Engineer', 'London, UK', 'UNKNOWN', 'Build services.'); w.row(F, 'k7', 64, { elig: 'UNKNOWN', reason: BR });                                  // cap 40, then -15 -> 25
   const p = w.run();
+  assert.equal(w.score(F, 'k5'), 49); assert.equal(w.score(F, 'k6'), 64); assert.equal(w.score(F, 'k7'), 25);
   assert.equal(w.score(S, 'k1'), 58); assert.equal(w.score(F, 'k2'), 58); assert.equal(p.counts.sana_accessibility, 0);
 });
 
 test('exclusion lists with ", and" and "not in the US" are not foreign; real places after an exclusion stay foreign', () => {
   for (const l of ['Remote, excluding US, Canada, and Europe', 'Remote, not in the US', 'Remote, excluding the US and UK']) assert.equal(foreignLocation(l), false, l);
   for (const l of ['Remote, excluding Canada, London', 'Remote - not UK, Berlin', 'Mexico City', 'Nottingham, UK']) assert.equal(foreignLocation(l), true, l);
+});
+
+test('Sana: relocation interest and worldwide remote are never proof by themselves; the gates need posting evidence and never reach READY', () => {
+  const base = { id: 'sana_ansari', primary_skills: JSON.stringify(['reliability']) };
+  const post = (location, description, remote = false) => ({ id: 'x', title: 'Reliability Engineer', url: 'https://example.com/x', location, description, remote });
+  // the candidate's stated interest in relocating is not an input to the screen
+  for (const d of ['Reliability and Plant Engineering.']) for (const loc of ['Dubai, UAE', 'Berlin, Germany', 'Remote']) {
+    const a = evaluate({ ...base, relocation_interest: true }, post(loc, d)), b = evaluate({ ...base, relocation_interest: false }, post(loc, d)), c = evaluate(base, post(loc, d));
+    assert.deepEqual(a, b); assert.deepEqual(a, c); assert.equal(a.eligibility, 'UNKNOWN', loc + ': no posting evidence');
+  }
+  // 'Remote' alone (no worldwide statement) and a bare relocation mention in a negated form are not evidence
+  assert.equal(evaluate(base, post('Remote', 'Reliability role.', true)).eligibility, 'UNKNOWN');
+  assert.equal(evaluate(base, post('Berlin, Germany', 'Reliability role. We do not offer visa sponsorship.')).eligibility, 'UNKNOWN');
+  assert.equal(evaluate(base, post('Remote - US', 'Reliability role. Worldwide remote work. US residents only.')).eligibility, 'UNKNOWN');
+  assert.equal(evaluate(base, post('Remote', 'Reliability role. Active secret clearance required. Worldwide remote work.')).eligibility, 'INELIGIBLE');
+  // where the posting itself states it, the result is ELIGIBLE for LOCATION only: the reason says review is still required, and the status is never READY
+  const sp = evaluate(base, post('Berlin, Germany', 'Reliability role. Visa sponsorship available.')), wr = evaluate(base, post('Remote - Worldwide', 'Reliability. Worldwide remote work.'));
+  assert.equal(sp.eligibility, 'ELIGIBLE'); assert.match(sp.reason, /requires review/); assert.equal(wr.eligibility, 'ELIGIBLE');
+  for (const r of [sp, wr]) { assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(r.status)); assert.match(r.qualification_reason, /review before READY|retained for review/); }
 });
