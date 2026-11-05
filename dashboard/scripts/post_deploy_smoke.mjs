@@ -6,7 +6,26 @@ const BASE = (process.env.SMOKE_BASE || '').replace(/\/$/, '');
 if (!BASE) { console.error('SMOKE_BASE is required'); process.exit(2); }
 let failed = 0;
 const check = (name, ok, detail = '') => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  -> ' + detail}`); };
-const get = (p) => fetch(BASE + p);
+const EXPECT = process.env.SMOKE_EXPECT_COMMIT || '';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// With an expected commit, a response is judged only if this release produced it (X-Worker-Commit). An answer from
+// another version is retried briefly and then reported as such: it is never counted as a pass or as a privacy result.
+const wrongVersion = [];
+async function get(p) {
+  for (let i = 0; ; i++) {
+    const r = await fetch(BASE + p, { signal: AbortSignal.timeout(20000) });
+    const served = r.headers.get('x-worker-commit');
+    if (!EXPECT || served === EXPECT || p === '/api/version') return r;
+    if (i >= 3) { wrongVersion.push(`${p.split('?')[0]} (served by ${served || 'a version without the header'})`); return r; }
+    await r.arrayBuffer(); await sleep(3000);
+  }
+}
+if (EXPECT) {
+  // Gate: no check runs until the live Worker reports the commit being released (up to ~90 s after the deploy).
+  let live = '';
+  for (let i = 0; i < 30 && live !== EXPECT; i++) { try { live = (await (await fetch(BASE + '/api/version', { signal: AbortSignal.timeout(10000) })).json()).commit; } catch {} if (live !== EXPECT) await sleep(3000); }
+  if (live !== EXPECT) { console.log(`FAIL  the live Worker never reported commit ${EXPECT.slice(0, 10)} (last seen ${live}); no further checks run`); process.exit(1); }
+}
 const PRIVATE_KEYS = /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;
 const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
@@ -49,5 +68,6 @@ for (const [m, p, b] of [['POST', '/api/applications', { candidate_id: 'farhan_s
   const r = await fetch(BASE + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
   check(`anonymous ${m} ${p.split('?')[0]} is refused (401)`, r.status === 401, `status ${r.status}`);
 }
+check('every checked response came from the expected commit', wrongVersion.length === 0, wrongVersion.join(', '));
 console.log(failed ? `\n${failed} check(s) failed: roll back (see dashboard/docs/RELEASE.md)` : '\nAll smoke checks passed');
 process.exit(failed ? 1 : 0);

@@ -10,6 +10,8 @@ export interface Env {
   ENVIRONMENT?: string;
   ALLOWED_ORIGINS?: string;
   ADMIN_API_KEY?: string;
+  /** 'off' disables the response cache (unit tests that change rows directly between calls) */
+  RESPONSE_CACHE?: string;
   /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
   GIT_COMMIT?: string;
   DEPLOYED_AT?: string;
@@ -126,6 +128,180 @@ function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
 }
 
+// Response cache for the read routes above (migration 0009). Every dashboard aggregate scans a candidate's whole
+// qualification set (thousands of D1 rows); a cached answer costs two (the entry and the cache generation).
+// * Keys: deployed commit, access level, path, and only the query parameters that route reads, so public and operator
+//   answers never mix, each candidate keeps its own entries, and unknown parameters cannot create new entries.
+// * Invalidation: an operator change raises the cache generation (one row) before and after its handler runs; an entry
+//   is fresh only if it was computed under the current generation, so a read that was in flight during the change cannot
+//   put old data back. Collector and cron updates appear when an entry expires.
+// * Bounds: public misses stop at PUBLIC_DAILY_READ_BUDGET rows read per UTC day (D1's own meta.rows_read), and at most
+//   CACHE_WRITES_PER_DAY entries are written per day, so visitors cannot spend the free read or write allowance.
+// A missing or failing cache table means no caching.
+const CACHE_TTL_SECONDS = { public: 1800, operator: 600 } as const;
+const STALE_MAX_SECONDS = 86400;
+const CACHE_MAX_KEY = 512;
+const CACHE_MAX_BYTES = 900_000;
+// Workers Free allows 5,000,000 D1 rows read and 100,000 rows written per UTC day. Public misses may use half of the
+// reads; measured per-miss cost is at most ~20,000 rows at 2,123 jobs. A cache write costs ~3-6 rows written.
+const PUBLIC_DAILY_READ_BUDGET = 2_500_000;
+const CACHE_WRITES_PER_DAY = 3000;
+// Values a cached query may carry. Anything else (any search text, an unknown status, an out-of-range page) is answered
+// without caching, so visitors cannot mint new entries cheaply.
+const enumOf = (...v: string[]) => (x: string) => v.includes(x);
+const intIn = (lo: number, hi: number, step = 1) => (x: string) => /^\d{1,5}$/.test(x) && +x >= lo && +x <= hi && +x % step === 0;
+const QUAL = ['READY', 'READY_HIGH', 'STRETCH_READY', 'NEEDS_REVIEW', 'INELIGIBLE', 'HOLD', 'CLOSED', 'APPLIED', 'APPLY_WORTHY', 'ALL'];
+const LANES = enumOf('STRONGEST_FIT', 'BRIDGE', 'DREAM', 'UNASSIGNED', 'ALL');
+const CACHE_VALUES: Record<string, (v: string) => boolean> = {
+  candidate_id: (v) => CANDIDATE_IDS.has(v),
+  eligibility: enumOf('ALL', 'ELIGIBLE', 'INELIGIBLE', 'UNKNOWN', 'CONDITIONAL'),
+  qualification_status: (v) => QUAL.includes(v),
+  strategy_lane: LANES, lane: LANES,
+  workplace_type: enumOf('ALL', 'REMOTE', 'REMOTE_RESTRICTED', 'HYBRID', 'ONSITE', 'UNKNOWN'),
+  source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
+  sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
+  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'),
+  limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
+  search: (v) => /^[a-z0-9][a-z0-9 .+#-]{0,28}[a-z0-9.+#]$/i.test(v),
+};
+const CANDIDATE_ONLY = ['candidate_id'];
+const CACHE_PARAMS: [RegExp, string[]][] = [
+  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type']],
+  [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
+  [/^\/api\/applications$/, ['candidate_id', 'status']],
+  [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
+];
+// Hands its query to /api/jobs, which caches its own answer under the full key.
+const NOT_CACHED = /^\/api\/india-remote\/jobs$/;
+const STATUS_VALUE: Record<string, (v: string) => boolean> = {
+  '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
+};
+const qualList = (v: string) => { const parts = v.split(','); return parts.length <= 6 && parts.every((x) => QUAL.includes(x.trim())); };
+// Cache namespace: a code constant (bump it when a response shape changes) plus the deployed commit when the release set one.
+// Caching and metering never depend on the deploy variable, so a plain `wrangler deploy` cannot switch them off.
+const CACHE_SCHEMA = 'c2';
+const CORE_PATHS = new Set(['/api/candidates', '/api/dashboard/overview', '/api/sources', '/api/automation/status', '/api/applications', '/api/jobs',
+  '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics', '/api/cohorts/metrics', '/api/profile',
+  '/api/india-remote/summary']);
+// Percent-encoding aliases of one path (j1, %6a1, %6A1, farhan%5Fshaikh) collapse to a single canonical form.
+function canonicalPath(pathname: string): string | null {
+  try { return pathname.split('/').map((seg) => encodeURIComponent(decodeURIComponent(seg))).join('/'); } catch { return null; }
+}
+function responseCacheKey(level: 'public' | 'operator', url: URL, namespace: string): { key: string; core: boolean; search: boolean } | null {
+  const path = canonicalPath(url.pathname);
+  if (!path || NOT_CACHED.test(path)) return null;
+  const inPath = path.match(/^\/api\/candidates\/([^/]+)\/(strategy|dashboard|jobs|applications)$/);
+  if (inPath && !CANDIDATE_IDS.has(inPath[1])) return null;
+  const allowed = CACHE_PARAMS.find(([re]) => re.test(path))?.[1] || [];
+  const params: string[] = [];
+  for (const k of allowed) {
+    if (!url.searchParams.has(k)) continue;
+    const v = url.searchParams.get(k) || '';
+    const ok = k === 'status' ? (STATUS_VALUE[path] || qualList)(v) : (CACHE_VALUES[k]?.(v) ?? false);
+    if (!ok) return null;
+    params.push(`${k}=${encodeURIComponent(k === 'search' ? v.toLowerCase() : v)}`);   // LIKE is case-insensitive for ASCII
+  }
+  const key = `${namespace}:${level}:${path}?${params.join('&')}`;
+  if (key.length > CACHE_MAX_KEY) return null;
+  // Page loads of the dashboard itself (a fixed set of paths, optionally one candidate) stay cacheable after the daily write cap.
+  const core = (CORE_PATHS.has(path) || !!inPath) && params.every((x) => x.startsWith('candidate_id='));
+  return { key, core, search: url.searchParams.has('search') };
+}
+function cachedResponse(lookup: { body: string | null }, request: Request, env: Env, state: string): Response {
+  return new Response(lookup.body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': state } });
+}
+type CacheLookup = { current: number; body: string | null; created_at: number | null; generation: number | null };
+async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup | null> {
+  try {
+    return await env.DB.prepare(`SELECT s.generation AS current, c.body, c.created_at, c.generation
+      FROM cache_state s LEFT JOIN response_cache c ON c.key = ? WHERE s.id = 1`).bind(key).first<CacheLookup>();
+  } catch { return null; }
+}
+async function writeResponseCache(env: Env, key: string, body: string, generation: number): Promise<void> {
+  if (new TextEncoder().encode(body).length > CACHE_MAX_BYTES) return;
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    await env.DB.prepare('INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, ?, ?, ?)').bind(key, body, now, generation).run();
+    meterAdd(utcDay(), { cache_writes: 1 });
+    // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
+    if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
+  } catch { /* D1 unavailable: serve uncached */ }
+}
+async function invalidateResponseCache(env: Env, retried = false): Promise<void> {
+  try { await env.DB.prepare('UPDATE cache_state SET generation = generation + 1 WHERE id = 1').run(); }
+  catch (e: any) {
+    if (/no such table/i.test(String(e?.message))) return;          // cache not installed: nothing to invalidate
+    if (!retried) return invalidateResponseCache(env, true);
+    throw e;                                                        // never carry on as if the cache were coherent
+  }
+}
+
+// Read meter: counts accumulate in the isolate and are written at most every 30 s or 5,000 rows, so metering adds few
+// writes. Counts held by an isolate that is evicted before flushing are lost (at most one interval's worth).
+const utcDay = () => new Date().toISOString().slice(0, 10);
+const secondsToUtcMidnight = () => 86400 - (Math.floor(Date.now() / 1000) % 86400);
+type MeterCounts = { rows_read?: number; public_misses?: number; operator_misses?: number; cache_writes?: number };
+let pendingMeter: { day: string; since: number; rows_read: number; public_misses: number; operator_misses: number; cache_writes: number } | null = null;
+function meterAdd(day: string, c: MeterCounts) {
+  if (!pendingMeter || pendingMeter.day !== day) pendingMeter = { day, since: Date.now(), rows_read: 0, public_misses: 0, operator_misses: 0, cache_writes: 0 };
+  pendingMeter.rows_read += c.rows_read || 0; pendingMeter.public_misses += c.public_misses || 0;
+  pendingMeter.operator_misses += c.operator_misses || 0; pendingMeter.cache_writes += c.cache_writes || 0;
+}
+async function flushMeter(env: Env, force = false): Promise<void> {
+  const m = pendingMeter;
+  if (!m || (!force && m.rows_read < 5000 && Date.now() - m.since < 30000 && m.day === utcDay())) return;
+  pendingMeter = null;
+  if (!m.rows_read && !m.public_misses && !m.operator_misses && !m.cache_writes) return;
+  try {
+    await env.DB.prepare(`INSERT INTO read_meter(day, rows_read, public_misses, operator_misses, cache_writes) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(day) DO UPDATE SET rows_read = rows_read + excluded.rows_read, public_misses = public_misses + excluded.public_misses,
+      operator_misses = operator_misses + excluded.operator_misses, cache_writes = cache_writes + excluded.cache_writes`)
+      .bind(m.day, m.rows_read, m.public_misses, m.operator_misses, m.cache_writes).run();
+  } catch { /* meter table missing: nothing recorded */ }
+}
+async function meterToday(env: Env): Promise<{ rows_read: number; cache_writes: number }> {
+  const day = utcDay();
+  const local = pendingMeter && pendingMeter.day === day ? pendingMeter : null;
+  let stored: any = null;
+  try { stored = await env.DB.prepare('SELECT rows_read, cache_writes FROM read_meter WHERE day = ?').bind(day).first<any>(); } catch {}
+  return { rows_read: (stored?.rows_read || 0) + (local?.rows_read || 0), cache_writes: (stored?.cache_writes || 0) + (local?.cache_writes || 0) };
+}
+// A view of the D1 binding that adds up meta.rows_read for one request. first() is answered from all() so its cost is
+// visible; the rows returned are the same (D1's first() does not add a LIMIT either).
+function meteredDb(db: D1Database): { db: D1Database; rows: () => number } {
+  let rows = 0;
+  const add = (r: any) => { rows += Number(r?.meta?.rows_read || 0); return r; };
+  const wrap = (st: any): any => ({
+    bind: (...a: any[]) => wrap(st.bind(...a)),
+    first: async (col?: string) => { const r = add(await st.all()); const row = r.results?.[0] ?? null; return col ? (row ? row[col] : null) : row; },
+    all: async () => add(await st.all()),
+    run: async () => add(await st.run()),
+    raw: (o?: any) => st.raw(o),
+    _inner: st,
+  });
+  const view: any = {
+    prepare: (sql: string) => wrap(db.prepare(sql)),
+    batch: async (stmts: any[]) => { const res = await db.batch(stmts.map((x) => x._inner ?? x)); res.forEach(add); return res; },
+    exec: (sql: string) => db.exec(sql),
+    dump: () => (db as any).dump(),
+  };
+  return { db: view as D1Database, rows: () => rows };
+}
+
+// Database failures (quota, overload, outage) answer a controlled 503 instead of a crash; the cause is logged privately.
+const UNAVAILABLE = { error: 'The dashboard is temporarily unavailable. Please try again in a few minutes.', status: 'unavailable' };
+// Availability failures only (D1's own quota, overload, timeout and connection messages). Anything else, including
+// query or programming errors that happen to mention a limit, stays a generic 500.
+const isDatabaseFailure = (message: unknown) =>
+  /daily row (read|write) limit|exceeded D1's|exceeded .*free tier|D1 DB is overloaded|overloaded|storage operation exceeded timeout|operation timed out|network connection lost|D1_RESET_DO|reset because its code was updated|internal error in D1|internal error while starting up D1|D1_ERROR: internal error|too many requests queued|transient issue on remote node|replica disconnected|exceeded its (memory|CPU time) limit and was reset|exceeded maximum DB size|maximum account storage limit/i
+    .test(String(message || ''));
+function logPrivately(tag: string, pathname: string, message: unknown) {
+  // Path only (no query string, headers or bodies), and the error text truncated: D1 errors carry no row data. JSON parse
+  // errors quote the request body, so their detail is withheld.
+  const text = String(message || '');
+  console.error(tag, pathname, /JSON|Unexpected token|position \d+/i.test(text) ? 'malformed JSON (detail withheld)' : text.slice(0, 300));
+}
+
 // Who is asking. Set by the router for every /api request; handlers use it to decide which fields to return.
 const accessLevel = new WeakMap<Request, 'public' | 'operator'>();
 const isOperatorRequest = (request: Request) => accessLevel.get(request) === 'operator';
@@ -204,8 +380,15 @@ async function recordAuthFailure(env: Env, key: string, presented: string): Prom
         window_start = CASE WHEN ? - window_start >= ? THEN ? ELSE window_start END,
         last_key_hash = ?,
         updated_at = ?
+      WHERE ? - window_start >= ? OR last_key_hash != ?
       RETURNING failures
-    `).bind(key, now, now, keyHash, now, AUTH_WINDOW_SECONDS, keyHash, now, AUTH_WINDOW_SECONDS, now, keyHash, now).first<{ failures: number }>();
+    `).bind(key, now, now, keyHash, now, AUTH_WINDOW_SECONDS, keyHash, now, AUTH_WINDOW_SECONDS, now, keyHash, now, now, AUTH_WINDOW_SECONDS, keyHash).first<{ failures: number }>();
+    // The identical wrong key again, inside the window: the conditional update wrote nothing (one row read, no row written), so
+    // a client repeating one bad key cannot spend the free write allowance. The count stays as it was.
+    if (!row) {
+      const current = await env.DB.prepare('SELECT failures FROM auth_failures WHERE ip_hash = ?').bind(key).first<{ failures: number }>();
+      return current?.failures ?? 0;
+    }
     // Retention: rows idle for a day are irrelevant; trimming rides on a failure, so the table cannot grow unbounded.
     if (Math.random() < 0.05) {
       await env.DB.prepare('DELETE FROM auth_failures WHERE updated_at < ?').bind(now - 24 * 3600).run();
@@ -303,7 +486,13 @@ class WorkerRouter {
     const headers = new Headers(res.headers);
     headers.delete('Content-Length');
     if (res.status === 500) {
-      try { console.error('api_error', new URL(request.url).pathname, (await res.clone().json<any>())?.error); } catch {}
+      let message: unknown = '';
+      try { message = (await res.clone().json<any>())?.error; } catch {}
+      logPrivately('api_error', new URL(request.url).pathname, message);
+      if (isDatabaseFailure(message)) {
+        headers.set('Retry-After', '300');
+        return new Response(JSON.stringify(UNAVAILABLE), { status: 503, headers });
+      }
       return new Response(JSON.stringify({ error: 'Internal error. The request was not completed.' }), { status: 500, headers });
     }
     const data = await res.json<any>();
@@ -342,7 +531,53 @@ class WorkerRouter {
         route.paramNames.forEach((name, i) => {
           try { params[name] = decodeURIComponent(match[i + 1]); } catch { params[name] = '\uFFFD'; }
         });
-        return await this.finish(request, await route.handler(request, env, params, url));
+        const level = accessLevel.get(request);
+        const readRoute = !!level && request.method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
+        // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
+        // (India Remote list) is metered by that inner call, so it is not counted twice.
+        const metered = readRoute && !NOT_CACHED.test(pathname);
+        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const cacheKey = keyInfo?.key ?? null;
+        const operatorChange = level === 'operator' && request.method !== 'GET';
+        let meter: { db: D1Database; rows: () => number } | null = null;
+        let lookup: CacheLookup | null = null;
+        const now = Math.floor(Date.now() / 1000);
+        if (cacheKey) {
+          lookup = await lookupResponseCache(env, cacheKey);
+          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) return cachedResponse(lookup, request, env, 'HIT');
+        }
+        if (metered) {
+          if (level === 'public' && (await meterToday(env)).rows_read >= PUBLIC_DAILY_READ_BUDGET) {
+            // Today's public share of the free allowance is used. An answer is only reused if no operator change happened since
+            // it was computed; otherwise a clear refusal.
+            if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - STALE_MAX_SECONDS) return cachedResponse(lookup, request, env, 'STALE');
+            return jsonResponse({ error: "Today's public viewing capacity is used up. The dashboard is available again after 00:00 UTC.", status: 'limited' },
+              503, { ...corsHeaders(request, env), 'Retry-After': String(secondsToUtcMidnight()) });
+          }
+          meter = meteredDb(env.DB);
+        }
+        if (operatorChange) await invalidateResponseCache(env);   // before: if this fails the change is refused
+        let res: Response;
+        try {
+          res = await this.finish(request, await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
+        } finally {
+          if (meter) {
+            const rows = meter.rows();
+            if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
+          }
+          if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
+            try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
+          }
+        }
+        if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
+          const body = await res.text();
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
+          await flushMeter(env);
+          const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
+          return new Response(body, { status: 200, headers });
+        }
+        if (meter) await flushMeter(env);
+        return res;
       }
     }
 
@@ -891,7 +1126,7 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       WHERE q.candidate_id = ?
         AND q.qualification_status IN (${placeholders})
     `;
@@ -942,7 +1177,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       WHERE q.candidate_id = ? AND j.is_active = 1
     `;
 
@@ -1180,7 +1415,7 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.job_id = j.id AND a2.candidate_id = ?)
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, jobId).first<any>();
 
@@ -1287,7 +1522,7 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.job_id = j.id AND a2.candidate_id = ?)
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, jobId).first<any>();
 
@@ -1528,7 +1763,7 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.job_id = j.id AND a2.candidate_id = ?)
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, job_id).first<any>();
 
@@ -2396,7 +2631,20 @@ router.get('/api/canonical-sync/status', async (request, env) => {
 // Main export for Cloudflare Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    return router.handle(request, env);
+    try {
+      const res = await router.handle(request, env);
+      if (!new URL(request.url).pathname.startsWith('/api/')) return res;
+      // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.
+      const headers = new Headers(res.headers);
+      headers.set('X-Worker-Commit', env.GIT_COMMIT || 'unknown');
+      return new Response(res.body, { status: res.status, headers });
+    } catch (err: any) {
+      const pathname = new URL(request.url).pathname;
+      logPrivately('worker_error', pathname, err?.message || err);
+      if (!pathname.startsWith('/api/')) return new Response('Temporarily unavailable', { status: 503, headers: { 'Retry-After': '300' } });
+      return jsonResponse(isDatabaseFailure(err?.message) ? UNAVAILABLE : { error: 'Internal error. The request was not completed.' },
+        isDatabaseFailure(err?.message) ? 503 : 500, { ...corsHeaders(request, env), 'Retry-After': '300', 'X-Worker-Commit': env.GIT_COMMIT || 'unknown' });
+    }
   },
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     const result = await runDiscovery(env, 'CRON');

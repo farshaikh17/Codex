@@ -90,6 +90,9 @@ export const App: React.FC = () => {
 
   // Filters
   const [search, setSearch] = useState<string>('');
+  // The job query re-reads every qualification row, so typing waits for a pause instead of querying per keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  useEffect(() => { const t = setTimeout(() => setDebouncedSearch(search), 400); return () => clearTimeout(t); }, [search]);
   const [eligibilityFilter, setEligibilityFilter] = useState<string>('ALL');
   const [minScore, setMinScore] = useState<number>(0);
   const [workplaceFilter, setWorkplaceFilter] = useState<string>('ALL');
@@ -100,7 +103,7 @@ export const App: React.FC = () => {
   // Reset pagination to page 1 whenever search, filters, or candidate change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, candidateId]);
+  }, [debouncedSearch, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, candidateId]);
 
   const loadData = useCallback(async () => {
     const currentRequest = ++requestId.current;
@@ -119,7 +122,7 @@ export const App: React.FC = () => {
       const candidateForFetch = candidateId;
       const [paginatedResult, profileData, analyticsData, trackerData, metricsData, irSummaryData] = await Promise.all([
         fetchJobs({
-          search,
+          search: debouncedSearch,
           eligibility: eligibilityFilter,
           min_score: minScore,
           workplace_type: workplaceFilter,
@@ -157,7 +160,7 @@ export const App: React.FC = () => {
     } finally {
       if (currentRequest === requestId.current) setIsLoading(false);
     }
-  }, [search, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, activeTab, candidateId, currentPage, pageSize]);
+  }, [debouncedSearch, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, candidateId, currentPage, pageSize]);
 
   useEffect(() => { if (authEpoch > 0) loadData(); }, [authEpoch]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {

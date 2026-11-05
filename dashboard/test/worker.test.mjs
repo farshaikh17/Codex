@@ -461,3 +461,312 @@ test('weekly target: 100 for Farhan counts only distinct jobs that became READY 
   assert.ok(m.ready_inventory >= 1);
   assert.equal(m.timezone || 'America/New_York', 'America/New_York');
 });
+
+// ---- D1 incident (2026-11-05): read cache, controlled unavailability, version header ----
+const raw = async (env, p, key) => worker.fetch(new Request('https://test.invalid' + p, { headers: key ? { Authorization: `Bearer ${key}` } : {} }), env, { waitUntil() {} });
+const cached = (extra) => fresh({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'commit-a', ...extra });
+
+test('read cache: a repeat public read is served from the cache with the same stripped body', async () => {
+  const { env } = cached();
+  const a = await raw(env, '/api/applications?candidate_id=farhan_shaikh');
+  const b = await raw(env, '/api/applications?candidate_id=farhan_shaikh');
+  assert.equal(a.headers.get('x-cache'), 'MISS'); assert.equal(b.headers.get('x-cache'), 'HIT');
+  const [ta, tb] = [await a.text(), await b.text()];
+  assert.equal(ta, tb);
+  assert.ok(!/PRIVATE-NOTE-7f3|"notes"/.test(tb));
+});
+
+test('read cache: public and operator answers never cross, and each candidate keeps its own entry', async () => {
+  const { env } = cached();
+  const op = await (await raw(env, '/api/applications?candidate_id=farhan_shaikh', ADMIN_KEY)).text();
+  assert.ok(op.includes('PRIVATE-NOTE-7f3'), 'operator view carries notes');
+  const pub = await raw(env, '/api/applications?candidate_id=farhan_shaikh');
+  assert.equal(pub.headers.get('x-cache'), 'MISS', 'a public read must not reuse the operator entry');
+  assert.ok(!(await pub.text()).includes('PRIVATE-NOTE-7f3'));
+  const op2 = await raw(env, '/api/applications?candidate_id=farhan_shaikh', ADMIN_KEY);
+  assert.equal(op2.headers.get('x-cache'), 'HIT'); assert.ok((await op2.text()).includes('PRIVATE-NOTE-7f3'));
+  const sana = await raw(env, '/api/applications?candidate_id=sana_ansari');
+  assert.equal(sana.headers.get('x-cache'), 'MISS', 'another candidate never reuses Farhan\'s entry');
+  // a wrong key on a public read is refused, never answered from the cache
+  assert.equal((await raw(env, '/api/applications?candidate_id=farhan_shaikh', 'wrong-key')).status, 403);
+});
+
+test('read cache: an operator change invalidates it, and the change answers with the new values (not a cached copy)', async () => {
+  const { env } = cached();
+  await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY);
+  await raw(env, '/api/profile?candidate_id=farhan_shaikh');
+  assert.equal((await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY)).headers.get('x-cache'), 'HIT');
+  const put = await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: { candidate_id: 'farhan_shaikh', full_name: 'Changed Name' } });
+  assert.ok(put.status < 400, `profile save answered ${put.status}`);
+  assert.ok(JSON.stringify(put.json).includes('Changed Name'), 'the save answers with the saved profile');
+  for (const key of [ADMIN_KEY, null]) {
+    const r = await raw(env, '/api/profile?candidate_id=farhan_shaikh', key);
+    assert.equal(r.headers.get('x-cache'), 'MISS');
+  }
+  assert.ok((await (await raw(env, '/api/profile?candidate_id=farhan_shaikh', ADMIN_KEY)).text()).includes('Changed Name'));
+});
+
+test('read cache: a read that was in flight during an operator change cannot put old data back', async () => {
+  const { sqlite, env } = cached();
+  const gen = () => sqlite.prepare('SELECT generation FROM cache_state WHERE id = 1').get().generation;
+  // The slow reader looked up the cache (and so the generation) before the change...
+  const before = gen();
+  await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: { candidate_id: 'farhan_shaikh', full_name: 'Changed Name' } });
+  assert.ok(gen() > before);
+  // ...and stores its old answer afterwards, stamped with the generation it saw.
+  sqlite.prepare('INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, ?, ?, ?)')
+    .run('commit-a:public:/api/profile?candidate_id=farhan_shaikh', '{"full_name":"OLD"}', Math.floor(Date.now() / 1000), before);
+  const r = await raw(env, '/api/profile?candidate_id=farhan_shaikh');
+  assert.equal(r.headers.get('x-cache'), 'MISS'); assert.ok(!(await r.text()).includes('OLD'));
+});
+
+test('read cache: unknown parameters and refused requests create no entries', async () => {
+  const { sqlite, env } = cached();
+  for (let i = 0; i < 20; i++) await raw(env, `/api/sources?z=${i}`);
+  for (let i = 0; i < 10; i++) await raw(env, `/api/profile?candidate_id=farhan_shaikh&offset=${i}`);
+  for (let i = 0; i < 10; i++) await raw(env, '/api/profile?candidate_id=bogus');
+  for (let i = 0; i < 10; i++) await raw(env, `/api/jobs/nonexistent-${i}?candidate_id=farhan_shaikh`);
+  const n = sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n;
+  assert.equal(n, 2, `expected one entry each for /api/sources and Farhan's profile, found ${n}`);
+});
+
+test('read cache: no entries are written once the daily write allowance for the cache is used', async () => {
+  const { sqlite, env } = cached();
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, cache_writes) VALUES (?, ?)').run(new Date().toISOString().slice(0, 10), 3000);
+  const r = await raw(env, '/api/applications?candidate_id=farhan_shaikh&status=APPLIED');   // an optional variant, not a core page load
+  assert.equal(r.status, 200);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 0);
+});
+
+test('read cache and meter do not depend on a deploy-time variable (a plain wrangler deploy cannot switch them off)', async () => {
+  const { sqlite, env } = cached({ GIT_COMMIT: undefined });
+  const a = await raw(env, '/api/candidates'); const b = await raw(env, '/api/candidates');
+  assert.equal(a.headers.get('x-cache'), 'MISS'); assert.equal(b.headers.get('x-cache'), 'HIT');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 1);
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(new Date().toISOString().slice(0, 10), 2_500_000);
+  assert.equal((await raw(env, '/api/jobs?candidate_id=farhan_shaikh&search=%25')).status, 503, 'the budget applies without a commit too');
+});
+
+test('read cache: entries are scoped to the deployed commit and expire', async () => {
+  const { sqlite, env } = cached();
+  await raw(env, '/api/candidates');
+  assert.equal((await raw({ ...env, GIT_COMMIT: 'commit-b' }, '/api/candidates')).headers.get('x-cache'), 'MISS', 'a new release starts with its own entries');
+  sqlite.exec('UPDATE response_cache SET created_at = created_at - 1801');
+  assert.equal((await raw(env, '/api/candidates')).headers.get('x-cache'), 'MISS', 'a public entry older than 30 minutes is recomputed');
+});
+
+test('read cache: a missing cache table only means no caching', async () => {
+  const { sqlite, env } = cached();
+  sqlite.exec('DROP TABLE response_cache');
+  const r = await raw(env, '/api/candidates');
+  assert.equal(r.status, 200);
+});
+
+test('database unavailable: every public read answers a controlled 503 with Retry-After, never a crash or internal text', async () => {
+  const { env } = fresh();
+  const msg = "D1_ERROR: Your account has exceeded D1's free tier daily row read limit (simulated)";
+  const failing = { prepare() { const s = { bind: () => s, first: async () => { throw new Error(msg); }, all: async () => { throw new Error(msg); }, run: async () => { throw new Error(msg); } }; return s; }, async batch() { throw new Error(msg); } };
+  const down = { ...env, DB: failing, RESPONSE_CACHE: 'on' };
+  for (const base of [...PUBLIC_READ, '/api/health']) {
+    const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/farhan_shaikh');
+    const r = await raw(down, p + (p.includes('?') ? '&' : '?') + 'candidate_id=farhan_shaikh');
+    const text = await r.text();
+    assert.equal(r.status, 503, `${p} answered ${r.status}: ${text.slice(0, 100)}`);
+    assert.ok(r.headers.get('retry-after'));
+    assert.ok(!/D1_ERROR|simulated|SQL/i.test(text), `${p} leaked internal error text`);
+  }
+  assert.equal((await raw(down, '/api/version')).status, 200, 'version does not need the database');
+});
+
+test('every API answer names the commit that produced it', async () => {
+  const { env } = fresh({ GIT_COMMIT: 'commit-a' });
+  for (const p of ['/api/version', '/api/candidates', '/api/meta']) assert.equal((await raw(env, p)).headers.get('x-worker-commit'), 'commit-a');
+});
+
+test('read meter: once the public share is used, visitors get the last answer or a clear 503; the operator is not blocked', async () => {
+  const { sqlite, env } = cached();
+  await raw(env, '/api/candidates');
+  sqlite.exec('UPDATE response_cache SET created_at = created_at - 7200');
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(new Date().toISOString().slice(0, 10), 2_500_000);
+  const stale = await raw(env, '/api/candidates');
+  assert.equal(stale.status, 200); assert.equal(stale.headers.get('x-cache'), 'STALE');
+  const none = await raw(env, '/api/analytics?candidate_id=farhan_shaikh');
+  assert.equal(none.status, 503); assert.ok(Number(none.headers.get('retry-after')) > 0);
+  assert.equal((await none.json()).status, 'limited');
+  assert.equal((await raw(env, '/api/analytics?candidate_id=farhan_shaikh', ADMIN_KEY)).status, 200, 'operator reads still work');
+});
+
+test('only D1 availability failures become 503; programming errors stay a generic 500', async () => {
+  const { env } = fresh();
+  const throwing = (msg) => ({ ...env, DB: { prepare() { const s = { bind: () => s, first: async () => { throw new Error(msg); }, all: async () => { throw new Error(msg); }, run: async () => { throw new Error(msg); } }; return s; } } });
+  for (const msg of ["Cannot read properties of undefined (reading 'limit')", "D1_TYPE_ERROR: Type 'undefined' not supported for value 'undefined'", 'D1_ERROR: too many SQL variables'])
+    assert.equal((await raw(throwing(msg), '/api/candidates')).status, 500, msg);
+  for (const msg of ['D1 DB is overloaded. Requests queued for too long.', 'D1_ERROR: Network connection lost.'])
+    assert.equal((await raw(throwing(msg), '/api/candidates')).status, 503, msg);
+});
+
+test('read cache: the India Remote list is never served for another page, search or sort', async () => {
+  const { env } = cached();
+  const ids = async (q) => (await (await raw(env, '/api/india-remote/jobs?candidate_id=farhan_shaikh' + q)).json()).jobs?.map((j) => j.id);
+  const first = await ids('&limit=1&offset=0');
+  const second = await ids('&limit=1&offset=1');
+  const again = await ids('&limit=1&offset=1');
+  assert.deepEqual(second, again);
+  if (first?.length && second?.length) assert.notDeepEqual(first, second, 'page 2 must not repeat page 1');
+});
+
+test('read cache: values outside the known sets are answered uncached, and core page loads stay cached after the write cap', async () => {
+  const { sqlite, env } = cached();
+  for (let i = 0; i < 15; i++) await raw(env, `/api/applications?candidate_id=farhan_shaikh&status=x${i}`);
+  for (let i = 0; i < 5; i++) await raw(env, `/api/jobs?candidate_id=farhan_shaikh&search=a`);        // one character: not cacheable
+  for (let i = 0; i < 5; i++) await raw(env, `/api/jobs?candidate_id=farhan_shaikh&offset=${1001 + i}`);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 0);
+  await raw(env, '/api/applications?candidate_id=farhan_shaikh&status=APPLIED');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n, 1, 'a known status is cached');
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, cache_writes) VALUES (?, ?)').run(new Date().toISOString().slice(0, 10), 999999);
+  await raw(env, '/api/analytics?candidate_id=farhan_shaikh');
+  await raw(env, '/api/applications?candidate_id=farhan_shaikh&status=REJECTED');
+  const keys = sqlite.prepare('SELECT key FROM response_cache').all().map((r) => r.key);
+  assert.ok(keys.some((k) => k.includes('/api/analytics?candidate_id=farhan_shaikh')), 'a core page load is still cached');
+  assert.ok(!keys.some((k) => k.includes('status=REJECTED')), 'an optional variant is not');
+});
+
+// ---- review of PR #26 ----------------------------------------------------------------------------------------------
+const today = () => new Date().toISOString().slice(0, 10);
+const entries = (sqlite) => sqlite.prepare('SELECT COUNT(*) n FROM response_cache').get().n;
+
+test('read meter: uncacheable public reads (odd search, India Remote list) are budgeted too; the operator is not blocked', async () => {
+  const { sqlite, env } = cached();
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(today(), 2_500_000);
+  for (const u of ['/api/jobs?candidate_id=farhan_shaikh&search=%25%25', '/api/jobs?candidate_id=farhan_shaikh&search=a', '/api/jobs?candidate_id=farhan_shaikh&limit=500',
+    '/api/india-remote/jobs?candidate_id=farhan_shaikh', '/api/india-remote/jobs?candidate_id=farhan_shaikh&search=zzz'])
+    assert.equal((await raw(env, u)).status, 503, `${u} must stop at the budget`);
+  assert.equal((await raw(env, '/api/jobs?candidate_id=farhan_shaikh&search=%25%25', ADMIN_KEY)).status, 200);
+});
+
+test('read meter: an uncacheable public read records its rows (once, not twice, through the India Remote hand-off)', async () => {
+  const { sqlite, env } = cached();
+  const wrapStmt = (st) => ({ bind: (...a) => wrapStmt(st.bind(...a)), first: async () => (await st.all()).results[0] ?? null,
+    all: async () => ({ ...(await st.all()), meta: { rows_read: 6000 } }), run: (...a) => st.run(...a) });
+  const db = { ...env.DB, prepare: (sql) => wrapStmt(env.DB.prepare(sql)), batch: (x) => env.DB.batch(x) };
+  await raw({ ...env, DB: db }, '/api/jobs?candidate_id=farhan_shaikh&search=a');
+  const one = sqlite.prepare('SELECT rows_read FROM read_meter WHERE day = ?').get(today())?.rows_read || 0;
+  assert.ok(one >= 6000, `a one-character search must be metered, got ${one}`);
+  sqlite.exec('DELETE FROM read_meter');
+  await raw({ ...env, DB: db }, '/api/india-remote/jobs?candidate_id=farhan_shaikh');
+  const viaHandoff = sqlite.prepare('SELECT rows_read FROM read_meter WHERE day = ?').get(today())?.rows_read || 0;
+  assert.ok(viaHandoff > 0 && viaHandoff <= one * 1.2, `hand-off metered once: ${viaHandoff} vs ${one}`);
+});
+
+test('read cache: percent-encoded aliases of one path share one entry; the write cap applies to job pages; invalid ids are not cached', async () => {
+  const { sqlite, env } = cached();
+  for (const u of ['/api/jobs/j1', '/api/jobs/%6a1', '/api/jobs/%6A1', '/api/candidates/farhan%5Fshaikh/jobs', '/api/candidates/farhan_shaikh/jobs', '/api/candidates/FARHAN_SHAIKH/jobs'])
+    await raw(env, u + (u.includes('/candidates/') ? '' : '?candidate_id=farhan_shaikh'));
+  const keys = sqlite.prepare('SELECT key FROM response_cache').all().map((r) => r.key);
+  assert.equal(keys.filter((k) => k.includes('/api/jobs/j1')).length, 1, JSON.stringify(keys));
+  assert.equal(keys.filter((k) => k.includes('/candidates/farhan_shaikh/jobs')).length, 1, JSON.stringify(keys));
+  assert.ok(!keys.some((k) => /%6|FARHAN/.test(k)));
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, cache_writes) VALUES (?, ?)').run(today(), 3000);
+  const before = entries(sqlite);
+  await raw(env, '/api/jobs/j2?candidate_id=farhan_shaikh'); await raw(env, '/api/jobs/j2/explanation?candidate_id=farhan_shaikh');
+  assert.equal(entries(sqlite), before, 'job pages obey the daily write cap');
+  await raw(env, '/api/sources');
+  assert.ok(entries(sqlite) > before, 'a core page still caches after the cap');
+});
+
+test('read cache: common searches are cached (normalised), odd ones are not', async () => {
+  const { sqlite, env } = cached();
+  const a = await raw(env, '/api/jobs?candidate_id=farhan_shaikh&search=Role'); const b = await raw(env, '/api/jobs?candidate_id=farhan_shaikh&search=role');
+  assert.equal(a.headers.get('x-cache'), 'MISS'); assert.equal(b.headers.get('x-cache'), 'HIT');
+  assert.equal(await a.text(), await b.text());
+  const n = entries(sqlite);
+  for (const q of ['%25', 'a', '%20role', 'role%20', 'x'.repeat(31), '<script>']) await raw(env, `/api/jobs?candidate_id=farhan_shaikh&search=${q}`);
+  assert.equal(entries(sqlite), n);
+});
+
+test('read cache: over budget, an old answer is never served across an operator change', async () => {
+  const { sqlite, env } = cached();
+  await raw(env, '/api/applications?candidate_id=farhan_shaikh');                       // warm
+  await call(worker, env, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });  // operator change
+  sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(today(), 2_500_000);
+  assert.equal((await raw(env, '/api/applications?candidate_id=farhan_shaikh')).status, 503, 'the pre-change entry must not be served as STALE');
+});
+
+test('read cache: if the cache cannot be invalidated the operator change is refused, not applied', async () => {
+  const { sqlite, env } = cached();
+  const failUpdate = (sql) => /UPDATE cache_state/.test(sql);
+  const db = { ...env.DB, prepare: (sql) => { if (failUpdate(sql)) throw new Error('D1_ERROR: internal error in D1'); return env.DB.prepare(sql); }, batch: (x) => env.DB.batch(x) };
+  const before = sqlite.prepare('SELECT COUNT(*) n FROM applications').get().n;
+  const res = await call(worker, { ...env, DB: db }, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
+  assert.ok(res.status >= 500, `got ${res.status}`);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM applications').get().n, before);
+});
+
+test('read cache: the cached path leaks nothing private (every public route, twice, second from the cache)', async () => {
+  const { env } = cached();
+  const forbidden = ['PRIVATE-NOTE-7f3', 'PRIVATE-CHANNEL-7f3', 'PRIVATE-RESUME-7f3', 'PRIVATE-COVER-7f3', 'PRIVATE-REJECT-7f3', 'PRIVATE-ACTOR-7f3', 'PRIVATECITY-7f3',
+    'PRIVATE-STAGE-7f3', 'PRIVATE-CATEGORY-7f3', 'PRIVATE-RUNERR-7f3', 'internal.example', 'seed decision', 'RRVUNL', 'Mianro', 'cash_floor', 'pay_line', 'employment_history'];
+  const urls = PUBLIC_READ.flatMap((base) => ['farhan_shaikh', 'sana_ansari'].map((cid) => {
+    const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/' + cid); return p + (p.includes('?') ? '&' : '?') + 'candidate_id=' + cid; }));
+  for (const u of urls) await raw(env, u, ADMIN_KEY);                       // warm the OPERATOR entries first
+  const hits = [];
+  for (const pass of [1, 2]) for (const u of urls) {
+    const r = await raw(env, u); const t = await r.text();
+    for (const f of forbidden) if (t.includes(f)) hits.push(`pass ${pass} ${u} (${r.headers.get('x-cache')}) contains ${f}`);
+  }
+  assert.deepEqual(hits, []);
+});
+
+test('read meter: a miss records the rows D1 reports for it', async () => {
+  const { sqlite, env } = cached();
+  // Stand-in for D1's meta: every read reports 6,000 rows, so the meter flushes at once.
+  const wrapStmt = (st) => ({ bind: (...a) => wrapStmt(st.bind(...a)), first: async () => (await st.all()).results[0] ?? null,
+    all: async () => ({ ...(await st.all()), meta: { rows_read: 6000 } }), run: (...a) => st.run(...a) });
+  const db = { ...env.DB, prepare: (sql) => wrapStmt(env.DB.prepare(sql)), batch: (x) => env.DB.batch(x) };
+  await raw({ ...env, DB: db }, '/api/candidates');
+  const m = sqlite.prepare('SELECT rows_read, public_misses FROM read_meter WHERE day = ?').get(new Date().toISOString().slice(0, 10));
+  assert.ok(m && m.rows_read >= 6000, `meter recorded ${JSON.stringify(m)}`);
+  assert.ok(m.public_misses >= 1);
+});
+
+// ---- re-review of the fixes ---------------------------------------------------------------------------------------
+test('limiter: repeating the identical wrong key writes nothing, so it cannot spend the free write allowance', async () => {
+  const { sqlite, env } = cached();
+  const hit = () => worker.fetch(new Request('https://test.invalid/api/applications?candidate_id=farhan_shaikh', { headers: { Authorization: 'Bearer same-wrong-key', 'CF-Connecting-IP': '203.0.113.9' } }), env, { waitUntil() {} });
+  assert.equal((await hit()).status, 403);
+  sqlite.exec('UPDATE auth_failures SET updated_at = 1');                    // marker: any further write would change it
+  for (let i = 0; i < 20; i++) assert.equal((await hit()).status, 403);
+  assert.equal(sqlite.prepare('SELECT updated_at, failures FROM auth_failures').get().updated_at, 1, 'the row was rewritten by a repeated identical key');
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 1);
+  const other = await worker.fetch(new Request('https://test.invalid/api/applications?candidate_id=farhan_shaikh', { headers: { Authorization: 'Bearer another-wrong-key', 'CF-Connecting-IP': '203.0.113.9' } }), env, { waitUntil() {} });
+  assert.equal(other.status, 403);
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 2, 'a different wrong key still counts');
+});
+
+test('read meter: with the budget used up, every public read route that is not warm answers 503; the cache switch does not disable the budget', async () => {
+  for (const extra of [{}, { RESPONSE_CACHE: 'off' }]) {
+    const { sqlite, env } = cached(extra);
+    sqlite.prepare('INSERT OR REPLACE INTO read_meter(day, rows_read) VALUES (?, ?)').run(today(), 2_500_000);
+    const urls = PUBLIC_READ.flatMap((base) => ['farhan_shaikh', 'sana_ansari'].map((cid) => {
+      const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/' + cid); return p + (p.includes('?') ? '&' : '?') + 'candidate_id=' + cid; }));
+    for (const u of urls) assert.equal((await raw(env, u)).status, 503, `${u} (${JSON.stringify(extra)})`);
+  }
+});
+
+test('read cache: one transient failure to invalidate is retried and the operator change goes through', async () => {
+  const { sqlite, env } = cached();
+  let failed = false;
+  const db = { ...env.DB, prepare: (sql) => {
+    const st = env.DB.prepare(sql);
+    if (/UPDATE cache_state/.test(sql) && !failed) return { run: async () => { failed = true; throw new Error('D1_ERROR: internal error in D1'); } };
+    return st; }, batch: (x) => env.DB.batch(x) };
+  const res = await call(worker, { ...env, DB: db }, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
+  assert.equal(res.status, 200); assert.ok(failed);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM applications WHERE job_id = 'j4'").get().n, 1);
+});
+
+test('search normalisation is lossless: Role and role return the same jobs when nothing is cached', async () => {
+  const { env } = cached({ RESPONSE_CACHE: 'off' });
+  const ids = async (q) => (await (await raw(env, `/api/jobs?candidate_id=farhan_shaikh&search=${q}`)).json()).jobs.map((j) => j.id).join();
+  assert.equal(await ids('Role'), await ids('role')); assert.ok((await ids('role')).length > 0);
+});
