@@ -145,7 +145,8 @@ jobs:
 
       - name: Preflight finished - nothing was changed
         if: ${{ inputs.mode == 'preflight' }}
-        run: echo "Preflight passed: token permissions, account, database, secrets and rollback records are all in order. Run again with mode=release to deploy." | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Preflight passed - token permissions, account, database, secrets and rollback records are all in order. Run again with mode=release to deploy." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Add the guess-limiter table (additive, idempotent; migrations 0001-0007 are NOT replayed)
         if: ${{ inputs.mode == 'release' }}
