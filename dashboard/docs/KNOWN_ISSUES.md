@@ -4,11 +4,13 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 ## Owner decisions (recorded 2026-11-05)
 
-1. **Sana's preferred locations: decided.** Remote is ideal; any city with a commercial airport within 2 hours is acceptable
-   (Mumbai and Pune are examples; the earlier lists, Bengaluru/Hyderabad/Chennai and Bengaluru/Pune/Mumbai, are now both examples of
-   this rule rather than a conflict). Middle East and Europe stay as relocation preferences, without assuming work authorization.
-   The profile shows this rule. The Worker's discovery screen still treats only a fixed list of large Indian cities as an accessible
-   Indian location for Sana; widening that to "any city within 2 hours of an airport" would need an airport list and is not done.
+1. **Sana's location preference: decided, with evidence required.** Remote is preferred. An on-site or hybrid role is acceptable where a
+   commercial airport is within about 2 hours; that is a preference to verify per posting, and no list of city names can establish it
+   (Mumbai and Pune are examples the owner gave, not a list). Middle East and Europe stay as relocation preferences, without assuming work
+   authorization. Consequently the Worker's discovery screen no longer calls an on-site role in a listed Indian city "eligible": it is
+   **unknown** until accessibility is verified, and only a role that is remote in India is affirmatively eligible. Migration 0010 applies
+   this to the preliminary rows already stored (reason text exactly "Posting is in an accessible Indian location."), lowering their score
+   by the 10 points that eligibility had added.
 2. **Farhan's 12 application records: owner's understanding recorded, nothing changed.** The owner believes they were listings added
    very early on that were not eligible, not real applications. They remain in the tracker and in every count (none was deleted,
    reclassified or excluded) until the owner confirms record by record, in particular the Drivetrain `APPLIED` record `app-803e11ab`, the

@@ -75,7 +75,12 @@ export function evaluate(candidate:any,p:Posting) {
  else if(candidate.id==='farhan_shaikh'){
   if(blocked){eligibility='INELIGIBLE';reason='Posting explicitly restricts work location outside India.';}
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site|not remote|no remote)\b/i.test(p.location+' '+p.description)){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
- }else if(india){eligibility='ELIGIBLE';reason='Posting is in an accessible Indian location.';}
+ }else if(india){
+  // A fixed city list cannot establish that a commercial airport is within about 2 hours of the candidate, so an on-site or
+  // hybrid role in an Indian city is UNKNOWN until that is verified. Only a role that is remote in India is affirmative.
+  if(remote){eligibility='ELIGIBLE';reason='Remote role in India.';}
+  else reason='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
+ }
  else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  const role=candidate.id==='farhan_shaikh'?/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery/i.test(p.title):/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarbon/i.test(p.title);
  const skills=list(candidate.primary_skills).filter(s=>lower.includes(s.toLowerCase()));
