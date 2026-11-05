@@ -155,3 +155,74 @@ test('source scorecard application counts come from the applications table', asy
   assert.equal(by['lever:acme'].interviews_count, 0);
   assert.equal(by['greenhouse:beta'].applications_count, 0);
 });
+
+// ---- guess limiter -------------------------------------------------------------------------------------------
+const callFrom = async (env, ip, key, method = 'GET', p = '/api/profile') => {
+  const headers = { 'CF-Connecting-IP': ip };
+  if (key) headers.Authorization = `Bearer ${key}`;
+  const res = await worker.fetch(new Request('https://test.invalid' + p, { method, headers }), env, { waitUntil() {} });
+  return { status: res.status, retry: res.headers.get('Retry-After') };
+};
+
+test('repeated wrong keys lock that client out (429 + Retry-After), even for the correct key; other clients are unaffected', async () => {
+  const { env } = fresh();
+  for (let i = 0; i < 8; i++) assert.equal((await callFrom(env, '203.0.113.7', 'guess' + i)).status, 403);
+  const locked = await callFrom(env, '203.0.113.7', 'guess9');
+  assert.equal(locked.status, 429); assert.ok(Number(locked.retry) > 0 && Number(locked.retry) <= 900);
+  assert.equal((await callFrom(env, '203.0.113.7', ADMIN_KEY)).status, 429, 'correct key must not be an oracle during lockout');
+  assert.equal((await callFrom(env, '198.51.100.9', ADMIN_KEY)).status, 200, 'another client is not locked');
+});
+
+test('lockout also covers /api/auth/verify, expires with the window, and a good unlock clears the count', async () => {
+  const { sqlite, env } = fresh();
+  const verify = (ip, key) => worker.fetch(new Request('https://test.invalid/api/auth/verify', { method: 'POST', headers: { 'CF-Connecting-IP': ip, 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) }), env, { waitUntil() {} }).then((r) => r.status);
+  for (let i = 0; i < 8; i++) assert.equal(await verify('192.0.2.1', 'bad' + i), 403);
+  assert.equal(await verify('192.0.2.1', ADMIN_KEY), 429);
+  sqlite.prepare('UPDATE auth_failures SET window_start = window_start - 1000').run();           // window elapsed
+  assert.equal(await verify('192.0.2.1', ADMIN_KEY), 200);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 0, 'success clears the counter');
+  for (let i = 0; i < 3; i++) await verify('192.0.2.2', 'bad');
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 3);
+  assert.ok(!JSON.stringify(sqlite.prepare('SELECT * FROM auth_failures').all()).includes('192.0.2'), 'raw client address must not be stored');
+});
+
+test('a missing limiter table never locks the operator out and never weakens authentication', async () => {
+  const { sqlite, env } = fresh();
+  sqlite.exec('DROP TABLE auth_failures');
+  assert.equal((await callFrom(env, '203.0.113.50', ADMIN_KEY)).status, 200);
+  for (let i = 0; i < 12; i++) assert.equal((await callFrom(env, '203.0.113.50', 'nope')).status, 403);
+  assert.equal((await callFrom(env, '203.0.113.50', null)).status, 401);
+});
+
+// ---- joins cannot inflate counts ----------------------------------------------------------------------------
+test('several application records for one job cannot inflate source, funnel or summary counts', async () => {
+  const { sqlite, env } = fresh();
+  const read = async () => ({
+    src: (await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.map((x) => [x.source_id, x.total_jobs, x.ready_jobs, x.eligible_jobs]).sort(),
+    funnel: (await call(worker, env, 'GET', '/api/analytics/discovery?candidate_id=farhan_shaikh')).json,
+    summary: (await call(worker, env, 'GET', '/api/india-remote/summary?candidate_id=farhan_shaikh')).json,
+    analytics: (await call(worker, env, 'GET', '/api/analytics?candidate_id=farhan_shaikh')).json,
+  });
+  const before = await read();
+  sqlite.exec('DROP INDEX IF EXISTS idx_app_cand_job');                                         // worst case: no unique index at all
+  for (let i = 0; i < 4; i++) sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)").run('dup-' + i, 'farhan_shaikh', 'j1', i % 2 ? 'REJECTED' : 'INTERVIEWING');
+  const after = await read();
+  assert.deepEqual(after.src, before.src, 'per-source job counts changed');
+  assert.equal(after.funnel.total_scanned_jobs, before.funnel.total_scanned_jobs);
+  assert.equal(after.funnel.ready_jobs, before.funnel.ready_jobs);
+  assert.deepEqual(after.summary, before.summary);
+  assert.equal(after.analytics.total_jobs, before.analytics.total_jobs);
+  assert.equal(after.analytics.application_counts.APPLIED, 1); // application RECORDS are counted as records
+  const acme = (await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.find((x) => x.source_id === 'lever:acme');
+  assert.equal(acme.total_jobs, 2); assert.equal(acme.applications_count, 2 + 4); assert.equal(acme.interviews_count, 1); assert.equal(acme.rejections_count, 1);
+});
+
+test('the job list and its total are not multiplied by duplicate application rows', async () => {
+  const { sqlite, env } = fresh();
+  const before = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh&limit=50')).json;
+  sqlite.exec('DROP INDEX IF EXISTS idx_app_cand_job');
+  for (let i = 0; i < 3; i++) sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)").run('d' + i, 'farhan_shaikh', 'j1', 'REJECTED');
+  const after = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh&limit=50')).json;
+  assert.equal(after.total, before.total); assert.equal(after.jobs.length, before.jobs.length);
+  assert.deepEqual(after.status_counts, before.status_counts);
+});

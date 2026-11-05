@@ -47,7 +47,56 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-function checkOperatorAuth(request: Request, env: Env): Response | null {
+// Built-in guess limiter. Cloudflare's rate-limiting rules are not assumed to be available on the free plan, so
+// failed keys are counted in D1 per hashed client address (CF-Connecting-IP is set by Cloudflare, not by the caller).
+const AUTH_MAX_FAILURES = 8;
+const AUTH_WINDOW_SECONDS = 15 * 60;
+
+async function clientKey(request: Request): Promise<string> {
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('career-job-engine:' + ip));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Seconds until the client may try again, or 0. A missing table or D1 error never locks the operator out. */
+async function lockoutSeconds(env: Env, key: string): Promise<number> {
+  try {
+    const row = await env.DB.prepare('SELECT failures, window_start FROM auth_failures WHERE ip_hash = ?').bind(key).first<{ failures: number; window_start: number }>();
+    if (!row) return 0;
+    const now = Math.floor(Date.now() / 1000);
+    const left = row.window_start + AUTH_WINDOW_SECONDS - now;
+    return row.failures >= AUTH_MAX_FAILURES && left > 0 ? left : 0;
+  } catch (err) {
+    console.warn('auth limiter unavailable (lockout check):', (err as Error).message);
+    return 0;
+  }
+}
+
+async function recordAuthFailure(env: Env, key: string): Promise<void> {
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    await env.DB.prepare(`
+      INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at) VALUES (?, 1, ?, ?)
+      ON CONFLICT(ip_hash) DO UPDATE SET
+        failures = CASE WHEN ? - window_start >= ? THEN 1 ELSE failures + 1 END,
+        window_start = CASE WHEN ? - window_start >= ? THEN ? ELSE window_start END,
+        updated_at = ?
+    `).bind(key, now, now, now, AUTH_WINDOW_SECONDS, now, AUTH_WINDOW_SECONDS, now, now).run();
+  } catch (err) {
+    console.warn('auth limiter unavailable (record):', (err as Error).message);
+  }
+}
+
+async function clearAuthFailures(env: Env, key: string): Promise<void> {
+  try { await env.DB.prepare('DELETE FROM auth_failures WHERE ip_hash = ?').bind(key).run(); } catch { /* limiter table absent */ }
+}
+
+function tooManyAttempts(request: Request, env: Env, seconds: number): Response {
+  return jsonResponse({ error: 'Too many failed attempts. Try again later.', retry_after_seconds: seconds }, 429,
+    { ...corsHeaders(request, env), 'Retry-After': String(seconds) });
+}
+
+async function checkOperatorAuth(request: Request, env: Env): Promise<Response | null> {
   const cors = corsHeaders(request, env);
   if (!env.ADMIN_API_KEY) {
     return jsonResponse({ error: 'Server authentication is unconfigured.' }, 503, cors);
@@ -57,7 +106,11 @@ function checkOperatorAuth(request: Request, env: Env): Response | null {
   if (!match) {
     return jsonResponse({ error: 'Operator authentication required.' }, 401, { ...cors, 'WWW-Authenticate': 'Bearer' });
   }
+  const ck = await clientKey(request);
+  const wait = await lockoutSeconds(env, ck);
+  if (wait > 0) return tooManyAttempts(request, env, wait);
   if (!timingSafeEqual(match[1].trim(), env.ADMIN_API_KEY)) {
+    await recordAuthFailure(env, ck);
     return jsonResponse({ error: 'Invalid operator access key.' }, 403, cors);
   }
   return null;
@@ -105,7 +158,7 @@ class WorkerRouter {
     // Every /api route except the public ones below requires the operator key (Authorization: Bearer <key>).
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
     if (pathname.startsWith('/api/') && !PUBLIC_API_PATHS.has(pathname)) {
-      const denied = checkOperatorAuth(request, env);
+      const denied = await checkOperatorAuth(request, env);
       if (denied) return denied;
     }
 
@@ -234,9 +287,14 @@ router.post('/api/auth/verify', async (request, env) => {
     if (!key) {
       return jsonResponse({ error: 'Operator access key is required.' }, 400, corsHeaders(request, env));
     }
+    const ck = await clientKey(request);
+    const wait = await lockoutSeconds(env, ck);
+    if (wait > 0) return tooManyAttempts(request, env, wait);
     if (!timingSafeEqual(key, env.ADMIN_API_KEY)) {
+      await recordAuthFailure(env, ck);
       return jsonResponse({ error: 'Invalid operator access key.' }, 403, corsHeaders(request, env));
     }
+    await clearAuthFailures(env, ck);
     return jsonResponse({
       status: 'authenticated',
       role: 'operator',
@@ -644,7 +702,7 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN applications a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
+      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
       WHERE q.candidate_id = ?
         AND q.qualification_status IN (${placeholders})
     `;
@@ -694,7 +752,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN applications a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
+      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
     `;
 
@@ -931,7 +989,7 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN applications a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, jobId).first<any>();
 
@@ -1036,7 +1094,7 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN applications a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, jobId).first<any>();
 
@@ -1274,7 +1332,7 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
-      LEFT JOIN applications a ON j.id = a.job_id AND a.candidate_id = ?
+      LEFT JOIN (SELECT * FROM applications WHERE rowid IN (SELECT MAX(rowid) FROM applications GROUP BY candidate_id, job_id)) a ON j.id = a.job_id AND a.candidate_id = ?
       WHERE j.id = ?
     `).bind(candidateId, candidateId, candidateId, job_id).first<any>();
 
@@ -1365,10 +1423,9 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
         SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) as stretch_count,
         SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) as review_count,
         SUM(CASE WHEN q.qualification_status IN ('INELIGIBLE', 'HOLD') THEN 1 ELSE 0 END) as not_fit_count,
-        SUM(CASE WHEN a.status IS NOT NULL AND a.status != 'SAVED' THEN 1 ELSE 0 END) as applied_count
+        SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status != 'SAVED') THEN 1 ELSE 0 END) as applied_count
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
-      LEFT JOIN applications a ON q.candidate_id = a.candidate_id AND q.job_id = a.job_id
       WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1
     `).bind(candidateId).first<any>();
 
@@ -1545,13 +1602,19 @@ router.get('/api/analytics/sources-effectiveness', async (request, env, _params,
              SUM(CASE WHEN q.eligibility_status = 'INELIGIBLE' THEN 1 ELSE 0 END) AS ineligible_jobs,
              SUM(CASE WHEN COALESCE(s.overall_score, 0) >= 70 THEN 1 ELSE 0 END) AS high_match_jobs,
              SUM(CASE WHEN q.qualification_status = 'READY' THEN 1 ELSE 0 END) AS ready_jobs,
-             COUNT(a.id) AS applications_count,
-             SUM(CASE WHEN a.status = 'INTERVIEWING' THEN 1 ELSE 0 END) AS interviews_count,
-             SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejections_count
+             SUM(COALESCE(a.n, 0)) AS applications_count,
+             SUM(COALESCE(a.interviewing, 0)) AS interviews_count,
+             SUM(COALESCE(a.rejected, 0)) AS rejections_count
       FROM candidate_qualifications q
       JOIN jobs j ON j.id = q.job_id
       LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
-      LEFT JOIN applications a ON a.candidate_id = q.candidate_id AND a.job_id = q.job_id
+      -- One row per (candidate, job) however many application records exist, so no join can multiply job counts.
+      LEFT JOIN (
+        SELECT candidate_id, job_id, COUNT(*) AS n,
+               MAX(CASE WHEN status = 'INTERVIEWING' THEN 1 ELSE 0 END) AS interviewing,
+               MAX(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+        FROM applications GROUP BY candidate_id, job_id
+      ) a ON a.candidate_id = q.candidate_id AND a.job_id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
       GROUP BY source_key
     `).bind(candidateId).all<any>();
