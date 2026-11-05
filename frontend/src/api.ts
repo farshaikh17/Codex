@@ -525,14 +525,14 @@ export async function verifyReadyUrls(): Promise<{ status: string; result: any }
   return res.json();
 }
 
-export async function fetchDiscoveryFunnel(): Promise<DiscoveryFunnelMetrics> {
-  const res = await authedFetch(`${API_BASE}/analytics/discovery`);
+export async function fetchDiscoveryFunnel(candidateId: string): Promise<DiscoveryFunnelMetrics> {
+  const res = await authedFetch(`${API_BASE}/analytics/discovery?candidate_id=${encodeURIComponent(candidateId)}`);
   if (!res.ok) throw new Error('Failed to fetch discovery funnel metrics');
   return res.json();
 }
 
-export async function fetchSourcesEffectiveness(): Promise<{ sources: SourceScorecardItem[] }> {
-  const res = await authedFetch(`${API_BASE}/analytics/sources-effectiveness`);
+export async function fetchSourcesEffectiveness(candidateId: string): Promise<{ candidate_id?: string; sources: SourceScorecardItem[] }> {
+  const res = await authedFetch(`${API_BASE}/analytics/sources-effectiveness?candidate_id=${encodeURIComponent(candidateId)}`);
   if (!res.ok) throw new Error('Failed to fetch source effectiveness scorecard');
   return res.json();
 }

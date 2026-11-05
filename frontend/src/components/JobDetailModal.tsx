@@ -108,7 +108,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         farhan_fit: overrideStatus === 'READY' ? 'READY' : overrideStatus === 'STRETCH_READY' ? 'STRETCH' : overrideStatus === 'NEEDS_REVIEW' ? 'REVIEW' : 'NOT_FIT',
         manual_override_status: overrideStatus,
         manual_override_reason: overrideReason.trim(),
-        qualification_reason: `Manual override by Farhan: ${overrideReason.trim()}`
+        qualification_reason: `Manual override by operator: ${overrideReason.trim()}`
       };
       setJob(updatedJob);
       if (onJobUpdated) onJobUpdated(updatedJob);

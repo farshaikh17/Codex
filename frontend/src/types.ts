@@ -307,6 +307,10 @@ export interface JobSource {
 }
 
 export interface DiscoveryFunnelMetrics {
+  candidate_id?: string;
+  scope?: string;
+  as_of?: string;
+  stretch_ready_jobs?: number;
   total_employers: number;
   scanned_employers: number;
   total_scanned_jobs: number;
@@ -340,7 +344,10 @@ export interface SourceScorecardItem {
   source_name: string;
   adapter_type: string;
   organization_slug: string;
-  feed_url: string;
+  feed_url: string | null;
+  monitored?: boolean;
+  last_success_at?: string | null;
+  consecutive_failures?: number;
   careers_url?: string | null;
   india_hiring_evidence?: string | null;
   is_active: boolean;
@@ -348,7 +355,7 @@ export interface SourceScorecardItem {
   last_polled_at?: string | null;
   last_status: string;
   last_error?: string | null;
-  last_latency_ms: number;
+  last_latency_ms: number | null;
   total_jobs: number;
   relevant_jobs: number;
   eligible_jobs: number;

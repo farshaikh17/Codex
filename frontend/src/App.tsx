@@ -9,7 +9,8 @@ import {
   reloadSyntheticFixtures,
   fetchWeeklyMetrics,
   fetchIndiaRemoteSummary,
-  overrideJobQualification
+  overrideJobQualification,
+  isOperatorAuthenticated
 } from './api';
 import { PilotView } from './components/PilotView';
 import { Navbar, NavTab } from './components/Navbar';
@@ -24,6 +25,7 @@ import { AutomationDashboardView } from './components/AutomationDashboardView';
 import { GoogleSyncView } from './components/GoogleSyncView';
 import { IndiaRemoteView } from './components/IndiaRemoteView';
 import { DashboardOverview } from './components/DashboardOverview';
+import { AuthModal } from './components/AuthModal';
 
 export const App: React.FC = () => {
   const [activeTab, changeActiveTab] = useState<NavTab>('dashboard');
@@ -60,9 +62,13 @@ export const App: React.FC = () => {
   
 
   // Global auth event listener for automatic modal trigger on 401/403
+  const [authOpen, setAuthOpen] = useState<boolean>(false);
+  const [isOperator, setIsOperator] = useState<boolean>(isOperatorAuthenticated());
   useEffect(() => {
     const handleAuthRequired = () => {
-      // Auth disabled per user request
+      // The Worker answered 401/403: the key is missing, wrong or rotated. Drop it and ask again.
+      setIsOperator(false);
+      setAuthOpen(true);
     };
     window.addEventListener('operator-auth-required', handleAuthRequired);
     return () => window.removeEventListener('operator-auth-required', handleAuthRequired);
@@ -218,9 +224,20 @@ export const App: React.FC = () => {
         onReloadFixtures={handleReloadFixtures}
         isLoading={isLoading}
         pilotActive={activeTab === 'pilot'}
+        isOperator={isOperator}
+        onOpenAuth={() => setAuthOpen(true)}
         
         
       />
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onAuthChange={(authed) => {
+          setIsOperator(authed);
+          if (authed) loadData();
+        }}
+      />
+
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'pilot' ? <PilotView /> : error ? (
@@ -417,7 +434,7 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'analytics' && (
-              <AnalyticsView analytics={analytics} />
+              <AnalyticsView key={candidateId} analytics={analytics} candidateId={candidateId} />
             )}
 
             {activeTab === 'profile' && profile && (

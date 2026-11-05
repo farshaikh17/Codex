@@ -230,7 +230,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
             <div>
               <label className="font-semibold text-slate-700 block mb-1">Education & Technical Background:</label>
               <div className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-slate-700 font-medium">
-                <span>{formData.education || (profile.id === "sana_ansari" ? "B.Tech in Electrical Engineering" : "Relevant Technical Degree")}</span>
+                <span>{formData.education || (profile.id === "sana_ansari" ? "B.Tech in Electrical Engineering" : "BMS in Marketing")}</span>
                 <span className="ml-2 text-[11px] text-slate-400 font-normal">(Authoritative profile)</span>
               </div>
             </div>

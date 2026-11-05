@@ -18,35 +18,48 @@ import {
 
 interface AnalyticsViewProps {
   analytics: AnalyticsData | null;
+  candidateId: string;
 }
 
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
+const CANDIDATE_LABELS: Record<string, string> = { farhan_shaikh: 'Farhan', sana_ansari: 'Sana' };
+
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics, candidateId }) => {
+  const candidateLabel = CANDIDATE_LABELS[candidateId] || candidateId;
   const [tab, setTab] = useState<'funnel' | 'sources' | 'overview'>('funnel');
   const [funnel, setFunnel] = useState<DiscoveryFunnelMetrics | null>(null);
   const [scorecard, setScorecard] = useState<SourceScorecardItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const requestSeq = React.useRef(0);
+
   const loadData = async () => {
+    const seq = ++requestSeq.current;
     setIsLoading(true);
     setError(null);
+    setFunnel(null);
+    setScorecard([]);
     try {
       const [fData, sData] = await Promise.all([
-        fetchDiscoveryFunnel(),
-        fetchSourcesEffectiveness()
+        fetchDiscoveryFunnel(candidateId),
+        fetchSourcesEffectiveness(candidateId)
       ]);
+      // A slower response for a previously selected candidate must never overwrite the current one.
+      if (seq !== requestSeq.current || fData.candidate_id !== candidateId) return;
       setFunnel(fData);
       setScorecard(sData.sources || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to load discovery analytics');
+      if (seq === requestSeq.current) setError(err.message || 'Failed to load discovery analytics');
     } finally {
-      setIsLoading(false);
+      if (seq === requestSeq.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+    return () => { requestSeq.current++; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candidateId]);
 
   // Render loading or view content
 
@@ -60,7 +73,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
             Discovery Coverage & Funnel Analytics
           </h2>
           <p className="text-xs text-slate-500">
-            Real-time pipeline metrics tracking genuine vacancy retrieval across 30+ official employer ATS feeds.
+            Current active inventory for {candidateLabel}, computed from the database on each load.
           </p>
         </div>
 
@@ -143,7 +156,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
                 {funnel.conversion_rates.qualification_rate_pct}%
               </span>
               <span className="text-[11px] text-slate-400">
-                {funnel.ready_jobs} meet all 6 criteria
+                {funnel.ready_jobs} currently READY
               </span>
             </div>
 
@@ -153,7 +166,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
                 {funnel.total_employers}
               </span>
               <span className="text-[11px] text-slate-400">
-                Across 5 official ATS feeds
+                Distinct employers in current inventory
               </span>
             </div>
           </div>
@@ -201,7 +214,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-blue-950">Stage A: Candidate-Target Retrieval</h4>
-                    <p className="text-xs text-blue-700">Exact & adjacent roles (Tech Ops, Solutions, Integration, Automation, Staff Backend)</p>
+                    <p className="text-xs text-blue-700">Jobs not marked INELIGIBLE or CLOSED for this candidate</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -286,20 +299,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
                   <div>
                     <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-emerald-600" />
-                      Cumulative Benchmark READY Shortlist ({funnel.ready_jobs})
+                      READY Shortlist ({funnel.ready_jobs})
                     </h4>
                     <p className="text-xs text-emerald-800">
-                      Historical all-time benchmark across 156 ATS sources. Currently, Farhan has <strong>1 active open READY job</strong> in his review queue, with 2 Stretch Ready matches and 12 tracked applications.
+                      Current inventory for {candidateLabel}: <strong>{funnel.ready_jobs} READY</strong>, {funnel.stretch_ready_jobs ?? 0} Stretch Ready and {funnel.applications.total} tracked application records.
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-baseline justify-end gap-1.5">
                     <span className="text-2xl font-bold font-mono text-emerald-700">{funnel.ready_jobs}</span>
-                    <span className="text-xs font-semibold text-slate-500 uppercase font-mono">(All-Time)</span>
+                    <span className="text-xs font-semibold text-slate-500 uppercase font-mono">(current)</span>
                   </div>
                   <span className="text-xs text-emerald-700 font-medium block">
-                    1 Active Ready in Review Queue
+                    Active READY in review queue
                   </span>
                   <span className="text-[11px] text-slate-400 block">
                     {funnel.conversion_rates.overall_funnel_efficiency_pct}% overall yield
@@ -361,6 +374,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics }) => {
                           {s.adapter_type}
                         </span>
                         <span className="text-[10px] text-slate-400">{s.organization_slug}</span>
+                      </div>
+                      <div className="mt-0.5 text-[10px] text-slate-500">
+                        {s.monitored === false
+                          ? 'Not polled by the Worker (imported by the GitHub collector)'
+                          : `Worker poll: ${s.last_status}${s.last_polled_at ? ` at ${s.last_polled_at}` : ''}${s.last_error ? ` - ${s.last_error}` : ''}`}
                       </div>
                     </td>
 

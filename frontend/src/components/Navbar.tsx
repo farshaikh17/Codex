@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Sliders, BarChart3, BookmarkCheck, RefreshCw, ShieldCheck, Radio, LayoutDashboard, Zap, Users } from 'lucide-react';
+import { Briefcase, Sliders, BarChart3, BookmarkCheck, RefreshCw, ShieldCheck, Radio, LayoutDashboard, Zap, Users, Lock, Unlock } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
 
@@ -12,6 +12,8 @@ interface NavbarProps {
   onReloadFixtures: () => void;
   isLoading: boolean;
   pilotActive?: boolean;
+  isOperator?: boolean;
+  onOpenAuth?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,6 +25,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onReloadFixtures,
   isLoading,
   pilotActive: _pilotActive,
+  isOperator = false,
+  onOpenAuth,
 }) => {
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40">
@@ -165,6 +169,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-400' : ''}`} />
+          </button>
+
+          <button
+            aria-label={isOperator ? 'Operator session: unlocked' : 'Operator session: locked, click to unlock'}
+            onClick={onOpenAuth}
+            title={isOperator ? 'Operator session: unlocked' : 'Operator session: locked (click to unlock)'}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+          >
+            {isOperator ? <Unlock className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-amber-400" />}
           </button>
 
           </nav>

@@ -94,10 +94,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Tech Ops Lead • CRM & Workflow Automation • 100% Remote Worldwide Only
+                  Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)
                 </p>
                 <p className="text-[11px] text-emerald-400 font-medium mt-0.5">
-                  Floor: ₹14.4L/yr ($25/hr) • Target Strategy: 70 / 20 / 10
+                  Floor: ₹120,000/month fixed, or $25/hour contract • Target Strategy: 70 / 20 / 10
                 </p>
               </div>
 

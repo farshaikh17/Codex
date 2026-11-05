@@ -96,11 +96,11 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                 <Globe2 className="w-3.5 h-3.5" />
                 AFFIRMATIVE INDIA REMOTE QUEUE
               </span>
-              <span className="text-slate-400 text-xs">Decoupled Remote Eligibility & Farhan Fit</span>
+              <span className="text-slate-400 text-xs">Decoupled Remote Eligibility & Candidate Fit</span>
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white">Confirmed India Remote Opportunities</h1>
             <p className="text-slate-300 text-sm mt-1 max-w-2xl leading-relaxed">
-              Every vacancy in this queue is verified with affirmative evidence allowing remote work from India. Opportunities are cleanly segmented into Farhan target fit, stretch matches, review cases, and unaligned technical roles.
+              Every vacancy in this queue is verified with affirmative evidence allowing remote work from India. Opportunities are cleanly segmented into candidate target fit, stretch matches, review cases, and unaligned technical roles.
             </p>
           </div>
           <div className="flex items-center gap-2">
