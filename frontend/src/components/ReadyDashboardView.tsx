@@ -52,12 +52,16 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   const [auditTrail, setAuditTrail] = useState<QualificationAuditRecord[]>([]);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
 
+  const readySeq = React.useRef(0);
   const loadData = async () => {
+    const seq = ++readySeq.current;
+    const fresh = () => seq === readySeq.current;
     setIsLoading(true);
     try {
       setMetrics(null); setProfile(null); setJobs([]);
-      fetchWeeklyMetrics(candidateId).then(data => setMetrics(data)).catch(() => {});
+      fetchWeeklyMetrics(candidateId).then(data => { if (fresh()) setMetrics(data); }).catch(() => {});
       fetchProfile(candidateId).then(data => {
+        if (!fresh()) return;
         setProfile(data);
         setThresholdInput(data.qualification_threshold ?? (candidateId === 'sana_ansari' ? 60 : 70));
       }).catch(() => {});
@@ -69,8 +73,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
         exclude_applied: true,
         limit: 500
       });
+      if (!fresh()) return;
       setJobs(paginatedResult.jobs);
     } catch (err: any) {
+      if (!fresh()) return;
       setNotification({ type: 'error', message: err.message || 'Failed to load qualification pipeline data.' });
     } finally {
       setIsLoading(false);

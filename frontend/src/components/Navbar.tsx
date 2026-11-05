@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
           <span>
-            <strong className="font-semibold uppercase tracking-wider">Cloud Engine:</strong> Multi-Candidate Career Engine running on Cloudflare Workers &amp; D1. Independent pipelines for Farhan Shaikh and Sana Ansari.
+            <strong className="font-semibold uppercase tracking-wider">Cloud Engine:</strong> Multi-Candidate Career Engine running on Cloudflare Workers &amp; D1. Independent pipelines per candidate.
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 text-emerald-400/80 text-[11px]">
@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Career Job Engine
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-medium">Multi-Candidate</span>
             </h1>
-            <p className="text-xs text-slate-400">Farhan Shaikh • Sana Ansari</p>
+            <p className="text-xs text-slate-400">Farhan • Sana</p>
           </div>
         </div>
 

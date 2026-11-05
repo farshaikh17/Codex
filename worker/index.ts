@@ -12,6 +12,64 @@ export interface Env {
   ADMIN_API_KEY?: string;
 }
 
+// -------------------------------------------------------------
+// Candidate facts supplied by the candidates themselves (private: served only through authenticated routes, never
+// bundled into the public frontend). Anything not listed is unknown and stays unknown.
+// -------------------------------------------------------------
+interface EmploymentEntry { role: string; employer: string; from: string; to: string | null; note?: string }
+const CANDIDATE_FACTS: Record<string, {
+  display_title: string; education_short: string; education_detail: string; summary_line: string; career_start: string | null; employment_history: EmploymentEntry[];
+}> = {
+  farhan_shaikh: {
+    display_title: 'Technical Operations & Workflow Automation Engineering',
+    education_short: 'BMS Marketing',
+    education_detail: 'BMS in Marketing',
+    summary_line: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)',
+    career_start: null, // total years are not derivable from the dates supplied; the stored value is used and labelled as stored
+    employment_history: [{ role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'five direct reports' }],
+  },
+  sana_ansari: {
+    display_title: 'Power Plant Operations & Industrial Reliability Engineering',
+    education_short: 'B.Tech Electrical',
+    education_detail: 'B.Tech in Electrical Engineering, Rajasthan Technical University, 2016',
+    summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Transition',
+    career_start: '2017-09-01',
+    employment_history: [
+      { role: 'Maintenance (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
+      { role: 'Operations (Kota)', employer: 'RRVUNL', from: '2025-02', to: null },
+    ],
+  },
+};
+
+/** Years since a YYYY-MM-DD start, one decimal (365.25-day years). */
+function yearsSince(start: string, now: Date = new Date()): number {
+  const ms = now.getTime() - new Date(start + 'T00:00:00Z').getTime();
+  return Math.max(0, Math.round((ms / (365.25 * 86400000)) * 10) / 10);
+}
+
+function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) {
+  const f = CANDIDATE_FACTS[candidateId];
+  const fromDates = !!f?.career_start;
+  const stored = cand?.total_years_experience ?? null;
+  const inr = (n: number) => '₹' + Number(n).toLocaleString('en-IN');
+  let pay: string;
+  if (candidateId === 'farhan_shaikh') {
+    pay = `Monthly cash floor: ${inr(cand?.cash_floor_inr_monthly ?? 120000)} fixed, or $${cand?.min_acceptable_salary_usd ?? 25}/hour contract (no guaranteed minimum hours). Preferred: ₹25–30 LPA+. Notice: 30 days.`;
+  } else {
+    pay = 'Pay floor and notice period: unknown (not provided).';
+  }
+  return {
+    display_title: f?.display_title || '',
+    education_short: f?.education_short || '',
+    education_detail: f?.education_detail || cand?.education || '',
+    summary_line: f?.summary_line || '',
+    pay_line: pay,
+    employment_history: f?.employment_history || [],
+    total_years_experience: fromDates ? yearsSince(f!.career_start!, now) : stored,
+    years_basis: fromDates ? `computed from career start ${f!.career_start!.slice(0, 7)}` : 'stored value (no dated history supplied)',
+  };
+}
+
 // Standard CORS headers
 function corsHeaders(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get('Origin') || '*';
@@ -53,7 +111,9 @@ const AUTH_MAX_FAILURES = 8;
 const AUTH_WINDOW_SECONDS = 15 * 60;
 
 async function clientKey(request: Request): Promise<string> {
-  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+  // Only CF-Connecting-IP is trusted: Cloudflare sets it itself. X-Forwarded-For is caller-controlled and would let an
+  // attacker pick a fresh bucket for every guess.
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('career-job-engine:' + ip));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -72,18 +132,26 @@ async function lockoutSeconds(env: Env, key: string): Promise<number> {
   }
 }
 
-async function recordAuthFailure(env: Env, key: string): Promise<void> {
+/** Counts one wrong key atomically (single upsert) and returns the failures now in the window, or 0 if unavailable. */
+async function recordAuthFailure(env: Env, key: string): Promise<number> {
   try {
     const now = Math.floor(Date.now() / 1000);
-    await env.DB.prepare(`
+    const row = await env.DB.prepare(`
       INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at) VALUES (?, 1, ?, ?)
       ON CONFLICT(ip_hash) DO UPDATE SET
         failures = CASE WHEN ? - window_start >= ? THEN 1 ELSE failures + 1 END,
         window_start = CASE WHEN ? - window_start >= ? THEN ? ELSE window_start END,
         updated_at = ?
-    `).bind(key, now, now, now, AUTH_WINDOW_SECONDS, now, AUTH_WINDOW_SECONDS, now, now).run();
+      RETURNING failures
+    `).bind(key, now, now, now, AUTH_WINDOW_SECONDS, now, AUTH_WINDOW_SECONDS, now, now).first<{ failures: number }>();
+    // Retention: rows idle for a day are irrelevant; trimming rides on a failure, so the table cannot grow unbounded.
+    if (Math.random() < 0.05) {
+      await env.DB.prepare('DELETE FROM auth_failures WHERE updated_at < ?').bind(now - 24 * 3600).run();
+    }
+    return row?.failures ?? 0;
   } catch (err) {
     console.warn('auth limiter unavailable (record):', (err as Error).message);
+    return 0;
   }
 }
 
@@ -110,10 +178,25 @@ async function checkOperatorAuth(request: Request, env: Env): Promise<Response |
   const wait = await lockoutSeconds(env, ck);
   if (wait > 0) return tooManyAttempts(request, env, wait);
   if (!timingSafeEqual(match[1].trim(), env.ADMIN_API_KEY)) {
-    await recordAuthFailure(env, ck);
+    const n = await recordAuthFailure(env, ck);
+    // The attempt that crosses the limit is already answered 429, so at most AUTH_MAX_FAILURES wrong keys get a 403
+    // per window even when guesses are sent concurrently.
+    if (n > AUTH_MAX_FAILURES) return tooManyAttempts(request, env, AUTH_WINDOW_SECONDS);
     return jsonResponse({ error: 'Invalid operator access key.' }, 403, cors);
   }
   return null;
+}
+
+// Candidate isolation: a candidate-scoped route never falls back to a default candidate.
+const CANDIDATE_IDS = new Set(['farhan_shaikh', 'sana_ansari']);
+function knownCandidate(value: unknown): string | null {
+  return typeof value === 'string' && CANDIDATE_IDS.has(value) ? value : null;
+}
+function badCandidate(request: Request, env: Env, given: unknown): Response {
+  return jsonResponse({
+    error: given ? `Unknown candidate_id '${String(given).slice(0, 40)}'.` : 'candidate_id is required for this endpoint.',
+    allowed_candidate_ids: [...CANDIDATE_IDS],
+  }, 400, corsHeaders(request, env));
 }
 
 // Router abstraction without external dependencies
@@ -291,7 +374,8 @@ router.post('/api/auth/verify', async (request, env) => {
     const wait = await lockoutSeconds(env, ck);
     if (wait > 0) return tooManyAttempts(request, env, wait);
     if (!timingSafeEqual(key, env.ADMIN_API_KEY)) {
-      await recordAuthFailure(env, ck);
+      const n = await recordAuthFailure(env, ck);
+      if (n > AUTH_MAX_FAILURES) return tooManyAttempts(request, env, AUTH_WINDOW_SECONDS);
       return jsonResponse({ error: 'Invalid operator access key.' }, 403, corsHeaders(request, env));
     }
     await clearAuthFailures(env, ck);
@@ -583,10 +667,10 @@ router.get('/api/dashboard/overview', async (request, env) => {
       `).bind(cid).first<any>();
 
       const { results: qRows } = await env.DB.prepare(`
-        SELECT qualification_status, strategy_lane, COUNT(*) as cnt
-        FROM candidate_qualifications
-        WHERE candidate_id = ?
-        GROUP BY qualification_status, strategy_lane
+        SELECT q.qualification_status, q.strategy_lane, COUNT(*) as cnt
+        FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+        WHERE q.candidate_id = ? AND j.is_active = 1
+        GROUP BY q.qualification_status, q.strategy_lane
       `).bind(cid).all<any>();
 
       const statusMap: Record<string, number> = {};
@@ -605,8 +689,11 @@ router.get('/api/dashboard/overview', async (request, env) => {
       const totalReady = (readyLaneMap['STRONGEST_FIT'] || 0) + (readyLaneMap['BRIDGE'] || 0) + (readyLaneMap['DREAM'] || 0) || 1;
 
       const appCnt = await env.DB.prepare(`
-        SELECT COUNT(*) as cnt FROM applications WHERE candidate_id = ?
-      `).bind(cid).first<{ cnt: number }>();
+        SELECT COUNT(*) as records,
+               SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
+        FROM applications WHERE candidate_id = ?
+      `).bind(cid).first<{ records: number; applied: number }>();
+      const facts = candidateFacts(cid, cand);
 
       const target_distribution = {
         strongest_fit: cand?.strongest_fit_target_pct ?? (cid === 'sana_ansari' ? 20.0 : 70.0),
@@ -642,8 +729,15 @@ router.get('/api/dashboard/overview', async (request, env) => {
         stretch_count: statusMap['STRETCH_READY'] || 0,
         review: statusMap['NEEDS_REVIEW'] || 0,
         review_count: statusMap['NEEDS_REVIEW'] || 0,
-        applied: appCnt?.cnt || 0,
-        applied_count: appCnt?.cnt || 0,
+        // applied = records in an applied stage; application_records = every tracker record (saved, rejected, ...)
+        applied: appCnt?.applied || 0,
+        applied_count: appCnt?.applied || 0,
+        application_records: appCnt?.records || 0,
+        display_title: facts.display_title,
+        education_short: facts.education_short,
+        summary_line: facts.summary_line,
+        pay_line: facts.pay_line,
+        counts_scope: 'active jobs only',
         target: target_distribution,
         target_distribution,
         discovery: actual_discovery_distribution,
@@ -662,8 +756,8 @@ router.get('/api/dashboard/overview', async (request, env) => {
     return jsonResponse({
       farhan: farhanCard,
       sana: sanaCard,
-      total_jobs_tracked: totalJobs?.cnt || 1161,
-      active_jobs_count: activeJobs?.cnt || 1159,
+      total_jobs_tracked: totalJobs?.cnt ?? 0,
+      active_jobs_count: activeJobs?.cnt ?? 0,
       automation_status: (await env.DB.prepare('SELECT enabled FROM cloud_automation WHERE id=1').first<{enabled:number}>())?.enabled ? 'ACTIVE' : 'PAUSED',
     }, 200, corsHeaders(request, env));
   } catch (err: any) {
@@ -733,7 +827,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 
 // Comprehensive /api/jobs for React Frontend
 router.get('/api/jobs', async (request, env, _params, url) => {
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const search = url.searchParams.get('search');
   const eligibility = url.searchParams.get('eligibility');
   const minScore = parseInt(url.searchParams.get('min_score') || '0', 10);
@@ -975,7 +1070,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 
 router.get('/api/jobs/:id', async (request, env, params, url) => {
   const jobId = params.id;
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
     const job = await env.DB.prepare(`
       SELECT 
@@ -1032,7 +1128,8 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
 
 router.get('/api/jobs/:id/explanation', async (request, env, params, url) => {
   const jobId = params.id;
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
     const job = await env.DB.prepare(`
       SELECT 
@@ -1077,7 +1174,8 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
   const jobId = params.id;
   try {
     const body = await request.json<any>();
-    const candidateId = body?.candidate_id || url.searchParams.get('candidate_id') || 'farhan_shaikh';
+    const candidateId = knownCandidate(body?.candidate_id ?? url.searchParams.get('candidate_id'));
+    if (!candidateId) return badCandidate(request, env, body?.candidate_id ?? url.searchParams.get('candidate_id'));
     const rating = body?.rating || 'UP';
     const notes = body?.notes || null;
 
@@ -1172,7 +1270,8 @@ router.get('/api/candidates/:id/applications', async (request, env, params) => {
 
 // Top-level /api/applications router
 router.get('/api/applications', async (request, env, _params, url) => {
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const filterStatus = url.searchParams.get('status');
 
   try {
@@ -1243,7 +1342,8 @@ router.get('/api/applications', async (request, env, _params, url) => {
 async function handleApplicationSave(request: Request, env: Env, explicitCandidateId?: string) {
   try {
     const body = await request.json<any>();
-    const candidateId = explicitCandidateId || body.candidate_id || 'farhan_shaikh';
+    const candidateId = knownCandidate(explicitCandidateId ?? body.candidate_id);
+    if (!candidateId) return badCandidate(request, env, explicitCandidateId ?? body.candidate_id);
     const {
       job_id,
       status,
@@ -1385,7 +1485,8 @@ router.post('/api/applications', async (request, env) => {
 // Application History Audit Trail
 router.get('/api/applications/:id/history', async (request, env, params, url) => {
   const jobId = params.id;
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
     const { results } = await env.DB.prepare(`
       SELECT 
@@ -1413,7 +1514,8 @@ router.get('/api/applications/:id/history', async (request, env, params, url) =>
 // -------------------------------------------------------------
 
 router.get('/api/india-remote/summary', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
     const row = await env.DB.prepare(`
@@ -1447,8 +1549,9 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
   // Delegate to /api/jobs with eligibility=ELIGIBLE
   url.pathname = '/api/jobs';
   url.searchParams.set('eligibility', 'ELIGIBLE');
-  // The caller's candidate is kept; an absent one keeps the historical default.
-  url.searchParams.set('candidate_id', url.searchParams.get('candidate_id') || 'farhan_shaikh');
+  const candidateId = knownCandidate(url.searchParams.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url.searchParams.get('candidate_id'));
+  url.searchParams.set('candidate_id', candidateId);
   return router.handle(new Request(url.toString(), request), env);
 });
 
@@ -1457,7 +1560,8 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
 // -------------------------------------------------------------
 
 router.get('/api/analytics', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
     // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs.
@@ -1525,7 +1629,8 @@ router.get('/api/analytics', async (request, env, _params, url) => {
 const pct1 = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1000) / 10 : 0);
 
 router.get('/api/analytics/discovery', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
     // Current inventory for ONE candidate: active jobs joined to that candidate's qualification and score.
     const { results: rows } = await env.DB.prepare(`
@@ -1589,7 +1694,8 @@ router.get('/api/analytics/discovery', async (request, env, _params, url) => {
 });
 
 router.get('/api/analytics/sources-effectiveness', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
     // Job statistics per source key, for this candidate. Jobs carry source_id when a Worker-monitored source found them.
     const { results: stats } = await env.DB.prepare(`
@@ -1669,28 +1775,29 @@ router.get('/api/analytics/sources-effectiveness', async (request, env, _params,
 // -------------------------------------------------------------
 
 router.get('/api/qualification/metrics', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const bounds = getNyWeekBounds();
 
   try {
     const readyCnt = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications 
-      WHERE candidate_id = ? AND qualification_status IN ('READY', 'READY_HIGH')
+      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status IN ('READY', 'READY_HIGH')
     `).bind(candidateId).first<{ cnt: number }>();
 
     const stretchCnt = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications 
-      WHERE candidate_id = ? AND qualification_status = 'STRETCH_READY'
+      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'STRETCH_READY'
     `).bind(candidateId).first<{ cnt: number }>();
 
     const reviewCnt = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications 
-      WHERE candidate_id = ? AND qualification_status = 'NEEDS_REVIEW'
+      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'NEEDS_REVIEW'
     `).bind(candidateId).first<{ cnt: number }>();
 
     const ineligCnt = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications 
-      WHERE candidate_id = ? AND qualification_status IN ('INELIGIBLE', 'HOLD')
+      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status IN ('INELIGIBLE', 'HOLD')
     `).bind(candidateId).first<{ cnt: number }>();
 
     const candThreshold = await env.DB.prepare(`
@@ -1739,6 +1846,7 @@ router.get('/api/qualification/metrics', async (request, env, _params, url) => {
         NEEDS_REVIEW: reviewCnt?.cnt || 0,
         INELIGIBLE: ineligCnt?.cnt || 0
       },
+      inventory_scope: 'Open inventory counts cover active jobs only; new_qualified_this_week counts jobs whose READY qualification time falls in the current week.',
       disclaimer: 'America/New_York weekly cohort research metrics scoped to candidate.',
     }, 200, corsHeaders(request, env));
   } catch (err: any) {
@@ -1756,8 +1864,8 @@ router.post('/api/jobs/:id/qualification-override', async (request, env, params)
     const newStatus = body?.status;
     const reason = typeof body?.reason === 'string' ? body.reason.trim() : '';
     const reviewer = typeof body?.reviewer === 'string' && body.reviewer.trim() ? body.reviewer.trim() : 'Candidate';
-    const candidateId = body?.candidate_id || 'farhan_shaikh';
-    if (!['farhan_shaikh', 'sana_ansari'].includes(candidateId) || !['READY','STRETCH_READY','NEEDS_REVIEW','INELIGIBLE','HOLD','CLOSED'].includes(newStatus) || reason.length < 3) {
+    const candidateId = body?.candidate_id;
+    if (!knownCandidate(candidateId) || !['READY','STRETCH_READY','NEEDS_REVIEW','INELIGIBLE','HOLD','CLOSED'].includes(newStatus) || reason.length < 3) {
       return jsonResponse({error:'Choose a valid candidate, qualification status and reason. Application status must be changed in the tracker.'},400,corsHeaders(request,env));
     }
 
@@ -1804,7 +1912,8 @@ router.post('/api/jobs/:id/qualification-override', async (request, env, params)
 
 router.get('/api/jobs/:id/qualification-audit', async (request, env, params, url) => {
   const jobId = params.id;
-  const candidateId = url.searchParams.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const current = await env.DB.prepare('SELECT qualification_status, manual_override_status, manual_override_reason, qualified_at, last_reverified_at FROM candidate_qualifications WHERE candidate_id=? AND job_id=?').bind(candidateId,jobId).first<any>();
   
   // Query persistent qualification_history records ordered by creation
@@ -1830,12 +1939,13 @@ router.get('/api/jobs/:id/qualification-audit', async (request, env, params, url
 });
 
 router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const bounds = getNyWeekBounds();
 
   try {
     // 1. Lifetime / all-time global inventory (explicitly labeled)
-    const lifetimeTotalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
+    const lifetimeTotalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs').first<{ cnt: number }>();
     const lifetimeActiveJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
     const lifetimeClosedJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 0').first<{ cnt: number }>();
 
@@ -1955,7 +2065,8 @@ router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
 });
 
 router.get('/api/profile', async (request, env, _params, url) => {
-  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
     const cand = await env.DB.prepare(`
@@ -1968,12 +2079,13 @@ router.get('/api/profile', async (request, env, _params, url) => {
 
     // Authoritative profile fields scoped strictly to selected candidate
     const isSana = cand.id === 'sana_ansari';
+    const facts = candidateFacts(cand.id, cand);
 
     return jsonResponse({
       id: cand.id,
       full_name: cand.full_name,
       // The stored value wins; the fallbacks are the candidates' own documented degrees, never a generic placeholder.
-      education: cand.education || (isSana ? 'B.Tech in Electrical Engineering' : 'BMS in Marketing'),
+      education: cand.education || facts.education_detail,
       current_location: cand.current_location,
       citizenship: cand.citizenship || 'India',
       primary_timezone: cand.primary_timezone || 'Asia/Kolkata',
@@ -2026,7 +2138,13 @@ router.get('/api/profile', async (request, env, _params, url) => {
       work_authorization: ['India Citizen'],
       profile_basis: isSana ? 'Authoritative Candidate Search Brief: Sana Ansari' : 'Authoritative Candidate Search Brief: Farhan Shaikh',
       disqualifying_keywords: cand.disqualifying_keywords ? JSON.parse(cand.disqualifying_keywords) : ['US Citizen Only', 'Security Clearance', 'ITAR'],
-      total_years_experience: cand.total_years_experience,
+      total_years_experience: facts.total_years_experience,
+      years_basis: facts.years_basis,
+      display_title: facts.display_title,
+      education_short: facts.education_short,
+      summary_line: facts.summary_line,
+      pay_line: facts.pay_line,
+      employment_history: facts.employment_history,
       target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : (isSana ? ['MID', 'SENIOR', 'LEAD'] : ['SENIOR', 'LEAD', 'STAFF']),
       qualification_threshold: cand.qualification_threshold,
     }, 200, corsHeaders(request, env));
@@ -2038,9 +2156,9 @@ router.get('/api/profile', async (request, env, _params, url) => {
 router.put('/api/profile', async (request, env, _params, url) => {
   try {
     const body = await request.json<any>();
-    const candidateId = url?.searchParams?.get('candidate_id') || body.id || 'farhan_shaikh';
+    const candidateId = url?.searchParams?.get('candidate_id') || body.id;
 
-    if (!['farhan_shaikh', 'sana_ansari'].includes(candidateId)) {
+    if (!knownCandidate(candidateId)) {
       return jsonResponse({ error: 'Valid candidate_id parameter is required for profile mutation.' }, 400, corsHeaders(request, env));
     }
     // A form that still carries the other candidate's id must never overwrite this candidate's record.

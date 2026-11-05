@@ -1,0 +1,126 @@
+name: Release to production (manual)
+# The ONLY path that changes production. Manual, from main, one run at a time, and it re-runs every check itself so
+# it cannot bypass them. Nothing here is triggered by a push, a schedule or another workflow.
+#
+# Repository secrets needed (Settings > Secrets and variables > Actions), set once in the GitHub UI, never in chat:
+#   CLOUDFLARE_API_TOKEN   token for the account that owns the career-job-engine Worker and D1 database
+#                          (permissions: Workers Scripts Edit, D1 Edit, Workers Routes Edit if used; no Billing)
+#   CLOUDFLARE_ACCOUNT_ID  must equal account_id in wrangler.toml, or the run stops before touching anything
+# Optional:
+#   NEW_ADMIN_API_KEY      only for the rotate_key input: the new operator key you generated yourself
+#   OPERATOR_SMOKE_KEY     lets the post-deploy smoke test run its authenticated checks
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha:
+        description: 'Full commit SHA of main you intend to release (must equal the commit this run uses)'
+        required: true
+        type: string
+      rotate_key:
+        description: 'Replace ADMIN_API_KEY with the NEW_ADMIN_API_KEY secret (leave off to keep the current key)'
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Guard - main only, exact commit
+        run: |
+          [ "${{ github.ref }}" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on ${{ github.ref }})"; exit 1; }
+          [ "${{ inputs.confirm_sha }}" = "${{ github.sha }}" ] || { echo "::error::confirm_sha does not match the commit being released (${{ github.sha }})"; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run verify
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+
+      - name: Preflight - correct account, secret present, record rollback points (read-only)
+        run: |
+          set -euo pipefail
+          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets"; exit 1; }
+          EXPECTED=$(grep -E '^account_id' wrangler.toml | sed -E 's/.*"([0-9a-f]+)".*/\1/')
+          [ "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED" ] || { echo "::error::CLOUDFLARE_ACCOUNT_ID is not the account in wrangler.toml; stopping before any change"; exit 1; }
+          {
+            echo "### Release preflight"
+            echo "- commit: \`${{ github.sha }}\`"
+            echo "- account matches wrangler.toml: yes"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if npx wrangler secret list --format json | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));process.exit(s.some(x=>x.name==='ADMIN_API_KEY')?0:1)"; then
+            echo "- ADMIN_API_KEY present (value never read): yes" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ inputs.rotate_key }}" = "true" ]; then
+            echo "- ADMIN_API_KEY present: no (will be created by rotate_key)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::ADMIN_API_KEY is not set in Cloudflare. Re-run with rotate_key after adding the NEW_ADMIN_API_KEY secret."; exit 1
+          fi
+          { echo '- current deployments (rollback target = the newest line before this release):'; echo '```'; npx wrangler deployments list | tail -n 12; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '- D1 restore bookmark:'; echo '```'; npx wrangler d1 time-travel info career-job-engine; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fingerprint protected records before
+        run: node scripts/fingerprint.mjs --remote > before.json && cat before.json
+
+      - name: Add the guess-limiter table (additive, idempotent; migrations 0001-0007 are NOT replayed)
+        run: npx wrangler d1 execute career-job-engine --remote --file=migrations/0008_auth_failures.sql
+
+      - name: Rotate operator key (only when requested)
+        if: ${{ inputs.rotate_key }}
+        env:
+          NEW_ADMIN_API_KEY: ${{ secrets.NEW_ADMIN_API_KEY }}
+        run: |
+          [ -n "$NEW_ADMIN_API_KEY" ] || { echo "::error::NEW_ADMIN_API_KEY secret is empty"; exit 1; }
+          printf '%s' "$NEW_ADMIN_API_KEY" | npx wrangler secret put ADMIN_API_KEY
+
+      - name: Build and deploy
+        run: |
+          npm run build:frontend
+          npx wrangler deploy 2>&1 | tee deploy.log
+          VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
+          echo "- deployed version: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test
+        env:
+          SMOKE_BASE: https://career-job-engine.farshaikh17.workers.dev
+          SMOKE_KEY: ${{ secrets.OPERATOR_SMOKE_KEY }}
+        run: node scripts/post_deploy_smoke.mjs
+
+      - name: Fingerprint protected records after and compare
+        run: |
+          node scripts/fingerprint.mjs --remote > after.json
+          node -e "
+            const b=require('./before.json'),a=require('./after.json');let bad=0;const lines=['| table | rows before | rows after | identical |','|---|---|---|---|'];
+            for(const t of ['applications','application_history','manual_overrides','candidates']){const same=b[t].sha256===a[t].sha256;if(!same)bad++;lines.push('| '+t+' | '+b[t].rows+' | '+a[t].rows+' | '+(same?'yes':'**NO**')+' |');}
+            for(const t of ['qualifications','scores']){lines.push('| '+t+' (informational: the collector may legitimately write) | '+b[t].rows+' | '+a[t].rows+' | '+(b[t].sha256===a[t].sha256?'yes':'changed')+' |');}
+            require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n### Protected records, field-level\n'+lines.join('\n')+'\n');
+            console.log(lines.join('\n'));
+            if(bad){console.error('Protected records changed during the release');process.exit(1);}"
+
+      - name: How to roll back (only shown on failure)
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "### The release did not complete"
+            echo "Prefer a forward fix. To restore the previous Worker and frontend: \`npx wrangler rollback <previous version id from the preflight list>\`."
+            echo "The previous Worker has no API authentication, so only use it if the new one is unusable."
+          } >> "$GITHUB_STEP_SUMMARY"

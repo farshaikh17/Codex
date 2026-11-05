@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 
 interface ApplicationTrackerProps {
+  candidateId: string;
   jobs: Job[];
   onSelectJob: (job: Job) => void;
 }
 
 export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
+  candidateId,
   jobs,
   onSelectJob
 }) => {
@@ -30,10 +32,13 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchCohortMetrics()
-      .then(setCohortMetrics)
+    let current = true;
+    setCohortMetrics(null);
+    fetchCohortMetrics(candidateId)
+      .then((m) => { if (current) setCohortMetrics(m); })
       .catch((err) => console.error('Failed to load cohort metrics', err));
-  }, []);
+    return () => { current = false; };
+  }, [candidateId]);
 
   const openHistoryModal = async (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();

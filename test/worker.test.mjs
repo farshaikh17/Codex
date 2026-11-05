@@ -157,7 +157,7 @@ test('source scorecard application counts come from the applications table', asy
 });
 
 // ---- guess limiter -------------------------------------------------------------------------------------------
-const callFrom = async (env, ip, key, method = 'GET', p = '/api/profile') => {
+const callFrom = async (env, ip, key, method = 'GET', p = '/api/profile?candidate_id=farhan_shaikh') => {
   const headers = { 'CF-Connecting-IP': ip };
   if (key) headers.Authorization = `Bearer ${key}`;
   const res = await worker.fetch(new Request('https://test.invalid' + p, { method, headers }), env, { waitUntil() {} });
@@ -225,4 +225,66 @@ test('the job list and its total are not multiplied by duplicate application row
   const after = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh&limit=50')).json;
   assert.equal(after.total, before.total); assert.equal(after.jobs.length, before.jobs.length);
   assert.deepEqual(after.status_counts, before.status_counts);
+});
+
+test('candidate isolation: scoped routes require a known candidate_id and never default to Farhan', async () => {
+  const { env } = fresh();
+  for (const p of ['/api/profile', '/api/jobs', '/api/applications', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness',
+                   '/api/qualification/metrics', '/api/cohorts/metrics', '/api/india-remote/summary', '/api/india-remote/jobs']) {
+    const none = await call(worker, env, 'GET', p);
+    assert.equal(none.status, 400, `${p} without candidate_id answered ${none.status}`);
+    const bad = await call(worker, env, 'GET', p + (p.includes('?') ? '&' : '?') + 'candidate_id=someone_else');
+    assert.equal(bad.status, 400, `${p} with an unknown candidate answered ${bad.status}`);
+  }
+  for (const body of [{ job_id: 'j1', status: 'SAVED' }, { candidate_id: 'nobody', job_id: 'j1', status: 'SAVED' }]) {
+    assert.equal((await call(worker, env, 'POST', '/api/applications', { body })).status, 400);
+  }
+  assert.equal((await call(worker, env, 'POST', '/api/jobs/j1/qualification-override', { body: { status: 'READY', reason: 'because' } })).status, 400);
+});
+
+test('limiter: concurrent wrong guesses are counted exactly; X-Forwarded-For cannot pick a fresh bucket; idle rows are trimmed', async () => {
+  const { sqlite, env } = fresh();
+  const attempt = (xff, i) => worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '203.0.113.99', 'X-Forwarded-For': xff, Authorization: 'Bearer g' + i } }), env, { waitUntil() {} }).then((r) => r.status);
+  const statuses = await Promise.all(Array.from({ length: 30 }, (_, i) => attempt('10.0.0.' + i, i)));
+  assert.equal(statuses.filter((s) => s === 403).length, 8, 'exactly 8 wrong guesses may be answered 403');
+  assert.equal(statuses.filter((s) => s === 429).length, 22);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 1, 'rotating X-Forwarded-For created extra buckets');
+  assert.ok(sqlite.prepare('SELECT failures FROM auth_failures').get().failures >= 8);
+  sqlite.prepare("INSERT INTO auth_failures VALUES ('stale',3,1,1)").run();
+  for (let i = 0; i < 300; i++) await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '198.51.100.' + (i % 250) + '.' + i, Authorization: 'Bearer n' + i } }), env, { waitUntil() {} });
+  assert.equal(sqlite.prepare("SELECT COUNT(*) c FROM auth_failures WHERE ip_hash='stale'").get().c, 0, 'rows idle for a day must be trimmed');
+});
+
+test('overview and metrics: active-only inventory, applied stage vs tracker records, no placeholder fallbacks', async () => {
+  const { sqlite, env } = fresh();
+  const o = (await call(worker, env, 'GET', '/api/dashboard/overview')).json;
+  assert.equal(o.total_jobs_tracked, 5); assert.equal(o.active_jobs_count, 4);
+  assert.equal(o.farhan.ready_count, 1); assert.equal(o.farhan.stretch_count, 1);
+  assert.equal(o.farhan.application_records, 2); assert.equal(o.farhan.applied_count, 1, 'only the APPLIED stage counts as applied');
+  assert.equal(o.sana.application_records, 0);
+  sqlite.prepare("UPDATE jobs SET is_active=0 WHERE id='j1'").run();                         // closing a READY job removes it from inventory
+  const m = (await call(worker, env, 'GET', '/api/qualification/metrics?candidate_id=farhan_shaikh')).json;
+  assert.equal(m.ready_inventory, 0); assert.equal(m.stretch_ready_inventory, 1);
+  assert.equal((await call(worker, env, 'GET', '/api/dashboard/overview')).json.farhan.ready_count, 0);
+  const empty = createDb(); const e = (await call(worker, makeEnv(empty.d1), 'GET', '/api/dashboard/overview')).json;
+  assert.equal(e.total_jobs_tracked, 0); assert.equal(e.active_jobs_count, 0, 'an empty database must not report invented totals');
+  const c = (await call(worker, env, 'GET', '/api/cohorts/metrics?candidate_id=farhan_shaikh')).json;
+  assert.ok(JSON.stringify(c).length > 10);
+});
+
+test('profile facts: experience is computed from dates for Sana, Farhan keeps his stored value, no private text without the key', async () => {
+  const { env } = fresh();
+  const s = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
+  const years = (Date.now() - Date.UTC(2017, 8, 1)) / (365.25 * 86400000);
+  assert.ok(Math.abs(s.total_years_experience - years) < 0.11, `${s.total_years_experience} vs ${years}`);
+  assert.match(s.years_basis, /computed from career start 2017-09/);
+  assert.deepEqual(s.employment_history.map((e) => [e.employer, e.from, e.to]), [['RRVUNL', '2017-09', '2025-02'], ['RRVUNL', '2025-02', null]]);
+  assert.match(s.pay_line, /unknown/i);
+  const f = (await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh')).json;
+  assert.equal(f.total_years_experience, 4); assert.match(f.years_basis, /stored/);
+  assert.equal(f.education, 'BMS in Marketing');
+  assert.equal(f.employment_history[0].employer, 'Mianro Systems');
+  assert.match(f.pay_line, /1,20,000/); assert.match(f.pay_line, /\$25\/hour/);
+  const anon = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null });
+  assert.equal(anon.status, 401); assert.ok(!JSON.stringify(anon.json).includes('RRVUNL'));
 });

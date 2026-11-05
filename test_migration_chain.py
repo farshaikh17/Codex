@@ -8,9 +8,11 @@ migrations = [
     '0003_validated_sources.sql',
     '0004_broad_discovery.sql',
     '0005_role_searches.sql',
-    '0006_startup_location_unknown.sql'
+    '0006_startup_location_unknown.sql',
+    '0007_qualification_history.sql',
+    '0008_auth_failures.sql',
 ]
-base = r'C:\Users\admin\.gemini\antigravity\scratch\farhan-job-engine\migrations'
+base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
     p = os.path.join(base, m)
     with open(p, 'r', encoding='utf-8') as f:
@@ -40,3 +42,6 @@ print('cloud_discovery_runs columns:', cols_runs)
 # Verify cloud_job_evidence columns
 cols_evi = [r[1] for r in conn.execute("PRAGMA table_info(cloud_job_evidence)").fetchall()]
 print('cloud_job_evidence columns:', cols_evi)
+
+assert 'auth_failures' in tables and 'candidate_qualifications' in tables, 'migration chain is incomplete'
+print('migration chain OK')

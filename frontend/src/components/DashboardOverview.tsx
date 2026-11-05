@@ -65,7 +65,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight">Career Job Engine</h2>
           <p className="text-sm text-slate-400 mt-1">
-            Independent qualification pipelines for Farhan Shaikh and Sana Ansari with absolute candidate isolation.
+            Independent qualification pipelines per candidate, with candidate-scoped data and one shared operator key.
           </p>
         </div>
 
@@ -90,14 +90,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-bold text-white">{farhan.full_name}</h3>
                   <span className="text-[11px] font-mono bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
-                    BMS Marketing
+                    {farhan.education_short || ''}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)
+                  {farhan.summary_line || ''}
                 </p>
                 <p className="text-[11px] text-emerald-400 font-medium mt-0.5">
-                  Floor: ₹120,000/month fixed, or $25/hour contract • Target Strategy: 70 / 20 / 10
+                  {farhan.pay_line || ''} • Target Strategy: {farhan.target_distribution?.strongest_fit} / {farhan.target_distribution?.bridge} / {farhan.target_distribution?.dream}
                 </p>
               </div>
 
@@ -182,14 +182,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-bold text-white">{sana.full_name}</h3>
                   <span className="text-[11px] font-mono bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">
-                    B.Tech Electrical
+                    {sana.education_short || ''}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Transition
+                  {sana.summary_line || ''}
                 </p>
                 <p className="text-[11px] text-amber-400 font-medium mt-0.5">
-                  India / Relocation / Remote • Target Strategy: 20 / 30 / 50
+                  {sana.pay_line || ''} • Target Strategy: {sana.target_distribution?.strongest_fit} / {sana.target_distribution?.bridge} / {sana.target_distribution?.dream}
                 </p>
               </div>
 

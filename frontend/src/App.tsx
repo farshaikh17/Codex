@@ -272,22 +272,20 @@ export const App: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded font-semibold bg-white/10">
-                        {candidateId === 'sana_ansari' ? 'Sana Ansari Workspace' : 'Farhan Shaikh Workspace'}
+                        {profile && profile.id === candidateId ? `${profile.full_name} Workspace` : 'Loading workspace'}
                       </span>
                       <span className="text-xs text-slate-400">•</span>
                       <span className="text-xs text-slate-300">
-                        {candidateId === 'sana_ansari' ? 'B.Tech Electrical Engineering' : 'BMS Marketing'}
+                        {profile && profile.id === candidateId ? (profile.education_short || '') : ''}
                       </span>
                     </div>
                     <h2 className="text-xl font-bold text-white mt-1">
-                      {candidateId === 'sana_ansari'
-                        ? 'Power Plant Operations & Industrial Reliability Engineering'
-                        : 'Technical Operations & Workflow Automation Engineering'}
+                      {profile && profile.id === candidateId ? (profile.display_title || '') : ''}
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {candidateId === 'sana_ansari'
-                        ? 'Scope: Power Plant O&M, Reliability Engineering, Asset Performance. Location: Bengaluru, Hyderabad, Chennai. Relocation interest: Middle East & Europe (Preference; visa required). Notice & Comp: Unknown (Private candidate brief).'
-                        : 'Scope: Technical Operations & Workflow Automation Engineering. Location: 100% Remote from India. Monthly cash floor: ₹120,000 fixed, or $25/hr contract.'}
+                      {profile && profile.id === candidateId
+                        ? `${profile.summary_line || ''} ${profile.location_preferences && profile.location_preferences.length ? 'Location preferences: ' + profile.location_preferences.join(', ') + '.' : ''} ${profile.pay_line || ''}`
+                        : ''}
                     </p>
                   </div>
 
@@ -430,6 +428,8 @@ export const App: React.FC = () => {
 
             {activeTab === 'tracker' && (
               <ApplicationTracker
+                key={candidateId}
+                candidateId={candidateId}
                 jobs={trackedJobs}
                 onSelectJob={(j) => setSelectedJob(j)}
               />

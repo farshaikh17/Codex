@@ -274,7 +274,7 @@ export const SourcesView: React.FC<SourcesViewProps> = ({ onSyncComplete }) => {
                         {source.last_status === 'SUCCESS' ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            Healthy ({source.last_latency_ms}ms)
+                            Healthy{typeof source.last_latency_ms === 'number' ? ` (${source.last_latency_ms}ms)` : ' (latency not measured)'}
                           </span>
                         ) : source.last_status === 'ERROR' ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">

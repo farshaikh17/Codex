@@ -1,9 +1,15 @@
-name: Verify (manual)
-# Manual only, read-only, no secrets: builds the frontend, bundles the Worker (dry run, nothing is deployed) and runs the tests.
+name: Verify
+# Read-only, no secrets. Runs on pull requests into main and on demand: builds the frontend, bundles the Worker
+# (dry run, nothing is deployed) and runs the unit, bundle-privacy and migration tests. ~2 minutes per run.
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest

@@ -1,8 +1,8 @@
 // Read-only post-deploy checks. The key comes from the environment and is never printed or sent anywhere but the
 // target's Authorization header.  SMOKE_BASE=https://... SMOKE_KEY=... [SMOKE_EXPECT_APPLICATIONS=12] node scripts/post_deploy_smoke.mjs
 const BASE = (process.env.SMOKE_BASE || '').replace(/\/$/, '');
-const KEY = process.env.SMOKE_KEY;
-if (!BASE || !KEY) { console.error('SMOKE_BASE and SMOKE_KEY are required'); process.exit(2); }
+const KEY = process.env.SMOKE_KEY; // optional: without it only the anonymous checks run
+if (!BASE) { console.error('SMOKE_BASE is required'); process.exit(2); }
 let failed = 0;
 const check = (name, ok, detail = '') => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  -> ' + detail}`); };
 const get = (p, key) => fetch(BASE + p, { headers: key ? { Authorization: `Bearer ${key}` } : {} });
@@ -13,10 +13,11 @@ for (const p of ['/api/profile', '/api/applications', '/api/dashboard/overview',
   const r = await get(p);
   check(`anonymous ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
 }
-check('a wrong key is refused (one attempt only)', (await get('/api/profile', 'definitely-not-the-key')).status === 403);
-const ok = await get('/api/dashboard/overview', KEY);
-check('the real key is accepted', ok.status === 200, `status ${ok.status} (429 means this address is locked out for up to 15 minutes)`);
-if (ok.status === 200) {
+{ const w = (await get('/api/profile?candidate_id=farhan_shaikh', 'definitely-not-the-key')).status; check('a wrong key is refused (one attempt only)', w === 403 || w === 429, `status ${w}`); }
+const ok = KEY ? await get('/api/dashboard/overview', KEY) : null;
+if (!KEY) console.log('INFO  SMOKE_KEY not set: authenticated checks skipped (anonymous protection verified only)');
+else check('the real key is accepted', ok.status === 200, `status ${ok.status} (429 means this address is locked out for up to 15 minutes)`);
+if (ok && ok.status === 200) {
   const o = await ok.json();
   console.log(`INFO  overview: farhan READY ${o.farhan?.ready_count} / sana READY ${o.sana?.ready_count}; active ${o.active_jobs_count} of ${o.total_jobs_tracked}`);
   const apps = await (await get('/api/applications?candidate_id=farhan_shaikh', KEY)).json();

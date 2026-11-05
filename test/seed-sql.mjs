@@ -13,7 +13,9 @@ for (let i = 0; i < 300; i++) {
   const id = 'job_' + String(i).padStart(3, '0'); const src = sources[i % sources.length];
   ins('jobs', { id, title: 'Role ' + i, company: 'Company ' + (i % 25), source_adapter: src ? src.split(':')[0] : 'feed', source_id: src, is_active: i % 17 === 0 ? 0 : 1, salary_published: i % 4 === 0 ? 1 : 0, discovered_at: '2026-11-01T00:00:00Z' });
   for (const [c, off] of [['farhan_shaikh', 0], ['sana_ansari', 3]]) {
-    ins('candidate_qualifications', { candidate_id: c, job_id: id, qualification_status: statuses[(i + off) % statuses.length], eligibility_status: elig[(i + off) % elig.length], strategy_lane: 'UNASSIGNED' });
+    // Sana's mix differs from Farhan's on purpose so cross-candidate leaks show up as wrong numbers.
+    const status = c === 'sana_ansari' ? (i % 11 === 0 ? 'READY' : i % 5 === 0 ? 'STRETCH_READY' : 'NEEDS_REVIEW') : statuses[(i + off) % statuses.length];
+    ins('candidate_qualifications', { candidate_id: c, job_id: id, qualification_status: status, eligibility_status: elig[(i + off) % elig.length], strategy_lane: 'UNASSIGNED' });
     ins('candidate_job_scores', { candidate_id: c, job_id: id, overall_score: (i * 7 + off * 13) % 100 });
   }
 }

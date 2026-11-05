@@ -2,7 +2,7 @@
 // frontend. Usage: E2E_BASE=http://localhost:8787 E2E_KEY=<test key> node test/e2e/browser.e2e.mjs [desktop|mobile]
 // The key is read from the environment and never printed. Refuses to run against a non-local host.
 import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
+const require = createRequire(new URL('../../frontend/package.json', import.meta.url)); // playwright is a frontend devDependency
 const { chromium } = require('playwright');
 const BASE = process.env.E2E_BASE || 'http://localhost:8787';
 const KEY = process.env.E2E_KEY;
@@ -80,6 +80,30 @@ await tab('SANA'); await tab('SETTINGS');
 check('Sana Settings shows her record, not Farhan\'s', await page.locator('input').evaluateAll((els) => els.some((e) => e.value === 'Test Sana')) && !(await page.locator('input').evaluateAll((els) => els.some((e) => e.value === 'Test Farhan'))));
 await tab('FARHAN'); await tab('SETTINGS');
 check('Farhan Settings shows his record', await page.locator('input').evaluateAll((els) => els.some((e) => e.value === 'Test Farhan')));
+
+// 5b. Overlapping requests: Farhan's responses are held back while Sana is selected; they must not paint over Sana's screen.
+const readyOf = async (cid) => (await (await fetch(`${BASE}/api/jobs?candidate_id=${cid}&limit=1`, { headers: { Authorization: `Bearer ${KEY}` } })).json()).status_counts.READY;
+const fReady = await readyOf('farhan_shaikh'), sReady = await readyOf('sana_ansari');
+check('fixture sanity: the two candidates have different READY counts', fReady !== sReady, `${fReady}/${sReady}`);
+await page.route('**/api/**', async (route) => {
+  if (/candidate_id=farhan_shaikh/.test(route.request().url())) await new Promise((r) => setTimeout(r, 2500));
+  await route.continue();
+});
+await tab('DASHBOARD');
+await page.getByRole('button', { name: /^FARHAN/i }).first().click();      // Farhan starts loading (slow)
+await page.waitForTimeout(250);
+await page.getByRole('button', { name: /^SANA/i }).first().click();        // user switches to Sana before it finishes
+await page.waitForTimeout(4500);                                             // Farhan's late responses arrive now
+const raceText = await bodyText();
+const readyCard = Number((raceText.match(/READY TO APPLY\s+(\d+)/i) || [])[1]);
+check('slow Farhan response does not overwrite Sana: heading and READY card are Sana\'s', /Test Sana Workspace/i.test(raceText) && !/Test Farhan Workspace/i.test(raceText) && readyCard === sReady, `${readyCard} vs ${sReady}; ${(raceText.match(/Test \w+ Workspace/i) || [])[0]}`);
+await tab('Analytics');
+await page.waitForTimeout(3500);
+check('slow Farhan analytics does not overwrite Sana: still Sana\'s sentence', /Current inventory for Sana/.test(await bodyText()));
+await page.unroute('**/api/**');
+await tab('APPLICATIONS'); await page.waitForTimeout(800);
+const appsRequests = apiLog.filter((r) => /cohorts\/metrics/.test(r.url)).slice(-1)[0];
+check('Applications tab asks for the selected candidate\'s cohort ledger', !!appsRequests && /candidate_id=sana_ansari/.test(appsRequests.url), appsRequests && appsRequests.url);
 
 // 6. Expired/rotated credentials mid-session: the server answers 401 -> window opens, key dropped.
 await page.route('**/api/profile**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{"error":"Operator authentication required."}' }));

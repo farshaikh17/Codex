@@ -230,7 +230,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
             <div>
               <label className="font-semibold text-slate-700 block mb-1">Education & Technical Background:</label>
               <div className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-slate-700 font-medium">
-                <span>{formData.education || (profile.id === "sana_ansari" ? "B.Tech in Electrical Engineering" : "BMS in Marketing")}</span>
+                <span>{formData.education || "Not recorded"}</span>
                 <span className="ml-2 text-[11px] text-slate-400 font-normal">(Authoritative profile)</span>
               </div>
             </div>
@@ -295,10 +295,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
               />
               <p className="mt-1 text-slate-400 text-[11px]">
-                {profile.id === 'sana_ansari'
-                  ? 'Continuous RRVUNL employment since September 2017 (~9.2 years) & Kota operations role since February 2025.'
-                  : 'Used for deterministic comparison against minimum required years.'}
+                {profile.years_basis ? `Basis: ${profile.years_basis}. ` : ''}Used for deterministic comparison against minimum required years.
               </p>
+              {profile.employment_history && profile.employment_history.length > 0 && (
+                <ul className="mt-1 text-slate-500 text-[11px] list-disc pl-4">
+                  {profile.employment_history.map((e, i) => (
+                    <li key={i}>{e.role}, {e.employer}: {e.from} to {e.to || 'present'}{e.note ? ` (${e.note})` : ''}</li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div>
@@ -359,9 +364,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
               <label htmlFor="min-pay-inr" className="font-semibold text-slate-700 block mb-1">Minimum Fixed Monthly Pay (INR ₹):</label>
               <input id="min-pay-inr" type="number" min="0" value={formData.min_fixed_monthly_inr ?? ''}
                 onChange={(e) => setFormData({...formData, min_fixed_monthly_inr: e.target.value ? Number(e.target.value) : null})}
-                placeholder="e.g. 120000"
+                placeholder="Monthly floor in INR"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" />
-              <p className="mt-1 text-slate-400 text-[11px]">{profile.id === 'sana_ansari' ? (profile.min_fixed_monthly_inr ? `Hard monthly floor: ₹${profile.min_fixed_monthly_inr.toLocaleString('en-IN')}` : 'Verified monthly floor: Unknown (Not specified in brief)') : 'Hard monthly floor: ₹1,20,000'}</p>
+              <p className="mt-1 text-slate-400 text-[11px]">{profile.id === 'sana_ansari' ? (profile.min_fixed_monthly_inr ? `Hard monthly floor: ₹${profile.min_fixed_monthly_inr.toLocaleString('en-IN')}` : 'Verified monthly floor: Unknown (Not specified in brief)') : (profile.min_fixed_monthly_inr ? `Hard monthly floor: ₹${profile.min_fixed_monthly_inr.toLocaleString('en-IN')}` : 'Monthly floor: not recorded')}</p>
             </div>
 
             <div>
@@ -370,23 +375,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
                 onChange={(e) => setFormData({...formData, min_acceptable_salary_usd: e.target.value ? Number(e.target.value) : null})}
                 placeholder="e.g. 25"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" />
-              <p className="mt-1 text-slate-400 text-[11px]">{profile.id === 'sana_ansari' ? (profile.min_acceptable_salary_usd ? `Hourly contractor rate: ${profile.min_acceptable_salary_usd}/hr` : 'Verified contractor rate: Unknown (Not specified in brief)') : 'Hourly contractor rate: $25/hr'}</p>
+              <p className="mt-1 text-slate-400 text-[11px]">{profile.id === 'sana_ansari' ? (profile.min_acceptable_salary_usd ? `Hourly contractor rate: ${profile.min_acceptable_salary_usd}/hr` : 'Verified contractor rate: Unknown (Not specified in brief)') : (profile.min_acceptable_salary_usd ? `Hourly contractor rate: $${profile.min_acceptable_salary_usd}/hr` : 'Hourly rate: not recorded')}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="pref-inr" className="font-semibold text-slate-700 block mb-1">Preferred Annual Target (INR):</label>
-              <input id="pref-inr" type="text" value={formData.preferred_inr_range ?? (profile.id === 'sana_ansari' ? '' : '₹25–30 LPA+')}
-                placeholder={profile.id === 'sana_ansari' ? 'Unknown (Not specified in brief)' : '₹25–30 LPA+'}
+              <input id="pref-inr" type="text" value={formData.preferred_inr_range ?? ''}
+                placeholder="Unknown (not recorded)"
                 onChange={(e) => setFormData({...formData, preferred_inr_range: e.target.value})}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" />
             </div>
 
             <div>
               <label htmlFor="notice-period" className="font-semibold text-slate-700 block mb-1">Notice Period (Days):</label>
-              <input id="notice-period" type="number" min="0" max="90" value={formData.notice_period_days ?? (profile.id === 'sana_ansari' ? '' : 30)}
-                placeholder={profile.id === 'sana_ansari' ? 'Unknown' : '30'}
+              <input id="notice-period" type="number" min="0" max="90" value={formData.notice_period_days ?? ''}
+                placeholder="Unknown"
                 onChange={(e) => setFormData({...formData, notice_period_days: e.target.value ? Number(e.target.value) : null})}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none" />
             </div>

@@ -34,7 +34,9 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
   const [excludeApplied, setExcludeApplied] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<string>('score_desc');
 
+  const loadSeq = React.useRef(0);
   const loadData = useCallback(async () => {
+    const seq = ++loadSeq.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -50,15 +52,18 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
           sort_by: sortBy
         })
       ]);
+      // A slower response for an earlier filter or candidate must not overwrite the current screen.
+      if (seq !== loadSeq.current) return;
       setSummary(summaryData);
       setJobs(jobsData);
     } catch (err: any) {
+      if (seq !== loadSeq.current) return;
       console.error(err);
       setError(err.message || 'Failed to load India Remote opportunities.');
     } finally {
-      setIsLoading(false);
+      if (seq === loadSeq.current) setIsLoading(false);
     }
-  }, [fitFilter, roleFamilyFilter, payFilter, search, excludeApplied, sortBy]);
+  }, [candidateId, fitFilter, roleFamilyFilter, payFilter, search, excludeApplied, sortBy]);
 
   useEffect(() => {
     loadData();
@@ -68,7 +73,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
     e.stopPropagation();
     const newStatus = job.application?.status === 'SAVED' ? 'WITHDRAWN' : 'SAVED';
     try {
-      await updateApplication({ job_id: job.id, status: newStatus });
+      await updateApplication({ job_id: job.id, status: newStatus, candidate_id: candidateId });
       await loadData();
       if (onRefreshGlobal) onRefreshGlobal();
     } catch {
@@ -249,7 +254,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             >
               <option value="ALL">All Pay Ranges</option>
               <option value="PUBLISHED">Published Salary Only</option>
-              <option value="MEETS_60K">Meets Base Pay Floor (₹120,000/mo or $25/hr)</option>
+              <option value="MEETS_60K">Meets the candidate's stated pay floor</option>
               <option value="UNKNOWN">Unspecified Salary</option>
             </select>
           </div>

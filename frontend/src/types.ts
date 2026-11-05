@@ -189,6 +189,12 @@ export interface CandidateDashboardCard {
   stretch_count: number;
   review_count: number;
   applied_count: number;
+  application_records?: number;
+  display_title?: string;
+  education_short?: string;
+  summary_line?: string;
+  pay_line?: string;
+  counts_scope?: string;
   target_distribution: CandidateStrategyDistribution;
   actual_discovery_distribution: CandidateStrategyDistribution;
   actual_ready_distribution: CandidateStrategyDistribution;
@@ -223,6 +229,12 @@ export interface CandidateProfile {
   profile_basis: string;
   disqualifying_keywords: string[];
   total_years_experience?: number;
+  years_basis?: string;
+  display_title?: string;
+  education_short?: string;
+  summary_line?: string;
+  pay_line?: string;
+  employment_history?: { role: string; employer: string; from: string; to: string | null; note?: string }[];
   target_seniorities?: string[];
   raw_resume_text?: string | null;
   qualification_threshold?: number;
