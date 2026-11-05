@@ -51,6 +51,7 @@ jobs:
           CONFIRM: ${{ inputs.confirm_sha }}
           ACTOR: ${{ github.actor }}
           OWNER: ${{ github.repository_owner }}
+        working-directory: .   # runs before checkout, when ./dashboard does not exist yet
         run: |
           [ "$ACTOR" = "$OWNER" ] || { echo "::error::Only the repository owner may run releases"; exit 1; }
           [ "$REF" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on $REF)"; exit 1; }
@@ -83,6 +84,7 @@ jobs:
           CONFIRM: ${{ inputs.confirm_sha }}
           ACTOR: ${{ github.actor }}
           OWNER: ${{ github.repository_owner }}
+        working-directory: .   # runs before checkout, when ./dashboard does not exist yet
         run: |
           [ "$ACTOR" = "$OWNER" ] && [ "$REF" = "refs/heads/main" ] && [ "$CONFIRM" = "$SHA" ] || { echo "::error::Not the owner, not main, or confirm_sha mismatch"; exit 1; }
       - uses: actions/checkout@v4
