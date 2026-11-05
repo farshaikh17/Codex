@@ -61,7 +61,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthCha
                 {authenticated ? 'Operator Session Active' : 'Unlock Operator Actions'}
               </h3>
               <p className="text-[11px] text-slate-500">
-                {authenticated ? 'Authenticated for mutations on staging' : 'Enter access key to perform status updates'}
+                {authenticated ? 'Signed in to change records' : 'Needed only to change records. Viewing is open to everyone.'}
               </p>
             </div>
           </div>

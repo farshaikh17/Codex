@@ -19,13 +19,100 @@ function routes() {
 
 test('route discovery finds the API surface', () => { assert.ok(routes().length > 40); });
 
-test('every non-public route rejects a request with no key (401) and never reaches its handler', async () => {
+// Routes a visitor may read without a key; the router's allowlist must be exactly this list.
+const PUBLIC_READ = [
+  '/api/candidates', '/api/candidates/x/strategy', '/api/candidates/x/dashboard', '/api/candidates/x/jobs', '/api/candidates/x/applications',
+  '/api/dashboard/overview', '/api/jobs', '/api/jobs/x', '/api/jobs/x/explanation', '/api/applications', '/api/india-remote/summary',
+  '/api/india-remote/jobs', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics',
+  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status',
+];
+const isPublicRead = (r) => r.method === 'GET' && PUBLIC_READ.includes(r.path);
+
+test('every protected route (all writes, audit and sync surfaces) rejects a request with no key (401) and never reaches its handler', async () => {
   const { env } = fresh();
-  for (const r of routes().filter((r) => !PUBLIC.has(r.path))) {
+  const protectedRoutes = routes().filter((r) => !PUBLIC.has(r.path) && !isPublicRead(r));
+  assert.ok(protectedRoutes.some((r) => r.method !== 'GET') && protectedRoutes.some((r) => r.method === 'GET'));
+  for (const r of protectedRoutes) {
     const res = await call(worker, env, r.method, r.path, { key: null, body: r.method === 'GET' ? undefined : {} });
     assert.equal(res.status, 401, `${r.method} ${r.path} answered ${res.status} without a key`);
     assert.ok(!res.json || Object.keys(res.json).join() === 'error', `${r.method} ${r.path} leaked ${Object.keys(res.json || {})}`);
   }
+});
+
+test('the public read list matches the registered routes (a new GET route is protected until it is listed on purpose)', () => {
+  const have = new Set(routes().filter((r) => r.method === 'GET').map((r) => r.path));
+  for (const p of PUBLIC_READ) assert.ok(have.has(p), `${p} is not a registered GET route`);
+  const src = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
+  const listed = (src.match(/PUBLIC_READ_PATTERNS: RegExp\[\] = \[([\s\S]*?)\n\];/) || [])[1] || '';
+  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 15);
+  for (const bad of ['history', 'qualification-audit', 'runs', 'backups', 'sync', 'meta', 'pilot', 'canonical-sync', 'url-checks']) assert.ok(!listed.includes(bad), `${bad} must stay protected`);
+});
+
+test('public viewing: every public read works with no key, returns data, and holds no private field or value', async () => {
+  const { env } = fresh();
+  const forbidden = ['PRIVATE-NOTE-7f3', 'PRIVATE-CHANNEL-7f3', 'PRIVATE-RESUME-7f3', 'PRIVATE-COVER-7f3', 'PRIVATE-REJECT-7f3', 'PRIVATE-ACTOR-7f3', 'PRIVATECITY-7f3',
+    'seed decision', 'RRVUNL', 'Mianro', 'Chhabra', 'Bengaluru', '120000', '1,20,000', 'cash_floor', 'pay_line', 'employment_history', 'location_preferences',
+    'notice_period', 'HTTP 500', unitSecret()];
+  const hits = [];
+  for (const base of PUBLIC_READ) for (const cid of ['farhan_shaikh', 'sana_ansari']) {
+    const p = base.replace('/jobs/x', '/jobs/j1').replace('/candidates/x', '/candidates/' + cid);
+    const url = p + (p.includes('?') ? '&' : '?') + 'candidate_id=' + cid;
+    const res = await call(worker, env, 'GET', url, { key: null });
+    assert.equal(res.status, 200, `${url} answered ${res.status} to a visitor: ${JSON.stringify(res.json).slice(0, 120)}`);
+    const text = JSON.stringify(res.json);
+    for (const f of forbidden) if (text.includes(f)) hits.push(`${url} contains ${f}`);
+    if (/"(notes|actor|resume_version|cover_letter_path|rejection_notes|application_channel|manual_override_reason)"/.test(text)) hits.push(`${url} has a private key`);
+    if (/[\w.+-]+@[\w-]+\.[\w.]+/.test(text)) hits.push(`${url} has an email address`);
+  }
+  assert.deepEqual(hits, []);
+});
+
+function unitSecret() { return ADMIN_KEY; }
+
+test('public viewing shows the intended content: both candidates, jobs, applications without notes, analytics, a limited profile', async () => {
+  const { env } = fresh();
+  const cands = (await call(worker, env, 'GET', '/api/candidates', { key: null })).json;
+  assert.deepEqual(cands.map((c) => c.id).sort(), ['farhan_shaikh', 'sana_ansari']);
+  assert.ok(cands.every((c) => c.current_location === 'India' && !('cash_floor_inr_monthly' in c)));
+  const jobs = (await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.ok(jobs.jobs.length > 0 && jobs.status_counts.READY === 1);
+  const apps = (await call(worker, env, 'GET', '/api/applications?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.equal(apps.count, 2); assert.equal(apps.applications[0].application.status !== undefined, true);
+  const prof = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null })).json;
+  assert.equal(prof.public_view, true); assert.match(prof.education, /B\.Tech/); assert.ok(prof.total_years_experience > 8);
+  assert.ok(!('employment_history' in prof) && !('pay_line' in prof));
+  const an = (await call(worker, env, 'GET', '/api/analytics?candidate_id=sana_ansari', { key: null })).status;
+  assert.equal(an, 200);
+  // the operator still gets the full record
+  const op = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
+  assert.equal(op.employment_history[0].employer, 'RRVUNL');
+  const opApps = (await call(worker, env, 'GET', '/api/applications?candidate_id=farhan_shaikh')).json;
+  assert.ok(JSON.stringify(opApps).includes('PRIVATE-NOTE-7f3'));
+});
+
+test('a visitor cannot read audit trails or operational surfaces, and cannot write anything', async () => {
+  const { sqlite, env } = fresh();
+  for (const u of ['/api/applications/app-1/history?candidate_id=farhan_shaikh', '/api/jobs/j1/qualification-audit?candidate_id=farhan_shaikh', '/api/automation/runs', '/api/meta', '/api/backups', '/api/sync/activity-logs', '/api/canonical-sync/status'])
+    assert.equal((await call(worker, env, 'GET', u, { key: null })).status, 401, u);
+  const snap = () => JSON.stringify([sqlite.prepare('SELECT * FROM applications ORDER BY id').all(), sqlite.prepare('SELECT * FROM application_history').all(),
+    sqlite.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), sqlite.prepare('SELECT * FROM candidates ORDER BY id').all(),
+    sqlite.prepare('SELECT * FROM cloud_automation').all(), sqlite.prepare('SELECT COUNT(*) c FROM jobs').get()]);
+  const before = snap();
+  const writes = [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'APPLIED' }], ['POST', '/api/candidates/farhan_shaikh/applications', { job_id: 'j4', status: 'APPLIED' }],
+    ['POST', '/api/jobs/j1/feedback?candidate_id=farhan_shaikh', { rating: 'LIKE' }], ['POST', '/api/jobs/j1/qualification-override', { status: 'INELIGIBLE', reason: 'x', candidate_id: 'farhan_shaikh' }],
+    ['PUT', '/api/profile?candidate_id=farhan_shaikh', { full_name: 'Hijacked' }], ['POST', '/api/profile/import-resume', { text: 'x' }], ['POST', '/api/automation/pause', {}], ['POST', '/api/automation/resume', {}],
+    ['PUT', '/api/automation/config', { is_enabled: false }], ['POST', '/api/automation/trigger', {}], ['POST', '/api/fixtures/reload', {}], ['POST', '/api/qualification/reverify', {}]];
+  for (const [m, u, b] of writes) { const r = await call(worker, env, m, u, { key: null, body: b }); assert.equal(r.status, 401, `${m} ${u} -> ${r.status}`); }
+  for (const [m, u, b] of writes) { const r = await call(worker, env, m, u, { key: 'wrong-key', body: b }); assert.equal(r.status, 403, `${m} ${u} wrong key -> ${r.status}`); }
+  assert.equal(snap(), before);
+});
+
+test('internal error text is never returned to anyone (500 is generic)', async () => {
+  const { sqlite, env } = fresh();
+  sqlite.exec('DROP TABLE jobs');
+  const pub = await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh', { key: null });
+  const op = await call(worker, env, 'GET', '/api/jobs?candidate_id=farhan_shaikh');
+  for (const r of [pub, op]) { assert.equal(r.status, 500); assert.equal(r.json.error, 'Internal error. The request was not completed.'); }
 });
 
 test('a wrong key is 403 on reads and writes; the right key is accepted', async () => {
@@ -191,7 +278,7 @@ test('a missing limiter table never locks the operator out and never weakens aut
   sqlite.exec('DROP TABLE auth_failures');
   assert.equal((await callFrom(env, '203.0.113.50', ADMIN_KEY)).status, 200);
   for (let i = 0; i < 12; i++) assert.equal((await callFrom(env, '203.0.113.50', 'nope')).status, 403);
-  assert.equal((await callFrom(env, '203.0.113.50', null)).status, 401);
+  assert.equal((await callFrom(env, '203.0.113.50', null)).status, 200, 'a visitor with no key can still read public pages');
 });
 
 // ---- joins cannot inflate counts ----------------------------------------------------------------------------
@@ -286,7 +373,7 @@ test('profile facts: experience is computed from dates for Sana, Farhan keeps hi
   assert.equal(f.employment_history[0].employer, 'Mianro Systems');
   assert.match(f.pay_line, /1,20,000/); assert.match(f.pay_line, /\$25\/hour/);
   const anon = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null });
-  assert.equal(anon.status, 401); assert.ok(!JSON.stringify(anon.json).includes('RRVUNL'));
+  assert.equal(anon.status, 200); assert.ok(!JSON.stringify(anon.json).includes('RRVUNL'));
 });
 
 // ---- review round 2 -------------------------------------------------------------------------------------------
@@ -325,4 +412,36 @@ test('profile save keeps stored values for fields not sent and rejects malformed
   assert.equal(after.current_location, before.current_location); assert.equal(after.total_years_experience, before.total_years_experience); assert.equal(after.qualification_threshold, before.qualification_threshold);
   const bad = await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=sana_ansari', { method: 'PUT', headers: { Authorization: 'Bearer ' + ADMIN_KEY, 'Content-Type': 'application/json' }, body: '{not json' }), env, { waitUntil() {} });
   assert.equal(bad.status, 400);
+});
+
+// ---- public viewing release ---------------------------------------------------------------------------------------
+test('the version endpoint reports the deployed commit when the release provides it', async () => {
+  const { env } = fresh({ GIT_COMMIT: 'abc123def', DEPLOYED_AT: '2026-11-05T00:00:00Z' });
+  const v = (await call(worker, env, 'GET', '/api/version', { key: null })).json;
+  assert.equal(v.commit, 'abc123def'); assert.equal(v.deployed_at, '2026-11-05T00:00:00Z');
+  assert.equal((await call(worker, fresh().env, 'GET', '/api/version', { key: null })).json.commit, 'unknown');
+});
+
+test('the read-only public profile summary cannot be saved back over a stored record', async () => {
+  const { sqlite, env } = fresh();
+  const pub = (await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh', { key: null })).json;
+  const before = JSON.stringify(sqlite.prepare('SELECT * FROM candidates ORDER BY id').all());
+  const r = await call(worker, env, 'PUT', '/api/profile?candidate_id=farhan_shaikh', { body: pub });   // even the operator cannot save it
+  assert.equal(r.status, 400);
+  assert.equal(JSON.stringify(sqlite.prepare('SELECT * FROM candidates ORDER BY id').all()), before);
+});
+
+test('an operator key sent with a public read still returns the operator view; a wrong key on a public read is refused and counted', async () => {
+  const { env } = fresh();
+  const op = await call(worker, env, 'GET', '/api/candidates');
+  assert.match(JSON.stringify(op.json), /PRIVATECITY-7f3/);
+  assert.ok(op.json.every((c) => 'cash_floor_inr_monthly' in c), 'the operator view keeps the pay fields');
+  assert.equal((await call(worker, env, 'GET', '/api/candidates', { key: 'wrong' })).status, 403);
+});
+
+test('a visitor-origin CORS preflight is answered and no public route sets credentials', async () => {
+  const { env } = fresh();
+  const res = await worker.fetch(new Request('https://test.invalid/api/jobs', { method: 'OPTIONS', headers: { Origin: 'https://example.org' } }), env, { waitUntil() {} });
+  assert.equal(res.status, 204);
+  assert.ok(!res.headers.get('Access-Control-Allow-Credentials'));
 });

@@ -172,9 +172,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            aria-label={isOperator ? 'Operator session: unlocked' : 'Operator session: locked, click to unlock'}
+            aria-label={isOperator ? 'Operator mode on: records can be changed' : 'Viewing only. Operator sign-in is needed to change records'}
             onClick={onOpenAuth}
-            title={isOperator ? 'Operator session: unlocked' : 'Operator session: locked (click to unlock)'}
+            title={isOperator ? 'Operator mode on (click to sign out)' : 'Viewing only (click for operator sign-in)'}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
           >
             {isOperator ? <Unlock className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-amber-400" />}

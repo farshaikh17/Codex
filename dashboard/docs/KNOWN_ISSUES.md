@@ -23,12 +23,20 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 ## Behaviour to be aware of
 
-* **One shared operator key** unlocks the dashboard for both candidates. It is not per-user or per-candidate
+* **Public viewing.** Anyone with the URL can read jobs, candidate summaries, analytics and the application tracker
+  (status, dates, job). That is intended. Employers, pay, notice, city, location preferences, application notes, resume
+  versions, application history, audit trails and run logs are not served publicly. If a public field turns out to be
+  more than you want visible, tell the maintainer: the field list is in `worker/index.ts` (`PRIVATE_KEYS`, `publicLocation`,
+  the public profile block, `PUBLIC_READ_PATTERNS`).
+* **Application tracker is public.** It shows which jobs each candidate saved, applied to or was rejected from, with
+  status and dates but without notes. If that should be private, remove `/api/applications` and
+  `/api/candidates/:id/applications` from `PUBLIC_READ_PATTERNS`.
+* **One shared operator key** protects all changes for **both** candidates. It is not per-user or per-candidate
   authorization. Use a long random key; the limiter slows guessing from one address but cannot stop a distributed attack,
   and a 32+ character random key is the real protection.
-* **The limiter is per client address.** Two people behind the same address share a counter, and an attacker who can send
-  from many addresses is not slowed by it. There is deliberately no global lockout (that would let anyone lock the operator
-  out).
+* **The limiter is per client address and counts only wrong keys.** Visitors send no key, so ordinary browsing is never
+  counted. Two people behind the same address share a counter. A locked-out address can still view every public page.
+  There is deliberately no global lockout (that would let anyone lock the operator out).
 * **Settings: only some fields persist.** `PUT /api/profile` stores name, location, years and the qualification
   threshold. Skills, roles, pay floors, notice period and preferences shown in Settings are not written by that endpoint.
   Sana's experience is computed from her career start date, so her editable years value is display-only. Candidate facts
@@ -56,8 +64,8 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 ## Not verified (needs access this session did not have)
 
-* Whether `ADMIN_API_KEY` is present in Cloudflare via authenticated metadata (an empty-key request returned 400, which
-  is indirect evidence: an unset key would have returned 503). The release workflow checks the secret list by name.
+* Whether `ADMIN_API_KEY` is present in Cloudflare is checked by name in the release preflight (the value is never read).
+  Protected actions fail closed (503) if it is missing; public viewing does not depend on it.
 * Cloudflare billing or usage, D1 row counts against free-tier limits, and production query timings. D1 usage estimates
   in this repo are design reasoning, not measurements.
 * A remote disposable D1 database (tests use Cloudflare's local D1 engine through `wrangler dev --local`).

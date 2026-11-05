@@ -213,6 +213,22 @@ async function runRegressionSuite() {
   assert.strictEqual(dispatchedEvents.length, 0, 'No event should be dispatched for 200 OK');
   console.log('  [PASS] 6. HTTP 200 response does not trigger operator-auth-required event.');
 
+  // Test 7: a write with no operator key never leaves the browser; it asks for the unlock window instead
+  fetchCallCount = 0; dispatchedEvents.length = 0; mockSessionStorage.removeItem('admin_session_key'); mockFetchStatus = 200;
+  await assert.rejects(() => authedFetch('/api/applications', { method: 'POST', body: '{}' }), /Operator sign-in is required/);
+  assert.strictEqual(fetchCallCount, 0, 'FATAL: an anonymous write must not be sent');
+  assert.strictEqual(dispatchedEvents.length, 1);
+  assert.strictEqual(dispatchedEvents[0].detail.write, true);
+  console.log('  [PASS] 7. Anonymous writes are blocked in the browser and request the operator sign-in.');
+
+  // Test 8: public reads send no Authorization header and a refused read does not request the unlock window
+  fetchCallCount = 0; dispatchedEvents.length = 0; mockFetchStatus = 401;
+  await authedFetch('/api/jobs?candidate_id=farhan_shaikh');
+  assert.strictEqual(lastFetchInit.headers.has('Authorization'), false, 'a visitor sends no key');
+  assert.strictEqual(dispatchedEvents[0].detail.write, false, 'a refused READ must not open the unlock window');
+  assert.strictEqual(dispatchedEvents[0].detail.hadKey, false);
+  console.log('  [PASS] 8. Public reads carry no key; a refused read does not ask for the unlock window.');
+
   console.log('\n>>> All authedFetch regression assertions PASSED on actual application api.ts! <<<\n');
 }
 

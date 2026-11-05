@@ -93,6 +93,34 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
     }
   };
 
+  if (profile.public_view) {
+    // Public summary: read-only. Employers, pay, notice, city and documents are shown to the operator only.
+    const chips = (items: string[] = []) => items.length ? (
+      <div className="flex flex-wrap gap-1.5 mt-1">{items.map((x) => <span key={x} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs">{x}</span>)}</div>
+    ) : <p className="text-xs text-slate-400 mt-1">Not listed.</p>;
+    return (
+      <div className="max-w-3xl mx-auto space-y-4">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 text-sm">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">{profile.full_name}</h2>
+            <p className="text-slate-600">{profile.display_title}</p>
+            {profile.summary_line && <p className="text-xs text-slate-500 mt-0.5">{profile.summary_line}</p>}
+          </div>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt className="font-semibold text-slate-700">Education</dt><dd className="text-slate-600">{profile.education || 'Not listed'}</dd></div>
+            <div><dt className="font-semibold text-slate-700">Experience</dt><dd className="text-slate-600">{profile.total_years_experience ?? 'Not listed'} years{profile.years_basis ? ` (${profile.years_basis})` : ''}</dd></div>
+            <div><dt className="font-semibold text-slate-700">Based in</dt><dd className="text-slate-600">{profile.current_location || 'Not listed'}</dd></div>
+            <div><dt className="font-semibold text-slate-700">Time zone</dt><dd className="text-slate-600">{profile.primary_timezone}</dd></div>
+          </dl>
+          <div><h4 className="text-xs font-semibold text-slate-700">Target roles</h4>{chips(profile.target_roles)}</div>
+          <div><h4 className="text-xs font-semibold text-slate-700">Primary skills</h4>{chips(profile.primary_skills)}</div>
+          <div><h4 className="text-xs font-semibold text-slate-700">Secondary skills</h4>{chips(profile.secondary_skills)}</div>
+          <p className="text-xs text-slate-400 pt-2 border-t border-slate-100">This is the public profile summary. Editing, pay details, employers and documents need the operator sign-in.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       {/* Resume Import Card */}

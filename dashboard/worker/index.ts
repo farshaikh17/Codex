@@ -10,6 +10,9 @@ export interface Env {
   ENVIRONMENT?: string;
   ALLOWED_ORIGINS?: string;
   ADMIN_API_KEY?: string;
+  /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
+  GIT_COMMIT?: string;
+  DEPLOYED_AT?: string;
 }
 
 // -------------------------------------------------------------
@@ -18,13 +21,14 @@ export interface Env {
 // -------------------------------------------------------------
 interface EmploymentEntry { role: string; employer: string; from: string; to: string | null; note?: string }
 const CANDIDATE_FACTS: Record<string, {
-  display_title: string; education_short: string; education_detail: string; summary_line: string; career_start: string | null; employment_history: EmploymentEntry[];
+  display_title: string; education_short: string; education_detail: string; summary_line: string; public_summary: string; career_start: string | null; employment_history: EmploymentEntry[];
 }> = {
   farhan_shaikh: {
     display_title: 'Technical Operations & Workflow Automation Engineering',
     education_short: 'BMS Marketing',
     education_detail: 'BMS in Marketing',
     summary_line: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)',
+    public_summary: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India',
     career_start: null, // total years are not derivable from the dates supplied; the stored value is used and labelled as stored
     employment_history: [{ role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'five direct reports' }],
   },
@@ -33,6 +37,7 @@ const CANDIDATE_FACTS: Record<string, {
     education_short: 'B.Tech Electrical',
     education_detail: 'B.Tech in Electrical Engineering, Rajasthan Technical University, 2016',
     summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Transition',
+    public_summary: 'Power Plant O&M • Industrial Reliability • Energy Transition',
     career_start: '2017-09-01',
     employment_history: [
       { role: 'Maintenance (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
@@ -63,6 +68,7 @@ function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) 
     education_short: f?.education_short || '',
     education_detail: f?.education_detail || cand?.education || '',
     summary_line: f?.summary_line || '',
+    public_summary: f?.public_summary || '',
     pay_line: pay,
     employment_history: f?.employment_history || [],
     total_years_experience: fromDates ? yearsSince(f!.career_start!, now) : stored,
@@ -94,6 +100,56 @@ function jsonResponse(data: any, status = 200, headers: HeadersInit = {}): Respo
 
 // Routes that carry no candidate data: liveness, build identity and the key check itself.
 const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+
+// Read-only routes any visitor may call without a key (the dashboard is publicly viewable). This is an explicit
+// allowlist: a route that is not listed here, and every POST/PUT/DELETE, needs the operator key. Audit trails
+// (application history, qualification audit), automation run logs, sync/backup surfaces and raw app metadata are
+// deliberately absent.
+const PUBLIC_READ_PATTERNS: RegExp[] = [
+  /^\/api\/candidates$/,
+  /^\/api\/candidates\/[^/]+\/(strategy|dashboard|jobs|applications)$/,
+  /^\/api\/dashboard\/overview$/,
+  /^\/api\/jobs$/,
+  /^\/api\/jobs\/[^/]+$/,
+  /^\/api\/jobs\/[^/]+\/explanation$/,
+  /^\/api\/applications$/,
+  /^\/api\/india-remote\/(summary|jobs)$/,
+  /^\/api\/analytics$/,
+  /^\/api\/analytics\/(discovery|sources-effectiveness)$/,
+  /^\/api\/qualification\/metrics$/,
+  /^\/api\/cohorts\/metrics$/,
+  /^\/api\/profile$/,
+  /^\/api\/sources$/,
+  /^\/api\/automation\/status$/,
+];
+function isPublicRead(method: string, pathname: string): boolean {
+  return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
+}
+
+// Who is asking. Set by the router for every /api request; handlers use it to decide which fields to return.
+const accessLevel = new WeakMap<Request, 'public' | 'operator'>();
+const isOperatorRequest = (request: Request) => accessLevel.get(request) === 'operator';
+
+// Fields that never leave the Worker in a public response, wherever they appear in the JSON (defence in depth on top
+// of the explicit route allowlist and the explicit field lists below): private application notes, documents,
+// audit actors, override reasons, pay and notice details, contact details and anything credential-shaped.
+const PRIVATE_KEYS = new Set([
+  'notes', 'application_notes', 'app_notes', 'rejection_notes', 'resume_version', 'cover_letter_path', 'application_channel',
+  'manual_override_reason', 'actor', 'payload', 'raw_payload', 'audit', 'audit_payload', 'feedback',
+  'email', 'phone', 'phone_number', 'linkedin', 'address', 'contact', 'contact_email',
+  'cash_floor_inr_monthly', 'cash_floor_inr_annual', 'min_acceptable_salary_usd', 'min_fixed_monthly_inr', 'preferred_inr_range',
+  'notice_period_days', 'pay_line', 'employment_history', 'location_preferences', 'relocation_interest', 'unsupported_claims',
+  'disqualifying_keywords', 'token', 'secret', 'api_key', 'password', 'authorization', 'cursor_token', 'last_error',
+]);
+function stripPrivate(value: any): any {
+  if (Array.isArray(value)) return value.map(stripPrivate);
+  if (value && typeof value === 'object') {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(value)) if (!PRIVATE_KEYS.has(k.toLowerCase())) out[k] = stripPrivate(v);
+    return out;
+  }
+  return value;
+}
 
 function timingSafeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
@@ -191,6 +247,9 @@ async function checkOperatorAuth(request: Request, env: Env): Promise<Response |
   return null;
 }
 
+// Public pages show the country only; the stored city-level location stays operator-only.
+const publicLocation = (v: unknown) => (typeof v === 'string' && /india/i.test(v) ? 'India' : '');
+
 // Candidate isolation: a candidate-scoped route never falls back to a default candidate.
 const CANDIDATE_IDS = new Set(['farhan_shaikh', 'sana_ansari']);
 function knownCandidate(value: unknown): string | null {
@@ -231,6 +290,24 @@ class WorkerRouter {
   put(path: string, handler: RouteHandler) { this.add('PUT', path, handler); }
   delete(path: string, handler: RouteHandler) { this.add('DELETE', path, handler); }
 
+  // Last step for every API response: a 500 never echoes internal error text, and a public response is stripped of
+  // private fields before it leaves.
+  private async finish(request: Request, res: Response): Promise<Response> {
+    const isApi = new URL(request.url).pathname.startsWith('/api/');
+    const isPublic = accessLevel.get(request) === 'public';
+    if (!isApi || (res.status !== 500 && !isPublic)) return res;
+    const type = res.headers.get('Content-Type') || '';
+    if (!type.includes('json')) return res;
+    const headers = new Headers(res.headers);
+    headers.delete('Content-Length');
+    if (res.status === 500) {
+      try { console.error('api_error', new URL(request.url).pathname, (await res.clone().json<any>())?.error); } catch {}
+      return new Response(JSON.stringify({ error: 'Internal error. The request was not completed.' }), { status: 500, headers });
+    }
+    const data = await res.json<any>();
+    return new Response(JSON.stringify(stripPrivate(data)), { status: res.status, headers });
+  }
+
   async handle(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname;
@@ -244,9 +321,15 @@ class WorkerRouter {
 
     // Every /api route except the public ones below requires the operator key (Authorization: Bearer <key>).
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
-    if (pathname.startsWith('/api/') && !PUBLIC_API_PATHS.has(pathname)) {
-      const denied = await checkOperatorAuth(request, env);
-      if (denied) return denied;
+    const isApi = pathname.startsWith('/api/');
+    if (isApi && !PUBLIC_API_PATHS.has(pathname)) {
+      if (isPublicRead(request.method, pathname) && !request.headers.get('Authorization')) {
+        accessLevel.set(request, 'public');
+      } else {
+        const denied = await checkOperatorAuth(request, env);
+        if (denied) return denied;
+        accessLevel.set(request, 'operator');
+      }
     }
 
     for (const route of this.routes) {
@@ -257,7 +340,7 @@ class WorkerRouter {
         route.paramNames.forEach((name, i) => {
           params[name] = decodeURIComponent(match[i + 1]);
         });
-        return await route.handler(request, env, params, url);
+        return await this.finish(request, await route.handler(request, env, params, url));
       }
     }
 
@@ -396,11 +479,12 @@ router.post('/api/auth/verify', async (request, env) => {
 
 router.get('/api/version', async (request, env) => {
   return jsonResponse({
-    version: '2026-11-02-qa-coordinated-repair-v2',
-    commit_ref: 'feat/dashboard-qa-coordinated-repair',
-    deployed_at: new Date().toISOString(),
+    version: '2026-11-05-public-view',
+    commit: env.GIT_COMMIT || 'unknown',
+    deployed_at: env.DEPLOYED_AT || null,
     status: 'operational',
-    architecture: 'cloudflare_workers_d1'
+    architecture: 'cloudflare_workers_d1',
+    access: 'public read-only; changes require the operator key',
   }, 200, corsHeaders(request, env));
 });
 
@@ -457,12 +541,14 @@ router.get('/api/candidates', async (request, env) => {
         : 'Technical Operations & Workflow Automation Engineering',
       citizenship: r.citizenship,
       education: r.education,
-      current_location: r.current_location,
+      current_location: isOperatorRequest(request) ? r.current_location : publicLocation(r.current_location),
       primary_timezone: r.primary_timezone,
       total_years_experience: r.total_years_experience,
-      cash_floor_inr_monthly: r.cash_floor_inr_monthly,
-      cash_floor_inr_annual: r.cash_floor_inr_annual,
-      min_acceptable_salary_usd: r.min_acceptable_salary_usd,
+      ...(isOperatorRequest(request) ? {
+        cash_floor_inr_monthly: r.cash_floor_inr_monthly,
+        cash_floor_inr_annual: r.cash_floor_inr_annual,
+        min_acceptable_salary_usd: r.min_acceptable_salary_usd,
+      } : {}),
       qualification_threshold: r.qualification_threshold,
       target_roles: r.target_roles ? JSON.parse(r.target_roles) : [],
       primary_skills: r.primary_skills ? JSON.parse(r.primary_skills) : [],
@@ -634,7 +720,7 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
       candidate_name: candidate.full_name,
       full_name: candidate.full_name,
       education: candidate.education,
-      current_location: candidate.current_location,
+      current_location: isOperatorRequest(request) ? candidate.current_location : publicLocation(candidate.current_location),
       display_title: candidateId === 'sana_ansari'
         ? 'Power Plant Operations & Industrial Reliability Engineering'
         : 'Technical Operations & Workflow Automation Engineering',
@@ -727,8 +813,8 @@ router.get('/api/dashboard/overview', async (request, env) => {
           ? 'Electrical Engineering & Industrial Operations'
           : 'Technical Operations & Workflow Automation Lead',
         education: cand?.education || '',
-        current_location: cand?.current_location || '',
-        location: cand?.current_location || '',
+        current_location: (isOperatorRequest(request) ? cand?.current_location : publicLocation(cand?.current_location)) || '',
+        location: (isOperatorRequest(request) ? cand?.current_location : publicLocation(cand?.current_location)) || '',
         ready: statusMap['READY'] || 0,
         ready_count: statusMap['READY'] || 0,
         stretch: statusMap['STRETCH_READY'] || 0,
@@ -741,7 +827,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
         application_records: appCnt?.records || 0,
         display_title: facts.display_title,
         education_short: facts.education_short,
-        summary_line: facts.summary_line,
+        summary_line: isOperatorRequest(request) ? facts.summary_line : facts.public_summary,
         pay_line: facts.pay_line,
         counts_scope: 'active jobs only',
         target: target_distribution,
@@ -2094,7 +2180,7 @@ router.get('/api/profile', async (request, env, _params, url) => {
     const isSana = cand.id === 'sana_ansari';
     const facts = candidateFacts(cand.id, cand);
 
-    return jsonResponse({
+    const full = {
       id: cand.id,
       full_name: cand.full_name,
       // The stored value wins; the fallbacks are the candidates' own documented degrees, never a generic placeholder.
@@ -2160,6 +2246,26 @@ router.get('/api/profile', async (request, env, _params, url) => {
       employment_history: facts.employment_history,
       target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : (isSana ? ['MID', 'SENIOR', 'LEAD'] : ['SENIOR', 'LEAD', 'STAFF']),
       qualification_threshold: cand.qualification_threshold,
+    };
+    if (isOperatorRequest(request)) return jsonResponse(full, 200, corsHeaders(request, env));
+    // Public profile summary: explicitly selected fields only. Employers, pay, notice, city, relocation and location
+    // preferences, contact details and documents are operator-only.
+    return jsonResponse({
+      id: full.id,
+      full_name: full.full_name,
+      display_title: full.display_title,
+      summary_line: facts.public_summary,
+      education: full.education,
+      education_short: full.education_short,
+      current_location: publicLocation(cand.current_location),
+      primary_timezone: full.primary_timezone,
+      target_roles: full.target_roles,
+      primary_skills: full.primary_skills,
+      secondary_skills: full.secondary_skills,
+      target_seniorities: full.target_seniorities,
+      total_years_experience: full.total_years_experience,
+      years_basis: full.years_basis,
+      public_view: true,
     }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
@@ -2168,6 +2274,9 @@ router.get('/api/profile', async (request, env, _params, url) => {
 
 router.put('/api/profile', async (request, env, _params, url) => {
   try {
+    const preBody = await request.clone().json<any>().catch(() => null);
+    if (preBody && preBody.public_view) return jsonResponse({ error: 'The public profile summary is read-only and cannot be saved.' }, 400, corsHeaders(request, env));
+    
     const body = await request.json<any>().catch(() => null);
     if (!body || typeof body !== 'object') return jsonResponse({ error: 'Request body must be valid JSON.' }, 400, corsHeaders(request, env));
     const candidateId = url?.searchParams?.get('candidate_id') || body.id;

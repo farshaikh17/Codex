@@ -11,6 +11,7 @@ import {
   fetchIndiaRemoteSummary,
   overrideJobQualification,
   isOperatorAuthenticated,
+  OPERATOR_AUTH_EVENT,
   logoutOperator,
   checkStoredOperatorKey
 } from './api';
@@ -25,6 +26,7 @@ import { SourcesView } from './components/SourcesView';
 import { ReadyDashboardView } from './components/ReadyDashboardView';
 import { AutomationDashboardView } from './components/AutomationDashboardView';
 import { GoogleSyncView } from './components/GoogleSyncView';
+import { OperatorOnlyPanel } from './components/OperatorOnlyPanel';
 import { IndiaRemoteView } from './components/IndiaRemoteView';
 import { DashboardOverview } from './components/DashboardOverview';
 import { AuthModal } from './components/AuthModal';
@@ -63,18 +65,24 @@ export const App: React.FC = () => {
   
   
 
-  // Global auth event listener for automatic modal trigger on 401/403
+  // The dashboard is public. The operator unlock exists only for changing records: it opens when a visitor tries to
+  // change something, or when the operator chooses it from the top bar. Reads never open it.
   const [authOpen, setAuthOpen] = useState<boolean>(false);
   const [isOperator, setIsOperator] = useState<boolean>(isOperatorAuthenticated());
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   useEffect(() => {
-    const handleAuthRequired = () => {
-      // The Worker answered 401/403: the key is missing, wrong or rotated. Drop it and ask again.
-      logoutOperator();
-      setIsOperator(false);
-      setAuthOpen(true);
+    const handleAuthRequired = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      if (d.hadKey) {
+        // A stored key was refused (rotated or expired): fall back to the public view and say so.
+        logoutOperator();
+        setIsOperator(false);
+        setSessionNotice('The operator session ended. You are viewing the public dashboard; sign in again to make changes.');
+      }
+      if (d.write) setAuthOpen(true);
     };
-    window.addEventListener('operator-auth-required', handleAuthRequired);
-    return () => window.removeEventListener('operator-auth-required', handleAuthRequired);
+    window.addEventListener(OPERATOR_AUTH_EVENT, handleAuthRequired);
+    return () => window.removeEventListener(OPERATOR_AUTH_EVENT, handleAuthRequired);
   }, []);
 
   // Filters
@@ -95,17 +103,14 @@ export const App: React.FC = () => {
     const currentRequest = ++requestId.current;
     setIsLoading(true);
     setError(null);
-    // Check the stored key once before fanning out parallel requests: a stale key then costs one refused attempt, not seven.
+    // If an operator key is stored, confirm it once before fanning out (a stale key then costs one refused attempt).
+    // Without a key, or with a refused one, the page simply loads in public mode: no unlock window, no error.
     const session = await checkStoredOperatorKey();
-    if (currentRequest !== requestId.current) return;
-    if (session !== 'ok') {
-      setIsLoading(false);
-      setIsOperator(false);
-      if (session === 'locked') setError('Too many failed attempts from this address. Try again in a few minutes.');
-      setAuthOpen(true);
-      return;
-    }
-    setIsOperator(true);
+    // These two apply even if a newer load has superseded this one: the stored key is already gone.
+    if (session === 'rejected') setSessionNotice('The saved operator key is no longer valid. You are viewing the public dashboard.');
+    if (session === 'locked') { logoutOperator(); setSessionNotice('Too many failed sign-in attempts from this address. You are viewing the public dashboard; try signing in again later.'); }
+    if (currentRequest !== requestId.current) { if (session !== 'ok') setIsOperator(false); return; }
+    setIsOperator(session === 'ok');
     try {
       const candidateForFetch = candidateId;
       const [paginatedResult, profileData, analyticsData, trackerData, metricsData, irSummaryData] = await Promise.all([
@@ -254,13 +259,16 @@ export const App: React.FC = () => {
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'pilot' ? <PilotView /> : error ? (
+        {sessionNotice && (
+          <div role="status" className="mb-4 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm flex items-start justify-between gap-3">
+            <span>{sessionNotice}</span>
+            <button className="underline text-xs shrink-0" onClick={() => setSessionNotice(null)}>Dismiss</button>
+          </div>
+        )}
+        {activeTab === 'pilot' ? (isOperator ? <PilotView /> : <OperatorOnlyPanel what="The pilot snapshot" onUnlock={() => setAuthOpen(true)} />) : error ? (
           <div className="p-6 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-sm">
-            <h3 className="font-bold text-base mb-1">Backend Connection Notice</h3>
+            <h3 className="font-bold text-base mb-1">The dashboard could not load</h3>
             <p>{error}</p>
-            <p className="mt-2 text-xs font-mono bg-rose-100 p-2 rounded">
-              uvicorn backend.main:app --port 8000
-            </p>
             <button className="mt-3 underline" onClick={loadData}>Retry connection</button>
           </div>
         ) : (
@@ -468,9 +476,9 @@ export const App: React.FC = () => {
               <AutomationDashboardView onRefreshData={loadData} />
             )}
 
-            {activeTab === 'google-sync' && (
-              <GoogleSyncView />
-            )}
+            {activeTab === 'google-sync' && (isOperator
+              ? <GoogleSyncView />
+              : <OperatorOnlyPanel what="Spreadsheet sync" onUnlock={() => setAuthOpen(true)} />)}
           </>
         )}
       </main>

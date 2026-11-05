@@ -1,40 +1,50 @@
-// Read-only post-deploy checks. The key comes from the environment and is never printed or sent anywhere but the
-// target's Authorization header.  SMOKE_BASE=https://... SMOKE_KEY=... [SMOKE_EXPECT_APPLICATIONS=12] node scripts/post_deploy_smoke.mjs
+// Read-only post-deploy checks of the PUBLIC dashboard. No credentials are needed or used.
+//   SMOKE_BASE=https://... [SMOKE_EXPECT_COMMIT=<sha>] [SMOKE_EXPECT_APPLICATIONS=12] node scripts/post_deploy_smoke.mjs
+// Anonymous write attempts use a nonexistent job id and an invalid body so that, even if protection failed, nothing
+// real could be changed; they must all be refused with 401 before reaching any handler.
 const BASE = (process.env.SMOKE_BASE || '').replace(/\/$/, '');
-const KEY = process.env.SMOKE_KEY; // optional: without it only the anonymous checks run
 if (!BASE) { console.error('SMOKE_BASE is required'); process.exit(2); }
-const REQUIRE_AUTH = process.env.REQUIRE_AUTH_SMOKE === '1';
-if (REQUIRE_AUTH && !KEY) { console.error('REQUIRE_AUTH_SMOKE=1 but SMOKE_KEY is empty: authenticated checks cannot be skipped'); process.exit(2); }
-let authChecks = 0;
 let failed = 0;
-const check = (name, ok, detail = '', authed = false) => { if (authed) authChecks++; if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  -> ' + detail}`); };
-const get = (p, key) => fetch(BASE + p, { headers: key ? { Authorization: `Bearer ${key}` } : {} });
+const check = (name, ok, detail = '') => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  -> ' + detail}`); };
+const get = (p) => fetch(BASE + p);
+const PRIVATE_KEYS = /"(notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;
+const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
+const v = await (await get('/api/version')).json().catch(() => ({}));
 check('health is public', (await get('/api/health')).status === 200);
-check('version is public', (await get('/api/version')).status === 200);
-for (const p of ['/api/profile', '/api/applications', '/api/dashboard/overview', '/api/jobs?candidate_id=farhan_shaikh', '/api/analytics/discovery?candidate_id=sana_ansari', '/api/india-remote/jobs']) {
-  const r = await get(p);
-  check(`anonymous ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
-}
-{ const w = (await get('/api/profile?candidate_id=farhan_shaikh', 'definitely-not-the-key')).status; check('a wrong key is refused (one attempt only)', w === 403 || w === 429, `status ${w}`); }
-const ok = KEY ? await get('/api/dashboard/overview', KEY) : null;
-if (!KEY) console.log('INFO  SMOKE_KEY not set: authenticated checks skipped (anonymous protection verified only)');
-else check('the real key is accepted', ok.status === 200, `status ${ok.status} (429 means this address is locked out for up to 15 minutes)`, true);
-if (ok && ok.status === 200) {
-  const o = await ok.json();
-  console.log(`INFO  overview: farhan READY ${o.farhan?.ready_count} / sana READY ${o.sana?.ready_count}; active ${o.active_jobs_count} of ${o.total_jobs_tracked}`);
-  const apps = await (await get('/api/applications?candidate_id=farhan_shaikh', KEY)).json();
-  const byStatus = {}; for (const a of apps.applications || []) byStatus[a.app_status || a.status] = (byStatus[a.app_status || a.status] || 0) + 1;
-  console.log(`INFO  Farhan application records: ${apps.count} ${JSON.stringify(byStatus)}`);
-  if (process.env.SMOKE_EXPECT_APPLICATIONS) check(`application records preserved (${process.env.SMOKE_EXPECT_APPLICATIONS})`, String(apps.count) === process.env.SMOKE_EXPECT_APPLICATIONS, `found ${apps.count}`, true);
-  for (const c of ['farhan_shaikh', 'sana_ansari']) {
-    const f = await (await get(`/api/analytics/discovery?candidate_id=${c}`, KEY)).json();
-    check(`funnel for ${c} is candidate-scoped and computed`, f.candidate_id === c && f.scope === 'current_active_inventory', JSON.stringify(f).slice(0, 120), true);
+check('version is public', !!v.version, JSON.stringify(v));
+if (process.env.SMOKE_EXPECT_COMMIT) check(`the live Worker reports the commit being released (${process.env.SMOKE_EXPECT_COMMIT.slice(0, 10)})`, v.commit === process.env.SMOKE_EXPECT_COMMIT, `live commit ${v.commit}`);
+console.log(`INFO  live version ${v.version} commit ${v.commit} deployed_at ${v.deployed_at}`);
+
+// public viewing works for both candidates and exposes nothing private
+const counts = {};
+for (const c of ['farhan_shaikh', 'sana_ansari']) {
+  for (const p of [`/api/jobs?candidate_id=${c}&limit=25`, `/api/profile?candidate_id=${c}`, `/api/applications?candidate_id=${c}`, `/api/analytics?candidate_id=${c}`,
+    `/api/analytics/discovery?candidate_id=${c}`, `/api/analytics/sources-effectiveness?candidate_id=${c}`, `/api/qualification/metrics?candidate_id=${c}`, `/api/cohorts/metrics?candidate_id=${c}`, `/api/india-remote/summary?candidate_id=${c}`]) {
+    const r = await get(p); const t = await r.text();
+    check(`public ${p.split('?')[0]} (${c.split('_')[0]}) answers 200 without a key`, r.status === 200, `status ${r.status}`);
+    check(`...and holds no private field, employer, pay or email`, !PRIVATE_KEYS.test(t) && !PRIVATE_TEXT.test(t), (t.match(PRIVATE_KEYS) || t.match(PRIVATE_TEXT) || [])[0]);
+    if (p.startsWith('/api/applications')) { try { counts[c] = JSON.parse(t).count; } catch {} }
   }
-  const src = await (await get('/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh', KEY)).json();
-  check('source scorecard has no placeholder feeds', !JSON.stringify(src).includes('example.com'), '', true);
 }
-if (REQUIRE_AUTH && authChecks === 0) { console.log('FAIL  no authenticated check ran'); failed++; }
-console.log(`\nauthenticated checks run: ${authChecks}`);
-console.log(failed ? `\n${failed} check(s) failed: roll back (see docs/RELEASE.md)` : '\nAll smoke checks passed');
+for (const p of ['/api/candidates', '/api/dashboard/overview', '/api/sources', '/api/automation/status']) {
+  const r = await get(p); const t = await r.text();
+  check(`public ${p} answers 200 and holds nothing private`, r.status === 200 && !PRIVATE_KEYS.test(t) && !PRIVATE_TEXT.test(t), `status ${r.status}`);
+}
+console.log(`INFO  application records visible: ${JSON.stringify(counts)}`);
+if (process.env.SMOKE_EXPECT_APPLICATIONS) check(`Farhan's application records preserved (${process.env.SMOKE_EXPECT_APPLICATIONS})`, String(counts.farhan_shaikh) === process.env.SMOKE_EXPECT_APPLICATIONS, `found ${counts.farhan_shaikh}`);
+const sc = await (await get('/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).text();
+check('source scorecard has no placeholder feeds', !sc.includes('example.com'));
+
+// protected surface
+for (const p of ['/api/applications/none/history?candidate_id=farhan_shaikh', '/api/jobs/none/qualification-audit?candidate_id=farhan_shaikh', '/api/automation/runs', '/api/meta', '/api/backups', '/api/sync/activity-logs']) {
+  const r = await get(p); check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
+}
+for (const [m, p, b] of [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'smoke-nonexistent', status: 'SAVED' }], ['PUT', '/api/profile?candidate_id=farhan_shaikh', { public_view: true }],
+  ['POST', '/api/automation/trigger', {}], ['POST', '/api/automation/pause', {}], ['POST', '/api/jobs/smoke-nonexistent/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'smoke' }],
+  ['POST', '/api/jobs/smoke-nonexistent/feedback?candidate_id=farhan_shaikh', { rating: 'CLEAR' }], ['POST', '/api/profile/import-resume', { text: 'x' }]]) {
+  const r = await fetch(BASE + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+  check(`anonymous ${m} ${p.split('?')[0]} is refused (401)`, r.status === 401, `status ${r.status}`);
+}
+console.log(failed ? `\n${failed} check(s) failed: roll back (see dashboard/docs/RELEASE.md)` : '\nAll smoke checks passed');
 process.exit(failed ? 1 : 0);

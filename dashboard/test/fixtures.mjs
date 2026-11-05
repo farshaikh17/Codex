@@ -2,8 +2,8 @@
 export function seed(sqlite) {
   const run = (sql, ...p) => sqlite.prepare(sql).run(...p);
   run(`INSERT INTO candidates(id,full_name,current_location,citizenship,education,primary_timezone,total_years_experience,qualification_threshold) VALUES
-       ('farhan_shaikh','Test Farhan','Kota, India','India',NULL,'Asia/Kolkata',4,70),
-       ('sana_ansari','Test Sana','Kota, India','India','B.Tech in Electrical Engineering','Asia/Kolkata',9.2,60)`);
+       ('farhan_shaikh','Test Farhan','PRIVATECITY-7f3, India','India',NULL,'Asia/Kolkata',4,70),
+       ('sana_ansari','Test Sana','PRIVATECITY-7f3, India','India','B.Tech in Electrical Engineering','Asia/Kolkata',9.2,60)`);
   const job = (id, company, active, src, srcId, salary = 0) =>
     run(`INSERT INTO jobs(id,title,company,source_adapter,source_id,is_active,salary_published,discovered_at) VALUES (?,?,?,?,?,?,?,'2026-11-01T00:00:00Z')`,
         id, 'Role ' + id, company, src, srcId, active, salary);
@@ -27,8 +27,10 @@ export function seed(sqlite) {
   sqlite.prepare(`UPDATE candidate_qualifications SET eligibility_status='ELIGIBLE' WHERE candidate_id='sana_ansari' AND job_id IN ('j3','j5')`).run();
   for (const [c, id, n] of [['farhan_shaikh','j1',80],['farhan_shaikh','j2',55],['farhan_shaikh','j3',64],['farhan_shaikh','j4',20],['sana_ansari','j4',75],['sana_ansari','j3',40]]) score(c, id, n);
 
-  run(`INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES ('app-1','farhan_shaikh','j1','APPLIED','seed'),('app-2','farhan_shaikh','j2','SAVED','seed')`);
-  run(`INSERT INTO application_history(candidate_id,job_id,application_id,new_status,actor,source) VALUES ('farhan_shaikh','j1','app-1','APPLIED','seed','test')`);
+  run(`INSERT INTO applications(id,candidate_id,job_id,status,notes,application_channel,resume_version,cover_letter_path,rejection_notes) VALUES
+       ('app-1','farhan_shaikh','j1','APPLIED','PRIVATE-NOTE-7f3','PRIVATE-CHANNEL-7f3','PRIVATE-RESUME-7f3','PRIVATE-COVER-7f3','PRIVATE-REJECT-7f3'),
+       ('app-2','farhan_shaikh','j2','SAVED','PRIVATE-NOTE-7f3',NULL,NULL,NULL,NULL)`);
+  run(`INSERT INTO application_history(candidate_id,job_id,application_id,new_status,actor,source) VALUES ('farhan_shaikh','j1','app-1','APPLIED','PRIVATE-ACTOR-7f3','test')`);
   run(`INSERT INTO cloud_sources(id,kind,slug,name,enabled,last_status,last_attempt_at,last_success_at,last_error,failures) VALUES
        ('lever:acme','lever','acme','Acme',1,'SUCCESS','2026-11-04T10:00:00Z','2026-11-04T10:00:00Z',NULL,0),
        ('greenhouse:beta','greenhouse','beta','Beta',1,'ERROR','2026-11-04T11:00:00Z','2026-11-03T11:00:00Z','HTTP 500',3),

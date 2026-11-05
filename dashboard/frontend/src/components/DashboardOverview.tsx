@@ -21,23 +21,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Private data is requested only while the operator session is unlocked, and again after every unlock.
+    // Public page: loads for every visitor. Re-fetched when the operator signs in or out so the view matches the session.
     let current = true;
-    if (!isOperator) { setData(null); setError(null); setLoading(false); return; }
     setLoading(true); setError(null);
     fetchDashboardOverview()
       .then(res => { if (current) { setData(res); setLoading(false); } })
       .catch(err => { if (current) { setError(err.message || 'Failed to load dashboard overview'); setLoading(false); } });
     return () => { current = false; };
   }, [isOperator]);
-
-  if (!isOperator) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-slate-400">
-        <p className="text-sm">The dashboard is locked. Use the lock button in the top bar to enter the operator key.</p>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -74,7 +65,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight">Career Job Engine</h2>
           <p className="text-sm text-slate-400 mt-1">
-            Independent qualification pipelines per candidate, with candidate-scoped data and one shared operator key.
+            Independent qualification pipelines per candidate. Viewing is open to everyone; changing records needs the operator key.
           </p>
         </div>
 

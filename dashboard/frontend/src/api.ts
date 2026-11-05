@@ -57,25 +57,35 @@ export function isOperatorAuthenticated(): boolean {
 }
 
 
+export const OPERATOR_AUTH_EVENT = 'operator-auth-required';
+
+/** Public pages are read-only for visitors. A read sends no key unless the operator has unlocked; a write without a
+ *  key never leaves the browser, it asks for the operator unlock instead. */
 export async function authedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const method = (init?.method || 'GET').toUpperCase();
   const headers = new Headers(init?.headers);
   const token = getSessionAuthKey();
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  
-  const response = await fetch(input, { ...init, headers });
-  
-  if (response.status === 401 || response.status === 403) {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('operator-auth-required', {
-        detail: { status: response.status, url: typeof input === 'string' ? input : input.toString() }
-      }));
-    }
+  const isWrite = method !== 'GET' && method !== 'HEAD';
+  if (isWrite && !token && !headers.has('Authorization')) {
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('operator-auth-required', { detail: { status: 401, write: true, hadKey: false, url: typeof input === 'string' ? input : input.toString() } }));
+    throw new Error('Operator sign-in is required to change records.');
   }
-  
+
+  const response = await fetch(input, { ...init, headers });
+
+  if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
+    // write: ask for the unlock window. read: only matters when a stored key was refused (rotated/expired).
+    window.dispatchEvent(new CustomEvent('operator-auth-required', { detail: { status: response.status, write: isWrite, hadKey: Boolean(token), url: typeof input === 'string' ? input : input.toString() } }));
+  }
   return response;
 }
+
+/** Reads that only the operator may see (audit trails, run logs, sync and backup surfaces). A visitor gets an empty,
+ *  clearly flagged result and no request is made. */
+const restricted = <T extends object>(empty: T): T & { restricted: true } => ({ ...empty, restricted: true as const });
 
 
 export async function verifyOperatorKey(key: string): Promise<{ status: string; role: string }> {
@@ -133,6 +143,7 @@ export async function fetchApplications(candidateId?: string): Promise<Job[]> {
 }
 
 export async function fetchPilot(): Promise<any> {
+  if (!isOperatorAuthenticated()) return restricted({ available: false }) as any;
   const res = await authedFetch(`${API_BASE}/pilot`);
   if (!res.ok) throw new Error('Unable to load pilot');
   return res.json();
@@ -283,7 +294,9 @@ export async function fetchProfile(candidateId?: string): Promise<CandidateProfi
   const url = candidateId ? `${API_BASE}/profile?candidate_id=${encodeURIComponent(candidateId)}` : `${API_BASE}/profile`;
   const res = await authedFetch(url);
   if (!res.ok) throw new Error('Failed to fetch profile');
-  return res.json();
+  const data = await res.json();
+  // The public summary omits operator-only fields; give the arrays a safe default so screens never fail on them.
+  return { disqualifying_keywords: [], acceptable_hiring_models: [], primary_skills: [], secondary_skills: [], target_roles: [], ...data };
 }
 
 export async function updateProfile(profile: CandidateProfile, candidateId?: string): Promise<CandidateProfile> {
@@ -367,6 +380,7 @@ export async function updateSourceApproval(sourceId: string, approved: boolean):
 }
 
 export async function fetchSourceLogs(sourceId: string): Promise<any> {
+  if (!isOperatorAuthenticated()) return restricted({ logs: [] }) as any;
   const res = await authedFetch(`${API_BASE}/sources/${encodeURIComponent(sourceId)}/logs`);
   if (!res.ok) throw new Error('Failed to fetch source logs');
   return res.json();
@@ -420,6 +434,7 @@ export async function fetchQualificationAudit(jobId: string, candidateId: string
   count: number;
   audit_trail: QualificationAuditRecord[];
 }> {
+  if (!isOperatorAuthenticated()) return restricted({ job_id: '', count: 0, audit_trail: [] }) as any;
   const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/qualification-audit?candidate_id=${encodeURIComponent(candidateId)}`);
   if (!res.ok) throw new Error('Failed to fetch qualification audit history');
   return res.json();
@@ -431,6 +446,7 @@ export async function fetchApplicationHistory(jobId: string, candidateId?: strin
   history: ApplicationHistoryRecord[];
 }> {
   const url = candidateId ? `${API_BASE}/applications/${encodeURIComponent(jobId)}/history?candidate_id=${encodeURIComponent(candidateId)}` : `${API_BASE}/applications/${encodeURIComponent(jobId)}/history`;
+  if (!isOperatorAuthenticated()) return restricted({ job_id: '', count: 0, history: [] }) as any;
   const res = await authedFetch(url);
   if (!res.ok) throw new Error('Failed to fetch application history');
   return res.json();
@@ -444,18 +460,21 @@ export async function fetchCohortMetrics(candidateId?: string): Promise<CohortMe
 }
 
 export async function fetchSyncConflicts(): Promise<{ count: number; conflicts: SyncConflict[] }> {
+  if (!isOperatorAuthenticated()) return restricted({ count: 0, conflicts: [] }) as any;
   const res = await authedFetch(`${API_BASE}/sync/conflicts`);
   if (!res.ok) throw new Error('Failed to fetch sync conflicts');
   return res.json();
 }
 
 export async function fetchActivityLogs(): Promise<{ count: number; activity_logs: ActivityLog[] }> {
+  if (!isOperatorAuthenticated()) return restricted({ count: 0, activity_logs: [] }) as any;
   const res = await authedFetch(`${API_BASE}/sync/activity-logs`);
   if (!res.ok) throw new Error('Failed to fetch activity logs');
   return res.json();
 }
 
 export async function fetchBackups(): Promise<{ count: number; backups: BackupRecord[] }> {
+  if (!isOperatorAuthenticated()) return restricted({ count: 0, backups: [] }) as any;
   const res = await authedFetch(`${API_BASE}/backups`);
   if (!res.ok) throw new Error('Failed to fetch database backups');
   return res.json();
@@ -527,12 +546,14 @@ export async function triggerAutomation(live: boolean = false): Promise<{ status
 }
 
 export async function fetchAutomationRuns(limit: number = 20): Promise<{ count: number; runs: AutomationRun[] }> {
+  if (!isOperatorAuthenticated()) return restricted({ count: 0, runs: [] }) as any;
   const res = await authedFetch(`${API_BASE}/automation/runs?limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch automation execution runs');
   return res.json();
 }
 
 export async function fetchUrlChecks(limit: number = 30): Promise<{ count: number; checks: UrlCheckRecord[] }> {
+  if (!isOperatorAuthenticated()) return restricted({ count: 0, checks: [] }) as any;
   const res = await authedFetch(`${API_BASE}/automation/url-checks?limit=${limit}`);
   if (!res.ok) throw new Error('Failed to fetch URL checks');
   return res.json();

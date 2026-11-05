@@ -238,6 +238,8 @@ export interface CandidateProfile {
   target_seniorities?: string[];
   raw_resume_text?: string | null;
   qualification_threshold?: number;
+  /** true when this is the public summary (read-only; operator-only fields are absent) */
+  public_view?: boolean;
 }
 
 export interface QualificationAuditRecord {

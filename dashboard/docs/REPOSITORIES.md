@@ -1,27 +1,39 @@
-# Repository ownership and automation
+# Repositories and automation
 
-| | `farshaikh17/farhan-job-engine` (this repo) | `farshaikh17/Codex` (collector) |
+There is one working repository: **`farshaikh17/Codex`**. The dashboard source lives in its `dashboard/` folder; the
+collector, the matching engine and the sync into D1 are in the repository root.
+
+`farshaikh17/farhan-job-engine` is kept as a **backup only** (its full history was merged into this repository with
+`git subtree`-style history preservation; `git log --follow dashboard/worker/index.ts` reaches the original commits). It is
+not deployed from and has no active workflow. It is neither archived nor deleted until the owner decides to.
+
+| Workflow (in `.github/workflows/`) | Trigger | Purpose |
 |---|---|---|
-| Owns | Dashboard frontend (`frontend/`), Cloudflare Worker API (`worker/`), D1 schema migrations (`migrations/`), release process | Public job collection (ATS feeds), matching engine (`engine/`), the collector-to-D1 importer (`engine/collector_importer.py`, `engine/staging_bridge.py`) |
-| Source of truth for | The deployed Worker and the dashboard | The collected job data and the sync into D1 |
-| Automation | `Verify` (pull requests to main, manual), `Release to production` (manual only) | `collect.yml` (5 daily runs, UTC 01:37, 06:37, 11:37, 16:37, 21:37), `sync_collector_to_d1.yml` (UTC 01:45, 06:45, 11:45, 16:45, 21:45, plus manual) |
-| Needs secrets | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (release only) | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (sync only) |
+| `collect.yml` | schedule UTC 01:37, 06:37, 11:37, 16:37, 21:37 | public ATS collection |
+| `sync_collector_to_d1.yml` | schedule UTC 01:45, 06:45, 11:45, 16:45, 21:45 (plus manual, plus a push to its own files) | writes collected postings into D1 |
+| `dashboard-verify.yml` | pull requests touching `dashboard/**`, manual | build + tests, no secrets |
+| `dashboard-release.yml` | manual only | the only path that deploys the Worker |
+| others | see their files | engine tests, career pipeline, crawl, experiments |
 
-The five daily collection times are 5, 5, 5, 5 and 4 hours apart; the schedule leaves no gap longer than 5 hours but
-is not evenly spaced across the 24 hours.
+GitHub schedules are best effort: real runs start minutes after the nominal time, and a scheduled run's evidence is its
+`event: schedule` entry in the run list, which is separate from manual runs.
 
-## How the two connect
+## How the dashboard and the collector connect
 
 The collector never calls the Worker's HTTP API. The sync runs `npx wrangler d1 execute career-job-engine --remote
---file=...` with a Cloudflare API token, writing straight into the same D1 database, so Worker authentication does not
-affect it. Both repositories contain a `wrangler.toml` naming the same D1 database; **only this repository deploys the
-Worker.** Do not run `wrangler deploy` from the collector repository.
+--file=...` with the Cloudflare API token, writing straight into the same D1 database, so Worker authentication (and the
+public/protected split) does not affect it. Both `wrangler.toml` files name the same account and database. **Only
+`dashboard/wrangler.toml` deploys the Worker**; the root `wrangler.toml` exists so the collector's `wrangler d1 execute`
+resolves the database binding and must never be used with `wrangler deploy` (that would create a second, broken
+deployment and a second cron schedule).
 
 The collector's importer writes new postings and unassessed qualifications and uses conditional upserts that leave human
 decisions (manual overrides, applications) untouched. The dashboard owns the schema; a migration that changes a table the
-importer writes (`jobs`, `candidate_qualifications`, `candidate_job_scores`) needs a matching importer change in `Codex`.
+importer writes (`jobs`, `candidate_qualifications`, `candidate_job_scores`) needs a matching importer change in
+`engine/collector_importer.py`.
 
-## Other consumers
+## Secrets
 
-No other consumer of the Worker's HTTP API is known. Anything that called it without a key must now send
-`Authorization: Bearer <operator key>`.
+Repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` serve both the sync and the dashboard release (the
+same token and account the sync already uses). `ADMIN_API_KEY` is a Cloudflare **Worker** secret, never a GitHub secret.
+The optional `NEW_ADMIN_API_KEY` repository secret exists only for a deliberate key rotation.
