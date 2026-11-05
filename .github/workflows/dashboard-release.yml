@@ -105,29 +105,37 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          set -uo pipefail
+          set +e   # report every probe even when one fails; this step changes nothing
           EXPECTED=$(grep -E '^account_id' wrangler.toml | sed -E 's/.*"([0-9a-f]+)".*/\1/')
           [ "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED" ] || { echo "::error::CLOUDFLARE_ACCOUNT_ID is not the account in dashboard/wrangler.toml"; exit 1; }
-          S="$GITHUB_STEP_SUMMARY"
-          echo "### Diagnose (read-only)" >> "$S"
-          echo "- live version: \`$(curl -sS -m 15 "$SMOKE_BASE/api/version" || echo unreachable)\`" >> "$S"
-          { echo '#### wrangler d1 info (24h usage fields appear only if the token may read account analytics)'; echo '```'; npx wrangler d1 info career-job-engine --json 2>&1 | grep -v -i 'token' | tail -n 40; echo '```'; } >> "$S"
-          { echo '#### One minimal remote query: SELECT 1'; echo '```'; npx wrangler d1 execute career-job-engine --remote --command "SELECT 1 AS ok" --json 2>&1 | tail -n 40; echo '```'; } >> "$S"
-          # The Worker's own error for ONE public request. Only outcome, exception text and console lines are kept:
-          # no request headers, no query strings, no response bodies.
-          timeout 75 npx wrangler tail career-job-engine --format json > tail.jsonl 2> tail.err &
+          {
+            echo "### Diagnose (read-only)"
+            echo "- live version: $(curl -sS -m 15 "$SMOKE_BASE/api/version" || echo unreachable)"
+            echo '#### wrangler d1 info (24h usage fields appear only if the token may read account analytics)'
+            npx wrangler d1 info career-job-engine --json 2>&1 | grep -v -i 'token' | tail -n 40
+            echo '#### One minimal remote query: SELECT 1'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT 1 AS ok" --json 2>&1 | tail -n 40
+          } 2>&1 | tee diag.txt
+          # The Worker's own error for two requests to /api/health (reads at most one row). Only outcome, exception text and
+          # console lines are kept: no request headers, no query strings, no response bodies.
+          timeout 80 npx wrangler tail career-job-engine --format json > tail.jsonl 2> tail.err &
           TAIL=$!
           sleep 25
-          curl -sS -m 20 -o /dev/null -w 'public /api/candidates -> HTTP %{http_code}\n' "$SMOKE_BASE/api/candidates" | tee -a "$S"
-          sleep 20
-          kill $TAIL 2>/dev/null; wait $TAIL 2>/dev/null
-          { echo '#### Worker events during the window (filtered)'; echo '```'; node -e "
+          for i in 1 2; do curl -sS -m 20 -o /dev/null -w 'public /api/health -> HTTP %{http_code}\n' "$SMOKE_BASE/api/health" | tee -a diag.txt; sleep 5; done
+          sleep 15
+          kill $TAIL 2>/dev/null; wait $TAIL 2>/dev/null || true
+          {
+            echo '#### Worker events during the window (filtered)'
+            node -e "
             const lines=require('fs').readFileSync('tail.jsonl','utf8').split(/\n(?=\{)/).filter(Boolean);
             let n=0;for(const l of lines){let e;try{e=JSON.parse(l)}catch{continue}
               const path=e.event?.request?.url?new URL(e.event.request.url).pathname:(e.event?.cron?'cron '+e.event.cron:'?');
               console.log(JSON.stringify({outcome:e.outcome,path,exceptions:(e.exceptions||[]).map(x=>String(x.name)+': '+String(x.message).slice(0,400)),logs:(e.logs||[]).map(x=>(x.message||[]).map(String).join(' ').slice(0,400))}));n++;}
-            if(!n)console.log('no events captured');" 2>&1; echo '--- tail stderr (last lines)'; tail -n 8 tail.err | grep -v -i 'token'; echo '```'; } >> "$S"
-          echo "Diagnose finished: nothing in production was changed." | tee -a "$S"
+            if(!n)console.log('no events captured');"
+            echo '--- tail stderr (last lines)'; tail -n 8 tail.err | grep -v -i 'token'
+          } 2>&1 | tee -a diag.txt
+          { echo '```'; cat diag.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "Diagnose finished: nothing in production was changed." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Preflight - account, database, token permissions, rollback points (read-only)
         if: ${{ inputs.mode != 'diagnose' }}
