@@ -445,3 +445,19 @@ test('a visitor-origin CORS preflight is answered and no public route sets crede
   assert.equal(res.status, 204);
   assert.ok(!res.headers.get('Access-Control-Allow-Credentials'));
 });
+
+test('weekly target: 100 for Farhan counts only distinct jobs that became READY in the current NY week; older READY and STRETCH_READY are separate', async () => {
+  const { sqlite, env } = fresh();
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const old = new Date(Date.now() - 12 * 86400000).toISOString().replace('T', ' ').slice(0, 19);
+  const set = (id, st, at) => sqlite.prepare(`UPDATE candidate_qualifications SET qualification_status=?, qualified_at=? WHERE candidate_id='farhan_shaikh' AND job_id=?`).run(st, at, id);
+  set('j1', 'READY', now);            // new this week
+  set('j2', 'STRETCH_READY', now);    // stretch is separate
+  set('j3', 'READY', old);            // older READY inventory
+  const m = (await call(worker, env, 'GET', '/api/qualification/metrics?candidate_id=farhan_shaikh', { key: null })).json;
+  assert.equal(m.weekly_research_target, 100);
+  assert.equal(m.new_qualified_this_week, 1, 'only the job that became READY this week');
+  assert.equal(m.stretch_ready_inventory, 1);
+  assert.ok(m.ready_inventory >= 1);
+  assert.equal(m.timezone || 'America/New_York', 'America/New_York');
+});
