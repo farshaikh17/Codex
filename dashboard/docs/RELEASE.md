@@ -39,12 +39,19 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
    verification from a clean checkout; the Cloudflare account and the D1 database id match `wrangler.toml`; the token can
    read the Worker, its deployments, D1 and Time Travel; `ADMIN_API_KEY` exists on the Worker (name only; a warning, not a
    failure, if absent); and it records the rollback points and the currently live version in the run summary.
-3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, add table `auth_failures`
-   (migration 0008 only; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
+3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, add tables `auth_failures`,
+   `response_cache` and `read_meter` (migrations 0008 and 0009, both additive; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
    commit recorded in the Worker, public smoke test (including anonymous write attempts that must be refused), read-only
    real-browser check of both dashboards on desktop and 375 px mobile with no credentials, fingerprint again and fail if
    any application, history, override or candidate record changed.
-4. Verify the live commit: `GET /api/version` returns `commit` equal to the released SHA (the smoke test asserts it).
+4. Verify the live commit: `GET /api/version` returns `commit` equal to the released SHA. The smoke test waits for it and
+   judges only answers whose `X-Worker-Commit` header is the released SHA.
+5. **Diagnose** (`mode = diagnose`, read-only) when production misbehaves: D1 info with 24-hour rows read and written, one
+   `SELECT 1`, and the Worker's own error for two `/api/health` requests through `wrangler tail`. It skips the fingerprint,
+   so it costs almost no D1 reads. See `INCIDENT_2026-11-05.md`.
+
+D1 budget: Workers Free allows 5,000,000 rows read per UTC day. Every smoke pass and browser suite costs reads; the
+read cache makes repeats cheap, but avoid repeated full suites against production on the same day.
 
 ## Operator key
 

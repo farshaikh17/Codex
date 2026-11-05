@@ -115,6 +115,8 @@ jobs:
             npx wrangler d1 info career-job-engine --json 2>&1 | grep -v -i 'token' | tail -n 40
             echo '#### One minimal remote query: SELECT 1'
             npx wrangler d1 execute career-job-engine --remote --command "SELECT 1 AS ok" --json 2>&1 | tail -n 40
+            echo '#### Dashboard read meter, last 3 UTC days (rows read by cache misses; table from migration 0009)'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT day, rows_read, public_misses, operator_misses FROM read_meter ORDER BY day DESC LIMIT 3" --json 2>&1 | grep -E '"(day|rows_read|public_misses|operator_misses)"|error|ERROR' | head -n 20
           } 2>&1 | tee diag.txt
           # The Worker's own error for two requests to /api/health (reads at most one row). Only outcome, exception text and
           # console lines are kept: no request headers, no query strings, no response bodies.

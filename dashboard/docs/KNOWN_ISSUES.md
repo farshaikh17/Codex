@@ -23,6 +23,14 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 ## Behaviour to be aware of
 
+* **Cached answers.** Dashboard reads are cached in D1: up to 30 minutes for visitors and 10 minutes for the operator.
+  An operator change clears the cache at once; new postings from the cron or the collector sync appear when an entry
+  expires. Answers carry `X-Cache: HIT`, `MISS` or `STALE`.
+* **Daily public read cap.** After 2,500,000 rows read by visitor cache misses in a UTC day, visitors see the last cached
+  answer (`X-Cache: STALE`) or a 503 until midnight UTC. Operator reads are never blocked. Anyone can still spend that
+  public share by requesting many different filter combinations; the cap only guarantees it cannot take the whole
+  free allowance.
+
 * **Public viewing.** Anyone with the URL can read jobs, candidate summaries, analytics and the application tracker
   (status, dates, job). That is intended. Employers, pay, notice, city, location preferences, application notes, resume
   versions, application history, audit trails and run logs are not served publicly. If a public field turns out to be
@@ -66,8 +74,8 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 * Whether `ADMIN_API_KEY` is present in Cloudflare is checked by name in the release preflight (the value is never read).
   Protected actions fail closed (503) if it is missing; public viewing does not depend on it.
-* Cloudflare billing or usage, D1 row counts against free-tier limits, and production query timings. D1 usage estimates
-  in this repo are design reasoning, not measurements.
+* Cloudflare billing. D1 usage is now measured (see `INCIDENT_2026-11-05.md`): the diagnose mode reads 24-hour rows
+  read/written, and the `read_meter` table records rows read by dashboard cache misses per UTC day.
 * A remote disposable D1 database (tests use Cloudflare's local D1 engine through `wrangler dev --local`).
 * Whether the sync workflow's *scheduled* run still succeeds after the Worker is deployed; the release does not touch the
   collector, and the sync path does not use the Worker API, but the first scheduled run after release should be checked.
