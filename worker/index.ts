@@ -234,7 +234,7 @@ router.post('/api/auth/verify', async (request, env) => {
     if (!key) {
       return jsonResponse({ error: 'Operator access key is required.' }, 400, corsHeaders(request, env));
     }
-    if (key !== env.ADMIN_API_KEY) {
+    if (!timingSafeEqual(key, env.ADMIN_API_KEY)) {
       return jsonResponse({ error: 'Invalid operator access key.' }, 403, corsHeaders(request, env));
     }
     return jsonResponse({
@@ -1390,7 +1390,8 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
   // Delegate to /api/jobs with eligibility=ELIGIBLE
   url.pathname = '/api/jobs';
   url.searchParams.set('eligibility', 'ELIGIBLE');
-  url.searchParams.set('candidate_id', 'farhan_shaikh');
+  // The caller's candidate is kept; an absent one keeps the historical default.
+  url.searchParams.set('candidate_id', url.searchParams.get('candidate_id') || 'farhan_shaikh');
   return router.handle(new Request(url.toString(), request), env);
 });
 
@@ -1543,10 +1544,14 @@ router.get('/api/analytics/sources-effectiveness', async (request, env, _params,
              SUM(CASE WHEN q.eligibility_status = 'UNKNOWN' THEN 1 ELSE 0 END) AS unknown_jobs,
              SUM(CASE WHEN q.eligibility_status = 'INELIGIBLE' THEN 1 ELSE 0 END) AS ineligible_jobs,
              SUM(CASE WHEN COALESCE(s.overall_score, 0) >= 70 THEN 1 ELSE 0 END) AS high_match_jobs,
-             SUM(CASE WHEN q.qualification_status = 'READY' THEN 1 ELSE 0 END) AS ready_jobs
+             SUM(CASE WHEN q.qualification_status = 'READY' THEN 1 ELSE 0 END) AS ready_jobs,
+             COUNT(a.id) AS applications_count,
+             SUM(CASE WHEN a.status = 'INTERVIEWING' THEN 1 ELSE 0 END) AS interviews_count,
+             SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejections_count
       FROM candidate_qualifications q
       JOIN jobs j ON j.id = q.job_id
       LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+      LEFT JOIN applications a ON a.candidate_id = q.candidate_id AND a.job_id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
       GROUP BY source_key
     `).bind(candidateId).all<any>();
@@ -1554,14 +1559,15 @@ router.get('/api/analytics/sources-effectiveness', async (request, env, _params,
 
     const { results: monitored } = await env.DB.prepare('SELECT * FROM cloud_sources ORDER BY id').all<any>();
     const sources: any[] = [];
-    const zero = { total_jobs: 0, relevant_jobs: 0, eligible_jobs: 0, unknown_jobs: 0, ineligible_jobs: 0, high_match_jobs: 0, ready_jobs: 0 };
+    const zero = { total_jobs: 0, relevant_jobs: 0, eligible_jobs: 0, unknown_jobs: 0, ineligible_jobs: 0, high_match_jobs: 0, ready_jobs: 0, applications_count: 0, interviews_count: 0, rejections_count: 0 };
     const finish = (base: any, st: any) => {
       const t = { ...zero, ...(st || {}) };
       return {
         ...base,
         total_jobs: t.total_jobs || 0, relevant_jobs: t.relevant_jobs || 0, eligible_jobs: t.eligible_jobs || 0,
         unknown_jobs: t.unknown_jobs || 0, ineligible_jobs: t.ineligible_jobs || 0, high_match_jobs: t.high_match_jobs || 0,
-        ready_jobs: t.ready_jobs || 0, applications_count: 0, interviews_count: 0, rejections_count: 0,
+        ready_jobs: t.ready_jobs || 0, applications_count: t.applications_count || 0,
+        interviews_count: t.interviews_count || 0, rejections_count: t.rejections_count || 0,
         conversion_pct: pct1(t.ready_jobs || 0, t.total_jobs || 0),
       };
     };
@@ -2049,7 +2055,7 @@ router.post('/api/automation/trigger',async(request,env)=>{
  return jsonResponse({status:summary.status,summary:{jobs_seen:0,jobs_new:0,jobs_unchanged:0,duration_ms:0,memory_peak_mb:null,...summary}},summary.status==='ERROR'?502:200,corsHeaders(request,env));
 });
 router.post('/api/automation/verify-urls',async(request,env)=>jsonResponse({error:'Standalone bulk URL verification is not implemented; no URLs were checked.'},501,corsHeaders(request,env)));
-router.post('/api/fixtures/reload',async(request,env)=>jsonResponse({error:'Synthetic fixture imports are disabled in production.'},403,corsHeaders(request,env)));
+router.post('/api/fixtures/reload',async(request,env)=>jsonResponse({error:'Synthetic fixture imports are disabled in production.'},410,corsHeaders(request,env)));
 
 router.get('/api/pilot', async (request, env) => {
   return jsonResponse({ available: false }, 200, corsHeaders(request, env));

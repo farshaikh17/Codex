@@ -10,7 +10,8 @@ import {
   fetchWeeklyMetrics,
   fetchIndiaRemoteSummary,
   overrideJobQualification,
-  isOperatorAuthenticated
+  isOperatorAuthenticated,
+  logoutOperator
 } from './api';
 import { PilotView } from './components/PilotView';
 import { Navbar, NavTab } from './components/Navbar';
@@ -33,7 +34,7 @@ export const App: React.FC = () => {
   const setActiveTab = (tab: NavTab) => {
     if (tab === 'farhan' || tab === 'sana') {
       const nextCandidate = tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
-      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); }
+      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); }
       setCandidateId(nextCandidate);
     }
     changeActiveTab(tab);
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleAuthRequired = () => {
       // The Worker answered 401/403: the key is missing, wrong or rotated. Drop it and ask again.
+      logoutOperator();
       setIsOperator(false);
       setAuthOpen(true);
     };

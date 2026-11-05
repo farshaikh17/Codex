@@ -129,3 +129,29 @@ test('GET requests never modify application history or manual decisions', async 
   assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, 2);
   assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM application_history').get().c, 1);
 });
+
+test('india-remote queue follows the requested candidate (no forced Farhan)', async () => {
+  const { env } = fresh();
+  const f = await call(worker, env, 'GET', '/api/india-remote/jobs?candidate_id=farhan_shaikh');
+  const s = await call(worker, env, 'GET', '/api/india-remote/jobs?candidate_id=sana_ansari');
+  assert.ok(f.json.jobs.length > 0 && s.json.jobs.length > 0);
+  assert.ok(f.json.jobs.every((j) => j.candidate_id === 'farhan_shaikh'));
+  assert.ok(s.json.jobs.every((j) => j.candidate_id === 'sana_ansari'), 'Sana received another candidate\'s rows');
+  assert.notDeepEqual(f.json.jobs.map((j) => j.id).sort(), s.json.jobs.map((j) => j.id).sort());
+});
+
+test('a disabled route is not an auth failure (410, not 403), and /auth/verify compares the key safely', async () => {
+  const { env } = fresh();
+  assert.equal((await call(worker, env, 'POST', '/api/fixtures/reload', { body: {} })).status, 410);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: ADMIN_KEY } })).status, 200);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: ADMIN_KEY + 'x' } })).status, 403);
+  assert.equal((await call(worker, env, 'POST', '/api/auth/verify', { key: null, body: { key: '' } })).status, 400);
+});
+
+test('source scorecard application counts come from the applications table', async () => {
+  const { env } = fresh();
+  const by = Object.fromEntries((await call(worker, env, 'GET', '/api/analytics/sources-effectiveness?candidate_id=farhan_shaikh')).json.sources.map((x) => [x.source_id, x]));
+  assert.equal(by['lever:acme'].applications_count, 2);
+  assert.equal(by['lever:acme'].interviews_count, 0);
+  assert.equal(by['greenhouse:beta'].applications_count, 0);
+});
