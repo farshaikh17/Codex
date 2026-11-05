@@ -59,7 +59,8 @@ export const AutomationDashboardView: React.FC<AutomationDashboardViewProps> = (
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 15000);
+    // The cron runs one work unit every 2 minutes, so refreshing faster shows nothing new; skip refreshes while the tab is hidden.
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') loadData(); }, 120000);
     return () => clearInterval(interval);
   }, []);
 

@@ -11,6 +11,7 @@ migrations = [
     '0006_startup_location_unknown.sql',
     '0007_qualification_history.sql',
     '0008_auth_failures.sql',
+    '0009_response_cache.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -45,3 +46,9 @@ print('cloud_job_evidence columns:', cols_evi)
 
 assert 'auth_failures' in tables and 'candidate_qualifications' in tables, 'migration chain is incomplete'
 print('migration chain OK')
+
+# 0009 is additive: the read cache and meter tables exist, and applying it twice changes nothing
+assert {'response_cache', 'read_meter'} <= set(r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'"))
+with open(os.path.join(base, '0009_response_cache.sql'), 'r', encoding='utf-8') as f:
+    conn.executescript(f.read())
+print('0009 re-applied idempotently')
