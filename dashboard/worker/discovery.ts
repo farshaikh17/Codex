@@ -65,12 +65,13 @@ export function avoidedTitle(candidateId:string,title:string){
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
  return FARHAN_HARD_AVOID.test(t)||(FARHAN_SOFT_AVOID.test(t)&&!FARHAN_TARGET_WORDS.test(t));
 }
-const INDIA_PLACE=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram|gurgaon|kolkata|ahmedabad|kochi|jaipur)\b/i;
+const INDIA_PLACE=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram|gurgaon|kolkata|ahmedabad|kochi|jaipur|coimbatore|madurai|tiruchirappalli|trichy|tamil nadu|karnataka|maharashtra|telangana|kerala|gujarat)\b/i;
 const FOREIGN_NAME=/\b(united states|usa|united kingdom|uk|japan|tokyo|stockholm|sweden|philippines|manila|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|north america|americas|mexico|brazil|singapore|dubai|uae|united arab emirates)\b/i;
 const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
 const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU)(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
-const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code)
-const EXCLUSION_PHRASE=/\b(?:excluding|except|outside(?: of)?|not including|other than)\s+(?:the\s+)?(?:US|U\.S\.|USA|United States|UK|EU|Europe)(?![A-Za-z0-9])/gi;
+const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code; TN stays, with Tamil Nadu places in INDIA_PLACE so 'Coimbatore, TN' is not foreign)
+const EXCLUSION_PLACE='(?:US|U\\.S\\.|USA|United States|UK|United Kingdom|EU|Europe|Canada|APAC|EMEA)(?![A-Za-z0-9])';
+const EXCLUSION_PHRASE=new RegExp('\\b(?:excluding|excl\\.?|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)[\\s-]*(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l))return false;   // 'Remote, excluding the US' is not a US location
@@ -82,6 +83,8 @@ export function remoteFromStored(workplaceType:string|null|undefined,location:st
 }
 /** Skill-based preliminary score, exactly as evaluate() computes it for a role-matched posting. */
 export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+skills*8+(eligible?10:0));}
+/** The Worker's own test for an Indian location in evaluate(); narrower than indianPlace(), which is only used to decide that a location is NOT foreign. */
+export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return /\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(l)||/(?:^|, )in$/i.test(l);}
 export function indianPlace(location:string|null|undefined){return INDIA_PLACE.test(location||'');}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
@@ -89,7 +92,7 @@ export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a co
 export function evaluate(candidate:any,p:Posting) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
  const negated=(pattern:RegExp)=>{const m=pattern.exec(lower);if(!m)return false;const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);return /\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after)};
- const india=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(p.location)||/(?:^|, )in$/i.test(p.location);
+ const india=sanaIndiaCity(p.location);
  const remote=p.remote||/\b(remote|work from home|telecommut)/i.test(p.location);
  const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);

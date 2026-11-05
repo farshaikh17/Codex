@@ -209,3 +209,20 @@ test('Sana remote-in-India rows keep ELIGIBLE and their score; only the stored r
   assert.equal(w.sqlite.prepare("SELECT eligibility_reason r FROM candidate_qualifications WHERE job_id='r1'").get().r, 'Remote role in India.');
   assert.equal(p.counts.sana_accessibility, 0); assert.equal(w.run().statements.length, 0);
 });
+
+test('review round 3: exclusion lists, non-US forms, Indian TN, board rows and the narrow Sana city test', async () => {
+  for (const l of ['Remote, excluding US and Canada', 'Remote, excluding US, UK', 'Remote, outside the UK or Europe', 'Remote, non-US', 'Remote (excl. US)', 'Remote, ex-US', 'Remote - not US', 'Remote - anywhere but the US', 'Remote - APAC (no US)', 'Coimbatore, TN', 'Madurai, TN'])
+    assert.equal(foreignLocation(l), false, l);
+  for (const l of ['Remote - US', 'Austin, TX', 'London, UK', 'New York, NY']) assert.equal(foreignLocation(l), true, l);
+  const { sanaIndiaCity } = await import('../worker/discovery.ts');
+  assert.equal(sanaIndiaCity('Kolkata, West Bengal'), false); assert.equal(sanaIndiaCity('Mumbai, India'), true);
+  const w = world();
+  // a board row for Sana in a city the Worker does not treat as Indian, scored from sponsorship: untouched
+  w.job('k1', 'Reliability Engineer', 'Kolkata, West Bengal');
+  w.row(S, 'k1', 58, { elig: 'UNKNOWN', reason: 'Reported by Some Board; employer availability and eligibility are unverified.', bd: JSON.stringify({ rule_version: 'cloud-conservative-review-1', matched_skills: ['a'] }) });
+  // a Farhan board row: eligibility was forced to UNKNOWN after scoring, so no foreign-location penalty
+  w.job('k2', 'Implementation Manager', 'Remote (US)');
+  w.row(F, 'k2', 58, { elig: 'UNKNOWN', reason: 'Reported by Some Board; employer availability and eligibility are unverified.' });
+  const p = w.run();
+  assert.equal(w.score(S, 'k1'), 58); assert.equal(w.score(F, 'k2'), 58); assert.equal(p.counts.sana_accessibility, 0);
+});

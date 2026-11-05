@@ -87,3 +87,5 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 * `legacy/` holds the original Windows-path scripts; they are not run by anything.
 * The collector's two Python tests of the importer live in `legacy/` because they need that repository's `engine/`.
+
+- **Ranking correction and job-board rows (known gap, conservative).** Job-board rows are stored with eligibility forced to UNKNOWN after scoring, so the script cannot tell whether a foreign-location penalty applied to them; it does not penalise them (a board posting in a foreign city keeps its older score until the next discovery refresh). The script only ever lowers scores and never changes status, lane, overrides, applications or history. Foreign-location detection is a text rule: 'Hyderabad, Pakistan' reads as Indian, and unusual exclusion wording may be misread; both err toward not penalising.

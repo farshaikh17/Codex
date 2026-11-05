@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { avoidedTitle, foreignLocation, remoteFromStored, roleScore, indianPlace, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { avoidedTitle, foreignLocation, remoteFromStored, roleScore, sanaIndiaCity, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 
 const q = (v) => (v === null || v === undefined ? 'NULL' : "'" + String(v).replace(/'/g, "''") + "'");
 export const SELECT_ROWS = `SELECT s.candidate_id AS c, s.job_id AS j, s.overall_score AS score, s.strategy_lane AS lane, s.score_breakdown AS bd,
@@ -37,7 +37,9 @@ export function plan(rows) {
     if (r.c === 'farhan_shaikh') {
       let next = score; const avoid = avoidedTitle(r.c, r.title);
       if (avoid) next = Math.min(next, AVOID_TITLE_CAP);
-      const foreign = r.es !== 'ELIGIBLE' && foreignLocation(r.loc);
+      // Job-board rows are stored with eligibility forced to UNKNOWN after the score was computed, so the pre-force eligibility is not recoverable: never penalise them.
+      const boardRow = typeof r.er === 'string' && r.er.startsWith('Reported by ');
+      const foreign = !boardRow && r.es !== 'ELIGIBLE' && foreignLocation(r.loc);
       if (foreign) next = Math.max(0, next - FOREIGN_LOCATION_PENALTY);
       if (next !== score) {
         out.statements.push(tagScore(r.c, r.j, next)); out.counts.score_rows++;
@@ -51,21 +53,22 @@ export function plan(rows) {
       const oldReason = r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && cityOnly;
       if (r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && !cityOnly) {
         // Remote in India stays ELIGIBLE with the same score; only the stored reason text is brought in line with what the Worker now writes.
-        out.statements.push(`UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
+        out.statements.push(`UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
         out.counts.qualification_rows++; continue;
       }
-      const boardRow = r.es === 'UNKNOWN' && typeof r.er === 'string' && r.er.startsWith('Reported by ') && cityOnly && indianPlace(r.loc);
+      const boardRow = r.es === 'UNKNOWN' && typeof r.er === 'string' && r.er.startsWith('Reported by ') && cityOnly && sanaIndiaCity(r.loc);
       if (!oldReason && !boardRow) continue;
+      const before = out.statements.length;
       if (r.lane === 'STRONGEST_FIT') {
         const skills = Array.isArray(bd.matched_skills) ? bd.matched_skills.length : null;
         const next = skills === null ? Math.max(0, score - 10) : Math.min(score, roleScore(skills, false));   // recompute exactly like evaluate(); never raise
         if (next !== score) { out.statements.push(tagScore(r.c, r.j, next)); out.counts.score_rows++; }
       }
       if (oldReason) {
-        out.statements.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(SANA_UNKNOWN_ACCESS_REASON)} WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
+        out.statements.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(SANA_UNKNOWN_ACCESS_REASON)} WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
         out.counts.qualification_rows++;
       }
-      out.counts.sana_accessibility++;
+      if (out.statements.length > before) out.counts.sana_accessibility++;
     }
   }
   out.counts.estimated_rows_written = out.counts.score_rows * 2 + out.counts.qualification_rows;   // the score index includes overall_score
