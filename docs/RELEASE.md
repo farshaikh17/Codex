@@ -16,8 +16,9 @@ Repository -> Settings -> Secrets and variables -> Actions -> New repository sec
 | `NEW_ADMIN_API_KEY` | A new operator key you generated yourself (for example in a password manager, 32+ random characters). Only used if you tick `rotate_key`. | optional |
 | `OPERATOR_SMOKE_KEY` | The operator key, so the post-deploy smoke test can also run its authenticated checks. | optional |
 
-Settings -> Environments -> New environment `production` (the deploy job uses it; add yourself as required reviewer if
-your plan allows, otherwise leave it without protection rules).
+Settings -> Environments -> New environment `production`: under *Deployment branches* choose **Selected branches** and
+allow only `main`; add yourself as required reviewer if your plan allows. The deploy job uses this environment, so a
+release workflow edited on another branch cannot run with the production secrets.
 
 ## Releasing
 
@@ -64,4 +65,6 @@ node test/seed-sql.mjs > .tmp-seed.sql && npx wrangler d1 execute career-job-eng
 npx wrangler dev --local --port 8787 --persist-to .tmp-d1 --var ADMIN_API_KEY:any-local-test-value &
 E2E_KEY=any-local-test-value node test/e2e/browser.e2e.mjs desktop      # and: mobile
 ```
-(`E2E_CHROMIUM=/path/to/chrome` selects a browser if Playwright's own is not installed; `.tmp-*` is git-ignored.)
+(`E2E_CHROMIUM=/path/to/chrome` selects a browser if Playwright's own is not installed; `.tmp-*` is git-ignored. The run
+ends by deliberately locking the local limiter, so clear it before running again:
+`npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "DELETE FROM auth_failures"`.)

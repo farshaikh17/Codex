@@ -69,7 +69,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const loadAuditHistory = async () => {
     setIsLoadingAudit(true);
     try {
-      const res = await fetchQualificationAudit(job.id, job.candidate_id);
+      const res = await fetchQualificationAudit(job.id, job.candidate_id || '');
       setAuditTrail(res.audit_trail);
     } catch {
       setAuditTrail([]);
@@ -101,7 +101,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     if (!overrideReason.trim()) return;
     setIsSubmittingOverride(true);
     try {
-      await overrideJobQualification(job.id, overrideStatus, overrideReason.trim(), 'Candidate', job.candidate_id);
+      await overrideJobQualification(job.id, overrideStatus, overrideReason.trim(), 'Candidate', job.candidate_id || '');
       const updatedJob: Job = {
         ...job,
         qualification_status: overrideStatus,

@@ -181,7 +181,7 @@ test('lockout also covers /api/auth/verify, expires with the window, and a good 
   sqlite.prepare('UPDATE auth_failures SET window_start = window_start - 1000').run();           // window elapsed
   assert.equal(await verify('192.0.2.1', ADMIN_KEY), 200);
   assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 0, 'success clears the counter');
-  for (let i = 0; i < 3; i++) await verify('192.0.2.2', 'bad');
+  for (let i = 0; i < 3; i++) await verify('192.0.2.2', 'bad' + i);
   assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 3);
   assert.ok(!JSON.stringify(sqlite.prepare('SELECT * FROM auth_failures').all()).includes('192.0.2'), 'raw client address must not be stored');
 });
@@ -250,7 +250,7 @@ test('limiter: concurrent wrong guesses are counted exactly; X-Forwarded-For can
   assert.equal(statuses.filter((s) => s === 429).length, 22);
   assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM auth_failures').get().c, 1, 'rotating X-Forwarded-For created extra buckets');
   assert.ok(sqlite.prepare('SELECT failures FROM auth_failures').get().failures >= 8);
-  sqlite.prepare("INSERT INTO auth_failures VALUES ('stale',3,1,1)").run();
+  sqlite.prepare("INSERT INTO auth_failures VALUES ('stale',3,1,1,NULL)").run();
   for (let i = 0; i < 300; i++) await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '198.51.100.' + (i % 250) + '.' + i, Authorization: 'Bearer n' + i } }), env, { waitUntil() {} });
   assert.equal(sqlite.prepare("SELECT COUNT(*) c FROM auth_failures WHERE ip_hash='stale'").get().c, 0, 'rows idle for a day must be trimmed');
 });
@@ -287,4 +287,42 @@ test('profile facts: experience is computed from dates for Sana, Farhan keeps hi
   assert.match(f.pay_line, /1,20,000/); assert.match(f.pay_line, /\$25\/hour/);
   const anon = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null });
   assert.equal(anon.status, 401); assert.ok(!JSON.stringify(anon.json).includes('RRVUNL'));
+});
+
+// ---- review round 2 -------------------------------------------------------------------------------------------
+test('a browser repeating the SAME stale key in parallel counts once; different guesses each count', async () => {
+  const { sqlite, env } = fresh();
+  const hit = (key) => worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=farhan_shaikh', { headers: { 'CF-Connecting-IP': '203.0.113.201', Authorization: 'Bearer ' + key } }), env, { waitUntil() {} }).then((r) => r.status);
+  const burst = await Promise.all(Array.from({ length: 7 }, () => hit('stale-old-key')));
+  assert.deepEqual(new Set(burst), new Set([403]));
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 1, 'seven identical requests must cost one attempt');
+  assert.equal(await hit(ADMIN_KEY), 200, 'the real key still works after a stale-key burst');
+  for (let i = 0; i < 7; i++) await hit('guess-' + i);                                  // seven different guesses
+  assert.equal(sqlite.prepare('SELECT failures FROM auth_failures').get().failures, 8);
+  assert.equal(await hit('guess-8'), 429);
+  assert.equal(await hit(ADMIN_KEY), 429);
+  assert.ok(!sqlite.prepare('SELECT last_key_hash FROM auth_failures').get().last_key_hash.includes('guess'), 'a wrong key must not be stored');
+});
+
+test('path-scoped candidate routes reject unknown candidates and a body that disagrees with the path', async () => {
+  const { sqlite, env } = fresh();
+  for (const p of ['/api/candidates/unknown/jobs', '/api/candidates/unknown/applications', '/api/candidates/unknown/strategy', '/api/candidates/unknown/dashboard'])
+    assert.equal((await call(worker, env, 'GET', p)).status, 400, p);
+  assert.equal((await call(worker, env, 'GET', '/api/candidates/sana_ansari/strategy')).status, 200);
+  const before = sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c;
+  const mismatch = await call(worker, env, 'POST', '/api/candidates/sana_ansari/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
+  assert.equal(mismatch.status, 409);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, before, 'nothing may be saved on a mismatch');
+});
+
+test('profile save keeps stored values for fields not sent and rejects malformed bodies', async () => {
+  const { sqlite, env } = fresh();
+  const before = sqlite.prepare("SELECT current_location, total_years_experience, qualification_threshold FROM candidates WHERE id='sana_ansari'").get();
+  const ok = await call(worker, env, 'PUT', '/api/profile?candidate_id=sana_ansari', { body: { full_name: 'Test Sana Renamed' } });
+  assert.equal(ok.status, 200);
+  const after = sqlite.prepare("SELECT full_name, current_location, total_years_experience, qualification_threshold FROM candidates WHERE id='sana_ansari'").get();
+  assert.equal(after.full_name, 'Test Sana Renamed');
+  assert.equal(after.current_location, before.current_location); assert.equal(after.total_years_experience, before.total_years_experience); assert.equal(after.qualification_threshold, before.qualification_threshold);
+  const bad = await worker.fetch(new Request('https://test.invalid/api/profile?candidate_id=sana_ansari', { method: 'PUT', headers: { Authorization: 'Bearer ' + ADMIN_KEY, 'Content-Type': 'application/json' }, body: '{not json' }), env, { waitUntil() {} });
+  assert.equal(bad.status, 400);
 });

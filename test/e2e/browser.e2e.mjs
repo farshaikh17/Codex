@@ -35,7 +35,7 @@ const unlock = async (key) => { await page.fill('#operator-key-input', key); awa
 
 // 1. No credentials: protected data is refused and the unlock window opens by itself.
 await goto();
-check('no key: first load makes unauthenticated API calls that are refused (401)', apiLog.some((r) => r.status === 401 && !r.auth) && !apiLog.some((r) => r.status === 200 && !r.auth && !/health|version/.test(r.url)));
+check('no key: no private data is requested at all, and nothing is counted against the limiter', !apiLog.some((r) => !/health|version|auth\/verify/.test(r.url)), JSON.stringify(apiLog.slice(0, 3)));
 check('no key: unlock window opens automatically', await modalOpen());
 
 // 2. Invalid key.
@@ -114,8 +114,10 @@ await page.keyboard.press('Escape'); await page.evaluate(() => document.querySel
 
 // 7. Rejected credentials after a reload (rotated key stored in the session).
 await page.evaluate(() => window.sessionStorage.setItem('admin_session_key', 'rotated-old-key'));
+apiLog.length = 0;
 await goto();
-check('stale key after reload: refused (403), window opens, stale key removed', (await modalOpen()) && (await storedKey()) === null);
+const staleVerify = apiLog.filter((r) => /auth\/verify/.test(r.url));
+check('stale key after reload: ONE refused check (not one per request), window opens, stale key removed', staleVerify.length === 1 && staleVerify[0].status === 403 && (await modalOpen()) && (await storedKey()) === null, JSON.stringify(staleVerify));
 
 // 8. Lock: unlock again, then Log Out / Lock.
 if (!(await page.locator('#operator-key-input').count())) await page.locator('button[aria-label*="Operator session"]').first().click();
@@ -127,7 +129,7 @@ await page.click('#operator-logout-btn'); await page.waitForTimeout(800);
 check('lock: key removed and window closed', (await storedKey()) === null && !(await modalOpen()));
 apiLog.length = 0;
 await goto();
-check('after lock: reload is refused and asks for the key again', apiLog.some((r) => r.status === 401) && (await modalOpen()));
+check('after lock: reload requests no private data and asks for the key again', !apiLog.some((r) => !/health|version|auth\/verify/.test(r.url)) && (await modalOpen()), JSON.stringify(apiLog.slice(0, 3)));
 
 // 9. Guess limiter through the UI: eight wrong keys, then even the right key is refused.
 if (!(await page.locator('#operator-key-input').count())) await page.locator('button[aria-label*="Operator session"]').first().click();

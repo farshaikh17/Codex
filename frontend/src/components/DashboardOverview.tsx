@@ -4,12 +4,14 @@ import { fetchDashboardOverview } from '../api';
 import { DashboardOverviewData } from '../types';
 
 interface DashboardOverviewProps {
+  isOperator: boolean;
   onSelectCandidate: (candidateId: 'farhan_shaikh' | 'sana_ansari') => void;
   onOpenAutomation: () => void;
   onOpenApplications: () => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
+  isOperator,
   onSelectCandidate,
   onOpenAutomation,
   onOpenApplications
@@ -19,16 +21,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Private data is requested only while the operator session is unlocked, and again after every unlock.
+    let current = true;
+    if (!isOperator) { setData(null); setError(null); setLoading(false); return; }
+    setLoading(true); setError(null);
     fetchDashboardOverview()
-      .then(res => {
-        setData(res);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message || 'Failed to load dashboard overview');
-        setLoading(false);
-      });
-  }, []);
+      .then(res => { if (current) { setData(res); setLoading(false); } })
+      .catch(err => { if (current) { setError(err.message || 'Failed to load dashboard overview'); setLoading(false); } });
+    return () => { current = false; };
+  }, [isOperator]);
+
+  if (!isOperator) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-slate-400">
+        <p className="text-sm">The dashboard is locked. Use the lock button in the top bar to enter the operator key.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -277,7 +286,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <div className="h-8 w-px bg-slate-800" />
           <div>
             <span className="text-slate-500 uppercase tracking-wider text-[10px] block">Active Vacancies</span>
-            <span className="text-base font-bold text-emerald-400 font-mono">{(data.active_jobs_count ?? 2878).toLocaleString()} Active</span>
+            <span className="text-base font-bold text-emerald-400 font-mono">{(data.active_jobs_count ?? 0).toLocaleString()} Active</span>
           </div>
         </div>
 

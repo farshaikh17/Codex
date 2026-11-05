@@ -130,7 +130,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             }`}
           >
             <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">All Confirmed</div>
-            <div className="text-xl font-black text-white mt-0.5">{summary?.total_confirmed ?? 412}</div>
+            <div className="text-xl font-black text-white mt-0.5">{summary?.total_confirmed ?? '—'}</div>
             <div className="text-[10px] text-emerald-400 mt-1">India Verified</div>
           </button>
 
@@ -145,7 +145,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <div className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Ready
             </div>
-            <div className="text-xl font-black text-emerald-300 mt-0.5">{summary?.ready_count ?? 13}</div>
+            <div className="text-xl font-black text-emerald-300 mt-0.5">{summary?.ready_count ?? '—'}</div>
             <div className="text-[10px] text-emerald-400 mt-1 font-mono font-medium">Ready to Apply</div>
           </button>
 
@@ -160,7 +160,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <div className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> Stretch
             </div>
-            <div className="text-xl font-black text-blue-300 mt-0.5">{summary?.stretch_count ?? 15}</div>
+            <div className="text-xl font-black text-blue-300 mt-0.5">{summary?.stretch_count ?? '—'}</div>
             <div className="text-[10px] text-blue-400 mt-1 font-mono font-medium">Adjacent Match</div>
           </button>
 
@@ -173,7 +173,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             }`}
           >
             <div className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Needs Review</div>
-            <div className="text-xl font-black text-amber-300 mt-0.5">{summary?.review_count ?? 126}</div>
+            <div className="text-xl font-black text-amber-300 mt-0.5">{summary?.review_count ?? '—'}</div>
             <div className="text-[10px] text-amber-400 mt-1 font-mono font-medium">Operator Check</div>
           </button>
 
@@ -186,7 +186,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             }`}
           >
             <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Not Role Fit</div>
-            <div className="text-xl font-black text-slate-300 mt-0.5">{summary?.not_fit_count ?? 256}</div>
+            <div className="text-xl font-black text-slate-300 mt-0.5">{summary?.not_fit_count ?? '—'}</div>
             <div className="text-[10px] text-slate-400 mt-1 font-mono font-medium">Unaligned Roles</div>
           </button>
         </div>
@@ -216,10 +216,10 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
               className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="ALL">All Confirmed</option>
-              <option value="READY">Ready ({summary?.ready_count ?? 13})</option>
-              <option value="STRETCH">Stretch ({summary?.stretch_count ?? 15})</option>
-              <option value="REVIEW">Needs Review ({summary?.review_count ?? 126})</option>
-              <option value="NOT_FIT">Not Fit ({summary?.not_fit_count ?? 256})</option>
+              <option value="READY">Ready ({summary?.ready_count ?? '—'})</option>
+              <option value="STRETCH">Stretch ({summary?.stretch_count ?? '—'})</option>
+              <option value="REVIEW">Needs Review ({summary?.review_count ?? '—'})</option>
+              <option value="NOT_FIT">Not Fit ({summary?.not_fit_count ?? '—'})</option>
             </select>
           </div>
 

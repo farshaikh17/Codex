@@ -93,7 +93,26 @@ export async function verifyOperatorKey(key: string): Promise<{ status: string; 
   return data;
 }
 
+/** One check of the stored key per page load, before any data requests are fanned out. A stale key then costs a
+ *  single refused attempt instead of one per parallel request. Returns 'ok', 'none', 'rejected' or 'locked'. */
+let verifiedKey: string | null = null;
+export async function checkStoredOperatorKey(): Promise<'ok' | 'none' | 'rejected' | 'locked'> {
+  const key = getSessionAuthKey();
+  if (!key) return 'none';
+  if (verifiedKey === key) return 'ok';
+  const res = await fetch(`${API_BASE}/auth/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key })
+  });
+  if (res.status === 429) return 'locked';
+  if (!res.ok) { clearSessionAuthKey(); verifiedKey = null; return 'rejected'; }
+  verifiedKey = key;
+  return 'ok';
+}
+
 export function logoutOperator(): void {
+  verifiedKey = null;
   clearSessionAuthKey();
 }
 
@@ -268,7 +287,7 @@ export async function fetchProfile(candidateId?: string): Promise<CandidateProfi
 }
 
 export async function updateProfile(profile: CandidateProfile, candidateId?: string): Promise<CandidateProfile> {
-  const targetCid = candidateId || profile.id || 'farhan_shaikh';
+  const targetCid = candidateId || profile.id;
   const res = await authedFetch(`${API_BASE}/profile?candidate_id=${encodeURIComponent(targetCid)}`, {
     method: 'PUT',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
@@ -382,7 +401,7 @@ export async function overrideJobQualification(
   status: QualificationStatus,
   reason: string,
   reviewer: string = 'Candidate',
-  candidateId: string = 'farhan_shaikh'
+  candidateId: string
 ): Promise<any> {
   const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/qualification-override`, {
     method: 'POST',
@@ -396,7 +415,7 @@ export async function overrideJobQualification(
   return res.json();
 }
 
-export async function fetchQualificationAudit(jobId: string, candidateId: string = 'farhan_shaikh'): Promise<{
+export async function fetchQualificationAudit(jobId: string, candidateId: string): Promise<{
   job_id: string;
   count: number;
   audit_trail: QualificationAuditRecord[];

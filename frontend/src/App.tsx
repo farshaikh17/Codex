@@ -11,7 +11,8 @@ import {
   fetchIndiaRemoteSummary,
   overrideJobQualification,
   isOperatorAuthenticated,
-  logoutOperator
+  logoutOperator,
+  checkStoredOperatorKey
 } from './api';
 import { PilotView } from './components/PilotView';
 import { Navbar, NavTab } from './components/Navbar';
@@ -34,7 +35,7 @@ export const App: React.FC = () => {
   const setActiveTab = (tab: NavTab) => {
     if (tab === 'farhan' || tab === 'sana') {
       const nextCandidate = tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
-      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); }
+      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); setWeeklyMetrics(null); setIndiaRemoteSummary(null); setTotalJobsCount(0); setStatusCounts({ READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 }); setProfile(null); }
       setCandidateId(nextCandidate);
     }
     changeActiveTab(tab);
@@ -94,6 +95,17 @@ export const App: React.FC = () => {
     const currentRequest = ++requestId.current;
     setIsLoading(true);
     setError(null);
+    // Check the stored key once before fanning out parallel requests: a stale key then costs one refused attempt, not seven.
+    const session = await checkStoredOperatorKey();
+    if (currentRequest !== requestId.current) return;
+    if (session !== 'ok') {
+      setIsLoading(false);
+      setIsOperator(false);
+      if (session === 'locked') setError('Too many failed attempts from this address. Try again in a few minutes.');
+      setAuthOpen(true);
+      return;
+    }
+    setIsOperator(true);
     try {
       const candidateForFetch = candidateId;
       const [paginatedResult, profileData, analyticsData, trackerData, metricsData, irSummaryData] = await Promise.all([
@@ -213,7 +225,7 @@ export const App: React.FC = () => {
 
   const savedCount = trackedJobs.length;
   const readyCount = weeklyMetrics?.ready_inventory ?? jobs.filter((j) => j.farhan_fit === 'READY' || j.qualification_status === 'READY').length;
-  const indiaRemoteCount = indiaRemoteSummary?.total_confirmed ?? 412;
+  const indiaRemoteCount = indiaRemoteSummary?.total_confirmed ?? 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
@@ -255,6 +267,7 @@ export const App: React.FC = () => {
           <>
             {activeTab === 'dashboard' && (
               <DashboardOverview
+                isOperator={isOperator}
                 onSelectCandidate={(cid) => setActiveTab(cid === 'farhan_shaikh' ? 'farhan' : 'sana')}
                 onOpenAutomation={() => setActiveTab('automation')}
                 onOpenApplications={() => setActiveTab('tracker')}

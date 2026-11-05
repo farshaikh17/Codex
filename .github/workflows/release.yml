@@ -23,6 +23,10 @@ on:
         default: false
 permissions:
   contents: read
+# Explicit bash so every step runs with -e -o pipefail: a failed `wrangler deploy | tee` fails the step.
+defaults:
+  run:
+    shell: bash
 concurrency:
   group: production-release
   cancel-in-progress: false
@@ -32,9 +36,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Guard - main only, exact commit
+        env:
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          CONFIRM: ${{ inputs.confirm_sha }}
         run: |
-          [ "${{ github.ref }}" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on ${{ github.ref }})"; exit 1; }
-          [ "${{ inputs.confirm_sha }}" = "${{ github.sha }}" ] || { echo "::error::confirm_sha does not match the commit being released (${{ github.sha }})"; exit 1; }
+          [ "$REF" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on $REF)"; exit 1; }
+          [ "$CONFIRM" = "$SHA" ] || { echo "::error::confirm_sha does not match the commit being released ($SHA)"; exit 1; }
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -51,6 +59,13 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
+      - name: Guard - main only, exact commit (again, in the job that holds the secrets)
+        env:
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          CONFIRM: ${{ inputs.confirm_sha }}
+        run: |
+          [ "$REF" = "refs/heads/main" ] && [ "$CONFIRM" = "$SHA" ] || { echo "::error::Not main, or confirm_sha mismatch"; exit 1; }
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -58,6 +73,8 @@ jobs:
       - run: npm ci
 
       - name: Preflight - correct account, secret present, record rollback points (read-only)
+        env:
+          ROTATE: ${{ inputs.rotate_key }}
         run: |
           set -euo pipefail
           [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets"; exit 1; }
@@ -65,12 +82,12 @@ jobs:
           [ "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED" ] || { echo "::error::CLOUDFLARE_ACCOUNT_ID is not the account in wrangler.toml; stopping before any change"; exit 1; }
           {
             echo "### Release preflight"
-            echo "- commit: \`${{ github.sha }}\`"
+            echo "- commit: \`$GITHUB_SHA\`"
             echo "- account matches wrangler.toml: yes"
           } >> "$GITHUB_STEP_SUMMARY"
           if npx wrangler secret list --format json | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));process.exit(s.some(x=>x.name==='ADMIN_API_KEY')?0:1)"; then
             echo "- ADMIN_API_KEY present (value never read): yes" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ inputs.rotate_key }}" = "true" ]; then
+          elif [ "$ROTATE" = "true" ]; then
             echo "- ADMIN_API_KEY present: no (will be created by rotate_key)" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::error::ADMIN_API_KEY is not set in Cloudflare. Re-run with rotate_key after adding the NEW_ADMIN_API_KEY secret."; exit 1

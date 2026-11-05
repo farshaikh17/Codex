@@ -132,18 +132,22 @@ async function lockoutSeconds(env: Env, key: string): Promise<number> {
   }
 }
 
-/** Counts one wrong key atomically (single upsert) and returns the failures now in the window, or 0 if unavailable. */
-async function recordAuthFailure(env: Env, key: string): Promise<number> {
+/** Counts one wrong key atomically (single upsert) and returns the failures now in the window, or 0 if unavailable.
+ *  Repeating the identical wrong key is not a guess, so it adds nothing; every different wrong key adds one. */
+async function recordAuthFailure(env: Env, key: string, presented: string): Promise<number> {
   try {
     const now = Math.floor(Date.now() / 1000);
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wrong-key:' + presented));
+    const keyHash = [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
     const row = await env.DB.prepare(`
-      INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at) VALUES (?, 1, ?, ?)
+      INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at, last_key_hash) VALUES (?, 1, ?, ?, ?)
       ON CONFLICT(ip_hash) DO UPDATE SET
-        failures = CASE WHEN ? - window_start >= ? THEN 1 ELSE failures + 1 END,
+        failures = CASE WHEN ? - window_start >= ? THEN 1 WHEN last_key_hash = ? THEN failures ELSE failures + 1 END,
         window_start = CASE WHEN ? - window_start >= ? THEN ? ELSE window_start END,
+        last_key_hash = ?,
         updated_at = ?
       RETURNING failures
-    `).bind(key, now, now, now, AUTH_WINDOW_SECONDS, now, AUTH_WINDOW_SECONDS, now, now).first<{ failures: number }>();
+    `).bind(key, now, now, keyHash, now, AUTH_WINDOW_SECONDS, keyHash, now, AUTH_WINDOW_SECONDS, now, keyHash, now).first<{ failures: number }>();
     // Retention: rows idle for a day are irrelevant; trimming rides on a failure, so the table cannot grow unbounded.
     if (Math.random() < 0.05) {
       await env.DB.prepare('DELETE FROM auth_failures WHERE updated_at < ?').bind(now - 24 * 3600).run();
@@ -178,7 +182,7 @@ async function checkOperatorAuth(request: Request, env: Env): Promise<Response |
   const wait = await lockoutSeconds(env, ck);
   if (wait > 0) return tooManyAttempts(request, env, wait);
   if (!timingSafeEqual(match[1].trim(), env.ADMIN_API_KEY)) {
-    const n = await recordAuthFailure(env, ck);
+    const n = await recordAuthFailure(env, ck, match[1].trim());
     // The attempt that crosses the limit is already answered 429, so at most AUTH_MAX_FAILURES wrong keys get a 403
     // per window even when guesses are sent concurrently.
     if (n > AUTH_MAX_FAILURES) return tooManyAttempts(request, env, AUTH_WINDOW_SECONDS);
@@ -374,7 +378,7 @@ router.post('/api/auth/verify', async (request, env) => {
     const wait = await lockoutSeconds(env, ck);
     if (wait > 0) return tooManyAttempts(request, env, wait);
     if (!timingSafeEqual(key, env.ADMIN_API_KEY)) {
-      const n = await recordAuthFailure(env, ck);
+      const n = await recordAuthFailure(env, ck, key);
       if (n > AUTH_MAX_FAILURES) return tooManyAttempts(request, env, AUTH_WINDOW_SECONDS);
       return jsonResponse({ error: 'Invalid operator access key.' }, 403, corsHeaders(request, env));
     }
@@ -477,7 +481,8 @@ router.get('/api/candidates', async (request, env) => {
 });
 
 router.get('/api/candidates/:id/strategy', async (request, env, params) => {
-  const candidateId = params.id;
+  const candidateId = knownCandidate(params.id);
+  if (!candidateId) return badCandidate(request, env, params.id);
   try {
     const strat = await env.DB.prepare(`
       SELECT strongest_fit_target_pct, bridge_target_pct, dream_target_pct
@@ -560,7 +565,8 @@ router.get('/api/candidates/:id/strategy', async (request, env, params) => {
 });
 
 router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
-  const candidateId = params.id;
+  const candidateId = knownCandidate(params.id);
+  if (!candidateId) return badCandidate(request, env, params.id);
   try {
     const candidate = await env.DB.prepare(`
       SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
@@ -770,7 +776,8 @@ router.get('/api/dashboard/overview', async (request, env) => {
 // -------------------------------------------------------------
 
 router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
-  const candidateId = params.id;
+  const candidateId = knownCandidate(params.id);
+  if (!candidateId) return badCandidate(request, env, params.id);
   const statusFilter = url.searchParams.get('status') || 'READY,STRETCH_READY';
   const laneFilter = url.searchParams.get('lane') || 'ALL';
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), 500);
@@ -1242,7 +1249,8 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
 // -------------------------------------------------------------
 
 router.get('/api/candidates/:id/applications', async (request, env, params) => {
-  const candidateId = params.id;
+  const candidateId = knownCandidate(params.id);
+  if (!candidateId) return badCandidate(request, env, params.id);
   try {
     const { results } = await env.DB.prepare(`
       SELECT 
@@ -1475,6 +1483,11 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
 }
 
 router.post('/api/candidates/:id/applications', async (request, env, params) => {
+  // The path decides the candidate; a body naming someone else is a mistake, not something to guess around.
+  const peek = await request.clone().json<any>().catch(() => null);
+  if (peek && peek.candidate_id && peek.candidate_id !== params.id) {
+    return jsonResponse({ error: `Body candidate_id ${String(peek.candidate_id).slice(0, 40)} does not match the path candidate ${params.id.slice(0, 40)}; nothing was saved.` }, 409, corsHeaders(request, env));
+  }
   return handleApplicationSave(request, env, params.id);
 });
 
@@ -2155,7 +2168,8 @@ router.get('/api/profile', async (request, env, _params, url) => {
 
 router.put('/api/profile', async (request, env, _params, url) => {
   try {
-    const body = await request.json<any>();
+    const body = await request.json<any>().catch(() => null);
+    if (!body || typeof body !== 'object') return jsonResponse({ error: 'Request body must be valid JSON.' }, 400, corsHeaders(request, env));
     const candidateId = url?.searchParams?.get('candidate_id') || body.id;
 
     if (!knownCandidate(candidateId)) {
@@ -2166,20 +2180,19 @@ router.put('/api/profile', async (request, env, _params, url) => {
       return jsonResponse({ error: `Profile id ${body.id} does not match candidate ${candidateId}; nothing was saved.` }, 409, corsHeaders(request, env));
     }
 
-    const defaultExp = candidateId === 'sana_ansari' ? 9.2 : 4;
-    const expYears = body.total_years_experience !== undefined && body.total_years_experience !== null
-      ? Number(body.total_years_experience)
-      : defaultExp;
-
+    const existing = await env.DB.prepare('SELECT full_name, current_location, total_years_experience, qualification_threshold FROM candidates WHERE id = ?').bind(candidateId).first<any>();
+    if (!existing) return jsonResponse({ error: `Profile not found for candidate ${candidateId}` }, 404, corsHeaders(request, env));
+    // Only the fields the caller sent change; everything else keeps its stored value (no constants written over data).
+    const num = (v: unknown, fallback: number) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : fallback);
     await env.DB.prepare(`
       UPDATE candidates
       SET full_name = ?, current_location = ?, total_years_experience = ?, qualification_threshold = ?, updated_at = datetime('now')
       WHERE id = ?
     `).bind(
-      body.full_name || (candidateId === 'sana_ansari' ? 'Sana Ansari' : 'Farhan Shaikh'),
-      body.current_location || (candidateId === 'sana_ansari' ? 'Kota, India' : 'Kota, India'),
-      expYears,
-      body.qualification_threshold || (candidateId === 'sana_ansari' ? 60 : 70),
+      typeof body.full_name === 'string' && body.full_name.trim() ? body.full_name.trim() : existing.full_name,
+      typeof body.current_location === 'string' && body.current_location.trim() ? body.current_location.trim() : existing.current_location,
+      num(body.total_years_experience, existing.total_years_experience),
+      num(body.qualification_threshold, existing.qualification_threshold),
       candidateId
     ).run();
 
