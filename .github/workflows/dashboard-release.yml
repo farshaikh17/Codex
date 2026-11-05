@@ -169,8 +169,8 @@ jobs:
       - name: Public smoke test (no credentials; includes anonymous write attempts that must be refused)
         if: ${{ inputs.mode == 'release' || inputs.mode == 'verify' }}
         env:
-          SMOKE_EXPECT_COMMIT: ${{ github.sha }}
-        # (a verify run right after a release can pass a different SMOKE_EXPECT_COMMIT via a new release; it checks the live commit equals this run's commit)
+          # release mode asserts the live commit equals this run's commit; verify mode may run on a later main, so it does not
+          SMOKE_EXPECT_COMMIT: ${{ inputs.mode == 'release' && github.sha || '' }}
         run: |
           node scripts/post_deploy_smoke.mjs | tee smoke.txt
           { echo '### Public smoke test'; echo '```'; cat smoke.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
