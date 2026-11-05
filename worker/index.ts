@@ -34,6 +34,35 @@ function jsonResponse(data: any, status = 200, headers: HeadersInit = {}): Respo
   });
 }
 
+// Routes that carry no candidate data: liveness, build identity and the key check itself.
+const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const x = enc.encode(a);
+  const y = enc.encode(b);
+  let diff = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) diff |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return diff === 0;
+}
+
+function checkOperatorAuth(request: Request, env: Env): Response | null {
+  const cors = corsHeaders(request, env);
+  if (!env.ADMIN_API_KEY) {
+    return jsonResponse({ error: 'Server authentication is unconfigured.' }, 503, cors);
+  }
+  const header = request.headers.get('Authorization') || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    return jsonResponse({ error: 'Operator authentication required.' }, 401, { ...cors, 'WWW-Authenticate': 'Bearer' });
+  }
+  if (!timingSafeEqual(match[1].trim(), env.ADMIN_API_KEY)) {
+    return jsonResponse({ error: 'Invalid operator access key.' }, 403, cors);
+  }
+  return null;
+}
+
 // Router abstraction without external dependencies
 type RouteHandler = (request: Request, env: Env, params: Record<string, string>, url: URL) => Promise<Response> | Response;
 
@@ -73,8 +102,12 @@ class WorkerRouter {
       });
     }
 
-    // Public access enabled: No operator key required
-    // (Authentication guard bypassed per user preference)
+    // Every /api route except the public ones below requires the operator key (Authorization: Bearer <key>).
+    // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
+    if (pathname.startsWith('/api/') && !PUBLIC_API_PATHS.has(pathname)) {
+      const denied = checkOperatorAuth(request, env);
+      if (denied) return denied;
+    }
 
     for (const route of this.routes) {
       if (route.method !== request.method && route.method !== 'ALL') continue;
@@ -1369,13 +1402,17 @@ router.get('/api/analytics', async (request, env, _params, url) => {
   const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
 
   try {
-    const totalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
-    
+    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs.
+    const totalJobs = await env.DB.prepare(`
+      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1
+    `).bind(candidateId).first<{ cnt: number }>();
+
     const { results: eligCounts } = await env.DB.prepare(`
-      SELECT eligibility_status, COUNT(*) as cnt
-      FROM candidate_qualifications
-      WHERE candidate_id = ?
-      GROUP BY eligibility_status
+      SELECT q.eligibility_status, COUNT(*) as cnt
+      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1
+      GROUP BY q.eligibility_status
     `).bind(candidateId).all<any>();
 
     const eligibility_counts: Record<string, number> = {
@@ -1400,19 +1437,22 @@ router.get('/api/analytics', async (request, env, _params, url) => {
     });
 
     const avgScore = await env.DB.prepare(`
-      SELECT AVG(overall_score) as avg_score FROM candidate_job_scores WHERE candidate_id = ?
+      SELECT AVG(s.overall_score) as avg_score
+      FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id
+      WHERE s.candidate_id = ? AND j.is_active = 1
     `).bind(candidateId).first<{ avg_score: number }>();
 
     const salaryPub = await env.DB.prepare(`
-      SELECT 
+      SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN salary_published = 1 THEN 1 ELSE 0 END) as pub
-      FROM jobs
-      WHERE is_active = 1
-    `).first<{ total: number; pub: number }>();
+        SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub
+      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1
+    `).bind(candidateId).first<{ total: number; pub: number }>();
 
     return jsonResponse({
       candidate_id: candidateId,
+      scope: 'active_jobs_for_candidate',
       total_jobs: totalJobs?.cnt || 0,
       eligibility_counts,
       application_counts,
@@ -1424,59 +1464,132 @@ router.get('/api/analytics', async (request, env, _params, url) => {
   }
 });
 
-router.get('/api/analytics/discovery', async (request, env) => {
-  return jsonResponse({
-    total_employers: 156,
-    scanned_employers: 156,
-    total_scanned_jobs: 1161,
-    potentially_relevant_jobs: 1161,
-    retrieval_stages: { RELEVANT: 1161 },
-    geographic_eligibility: { ELIGIBLE: 8, UNKNOWN: 752, INELIGIBLE: 401 },
-    eligible_score_distribution: { high_match_70_plus: 8, moderate_match_50_69: 3, low_match_under_50: 0 },
-    ready_jobs: 8,
-    applications: { total: 11, breakdown: { SAVED: 1, REJECTED: 10 } },
-    conversion_rates: {
-      relevance_rate_pct: 100.0,
-      eligibility_rate_pct: 0.7,
-      qualification_rate_pct: 100.0,
-      overall_funnel_efficiency_pct: 0.7,
-    },
-  }, 200, corsHeaders(request, env));
+const pct1 = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1000) / 10 : 0);
+
+router.get('/api/analytics/discovery', async (request, env, _params, url) => {
+  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
+  try {
+    // Current inventory for ONE candidate: active jobs joined to that candidate's qualification and score.
+    const { results: rows } = await env.DB.prepare(`
+      SELECT q.qualification_status AS qs, q.eligibility_status AS es, COALESCE(s.overall_score, 0) AS score,
+             j.company AS company
+      FROM candidate_qualifications q
+      JOIN jobs j ON j.id = q.job_id
+      LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1
+    `).bind(candidateId).all<any>();
+
+    const geo = { ELIGIBLE: 0, UNKNOWN: 0, INELIGIBLE: 0 } as Record<string, number>;
+    const dist = { high_match_70_plus: 0, moderate_match_50_69: 0, low_match_under_50: 0 };
+    const employers = new Set<string>();
+    let relevant = 0, ready = 0, stretch = 0;
+    for (const r of rows || []) {
+      geo[r.es] = (geo[r.es] || 0) + 1;
+      employers.add(String(r.company || '').toLowerCase());
+      if (r.qs !== 'INELIGIBLE' && r.qs !== 'CLOSED') relevant++;
+      if (r.qs === 'READY') ready++;
+      if (r.qs === 'STRETCH_READY') stretch++;
+      if (r.es === 'ELIGIBLE') {
+        if (r.score >= 70) dist.high_match_70_plus++;
+        else if (r.score >= 50) dist.moderate_match_50_69++;
+        else dist.low_match_under_50++;
+      }
+    }
+    const total = (rows || []).length;
+
+    const { results: appRows } = await env.DB.prepare(
+      'SELECT status, COUNT(*) AS cnt FROM applications WHERE candidate_id = ? GROUP BY status'
+    ).bind(candidateId).all<any>();
+    const breakdown: Record<string, number> = {};
+    let appTotal = 0;
+    (appRows || []).forEach((r: any) => { breakdown[r.status] = r.cnt; appTotal += r.cnt; });
+
+    return jsonResponse({
+      candidate_id: candidateId,
+      scope: 'current_active_inventory',
+      as_of: new Date().toISOString(),
+      total_employers: employers.size,
+      scanned_employers: employers.size,
+      total_scanned_jobs: total,
+      potentially_relevant_jobs: relevant,
+      retrieval_stages: { RELEVANT: relevant },
+      geographic_eligibility: geo,
+      eligible_score_distribution: dist,
+      ready_jobs: ready,
+      stretch_ready_jobs: stretch,
+      applications: { total: appTotal, breakdown },
+      conversion_rates: {
+        relevance_rate_pct: pct1(relevant, total),
+        eligibility_rate_pct: pct1(geo.ELIGIBLE || 0, total),
+        qualification_rate_pct: pct1(ready, geo.ELIGIBLE || 0),
+        overall_funnel_efficiency_pct: pct1(ready, total),
+      },
+    }, 200, corsHeaders(request, env));
+  } catch (err: any) {
+    return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
+  }
 });
 
-router.get('/api/analytics/sources-effectiveness', async (request, env) => {
+router.get('/api/analytics/sources-effectiveness', async (request, env, _params, url) => {
+  const candidateId = url?.searchParams?.get('candidate_id') || 'farhan_shaikh';
   try {
-    const { results } = await env.DB.prepare(`
-      SELECT 
-        source_adapter as source_id,
-        source_adapter as source_name,
-        source_adapter as adapter_type,
-        COUNT(*) as total_jobs,
-        SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as relevant_jobs
-      FROM jobs
-      GROUP BY source_adapter
-    `).all<any>();
+    // Job statistics per source key, for this candidate. Jobs carry source_id when a Worker-monitored source found them.
+    const { results: stats } = await env.DB.prepare(`
+      SELECT COALESCE(j.source_id, 'unattributed:' || COALESCE(j.source_adapter, 'unknown')) AS source_key,
+             MAX(j.source_adapter) AS adapter,
+             COUNT(*) AS total_jobs,
+             SUM(CASE WHEN q.qualification_status NOT IN ('INELIGIBLE','CLOSED') THEN 1 ELSE 0 END) AS relevant_jobs,
+             SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS eligible_jobs,
+             SUM(CASE WHEN q.eligibility_status = 'UNKNOWN' THEN 1 ELSE 0 END) AS unknown_jobs,
+             SUM(CASE WHEN q.eligibility_status = 'INELIGIBLE' THEN 1 ELSE 0 END) AS ineligible_jobs,
+             SUM(CASE WHEN COALESCE(s.overall_score, 0) >= 70 THEN 1 ELSE 0 END) AS high_match_jobs,
+             SUM(CASE WHEN q.qualification_status = 'READY' THEN 1 ELSE 0 END) AS ready_jobs
+      FROM candidate_qualifications q
+      JOIN jobs j ON j.id = q.job_id
+      LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1
+      GROUP BY source_key
+    `).bind(candidateId).all<any>();
+    const byKey = new Map<string, any>((stats || []).map((r: any) => [r.source_key, r]));
 
-    const sources = results.map((r: any) => ({
-      source_id: r.source_id,
-      source_name: r.source_name,
-      adapter_type: r.adapter_type,
-      organization_slug: r.source_id,
-      feed_url: `https://ats.example.com/${r.source_id}`,
-      is_active: true,
-      is_live_approved: true,
-      last_status: 'SUCCESS',
-      last_latency_ms: 45,
-      total_jobs: r.total_jobs,
-      relevant_jobs: r.relevant_jobs,
-      eligible_jobs: 2,
-      unknown_jobs: r.total_jobs - 2,
-      ineligible_jobs: 0,
-      high_match_jobs: 2,
-      ready_jobs: 1,
-    }));
+    const { results: monitored } = await env.DB.prepare('SELECT * FROM cloud_sources ORDER BY id').all<any>();
+    const sources: any[] = [];
+    const zero = { total_jobs: 0, relevant_jobs: 0, eligible_jobs: 0, unknown_jobs: 0, ineligible_jobs: 0, high_match_jobs: 0, ready_jobs: 0 };
+    const finish = (base: any, st: any) => {
+      const t = { ...zero, ...(st || {}) };
+      return {
+        ...base,
+        total_jobs: t.total_jobs || 0, relevant_jobs: t.relevant_jobs || 0, eligible_jobs: t.eligible_jobs || 0,
+        unknown_jobs: t.unknown_jobs || 0, ineligible_jobs: t.ineligible_jobs || 0, high_match_jobs: t.high_match_jobs || 0,
+        ready_jobs: t.ready_jobs || 0, applications_count: 0, interviews_count: 0, rejections_count: 0,
+        conversion_pct: pct1(t.ready_jobs || 0, t.total_jobs || 0),
+      };
+    };
+    for (const m of monitored || []) {
+      let feed: string | null = null;
+      try { feed = sourceURL(m); } catch { feed = null; }
+      sources.push(finish({
+        source_id: m.id, source_name: m.name, adapter_type: m.kind, organization_slug: m.slug,
+        feed_url: feed, is_active: !!m.enabled, is_live_approved: true, monitored: true,
+        last_polled_at: m.last_attempt_at || null, last_success_at: m.last_success_at || null,
+        last_status: m.last_status, last_error: m.last_error || null, consecutive_failures: m.failures || 0,
+        last_latency_ms: null,
+      }, byKey.get(m.id)));
+      byKey.delete(m.id);
+    }
+    // Everything else arrived through the GitHub collector import; the Worker does not poll it, so no health is claimed.
+    for (const [key, st] of byKey) {
+      const name = key.startsWith('unattributed:') ? key.slice('unattributed:'.length) : key;
+      sources.push(finish({
+        source_id: key, source_name: name, adapter_type: st.adapter || name, organization_slug: name,
+        feed_url: null, is_active: true, is_live_approved: false, monitored: false,
+        last_polled_at: null, last_success_at: null, last_status: 'NOT_MONITORED', last_error: null,
+        consecutive_failures: 0, last_latency_ms: null,
+      }, st));
+    }
+    sources.sort((a, b) => b.total_jobs - a.total_jobs);
 
-    return jsonResponse({ sources }, 200, corsHeaders(request, env));
+    return jsonResponse({ candidate_id: candidateId, sources }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
@@ -1790,7 +1903,8 @@ router.get('/api/profile', async (request, env, _params, url) => {
     return jsonResponse({
       id: cand.id,
       full_name: cand.full_name,
-      education: isSana ? 'B.Tech in Electrical Engineering' : 'Relevant Technical Degree',
+      // The stored value wins; the fallbacks are the candidates' own documented degrees, never a generic placeholder.
+      education: cand.education || (isSana ? 'B.Tech in Electrical Engineering' : 'BMS in Marketing'),
       current_location: cand.current_location,
       citizenship: cand.citizenship || 'India',
       primary_timezone: cand.primary_timezone || 'Asia/Kolkata',
@@ -1859,6 +1973,10 @@ router.put('/api/profile', async (request, env, _params, url) => {
 
     if (!['farhan_shaikh', 'sana_ansari'].includes(candidateId)) {
       return jsonResponse({ error: 'Valid candidate_id parameter is required for profile mutation.' }, 400, corsHeaders(request, env));
+    }
+    // A form that still carries the other candidate's id must never overwrite this candidate's record.
+    if (body.id && body.id !== candidateId) {
+      return jsonResponse({ error: `Profile id ${body.id} does not match candidate ${candidateId}; nothing was saved.` }, 409, corsHeaders(request, env));
     }
 
     const defaultExp = candidateId === 'sana_ansari' ? 9.2 : 4;
