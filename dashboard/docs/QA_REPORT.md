@@ -93,7 +93,8 @@ Reviewed commit for this round: `d7b7849` (documentation-only commits follow it)
 | Real-browser check, production, GitHub runner | desktop 26/26, mobile (375 px) 26/26: no unlock window, no key sent, no refused request, both candidates' workspaces, Analytics scope, profile summary and tracker free of private text, bundle holds no profile data, no write attempted, no console errors |
 | Same check from the development environment | desktop 26/26, mobile 26/26 |
 | Protected records, before vs after | identical: applications 12 rows (`d594d21e...`), application_history 44 (`221fc998...`), manual overrides 11 (`43499257...`), candidates 2 (`08c63807...`); qualifications 4246 and scores 4246 also identical (the collector had not changed them) |
-| Collector continuity | manual sync run 42066372766 after the release: success. See the final report for scheduled-run evidence. |
+| Collector continuity (manual) | sync run 42066372766 (workflow_dispatch, 16:37 UTC, after the release): success; the importer writes straight into D1 and does not use the Worker API |
+| Collector continuity (scheduled) | **Not yet observed after the release.** The last `event: schedule` run before it was 42050115956 (14:57 UTC, success). Scheduled runs have started 1-3 hours after the nominal :45 slots and some slots did not run at all (for example no scheduled run between 01:48 and 14:57 UTC on 2026-11-05), so the first post-release scheduled run is expected later today. Check `Sync Collector Postings to Cloudflare D1` for an `event: schedule` entry newer than 16:25 UTC. |
 
 ### Limitations observed in production
 
