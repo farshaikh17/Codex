@@ -1,0 +1,190 @@
+// Small durable work units. No application/history writes and no model/API fees.
+import { isBroad, broadURL, broadPage, normalizeBroad } from './broad-feeds.ts';
+export const RULE_VERSION = 'cloud-conservative-review-1';
+const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
+type DB = D1Database;
+type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
+export type Posting = {id:string;title:string;url:string;location:string;description:string;remote:boolean;salary?:any;company?:string;board?:boolean;observedAt?:string;sourceLabel?:string};
+const iso = () => new Date().toISOString();
+const epoch = () => Math.floor(Date.now()/1000);
+const plain = (s:any) => String(s || '').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+const list = (s:any):string[] => {try{return Array.isArray(s)?s:JSON.parse(s||'[]')}catch{return []}};
+export const relevant = (title:string) => /operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery|electrical|power|energy|reliability|maintenance|plant|commissioning|switchgear|scada|utilities|asset performance|decarbon/i.test(title);
+function officialURL(url:string) {
+ try { const u=new URL(url); return u.protocol==='https:' && /(^|\.)(lever\.co|greenhouse\.io|smartrecruiters\.com|ashbyhq\.com)$/.test(u.hostname); }catch{return false;}
+}
+export function sourceURL(s:Source, detail?:string) {
+ if(isBroad(s.kind))return broadURL(s,detail);
+ const slug=encodeURIComponent(s.slug), id=detail?encodeURIComponent(detail):'';
+ if(s.kind==='lever')return `https://api.lever.co/v0/postings/${slug}${id?'/'+id:`?mode=json&skip=${s.cursor}&limit=${PAGE}`}`;
+ if(s.kind==='greenhouse')return `https://boards-api.greenhouse.io/v1/boards/${slug}/jobs${id?'/'+id:''}`;
+ if(s.kind==='smartrecruiters')return `https://api.smartrecruiters.com/v1/companies/${slug}/postings${id?'/'+id:`?limit=${PAGE}&offset=${s.cursor}`}`;
+ throw Error('Unsupported source kind');
+}
+export async function boundedJSON(url:string, transport:typeof fetch=fetch):Promise<any> {
+ const r=await transport(url,{redirect:'manual',signal:AbortSignal.timeout(12000),headers:{Accept:'application/json','User-Agent':'CareerJobEngine/2.0 public-job-discovery'}});
+ if(!r.ok)throw Error(`Source HTTP ${r.status}`);
+ if(Number(r.headers.get('content-length')||0)>MAX_BYTES){await r.body?.cancel();throw Error('Source response exceeds 512 KiB budget');}
+ const reader=r.body?.getReader();if(!reader)throw Error('Empty response body');
+ const chunks:Uint8Array[]=[];let size=0;
+ try {while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_BYTES)throw Error('Source response exceeds 512 KiB budget');chunks.push(value);}}
+ catch(e){await reader.cancel();throw e;}
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+ return JSON.parse(new TextDecoder().decode(bytes));
+}
+export function normalize(s:Source, x:any):Posting {
+ if(!x?.id)throw Error('Posting missing stable ID');
+ let p:Posting;
+ if(s.kind==='lever')p={id:String(x.id),title:x.text,url:x.hostedUrl||x.applyUrl,location:x.categories?.location||'',description:plain([x.descriptionPlain||x.description,...(x.lists||[]).map((l:any)=>`${l.text} ${l.content}`),x.additionalPlain||x.additional].join(' ')),remote:x.workplaceType==='remote',salary:x.salaryRange};
+ else if(s.kind==='greenhouse')p={id:String(x.id),title:x.title,url:x.absolute_url,location:x.location?.name||'',description:plain(x.content),remote:/remote/i.test(x.location?.name||'')};
+ else {const loc=x.location||{};const sections=x.jobAd?.sections||{};p={id:String(x.id),title:x.name,url:x.ref?.startsWith('https://jobs.smartrecruiters.com/')?x.ref:`https://jobs.smartrecruiters.com/${encodeURIComponent(s.slug)}/${encodeURIComponent(x.id)}`,location:[loc.city,loc.region,loc.country].filter(Boolean).join(', '),description:plain(Object.values(sections).map((v:any)=>v.text).join(' ')),remote:loc.remote===true};}
+ if(!p.title||!officialURL(p.url))throw Error('Posting missing title or official HTTPS application URL');
+ if(p.description.length>100000)throw Error('Posting description exceeds evaluation budget');
+ return p;
+}
+export function page(s:Source, raw:any):{items:any[];next:number;complete:boolean} {
+ if(isBroad(s.kind))return broadPage(s,raw);
+ let all:any[], total:number;
+ if(s.kind==='lever'){if(!Array.isArray(raw))throw Error('Malformed Lever listing');all=raw;total=s.cursor+all.length;return {items:all.slice(0,PAGE),next:all.length===PAGE?s.cursor+PAGE:0,complete:all.length<PAGE};}
+ if(s.kind==='greenhouse'){if(!Array.isArray(raw?.jobs))throw Error('Malformed Greenhouse listing');all=raw.jobs;total=all.length;return {items:all.slice(s.cursor,s.cursor+PAGE),next:s.cursor+PAGE<total?s.cursor+PAGE:0,complete:s.cursor+PAGE>=total};}
+ if(!Array.isArray(raw?.content)||typeof raw.totalFound!=='number')throw Error('Malformed SmartRecruiters listing');
+ all=raw.content;total=raw.totalFound;if(all.length===0&&s.cursor<total)throw Error('Incomplete empty source page');
+ return {items:all.slice(0,PAGE),next:s.cursor+all.length<total?s.cursor+all.length:0,complete:s.cursor+all.length>=total};
+}
+// This is a conservative discovery screen, not a substitute for full employer/candidate review.
+export function evaluate(candidate:any,p:Posting) {
+ const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
+ const negated=(pattern:RegExp)=>{const m=pattern.exec(lower);if(!m)return false;const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);return /\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after)};
+ const india=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(p.location)||/(?:^|, )in$/i.test(p.location);
+ const remote=p.remote||/\b(remote|work from home|telecommut)/i.test(p.location);
+ const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
+ const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
+ const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
+ const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
+ const globalRemote=/worldwide remote|remote worldwide|remote.?global|work from anywhere in the world/i.test(text);
+ let eligibility='UNKNOWN',reason='No affirmative candidate-specific location evidence.';
+ if(security){eligibility='INELIGIBLE';reason='Explicit citizenship, security clearance or licensing restriction requires exclusion.';}
+ else if(candidate.id==='farhan_shaikh'){
+  if(blocked){eligibility='INELIGIBLE';reason='Posting explicitly restricts work location outside India.';}
+  else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site|not remote|no remote)\b/i.test(p.location+' '+p.description)){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
+ }else if(india){eligibility='ELIGIBLE';reason='Posting is in an accessible Indian location.';}
+ else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
+ const role=candidate.id==='farhan_shaikh'?/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery/i.test(p.title):/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarbon/i.test(p.title);
+ const skills=list(candidate.primary_skills).filter(s=>lower.includes(s.toLowerCase()));
+ const score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
+ // New discoveries are never auto-promoted to READY using a simplified scorer.
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.'};
+}
+async function hash(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function canonical(url:string){const u=new URL(url),keys:string[]=[];u.searchParams.forEach((_,k)=>keys.push(k));for(const k of keys)if(/^(utm_|gh_src|source|ref|lever-source)/.test(k))u.searchParams.delete(k);u.hash='';u.pathname=u.pathname.replace(/\/$/,'');return u.toString().replace(/\/$/,'');}
+export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
+ const fingerprint=await hash(JSON.stringify([p.title,p.location,p.description,p.remote,p.salary||null]));
+ const mapped=await db.prepare('SELECT job_id,content_sha256 FROM cloud_job_evidence WHERE source_id=? AND posting_id=?').bind(s.id,p.id).first<any>();
+ const rawId=`${s.kind}:${s.slug.toLowerCase()}:${p.id}`;
+ const existing=mapped?await db.prepare('SELECT * FROM jobs WHERE id=?').bind(mapped.job_id).first<any>():await db.prepare('SELECT * FROM jobs WHERE id=? OR original_posting_url=? OR source_url=? OR original_posting_url=? OR source_url=? LIMIT 1').bind(rawId,p.url,p.url,canonical(p.url),canonical(p.url)).first<any>();
+ const jobId=existing?.id||rawId;
+ // Preserve all original text for evaluation/evidence, and only touch employer-owned fields.
+ const statements:D1PreparedStatement[]=[];
+ const unchanged=mapped?.content_sha256===fingerprint;
+ if(!unchanged){
+  statements.push(db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,original_posting_url,employment_type,workplace_type,location_restrictions,description,required_skills,discovered_at,last_verified_at,is_active,content_sha256,source_id,source_channel,provenance)
+   VALUES(?,?,?,?,?,?,'FULL_TIME',?,?,?,'[]',?,?,1,?,?,?,?)
+   ON CONFLICT(id) DO UPDATE SET title=excluded.title,company=excluded.company,location_restrictions=excluded.location_restrictions,description=excluded.description,workplace_type=excluded.workplace_type,last_verified_at=excluded.last_verified_at,content_sha256=excluded.content_sha256,is_active=1,expired_at=NULL
+   WHERE excluded.provenance='LIVE_PUBLIC' OR jobs.provenance='PUBLIC_FEED_UNVERIFIED'`).bind(jobId,p.title,p.company||s.name,s.kind,p.url,p.url,p.remote?'REMOTE_RESTRICTED':p.board?'UNKNOWN':'ONSITE',p.location,p.description,now,p.board?null:now,fingerprint,s.id,p.board?'PUBLIC_JOB_BOARD':'PUBLIC_ATS',p.board?'PUBLIC_FEED_UNVERIFIED':'LIVE_PUBLIC'));
+  const candidates=await db.prepare('SELECT * FROM candidates').all<any>();
+  if(p.board&&p.salary){const min=Number.isFinite(p.salary.min)?p.salary.min:null,max=Number.isFinite(p.salary.max)?p.salary.max:null;
+   statements.push(db.prepare(`UPDATE jobs SET salary_published=?,salary_min=?,salary_max=?,salary_currency=?,salary_period=?,salary_raw_text=? WHERE id=? AND provenance='PUBLIC_FEED_UNVERIFIED'`).bind(min!==null||max!==null||p.salary.text?1:0,min,max,p.salary.currency||null,p.salary.period||null,p.salary.text||null,jobId));
+  }
+  for(const candidate of candidates.results){
+   const result=evaluate(candidate,p);
+   if(p.board){result.eligibility='UNKNOWN';result.reason=`Reported by ${p.sourceLabel}; employer availability and eligibility are unverified.`;result.status=result.status==='HOLD'?'HOLD':'NEEDS_REVIEW';result.qualification_reason='Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.';}
+   // Existing candidate decisions are preserved; cloud refresh never demotes/promotes them silently.
+   statements.push(db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at)
+    SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=? AND job_id=?)
+    ON CONFLICT(candidate_id,job_id) DO UPDATE SET qualification_status=excluded.qualification_status,strategy_lane=excluded.strategy_lane,eligibility_status=excluded.eligibility_status,eligibility_reason=excluded.eligibility_reason,qualification_reason=excluded.qualification_reason,last_reverified_at=excluded.last_reverified_at
+    WHERE candidate_qualifications.manual_override_status IS NULL AND (candidate_qualifications.qualification_reason LIKE 'Cloud discovery match.%' OR candidate_qualifications.qualification_reason='Outside candidate target role family; retained for review.')
+    AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)`).bind(candidate.id,jobId,result.status,result.lane,result.eligibility,result.reason,result.qualification_reason,now,candidate.id,jobId));
+   statements.push(db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
+    VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(candidate_id,job_id) DO UPDATE SET overall_score=excluded.overall_score,skill_score=excluded.skill_score,role_score=excluded.role_score,strategy_lane=excluded.strategy_lane,score_breakdown=excluded.score_breakdown,calculated_at=excluded.calculated_at
+    WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-1%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
+    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
+  }
+ }
+ else if(!p.board)statements.push(db.prepare('UPDATE jobs SET last_verified_at=? WHERE id=?').bind(now,jobId));
+ statements.push(db.prepare(`INSERT INTO cloud_job_evidence(job_id,source_id,posting_id,content_sha256,fetched_at,rule_version) VALUES(?,?,?,?,?,?) ON CONFLICT(job_id) DO UPDATE SET content_sha256=excluded.content_sha256,fetched_at=excluded.fetched_at,rule_version=excluded.rule_version`).bind(jobId,s.id,p.id,fingerprint,p.observedAt||now,RULE_VERSION));
+ await db.batch(statements);
+ return {job_id:jobId,jobs_new:existing?0:1,jobs_updated:existing&&!unchanged?1:0,jobs_unchanged:unchanged?1:0};
+}
+export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {
+ const db=env.DB, now=iso(), seconds=epoch(), token=crypto.randomUUID(), day=now.slice(0,10);
+ const acquired=await db.prepare(`UPDATE cloud_automation SET lease_token=?,lease_until=?,day=?,jobs_today=CASE WHEN day=? THEN jobs_today ELSE 0 END,sources_today=CASE WHEN day=? THEN sources_today ELSE 0 END WHERE id=1 AND enabled=1 AND lease_until<? RETURNING *`).bind(token,seconds+180,day,day,day,seconds).first<any>();
+ if(!acquired)return {status:'SKIPPED',reason:'Paused or another run holds lease'};
+ let runId='',work:any=null,source:Source|null=null,kind='',started=Date.now();
+ try {
+  if(acquired.jobs_today>=DAY_JOBS)return {status:'IDLE',reason:'Daily posting budget reached; source collection also rests until tomorrow'};
+  work=await db.prepare(`SELECT q.* FROM cloud_discovery_queue q JOIN cloud_sources s ON s.id=q.source_id WHERE q.state='PENDING' AND q.next_due<=? AND s.enabled=1 ORDER BY q.next_due,q.id LIMIT 1`).bind(seconds).first<any>();
+  if(work){source=await db.prepare('SELECT * FROM cloud_sources WHERE id=? AND enabled=1').bind(work.source_id).first<Source>();kind='POSTING';}
+  else if(acquired.sources_today<DAY_SOURCES){source=await db.prepare('SELECT * FROM cloud_sources WHERE enabled=1 AND next_due<=? ORDER BY next_due,id LIMIT 1').bind(seconds).first<Source>();kind='SOURCE';}
+  // Reserve a regular source slot so queued jobs cannot starve new employers/boards.
+  if(acquired.sources_today<DAY_SOURCES&&Math.floor(seconds/120)%5===0&&!preferredSource){const due=await db.prepare('SELECT * FROM cloud_sources WHERE enabled=1 AND next_due<=? ORDER BY next_due,id LIMIT 1').bind(seconds).first<Source>();if(due){source=due;work=null;kind='SOURCE';}}
+  if(preferredSource&&trigger==='MANUAL'){
+   source=await db.prepare('SELECT * FROM cloud_sources WHERE id=? AND enabled=1').bind(preferredSource).first<Source>();
+   work=source?await db.prepare("SELECT * FROM cloud_discovery_queue WHERE source_id=? AND state='PENDING' AND next_due<=? ORDER BY next_due,id LIMIT 1").bind(source.id,seconds).first<any>():null;
+   if(work)kind='POSTING';else if(source&&acquired.sources_today<DAY_SOURCES&&(source as any).next_due<=seconds)kind='SOURCE';else source=null;
+  }
+  if(!source)return {status:'IDLE',reason:'No due work or daily budget reached'};
+  await db.prepare("UPDATE cloud_discovery_runs SET status='INTERRUPTED',completed_at=?,error_message='Previous lease expired before completion' WHERE status='RUNNING' AND started_at<?").bind(now,new Date(Date.now()-180000).toISOString()).run();
+  runId=crypto.randomUUID();await db.prepare(`INSERT INTO cloud_discovery_runs(id,trigger_type,run_type,source_id,status,started_at) VALUES(?,?,?,?,'RUNNING',?)`).bind(runId,trigger,kind,source.id,now).run();
+  let counts={jobs_seen:0,jobs_new:0,jobs_updated:0,jobs_unchanged:0},jobId:string|null=null;
+  if(kind==='SOURCE'){
+   // Charge attempts before network calls, including failures.
+   await db.prepare('UPDATE cloud_automation SET sources_today=sources_today+1 WHERE id=1').run();
+   if(source.kind==='jobicy'&&source.cursor_token&&seconds-(source.cursor_started_at||0)>82800){source.cursor_token=undefined;source.cursor=0;}
+   const raw=await boundedJSON(sourceURL(source),transport), parsed:any=page(source,raw);
+   const statements:D1PreparedStatement[]=[];
+   for(const item of parsed.items){
+    const title=item.jobTitle||item.text||item.title||item.name||'';if((source.kind!=='hnjobs'&&!relevant(title))||!item.id)continue;
+    const postingId=String(item.id), id=`${source.id}:${postingId}`;
+    statements.push(db.prepare(`INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,next_due,updated_at) VALUES(?,?,?,?,'PENDING',?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,state='PENDING',next_due=excluded.next_due,attempts=0,last_error=NULL,updated_at=excluded.updated_at`).bind(id,source.id,postingId,JSON.stringify(item),seconds,now));
+   }
+   counts.jobs_seen=parsed.items.length;
+   const interval=source.kind==='remotive'?86400:43200;
+   statements.push(db.prepare(`UPDATE cloud_sources SET cursor=?,cursor_token=?,cursor_started_at=?,next_due=?,failures=0,last_attempt_at=?,last_success_at=?,last_error=NULL,last_status=?,last_seen=? WHERE id=?`).bind(parsed.next,parsed.token||null,parsed.token?(source.cursor_token?source.cursor_started_at||seconds:seconds):0,seconds+(parsed.complete?interval:600),now,now,parsed.complete?(parsed.items.length?'SUCCESS':'EMPTY'):'PARTIAL',parsed.items.length,source.id));
+   await db.batch(statements);
+  }else{
+   await db.prepare('UPDATE cloud_automation SET jobs_today=jobs_today+1 WHERE id=1').run();
+   const cached=source.kind==='jobicy'||source.kind==='remotive';
+   const raw=cached?JSON.parse(work.payload):await boundedJSON(sourceURL(source,work.posting_id),transport);
+   const posting:Posting=isBroad(source.kind)?normalizeBroad(source,raw,cached?work.updated_at:now):normalize(source,raw);
+   posting.description=plain(posting.description);if(!posting.description)throw Error('Posting detail missing description; held for retry');
+   const result=await persist(db,source,posting);jobId=result.job_id;counts={jobs_seen:1,...result};
+   await db.prepare(`UPDATE cloud_discovery_queue SET state='DONE',last_error=NULL,updated_at=? WHERE id=?`).bind(iso(),work.id).run();
+  }
+  const end=iso();await db.batch([
+   db.prepare(`UPDATE cloud_discovery_runs SET status='SUCCESS',completed_at=?,duration_ms=?,job_id=?,jobs_seen=?,jobs_new=?,jobs_updated=?,jobs_unchanged=? WHERE id=?`).bind(end,Date.now()-started,jobId,counts.jobs_seen,counts.jobs_new,counts.jobs_updated,counts.jobs_unchanged,runId),
+   db.prepare('UPDATE cloud_automation SET last_success_at=?,last_error=NULL,updated_at=? WHERE id=1 AND lease_token=?').bind(end,end,token)
+  ]);
+  return {status:'SUCCESS',run_id:runId,source_id:source.id,run_type:kind,duration_ms:Date.now()-started,...counts};
+ }catch(error:any){
+  const message=String(error.message||error).slice(0,500),end=iso();
+  const statements=[db.prepare('UPDATE cloud_automation SET last_error=?,updated_at=? WHERE id=1 AND lease_token=?').bind(message,end,token)];
+  if(runId)statements.push(db.prepare(`UPDATE cloud_discovery_runs SET status='ERROR',completed_at=?,duration_ms=?,error_message=? WHERE id=?`).bind(end,Date.now()-started,message,runId));
+  if(work)statements.push(db.prepare(`UPDATE cloud_discovery_queue SET attempts=attempts+1,state=CASE WHEN attempts>=2 THEN 'FAILED' ELSE 'PENDING' END,next_due=?,last_error=?,updated_at=? WHERE id=?`).bind(seconds+3600,message,end,work.id));
+  else if(source)statements.push(db.prepare(`UPDATE cloud_sources SET failures=failures+1,next_due=?,cursor_token=CASE WHEN ? THEN NULL ELSE cursor_token END,cursor_started_at=CASE WHEN ? THEN 0 ELSE cursor_started_at END,last_status='ERROR',last_attempt_at=?,last_error=? WHERE id=?`).bind(seconds+Math.min(86400,3600*2**Math.min(source.failures,4)),source.kind==='jobicy'&&message.includes('400')?1:0,source.kind==='jobicy'&&message.includes('400')?1:0,end,message,source.id));
+  await db.batch(statements);return {status:'ERROR',run_id:runId,error:message};
+ }finally{
+  await db.prepare('UPDATE cloud_automation SET lease_token=NULL,lease_until=0 WHERE id=1 AND lease_token=?').bind(token).run();
+ }
+}
+export async function automationStatus(db:DB) {
+ const [config,latest,lastSuccess,pending,sources]=await Promise.all([
+  db.prepare('SELECT * FROM cloud_automation WHERE id=1').first<any>(),
+  db.prepare('SELECT * FROM cloud_discovery_runs ORDER BY started_at DESC LIMIT 1').first<any>(),
+  db.prepare("SELECT * FROM cloud_discovery_runs WHERE status='SUCCESS' ORDER BY started_at DESC LIMIT 1").first<any>(),
+  db.prepare("SELECT COUNT(*) count FROM cloud_discovery_queue WHERE state='PENDING'").first<any>(),
+  db.prepare('SELECT COUNT(*) count FROM cloud_sources WHERE enabled=1').first<any>()
+ ]);
+ const enabled=!!config?.enabled;
+ const coverage=await db.prepare(`SELECT (SELECT COUNT(*) FROM cloud_sources WHERE enabled=1 AND kind IN ('jobicy','remotive','hnjobs')) multi_employer_sources,(SELECT COUNT(*) FROM cloud_sources WHERE enabled=1 AND kind NOT IN ('jobicy','remotive','hnjobs')) direct_employer_sources,(SELECT COUNT(DISTINCT company) FROM jobs WHERE provenance='PUBLIC_FEED_UNVERIFIED') employers_discovered,(SELECT COUNT(*) FROM jobs WHERE provenance='PUBLIC_FEED_UNVERIFIED') broad_listings`).first<any>();
+ return {coverage,config:{id:1,is_enabled:enabled,interval_seconds:120,verify_urls:false,reverify_inventory:false,last_run_at:latest?.started_at||null,next_run_at:enabled?new Date(Math.ceil(Date.now()/120000)*120000).toISOString():null,status:enabled?'ACTIVE':'PAUSED',updated_at:config?.updated_at||null},is_active:enabled,automation_state:enabled?'CLOUD DISCOVERY ACTIVE':'CLOUD DISCOVERY PAUSED',latest_run:latest,last_discovery_run:latest,last_successful_run:lastSuccess,next_scheduled_discovery:enabled?'Every 2 minutes; one bounded work unit per tick (UTC)':'Paused',last_weekly_refresh:null,current_run_status:latest?.status||'NEVER_RUN',last_error:config?.last_error||null,pending_jobs:pending?.count||0,source_count:sources?.count||0,daily_budgets:{posting_attempts:DAY_JOBS,source_pages:DAY_SOURCES},today:{day:config?.day,posting_attempts:config?.jobs_today||0,source_pages:config?.sources_today||0},qualification_mode:'conservative_review',schedules:{discovery:'Cloudflare cron: every 2 minutes',weekly_refresh:'Continuous rotating source refresh; no separate weekly bulk scan',server_startup:'Cloudflare managed; PC not required'}};
+}
