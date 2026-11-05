@@ -146,19 +146,53 @@ const CACHE_MAX_BYTES = 900_000;
 // reads; measured per-miss cost is at most ~20,000 rows at 2,123 jobs. A cache write costs ~3-6 rows written.
 const PUBLIC_DAILY_READ_BUDGET = 2_500_000;
 const CACHE_WRITES_PER_DAY = 3000;
+// Values a cached query may carry. Anything else (any search text, an unknown status, an out-of-range page) is answered
+// without caching, so visitors cannot mint new entries cheaply.
+const enumOf = (...v: string[]) => (x: string) => v.includes(x);
+const intIn = (lo: number, hi: number, step = 1) => (x: string) => /^\d{1,5}$/.test(x) && +x >= lo && +x <= hi && +x % step === 0;
+const QUAL = ['READY', 'READY_HIGH', 'STRETCH_READY', 'NEEDS_REVIEW', 'INELIGIBLE', 'HOLD', 'CLOSED', 'APPLIED', 'APPLY_WORTHY', 'ALL'];
+const LANES = enumOf('STRONGEST_FIT', 'BRIDGE', 'DREAM', 'UNASSIGNED', 'ALL');
+const CACHE_VALUES: Record<string, (v: string) => boolean> = {
+  candidate_id: (v) => CANDIDATE_IDS.has(v),
+  eligibility: enumOf('ALL', 'ELIGIBLE', 'INELIGIBLE', 'UNKNOWN', 'CONDITIONAL'),
+  qualification_status: (v) => QUAL.includes(v),
+  strategy_lane: LANES, lane: LANES,
+  workplace_type: enumOf('ALL', 'REMOTE', 'REMOTE_RESTRICTED', 'HYBRID', 'ONSITE', 'UNKNOWN'),
+  source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
+  sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
+  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'),
+  limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
+  search: (v) => v === '',
+};
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
   [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
-  [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/(summary|jobs)|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
+  [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
+// Hands its query to /api/jobs, which caches its own answer under the full key.
+const NOT_CACHED = /^\/api\/india-remote\/jobs$/;
+const STATUS_VALUE: Record<string, (v: string) => boolean> = {
+  '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
+};
+const qualList = (v: string) => { const parts = v.split(','); return parts.length <= 6 && parts.every((x) => QUAL.includes(x.trim())); };
 function responseCacheKey(level: 'public' | 'operator', url: URL, commit: string): string | null {
+  if (NOT_CACHED.test(url.pathname)) return null;
   const allowed = CACHE_PARAMS.find(([re]) => re.test(url.pathname))?.[1] || [];
-  const params = allowed.filter((k) => url.searchParams.has(k)).map((k) => `${k}=${encodeURIComponent(url.searchParams.get(k) || '')}`);
+  const params: string[] = [];
+  for (const k of allowed) {
+    if (!url.searchParams.has(k)) continue;
+    const v = url.searchParams.get(k) || '';
+    const ok = k === 'status' ? (STATUS_VALUE[url.pathname] || qualList)(v) : (CACHE_VALUES[k]?.(v) ?? false);
+    if (!ok) return null;
+    params.push(`${k}=${encodeURIComponent(v)}`);
+  }
   const key = `${commit}:${level}:${url.pathname}?${params.join('&')}`;
   return key.length <= CACHE_MAX_KEY ? key : null;
 }
+// The dashboard's own page loads (no parameter but the candidate) stay cacheable even after the daily write cap.
+const isCoreKey = (key: string) => /\?(candidate_id=[a-z_]+)?$/.test(key);
 type CacheLookup = { current: number; body: string | null; created_at: number | null; generation: number | null };
 async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup | null> {
   try {
@@ -237,7 +271,7 @@ const UNAVAILABLE = { error: 'The dashboard is temporarily unavailable. Please t
 // Availability failures only (D1's own quota, overload, timeout and connection messages). Anything else, including
 // query or programming errors that happen to mention a limit, stays a generic 500.
 const isDatabaseFailure = (message: unknown) =>
-  /daily row (read|write) limit|exceeded D1's|exceeded .*free tier|D1 DB is overloaded|overloaded|storage operation exceeded timeout|operation timed out|network connection lost|D1_RESET_DO|reset because its code was updated|internal error in D1|D1_ERROR: internal error|too many requests queued/i
+  /daily row (read|write) limit|exceeded D1's|exceeded .*free tier|D1 DB is overloaded|overloaded|storage operation exceeded timeout|operation timed out|network connection lost|D1_RESET_DO|reset because its code was updated|internal error in D1|internal error while starting up D1|D1_ERROR: internal error|too many requests queued|transient issue on remote node|replica disconnected|exceeded its (memory|CPU time) limit and was reset|exceeded maximum DB size|maximum account storage limit/i
     .test(String(message || ''));
 function logPrivately(tag: string, pathname: string, message: unknown) {
   // Path only (no query string, headers or bodies), and the error text truncated: D1 errors carry no row data. JSON parse
@@ -501,7 +535,7 @@ class WorkerRouter {
         }
         if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if ((await meterToday(env)).cache_writes < CACHE_WRITES_PER_DAY) await writeResponseCache(env, cacheKey, body, lookup.current);
+          if (isCoreKey(cacheKey) || (await meterToday(env)).cache_writes < CACHE_WRITES_PER_DAY) await writeResponseCache(env, cacheKey, body, lookup.current);
           await flushMeter(env);
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });

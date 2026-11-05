@@ -188,6 +188,8 @@ jobs:
         run: |
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0008_auth_failures.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0009_response_cache.sql
+          # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
+          npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0" > /dev/null
 
       - name: Rotate operator key (only when requested)
         if: ${{ inputs.mode == 'release' && inputs.rotate_key }}
