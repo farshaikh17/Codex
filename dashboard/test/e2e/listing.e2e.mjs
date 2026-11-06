@@ -141,7 +141,7 @@ await waitForIds(['hi077'], 'RD14 server-side search finds a job that is not on 
 check('RD14b a narrowed list says so while the tab numbers keep counting the whole queue', /1 job matches your search; the tab numbers above count the whole queue/.test(await text()) && /Needs Review \(131\)/.test(await text()));
 await page.getByPlaceholder(/Search title/).fill(''); await page.waitForTimeout(900);
 await tabButton(/^Unverified location, score 60\+/).click(); await settle();
-check('RD15 'Unverified location, score 60+' tab: 65 jobs with unknown location and score of 60 or more (a different set from the review sub-filter of 66)', /Unverified location, score 60\+ \(65\)/.test(await text()) && /of 65 · page 1 of 3/.test(await text()));
+check('RD15 the Unverified location, score 60+ tab: 65 jobs with unknown location and score of 60 or more (a different set from the review sub-filter of 66)', /Unverified location, score 60\+ \(65\)/.test(await text()) && /of 65 · page 1 of 3/.test(await text()));
 await tabButton(/^All open/).click(); await settle();
 check('RD16 All open: 140 jobs, dismissed and applied are not among them', /All open \(140\)/.test(await text()) && !(await ids()).some((x) => ['dis1', 'rd4', 's3'].includes(x)));
 
