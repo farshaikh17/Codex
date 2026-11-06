@@ -370,8 +370,8 @@ export const JobTable: React.FC<JobTableProps> = ({
                       <td className="py-3 px-4">
                         <div className="space-y-1">
                           {renderEligibilityBadge(job.eligibility.classification)}
-                          <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={job.eligibility.reasoning}>
-                            {job.eligibility.reasoning}
+                          <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={job.eligibility.reason ?? undefined}>
+                            {job.eligibility.reason}
                           </div>
                         </div>
                       </td>

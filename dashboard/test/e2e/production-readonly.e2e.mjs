@@ -81,6 +81,25 @@ for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.far
   await tab('APPLICATIONS');
   check(`${btn}: tracker shows no private notes`, !/PRIVATE-|Playwright verified rejection test/i.test(await text()));
 }
+// India Remote and READY lists: the jobs on screen are exactly the server's filtered first page (same query the screen sends; reads are cache hits after the visit).
+const onScreen = () => page.$$eval('[data-job-id]', (els) => els.map((e) => e.getAttribute('data-job-id')));
+const sameAsApi = async (expected) => { let got = []; for (let i = 0; i < 20; i++) { got = await onScreen(); if (JSON.stringify(got) === JSON.stringify(expected)) return { ok: true, got }; await page.waitForTimeout(1000); } return { ok: false, got }; };
+for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']]) {
+  await tab(btn);
+  await page.getByText('Explore Queue').first().click(); await page.waitForTimeout(1500);
+  const all = await api(`/india-remote/jobs?candidate_id=${cid}&sort_by=score_desc&exclude_applied=true&limit=25&offset=0`);
+  let r = await sameAsApi(all.jobs.map((j) => j.id));
+  check(`${btn}: India Remote shows exactly the server's first page (${all.jobs.length} of ${all.total})`, r.ok, `screen [${r.got}] api [${all.jobs.map((j) => j.id)}]`);
+  await page.getByRole('button', { name: /^Ready/ }).first().click();
+  const ready = await api(`/india-remote/jobs?candidate_id=${cid}&farhan_fit=READY&sort_by=score_desc&exclude_applied=true&limit=25&offset=0`);
+  r = await sameAsApi(ready.jobs.map((j) => j.id));
+  check(`${btn}: India Remote READY filter shows exactly the READY jobs, and the pill count is their total`, r.ok && ready.jobs.every((j) => j.farhan_fit === 'READY') && ready.facets.fit.READY === ready.total, `screen [${r.got}] api [${ready.jobs.map((j) => j.id)}]`);
+  await tab(btn);
+  await page.getByText('View READY').first().click(); await page.waitForTimeout(1500);
+  const rd = await api(`/jobs?candidate_id=${cid}&farhan_fit=READY&sort_by=score_desc&exclude_applied=true&exclude_dismissed=true&limit=25&offset=0`);
+  r = await sameAsApi(rd.jobs.map((j) => j.id));
+  check(`${btn}: READY dashboard shows exactly the server's READY jobs and its tab count is their total`, r.ok && rd.jobs.every((j) => j.farhan_fit === 'READY') && new RegExp(`READY to Apply \\(${rd.status_counts.READY}\\)`, 'i').test(await text()), `screen [${r.got}] api [${rd.jobs.map((j) => j.id)}]`);
+}
 check('across the whole visit no request was refused and no key was used', apiLog.filter((r) => r.status >= 400).length === 0 && apiLog.every((r) => !r.auth), JSON.stringify(apiLog.filter((r) => r.status >= 400).slice(0, 3)));
 check('no write request was attempted by the UI during this run', blocked.length === 0, blocked.join(', '));
 check('no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));

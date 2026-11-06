@@ -4,6 +4,7 @@
  */
 
 import { runDiscovery, automationStatus, sourceURL } from './discovery';
+import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
 export interface Env {
   DB: D1Database;
@@ -156,6 +157,7 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   candidate_id: (v) => CANDIDATE_IDS.has(v),
   eligibility: enumOf('ALL', 'ELIGIBLE', 'INELIGIBLE', 'UNKNOWN', 'CONDITIONAL'),
   qualification_status: (v) => QUAL.includes(v),
+  farhan_fit: enumOf('ALL', ...FIT_VALUES), pay_filter: enumOf('ALL', 'PUBLISHED', 'UNPUBLISHED', 'UNKNOWN'), role_family: validRoleFamily,
   strategy_lane: LANES, lane: LANES,
   workplace_type: enumOf('ALL', 'REMOTE', 'REMOTE_RESTRICTED', 'HYBRID', 'ONSITE', 'UNKNOWN'),
   source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
@@ -166,13 +168,14 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
-  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type']],
+  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
+  [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
   [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
-// Hands its query to /api/jobs, which caches its own answer under the full key.
-const NOT_CACHED = /^\/api\/india-remote\/jobs$/;
+// Nothing is excluded from the cache by path any more: /api/india-remote/jobs has its own query and its own key (every filter it honours is in CACHE_PARAMS).
+const NOT_CACHED = /^\/api\/never-cached$/;
 const STATUS_VALUE: Record<string, (v: string) => boolean> = {
   '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
 };
@@ -1156,6 +1159,111 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 });
 
 // Comprehensive /api/jobs for React Frontend
+// Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
+const JOB_COLUMNS = `
+        j.id, j.title, j.company, j.company_url, j.company_headquarters,
+        j.source_adapter, j.source_url, j.original_posting_url,
+        j.employment_type, j.workplace_type, j.location_restrictions,
+        j.description, j.required_skills,
+        j.salary_published, j.salary_currency, j.salary_min, j.salary_max, j.salary_period, j.salary_raw_text,
+        j.discovered_at, j.last_verified_at, j.is_active, j.provenance,
+        q.qualification_status, q.strategy_lane, q.eligibility_status,
+        q.eligibility_reason, q.qualification_reason, q.manual_override_status,
+        q.manual_override_reason, q.qualified_at,
+        s.overall_score, s.skill_score, s.role_score, s.score_breakdown,
+        a.id as application_id, a.status as app_status, a.applied_at as app_applied_at,
+        a.notes as app_notes, a.rejection_stage as app_rejection_stage,
+        a.rejection_reason_category as app_rejection_reason_category,
+        a.rejection_notes as app_rejection_notes`;
+function shapeJob(r: any, candidateId: string, threshold: number | null) {
+      let scoreBreakdown = null;
+      try {
+        if (r.score_breakdown) scoreBreakdown = JSON.parse(r.score_breakdown);
+      } catch {}
+
+      let reqSkills = [];
+      try {
+        if (r.required_skills) reqSkills = JSON.parse(r.required_skills);
+      } catch {}
+
+      // Disclosure only: a READY/STRETCH status next to a score that does not support it is explained, never repaired.
+      const conflict = assessmentConflict(r, threshold);
+      const family = roleFamilyOf(r.title);
+
+      return {
+        id: r.id,
+        title: r.title,
+        company: r.company,
+        company_url: r.company_url,
+        company_headquarters: r.company_headquarters,
+        source_adapter: r.source_adapter,
+        provenance: r.provenance,
+        source_url: r.source_url,
+        original_posting_url: r.original_posting_url,
+        employment_type: r.employment_type || 'FULL_TIME',
+        workplace_type: r.workplace_type,
+        location_restrictions: r.location_restrictions,
+        description: r.description,
+        required_skills: Array.isArray(reqSkills) ? reqSkills : [],
+        salary_published: Boolean(r.salary_published),
+        salary_currency: r.salary_currency,
+        salary_min: r.salary_min,
+        salary_max: r.salary_max,
+        salary_period: r.salary_period,
+        salary_raw_text: r.salary_raw_text,
+        discovered_at: r.discovered_at,
+        last_verified_at: r.provenance === 'PUBLIC_FEED_UNVERIFIED' ? null : r.last_verified_at || r.discovered_at,
+        is_active: Boolean(r.is_active),
+        qualification_status: r.qualification_status,
+        qualification_reason: r.qualification_reason,
+        qualified_at: r.qualified_at,
+        manual_override_status: r.manual_override_status,
+        manual_override_reason: r.manual_override_reason,
+        assessment_conflict: conflict.conflict,
+        assessment_conflict_reason: conflict.reason,
+        role_family: family ? family.label : null,
+        role_family_key: family ? family.key : UNCLASSIFIED,
+        strategy_lane: r.strategy_lane,
+        candidate_id: candidateId,
+        remote_from_india: r.eligibility_status === 'ELIGIBLE' ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
+        farhan_fit: fitOf(r.qualification_status),
+        application_state: r.app_status || 'NEW',
+        eligibility: {
+          classification: r.eligibility_status,
+          epistemic_status: r.provenance === 'PUBLIC_FEED_UNVERIFIED' || r.eligibility_status === 'UNKNOWN' ? 'UNKNOWN' : 'VERIFIED_FACT',
+          confidence: 0.95,
+          evidence_text: r.eligibility_reason,
+          reason: r.eligibility_reason,
+        },
+        score: {
+          overall_score: r.overall_score || 0,
+          skill_score: r.skill_score || 0,
+          role_score: r.role_score || 0,
+          strategy_lane: r.strategy_lane,
+          breakdown: scoreBreakdown || {
+            skill_score: r.skill_score || 0,
+            role_score: r.role_score || 0,
+            matched_skills: [],
+            missing_skills: [],
+          },
+        },
+        application: r.app_status ? {
+          id: r.application_id,
+          candidate_id: candidateId,
+          job_id: r.id,
+          status: r.app_status,
+          applied_at: r.app_applied_at,
+          notes: r.app_notes,
+          rejection_stage: r.app_rejection_stage,
+          rejection_reason_category: r.app_rejection_reason_category,
+          rejection_notes: r.app_rejection_notes,
+        } : null,
+      };
+}
+async function candidateThreshold(env: Env, candidateId: string): Promise<number | null> {
+  try { const r = await env.DB.prepare('SELECT qualification_threshold AS t FROM candidates WHERE id = ?').bind(candidateId).first<any>(); return typeof r?.t === 'number' ? r.t : null; } catch { return null; }
+}
+
 router.get('/api/jobs', async (request, env, _params, url) => {
   const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
@@ -1166,6 +1274,10 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const sourceAdapter = url.searchParams.get('source_adapter');
   const qualificationStatus = url.searchParams.get('qualification_status');
   const strategyLane = url.searchParams.get('strategy_lane');
+  const fitParam = (url.searchParams.get('farhan_fit') || 'ALL').toUpperCase();
+  const payParam = parsePay(url.searchParams.get('pay_filter'));
+  if (fitParam !== 'ALL' && !(FIT_VALUES as readonly string[]).includes(fitParam)) return jsonResponse({ error: 'Unsupported farhan_fit value.', allowed: ['ALL', ...FIT_VALUES] }, 400, corsHeaders(request, env));
+  if (payParam === undefined) return jsonResponse({ error: 'Unsupported pay_filter value.', allowed: ['ALL', 'PUBLISHED', 'UNPUBLISHED'] }, 400, corsHeaders(request, env));
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
@@ -1219,6 +1331,9 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       baseParams.push(strategyLane);
     }
 
+    if (fitParam !== 'ALL') baseWhere += ` AND ${FIT_SQL[fitParam as (typeof FIT_VALUES)[number]]}`;
+    if (payParam) baseWhere += ` AND ${PAY_SQL[payParam]}`;
+
     if (excludeApplied) {
       baseWhere += ` AND (a.status IS NULL OR a.status = 'SAVED')`;
     }
@@ -1263,21 +1378,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 
     // 3. Query paginated results
     let selectQuery = `
-      SELECT 
-        j.id, j.title, j.company, j.company_url, j.company_headquarters,
-        j.source_adapter, j.source_url, j.original_posting_url,
-        j.employment_type, j.workplace_type, j.location_restrictions,
-        j.description, j.required_skills,
-        j.salary_published, j.salary_currency, j.salary_min, j.salary_max, j.salary_period, j.salary_raw_text,
-        j.discovered_at, j.last_verified_at, j.is_active, j.provenance,
-        q.qualification_status, q.strategy_lane, q.eligibility_status,
-        q.eligibility_reason, q.qualification_reason, q.manual_override_status,
-        q.manual_override_reason, q.qualified_at,
-        s.overall_score, s.skill_score, s.role_score, s.score_breakdown,
-        a.id as application_id, a.status as app_status, a.applied_at as app_applied_at,
-        a.notes as app_notes, a.rejection_stage as app_rejection_stage,
-        a.rejection_reason_category as app_rejection_reason_category,
-        a.rejection_notes as app_rejection_notes
+      SELECT ${JOB_COLUMNS}
       ${filteredWhere}
     `;
 
@@ -1301,88 +1402,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 
     const { results } = await env.DB.prepare(selectQuery).bind(...selectParams).all<any>();
 
-    const jobs = results.map((r: any) => {
-      let scoreBreakdown = null;
-      try {
-        if (r.score_breakdown) scoreBreakdown = JSON.parse(r.score_breakdown);
-      } catch {}
-
-      let reqSkills = [];
-      try {
-        if (r.required_skills) reqSkills = JSON.parse(r.required_skills);
-      } catch {}
-
-      // Honest contradiction disclosure without requalifying or inflating scores
-      const hasAssessmentConflict = (r.qualification_status === 'READY' || r.qualification_status === 'STRETCH_READY') &&
-        ((r.overall_score === 0 || r.overall_score === null) || r.strategy_lane === 'NOT_FIT');
-
-      return {
-        id: r.id,
-        title: r.title,
-        company: r.company,
-        company_url: r.company_url,
-        company_headquarters: r.company_headquarters,
-        source_adapter: r.source_adapter,
-        provenance: r.provenance,
-        source_url: r.source_url,
-        original_posting_url: r.original_posting_url,
-        employment_type: r.employment_type || 'FULL_TIME',
-        workplace_type: r.workplace_type,
-        location_restrictions: r.location_restrictions,
-        description: r.description,
-        required_skills: Array.isArray(reqSkills) ? reqSkills : [],
-        salary_published: Boolean(r.salary_published),
-        salary_currency: r.salary_currency,
-        salary_min: r.salary_min,
-        salary_max: r.salary_max,
-        salary_period: r.salary_period,
-        salary_raw_text: r.salary_raw_text,
-        discovered_at: r.discovered_at,
-        last_verified_at: r.provenance === 'PUBLIC_FEED_UNVERIFIED' ? null : r.last_verified_at || r.discovered_at,
-        is_active: Boolean(r.is_active),
-        qualification_status: r.qualification_status,
-        qualification_reason: r.qualification_reason,
-        qualified_at: r.qualified_at,
-        manual_override_status: r.manual_override_status,
-        manual_override_reason: r.manual_override_reason,
-        assessment_conflict: hasAssessmentConflict,
-        strategy_lane: r.strategy_lane,
-        candidate_id: candidateId,
-        remote_from_india: r.eligibility_status === 'ELIGIBLE' ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
-        farhan_fit: r.qualification_status === 'READY' ? 'READY' : (r.qualification_status === 'STRETCH_READY' ? 'STRETCH' : (r.qualification_status === 'NEEDS_REVIEW' ? 'REVIEW' : 'NOT_FIT')),
-        application_state: r.app_status || 'NEW',
-        eligibility: {
-          classification: r.eligibility_status,
-          epistemic_status: r.provenance === 'PUBLIC_FEED_UNVERIFIED' || r.eligibility_status === 'UNKNOWN' ? 'UNKNOWN' : 'VERIFIED_FACT',
-          confidence: 0.95,
-          evidence_text: r.eligibility_reason,
-          reason: r.eligibility_reason,
-        },
-        score: {
-          overall_score: r.overall_score || 0,
-          skill_score: r.skill_score || 0,
-          role_score: r.role_score || 0,
-          strategy_lane: r.strategy_lane,
-          breakdown: scoreBreakdown || {
-            skill_score: r.skill_score || 0,
-            role_score: r.role_score || 0,
-            matched_skills: [],
-            missing_skills: [],
-          },
-        },
-        application: r.app_status ? {
-          id: r.application_id,
-          candidate_id: candidateId,
-          job_id: r.id,
-          status: r.app_status,
-          applied_at: r.app_applied_at,
-          notes: r.app_notes,
-          rejection_stage: r.app_rejection_stage,
-          rejection_reason_category: r.app_rejection_reason_category,
-          rejection_notes: r.app_rejection_notes,
-        } : null,
-      };
-    });
+    const threshold = await candidateThreshold(env, candidateId);
+    const jobs = results.map((r: any) => shapeJob(r, candidateId, threshold));
 
     return jsonResponse({
       count: jobs.length,
@@ -1882,13 +1903,58 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
 });
 
 router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
-  // Delegate to /api/jobs with eligibility=ELIGIBLE
-  url.pathname = '/api/jobs';
-  url.searchParams.set('eligibility', 'ELIGIBLE');
-  const candidateId = knownCandidate(url.searchParams.get('candidate_id'));
-  if (!candidateId) return badCandidate(request, env, url.searchParams.get('candidate_id'));
-  url.searchParams.set('candidate_id', candidateId);
-  return router.handle(new Request(url.toString(), request), env);
+  const sp = url.searchParams;
+  const candidateId = knownCandidate(sp.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, sp.get('candidate_id'));
+  const reject = (what: string, allowed: unknown) => jsonResponse({ error: `Unsupported ${what}.`, allowed }, 400, corsHeaders(request, env));
+  const fit = (sp.get('farhan_fit') || 'ALL').toUpperCase();
+  if (fit !== 'ALL' && !(FIT_VALUES as readonly string[]).includes(fit)) return reject('farhan_fit value', ['ALL', ...FIT_VALUES]);
+  const pay = parsePay(sp.get('pay_filter'));
+  if (pay === undefined) return reject('pay_filter value', ['ALL', 'PUBLISHED', 'UNPUBLISHED']);
+  const family = sp.get('role_family') || 'ALL';
+  if (!validRoleFamily(family)) return reject('role_family value', ['ALL', UNCLASSIFIED, ...ROLE_FAMILIES.map((f) => f.key)]);
+  const sort = sp.get('sort_by') || 'score_desc';
+  if (!SORTS.includes(sort)) return reject('sort_by value', SORTS);
+  const exAppliedRaw = sp.get('exclude_applied');
+  if (exAppliedRaw !== null && exAppliedRaw !== 'true' && exAppliedRaw !== 'false') return reject('exclude_applied value', ['true', 'false']);
+  const limit = Math.min(Math.max(1, parseInt(sp.get('limit') || '50', 10) || 50), isOperatorRequest(request) ? 1000 : 100);
+  const offset = Math.max(0, parseInt(sp.get('offset') || '0', 10) || 0);
+  const search = (sp.get('search') || '').trim();
+  try {
+    // Step 1: one light row per ELIGIBLE active job of this candidate (a few hundred at most), with only what filtering needs.
+    let where = `WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1`;
+    const binds: any[] = [candidateId];
+    if (search) { where += ` AND (j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)`; const t = `%${search}%`; binds.push(t, t, t); }
+    const { results: light } = await env.DB.prepare(`
+      SELECT j.id, j.title, j.company, j.discovered_at, COALESCE(j.salary_published, 0) AS pub, q.qualification_status AS status,
+             COALESCE(s.overall_score, 0) AS score, a.status AS app_status
+      FROM candidate_qualifications q
+      JOIN jobs j ON j.id = q.job_id
+      LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+      ${where}
+      LIMIT 5000`).bind(...binds).all<LightRow>();
+    // Step 2: filter, count and paginate on those rows (role family is derived from the title, so it cannot be a SQL predicate).
+    const page = listIndiaRemote(light || [], { fit: fit as any, family, pay, excludeApplied: exAppliedRaw === 'true', sort, limit, offset });
+    // Step 3: full detail for the ids of this page only, returned in page order.
+    let jobs: any[] = [];
+    if (page.ids.length) {
+      const marks = page.ids.map(() => '?').join(',');
+      const { results } = await env.DB.prepare(`
+        SELECT ${JOB_COLUMNS}
+        FROM candidate_qualifications q
+        JOIN jobs j ON q.job_id = j.id
+        LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
+        LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+        WHERE q.candidate_id = ? AND j.id IN (${marks})`).bind(candidateId, ...page.ids).all<any>();
+      const threshold = await candidateThreshold(env, candidateId);
+      const byId = new Map((results || []).map((r: any) => [r.id, shapeJob(r, candidateId, threshold)]));
+      jobs = page.ids.map((id) => byId.get(id)).filter(Boolean);
+    }
+    return jsonResponse({ count: jobs.length, total: page.total, limit, offset, facets: page.facets, jobs }, 200, corsHeaders(request, env));
+  } catch (err: any) {
+    throw err;
+  }
 });
 
 // -------------------------------------------------------------

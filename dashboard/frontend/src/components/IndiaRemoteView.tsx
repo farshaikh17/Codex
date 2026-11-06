@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Job, IndiaRemoteSummary } from '../types';
-import { fetchIndiaRemoteJobs, fetchIndiaRemoteSummary, updateApplication } from '../api';
+import { Job, IndiaRemoteResult } from '../types';
+import { fetchIndiaRemoteJobs, updateApplication } from '../api';
 import {
   Globe2,
   CheckCircle2,
@@ -11,7 +11,8 @@ import {
   Sparkles,
   RotateCcw,
   Building,
-  DollarSign
+  DollarSign,
+  AlertCircle
 } from 'lucide-react';
 
 interface IndiaRemoteViewProps {
@@ -20,19 +21,35 @@ interface IndiaRemoteViewProps {
   onRefreshGlobal?: () => void;
 }
 
+type Fit = 'ALL' | 'READY' | 'STRETCH' | 'REVIEW' | 'NOT_FIT';
+const PAGE_SIZE = 25;
+const FIT_LABEL: Record<string, string> = { READY: 'READY', STRETCH: 'STRETCH', REVIEW: 'NEEDS REVIEW', NOT_FIT: 'NOT FIT' };
+
 export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 'farhan_shaikh', onSelectJob, onRefreshGlobal }) => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [summary, setSummary] = useState<IndiaRemoteSummary | null>(null);
+  const [result, setResult] = useState<IndiaRemoteResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter States
-  const [fitFilter, setFitFilter] = useState<'ALL' | 'READY' | 'STRETCH' | 'REVIEW' | 'NOT_FIT'>('ALL');
+  // Filter states. Every one of them is sent to the server, which filters, counts and paginates; nothing is filtered in the browser.
+  const [fitFilter, setFitFilter] = useState<Fit>('ALL');
   const [roleFamilyFilter, setRoleFamilyFilter] = useState<string>('ALL');
   const [payFilter, setPayFilter] = useState<string>('ALL');
+  const [searchInput, setSearchInput] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [excludeApplied, setExcludeApplied] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<string>('score_desc');
+  const [page, setPage] = useState<number>(0);
+
+  // A different candidate has different role families and counts: start from a clean state.
+  useEffect(() => {
+    setFitFilter('ALL'); setRoleFamilyFilter('ALL'); setPayFilter('ALL'); setSearchInput(''); setSearch(''); setPage(0);
+  }, [candidateId]);
+
+  // Typing does not query on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput.trim()); setPage(0); }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const loadSeq = React.useRef(0);
   const loadData = useCallback(async () => {
@@ -40,22 +57,20 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
     setIsLoading(true);
     setError(null);
     try {
-      const [summaryData, jobsData] = await Promise.all([
-        fetchIndiaRemoteSummary(candidateId),
-        fetchIndiaRemoteJobs({
-          candidate_id: candidateId,
-          farhan_fit: fitFilter,
-          role_family: roleFamilyFilter,
-          pay_filter: payFilter,
-          search: search.trim() || undefined,
-          exclude_applied: excludeApplied,
-          sort_by: sortBy
-        })
-      ]);
+      const data = await fetchIndiaRemoteJobs({
+        candidate_id: candidateId,
+        farhan_fit: fitFilter,
+        role_family: roleFamilyFilter,
+        pay_filter: payFilter,
+        search: search || undefined,
+        exclude_applied: excludeApplied,
+        sort_by: sortBy,
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+      });
       // A slower response for an earlier filter or candidate must not overwrite the current screen.
       if (seq !== loadSeq.current) return;
-      setSummary(summaryData);
-      setJobs(jobsData);
+      setResult(data);
     } catch (err: any) {
       if (seq !== loadSeq.current) return;
       console.error(err);
@@ -63,11 +78,27 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
     } finally {
       if (seq === loadSeq.current) setIsLoading(false);
     }
-  }, [candidateId, fitFilter, roleFamilyFilter, payFilter, search, excludeApplied, sortBy]);
+  }, [candidateId, fitFilter, roleFamilyFilter, payFilter, search, excludeApplied, sortBy, page]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const jobs = result?.jobs ?? [];
+  const total = result?.total ?? 0;
+  const fitCounts = result?.facets?.fit;
+  const payCounts = result?.facets?.pay;
+  const families = result?.facets?.role_family ?? [];
+  const lastPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
+  const firstShown = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const lastShown = Math.min(total, page * PAGE_SIZE + jobs.length);
+
+  // If the data shrank under the current page (for example a job was applied to), step back to the last page that exists.
+  useEffect(() => {
+    if (result && result.total > 0 && result.jobs.length === 0 && page > lastPage) setPage(lastPage);
+  }, [result, page, lastPage]);
+
+  const pickFit = (f: Fit) => { setFitFilter(f); setPage(0); };
 
   const handleToggleSave = async (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,10 +116,14 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
     setFitFilter('ALL');
     setRoleFamilyFilter('ALL');
     setPayFilter('ALL');
+    setSearchInput('');
     setSearch('');
     setExcludeApplied(true);
     setSortBy('score_desc');
+    setPage(0);
   };
+
+  const count = (n: number | undefined) => (n === undefined ? '—' : n);
 
   return (
     <div className="space-y-6">
@@ -99,13 +134,14 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-mono border border-emerald-500/30 font-semibold flex items-center gap-1.5">
                 <Globe2 className="w-3.5 h-3.5" />
-                AFFIRMATIVE INDIA REMOTE QUEUE
+                INDIA ELIGIBILITY SCREEN
               </span>
-              <span className="text-slate-400 text-xs">Decoupled Remote Eligibility & Candidate Fit</span>
+              <span className="text-slate-400 text-xs">Eligibility and candidate fit are separate</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white">Confirmed India Remote Opportunities</h1>
+            <h1 className="text-2xl font-black tracking-tight text-white">India Remote Opportunities</h1>
             <p className="text-slate-300 text-sm mt-1 max-w-2xl leading-relaxed">
-              Every vacancy in this queue is verified with affirmative evidence allowing remote work from India. Opportunities are cleanly segmented into candidate target fit, stretch matches, review cases, and unaligned technical roles.
+              Vacancies whose own posting text met an automated screen for working from India. This is not confirmation from the employer, so read the posting
+              before applying. The fit label is the recorded qualification status and is shown next to the stored score; where the two disagree the card explains it.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -114,28 +150,28 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
               disabled={isLoading}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors"
             >
-              Refresh Queue
+              Refresh
             </button>
           </div>
         </div>
 
-        {/* Top Metric Pills */}
+        {/* Top Metric Pills: the counts are the facets of the same query, so each equals what choosing it shows */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-6 pt-6 border-t border-slate-800">
           <button
-            onClick={() => setFitFilter('ALL')}
+            onClick={() => pickFit('ALL')}
             className={`p-3 rounded-xl border text-left transition-all ${
               fitFilter === 'ALL'
                 ? 'bg-white/10 border-white/30 ring-2 ring-emerald-400 shadow-md'
                 : 'bg-slate-800/40 border-slate-800 hover:bg-slate-800/70'
             }`}
           >
-            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">All Confirmed</div>
-            <div className="text-xl font-black text-white mt-0.5">{summary?.total_confirmed ?? '—'}</div>
-            <div className="text-[10px] text-emerald-400 mt-1">India Verified</div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">All eligible</div>
+            <div className="text-xl font-black text-white mt-0.5">{count(fitCounts?.ALL)}</div>
+            <div className="text-[10px] text-emerald-400 mt-1">Per posting text</div>
           </button>
 
           <button
-            onClick={() => setFitFilter('READY')}
+            onClick={() => pickFit('READY')}
             className={`p-3 rounded-xl border text-left transition-all ${
               fitFilter === 'READY'
                 ? 'bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-400 shadow-md'
@@ -145,12 +181,12 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <div className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Ready
             </div>
-            <div className="text-xl font-black text-emerald-300 mt-0.5">{summary?.ready_count ?? '—'}</div>
-            <div className="text-[10px] text-emerald-400 mt-1 font-mono font-medium">Ready to Apply</div>
+            <div className="text-xl font-black text-emerald-300 mt-0.5">{count(fitCounts?.READY)}</div>
+            <div className="text-[10px] text-emerald-400 mt-1 font-mono font-medium">Recorded status</div>
           </button>
 
           <button
-            onClick={() => setFitFilter('STRETCH')}
+            onClick={() => pickFit('STRETCH')}
             className={`p-3 rounded-xl border text-left transition-all ${
               fitFilter === 'STRETCH'
                 ? 'bg-blue-950/60 border-blue-500 ring-2 ring-blue-400 shadow-md'
@@ -160,34 +196,34 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <div className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> Stretch
             </div>
-            <div className="text-xl font-black text-blue-300 mt-0.5">{summary?.stretch_count ?? '—'}</div>
-            <div className="text-[10px] text-blue-400 mt-1 font-mono font-medium">Adjacent Match</div>
+            <div className="text-xl font-black text-blue-300 mt-0.5">{count(fitCounts?.STRETCH)}</div>
+            <div className="text-[10px] text-blue-400 mt-1 font-mono font-medium">Recorded status</div>
           </button>
 
           <button
-            onClick={() => setFitFilter('REVIEW')}
+            onClick={() => pickFit('REVIEW')}
             className={`p-3 rounded-xl border text-left transition-all ${
               fitFilter === 'REVIEW'
                 ? 'bg-amber-950/60 border-amber-500 ring-2 ring-amber-400 shadow-md'
                 : 'bg-amber-950/20 border-amber-900/50 hover:bg-amber-950/40'
             }`}
           >
-            <div className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Needs Review</div>
-            <div className="text-xl font-black text-amber-300 mt-0.5">{summary?.review_count ?? '—'}</div>
-            <div className="text-[10px] text-amber-400 mt-1 font-mono font-medium">Operator Check</div>
+            <div className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Needs review</div>
+            <div className="text-xl font-black text-amber-300 mt-0.5">{count(fitCounts?.REVIEW)}</div>
+            <div className="text-[10px] text-amber-400 mt-1 font-mono font-medium">Recorded status</div>
           </button>
 
           <button
-            onClick={() => setFitFilter('NOT_FIT')}
+            onClick={() => pickFit('NOT_FIT')}
             className={`p-3 rounded-xl border text-left transition-all ${
               fitFilter === 'NOT_FIT'
                 ? 'bg-slate-800 border-slate-500 ring-2 ring-slate-400 shadow-md'
                 : 'bg-slate-900/50 border-slate-800 hover:bg-slate-800/40'
             }`}
           >
-            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Not Role Fit</div>
-            <div className="text-xl font-black text-slate-300 mt-0.5">{summary?.not_fit_count ?? '—'}</div>
-            <div className="text-[10px] text-slate-400 mt-1 font-mono font-medium">Unaligned Roles</div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Not fit</div>
+            <div className="text-xl font-black text-slate-300 mt-0.5">{count(fitCounts?.NOT_FIT)}</div>
+            <div className="text-[10px] text-slate-400 mt-1 font-mono font-medium">Ineligible or on hold</div>
           </button>
         </div>
       </div>
@@ -200,47 +236,44 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search title, company, skills, description..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search title, company, description..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
             />
           </div>
 
-          {/* Farhan Fit Dropdown */}
+          {/* Fit Dropdown */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-semibold text-slate-500">Fit:</span>
             <select
               value={fitFilter}
-              onChange={(e) => setFitFilter(e.target.value as any)}
+              onChange={(e) => pickFit(e.target.value as Fit)}
               className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="ALL">All Confirmed</option>
-              <option value="READY">Ready ({summary?.ready_count ?? '—'})</option>
-              <option value="STRETCH">Stretch ({summary?.stretch_count ?? '—'})</option>
-              <option value="REVIEW">Needs Review ({summary?.review_count ?? '—'})</option>
-              <option value="NOT_FIT">Not Fit ({summary?.not_fit_count ?? '—'})</option>
+              <option value="ALL">All ({count(fitCounts?.ALL)})</option>
+              <option value="READY">Ready ({count(fitCounts?.READY)})</option>
+              <option value="STRETCH">Stretch ({count(fitCounts?.STRETCH)})</option>
+              <option value="REVIEW">Needs review ({count(fitCounts?.REVIEW)})</option>
+              <option value="NOT_FIT">Not fit ({count(fitCounts?.NOT_FIT)})</option>
             </select>
           </div>
 
-          {/* Role Family Dropdown */}
+          {/* Role Family Dropdown: only families that exist in this candidate's data, derived from titles */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-slate-500">Role Family:</span>
+            <span className="text-xs font-semibold text-slate-500">Role family:</span>
             <select
               value={roleFamilyFilter}
-              onChange={(e) => setRoleFamilyFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              onChange={(e) => { setRoleFamilyFilter(e.target.value); setPage(0); }}
+              className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[16rem]"
             >
-              <option value="ALL">All Families</option>
-              <option value="Implementation">Implementation / Tech Delivery</option>
-              <option value="Solutions">Solutions Implementation</option>
-              <option value="Technical Operations">Technical Operations</option>
-              <option value="Automation">Automation / Workflows</option>
-              <option value="AI Operations">AI Operations / Systems</option>
-              <option value="CRM/GTM">CRM / GTM Systems</option>
-              <option value="Revenue Systems">Revenue Systems</option>
-              <option value="Technical Account">Technical Account</option>
-              <option value="Adjacent Stretch">Adjacent Stretch</option>
+              <option value="ALL">All families</option>
+              {families.map((f) => (
+                <option key={f.key} value={f.key}>{f.label} ({f.count})</option>
+              ))}
+              {roleFamilyFilter !== 'ALL' && !families.some((f) => f.key === roleFamilyFilter) && (
+                <option value={roleFamilyFilter}>{roleFamilyFilter === 'UNCLASSIFIED' ? 'Unclassified' : roleFamilyFilter} (0)</option>
+              )}
             </select>
           </div>
 
@@ -249,13 +282,27 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <span className="text-xs font-semibold text-slate-500">Pay:</span>
             <select
               value={payFilter}
-              onChange={(e) => setPayFilter(e.target.value)}
+              onChange={(e) => { setPayFilter(e.target.value); setPage(0); }}
               className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="ALL">All Pay Ranges</option>
-              <option value="PUBLISHED">Published Salary Only</option>
-              <option value="MEETS_60K">Meets the candidate's stated pay floor</option>
-              <option value="UNKNOWN">Unspecified Salary</option>
+              <option value="ALL">All ({count(payCounts?.ALL)})</option>
+              <option value="PUBLISHED">Salary published ({count(payCounts?.PUBLISHED)})</option>
+              <option value="UNPUBLISHED">Salary not published ({count(payCounts?.UNPUBLISHED)})</option>
+            </select>
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-500">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => { setSortBy(e.target.value); setPage(0); }}
+              className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="score_desc">Stored score, high to low</option>
+              <option value="date_desc">Newest first</option>
+              <option value="title_asc">Title A–Z</option>
+              <option value="company_asc">Company A–Z</option>
             </select>
           </div>
 
@@ -264,10 +311,10 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
             <input
               type="checkbox"
               checked={excludeApplied}
-              onChange={(e) => setExcludeApplied(e.target.checked)}
+              onChange={(e) => { setExcludeApplied(e.target.checked); setPage(0); }}
               className="rounded text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5"
             />
-            <span className="text-xs font-medium text-slate-700">Exclude Applied (Quarantine)</span>
+            <span className="text-xs font-medium text-slate-700">Hide jobs already applied to</span>
           </label>
 
           {/* Clear Button */}
@@ -290,32 +337,32 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading && !result ? (
         <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3 shadow-sm">
           <div className="inline-block animate-spin text-emerald-600">
             <RotateCcw className="w-6 h-6" />
           </div>
-          <p className="text-xs font-semibold text-slate-500">Loading confirmed India Remote vacancies...</p>
+          <p className="text-xs font-semibold text-slate-500">Loading India Remote vacancies...</p>
         </div>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && !isLoading ? (
         <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3 shadow-sm">
           <Globe2 className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="text-sm font-bold text-slate-800">No matching vacancies found</h3>
+          <h3 className="text-sm font-bold text-slate-800">No vacancies match these filters</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Try adjusting your search query, selecting "All Families", or including already-applied jobs.
+            Nothing matches the combination you chose. Loosen a filter, clear the search, or show jobs you have already applied to.
           </p>
           <button
             onClick={handleClearFilters}
             className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-emerald-500 transition-colors"
           >
-            Reset Filters
+            Reset filters
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" aria-busy={isLoading}>
           <div className="flex items-center justify-between px-1 text-xs text-slate-500 font-semibold">
-            <span>Showing {jobs.length} confirmed India remote vacancies</span>
-            <span>Sorted by Match Score</span>
+            <span data-testid="india-remote-range">Showing {firstShown}–{lastShown} of {total} vacancies</span>
+            <span>{{ score_desc: 'Sorted by stored score', date_desc: 'Newest first', title_asc: 'Title A–Z', company_asc: 'Company A–Z' }[sortBy] ?? ''}</span>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -323,11 +370,13 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
               const score = job.score?.overall_score ?? 0;
               const fit = job.farhan_fit ?? 'REVIEW';
               const appState = job.application_state ?? (job.application?.status ? job.application.status : 'NEW');
-              const evidence = job.india_evidence || job.eligibility?.evidence_quote || job.eligibility?.reasoning;
+              const basis = job.eligibility?.reason || job.eligibility?.evidence_text;
+              const unverified = job.eligibility?.epistemic_status === 'UNKNOWN';
 
               return (
                 <div
                   key={job.id}
+                  data-job-id={job.id}
                   onClick={() => onSelectJob(job)}
                   className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer space-y-3"
                 >
@@ -343,8 +392,8 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
-                          {job.role_family || 'Implementation / Delivery'}
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium" data-role-family={job.role_family_key ?? ''}>
+                          {job.role_family || 'Unclassified'}
                         </span>
                         {job.location_restrictions && (
                           <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono text-[11px]">
@@ -355,16 +404,22 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                       </div>
                     </div>
 
-                    {/* Three Clean Dimensions Badges */}
+                    {/* Three separate dimensions */}
                     <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-                      {/* Dimension 1: Remote India */}
-                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                        <Globe2 className="w-3 h-3 text-emerald-600" />
-                        Remote: Confirmed
+                      {/* Dimension 1: eligibility to work from India, as read from the posting text */}
+                      <span
+                        title={basis || undefined}
+                        className={`border text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                          unverified ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        }`}
+                      >
+                        <Globe2 className="w-3 h-3" />
+                        {unverified ? 'Eligible per posting text (unverified)' : 'Eligible per posting text'}
                       </span>
 
-                      {/* Dimension 2: Farhan Fit */}
+                      {/* Dimension 2: recorded fit status and the stored score, side by side */}
                       <span
+                        data-fit={fit}
                         className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                           fit === 'READY'
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
@@ -375,7 +430,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                             : 'bg-amber-50 text-amber-800 border-amber-300'
                         }`}
                       >
-                        Fit: {fit} ({score}%)
+                        Status: {FIT_LABEL[fit] ?? fit} · stored score {score}
                       </span>
 
                       {/* Dimension 3: Application State */}
@@ -390,26 +445,34 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                             : 'bg-slate-100 text-slate-600 border-slate-200'
                         }`}
                       >
-                        App: {appState}
+                        Application: {appState}
                       </span>
                     </div>
                   </div>
 
-                  {/* India Evidence Box */}
-                  {evidence && (
+                  {/* Why this status and score disagree (never repaired, only explained) */}
+                  {job.assessment_conflict && job.assessment_conflict_reason && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{job.assessment_conflict_reason}</span>
+                    </div>
+                  )}
+
+                  {/* Basis recorded for the eligibility result */}
+                  {basis && (
                     <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-900 flex items-start gap-2">
                       <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                       <div className="space-y-0.5 leading-relaxed">
-                        <span className="font-bold text-emerald-950">India Remote Evidence: </span>
-                        <span className="italic font-serif">"{evidence}"</span>
+                        <span className="font-bold text-emerald-950">Basis (automated screen of the posting): </span>
+                        <span>{basis}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Farhan Match / Review Reasoning */}
+                  {/* Qualification reasoning */}
                   {job.qualification_reason && (
                     <div className="text-xs text-slate-600 flex items-start gap-2">
-                      <span className="font-semibold text-slate-800 flex-shrink-0">Fit Evaluation:</span>
+                      <span className="font-semibold text-slate-800 flex-shrink-0">Qualification note:</span>
                       <span className="text-slate-600">{job.qualification_reason}</span>
                     </div>
                   )}
@@ -420,10 +483,10 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                       {job.salary_published ? (
                         <span className="font-semibold text-emerald-700 flex items-center gap-1">
                           <DollarSign className="w-3.5 h-3.5" />
-                          {job.salary_currency} {job.salary_min?.toLocaleString()} - {job.salary_max?.toLocaleString()} {job.salary_period}
+                          {[job.salary_currency, job.salary_min?.toLocaleString(), job.salary_max != null ? `- ${job.salary_max.toLocaleString()}` : '', job.salary_period].filter(Boolean).join(' ')}
                         </span>
                       ) : (
-                        <span className="text-slate-400">Salary unlisted</span>
+                        <span className="text-slate-400">Salary not published</span>
                       )}
                     </div>
 
@@ -441,13 +504,13 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                       </button>
 
                       <a
-                        href={job.source_url}
+                        href={job.original_posting_url || job.source_url}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
                       >
-                        Official Post
+                        Open posting
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
@@ -456,6 +519,27 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {total > PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-2 text-xs">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="text-slate-500 font-semibold">Page {page + 1} of {lastPage + 1}</span>
+              <button
+                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                disabled={page >= lastPage || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
