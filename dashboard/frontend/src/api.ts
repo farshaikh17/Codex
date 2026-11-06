@@ -826,3 +826,8 @@ export async function fetchBrand(): Promise<{ brand_name: string; brand_sub: str
 export async function deleteClientRequest(id: string): Promise<void> {
   await jsonOrThrow(await authedFetch(`${API_BASE}/client-requests/${encodeURIComponent(id)}`, { method: 'DELETE' }), 'Deleting the application');
 }
+
+/** Removes a SAVED-only tracker record (the opposite of "Save"). A record that has moved on is left alone (409). */
+export async function unsaveJob(jobId: string, candidateId: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/applications/${encodeURIComponent(jobId)}?candidate_id=${encodeURIComponent(candidateId)}`, { method: 'DELETE' }), 'Un-saving the job');
+}

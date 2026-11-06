@@ -20,6 +20,7 @@ import {
   fetchCandidateList,
   downloadExport,
   fetchBrand,
+  unsaveJob,
   CandidateRef
 } from './api';
 import { ClientsView } from './components/ClientsView';
@@ -218,9 +219,9 @@ export const App: React.FC = () => {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    const newStatus: ApplicationStatus = job.application?.status === 'SAVED' ? 'WITHDRAWN' : 'SAVED';
     try {
-      await updateApplication({ job_id: jobId, status: newStatus, candidate_id: candidateId });
+      if (job.application?.status === 'SAVED') await unsaveJob(jobId, candidateId);
+      else await updateApplication({ job_id: jobId, status: 'SAVED', candidate_id: candidateId });
       await loadData();
     } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to save this job. Please retry."); }
   };

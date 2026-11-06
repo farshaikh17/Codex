@@ -298,3 +298,23 @@ test('overview and the client list stay within the 50-queries-per-request limit 
   assert.ok(n < 20, `client list used ${n} queries`);
   w.d1.prepare = realPrepare;
 });
+
+test('un-save removes a SAVED-only record, leaves the job in "not applied" lists, keeps history, and never removes a real application', async () => {
+  const w = world();
+  w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status) VALUES (?,?,?,?,?)`, F, 'k3', 'NEEDS_REVIEW', 'STRONGEST_FIT', 'UNKNOWN');
+  const before = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&exclude_applied=true&limit=50`);
+  assert.ok(before.json.jobs.some((j) => j.id === 'k3'));
+  await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k3', status: 'SAVED' } });
+  assert.equal(w.sqlite.prepare(`SELECT status FROM applications WHERE candidate_id=? AND job_id='k3'`).get(F).status, 'SAVED');
+  const r = await req(w.env, 'DELETE', `/api/applications/k3?candidate_id=${F}`);
+  assert.equal(r.status, 200, r.text);
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM applications WHERE candidate_id=? AND job_id='k3'`).get(F).n, 0);
+  assert.equal(w.sqlite.prepare(`SELECT new_status FROM application_history WHERE candidate_id=? AND job_id='k3' ORDER BY id DESC LIMIT 1`).get(F).new_status, 'UNSAVED');
+  const list = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&exclude_applied=true&limit=50`);
+  assert.ok(list.json.jobs.some((j) => j.id === 'k3'), 'an un-saved job is listed again as not applied');
+  // a real application (k1 is APPLIED with a note) can never be removed this way
+  assert.equal((await req(w.env, 'DELETE', `/api/applications/k1?candidate_id=${F}`)).status, 409);
+  assert.equal(w.sqlite.prepare(`SELECT status FROM applications WHERE candidate_id=? AND job_id='k1'`).get(F).status, 'APPLIED');
+  assert.equal((await req(w.env, 'DELETE', `/api/applications/k9?candidate_id=${F}`)).status, 404);
+  assert.equal((await req(w.env, 'DELETE', `/api/applications/k3?candidate_id=${F}`, { key: null })).status, 401, 'visitors cannot un-save');
+});

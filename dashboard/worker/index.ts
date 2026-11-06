@@ -1861,6 +1861,26 @@ router.post('/api/applications', async (request, env) => {
   return handleApplicationSave(request, env);
 });
 
+// Un-save: removes a tracker record that is still only SAVED (never one that has moved on, has notes, or carries a
+// decision), and writes a history row so the action is on record. Before this, un-saving set WITHDRAWN, which every
+// list counted as applied.
+router.delete('/api/applications/:id', async (request, env, params, url) => {
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
+  const jobId = params.id;
+  const existing = await env.DB.prepare('SELECT id, status, notes FROM applications WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).first<any>();
+  if (!existing) return jsonResponse({ error: 'No tracker record for this job.' }, 404, corsHeaders(request, env));
+  if (existing.status !== 'SAVED' || (existing.notes && String(existing.notes).trim()))
+    return jsonResponse({ error: 'Only a record that is still SAVED (with no notes) can be un-saved; change its status in the tracker instead.' }, 409, corsHeaders(request, env));
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
+      VALUES (?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?)`).bind(candidateId, jobId, existing.id, now),
+    env.DB.prepare('DELETE FROM applications WHERE id = ? AND candidate_id = ? AND job_id = ? AND status = ?').bind(existing.id, candidateId, jobId, 'SAVED'),
+  ]);
+  return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
+});
+
 // Application History Audit Trail
 router.get('/api/applications/:id/history', async (request, env, params, url) => {
   const jobId = params.id;
