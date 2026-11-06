@@ -2545,6 +2545,27 @@ router.get('/api/profile', async (request, env, _params, url) => {
       target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : (isSana ? ['MID', 'SENIOR', 'LEAD'] : ['SENIOR', 'LEAD', 'STAFF']),
       qualification_threshold: cand.qualification_threshold,
     };
+    // A resold client: only what was entered for them. None of the built-in candidates' facts (pay floors, preferences,
+    // briefs) are borrowed; anything not entered is empty, not invented.
+    if (!BUILTIN_IDS.includes(cand.id)) {
+      const cp = await env.DB.prepare('SELECT display_title, summary_line, search_profile FROM client_profiles WHERE candidate_id = ?').bind(cand.id).first<any>();
+      let sp: any = null; try { sp = cp?.search_profile ? JSON.parse(cp.search_profile) : null; } catch {}
+      const home = sp?.home_country || 'India';
+      Object.assign(full, {
+        display_title: cp?.display_title || '', summary_line: cp?.summary_line || '',
+        target_roles: sp?.role_keywords || (cand.target_roles ? JSON.parse(cand.target_roles) : []),
+        secondary_skills: cand.secondary_skills ? JSON.parse(cand.secondary_skills) : [],
+        target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : [],
+        disqualifying_keywords: sp?.avoid_keywords || [],
+        acceptable_hiring_models: [], min_acceptable_salary_usd: null, min_fixed_monthly_inr: null, preferred_inr_range: null, notice_period_days: null,
+        location_preferences: sp ? [sp.location_mode === 'HOME_OR_RELOCATE' ? `${home}, or postings offering sponsorship or worldwide remote work` : `Fully remote from ${home}`] : [],
+        relocation_interest: sp?.location_mode === 'HOME_OR_RELOCATE',
+        work_authorization: [], profile_basis: 'Client profile entered by the operator',
+        pay_line: 'Pay floor and notice period: not provided.', employment_history: [],
+        search_profile: sp,
+      });
+      (facts as any).public_summary = cp?.summary_line || '';
+    }
     if (isOperatorRequest(request)) return jsonResponse(full, 200, corsHeaders(request, env));
     // Public profile summary: explicitly selected fields only. Employers, pay, notice, city, relocation and location
     // preferences, contact details and documents are operator-only.

@@ -312,7 +312,21 @@ export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof
   }else{
    await db.prepare('UPDATE cloud_automation SET jobs_today=jobs_today+1 WHERE id=1').run();
    const cached=source.kind==='jobicy'||source.kind==='remotive';
-   const raw=cached?JSON.parse(work.payload):await boundedJSON(sourceURL(source,work.posting_id),transport);
+   let raw:any;
+   try{raw=cached?JSON.parse(work.payload):await boundedJSON(sourceURL(source,work.posting_id),transport);}
+   catch(e:any){
+    // The employer's own ATS answers 404 for this posting: it was taken down. That is a fact about the posting, not a failure of the
+    // engine: the queue item ends as GONE and the job (if stored) is closed. A job someone applied to or decided on is left as it is.
+    if(cached||String(e?.message)!=='Source HTTP 404')throw e;
+    const closedAt=iso(),ev=await db.prepare('SELECT job_id FROM cloud_job_evidence WHERE source_id=? AND posting_id=?').bind(source.id,work.posting_id).first<any>();
+    const st=[db.prepare(`UPDATE cloud_discovery_queue SET state='GONE',last_error='Posting removed upstream (HTTP 404)',updated_at=? WHERE id=?`).bind(closedAt,work.id)];
+    if(ev?.job_id)st.push(db.prepare(`UPDATE jobs SET is_active=0,expired_at=? WHERE id=? AND is_active=1
+      AND NOT EXISTS(SELECT 1 FROM applications a WHERE a.job_id=jobs.id) AND NOT EXISTS(SELECT 1 FROM candidate_qualifications q WHERE q.job_id=jobs.id AND q.manual_override_status IS NOT NULL)`).bind(closedAt,ev.job_id));
+    st.push(db.prepare(`UPDATE cloud_discovery_runs SET status='SUCCESS',completed_at=?,duration_ms=?,job_id=?,error_message='Posting removed upstream (HTTP 404); closed' WHERE id=?`).bind(closedAt,Date.now()-started,ev?.job_id||null,runId));
+    st.push(db.prepare('UPDATE cloud_automation SET last_success_at=?,last_error=NULL,updated_at=? WHERE id=1 AND lease_token=?').bind(closedAt,closedAt,token));
+    await db.batch(st);
+    return {status:'SUCCESS',run_id:runId,source_id:source.id,run_type:kind,duration_ms:Date.now()-started,posting_closed:true,job_id:ev?.job_id||null};
+   }
    const posting:Posting=isBroad(source.kind)?normalizeBroad(source,raw,cached?work.updated_at:now):normalize(source,raw);
    posting.description=plain(posting.description);if(!posting.description)throw Error('Posting detail missing description; held for retry');
    const result=await persist(db,source,posting);jobId=result.job_id;counts={jobs_seen:1,...result};

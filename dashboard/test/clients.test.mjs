@@ -201,3 +201,21 @@ test('a full 100-row page works on both listings (D1 allows at most 100 bound pa
   const op = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&limit=130`);
   assert.equal(op.json.jobs.length, 130, 'the operator may ask for more than 100 rows: still one statement parameter');
 });
+
+test('a client profile shows only what was entered for it, never the built-in candidates’ facts', async () => {
+  const w = world();
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  const op = await req(w.env, 'GET', '/api/profile?candidate_id=priya_analyst');
+  assert.equal(op.status, 200);
+  assert.equal(op.json.display_title, 'Data & BI Analyst');
+  assert.equal(op.json.summary_line, 'SQL • Dashboards • remote from India');
+  assert.deepEqual(op.json.target_roles, ['data analyst', 'bi analyst']);
+  assert.deepEqual(op.json.location_preferences, ['Fully remote from India']);
+  for (const k of ['min_acceptable_salary_usd', 'min_fixed_monthly_inr', 'preferred_inr_range', 'notice_period_days']) assert.equal(op.json[k], null, k);
+  assert.ok(!JSON.stringify(op.json).includes('Farhan') && !JSON.stringify(op.json).includes('120000'));
+  await req(w.env, 'PUT', '/api/clients/priya_analyst', { body: { visibility: 'public' } });
+  const pub = await req(w.env, 'GET', '/api/profile?candidate_id=priya_analyst', { key: null });
+  assert.equal(pub.json.summary_line, 'SQL • Dashboards • remote from India');
+  assert.equal(pub.json.current_location, 'India');
+  assert.ok(!pub.text.includes('Pune'), 'the stored city stays operator-only');
+});
