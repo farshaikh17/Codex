@@ -7,6 +7,7 @@ import {
   JobSource,
   WeeklyMetrics,
   IndiaRemoteSummary,
+  IndiaRemoteResult,
   QualificationAuditRecord,
   QualificationStatus,
   ApplicationHistoryRecord,
@@ -249,7 +250,9 @@ export async function fetchIndiaRemoteJobs(params?: {
   exclude_applied?: boolean;
   sort_by?: string;
   candidate_id?: string;
-}): Promise<Job[]> {
+  limit?: number;
+  offset?: number;
+}): Promise<IndiaRemoteResult> {
   const query = new URLSearchParams();
   if (params?.candidate_id) query.append('candidate_id', params.candidate_id);
   if (params?.farhan_fit && params.farhan_fit !== 'ALL') query.append('farhan_fit', params.farhan_fit);
@@ -258,11 +261,20 @@ export async function fetchIndiaRemoteJobs(params?: {
   if (params?.search) query.append('search', params.search);
   if (params?.exclude_applied !== undefined) query.append('exclude_applied', String(params.exclude_applied));
   if (params?.sort_by) query.append('sort_by', params.sort_by);
+  query.append('limit', String(params?.limit ?? 25));
+  query.append('offset', String(params?.offset ?? 0));
 
   const res = await authedFetch(`${API_BASE}/india-remote/jobs?${query.toString()}`);
   if (!res.ok) throw new Error('Failed to fetch India Remote jobs');
   const data = await res.json();
-  return data.jobs;
+  return {
+    jobs: data.jobs || [],
+    total: typeof data.total === 'number' ? data.total : (data.jobs || []).length,
+    count: data.count ?? (data.jobs || []).length,
+    limit: data.limit ?? (params?.limit ?? 25),
+    offset: data.offset ?? (params?.offset ?? 0),
+    facets: data.facets,
+  };
 }
 
 export async function fetchJobDetail(jobId: string, candidateId?: string): Promise<Job> {

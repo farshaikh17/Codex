@@ -71,9 +71,11 @@ export interface ScoreBreakdown {
 export interface JobEligibility {
   classification: EligibilityClassification;
   epistemic_status: EpistemicStatus;
-  evidence_quote: string | null;
-  reasoning: string;
-  detected_hiring_model: string;
+  confidence?: number;
+  // What the Worker records: the result of an automated screen of the posting text. It is a sentence describing the basis, not a quotation.
+  evidence_text?: string | null;
+  reason?: string | null;
+  detected_hiring_model?: string;
 }
 
 export interface JobScore {
@@ -155,9 +157,25 @@ export interface Job {
   remote_from_india?: 'CONFIRMED' | 'UNKNOWN' | 'NO';
   farhan_fit?: 'READY' | 'STRETCH' | 'REVIEW' | 'NOT_FIT';
   application_state?: 'NEW' | 'SAVED' | 'APPLIED' | 'INTERVIEW' | 'REJECTED' | 'WITHDRAWN';
-  india_evidence?: string | null;
-  review_reason?: string | null;
+  // READY/STRETCH recorded next to a score that does not support it: an explanation, never a change to either value.
+  assessment_conflict_reason?: string | null;
+  // Derived from the title by fixed rules; null (shown as Unclassified) when no rule matches.
   role_family?: string | null;
+  role_family_key?: string;
+}
+
+export interface IndiaRemoteFacets {
+  fit: Record<'ALL' | 'READY' | 'STRETCH' | 'REVIEW' | 'NOT_FIT', number>;
+  pay: Record<'ALL' | 'PUBLISHED' | 'UNPUBLISHED', number>;
+  role_family: { key: string; label: string; count: number }[];
+}
+export interface IndiaRemoteResult {
+  jobs: Job[];
+  total: number;
+  count: number;
+  limit: number;
+  offset: number;
+  facets: IndiaRemoteFacets;
 }
 
 export type StrategyLane = 'STRONGEST_FIT' | 'BRIDGE' | 'DREAM' | 'NOT_FIT';

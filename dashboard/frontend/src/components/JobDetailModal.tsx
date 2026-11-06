@@ -286,7 +286,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               {job.last_reverified_at && (
                 <span>Last reverified: {new Date(job.last_reverified_at).toLocaleTimeString()}</span>
               )}
-              <span className="ml-auto text-emerald-800 font-medium">Strict Verification Gate</span>
+              <span className="ml-auto text-emerald-800 font-medium">Recorded qualification status</span>
             </div>
           </div>
 
@@ -313,17 +313,17 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             </div>
 
             <p className="text-xs text-slate-700 mb-2 leading-relaxed">
-              {job.eligibility.reasoning}
+              {job.eligibility.reason}
             </p>
 
-            {job.eligibility.evidence_quote && (
+            {job.eligibility.evidence_text && job.eligibility.evidence_text !== job.eligibility.reason && (
               <div className="mt-2 p-2.5 bg-white rounded-lg border border-slate-200 text-xs">
                 <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">
-                  Extracted Textual Evidence:
+                  Recorded basis (automated screen of the posting text):
                 </span>
-                <blockquote className="italic text-slate-800 font-mono text-[11px] bg-slate-50 p-2 rounded border-l-2 border-emerald-500">
-                  "{job.eligibility.evidence_quote}"
-                </blockquote>
+                <p className="text-slate-800 text-[11px] bg-slate-50 p-2 rounded border-l-2 border-emerald-500">
+                  {job.eligibility.evidence_text}
+                </p>
               </div>
             )}
 

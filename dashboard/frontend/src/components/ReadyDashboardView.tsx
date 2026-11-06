@@ -31,10 +31,17 @@ interface ReadyDashboardViewProps {
   onViewTracker?: () => void;
 }
 
+const PAGE_SIZE = 25;
+
 export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidateId, onSelectJob, onViewTracker }) => {
   const [metrics, setMetrics] = useState<WeeklyMetrics | null>(null);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [counts, setCounts] = useState<{ READY: number; STRETCH_READY: number; NEEDS_REVIEW: number; ALL: number } | null>(null);
+  const [possibleRemoteTotal, setPossibleRemoteTotal] = useState<number | null>(null);
+  const [searchInput, setSearchInput] = useState('');
   const [activeTab, setActiveTab] = useState<'READY' | 'STRETCH' | 'APPLY_WORTHY' | 'NEEDS_REVIEW' | 'POSSIBLE_REMOTE' | 'ALL'>('READY');
   const [reviewSubFilter, setReviewSubFilter] = useState<'ALL' | 'FIT' | 'INDIA_SCOPE' | 'PAY'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,40 +59,86 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   const [auditTrail, setAuditTrail] = useState<QualificationAuditRecord[]>([]);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
 
-  const readySeq = React.useRef(0);
-  const loadData = async () => {
-    const seq = ++readySeq.current;
-    const fresh = () => seq === readySeq.current;
+  // The selected tab, review sub-filter, search and page are all answered by the server. The browser never filters a partial collection.
+  const tabQuery = (tab: typeof activeTab, sub: typeof reviewSubFilter) => {
+    const q: Record<string, any> = { candidate_id: candidateId, sort_by: 'score_desc', exclude_applied: true, exclude_dismissed: true };
+    if (tab === 'READY') q.farhan_fit = 'READY';
+    else if (tab === 'STRETCH') q.farhan_fit = 'STRETCH';
+    else if (tab === 'APPLY_WORTHY') q.qualification_status = 'APPLY_WORTHY';
+    else if (tab === 'NEEDS_REVIEW') {
+      q.farhan_fit = 'REVIEW';
+      if (sub === 'INDIA_SCOPE') q.eligibility = 'UNKNOWN';
+      else if (sub === 'FIT') q.eligibility = 'ELIGIBLE';
+      else if (sub === 'PAY') q.pay_filter = 'UNPUBLISHED';
+    } else if (tab === 'POSSIBLE_REMOTE') { q.eligibility = 'UNKNOWN'; q.min_score = 60; }
+    return q;
+  };
+
+  const listSeq = React.useRef(0);
+  const loadList = async () => {
+    const seq = ++listSeq.current;
     setIsLoading(true);
     try {
-      setMetrics(null); setProfile(null); setJobs([]);
-      fetchWeeklyMetrics(candidateId).then(data => { if (fresh()) setMetrics(data); }).catch(() => {});
-      fetchProfile(candidateId).then(data => {
-        if (!fresh()) return;
-        setProfile(data);
-        setThresholdInput(data.qualification_threshold ?? (candidateId === 'sana_ansari' ? 60 : 70));
-      }).catch(() => {});
-      
-      // Fetch up to 500 jobs for pipeline review
-      const paginatedResult = await fetchJobs({
-        candidate_id: candidateId,
-        sort_by: 'score_desc',
-        exclude_applied: true,
-        limit: 500
-      });
-      if (!fresh()) return;
-      setJobs(paginatedResult.jobs);
+      const res = await fetchJobs({ ...tabQuery(activeTab, reviewSubFilter), search: searchQuery || undefined, limit: PAGE_SIZE, offset: page * PAGE_SIZE });
+      if (seq !== listSeq.current) return;
+      setJobs(res.jobs); setTotal(res.total);
     } catch (err: any) {
-      if (!fresh()) return;
+      if (seq !== listSeq.current) return;
       setNotification({ type: 'error', message: err.message || 'Failed to load qualification pipeline data.' });
     } finally {
-      setIsLoading(false);
+      if (seq === listSeq.current) setIsLoading(false);
     }
   };
 
+  // Tab counts come from the same server-side scope as the lists (applied and dismissed jobs excluded), so a tab's number is its list's total.
+  const countSeq = React.useRef(0);
+  const loadCounts = async () => {
+    const seq = ++countSeq.current;
+    try {
+      const base = { candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, limit: 1 };
+      const [all, remote] = await Promise.all([fetchJobs(base), fetchJobs({ ...base, eligibility: 'UNKNOWN', min_score: 60 })]);
+      if (seq !== countSeq.current) return;
+      const sc: Record<string, number> = all.status_counts || {};
+      setCounts({ READY: sc.READY || 0, STRETCH_READY: sc.STRETCH_READY || 0, NEEDS_REVIEW: sc.NEEDS_REVIEW || 0, ALL: all.total });
+      setPossibleRemoteTotal(remote.total);
+    } catch { /* the tab labels simply stay without a number */ }
+  };
+
+  const chromeSeq = React.useRef(0);
+  const loadChrome = () => {
+    const seq = ++chromeSeq.current;
+    const fresh = () => seq === chromeSeq.current;
+    fetchWeeklyMetrics(candidateId).then(data => { if (fresh()) setMetrics(data); }).catch(() => {});
+    fetchProfile(candidateId).then(data => {
+      if (!fresh()) return;
+      setProfile(data);
+      setThresholdInput(data.qualification_threshold ?? (candidateId === 'sana_ansari' ? 60 : 70));
+    }).catch(() => {});
+  };
+
+  const loadData = async () => { loadChrome(); loadCounts(); await loadList(); };
+
   useEffect(() => {
-    loadData();
+    setMetrics(null); setProfile(null); setJobs([]); setCounts(null); setPossibleRemoteTotal(null); setPage(0); setSearchInput(''); setSearchQuery('');
+    loadChrome(); loadCounts();
   }, [candidateId]);
+
+  useEffect(() => { loadList(); }, [candidateId, activeTab, reviewSubFilter, searchQuery, page]);
+
+  // Typing does not query on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => { setSearchQuery(searchInput.trim()); setPage(0); }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // If the list shrank under the current page, step back to the last page that exists.
+  useEffect(() => {
+    const last = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
+    if (total > 0 && jobs.length === 0 && page > last) setPage(last);
+  }, [total, jobs.length, page]);
+
+  const chooseTab = (tab: typeof activeTab) => { setActiveTab(tab); setPage(0); };
+
 
   const handleUpdateThreshold = async () => {
     if (!profile) return;
@@ -159,58 +212,17 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
     }
   };
 
-  const readyCount = metrics?.ready_inventory !== undefined 
-    ? metrics.ready_inventory 
-    : jobs.filter(j => j.farhan_fit === 'READY' || j.qualification_status === 'READY').length;
-  const stretchCount = metrics?.stretch_ready_inventory !== undefined 
-    ? metrics.stretch_ready_inventory 
-    : jobs.filter(j => j.farhan_fit === 'STRETCH' || j.qualification_status === 'STRETCH_READY').length;
-  const applyWorthyCount = metrics?.total_apply_worthy !== undefined 
-    ? metrics.total_apply_worthy 
-    : readyCount + stretchCount;
-  const reviewCount = metrics?.status_distribution?.NEEDS_REVIEW !== undefined 
-    ? metrics.status_distribution.NEEDS_REVIEW 
-    : jobs.filter(j => j.farhan_fit === 'REVIEW' || j.qualification_status === 'NEEDS_REVIEW').length;
-  const possibleRemoteCount = jobs.filter(j => 
-    (j.remote_from_india === 'UNKNOWN' || j.eligibility?.classification === 'UNKNOWN') && 
-    (j.score?.overall_score ?? 0) >= 60
-  ).length;
-
-  // Filter jobs based on active tab and search
-  const filteredJobs = jobs.filter(j => {
-    // Dismissed or irrelevant jobs are excluded from active review/ready queues
-    if (j.qualification_status === 'INELIGIBLE' || j.manual_override_status === 'INELIGIBLE' || j.qualification_status === 'CLOSED') {
-      return false;
-    }
-    const isReady = j.qualification_status === 'READY' || j.farhan_fit === 'READY';
-    const isStretch = j.qualification_status === 'STRETCH_READY' || j.farhan_fit === 'STRETCH';
-    const isReview = j.qualification_status === 'NEEDS_REVIEW' || j.farhan_fit === 'REVIEW';
-    const isPossibleRemote = (j.remote_from_india === 'UNKNOWN' || j.eligibility?.classification === 'UNKNOWN') && (j.score?.overall_score ?? 0) >= 60;
-
-    if (activeTab === 'READY' && !isReady) return false;
-    if (activeTab === 'STRETCH' && !isStretch) return false;
-    if (activeTab === 'APPLY_WORTHY' && !(isReady || isStretch)) return false;
-    if (activeTab === 'POSSIBLE_REMOTE' && !isPossibleRemote) return false;
-    if (activeTab === 'NEEDS_REVIEW') {
-      if (!isReview) return false;
-      if (reviewSubFilter === 'FIT') {
-        const text = (j.review_reason || '').toLowerCase();
-        if (!text.includes('fit:') && !text.includes('threshold') && !text.includes('candidate')) return false;
-      } else if (reviewSubFilter === 'INDIA_SCOPE') {
-        const text = (j.review_reason || '').toLowerCase();
-        if (!text.includes('remote scope') && !text.includes('india') && j.remote_from_india !== 'UNKNOWN') return false;
-      } else if (reviewSubFilter === 'PAY') {
-        if (j.salary_published) return false;
-      }
-    }
-
-    if (searchQuery) {
-      const term = searchQuery.toLowerCase();
-      const matchText = `${j.title} ${j.company} ${j.description} ${j.location_restrictions || ''}`.toLowerCase();
-      if (!matchText.includes(term)) return false;
-    }
-    return true;
-  });
+  // Tab numbers count the whole queue for this candidate (applied and dismissed jobs excluded), ignoring the search box and the review sub-filter.
+  // The list's own total, in the range line under it, is what the current search and sub-filter leave.
+  const readyCount = counts?.READY;
+  const stretchCount = counts?.STRETCH_READY;
+  const applyWorthyCount = counts ? counts.READY + counts.STRETCH_READY : undefined;
+  const reviewCount = counts?.NEEDS_REVIEW;
+  const num = (n: number | null | undefined) => (n === null || n === undefined ? '…' : n);
+  const filteredJobs = jobs;   // already the server's answer for this tab, filter, search and page
+  const lastPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
+  const firstShown = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const lastShown = Math.min(total, page * PAGE_SIZE + jobs.length);
 
   return (
     <div className="space-y-6">
@@ -239,13 +251,13 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
           <div className="flex items-center gap-2 mb-1.5">
             <span className="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-mono border border-emerald-500/30 font-semibold flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" />
-              STRICT QUALIFICATION GATE
+              RECORDED QUALIFICATION STATUS
             </span>
             <span className="text-slate-400 text-xs">Sunday–Saturday America/New_York</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">READY-to-Apply Shortlist</h1>
           <p className="text-slate-300 text-sm mt-1 max-w-2xl leading-relaxed">
-            A job qualifies as READY strictly when it is a currently open vacancy with a working application URL, affirmative evidence of hiring in India, and meets your qualification threshold.
+            READY is the qualification status recorded for a job. It is not recomputed on this page, and the stored score is shown beside it. Where the score does not support the status, the card says so instead of changing either.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -253,7 +265,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
             onClick={handleReverify}
             disabled={isReverifying}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow transition-colors"
-            title="Reverify all currently READY jobs to confirm they remain active and open before presenting"
+            title="Re-check the READY jobs to see whether they are still open"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isReverifying ? 'animate-spin' : ''}`} />
             {isReverifying ? 'Reverifying...' : 'Reverify READY Jobs'}
@@ -310,15 +322,15 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               </div>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
-                  {metrics.ready_inventory ?? readyCount} READY
+                  {metrics.ready_inventory ?? num(readyCount)} READY
                 </span>
                 <span className="text-[11px] font-bold text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full">
-                  {metrics.stretch_ready_inventory ?? stretchCount} STRETCH
+                  {metrics.stretch_ready_inventory ?? num(stretchCount)} STRETCH
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span>Verified active vacancies</span>
+              <span>Open vacancies at the last check</span>
               {onViewTracker && (
                 <button
                   onClick={onViewTracker}
@@ -369,7 +381,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
           {/* View Mode Tabs */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto">
             <button
-              onClick={() => setActiveTab('READY')}
+              onClick={() => chooseTab('READY')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                 activeTab === 'READY'
                   ? 'bg-white text-emerald-800 shadow-sm'
@@ -377,10 +389,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              READY to Apply ({readyCount})
+              READY to Apply ({num(readyCount)})
             </button>
             <button
-              onClick={() => setActiveTab('STRETCH')}
+              onClick={() => chooseTab('STRETCH')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                 activeTab === 'STRETCH'
                   ? 'bg-white text-blue-800 shadow-sm'
@@ -388,10 +400,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Stretch ({stretchCount})
+              Stretch ({num(stretchCount)})
             </button>
             <button
-              onClick={() => setActiveTab('APPLY_WORTHY')}
+              onClick={() => chooseTab('APPLY_WORTHY')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                 activeTab === 'APPLY_WORTHY'
                   ? 'bg-white text-teal-800 shadow-sm'
@@ -399,10 +411,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-              All Apply-Worthy ({applyWorthyCount})
+              All Apply-Worthy ({num(applyWorthyCount)})
             </button>
             <button
-              onClick={() => setActiveTab('NEEDS_REVIEW')}
+              onClick={() => chooseTab('NEEDS_REVIEW')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                 activeTab === 'NEEDS_REVIEW'
                   ? 'bg-white text-amber-800 shadow-sm'
@@ -410,10 +422,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-              Needs Review ({reviewCount})
+              Needs Review ({num(reviewCount)})
             </button>
             <button
-              onClick={() => setActiveTab('POSSIBLE_REMOTE')}
+              onClick={() => chooseTab('POSSIBLE_REMOTE')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                 activeTab === 'POSSIBLE_REMOTE'
                   ? 'bg-white text-indigo-800 shadow-sm'
@@ -421,17 +433,17 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <Search className="w-3.5 h-3.5 text-indigo-600" />
-              Possible Remote ({possibleRemoteCount})
+              Unverified location, score 60+ ({num(possibleRemoteTotal)})
             </button>
             <button
-              onClick={() => setActiveTab('ALL')}
+              onClick={() => chooseTab('ALL')}
               className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 activeTab === 'ALL'
                   ? 'bg-white text-slate-900 shadow-sm font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All ({jobs.length})
+              All open ({num(counts?.ALL)})
             </button>
           </div>
 
@@ -440,9 +452,9 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search filtered jobs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search title, company, description..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50"
             />
           </div>
@@ -456,7 +468,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               Review Filter:
             </span>
             <button
-              onClick={() => setReviewSubFilter('ALL')}
+              onClick={() => { setReviewSubFilter('ALL'); setPage(0); }}
               className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                 reviewSubFilter === 'ALL'
                   ? 'bg-amber-200 text-amber-900 shadow-sm'
@@ -466,34 +478,34 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               All Review Cases
             </button>
             <button
-              onClick={() => setReviewSubFilter('FIT')}
+              onClick={() => { setReviewSubFilter('FIT'); setPage(0); }}
               className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                 reviewSubFilter === 'FIT'
                   ? 'bg-amber-200 text-amber-900 shadow-sm'
                   : 'text-amber-700 hover:bg-amber-100'
               }`}
             >
-              Fit & Score Questions
+              Location stated, review for fit
             </button>
             <button
-              onClick={() => setReviewSubFilter('INDIA_SCOPE')}
+              onClick={() => { setReviewSubFilter('INDIA_SCOPE'); setPage(0); }}
               className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                 reviewSubFilter === 'INDIA_SCOPE'
                   ? 'bg-amber-200 text-amber-900 shadow-sm'
                   : 'text-amber-700 hover:bg-amber-100'
               }`}
             >
-              Unconfirmed India Scope
+              Location unverified
             </button>
             <button
-              onClick={() => setReviewSubFilter('PAY')}
+              onClick={() => { setReviewSubFilter('PAY'); setPage(0); }}
               className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                 reviewSubFilter === 'PAY'
                   ? 'bg-amber-200 text-amber-900 shadow-sm'
                   : 'text-amber-700 hover:bg-amber-100'
               }`}
             >
-              Unlisted Salary
+              Salary not published
             </button>
           </div>
         )}
@@ -501,14 +513,21 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
 
       {/* Job Cards List */}
       <div className="space-y-4">
+        {(searchQuery || (activeTab === 'NEEDS_REVIEW' && reviewSubFilter !== 'ALL')) && (
+          <div className="text-[11px] text-slate-500 px-1" data-testid="ready-narrowed">
+            {total} {total === 1 ? 'job matches' : 'jobs match'} your {searchQuery ? 'search' : 'review filter'}; the tab numbers above count the whole queue.
+          </div>
+        )}
         {filteredJobs.length === 0 ? (
           <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 shadow-sm">
             <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-slate-800">No jobs in this category</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-              {activeTab === 'READY' 
-                ? 'No vacancies currently meet all affirmative India-remote criteria and threshold score. Review unconfirmed listings or adjust the threshold.'
-                : 'No postings match the current filter.'}
+              {searchQuery
+                ? 'No postings match this search in the selected category.'
+                : activeTab === 'READY'
+                ? 'No job currently has the recorded status READY (jobs you have applied to are not shown).'
+                : 'No postings in this category.'}
             </p>
           </div>
         ) : (
@@ -522,6 +541,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
             return (
               <div 
                 key={job.id} 
+                data-job-id={job.id}
                 className={`bg-white rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md ${
                   isReady ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/20 to-white' : 'border-slate-200'
                 }`}
@@ -540,7 +560,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                           : 'bg-amber-100 text-amber-800 border-amber-300'
                       }`}>
                         <Globe2 className="w-3 h-3 text-emerald-600" />
-                        Remote: {job.remote_from_india ?? (job.eligibility?.classification === 'ELIGIBLE' ? 'CONFIRMED' : 'UNKNOWN')}
+                        India eligibility: {({ CONFIRMED: 'eligible per posting text', NO: 'ruled out by posting text', UNKNOWN: 'not established' } as Record<string, string>)[job.remote_from_india ?? 'UNKNOWN'] ?? 'not established'}
                       </span>
 
                       {/* Dimension 2: Farhan Fit */}
@@ -555,7 +575,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                       }`}>
                         {qStatus === 'READY' && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
                         {qStatus === 'STRETCH_READY' && <Sparkles className="w-3 h-3 text-blue-600" />}
-                        Fit: {job.farhan_fit ?? qStatus}
+                        Status: {job.farhan_fit ?? qStatus}
                       </span>
 
                       {/* Dimension 3: Application State */}
@@ -625,10 +645,16 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                         <span className="font-bold text-slate-700 shrink-0">Qualification Reason:</span>
                         <span className="text-slate-600">{job.qualification_reason || 'Evaluated against qualification criteria.'}</span>
                       </div>
-                      {job.eligibility?.evidence_quote && (
-                        <div className="flex items-start gap-1.5 font-mono text-[11px] text-slate-700 bg-white p-2 rounded border border-slate-200">
-                          <span className="font-bold text-slate-500 uppercase text-[9px] shrink-0 mt-0.5">Evidence:</span>
-                          <span className="italic">"{job.eligibility.evidence_quote}"</span>
+                      {(job.eligibility?.reason || job.eligibility?.evidence_text) && (
+                        <div className="flex items-start gap-1.5 text-[11px] text-slate-700 bg-white p-2 rounded border border-slate-200">
+                          <span className="font-bold text-slate-500 uppercase text-[9px] shrink-0 mt-0.5">Eligibility basis:</span>
+                          <span>{job.eligibility?.reason || job.eligibility?.evidence_text}</span>
+                        </div>
+                      )}
+                      {job.assessment_conflict && job.assessment_conflict_reason && (
+                        <div className="flex items-start gap-1.5 text-[11px] text-amber-900 bg-amber-50 p-2 rounded border border-amber-200">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <span>{job.assessment_conflict_reason}</span>
                         </div>
                       )}
                     </div>
@@ -696,6 +722,25 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               </div>
             );
           })
+        )}
+        {total > PAGE_SIZE && (
+          <div className="flex items-center justify-between pt-2 text-xs">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0 || isLoading}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span className="text-slate-500 font-semibold" data-testid="ready-range">Showing {firstShown}–{lastShown} of {total} · page {page + 1} of {lastPage + 1}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+              disabled={page >= lastPage || isLoading}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 
