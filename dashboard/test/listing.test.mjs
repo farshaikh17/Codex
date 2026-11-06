@@ -25,6 +25,7 @@ function world(extraEnv = {}) {
 }
 const ids = (r) => r.json.jobs.map((j) => j.id);
 const get = (w, path, key) => call(worker, w.env, 'GET', path, key === undefined ? {} : { key });
+const JOBS = (q, c = F) => `/api/jobs?candidate_id=${c}&${q}`;
 const IR = (q, c = F) => `/api/india-remote/jobs?candidate_id=${c}&${q}`;
 
 // Farhan's India Remote set. Scores are distinct so the order is fully determined.
@@ -174,7 +175,11 @@ test('India Remote: unsupported values are refused, not ignored', async () => {
   const w = world(); farhanSet(w);
   for (const q of ['farhan_fit=MAYBE', 'pay_filter=MEETS_60K', 'role_family=Adjacent%20Stretch', 'sort_by=random', 'exclude_applied=yes']) {
     const r = await get(w, IR(q)); assert.equal(r.status, 400, q); assert.ok(r.json.error && r.json.allowed, q);
+    const pub = await get(w, IR(q), null);                                                                    // a visitor without a key gets the reason too
+    assert.equal(pub.status, 400, q); assert.match(pub.json.detail, /^Unsupported /, q); assert.ok(Array.isArray(pub.json.allowed), q);
   }
+  const j = await get(w, JOBS('farhan_fit=MAYBE'), null); assert.equal(j.status, 400); assert.match(j.json.detail, /farhan_fit/);
+  const p = await get(w, JOBS('pay_filter=MEETS_60K'), null); assert.equal(p.status, 400); assert.match(p.json.detail, /pay_filter/);
   assert.equal((await get(w, '/api/india-remote/jobs?candidate_id=nobody')).status, 400);
 });
 
@@ -210,7 +215,6 @@ function readyWorld() {
   w.add(S, 'sr1', 'Reliability Engineer', { status: 'READY', score: 20 });
   return w;
 }
-const JOBS = (q, c = F) => `/api/jobs?candidate_id=${c}&${q}`;
 
 test('READY dashboard: READY jobs below the first 100 scores are returned when the status is queried on the server', async () => {
   const w = readyWorld();

@@ -1276,8 +1276,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const strategyLane = url.searchParams.get('strategy_lane');
   const fitParam = (url.searchParams.get('farhan_fit') || 'ALL').toUpperCase();
   const payParam = parsePay(url.searchParams.get('pay_filter'));
-  if (fitParam !== 'ALL' && !(FIT_VALUES as readonly string[]).includes(fitParam)) return jsonResponse({ error: 'Unsupported farhan_fit value.', allowed: ['ALL', ...FIT_VALUES] }, 400, corsHeaders(request, env));
-  if (payParam === undefined) return jsonResponse({ error: 'Unsupported pay_filter value.', allowed: ['ALL', 'PUBLISHED', 'UNPUBLISHED'] }, 400, corsHeaders(request, env));
+  if (fitParam !== 'ALL' && !(FIT_VALUES as readonly string[]).includes(fitParam)) return jsonResponse({ error: 'Unsupported farhan_fit value.', detail: 'Unsupported farhan_fit value.', allowed: ['ALL', ...FIT_VALUES] }, 400, corsHeaders(request, env));
+  if (payParam === undefined) return jsonResponse({ error: 'Unsupported pay_filter value.', detail: 'Unsupported pay_filter value.', allowed: ['ALL', 'PUBLISHED', 'UNPUBLISHED'] }, 400, corsHeaders(request, env));
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
@@ -1906,7 +1906,8 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
   const sp = url.searchParams;
   const candidateId = knownCandidate(sp.get('candidate_id'));
   if (!candidateId) return badCandidate(request, env, sp.get('candidate_id'));
-  const reject = (what: string, allowed: unknown) => jsonResponse({ error: `Unsupported ${what}.`, allowed }, 400, corsHeaders(request, env));
+  // 'detail' carries the same message because public answers drop the key 'error'.
+  const reject = (what: string, allowed: unknown) => jsonResponse({ error: `Unsupported ${what}.`, detail: `Unsupported ${what}.`, allowed }, 400, corsHeaders(request, env));
   const fit = (sp.get('farhan_fit') || 'ALL').toUpperCase();
   if (fit !== 'ALL' && !(FIT_VALUES as readonly string[]).includes(fit)) return reject('farhan_fit value', ['ALL', ...FIT_VALUES]);
   const pay = parsePay(sp.get('pay_filter'));
