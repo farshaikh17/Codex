@@ -337,3 +337,20 @@ test('a posting the employer ATS answers 404 for is recorded as removed and its 
   assert.equal(err.status, 'ERROR', 'a server error is not mistaken for a removed posting');
   assert.equal(sqlite.prepare("SELECT state FROM cloud_discovery_queue WHERE posting_id='g9'").get().state, 'PENDING');
 });
+
+test('skills count when their key words appear, not only the exact phrase; a lone generic word is not enough', async () => {
+  const { skillFound, evaluate } = await import('../worker/discovery.ts');
+  const t = 'you will configure the crm and build automation of workflows using apis for a technical team';
+  assert.equal(skillFound('CRM Configuration', t), true);
+  assert.equal(skillFound('Workflow Automation', t), true);
+  assert.equal(skillFound('AI-assisted workflows', t), false, 'only "workflows" remains: not enough on its own');
+  assert.equal(skillFound('GoHighLevel', t), false);
+  assert.equal(skillFound('Reliability', 'plant reliability programs'), true);
+  assert.equal(skillFound('Electrical Maintenance', 'maintenance of electrical systems'), true);
+  assert.equal(skillFound('Electrical Maintenance', 'electrical design only'), false);
+  // never fewer matches than the exact-phrase rule
+  const exact = (s, x) => x.includes(s.toLowerCase());
+  for (const s of ['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) if (exact(s, 'crm configuration and workflow automation in gohighlevel')) assert.equal(skillFound(s, 'crm configuration and workflow automation in gohighlevel'), true);
+  const p = { id: 'x', title: 'Implementation Manager', url: '', location: 'Remote - India', description: 'Fully remote. You will configure our CRM and own automation of sales workflows.', remote: true };
+  assert.equal(evaluate({ id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) }, p).score, 50 + 16, 'two skills found by key words');
+});

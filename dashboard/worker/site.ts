@@ -56,7 +56,7 @@ export async function computeStats(db: DB): Promise<Stats> {
   const a = await db.prepare(`SELECT COUNT(*) AS active, COUNT(DISTINCT company) AS employers, SUM(CASE WHEN discovered_at >= ? THEN 1 ELSE 0 END) AS week FROM jobs WHERE is_active = 1`).bind(weekAgo).first<any>();
   const sources = (await db.prepare(`SELECT COUNT(*) AS n FROM cloud_sources WHERE enabled = 1`).first<any>())?.n || 0;
   const latest = (await db.prepare(`SELECT title, company, location_restrictions AS location, workplace_type, discovered_at FROM jobs
-    WHERE is_active = 1 AND provenance = 'LIVE_PUBLIC' ORDER BY discovered_at DESC LIMIT 6`).all<any>()).results || [];
+    WHERE is_active = 1 AND provenance IN ('LIVE_PUBLIC', 'ATS_DATASET') ORDER BY discovered_at DESC LIMIT 6`).all<any>()).results || [];
   return { active: a?.active || 0, employers: a?.employers || 0, week: a?.week || 0, sources, latest, computed_at: new Date().toISOString() };
 }
 /** Cron: recompute when the stored figures are older than an hour (or missing). Returns true when it wrote. */

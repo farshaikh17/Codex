@@ -1,0 +1,111 @@
+// Turns discovery matches into SQL for D1, scoring every (job, candidate) pair with the Worker's own evaluate() so stored rows
+// and the live screen can never disagree. Also closes jobs that left the dataset, and re-scores earlier preliminary rows with
+// the candidates' now-stored skills (owner-approved 2026-11-06).
+//
+//   node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates work/candidates.json \
+//        --in work/matches.json [--in work/jobsite_matches.json] [--rescore work/rescore.json] --out work/apply.sql [--max-new 1500]
+//
+// Guarantees: nothing is ever marked READY or STRETCH; no row with a human override or an application is written; an existing
+// job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { evaluate, RULE_VERSION } from '../worker/discovery.ts';
+
+const args = process.argv.slice(2);
+const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
+const many = (name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
+const MAX_NEW = Number(opt('--max-new', 1500));
+const MAX_CLOSE = Number(opt('--max-close', 2000));
+const MIN_SCORE = Number(opt('--min-score', 30));
+const now = new Date().toISOString();
+
+const q = (v) => (v === null || v === undefined || (typeof v === 'number' && !Number.isFinite(v)) ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`);
+const plain = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+const adapter = (s) => String(s || 'ats').toLowerCase().replace(/[^a-z]/g, '').slice(0, 20) || 'ats';
+const num = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+
+const candidates = JSON.parse(fs.readFileSync(opt('--candidates'), 'utf8'));   // [{ id, primary_skills, search_profile }]
+const byId = new Map(candidates.map((c) => [c.id, c]));
+// A row is tagged as scored with stored skills only when the candidate has skills; otherwise the later re-score must still see it.
+const hasSkills = (c) => { try { const v = JSON.parse(c?.primary_skills || '[]'); return Array.isArray(v) && v.length > 0; } catch { return false; } };
+const out = [];
+const report = { new_jobs: 0, rows: 0, skipped_low: 0, skipped_ineligible: 0, capped: 0, closed: 0, rescored: 0, by_status: {} };
+
+// ---- new jobs -----------------------------------------------------------------------------------------------------------
+const planned = [];
+const closed = new Set();
+for (const file of many('--in')) {
+  const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+  for (const id of m.closed || []) closed.add(id);
+  for (const j of m.jobs || []) {
+    const board = !!j.board;
+    const description = plain(j.description).slice(0, 8000);
+    const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
+    const posting = { id: j.id, title: j.title, url: j.url, location: j.location || '', description, remote };
+    const rows = [];
+    for (const cid of j.candidates || []) {
+      const cand = byId.get(cid);
+      if (!cand) continue;
+      const r = evaluate(cand, posting);
+      if (board) {   // a job-board report: eligibility is never taken from the board (same rule as the Worker's persist())
+        r.eligibility = 'UNKNOWN';
+        r.reason = `Reported by ${j.ats_type}; employer availability and eligibility are unverified.`;
+        r.status = r.status === 'HOLD' ? 'HOLD' : 'NEEDS_REVIEW';
+        r.qualification_reason = 'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.';
+      }
+      if (r.status === 'INELIGIBLE') { report.skipped_ineligible++; continue; }
+      if (r.score < MIN_SCORE) { report.skipped_low++; continue; }
+      rows.push({ cid, r });
+    }
+    if (rows.length) planned.push({ j, board, description, remote, rows, best: Math.max(...rows.map((x) => x.r.score)) });
+  }
+}
+planned.sort((a, b) => b.best - a.best || String(b.j.posted_at || '').localeCompare(String(a.j.posted_at || '')));
+report.capped = Math.max(0, planned.length - MAX_NEW);
+for (const { j, board, description, remote, rows } of planned.slice(0, MAX_NEW)) {
+  const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
+  const salary = num(j.salary_min) !== null || num(j.salary_max) !== null;
+  out.push(`INSERT OR IGNORE INTO jobs(id,title,company,source_adapter,source_url,original_posting_url,employment_type,workplace_type,location_restrictions,description,required_skills,salary_published,salary_currency,salary_min,salary_max,salary_period,salary_raw_text,discovered_at,last_verified_at,is_active,content_sha256,source_id,source_channel,provenance) VALUES (${[
+    j.id, String(j.title).slice(0, 300), String(j.company).slice(0, 200), adapter(j.ats_type), j.url, j.apply_url || j.url, j.employment_type || 'FULL_TIME',
+    remote ? 'REMOTE_RESTRICTED' : board ? 'UNKNOWN' : 'ONSITE', String(j.location || '').slice(0, 300), description, '[]', salary ? 1 : 0,
+    j.salary_currency || null, num(j.salary_min), num(j.salary_max), j.salary_period || null, j.salary_summary || null, now, board ? null : now, 1, sha,
+    `${board ? 'jobsites' : 'dataset'}:${adapter(j.ats_type)}`, board ? 'JOB_SITES' : 'ATS_DATASET', board ? 'PUBLIC_FEED_UNVERIFIED' : 'ATS_DATASET'].map(q).join(',')});`);
+  report.new_jobs++;
+  for (const { cid, r } of rows) {
+    const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
+    out.push(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at) SELECT ${[cid, j.id, r.status, r.lane, r.eligibility, r.reason, r.qualification_reason, now].map(q).join(',')} ${guard};`);
+    out.push(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) SELECT ${[cid, j.id, r.score, Math.min(100, r.skills.length * 20), r.lane === 'STRONGEST_FIT' ? 70 : 0, r.lane,
+      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
+    report.rows++; report.by_status[r.status] = (report.by_status[r.status] || 0) + 1;
+  }
+}
+
+// ---- closures: jobs this pipeline added that left the dataset -----------------------------------------------------------
+const toClose = [...closed].slice(0, MAX_CLOSE);
+for (let i = 0; i < toClose.length; i += 200) {
+  const ids = JSON.stringify(toClose.slice(i, i + 200));
+  out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN (SELECT value FROM json_each(${q(ids)})) AND source_channel = 'ATS_DATASET' AND is_active = 1 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL);`);
+}
+report.closed = toClose.length;
+
+// ---- one-time re-score of earlier preliminary rows (score only; status, eligibility and decisions untouched) -------------
+const rescoreFile = opt('--rescore');
+if (rescoreFile && fs.existsSync(rescoreFile)) {
+  for (const row of JSON.parse(fs.readFileSync(rescoreFile, 'utf8'))) {
+    const cand = byId.get(row.candidate_id);
+    if (!cand || !hasSkills(cand)) continue;   // nothing to re-score with yet
+    const posting = { id: row.job_id, title: row.title || '', url: '', location: row.location || '', description: plain(row.description), remote: /^REMOTE/i.test(row.workplace_type || '') };
+    const r = evaluate(cand, posting);
+    let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, matched_skills: r.skills, rescored_at: now });
+    out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
+      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"skills_v1":true%'
+      AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)
+      AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
+    report.rescored++;
+  }
+}
+
+fs.writeFileSync(opt('--out'), out.join('\n') + '\n');
+fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.report.json', JSON.stringify(report, null, 1));
+console.log(JSON.stringify(report));

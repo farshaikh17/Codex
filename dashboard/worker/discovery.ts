@@ -117,6 +117,21 @@ function inHomeCountry(country: string, location: string) {
  return country.toLowerCase() === 'india' ? sanaIndiaCity(location) : new RegExp(`\\b${escapeRe(country)}\\b`, 'i').test(location || '');
 }
 
+// A skill counts when its exact phrase appears, or when every one of its key words appears as a whole word anywhere in the
+// posting ("CRM Configuration" matches "configure the CRM"; "Workflow Automation" matches "automation of workflows"). Short
+// and generic words are ignored. Only adds matches compared with the exact-phrase rule; never removes one (2026-11-06).
+const SKILL_STOP=new Set(['and','the','for','with','of','in','on','to','a','an','assisted','based','team','skills','experience']);
+const stem=(w:string)=>w.replace(/(ations?|ing|ed|es|s)$/,'');
+export function skillFound(skill:string,lower:string){
+ const s=String(skill||'').toLowerCase().trim();
+ if(!s)return false;
+ if(lower.includes(s))return true;
+ const raw=s.split(/[^a-z0-9+#]+/).filter(Boolean);
+ const words=raw.filter(w=>w.length>=3&&!SKILL_STOP.has(w));
+ // a multi-word skill needs at least two of its key words, so "AI-assisted workflows" is not matched by "workflow" alone
+ if(!words.length||(raw.length>1&&words.length<2))return false;
+ return words.every(w=>new RegExp(`(^|[^a-z0-9])${stem(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}[a-z]*`).test(lower));
+}
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
@@ -154,7 +169,7 @@ export function evaluate(candidate:any,p:Posting) {
  }
  else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery/i.test(p.title):/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarbon/i.test(p.title);
- const skills=list(candidate.primary_skills).filter(s=>lower.includes(s.toLowerCase()));
+ const skills=list(candidate.primary_skills).filter(s=>skillFound(s,lower));
  let score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
  // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
