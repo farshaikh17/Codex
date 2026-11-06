@@ -1,7 +1,7 @@
 import React from 'react';
 import { Briefcase, Sliders, BarChart3, BookmarkCheck, RefreshCw, ShieldCheck, Radio, LayoutDashboard, Zap, Users, Lock, Unlock } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
+export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
 
 interface NavbarProps {
   activeTab: NavTab;
@@ -14,6 +14,10 @@ interface NavbarProps {
   pilotActive?: boolean;
   isOperator?: boolean;
   onOpenAuth?: () => void;
+  /** resold clients this viewer may see (the built-in two have their own buttons) */
+  clients?: { id: string; full_name: string }[];
+  activeClient?: string | null;
+  onSelectClient?: (id: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -27,6 +31,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   pilotActive: _pilotActive,
   isOperator = false,
   onOpenAuth,
+  clients = [],
+  activeClient = null,
+  onSelectClient,
 }) => {
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40">
@@ -53,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Career Job Engine
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-medium">Multi-Candidate</span>
             </h1>
-            <p className="text-xs text-slate-400">Farhan • Sana</p>
+            <p className="text-xs text-slate-400">{['Farhan', 'Sana', ...clients.map((c) => c.full_name.split(' ')[0])].join(' • ')}</p>
           </div>
         </div>
 
@@ -99,6 +106,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Zap className="w-4 h-4" />
             <span>SANA</span>
           </button>
+
+          {/* resold clients */}
+          {clients.map((c) => (
+            <button key={c.id} aria-label={c.full_name} data-client-tab={c.id} onClick={() => onSelectClient?.(c.id)}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                activeTab === 'client' && activeClient === c.id ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-300 hover:text-white hover:bg-slate-800/60'}`}>
+              <Users className="w-4 h-4" />
+              <span>{c.full_name.split(' ')[0].toUpperCase()}</span>
+            </button>
+          ))}
+          {isOperator && (
+            <button aria-label="Clients" onClick={() => setActiveTab('clients')}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                activeTab === 'clients' ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'}`}>
+              <Sliders className="w-4 h-4" />
+              <span>CLIENTS</span>
+            </button>
+          )}
 
           {/* 4. APPLICATIONS */}
           <button

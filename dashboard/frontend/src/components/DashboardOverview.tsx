@@ -5,7 +5,7 @@ import { DashboardOverviewData } from '../types';
 
 interface DashboardOverviewProps {
   isOperator: boolean;
-  onSelectCandidate: (candidateId: 'farhan_shaikh' | 'sana_ansari') => void;
+  onSelectCandidate: (candidateId: string) => void;
   onOpenAutomation: () => void;
   onOpenApplications: () => void;
 }
@@ -266,6 +266,27 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Further clients (resold profiles) this viewer may see */}
+      {(data.candidates || []).length > 2 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="client-cards">
+          {(data.candidates || []).slice(2).map((c) => (
+            <button key={c.candidate_id} data-candidate-id={c.candidate_id} onClick={() => onSelectCandidate(c.candidate_id)}
+              className="text-left bg-slate-900 border border-slate-800 hover:border-emerald-600 rounded-xl p-5 shadow-sm transition-colors">
+              <div className="text-lg font-bold text-white">{c.full_name}</div>
+              <div className="text-xs text-slate-400 mt-0.5">{c.display_title || ''}</div>
+              {c.summary_line && <div className="text-xs text-slate-500 mt-1">{c.summary_line}</div>}
+              <div className="grid grid-cols-4 gap-2 mt-4 text-center">
+                <div><div className="text-lg font-bold text-emerald-400 font-mono">{c.ready_count}</div><div className="text-[10px] text-slate-500 uppercase">Ready</div></div>
+                <div><div className="text-lg font-bold text-teal-300 font-mono">{c.stretch_count}</div><div className="text-[10px] text-slate-500 uppercase">Stretch</div></div>
+                <div><div className="text-lg font-bold text-amber-400 font-mono">{c.review_count}</div><div className="text-[10px] text-slate-500 uppercase">Review</div></div>
+                <div><div className="text-lg font-bold text-blue-400 font-mono">{c.applied_count}</div><div className="text-[10px] text-slate-500 uppercase">Applied</div></div>
+              </div>
+              <div className="mt-4 text-xs font-semibold text-emerald-400 flex items-center gap-1">Open workspace <ArrowRight className="w-3.5 h-3.5" /></div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Global System Inventory Banner */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">

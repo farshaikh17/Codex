@@ -185,3 +185,19 @@ test('CSV export: the public field set, spreadsheet-safe, visibility-checked', a
   assert.deepEqual(ready.text.trim().split('\r\n').slice(1).map((l) => l.split(',')[0]).sort(), ['k2']);
   assert.equal((await req(w.env, 'GET', '/api/export?candidate_id=priya_analyst&qualification_status=DROP', {})).status, 400);
 });
+
+test('a full 100-row page works on both listings (D1 allows at most 100 bound parameters per statement)', async () => {
+  const w = world();
+  for (let i = 0; i < 130; i++) {
+    w.run(`INSERT INTO jobs(id,title,company,source_adapter,is_active,location_restrictions,description,workplace_type,discovered_at) VALUES (?,?,?,?,1,?,?,?,?)`, `bulk${i}`, 'Implementation Manager', 'Bulk', 'lever', 'Remote - India', 'Fully remote from India.', 'REMOTE', '2026-11-04T00:00:00Z');
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status) VALUES (?,?,?,?,?)`, F, `bulk${i}`, 'NEEDS_REVIEW', 'STRONGEST_FIT', 'ELIGIBLE');
+  }
+  const jobs = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&limit=100`, { key: null });
+  assert.equal(jobs.status, 200, jobs.text.slice(0, 200));
+  assert.equal(jobs.json.jobs.length, 100);
+  const ir = await req(w.env, 'GET', `/api/india-remote/jobs?candidate_id=${F}&limit=100`, { key: null });
+  assert.equal(ir.status, 200, ir.text.slice(0, 200));
+  assert.equal(ir.json.jobs.length, 100);
+  const op = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&limit=130`);
+  assert.equal(op.json.jobs.length, 130, 'the operator may ask for more than 100 rows: still one statement parameter');
+});

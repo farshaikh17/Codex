@@ -1399,7 +1399,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
         JOIN jobs j ON q.job_id = j.id
         LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
         LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
-        WHERE q.candidate_id = ? AND j.id IN (${ids.map(() => '?').join(',')})`).bind(candidateId, ...ids).all<any>();
+        WHERE q.candidate_id = ? AND j.id IN (SELECT value FROM json_each(?))`).bind(candidateId, JSON.stringify(ids)).all<any>();   // one parameter: D1 allows at most 100 per statement
       const byId = new Map((full || []).map((r: any) => [r.id, r]));
       results = ids.map((id: string) => byId.get(id)).filter(Boolean);
     }
@@ -1947,14 +1947,13 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
     // Step 3: full detail for the ids of this page only, returned in page order.
     let jobs: any[] = [];
     if (page.ids.length) {
-      const marks = page.ids.map(() => '?').join(',');
       const { results } = await env.DB.prepare(`
         SELECT ${JOB_COLUMNS}
         FROM candidate_qualifications q
         JOIN jobs j ON q.job_id = j.id
         LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
         LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
-        WHERE q.candidate_id = ? AND j.id IN (${marks})`).bind(candidateId, ...page.ids).all<any>();
+        WHERE q.candidate_id = ? AND j.id IN (SELECT value FROM json_each(?))`).bind(candidateId, JSON.stringify(page.ids)).all<any>();   // one parameter: D1 allows at most 100 per statement
       const threshold = await candidateThreshold(env, candidateId);
       const byId = new Map((results || []).map((r: any) => [r.id, shapeJob(r, candidateId, threshold)]));
       jobs = page.ids.map((id) => byId.get(id)).filter(Boolean);
@@ -2800,7 +2799,7 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
   return jsonResponse({ candidate_id: id, link_id: params.link, revoked: true }, 200, corsHeaders(request, env));
 });
 
-// CSV of one client's screened jobs (active only), newest-score first, at most 1,000 rows. Public field set only (no notes,
+// CSV of one client's screened jobs (active only), in the list's score order (score, then newest, then id), at most 1,000 rows. Public field set only (no notes,
 // override reasons or pay floors); the visibility guard above already decided whether this request may see the client.
 const EXPORT_MAX = 1000;
 router.get('/api/export', async (request, env, _params, url) => {
@@ -2813,7 +2812,7 @@ router.get('/api/export', async (request, env, _params, url) => {
       j.salary_published, j.salary_raw_text, j.discovered_at, q.qualification_status, q.eligibility_status, q.strategy_lane, s.overall_score,
       (SELECT a.status FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id ORDER BY a.rowid DESC LIMIT 1) AS application_status
     FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
-    WHERE q.candidate_id = ? AND j.is_active = 1${where} ORDER BY COALESCE(s.overall_score, 0) DESC, q.job_id LIMIT ${EXPORT_MAX}`)
+    WHERE q.candidate_id = ? AND j.is_active = 1${where} ORDER BY COALESCE(s.overall_score, 0) DESC, j.discovered_at DESC, q.job_id LIMIT ${EXPORT_MAX}`)
     .bind(...(st === 'ALL' || st === 'APPLY_WORTHY' ? [id] : [id, st])).all<any>();
   const head = ['job_id', 'title', 'company', 'location', 'workplace', 'posting_url', 'qualification_status', 'eligibility', 'lane', 'preliminary_score', 'pay_published', 'pay_text', 'application_status', 'discovered_at'];
   const lines = [csvRow(head), ...(results || []).map((r: any) => csvRow([r.id, r.title, r.company, r.location_restrictions, r.workplace_type, r.url, r.qualification_status,
