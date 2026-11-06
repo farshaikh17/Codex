@@ -8,7 +8,7 @@ name: Dashboard release to production (manual)
 #   mode = diagnose            read-only incident check: D1 info and 24h usage (when the token can read it), one SELECT 1, and
 #                              the Worker's own error for one public request (wrangler tail, filtered). No fingerprint, no tests
 #                              against production beyond that single request.
-#   mode = release              preflight, fingerprint, migrations 0008-0012 (additive), the owner-approved score correction (idempotent, capped writes), deploy, public smoke test, real-browser
+#   mode = release              preflight, fingerprint, migrations 0008-0013 (additive), the owner-approved score correction (idempotent, capped writes), deploy, public smoke test, real-browser
 #                               check (desktop + 375px mobile), fingerprint comparison.
 #
 # Secrets (repository secrets; the collector's sync workflow already uses the same two):
@@ -137,6 +137,10 @@ jobs:
             echo '#### Discovery queue and run health (read-only)'
             echo '--- collector imports still waiting for assessment, per candidate (partial index; empty once the backlog is done)'
             npx wrangler d1 execute career-job-engine --remote --command "SELECT candidate_id, COUNT(*) n FROM candidate_qualifications WHERE qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' GROUP BY candidate_id" --json 2>&1 | grep -E '"(candidate_id|n)"|rror' | paste - - | head -5
+            echo '--- candidates: threshold and number of stored primary skills (0 or none = the screen can only score a flat 40/50; migration 0013 fills an empty list)'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT id, qualification_threshold threshold, CASE WHEN primary_skills IS NULL OR trim(primary_skills) IN ('','[]','null') THEN 'none' ELSE json_array_length(primary_skills) END skills FROM candidates" --json 2>&1 | grep -E '"(id|threshold|skills)"|rror' | paste - - - | head -20
+            echo '--- preliminary score distribution per candidate over active jobs (bucket = lower bound; shows whether a threshold is reachable)'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT s.candidate_id, (CAST(COALESCE(s.overall_score,0) AS INTEGER)/10)*10 bucket, COUNT(*) n FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id WHERE j.is_active = 1 GROUP BY 1,2 ORDER BY 1,2" --json 2>&1 | grep -E '"(candidate_id|bucket|n)"|rror' | paste - - - | head -40
             npx wrangler d1 execute career-job-engine --remote --command "SELECT state, COUNT(*) n FROM cloud_discovery_queue GROUP BY state" --json 2>&1 | grep -E '"(state|n)"|rror' | paste - - | head -10
             npx wrangler d1 execute career-job-engine --remote --command "SELECT status, run_type, COUNT(*) n FROM cloud_discovery_runs WHERE started_at >= strftime('%Y-%m-%dT%H:%M:%SZ','now','-1 day') GROUP BY 1,2 ORDER BY n DESC" --json 2>&1 | grep -E '"(status|run_type|n)"|rror' | paste - - - | head -10
             echo '--- sources whose last attempt failed (id, status, failures, error)'
@@ -217,6 +221,7 @@ jobs:
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0010_assessment.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0011_clients.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0012_site.sql
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0013_candidate_skills.sql
           # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
           npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0; SELECT candidate_id, visibility, search_profile FROM client_profiles LIMIT 0; SELECT token_hash, revoked_at FROM client_view_tokens LIMIT 0; SELECT id, status, source_hash FROM client_requests LIMIT 0; SELECT key, value FROM site_settings LIMIT 0" > /dev/null
 

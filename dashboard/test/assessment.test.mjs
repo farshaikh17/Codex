@@ -100,3 +100,23 @@ test('the cron runs an assessment batch every fifth tick only', async () => {
   await tick(ASSESS_EVERY_TICKS * 1000);
   assert.ok(row(w, F, 'a1').score > 0, 'assessment tick');
 });
+
+test('migration 0013 fills empty built-in skills (so the screen can score them) and never overwrites a stored list', async () => {
+  const fs = await import('node:fs'); const path = await import('node:path'); const { fileURLToPath } = await import('node:url');
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const sql = fs.readFileSync(path.join(root, 'migrations', '0013_candidate_skills.sql'), 'utf8');
+  const { sqlite } = createDb();
+  sqlite.prepare(`INSERT INTO candidates(id,full_name,primary_skills) VALUES ('farhan_shaikh','F',NULL),('sana_ansari','S','["Kept"]')`).run();
+  sqlite.exec(sql);
+  const f = JSON.parse(sqlite.prepare(`SELECT primary_skills s FROM candidates WHERE id='farhan_shaikh'`).get().s);
+  assert.ok(f.includes('CRM Configuration') && f.length === 6, 'empty column filled with the documented list');
+  assert.deepEqual(JSON.parse(sqlite.prepare(`SELECT primary_skills s FROM candidates WHERE id='sana_ansari'`).get().s), ['Kept'], 'a stored list is never overwritten');
+  sqlite.exec(sql);
+  assert.equal(JSON.parse(sqlite.prepare(`SELECT primary_skills s FROM candidates WHERE id='farhan_shaikh'`).get().s).length, 6, 'idempotent');
+  // the point of it: the same relevant posting scores a flat 50 with no stored skills and higher once they are stored
+  const posting = { id: 'p', title: 'Implementation Manager', url: '', location: 'Remote - India', description: 'Fully remote role. CRM Configuration and Workflow Automation with GoHighLevel.', remote: true };
+  assert.equal(evaluate({ id: 'farhan_shaikh', primary_skills: null }, posting).score, 50, 'the production state before 0013');
+  const after = evaluate({ id: 'farhan_shaikh', primary_skills: JSON.stringify(f) }, posting);
+  assert.equal(after.score, 74, 'three named skills: 40 + 24 + 10');
+  assert.equal(after.status, 'NEEDS_REVIEW', 'still never READY on its own');
+});
