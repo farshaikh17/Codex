@@ -1,0 +1,187 @@
+// Resold clients: onboarding, private-by-default visibility, read-only share links, backfill and CSV export.
+// Every check names the clients and jobs it expects, not just a status code.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createDb, loadWorker, makeEnv, ADMIN_KEY } from './harness.mjs';
+
+const F = 'farhan_shaikh', S = 'sana_ansari';
+const worker = await loadWorker();
+
+function world(extra = {}) {
+  const { sqlite, d1 } = createDb();
+  const run = (sql, ...p) => sqlite.prepare(sql).run(...p);
+  run(`INSERT INTO candidates(id,full_name,current_location,qualification_threshold,primary_skills) VALUES (?,?,?,?,?),(?,?,?,?,?)`,
+    F, 'Farhan', 'Mumbai, India', 70, '["CRM Configuration"]', S, 'Sana', 'Kota, India', 60, '["Maintenance"]');
+  const job = (id, title, location, description, o = {}) => run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    id, title, o.company || 'Acme', 'lever', 'https://jobs.lever.co/acme/' + id, o.active ?? 1, location, description, o.workplace || 'REMOTE', o.at || '2026-11-01T00:00:00Z', o.provenance || 'LIVE_PUBLIC');
+  job('k1', 'Data Analyst', 'Remote - India', 'Fully remote role. SQL and dashboards.', { at: '2026-11-03T00:00:00Z' });
+  job('k2', 'Office Manager', 'Remote - India', 'Fully remote role.', { at: '2026-11-02T00:00:00Z' });
+  job('k3', 'Senior Data Analyst', 'Berlin, Germany', 'On-site in Berlin. SQL.', { workplace: 'ONSITE', at: '2026-11-01T00:00:00Z' });
+  job('k4', 'Data Analyst (board)', 'Remote', 'Reported by a board.', { provenance: 'PUBLIC_FEED_UNVERIFIED', at: '2026-10-30T00:00:00Z' });
+  job('k5', 'Data Analyst', 'Remote - India', 'Closed posting.', { active: 0 });
+  job('k6', '=HYPERLINK("http://x.invalid","Data Analyst")', 'Remote - India', 'Fully remote role. SQL.', { company: 'Formula, "Co"', at: '2026-10-29T00:00:00Z' });
+  // built-in candidates' existing rows must never change
+  run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,qualification_reason) VALUES (?,?,?,?,?,?)`, F, 'k1', 'READY', 'STRONGEST_FIT', 'ELIGIBLE', 'human');
+  run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status,manual_override_reason,eligibility_status) VALUES (?,?,?,?,?,?)`, F, 'k2', 'HOLD', 'HOLD', 'PRIVATE-OVERRIDE-REASON', 'ELIGIBLE');
+  run(`INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES ('a1',?,?,?,?)`, F, 'k1', 'APPLIED', 'PRIVATE-NOTE-c1');
+  return { sqlite, d1, run, env: makeEnv(d1, extra) };
+}
+async function req(env, method, path, { body, key = ADMIN_KEY, view } = {}) {
+  const headers = {};
+  if (key) headers.Authorization = `Bearer ${key}`;
+  if (view) headers['X-View-Token'] = view;
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const res = await worker.fetch(new Request('https://test.invalid' + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), env, { waitUntil() {} });
+  const text = await res.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
+  return { status: res.status, json, text, headers: res.headers };
+}
+const analyst = { full_name: 'Priya Analyst', current_location: 'Pune, India', primary_skills: ['SQL', 'Dashboards'], qualification_threshold: 65,
+  display_title: 'Data & BI Analyst', summary_line: 'SQL • Dashboards • remote from India',
+  search_profile: { role_keywords: ['data analyst', 'bi analyst'], avoid_keywords: ['senior'], location_mode: 'REMOTE_FROM_HOME', home_country: 'India' } };
+const snapBuiltins = (w) => JSON.stringify(['candidate_qualifications', 'candidate_job_scores', 'applications'].map((t) =>
+  w.sqlite.prepare(`SELECT * FROM ${t} WHERE candidate_id IN ('${F}','${S}') ORDER BY 1,2`).all()));
+const ids = (r) => (r.json?.jobs || []).map((j) => j.id).sort();
+
+test('a new client is private: visitors cannot list, open or even learn its id; the operator sees it', async () => {
+  const w = world();
+  const made = await req(w.env, 'POST', '/api/clients', { body: analyst });
+  assert.equal(made.status, 201, made.text);
+  assert.equal(made.json.client.id, 'priya_analyst');
+  assert.equal(made.json.client.visibility, 'private');
+  const anonList = await req(w.env, 'GET', '/api/candidates', { key: null });
+  assert.deepEqual(anonList.json.map((c) => c.id).sort(), [F, S]);
+  const opList = await req(w.env, 'GET', '/api/candidates');
+  assert.deepEqual(opList.json.map((c) => c.id).sort(), [F, 'priya_analyst', S]);
+  for (const p of ['/api/jobs?candidate_id=priya_analyst', '/api/analytics?candidate_id=priya_analyst', '/api/candidates/priya_analyst/jobs', '/api/export?candidate_id=priya_analyst']) {
+    const r = await req(w.env, 'GET', p, { key: null });
+    assert.equal(r.status, 400, p);
+    assert.ok(!r.text.includes('priya_analyst\"]') && !(r.json?.allowed_candidate_ids || []).includes('priya_analyst'), `${p} must not list the private id`);
+  }
+  // an unknown id answers exactly like a private one
+  const unknown = await req(w.env, 'GET', '/api/jobs?candidate_id=nobody_here', { key: null });
+  assert.deepEqual(unknown.json.allowed_candidate_ids.sort(), [F, S]);
+  const ov = await req(w.env, 'GET', '/api/dashboard/overview', { key: null });
+  assert.deepEqual(ov.json.candidates.map((c) => c.candidate_id), [F, S]);
+  const ovOp = await req(w.env, 'GET', '/api/dashboard/overview');
+  assert.deepEqual(ovOp.json.candidates.map((c) => c.candidate_id), [F, S, 'priya_analyst']);
+  assert.equal(ovOp.json.candidates[2].display_title, 'Data & BI Analyst');
+});
+
+test('backfill screens exactly the active jobs the client has no row for, with its own profile, and touches nothing else', async () => {
+  const w = world();
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  const before = snapBuiltins(w);
+  const b1 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill?limit=200');
+  assert.equal(b1.status, 200, b1.text);
+  assert.equal(b1.json.inserted, 5);                       // k1 k2 k3 k4 k6 (k5 is closed)
+  const rows = Object.fromEntries(w.sqlite.prepare(`SELECT q.job_id, q.qualification_status st, q.eligibility_status es, s.overall_score sc FROM candidate_qualifications q JOIN candidate_job_scores s USING(candidate_id, job_id) WHERE q.candidate_id='priya_analyst'`).all().map((r) => [r.job_id, r]));
+  assert.deepEqual(Object.keys(rows).sort(), ['k1', 'k2', 'k3', 'k4', 'k6']);
+  assert.deepEqual([rows.k1.st, rows.k1.es], ['NEEDS_REVIEW', 'ELIGIBLE']);   // keyword in title, remote from India
+  assert.equal(rows.k2.st, 'HOLD');                                           // no role keyword in the title
+  assert.ok(rows.k3.sc < rows.k1.sc, 'senior is on the avoid list and Berlin is a foreign location: ranked lower');
+  assert.equal(rows.k3.es, 'UNKNOWN');
+  assert.deepEqual([rows.k4.st, rows.k4.es], ['NEEDS_REVIEW', 'UNKNOWN']);    // job-board posting: never eligible from the board alone
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_qualifications WHERE candidate_id='priya_analyst' AND qualification_status IN ('READY','READY_HIGH','STRETCH_READY')`).get().n, 0);
+  assert.equal(snapBuiltins(w), before, 'the built-in candidates are untouched');
+  const b2 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.equal(b2.json.inserted, 0);
+  // and the operator listing shows the work
+  const list = await req(w.env, 'GET', '/api/clients');
+  const p = list.json.clients.find((c) => c.id === 'priya_analyst');
+  assert.equal(p.jobs_screened, 5);
+  assert.deepEqual(p.search_profile.role_keywords, ['data analyst', 'bi analyst']);
+});
+
+test('a share link opens exactly one client, read-only, uncached, until it is revoked', async () => {
+  const w = world({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'test' });
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  await req(w.env, 'POST', '/api/clients', { body: { ...analyst, full_name: 'Omar Other' } });
+  await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  await req(w.env, 'POST', '/api/clients/omar_other/backfill');
+  const link = await req(w.env, 'POST', '/api/clients/priya_analyst/share-links', { body: { label: 'for Priya' } });
+  assert.equal(link.status, 201);
+  assert.match(link.json.token, /^v1_[0-9a-f]{48}$/);
+  assert.equal(link.json.path, `/#view=${link.json.token}&candidate=priya_analyst`);
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_view_tokens WHERE token_hash = ?').get(link.json.token).n, 0, 'only the hash is stored');
+  const t = link.json.token;
+
+  const mine = await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst&limit=50', { key: null, view: t });
+  assert.equal(mine.status, 200, mine.text);
+  assert.deepEqual(ids(mine), ['k1', 'k2', 'k3', 'k4', 'k6']);
+  assert.equal(mine.headers.get('X-Cache'), null, 'share-link answers are never cached');
+  const cands = await req(w.env, 'GET', '/api/candidates', { key: null, view: t });
+  assert.deepEqual(cands.json.map((c) => c.id).sort(), [F, 'priya_analyst', S]);
+  assert.equal(cands.json.find((c) => c.id === 'priya_analyst').visibility, undefined, 'viewers get the public field set');
+
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=omar_other', { key: null, view: t })).status, 400, 'another client stays closed');
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst', { key: null })).status, 400, 'no link, no access');
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst', { key: null, view: 'v1_' + '0'.repeat(48) })).status, 400);
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst', { key: null, view: 'garbage' })).status, 400);
+  // the public cache never holds the private client: a visitor right after the viewer is still refused
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst&limit=50', { key: null })).status, 400);
+  // a share link cannot write
+  assert.equal((await req(w.env, 'POST', '/api/clients/priya_analyst/backfill', { key: null, view: t })).status, 401);
+
+  const listed = await req(w.env, 'GET', '/api/clients/priya_analyst/share-links');
+  assert.equal(listed.json.share_links.length, 1);
+  assert.ok(!listed.text.includes(t), 'the token is never shown again');
+  const del = await req(w.env, 'DELETE', `/api/clients/priya_analyst/share-links/${listed.json.share_links[0].link_id}`);
+  assert.equal(del.status, 200);
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst', { key: null, view: t })).status, 400, 'revoked at once');
+});
+
+test('visibility changes apply at once, including to cached answers; the built-in two cannot be made private', async () => {
+  const w = world({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'test' });
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.equal((await req(w.env, 'PUT', '/api/clients/priya_analyst', { body: { visibility: 'public' } })).status, 200);
+  const pub = await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst&limit=50', { key: null });
+  assert.equal(pub.status, 200);
+  assert.deepEqual(ids(pub), ['k1', 'k2', 'k3', 'k4', 'k6']);
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst&limit=50', { key: null })).headers.get('X-Cache'), 'HIT');
+  assert.equal((await req(w.env, 'PUT', '/api/clients/priya_analyst', { body: { visibility: 'private' } })).status, 200);
+  assert.equal((await req(w.env, 'GET', '/api/jobs?candidate_id=priya_analyst&limit=50', { key: null })).status, 400, 'the cached public answer is not served');
+  const ov = await req(w.env, 'GET', '/api/dashboard/overview', { key: null });
+  assert.deepEqual(ov.json.candidates.map((c) => c.candidate_id), [F, S]);
+  const b = await req(w.env, 'PUT', `/api/clients/${F}`, { body: { visibility: 'private' } });
+  assert.equal(b.status, 400);
+  assert.equal((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}`, { key: null })).status, 200);
+});
+
+test('client input is validated; onboarding needs the operator key', async () => {
+  const w = world();
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: analyst, key: null })).status, 401);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: { ...analyst, search_profile: { role_keywords: [] } } })).status, 400);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: { ...analyst, id: 'Bad Id!' } })).status, 400);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: { ...analyst, qualification_threshold: 200 } })).status, 400);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: { ...analyst, primary_timezone: 'Mars/Base' } })).status, 400);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: { ...analyst, id: F } })).status, 409);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: analyst })).status, 201);
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: analyst })).status, 409);
+  // keywords are plain words: regex characters match literally and cannot break or slow the screen
+  const r = await req(w.env, 'POST', '/api/clients', { body: { ...analyst, full_name: 'Regex Person', search_profile: { role_keywords: ['(a+)+$', 'c++'] } } });
+  assert.equal(r.status, 201);
+  assert.equal((await req(w.env, 'POST', '/api/clients/regex_person/backfill')).status, 200);
+});
+
+test('CSV export: the public field set, spreadsheet-safe, visibility-checked', async () => {
+  const w = world();
+  const pub = await req(w.env, 'GET', `/api/export?candidate_id=${F}`, { key: null });
+  assert.equal(pub.status, 200);
+  assert.match(pub.headers.get('Content-Type'), /text\/csv/);
+  const lines = pub.text.trim().split('\r\n');
+  assert.equal(lines[0], 'job_id,title,company,location,workplace,posting_url,qualification_status,eligibility,lane,preliminary_score,pay_published,pay_text,application_status,discovered_at');
+  assert.deepEqual(lines.slice(1).map((l) => l.split(',')[0]).sort(), ['k1', 'k2']);
+  assert.ok(lines.some((l) => l.startsWith('k1,') && l.includes(',APPLIED,')));
+  for (const secret of ['PRIVATE-NOTE-c1', 'PRIVATE-OVERRIDE-REASON', 'Mumbai']) assert.ok(!pub.text.includes(secret), secret);
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.equal((await req(w.env, 'GET', '/api/export?candidate_id=priya_analyst', { key: null })).status, 400);
+  const op = await req(w.env, 'GET', '/api/export?candidate_id=priya_analyst');
+  const k6 = op.text.split('\r\n').find((l) => l.startsWith('k6,'));
+  assert.ok(k6.startsWith(`k6,"'=HYPERLINK(""http://x.invalid"",""Data Analyst"")","Formula, ""Co""",`), k6);
+  const ready = await req(w.env, 'GET', '/api/export?candidate_id=priya_analyst&qualification_status=HOLD');
+  assert.deepEqual(ready.text.trim().split('\r\n').slice(1).map((l) => l.split(',')[0]).sort(), ['k2']);
+  assert.equal((await req(w.env, 'GET', '/api/export?candidate_id=priya_analyst&qualification_status=DROP', {})).status, 400);
+});

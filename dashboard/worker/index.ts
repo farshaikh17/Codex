@@ -3,7 +3,8 @@
  * 100% Compatible with D1 Schema and Frontend UI
  */
 
-import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS } from './discovery';
+import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
+import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidate, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
 export interface Env {
@@ -87,7 +88,7 @@ function corsHeaders(request: Request, env: Env): HeadersInit {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion, X-View-Token',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
@@ -126,6 +127,7 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
   /^\/api\/profile$/,
   /^\/api\/sources$/,
   /^\/api\/automation\/status$/,
+  /^\/api\/export$/,
 ];
 function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
@@ -177,7 +179,7 @@ const CACHE_PARAMS: [RegExp, string[]][] = [
   [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
 // Nothing is excluded from the cache by path any more: /api/india-remote/jobs has its own query and its own key (every filter it honours is in CACHE_PARAMS).
-const NOT_CACHED = /^\/api\/never-cached$/;
+const NOT_CACHED = /^\/api\/export$/;   // exports are metered but never stored in the cache
 const STATUS_VALUE: Record<string, (v: string) => boolean> = {
   '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
 };
@@ -441,14 +443,28 @@ async function checkOperatorAuth(request: Request, env: Env): Promise<Response |
 const publicLocation = (v: unknown) => (typeof v === 'string' && /india/i.test(v) ? 'India' : '');
 
 // Candidate isolation: a candidate-scoped route never falls back to a default candidate.
-const CANDIDATE_IDS = new Set(['farhan_shaikh', 'sana_ansari']);
+// The set is the client registry (clients.ts), refreshed from the database at most once a minute; the built-in two are always in it.
+const CANDIDATE_IDS = new Set<string>(BUILTIN_IDS);
+const PRIVATE_IDS = new Set<string>();
+const CLIENT_TITLES = new Map<string, string | null>();
+async function syncRegistry(env: Env, force = false) {
+  const reg = await loadRegistry(env.DB, force);
+  CANDIDATE_IDS.clear(); reg.ids.forEach((id) => CANDIDATE_IDS.add(id));
+  PRIVATE_IDS.clear(); reg.privateIds.forEach((id) => PRIVATE_IDS.add(id));
+  CLIENT_TITLES.clear(); reg.titles.forEach((t, id) => CLIENT_TITLES.set(id, t));
+}
+// The client a request's share link (X-View-Token) grants read access to. Set by the router; read-only, public field shape.
+const viewerOf = new WeakMap<Request, string>();
+/** Whether this request may see a candidate at all: operators see every client, others the public ones and their own share link's. */
+const visibleTo = (request: Request, id: string) => isOperatorRequest(request) || !PRIVATE_IDS.has(id) || viewerOf.get(request) === id;
 function knownCandidate(value: unknown): string | null {
   return typeof value === 'string' && CANDIDATE_IDS.has(value) ? value : null;
 }
 function badCandidate(request: Request, env: Env, given: unknown): Response {
   return jsonResponse({
     error: given ? `Unknown candidate_id '${String(given).slice(0, 40)}'.` : 'candidate_id is required for this endpoint.',
-    allowed_candidate_ids: [...CANDIDATE_IDS],
+    // never names a private client to someone who may not see it
+    allowed_candidate_ids: [...CANDIDATE_IDS].filter((id) => visibleTo(request, id)),
   }, 400, corsHeaders(request, env));
 }
 
@@ -527,6 +543,17 @@ class WorkerRouter {
         accessLevel.set(request, 'operator');
       }
     }
+    // Client visibility: a private client is answered exactly like an unknown one unless the operator asks, or the request carries
+    // a share link for that client. Runs before the cache, so a cached answer can never reach someone who may not see it.
+    if (isApi && accessLevel.has(request)) {
+      await syncRegistry(env);
+      if (accessLevel.get(request) === 'public') {
+        const viewer = await viewTokenCandidate(env.DB, request.headers.get('X-View-Token'));
+        if (viewer) viewerOf.set(request, viewer);
+        const cid = referencedCandidate(url);
+        if (cid && CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) return badCandidate(request, env, cid);
+      }
+    }
 
     for (const route of this.routes) {
       if (route.method !== request.method && route.method !== 'ALL') continue;
@@ -540,8 +567,8 @@ class WorkerRouter {
         const readRoute = !!level && request.method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
         // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
         // (India Remote list) is metered by that inner call, so it is not counted twice.
-        const metered = readRoute && !NOT_CACHED.test(pathname);
-        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const metered = readRoute;
+        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !request.headers.has('X-View-Token') ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
         const operatorChange = level === 'operator' && request.method !== 'GET';
         let meter: { db: D1Database; rows: () => number } | null = null;
@@ -774,11 +801,13 @@ router.get('/api/candidates', async (request, env) => {
       ORDER BY c.full_name ASC
     `).all<any>();
 
-    const formatted = results.map((r: any) => ({
+    const formatted = results.filter((r: any) => visibleTo(request, r.id)).map((r: any) => ({
       id: r.id,
       name: r.full_name,
       full_name: r.full_name,
-      display_title: r.id === 'sana_ansari'
+      builtin: BUILTIN_IDS.includes(r.id),
+      ...(isOperatorRequest(request) ? { visibility: PRIVATE_IDS.has(r.id) ? 'private' : 'public' } : {}),
+      display_title: !BUILTIN_IDS.includes(r.id) ? (CLIENT_TITLES.get(r.id) || '') : r.id === 'sana_ansari'
         ? 'Power Plant Operations & Industrial Reliability Engineering'
         : 'Technical Operations & Workflow Automation Engineering',
       citizenship: r.citizenship,
@@ -1028,6 +1057,9 @@ router.get('/api/dashboard/overview', async (request, env) => {
         FROM applications WHERE candidate_id = ?
       `).bind(cid).first<{ records: number; applied: number }>();
       const facts = candidateFacts(cid, cand);
+      // a resold client's title and summary come from its profile (the built-in two keep their supplied facts)
+      const prof = BUILTIN_IDS.includes(cid) ? null : await env.DB.prepare('SELECT display_title, summary_line FROM client_profiles WHERE candidate_id = ?').bind(cid).first<any>();
+      if (prof) { facts.display_title = prof.display_title || ''; facts.summary_line = facts.public_summary = prof.summary_line || ''; }
 
       const target_distribution = {
         strongest_fit: cand?.strongest_fit_target_pct ?? (cid === 'sana_ansari' ? 20.0 : 70.0),
@@ -1051,7 +1083,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
         candidate_id: cid,
         name: cand?.full_name || cid,
         full_name: cand?.full_name || cid,
-        title: cid === 'sana_ansari'
+        title: !BUILTIN_IDS.includes(cid) ? (prof?.display_title || '') : cid === 'sana_ansari'
           ? 'Electrical Engineering & Industrial Operations'
           : 'Technical Operations & Workflow Automation Lead',
         education: cand?.education || '',
@@ -1083,6 +1115,9 @@ router.get('/api/dashboard/overview', async (request, env) => {
 
     const farhanCard = await getSummary('farhan_shaikh');
     const sanaCard = await getSummary('sana_ansari');
+    // every client this request may see, the built-in two first (the farhan/sana keys stay for the existing pages)
+    const clientCards: any[] = [];
+    for (const id of [...CANDIDATE_IDS].filter((x) => !BUILTIN_IDS.includes(x) && visibleTo(request, x)).sort()) clientCards.push(await getSummary(id));
 
     // one pass over jobs for both figures (it was two)
     const jobCounts = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active FROM jobs').first<{ cnt: number; active: number }>();
@@ -1091,6 +1126,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
     return jsonResponse({
       farhan: farhanCard,
       sana: sanaCard,
+      candidates: [farhanCard, sanaCard, ...clientCards],
       total_jobs_tracked: totalJobs?.cnt ?? 0,
       active_jobs_count: activeJobs?.cnt ?? 0,
       automation_status: (await env.DB.prepare('SELECT enabled FROM cloud_automation WHERE id=1').first<{enabled:number}>())?.enabled ? 'ACTIVE' : 'PAUSED',
@@ -2652,6 +2688,138 @@ router.get('/api/canonical-sync/status', async (request, env) => {
     pending_ready_to_propose: 0,
     staged_proposals_count: 0,
   }, 200, corsHeaders(request, env));
+});
+
+// -------------------------------------------------------------
+// Clients (operator only): onboarding, profile edits, backfill, share links. Plus the CSV export (public read, visibility-checked).
+// -------------------------------------------------------------
+const clientRow = async (env: Env, id: string) => env.DB.prepare(`SELECT c.id, c.full_name, c.current_location, c.citizenship, c.primary_timezone, c.total_years_experience,
+  c.qualification_threshold, c.primary_skills, p.visibility, p.display_title, p.summary_line, p.search_profile, p.created_at, p.updated_at,
+  (SELECT COUNT(*) FROM client_view_tokens t WHERE t.candidate_id = c.id AND t.revoked_at IS NULL) AS active_share_links
+  FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?`).bind(id).first<any>();
+const shapeClient = (r: any) => r && ({
+  ...r, builtin: BUILTIN_IDS.includes(r.id), visibility: r.visibility || (BUILTIN_IDS.includes(r.id) ? 'public' : 'private'),
+  primary_skills: (() => { try { return JSON.parse(r.primary_skills || '[]'); } catch { return []; } })(),
+  search_profile: (() => { try { return r.search_profile ? JSON.parse(r.search_profile) : null; } catch { return null; } })(),
+});
+const readJson = async (request: Request) => { try { return await request.json<any>(); } catch { return null; } };
+
+router.get('/api/clients', async (request, env) => {
+  const { results } = await env.DB.prepare('SELECT id FROM candidates ORDER BY full_name').all<any>();
+  const clients = [];
+  for (const r of results || []) {
+    const row = shapeClient(await clientRow(env, r.id));
+    const counts = await env.DB.prepare(`SELECT COUNT(*) AS jobs, SUM(CASE WHEN qualification_status IN ('READY','READY_HIGH','STRETCH_READY') THEN 1 ELSE 0 END) AS apply_worthy
+      FROM candidate_qualifications WHERE candidate_id = ?`).bind(r.id).first<any>();
+    clients.push({ ...row, jobs_screened: counts?.jobs || 0, apply_worthy: counts?.apply_worthy || 0 });
+  }
+  return jsonResponse({ clients }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients', async (request, env) => {
+  const body = await readJson(request);
+  const parsed = parseClient(body);
+  if (!parsed.ok) return jsonResponse({ error: parsed.error, detail: parsed.error }, 400, corsHeaders(request, env));
+  const v = parsed.value as any;
+  const id = body?.id ? String(body.id) : slugId(v.full_name);
+  if (!CLIENT_ID.test(id)) return jsonResponse({ error: 'id must be 3-40 characters: lowercase letters, digits and _ , starting with a letter.' }, 400, corsHeaders(request, env));
+  if (await env.DB.prepare('SELECT 1 FROM candidates WHERE id = ?').bind(id).first()) return jsonResponse({ error: `A client with id '${id}' already exists.` }, 409, corsHeaders(request, env));
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO candidates(id, full_name, current_location, citizenship, primary_timezone, total_years_experience, qualification_threshold, primary_skills, target_roles)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(id, v.full_name, v.current_location || null, v.citizenship || 'India', v.primary_timezone || 'Asia/Kolkata',
+      v.total_years_experience ?? 0, v.qualification_threshold, JSON.stringify(v.primary_skills || []), JSON.stringify(v.search_profile.role_keywords)),
+    env.DB.prepare(`INSERT INTO client_profiles(candidate_id, visibility, display_title, summary_line, search_profile) VALUES (?, ?, ?, ?, ?)`)
+      .bind(id, v.visibility, v.display_title || null, v.summary_line || null, JSON.stringify(v.search_profile)),
+  ]);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  return jsonResponse({ client: shapeClient(await clientRow(env, id)), next: 'POST /api/clients/' + id + '/backfill screens the existing active jobs for this client.' }, 201, corsHeaders(request, env));
+});
+
+router.put('/api/clients/:id', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const body = await readJson(request);
+  const parsed = parseClient(body, true);
+  if (!parsed.ok) return jsonResponse({ error: parsed.error, detail: parsed.error }, 400, corsHeaders(request, env));
+  const v = parsed.value as any;
+  if (BUILTIN_IDS.includes(id) && (v.visibility !== undefined || v.search_profile !== undefined))
+    return jsonResponse({ error: 'The two built-in candidates keep their visibility and built-in screening rules.' }, 400, corsHeaders(request, env));
+  const cand: [string, any][] = [['full_name', v.full_name], ['current_location', v.current_location], ['citizenship', v.citizenship], ['primary_timezone', v.primary_timezone],
+    ['total_years_experience', v.total_years_experience], ['qualification_threshold', v.qualification_threshold],
+    ['primary_skills', v.primary_skills === undefined ? undefined : JSON.stringify(v.primary_skills)]];
+  const prof: [string, any][] = [['visibility', v.visibility], ['display_title', v.display_title], ['summary_line', v.summary_line],
+    ['search_profile', v.search_profile === undefined ? undefined : JSON.stringify(v.search_profile)]];
+  const set = (list: [string, any][]) => list.filter(([, x]) => x !== undefined);
+  const stmts: D1PreparedStatement[] = [];
+  const c = set(cand), pr = set(prof);
+  if (c.length) stmts.push(env.DB.prepare(`UPDATE candidates SET ${c.map(([k]) => k + ' = ?').join(', ')}, updated_at = datetime('now') WHERE id = ?`).bind(...c.map(([, x]) => x), id));
+  if (pr.length) {
+    stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO client_profiles(candidate_id, visibility) VALUES (?, ?)`).bind(id, BUILTIN_IDS.includes(id) ? 'public' : 'private'));
+    stmts.push(env.DB.prepare(`UPDATE client_profiles SET ${pr.map(([k]) => k + ' = ?').join(', ')}, updated_at = datetime('now') WHERE candidate_id = ?`).bind(...pr.map(([, x]) => x), id));
+  }
+  if (!stmts.length) return jsonResponse({ error: 'Nothing to change.' }, 400, corsHeaders(request, env));
+  await env.DB.batch(stmts);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  // A changed search profile applies to new screening; rows already screened keep their recorded result (no silent rewrite).
+  return jsonResponse({ client: shapeClient(await clientRow(env, id)) }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '200', 10) || 200, 1), 200);
+  const res = await backfillClient(env.DB, id, limit);
+  return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
+});
+
+router.get('/api/clients/:id/share-links', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const { results } = await env.DB.prepare(`SELECT substr(token_hash, 1, 12) AS link_id, label, created_at, revoked_at FROM client_view_tokens WHERE candidate_id = ? ORDER BY created_at DESC`).bind(id).all<any>();
+  return jsonResponse({ candidate_id: id, share_links: results || [] }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients/:id/share-links', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const body = await readJson(request);
+  const label = typeof body?.label === 'string' ? body.label.trim().slice(0, 60) : '';
+  const token = newViewToken(), hash = await sha256Hex(token);
+  await env.DB.prepare('INSERT INTO client_view_tokens(token_hash, candidate_id, label) VALUES (?, ?, ?)').bind(hash, id, label || null).run();
+  // The token is returned once and never stored in plain form. The link carries it after '#', so it is not sent in requests or logged.
+  return jsonResponse({ candidate_id: id, link_id: hash.slice(0, 12), label: label || null, token, path: `/#view=${token}&candidate=${id}`,
+    note: 'Shown once. Anyone with this link can read this client’s dashboard (read-only) until it is revoked.' }, 201, corsHeaders(request, env));
+});
+
+router.delete('/api/clients/:id/share-links/:link', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  if (!/^[0-9a-f]{12}$/.test(params.link || '')) return jsonResponse({ error: 'Unknown share link.' }, 404, corsHeaders(request, env));
+  const r = await env.DB.prepare(`UPDATE client_view_tokens SET revoked_at = datetime('now') WHERE candidate_id = ? AND substr(token_hash, 1, 12) = ? AND revoked_at IS NULL`).bind(id, params.link).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown or already revoked share link.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ candidate_id: id, link_id: params.link, revoked: true }, 200, corsHeaders(request, env));
+});
+
+// CSV of one client's screened jobs (active only), newest-score first, at most 1,000 rows. Public field set only (no notes,
+// override reasons or pay floors); the visibility guard above already decided whether this request may see the client.
+const EXPORT_MAX = 1000;
+router.get('/api/export', async (request, env, _params, url) => {
+  const id = knownCandidate(url.searchParams.get('candidate_id'));
+  if (!id) return badCandidate(request, env, url.searchParams.get('candidate_id'));
+  const st = url.searchParams.get('qualification_status') || 'ALL';
+  if (st !== 'ALL' && st !== 'APPLY_WORTHY' && !QUAL.includes(st)) return jsonResponse({ error: 'Unsupported qualification_status.', detail: 'Unsupported qualification_status.' }, 400, corsHeaders(request, env));
+  const where = st === 'ALL' ? '' : st === 'APPLY_WORTHY' ? ` AND q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')` : ' AND q.qualification_status = ?';
+  const { results } = await env.DB.prepare(`SELECT j.id, j.title, j.company, j.location_restrictions, j.workplace_type, COALESCE(j.original_posting_url, j.source_url) AS url,
+      j.salary_published, j.salary_raw_text, j.discovered_at, q.qualification_status, q.eligibility_status, q.strategy_lane, s.overall_score,
+      (SELECT a.status FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id ORDER BY a.rowid DESC LIMIT 1) AS application_status
+    FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1${where} ORDER BY COALESCE(s.overall_score, 0) DESC, q.job_id LIMIT ${EXPORT_MAX}`)
+    .bind(...(st === 'ALL' || st === 'APPLY_WORTHY' ? [id] : [id, st])).all<any>();
+  const head = ['job_id', 'title', 'company', 'location', 'workplace', 'posting_url', 'qualification_status', 'eligibility', 'lane', 'preliminary_score', 'pay_published', 'pay_text', 'application_status', 'discovered_at'];
+  const lines = [csvRow(head), ...(results || []).map((r: any) => csvRow([r.id, r.title, r.company, r.location_restrictions, r.workplace_type, r.url, r.qualification_status,
+    r.eligibility_status, r.strategy_lane, r.overall_score ?? '', r.salary_published ? 'yes' : 'no', r.salary_published ? r.salary_raw_text : '', r.application_status || '', r.discovered_at]))];
+  return new Response(lines.join('\r\n') + '\r\n', { status: 200, headers: { ...corsHeaders(request, env), 'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${id}-jobs-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
 });
 
 // Main export for Cloudflare Worker

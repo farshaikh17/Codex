@@ -245,6 +245,34 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
  return { assessed: rows.length, by_status: byStatus };
 }
 
+// ---- Backfill for a newly onboarded client ---------------------------------------------------------------------------
+// A new client starts with no rows. This screens active jobs the client has no row for yet (newest first, a bounded batch per call)
+// with the same evaluate() as discovery. It only INSERTs: an existing row, an application or a human decision is never touched, and
+// nothing becomes READY. Job-board postings get the same "unverified" treatment as in discovery.
+export const BACKFILL_MAX = 200;
+export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso()) {
+ const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
+ if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number> };
+ const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
+ const {results} = await db.prepare(`SELECT j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
+  FROM jobs j WHERE j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
+  ORDER BY j.discovered_at DESC, j.id LIMIT ?`).bind(candidateId, n + 1).all<any>();
+ const rows = (results || []).slice(0, n);
+ const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
+ for (const r of rows) {
+  const posting: Posting = { id: r.id, title: r.title || '', url: '', location: r.location || '', description: plain(r.description), remote: /^REMOTE/i.test(r.workplace_type || '') };
+  const result = evaluate(cand, posting);
+  if (r.provenance === 'PUBLIC_FEED_UNVERIFIED') { result.eligibility = 'UNKNOWN'; result.reason = `Reported by a public job board (${r.source_adapter || 'unknown'}); employer availability and eligibility are unverified.`; result.status = result.status === 'HOLD' ? 'HOLD' : 'NEEDS_REVIEW'; result.qualification_reason = 'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.'; }
+  byStatus[result.status] = (byStatus[result.status] || 0) + 1;
+  statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at)
+   SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=? AND job_id=?)`).bind(candidateId, r.id, result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, candidateId, r.id));
+  statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) VALUES(?,?,?,?,?,?,?,?)`)
+   .bind(candidateId, r.id, result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane, JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, assessed_from: 'client_backfill', matched_skills: result.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now));
+ }
+ if (statements.length) await db.batch(statements);
+ return { inserted: rows.length, more: (results || []).length > n, by_status: byStatus };
+}
+
 export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {
  const db=env.DB, now=iso(), seconds=epoch(), token=crypto.randomUUID(), day=now.slice(0,10);
  const acquired=await db.prepare(`UPDATE cloud_automation SET lease_token=?,lease_until=?,day=?,jobs_today=CASE WHEN day=? THEN jobs_today ELSE 0 END,sources_today=CASE WHEN day=? THEN sources_today ELSE 0 END WHERE id=1 AND enabled=1 AND lease_until<? RETURNING *`).bind(token,seconds+180,day,day,day,seconds).first<any>();
