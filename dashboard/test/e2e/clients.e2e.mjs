@@ -44,7 +44,7 @@ await opCtx.addInitScript((k) => window.sessionStorage.setItem('admin_session_ke
 const op = await opCtx.newPage();
 const opErrs = watch(op, 'operator');
 await op.goto(BASE + '/app');
-await op.getByRole('button', { name: 'Clients' }).click();
+await op.getByRole('button', { name: 'Manage clients' }).click();
 await op.waitForSelector('[data-testid="clients-view"]');
 await op.fill('input[name="full_name"]', NAME);
 await op.fill('input[name="display_title"]', 'Implementation & Delivery');
@@ -72,7 +72,7 @@ check('C5 its own keywords rank its jobs: the top jobs are implementation/delive
   top.every((j) => /implementation|delivery/i.test(j.title) && !/director/i.test(j.title)), top.map((j) => j.title).join(' | '));
 
 // share link
-await op.getByRole('button', { name: 'Clients' }).click();
+await op.getByRole('button', { name: 'Manage clients' }).click();
 await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'New share link' }).click();
 await op.waitForSelector('[data-testid="new-share-link"] input');
 const shareUrl = await op.inputValue('[data-testid="new-share-link"] input');
@@ -102,7 +102,7 @@ check('C9 the viewer lands in the client’s workspace with a read-only banner n
 check('C9b the viewer\u2019s menu offers only their own dashboard: no other candidates, no client picker, no operator pages',
   (await viewer.getByRole('button', { name: 'My jobs' }).count()) === 1 && (await viewer.getByRole('button', { name: 'Farhan', exact: true }).count()) === 0
   && (await viewer.getByRole('button', { name: 'Dashboard', exact: true }).count()) === 0 && (await viewer.locator('[data-testid="client-select"]').count()) === 0
-  && (await viewer.getByRole('button', { name: 'Clients', exact: true }).count()) === 0);
+  && (await viewer.getByRole('button', { name: 'Manage clients', exact: true }).count()) === 0);
 check('C10 the token is removed from the address bar', !viewer.url().includes('view=') && !viewer.url().includes(token), viewer.url());
 const viewRows = await tableIds(viewer);
 const viewApi = (await api(`/api/jobs?candidate_id=${ID}&limit=50&exclude_applied=true&exclude_dismissed=true&sort_by=score_desc`, { key: null, view: token })).json.jobs.map((j) => j.id);

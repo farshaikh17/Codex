@@ -76,7 +76,7 @@ await op.addInitScript((k) => window.sessionStorage.setItem('admin_session_key',
 const opPage = await op.newPage();
 await opPage.route(/fonts\.(googleapis|gstatic)/, (r) => r.abort());
 await opPage.goto(BASE + '/app', { waitUntil: 'networkidle' });
-await opPage.getByRole('button', { name: 'Clients', exact: true }).click();
+await opPage.getByRole('button', { name: 'Manage clients', exact: true }).click();
 await opPage.getByRole('button', { name: /^Applications/ }).last().click();
 await opPage.waitForSelector(`[data-request-id="${req.id}"]`);
 await opPage.locator(`[data-request-id="${req.id}"]`).getByRole('button', { name: 'Create client from this' }).click();

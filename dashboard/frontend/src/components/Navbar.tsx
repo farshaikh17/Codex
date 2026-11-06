@@ -88,8 +88,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Sliders className="w-4 h-4" /><span className="hidden sm:inline">Profile</span>
             </button>}
             {isOperator && (
-              <button aria-label="Clients" onClick={() => setActiveTab('clients')} className={item(activeTab === 'clients')}>
-                <Users className="w-4 h-4" /><span>Clients</span>
+              <button aria-label="Manage clients" onClick={() => setActiveTab('clients')} className={item(activeTab === 'clients')}>
+                <Users className="w-4 h-4" /><span>Manage clients</span>
               </button>
             )}
             <span className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
