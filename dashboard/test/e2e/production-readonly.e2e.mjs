@@ -51,9 +51,9 @@ check('public endpoints answer 200 and expose no private field, employer, pay, c
 await page.goto(BASE + '/app', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 check('first visit: no unlock window, no key sent, no request refused', !(await modalOpen()) && apiLog.length > 3 && apiLog.every((r) => !r.auth && r.status === 200), JSON.stringify(apiLog.filter((r) => r.status !== 200).slice(0, 3)));
-const shell = await (await fetch(BASE + '/')).text();
+const shell = await (await fetch(BASE + '/app')).text();   // the app shell (the site root is the public website)
 const js = await (await fetch(BASE + (shell.match(/\/assets\/index-[^"']+\.js/) || [''])[0])).text();
-check('public bundle holds no candidate profile data', !/RRVUNL|Mianro|Chhabra|1,?20,?000/.test(js) && !/B\.Tech|\bBMS\b|Rajasthan/.test(js));
+check('public bundle holds no candidate profile data', js.length > 50000 && !/RRVUNL|Mianro|Chhabra|1,?20,?000/.test(js) && !/B\.Tech|\bBMS\b|Rajasthan/.test(js));
 await tab('DASHBOARD');
 const overview = await api('/dashboard/overview');
 const dash = await text();
