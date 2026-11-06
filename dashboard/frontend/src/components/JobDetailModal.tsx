@@ -286,7 +286,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               {job.last_reverified_at && (
                 <span>Last reverified: {new Date(job.last_reverified_at).toLocaleTimeString()}</span>
               )}
-              <span className="ml-auto text-emerald-800 font-medium">Strict Verification Gate</span>
+              <span className="ml-auto text-emerald-800 font-medium">Recorded qualification status</span>
             </div>
           </div>
 

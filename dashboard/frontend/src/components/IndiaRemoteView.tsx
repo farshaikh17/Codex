@@ -344,7 +344,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
           </div>
           <p className="text-xs font-semibold text-slate-500">Loading India Remote vacancies...</p>
         </div>
-      ) : jobs.length === 0 && !isLoading ? (
+      ) : jobs.length === 0 && !isLoading && !error ? (
         <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3 shadow-sm">
           <Globe2 className="w-10 h-10 text-slate-300 mx-auto" />
           <h3 className="text-sm font-bold text-slate-800">No vacancies match these filters</h3>

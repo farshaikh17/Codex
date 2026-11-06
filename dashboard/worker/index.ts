@@ -1916,6 +1916,9 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
   if (!validRoleFamily(family)) return reject('role_family value', ['ALL', UNCLASSIFIED, ...ROLE_FAMILIES.map((f) => f.key)]);
   const sort = sp.get('sort_by') || 'score_desc';
   if (!SORTS.includes(sort)) return reject('sort_by value', SORTS);
+  // These worked when this route handed its query to /api/jobs. They are not filters of this route, so they are refused rather than ignored.
+  const unsupported = ['min_score', 'qualification_status', 'strategy_lane', 'workplace_type', 'source_adapter', 'eligibility', 'exclude_dismissed'].filter((k) => sp.has(k));
+  if (unsupported.length) return reject(`parameter ${unsupported.join(', ')} on this route (use farhan_fit, role_family, pay_filter, search, exclude_applied, sort_by, limit, offset)`, ['candidate_id', 'farhan_fit', 'role_family', 'pay_filter', 'search', 'exclude_applied', 'sort_by', 'limit', 'offset']);
   const exAppliedRaw = sp.get('exclude_applied');
   if (exAppliedRaw !== null && exAppliedRaw !== 'true' && exAppliedRaw !== 'false') return reject('exclude_applied value', ['true', 'false']);
   const limit = Math.min(Math.max(1, parseInt(sp.get('limit') || '50', 10) || 50), isOperatorRequest(request) ? 1000 : 100);
@@ -1925,7 +1928,7 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
     // Step 1: one light row per ELIGIBLE active job of this candidate (a few hundred at most), with only what filtering needs.
     let where = `WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1`;
     const binds: any[] = [candidateId];
-    if (search) { where += ` AND (j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)`; const t = `%${search}%`; binds.push(t, t, t); }
+    if (search) { where += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`; const t = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`; binds.push(t, t, t); }
     const { results: light } = await env.DB.prepare(`
       SELECT j.id, j.title, j.company, j.discovered_at, COALESCE(j.salary_published, 0) AS pub, q.qualification_status AS status,
              COALESCE(s.overall_score, 0) AS score, a.status AS app_status
@@ -1934,9 +1937,11 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
       LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       ${where}
-      LIMIT 5000`).bind(...binds).all<LightRow>();
+      ORDER BY q.job_id
+      LIMIT 5001`).bind(...binds).all<LightRow>();
+    const truncated = (light || []).length > 5000;   // far above today's few hundred; if it ever happens the answer says so
     // Step 2: filter, count and paginate on those rows (role family is derived from the title, so it cannot be a SQL predicate).
-    const page = listIndiaRemote(light || [], { fit: fit as any, family, pay, excludeApplied: exAppliedRaw === 'true', sort, limit, offset });
+    const page = listIndiaRemote((light || []).slice(0, 5000), { fit: fit as any, family, pay, excludeApplied: exAppliedRaw === 'true', sort, limit, offset });
     // Step 3: full detail for the ids of this page only, returned in page order.
     let jobs: any[] = [];
     if (page.ids.length) {
@@ -1952,7 +1957,7 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
       const byId = new Map((results || []).map((r: any) => [r.id, shapeJob(r, candidateId, threshold)]));
       jobs = page.ids.map((id) => byId.get(id)).filter(Boolean);
     }
-    return jsonResponse({ count: jobs.length, total: page.total, limit, offset, facets: page.facets, jobs }, 200, corsHeaders(request, env));
+    return jsonResponse({ count: jobs.length, total: page.total, limit, offset, facets: page.facets, truncated, jobs }, 200, corsHeaders(request, env));
   } catch (err: any) {
     throw err;
   }

@@ -56,6 +56,11 @@ test('role families come from the title only, in rule order; an unmatched title 
   };
   for (const [t, k] of Object.entries(expect)) assert.equal(roleFamilyOf(t)?.key, k, t);
   for (const t of ['Gardener', 'Staff Software Engineer', '', null, undefined]) assert.equal(roleFamilyOf(t), null, String(t));
+  // reviewer-found misclassifications of realistic titles
+  for (const t of ['Senior Power BI Developer', 'Power BI Analyst', 'Power Apps Developer', 'Account Executive', 'Account Manager', 'Software Engineer, Billing', 'HR Operations Specialist', 'Finance Operations Analyst'])
+    assert.equal(roleFamilyOf(t), null, t);
+  assert.equal(roleFamilyOf('Billing Systems Analyst')?.key, 'REVENUE_SYSTEMS'); assert.equal(roleFamilyOf('Operations Manager')?.key, 'TECHNICAL_OPERATIONS'); assert.equal(roleFamilyOf('Power Systems Engineer')?.key, 'POWER_ENERGY');
+  const t0 = Date.now(); roleFamilyOf('ai '.repeat(30000)); assert.ok(Date.now() - t0 < 200, 'a very long title cannot make the rules expensive');
   assert.ok(!ROLE_FAMILIES.some((f) => /stretch/i.test(f.label)), '"Adjacent Stretch" is a fit, not a role family');
   assert.equal(fitOf('READY_HIGH'), 'READY'); assert.equal(fitOf('HOLD'), 'NOT_FIT'); assert.equal(fitOf('CLOSED'), 'NOT_FIT'); assert.equal(fitOf(undefined), 'NOT_FIT');
 });
@@ -145,12 +150,15 @@ test('India Remote: pagination is stable, complete and does not change the count
   assert.deepEqual(filtered, ['ir1', 'ir2', 'ir9', 'ir10', 'ir13']);
 });
 
-test('India Remote: sort orders are honoured', async () => {
-  const w = world(); farhanSet(w);
-  const titles = (await get(w, IR('sort_by=title_asc'))).json.jobs.map((j) => j.title);
-  assert.deepEqual(titles, [...titles].sort((a, b) => a.localeCompare(b)));
-  assert.equal((await get(w, IR('sort_by=title_asc'))).json.total, ALL_F.length);
-  const byDate = await get(w, IR('sort_by=date_desc')); assert.equal(byDate.json.total, ALL_F.length);
+test('India Remote: sort orders are honoured with explicit expected orders', async () => {
+  const w = world();
+  w.add(F, 'o1', 'Beta Analyst', { status: 'READY', score: 10, company: 'Zeta', at: '2026-11-03T00:00:00Z' });
+  w.add(F, 'o2', 'Alpha Analyst', { status: 'READY', score: 30, company: 'Mid', at: '2026-11-01T00:00:00Z' });
+  w.add(F, 'o3', 'Gamma Analyst', { status: 'READY', score: 20, company: 'Alpha', at: '2026-11-02T00:00:00Z' });
+  assert.deepEqual(ids(await get(w, IR('sort_by=score_desc'))), ['o2', 'o3', 'o1']);
+  assert.deepEqual(ids(await get(w, IR('sort_by=date_desc'))), ['o1', 'o3', 'o2']);
+  assert.deepEqual(ids(await get(w, IR('sort_by=title_asc'))), ['o2', 'o1', 'o3']);
+  assert.deepEqual(ids(await get(w, IR('sort_by=company_asc'))), ['o3', 'o2', 'o1']);
 });
 
 test('India Remote: both candidates are isolated and classified from their own rows', async () => {
@@ -183,6 +191,16 @@ test('India Remote: unsupported values are refused, not ignored', async () => {
   assert.equal((await get(w, '/api/india-remote/jobs?candidate_id=nobody')).status, 400);
 });
 
+test('India Remote: parameters of the old delegated route that are not filters here are refused, and search wildcards are literal', async () => {
+  const w = world(); farhanSet(w);
+  for (const q of ['min_score=85', 'qualification_status=STRETCH_READY', 'strategy_lane=DREAM', 'workplace_type=ONSITE', 'source_adapter=zzz', 'eligibility=INELIGIBLE', 'exclude_dismissed=true']) {
+    const r = await get(w, IR(q), null); assert.equal(r.status, 400, q); assert.match(r.json.detail, /not .*filters|parameter/i, q);
+  }
+  assert.deepEqual(ids(await get(w, IR('search=%25'))), [], '"%" is a literal character, not a wildcard that matches every job');
+  assert.deepEqual(ids(await get(w, IR('search=_'))), []);
+  assert.equal((await get(w, IR(''))).json.truncated, false);
+});
+
 test('cache: answers that differ only in a filter are never shared; a repeat is a hit', async () => {
   const w = world({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'commit-a' }); farhanSet(w);
   const ready = await get(w, IR('farhan_fit=READY'), null), stretch = await get(w, IR('farhan_fit=STRETCH'), null);
@@ -191,7 +209,11 @@ test('cache: answers that differ only in a filter are never shared; a repeat is 
     const a = await get(w, IR(q), null), b = await get(w, IR(''), null);
     assert.notDeepEqual(ids(a), ids(b), q);
   }
-  const again = await call(worker, w.env, 'GET', IR('farhan_fit=READY'), { key: null }); assert.deepEqual(ids(again), ['ir1', 'ir2', 'ir9', 'ir10', 'ir13']);
+  const again = await worker.fetch(new Request('https://test.invalid' + IR('farhan_fit=READY')), w.env, { waitUntil() {} });
+  assert.equal(again.headers.get('X-Cache'), 'HIT', 'the repeat of an identical request is answered from the cache');
+  assert.deepEqual((await again.json()).jobs.map((j) => j.id), ['ir1', 'ir2', 'ir9', 'ir10', 'ir13']);
+  for (const [a, b] of [['sort_by=title_asc', 'sort_by=date_desc'], ['search=analyst', 'search=implementation']]) assert.notDeepEqual(ids(await get(w, IR(a), null)), ids(await get(w, IR(b), null)), `${a} vs ${b}`);
+  assert.deepEqual(ids(await get(w, IR('', S), null)), [], 'another candidate never receives Farhan\'s cached answer');
   // /api/jobs: the same rule for the filters it honours
   const j1 = await get(w, `/api/jobs?candidate_id=${F}&farhan_fit=READY`, null), j2 = await get(w, `/api/jobs?candidate_id=${F}&pay_filter=PUBLISHED`, null);
   assert.ok(j1.json.jobs.every((j) => j.farhan_fit === 'READY')); assert.ok(j2.json.jobs.every((j) => j.salary_published));

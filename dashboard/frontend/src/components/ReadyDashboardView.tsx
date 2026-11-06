@@ -212,7 +212,8 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
     }
   };
 
-  // Tab numbers are the server's counts for the same scope as the lists (applied and dismissed jobs excluded).
+  // Tab numbers count the whole queue for this candidate (applied and dismissed jobs excluded), ignoring the search box and the review sub-filter.
+  // The list's own total, in the range line under it, is what the current search and sub-filter leave.
   const readyCount = counts?.READY;
   const stretchCount = counts?.STRETCH_READY;
   const applyWorthyCount = counts ? counts.READY + counts.STRETCH_READY : undefined;
@@ -264,7 +265,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
             onClick={handleReverify}
             disabled={isReverifying}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow transition-colors"
-            title="Reverify all currently READY jobs to confirm they remain active and open before presenting"
+            title="Re-check the READY jobs to see whether they are still open"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isReverifying ? 'animate-spin' : ''}`} />
             {isReverifying ? 'Reverifying...' : 'Reverify READY Jobs'}
@@ -329,7 +330,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               </div>
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span>Verified active vacancies</span>
+              <span>Open vacancies at the last check</span>
               {onViewTracker && (
                 <button
                   onClick={onViewTracker}
@@ -432,7 +433,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
               }`}
             >
               <Search className="w-3.5 h-3.5 text-indigo-600" />
-              Location Unverified ({num(possibleRemoteTotal)})
+              Unverified location, score 60+ ({num(possibleRemoteTotal)})
             </button>
             <button
               onClick={() => chooseTab('ALL')}
@@ -512,6 +513,11 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
 
       {/* Job Cards List */}
       <div className="space-y-4">
+        {(searchQuery || (activeTab === 'NEEDS_REVIEW' && reviewSubFilter !== 'ALL')) && (
+          <div className="text-[11px] text-slate-500 px-1" data-testid="ready-narrowed">
+            {total} {total === 1 ? 'job matches' : 'jobs match'} your {searchQuery ? 'search' : 'review filter'}; the tab numbers above count the whole queue.
+          </div>
+        )}
         {filteredJobs.length === 0 ? (
           <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 shadow-sm">
             <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />

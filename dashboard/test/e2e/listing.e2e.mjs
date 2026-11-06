@@ -130,7 +130,7 @@ for (let p = 2; p <= 6; p++) { await page.getByRole('button', { name: /^Next$/ }
 check('RD10 paging reached all 131 review jobs once (130 analysts + the Solar Developer)', seen.size === 131 && [...seen].filter((x) => /^hi\d{3}$/.test(x)).length === 130 && seen.has('s4'), String(seen.size));
 await tabButton(/^Needs Review/).click(); await settle();
 await page.getByRole('button', { name: /^Location unverified$/ }).click(); await settle();
-check('RD11 review sub-filter Location unverified: 66 jobs, all of them UNKNOWN-location review jobs', /of 66 · page 1 of 3/.test(await text()), (await text()).slice(0, 0));
+check('RD11 review sub-filter Location unverified: 66 jobs, all of them UNKNOWN-location review jobs', /of 66 · page 1 of 3/.test(await text()), (await text()).replace(/\s+/g, ' ').match(/Showing[^·]*·[^A-Za-z]*/)?.[0] ?? 'no range text');
 await page.getByRole('button', { name: /^Salary not published$/ }).click(); await settle();
 check('RD12 review sub-filter Salary not published: the 131 unpublished review jobs', /of 131 · page 1 of 6/.test(await text()));
 await page.getByRole('button', { name: /^Location stated, review for fit$/ }).click(); await settle();
@@ -138,9 +138,10 @@ check('RD13 review sub-filter Location stated: nothing matches here, so the empt
 await page.getByRole('button', { name: /^All Review Cases$/ }).click(); await settle();
 await page.getByPlaceholder(/Search title/).fill('Analyst Review 77'); await page.waitForTimeout(900);
 await waitForIds(['hi077'], 'RD14 server-side search finds a job that is not on the first page');
+check('RD14b a narrowed list says so while the tab numbers keep counting the whole queue', /1 job matches your search; the tab numbers above count the whole queue/.test(await text()) && /Needs Review \(131\)/.test(await text()));
 await page.getByPlaceholder(/Search title/).fill(''); await page.waitForTimeout(900);
-await tabButton(/^Location Unverified/).click(); await settle();
-check('RD15 Location Unverified tab: 65 jobs with unknown location and score of 60 or more', /Location Unverified \(65\)/.test(await text()) && /of 65 · page 1 of 3/.test(await text()));
+await tabButton(/^Unverified location, score 60\+/).click(); await settle();
+check('RD15 'Unverified location, score 60+' tab: 65 jobs with unknown location and score of 60 or more (a different set from the review sub-filter of 66)', /Unverified location, score 60\+ \(65\)/.test(await text()) && /of 65 · page 1 of 3/.test(await text()));
 await tabButton(/^All open/).click(); await settle();
 check('RD16 All open: 140 jobs, dismissed and applied are not among them', /All open \(140\)/.test(await text()) && !(await ids()).some((x) => ['dis1', 'rd4', 's3'].includes(x)));
 

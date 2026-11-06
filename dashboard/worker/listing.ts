@@ -37,21 +37,21 @@ export const PAY_SQL: Record<Pay, string> = {
 // Derived from the posting TITLE only, by the first matching rule below. A title no rule matches has no family (null); the
 // interface says "Unclassified" and never invents one.
 export const ROLE_FAMILIES: { key: string; label: string; re: RegExp }[] = [
-  { key: 'TECHNICAL_ACCOUNT', label: 'Technical account / customer success', re: /\btechnical account\b|\bcustomer success\b|\baccount (manager|executive)\b/i },
-  { key: 'REVENUE_SYSTEMS', label: 'Revenue systems / RevOps', re: /\brevenue (systems|operations|technology)\b|\brevops\b|\bsales (systems|operations)\b|\bbilling\b/i },
+  { key: 'TECHNICAL_ACCOUNT', label: 'Technical account / customer success', re: /\btechnical account\b|\bcustomer success\b/i },
+  { key: 'REVENUE_SYSTEMS', label: 'Revenue systems / RevOps', re: /\brevenue (systems|operations|technology)\b|\brevops\b|\bsales (systems|operations)\b|\bbilling (systems|operations|analyst|specialist)\b/i },
   { key: 'CRM_GTM', label: 'CRM / go-to-market systems', re: /\bcrm\b|\bsalesforce\b|\bhubspot\b|\bgo[- ]to[- ]market\b|\bgtm\b|\bmarketing (systems|operations|automation)\b/i },
   { key: 'AI_OPERATIONS', label: 'AI operations / systems', re: /\b(ai|llm|genai|machine learning)\b.*\b(operations|ops|systems|automation|implementation|solutions|deployment)\b|\b(operations|ops|systems|automation|implementation|solutions)\b.*\b(ai|llm|genai)\b/i },
   { key: 'AUTOMATION', label: 'Automation / workflows / integrations', re: /\bautomation\b|\bworkflows?\b|\bintegrations?\b|\bno[- ]code\b|\blow[- ]code\b/i },
-  { key: 'POWER_ENERGY', label: 'Power / energy / electrical', re: /\b(power|energy|electrical|substation|grid|utilit(y|ies)|renewables?|solar|wind|decarboni[sz]ation|transmission|switchgear)\b/i },
+  { key: 'POWER_ENERGY', label: 'Power / energy / electrical', re: /\b(power(?! (bi|apps?|automate|platform|query|pages|virtual agents?))|energy|electrical|substation|grid|utilit(y|ies)|renewables?|solar|wind|decarboni[sz]ation|transmission|switchgear)\b/i },
   { key: 'RELIABILITY_MAINTENANCE', label: 'Reliability / maintenance / plant', re: /\b(reliability|maintenance|asset (performance|management)|plant|scada|commissioning|o&m)\b/i },
   { key: 'SOLUTIONS', label: 'Solutions engineering / consulting', re: /\bsolutions?\b|\bpre-?sales\b|\bsales engineer\b|\bforward[- ]deployed\b/i },
   { key: 'IMPLEMENTATION', label: 'Implementation / technical delivery', re: /\bimplementation\b|\bonboarding\b|\bdeployment\b|\btechnical delivery\b|\bdelivery (manager|lead|specialist)\b|\bprofessional services\b/i },
-  { key: 'TECHNICAL_OPERATIONS', label: 'Technical / business operations', re: /\b(technical|business|it|systems|platform|tech|support) operations?\b|\btech ops\b|\boperations (manager|analyst|lead|specialist|engineer|associate)\b/i },
+  { key: 'TECHNICAL_OPERATIONS', label: 'Technical / business operations', re: /\b(technical|business|it|systems|platform|tech|support) operations?\b|\btech ops\b|(?<!\b(?:hr|people|finance|legal|facilities|logistics|warehouse|retail|store|hotel)\s)\boperations (manager|analyst|lead|specialist|engineer|associate)\b/i },
 ];
 export const ROLE_FAMILY_KEYS = new Set(ROLE_FAMILIES.map((f) => f.key));
 export const UNCLASSIFIED = 'UNCLASSIFIED';
 export function roleFamilyOf(title: string | null | undefined): { key: string; label: string } | null {
-  const t = String(title || '');
+  const t = String(title || '').slice(0, 200);   // titles come from external feeds: bound the work the rules can do
   for (const f of ROLE_FAMILIES) if (f.re.test(t)) return { key: f.key, label: f.label };
   return null;
 }
