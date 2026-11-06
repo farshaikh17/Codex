@@ -114,3 +114,87 @@ test('old share links that land on the site root are forwarded to the dashboard 
   const home = await get(w.env, '/');
   assert.ok(home.text.includes("if(/[#&]view=v1_/.test(location.hash))location.replace('/app'+location.hash);"));
 });
+
+test('apply limits: one bucket per IPv6 /64, a global daily cap, and a body cap that holds without Content-Length', async () => {
+  const w = world();
+  for (let i = 0; i < 5; i++) assert.equal((await post(w.env, form({ ...valid, email: `v${i}@example.com` }), `2001:db8:1:2:${i}::1`)).status, 303);
+  assert.equal((await post(w.env, form(valid), '2001:db8:1:2:ffff::9')).status, 429, 'same /64: same bucket');
+  assert.equal((await post(w.env, form(valid), '2001:db8:1:3::1')).status, 303, 'another /64');
+  const today = new Date().toISOString().slice(0, 10);
+  const insert = w.sqlite.prepare(`INSERT INTO client_requests(id, full_name, email, current_location, target_roles, created_at) VALUES (?, 'x', 'x@example.com', 'x', 'x', ?)`);
+  for (let i = w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n; i < 200; i++) insert.run('fill' + i, today + ' 00:00:01');
+  assert.equal((await post(w.env, form(valid), '7.7.7.7')).status, 429, 'global daily cap');
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n, 200);
+  // a 30 KB body sent without Content-Length (chunked) is refused without being parsed
+  const big = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(form({ ...valid, message: 'x'.repeat(30000) }))); c.close(); } });
+  const r = await worker.fetch(new Request('https://site.test/apply', { method: 'POST', body: big, duplex: 'half', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }), w.env, { waitUntil() {} });
+  assert.equal(r.status, 413);
+});
+
+test('the stored fingerprint is keyed (not a plain hash of the address) and erased after its day', async () => {
+  const w = world();
+  w.run(`INSERT INTO client_requests(id, full_name, email, current_location, target_roles, source_hash, created_at) VALUES ('old', 'x', 'x@example.com', 'x', 'x', 'abc', '2020-01-01 10:00:00')`);
+  await post(w.env, form(valid), '5.6.7.8');
+  const { createHash } = await import('node:crypto');
+  const today = new Date().toISOString().slice(0, 10);
+  const row = w.sqlite.prepare(`SELECT source_hash FROM client_requests WHERE id <> 'old'`).get();
+  assert.notEqual(row.source_hash, createHash('sha256').update(`5.6.7.8|${today}|apply`).digest('hex'));
+  assert.match(row.source_hash, /^[0-9a-f]{64}$/);
+  assert.equal(w.sqlite.prepare(`SELECT source_hash FROM client_requests WHERE id = 'old'`).get().source_hash, null, 'yesterday’s fingerprints are erased');
+});
+
+test('site figures come from one stored row; a database failure hides them instead of showing zeros', async () => {
+  const w = world();
+  assert.match((await get(w.env, '/')).text, /<b>2<\/b><span>active roles tracked/);
+  const stored = JSON.parse(w.sqlite.prepare('SELECT body FROM site_stats WHERE id = 1').get().body);
+  assert.equal(stored.active, 2);
+  // later views read the stored row (no scan of jobs)
+  forgetStats();
+  const real = w.d1.prepare.bind(w.d1); const seen = [];
+  w.d1.prepare = (sql) => { seen.push(sql); return real(sql); };
+  await get(w.env, '/');
+  assert.ok(!seen.some((q) => /FROM jobs/.test(q)), seen.join(' | '));
+  // failure: no figures at all
+  forgetStats();
+  w.d1.prepare = (sql) => { if (/site_stats/.test(sql)) throw new Error('D1 down'); return real(sql); };
+  const down = await get(w.env, '/');
+  assert.equal(down.status, 200);
+  assert.ok(!/active roles tracked/.test(down.text) && !/<b>0<\/b>/.test(down.text));
+  w.d1.prepare = real;
+});
+
+test('inbox: delete erases an application, a null candidate_id clears the link, and inbox changes keep the public cache', async () => {
+  const w = world();
+  w.env.RESPONSE_CACHE = 'on'; w.env.GIT_COMMIT = 't';
+  await post(w.env, form(valid));
+  const call = (method, path, body) => worker.fetch(new Request('https://site.test' + path, { method, headers: { Authorization: `Bearer ${ADMIN_KEY}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined }), w.env, { waitUntil() {} }).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null), headers: r.headers }));
+  const id = (await call('GET', '/api/client-requests')).json.requests[0].id;
+  await call('PUT', `/api/client-requests/${id}`, { status: 'CONVERTED', candidate_id: 'farhan_shaikh' });
+  await call('PUT', `/api/client-requests/${id}`, { status: 'CONTACTED', candidate_id: null });
+  assert.equal(w.sqlite.prepare('SELECT candidate_id FROM client_requests WHERE id = ?').get(id).candidate_id, null);
+  const pub = () => worker.fetch(new Request('https://site.test/api/candidates'), w.env, { waitUntil() {} });
+  await pub();
+  assert.equal((await pub()).headers.get('X-Cache'), 'HIT');
+  await call('PUT', `/api/client-requests/${id}`, { status: 'DECLINED' });
+  await call('PUT', '/api/site-settings', { tagline: 'New line' });
+  assert.equal((await pub()).headers.get('X-Cache'), 'HIT', 'inbox and settings changes do not empty the dashboard cache');
+  assert.equal((await call('DELETE', `/api/client-requests/${id}`)).status, 200);
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n, 0);
+  assert.equal((await call('DELETE', `/api/client-requests/${id}`)).status, 404);
+});
+
+test('an unknown address under /apply/ is an HTML 404 page, not JSON', async () => {
+  const w = world();
+  const r = await get(w.env, '/apply/whatever');
+  assert.equal(r.status, 404);
+  assert.match(r.headers.get('Content-Type'), /text\/html/);
+  assert.match(r.text, /Page not found/);
+});
+
+test('the cron refreshes the site figures only when they are older than an hour', async () => {
+  const { refreshSiteStats } = await import('../worker/site.ts');
+  const w = world();
+  assert.equal(await refreshSiteStats(w.d1), true, 'missing: computed');
+  assert.equal(await refreshSiteStats(w.d1), false, 'fresh: left alone');
+  assert.equal(await refreshSiteStats(w.d1, Date.now() + 2 * 3600_000), true, 'stale: recomputed');
+});

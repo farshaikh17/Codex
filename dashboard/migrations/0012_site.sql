@@ -25,3 +25,10 @@ CREATE TABLE IF NOT EXISTS site_settings (
   value TEXT NOT NULL,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE INDEX IF NOT EXISTS idx_client_requests_created ON client_requests(created_at);
+-- Public figures for the site, refreshed by the cron (at most hourly), so a page view reads one row instead of scanning jobs.
+CREATE TABLE IF NOT EXISTS site_stats (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  body TEXT NOT NULL,
+  computed_at TEXT NOT NULL
+);

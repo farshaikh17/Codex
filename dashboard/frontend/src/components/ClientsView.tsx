@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus, Link2, Download, RefreshCw, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { SiteSettingsPanel } from './SiteSettingsPanel';
 import {
-  ClientRequest, fetchClientRequests, updateClientRequest,
+  ClientRequest, fetchClientRequests, updateClientRequest, deleteClientRequest,
   ClientRecord, ShareLink, fetchClients, createClient, updateClient, backfillClient, fetchShareLinks, createShareLink, revokeShareLink, downloadExport,
 } from '../api';
 
@@ -112,6 +112,7 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
                     <button onClick={() => useRequest(r)} className="px-3 py-1.5 rounded-full bg-coral-500 text-white font-semibold hover:bg-coral-600">Create client from this</button>
                     {r.status === 'NEW' && <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'CONTACTED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Mark contacted</button>}
                     <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'DECLINED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Decline</button>
+                    <button onClick={() => { if (window.confirm(`Delete ${r.full_name}'s application permanently? Use this when someone asks for their data to be removed.`)) run('del-' + r.id, async () => { await deleteClientRequest(r.id); await loadRequests(); }); }} className="px-3 py-1.5 rounded-full border border-rose-300 text-rose-700 hover:bg-rose-50">Delete</button>
                   </div>
                 </li>))}
             </ul>)}

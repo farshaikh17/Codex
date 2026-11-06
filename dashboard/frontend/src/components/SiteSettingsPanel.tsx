@@ -26,6 +26,7 @@ export const SiteSettingsPanel: React.FC = () => {
         <h2 className="text-lg font-bold flex items-center gap-2"><Globe className="w-5 h-5 text-coral-500" /> Public site</h2>
         <a href="/" target="_blank" rel="noreferrer" className="text-sm font-semibold text-coral-600 hover:underline">Open the site ↗</a>
       </div>
+      {!values.contact_email && <div className="p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm">Set a contact email before you share the site: the privacy notice tells people to write to it to see or delete their data.</div>}
       {GROUPS.map((g) => (
         <fieldset key={g.title} className="border-t border-slate-100 pt-4">
           <legend className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{g.title}</legend>

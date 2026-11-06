@@ -823,3 +823,6 @@ export async function fetchBrand(): Promise<{ brand_name: string; brand_sub: str
   try { const r = await fetch(`${API_BASE}/brand`); if (r.ok) return await r.json(); } catch {}
   return { brand_name: 'Career Job Engine', brand_sub: 'Job search engine' };
 }
+export async function deleteClientRequest(id: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/client-requests/${encodeURIComponent(id)}`, { method: 'DELETE' }), 'Deleting the application');
+}

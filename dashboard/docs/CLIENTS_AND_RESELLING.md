@@ -19,9 +19,16 @@ The Worker serves a public website at the root of the domain, in the same visual
   - **Create client from this** prefills the client form.
   - Creating the client marks the application converted and links the two.
   - **Mark contacted** and **Decline** keep the inbox tidy.
-- **Spam protection.**
+- **Spam protection and limits.**
   - The form has a hidden honeypot field: a filled-in honeypot looks successful but stores nothing.
-  - Each connection is limited to 5 applications a day. Only a one-way daily fingerprint of the connection is stored, never the address.
+  - Each network (an IPv4 address, or an IPv6 /64) can send 5 applications a day, and the site stores at most 200 a day in total. This bounds how many database writes the public form can cause.
+  - Only a keyed fingerprint of the network is stored, never the address, and it is erased after its day. The body is capped at 20 KB.
+- **Delete** in the inbox erases an application completely. Use it when someone asks for their data to be removed.
+- **Before you launch:**
+  - Set a contact email. The privacy notice tells people to write there.
+  - The pages load fonts from Google Fonts. The privacy notice says so.
+  - "Live dashboard" links to the public dashboards of the built-in candidates. Make sure they agree to being shown, or make them private.
+- **Site figures.** The cron recomputes them at most hourly into one row, so a page view reads a single row. If the figures cannot be read, the pages leave them out rather than show zeros.
 - **Site settings.** **CLIENTS → Public site** sets:
   - brand name, small line and tagline
   - contact email (shown on the privacy page and the thank-you page)
@@ -112,5 +119,6 @@ All of these need the operator key, except `/api/export`, which follows the same
 | `DELETE /api/clients/:id/share-links/:link_id` | Revoke a link |
 | `GET /api/export?candidate_id=…&qualification_status=ALL\|APPLY_WORTHY\|READY\|…` | CSV download |
 | `GET /api/client-requests?status=OPEN\|ALL\|NEW\|CONTACTED\|CONVERTED\|DECLINED` | Applications from the website, plus counts by status |
-| `PUT /api/client-requests/:id` | `{ status, candidate_id? }` |
+| `PUT /api/client-requests/:id` | `{ status, candidate_id? }` (`null` clears the link) |
+| `DELETE /api/client-requests/:id` | Erase an application |
 | `GET` / `PUT /api/site-settings` | Read or change site settings. Unknown keys and invalid emails are refused |

@@ -578,7 +578,8 @@ class WorkerRouter {
         const metered = readRoute;
         const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !viewerOf.has(request) && !hiddenFrom.has(request) ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
-        const operatorChange = level === 'operator' && request.method !== 'GET';
+        // The applications inbox and site settings feed no cached dashboard answer, so changing them keeps the public cache.
+        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings)(\/|$)/.test(pathname);
         let meter: { db: D1Database; rows: () => number } | null = null;
         let lookup: CacheLookup | null = null;
         const now = Math.floor(Date.now() / 1000);
@@ -2867,10 +2868,31 @@ router.get('/api/export', async (request, env, _params, url) => {
 // Public site (server-rendered; the dashboard app lives at /app) and its operator settings and request inbox.
 // -------------------------------------------------------------
 const SITE_PATHS = new Set(['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/apply/thanks', '/portal', '/privacy', '/terms', '/robots.txt', '/sitemap.xml']);
+const APPLY_MAX_BYTES = 20000;
+/** The request body as text, or null when it exceeds `max` bytes (stops reading at the cap). */
+async function readCapped(request: Request, max: number): Promise<string | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return '';
+  const chunks: Uint8Array[] = []; let n = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    n += value.byteLength;
+    if (n > max) { try { await reader.cancel(); } catch {} return null; }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(n); let o = 0; for (const c of chunks) { all.set(c, o); o += c.byteLength; }
+  return new TextDecoder().decode(all);
+}
 const SITE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
 async function handleSite(request: Request, env: Env, url: URL): Promise<Response | null> {
   const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
-  if (!SITE_PATHS.has(path)) return null;
+  if (!SITE_PATHS.has(path)) {
+    // anything else under /apply/ is a site address that does not exist: an HTML page, not the API's JSON
+    if (!path.startsWith('/apply/')) return null;
+    const s404 = await site.loadSettings(env.DB);
+    return new Response(site.layout(s404, { title: `Not found · ${s404.brand_name}`, description: '', path, body: site.notFoundPage(), origin: url.origin, noindex: true }), { status: 404, headers: { ...SITE_HEADERS, 'Cache-Control': 'no-store' } });
+  }
   const origin = url.origin;
   if (path === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`, { headers: { 'Content-Type': 'text/plain' } });
   if (path === '/sitemap.xml') return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/privacy', '/terms'].map((p) => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`, { headers: { 'Content-Type': 'application/xml' } });
@@ -2880,20 +2902,30 @@ async function handleSite(request: Request, env: Env, url: URL): Promise<Respons
       headers: { ...SITE_HEADERS, 'Cache-Control': opts.cache === false ? 'no-store' : 'public, max-age=120' } });
   const brand = s.brand_name;
   if (path === '/apply' && request.method === 'POST') {
-    if (Number(request.headers.get('Content-Length') || 0) > 20000) return page(`Apply · ${brand}`, '', site.applyPage(s, {}, ['The form was too large.']), { status: 413, cache: false, noindex: true });
-    let form: Record<string, string> = {};
-    try { const fd = await request.formData(); fd.forEach((v, k) => { if (typeof v === 'string') form[k] = v; }); } catch { form = {}; }
+    const tooLarge = () => page(`Apply · ${brand}`, '', site.applyPage(s, {}, ['The form was too large.']), { status: 413, cache: false, noindex: true });
+    if (Number(request.headers.get('Content-Length') || 0) > APPLY_MAX_BYTES) return tooLarge();
+    // The body is read with a hard byte cap whatever the headers say (a chunked body has no Content-Length).
+    const raw = await readCapped(request, APPLY_MAX_BYTES);
+    if (raw === null) return tooLarge();
+    const form: Record<string, string> = {};
+    if (/application\/x-www-form-urlencoded/i.test(request.headers.get('Content-Type') || '')) new URLSearchParams(raw).forEach((v, k) => { if (!(k in form)) form[k] = v; });
     if (form.company_website) return Response.redirect(origin + '/apply/thanks', 303);   // honeypot: look successful, store nothing
     const checked = site.validateApply(form);
     if (!checked.ok) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, checked.errors), { status: 400, cache: false, noindex: true });
     const day = new Date().toISOString().slice(0, 10);
-    const sourceHash = await sha256Hex(`${request.headers.get('CF-Connecting-IP') || 'unknown'}|${day}|apply`);
-    const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM client_requests WHERE source_hash = ? AND created_at >= ?`).bind(sourceHash, day).first<any>();
-    if ((recent?.n || 0) >= site.APPLY_PER_SOURCE_PER_DAY) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, ['We already received several applications from this connection today. Please try again tomorrow.']), { status: 429, cache: false, noindex: true });
+    // One bucket per network (/64 for IPv6), keyed with a server secret so the stored value cannot be reversed by enumerating
+    // addresses; erased after a day (below). A global daily cap bounds what the form can write in total.
+    const sourceHash = await sha256Hex(`${env.ADMIN_API_KEY || 'no-key'}|${await clientKey(request)}|${day}|apply`);
+    await env.DB.prepare(`UPDATE client_requests SET source_hash = NULL WHERE created_at < ? AND source_hash IS NOT NULL`).bind(day).run();
     const v = checked.value;
-    await env.DB.prepare(`INSERT INTO client_requests(id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, source_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(crypto.randomUUID(), v.full_name, v.email, v.phone || null, v.current_location, v.target_roles, v.work_preference || null,
-      v.years_experience || null, v.linkedin_url || null, v.plan || null, v.message || null, sourceHash).run();
+    // One statement: the limits are checked and the row inserted atomically, so concurrent posts cannot exceed them.
+    const ins = await env.DB.prepare(`INSERT INTO client_requests(id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, source_hash)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      WHERE (SELECT COUNT(*) FROM client_requests WHERE source_hash = ? AND created_at >= ?) < ?
+        AND (SELECT COUNT(*) FROM client_requests WHERE created_at >= ?) < ?`)
+      .bind(crypto.randomUUID(), v.full_name, v.email, v.phone || null, v.current_location, v.target_roles, v.work_preference || null, v.years_experience || null,
+        v.linkedin_url || null, v.plan || null, v.message || null, sourceHash, sourceHash, day, site.APPLY_PER_SOURCE_PER_DAY, day, site.APPLY_PER_DAY_TOTAL).run();
+    if (!ins.meta?.changes) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, ['We cannot take more applications today. Please try again tomorrow.']), { status: 429, cache: false, noindex: true });
     return Response.redirect(origin + '/apply/thanks', 303);
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
@@ -2928,9 +2960,16 @@ router.put('/api/client-requests/:id', async (request, env, params) => {
   if (!REQUEST_STATUSES.includes(status)) return jsonResponse({ error: 'status must be NEW, CONTACTED, CONVERTED or DECLINED.' }, 400, corsHeaders(request, env));
   const cid = body?.candidate_id === undefined ? undefined : body.candidate_id === null ? null : knownCandidate(body.candidate_id);
   if (body?.candidate_id && !cid) return jsonResponse({ error: 'Unknown candidate_id.' }, 400, corsHeaders(request, env));
-  const r = await env.DB.prepare(`UPDATE client_requests SET status = ?, candidate_id = COALESCE(?, candidate_id), updated_at = datetime('now') WHERE id = ?`).bind(status, cid ?? null, params.id).run();
+  const r = await env.DB.prepare(`UPDATE client_requests SET status = ?, candidate_id = CASE WHEN ? THEN ? ELSE candidate_id END, updated_at = datetime('now') WHERE id = ?`)
+    .bind(status, cid === undefined ? 0 : 1, cid ?? null, params.id).run();
   if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
   return jsonResponse({ id: params.id, status, candidate_id: cid ?? null }, 200, corsHeaders(request, env));
+});
+// Erases an application entirely (the privacy notice promises deletion on request).
+router.delete('/api/client-requests/:id', async (request, env, params) => {
+  const r = await env.DB.prepare('DELETE FROM client_requests WHERE id = ?').bind(params.id).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: params.id, deleted: true }, 200, corsHeaders(request, env));
 });
 router.get('/api/site-settings', async (request, env) => {
   const s = await site.loadSettings(env.DB);
@@ -2982,6 +3021,11 @@ export default {
     if (Math.floor((controller?.scheduledTime || Date.now()) / 120000) % ASSESS_EVERY_TICKS === 0) {
       try { const a = await assessBacklog(env.DB); if (a.assessed) console.log(JSON.stringify({ event: 'collector_assessment', ...a })); }
       catch (e: any) { assessError = e; console.log(JSON.stringify({ event: 'collector_assessment', status: 'ERROR', error: String(e?.message || e).slice(0, 300) })); }
+    }
+    // The public site's figures, at most hourly (one row read per check, a full count only when stale).
+    if (Math.floor((controller?.scheduledTime || Date.now()) / 120000) % 15 === 1) {
+      try { if (await site.refreshSiteStats(env.DB)) console.log(JSON.stringify({ event: 'site_stats', status: 'UPDATED' })); }
+      catch (e: any) { console.log(JSON.stringify({ event: 'site_stats', status: 'ERROR', error: String(e?.message || e).slice(0, 200) })); }
     }
     if(result.status==='ERROR') throw new Error('Cloud discovery work unit failed; see durable run history.');
     if (assessError) throw new Error('Collector assessment batch failed; see the Worker log.');

@@ -13,7 +13,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   plan1_price: '',
   plan1_period: 'per month',
   plan1_blurb: 'Your own private job dashboard, screened every day.',
-  plan1_features: 'Daily screening of new postings against your profile\nEligibility evidence quoted from each posting\nReady, stretch and review lists\nApplication tracker\nCSV export any time\nPrivate access link',
+  plan1_features: 'Daily screening of new postings against your profile\nEligibility evidence quoted from each posting\nReady, stretch and review lists\nApplication tracker, kept by your advisor\nCSV export any time\nPrivate access link',
   plan2_name: 'Managed search',
   plan2_price: '',
   plan2_period: 'per month',
@@ -23,7 +23,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   plan3_price: '',
   plan3_period: 'per month',
   plan3_blurb: 'Hands-on support for a focused, time-boxed search.',
-  plan3_features: 'Everything in Managed search\nTwice-weekly review\nPriority on new matches\nNotes for each application\nDirect contact with your advisor',
+  plan3_features: 'Everything in Managed search\nTwice-weekly review of your matches\nNotes for each application\nDirect contact with your advisor',
 };
 export const SETTING_KEYS = Object.keys(SETTING_DEFAULTS);
 const SETTING_MAX: Record<string, number> = { plan1_features: 800, plan2_features: 800, plan3_features: 800, announcement: 160, tagline: 120 };
@@ -44,23 +44,41 @@ export async function loadSettings(db: DB): Promise<Record<string, string>> {
   return v;
 }
 
-// ---- Live figures (read at most every 10 minutes per isolate) -------------------------------------------------------------------
-type Stats = { active: number; employers: number; week: number; sources: number; latest: any[] };
+// ---- Live figures ------------------------------------------------------------------------------------------------------------------
+// Computed by the cron at most hourly (refreshSiteStats) into one row; a page view reads that row (memoised 60 s per isolate). If the
+// figures cannot be read, the pages leave them out rather than showing zeros.
+export type Stats = { active: number; employers: number; week: number; sources: number; latest: any[]; computed_at?: string };
 let statsMemo: { at: number; v: Stats } | null = null;
 export function forgetStats() { statsMemo = null; }
-export async function siteStats(db: DB): Promise<Stats> {
-  if (statsMemo && Date.now() - statsMemo.at < 600_000) return statsMemo.v;
+export const STATS_MAX_AGE_MS = 3600_000;
+export async function computeStats(db: DB): Promise<Stats> {
   const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const v: Stats = { active: 0, employers: 0, week: 0, sources: 0, latest: [] };
+  const a = await db.prepare(`SELECT COUNT(*) AS active, COUNT(DISTINCT company) AS employers, SUM(CASE WHEN discovered_at >= ? THEN 1 ELSE 0 END) AS week FROM jobs WHERE is_active = 1`).bind(weekAgo).first<any>();
+  const sources = (await db.prepare(`SELECT COUNT(*) AS n FROM cloud_sources WHERE enabled = 1`).first<any>())?.n || 0;
+  const latest = (await db.prepare(`SELECT title, company, location_restrictions AS location, workplace_type, discovered_at FROM jobs
+    WHERE is_active = 1 AND provenance = 'LIVE_PUBLIC' ORDER BY discovered_at DESC LIMIT 6`).all<any>()).results || [];
+  return { active: a?.active || 0, employers: a?.employers || 0, week: a?.week || 0, sources, latest, computed_at: new Date().toISOString() };
+}
+/** Cron: recompute when the stored figures are older than an hour (or missing). Returns true when it wrote. */
+export async function refreshSiteStats(db: DB, now = Date.now()): Promise<boolean> {
+  const row = await db.prepare('SELECT computed_at FROM site_stats WHERE id = 1').first<any>();
+  if (row && now - Date.parse(row.computed_at) < STATS_MAX_AGE_MS) return false;
+  const st = await computeStats(db);
+  await db.prepare(`INSERT INTO site_stats(id, body, computed_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET body = excluded.body, computed_at = excluded.computed_at`)
+    .bind(JSON.stringify(st), st.computed_at!).run();
+  statsMemo = null;
+  return true;
+}
+export async function siteStats(db: DB): Promise<Stats | null> {
+  if (statsMemo && Date.now() - statsMemo.at < 60_000) return statsMemo.v;
   try {
-    const a = await db.prepare(`SELECT COUNT(*) AS active, COUNT(DISTINCT company) AS employers, SUM(CASE WHEN discovered_at >= ? THEN 1 ELSE 0 END) AS week FROM jobs WHERE is_active = 1`).bind(weekAgo).first<any>();
-    v.active = a?.active || 0; v.employers = a?.employers || 0; v.week = a?.week || 0;
-    v.sources = (await db.prepare(`SELECT COUNT(*) AS n FROM cloud_sources WHERE enabled = 1`).first<any>())?.n || 0;
-    v.latest = (await db.prepare(`SELECT title, company, location_restrictions AS location, workplace_type, discovered_at FROM jobs
-      WHERE is_active = 1 AND provenance = 'LIVE_PUBLIC' ORDER BY discovered_at DESC LIMIT 6`).all<any>()).results || [];
-  } catch {}
-  statsMemo = { at: Date.now(), v };
-  return v;
+    const row = await db.prepare('SELECT body FROM site_stats WHERE id = 1').first<any>();
+    // Not computed yet (first visit after a deploy): compute once and store it, so later views read the stored row.
+    if (!row) { await refreshSiteStats(db); return siteStats(db); }
+    const v = JSON.parse(row.body) as Stats;
+    statsMemo = { at: Date.now(), v };
+    return v;
+  } catch { return null; }   // not memoised: the next view tries again
 }
 
 // ---- HTML helpers -------------------------------------------------------------------------------------------------------------------
@@ -70,7 +88,7 @@ const ago = (iso: string) => { const h = Math.max(0, (Date.now() - Date.parse(is
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
-:root{--cream:#FBF5EA;--card:#FFFFFF;--sand:#F1E7D6;--navy:#12263F;--ink:#1B2A3A;--body:#42556B;--muted:#7A8CA0;--faint:#A4B2C0;
+:root{--cream:#FBF5EA;--card:#FFFFFF;--sand:#F1E7D6;--navy:#12263F;--ink:#1B2A3A;--body:#42556B;--muted:#5F7186;--faint:#A4B2C0;
 --coral:#E4572E;--coral-d:#C6461F;--teal:#2E8B8B;--teal-s:#E4F1F1;--gold:#C8901F;--line:#E8DCC8;--line-s:#F0E8DA;
 --r:14px;--r-lg:20px;--pill:999px;--sh:0 1px 2px rgba(18,38,63,.04),0 8px 24px rgba(18,38,63,.06);--sh-lg:0 2px 4px rgba(18,38,63,.05),0 18px 44px rgba(18,38,63,.10);--wrap:1240px}
 *,*::before,*::after{box-sizing:border-box}
@@ -78,7 +96,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--cream);color:var(--ink);font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{margin:0;font-family:'Fraunces',Georgia,serif;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:var(--navy)}
 h1{font-size:52px}h2{font-size:34px}h3{font-size:20px}
-p{margin:0 0 12px}a{color:var(--coral);text-decoration:none}a:hover{text-decoration:underline}
+p{margin:0 0 12px}a{color:#B23F1A;text-decoration:none}a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:4px}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
 .skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:var(--navy);color:#fff;padding:10px 18px;z-index:999;border-radius:8px}
@@ -90,10 +108,10 @@ p{margin:0 0 12px}a{color:var(--coral);text-decoration:none}a:hover{text-decorat
 .logo i{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#F5A35C,var(--coral) 70%);display:block;box-shadow:inset 0 -3px 6px rgba(0,0,0,.08)}
 .logo b{display:block;font-family:'Fraunces',Georgia,serif;font-size:19px;font-weight:600;letter-spacing:.02em;line-height:1.1}
 .logo small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.nav{display:flex;gap:26px;flex:1}.nav a{color:var(--ink);font-weight:500;font-size:15px}.nav a.on{color:var(--coral)}
+.nav{display:flex;gap:26px;flex:1}.nav a{color:var(--ink);font-weight:500;font-size:15px}.nav a.on{color:#B23F1A}
 .hdr-cta{display:flex;align-items:center;gap:18px}.hdr-cta .login{color:var(--ink);font-weight:500}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--pill);padding:12px 22px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;text-decoration:none}
-.btn:hover{text-decoration:none}.btn-coral{background:var(--coral);color:#fff;box-shadow:0 6px 18px rgba(228,87,46,.25)}.btn-coral:hover{background:var(--coral-d)}
+.btn:hover{text-decoration:none}.btn-coral{background:var(--coral-d);color:#fff;box-shadow:0 6px 18px rgba(228,87,46,.25)}.btn-coral:hover{background:#A93D17}
 .btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn-ghost:hover{border-color:var(--coral)}
 .btn-lg{padding:15px 28px;font-size:16px}
 .menu{display:none;margin-left:auto}.menu summary{list-style:none;cursor:pointer;font-weight:600;color:var(--navy);padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
@@ -120,7 +138,7 @@ p{margin:0 0 12px}a{color:var(--coral);text-decoration:none}a:hover{text-decorat
 .stat b{display:block;font-family:'Fraunces',Georgia,serif;font-size:34px;color:var(--navy);line-height:1.1}.stat span{font-size:13px;color:var(--muted);font-weight:500}
 .sec{padding:76px 0}.sec-alt{background:var(--sand)}
 .sec-h{text-align:center;max-width:720px;margin:0 auto 44px}.sec-h p{color:var(--body);font-size:17px;margin-top:12px}
-.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--coral);margin-bottom:10px;display:block}
+.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:#B23F1A;margin-bottom:10px;display:block}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px;box-shadow:var(--sh)}
 .card h3{margin-bottom:8px}.card p{color:var(--body);margin:0}
@@ -129,7 +147,6 @@ p{margin:0 0 12px}a{color:var(--coral);text-decoration:none}a:hover{text-decorat
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
 .plan{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:30px;box-shadow:var(--sh)}
 .plan.feat{border:2px solid var(--coral);box-shadow:var(--sh-lg);position:relative}
-.plan.feat::before{content:"Most chosen";position:absolute;top:-13px;left:30px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:999px}
 .plan h3{font-size:22px}.plan .blurb{color:var(--body);margin:8px 0 18px;min-height:48px}
 .price{font-family:'Fraunces',Georgia,serif;font-size:40px;color:var(--navy);line-height:1}.price small{font-family:'Inter',sans-serif;font-size:14px;color:var(--muted);font-weight:500;margin-left:6px}
 .price.quote{font-size:26px}
@@ -145,7 +162,7 @@ p{margin:0 0 12px}a{color:var(--coral);text-decoration:none}a:hover{text-decorat
 .prose{max-width:760px;margin:0 auto;padding:10px 24px 70px}.prose h2{font-size:24px;margin:34px 0 10px}.prose p,.prose li{color:var(--body)}
 form.f{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:32px;box-shadow:var(--sh);max-width:780px;margin:0 auto}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}.fg .full{grid-column:1/-1}
-label.l{display:block;font-weight:600;font-size:14px;color:var(--navy);margin-bottom:6px}label.l em{font-style:normal;color:var(--coral)}
+label.l{display:block;font-weight:600;font-size:14px;color:var(--navy);margin-bottom:6px}label.l em{font-style:normal;color:#B23F1A}
 .in{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;color:var(--ink);background:#fff}
 .in:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 3px rgba(228,87,46,.12)}
 textarea.in{min-height:110px;resize:vertical}
@@ -158,14 +175,14 @@ textarea.in{min-height:110px;resize:vertical}
 .ftr .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px}
 .ftr h4{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--navy);margin-bottom:14px;font-family:'Fraunces',Georgia,serif}
 .ftr a{display:block;color:var(--body);padding:4px 0}.ftr a.logo{display:flex;color:var(--navy)}.ftr p{color:var(--body);font-size:14px;margin-top:12px;max-width:340px}
-.ftr .base{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:36px;padding-top:18px;font-size:13px;color:var(--muted)}
+.ftr .base{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:36px;padding-top:18px;font-size:13px;color:#4F6075}
 @media(max-width:960px){h1{font-size:38px}h2{font-size:28px}.hero{padding:44px 0 36px}.hero .wrap,.grid3,.grid2,.plans{grid-template-columns:1fr}
 .stats .wrap{grid-template-columns:repeat(2,1fr)}.nav,.hdr-cta{display:none}.menu{display:block}.hdr .wrap{position:relative}
 .ftr .cols{grid-template-columns:1fr 1fr}.fg{grid-template-columns:1fr}.band{padding:32px}.sec{padding:52px 0}form.f{padding:22px}}
 @media(max-width:520px){.ftr .cols{grid-template-columns:1fr}h1{font-size:33px}.stat b{font-size:28px}}
 `;
 
-const NAV: [string, string][] = [['/how-it-works', 'How it works'], ['/pricing', 'Pricing'], ['/faq', 'FAQ'], ['/about', 'About'], ['/app', 'Sample dashboard']];
+const NAV: [string, string][] = [['/how-it-works', 'How it works'], ['/pricing', 'Pricing'], ['/faq', 'FAQ'], ['/about', 'About'], ['/app', 'Live dashboard']];
 
 export function layout(s: Record<string, string>, opts: { title: string; description: string; path: string; body: string; stats?: Stats; origin: string; noindex?: boolean }): string {
   const brand = esc(s.brand_name);
@@ -192,7 +209,7 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
 <main id="main">${opts.body}</main>
 <footer class="ftr"><div class="wrap"><div class="cols">
 <div><a class="logo" href="/"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a><p>${esc(s.tagline)} Postings are read straight from employers' own hiring systems and screened against your profile, with the evidence quoted.</p></div>
-<div><h4>Product</h4><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/app">Sample dashboard</a><a href="/faq">FAQ</a></div>
+<div><h4>Product</h4><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/app">Live dashboard</a><a href="/faq">FAQ</a></div>
 <div><h4>Clients</h4><a href="/apply">Apply</a><a href="/portal">Client login</a>${contact}</div>
 <div><h4>Company</h4><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/app">Operator sign-in</a></div>
 </div><div class="base"><span>© ${new Date().getUTCFullYear()} ${brand}</span><span>Screening is automated and conservative; final decisions are always made by people.</span></div></div></footer>
@@ -204,8 +221,8 @@ const workplace = (w: string, loc: string) => {
   const remote = /^REMOTE/.test(w || '') || /remote/i.test(loc || '');
   return remote ? 'Remote' : w === 'HYBRID' ? 'Hybrid' : w === 'ONSITE' ? 'On-site' : '';
 };
-export function homePage(s: Record<string, string>, st: Stats): string {
-  const rows = st.latest.length ? st.latest.map((j) => `<div class="mock-r"><span class="dot"></span><div><b>${esc(j.title)}</b><small>${esc(j.company)}${j.location ? ' · ' + esc(String(j.location).slice(0, 60)) : ''}${workplace(j.workplace_type, j.location) ? `<span class="chip">${workplace(j.workplace_type, j.location)}</span>` : ''} · ${esc(ago(j.discovered_at))}</small></div></div>`).join('')
+export function homePage(s: Record<string, string>, st: Stats | null): string {
+  const rows = st && st.latest.length ? st.latest.map((j) => `<div class="mock-r"><span class="dot"></span><div><b>${esc(j.title)}</b><small>${esc(j.company)}${j.location ? ' · ' + esc(String(j.location).slice(0, 60)) : ''}${workplace(j.workplace_type, j.location) ? `<span class="chip">${workplace(j.workplace_type, j.location)}</span>` : ''} · ${esc(ago(j.discovered_at))}</small></div></div>`).join('')
     : '<div class="mock-r"><div><small>New postings appear here as the engine finds them.</small></div></div>';
   return `
 <section class="hero"><div class="wrap"><div>
@@ -215,29 +232,29 @@ export function homePage(s: Record<string, string>, st: Stats): string {
 <div class="ctas"><a class="btn btn-coral btn-lg" href="/apply">Apply for a dashboard</a><a class="btn btn-ghost btn-lg" href="/app">See a live dashboard</a></div>
 <div class="trust"><span>Private dashboard</span><span>Evidence for every match</span><span>Export any time</span></div>
 </div>
-<div class="mock" aria-label="Latest postings the engine found"><div class="mock-h">Latest postings found <em>live from the engine</em></div>${rows}</div>
+<div class="mock" role="region" aria-label="Latest postings the engine found"><div class="mock-h">Latest postings found <em>live from the engine</em></div>${rows}</div>
 </div></section>
-<section class="stats" aria-label="Live figures"><div class="wrap">
+${st ? `<section class="stats" aria-label="Live figures"><div class="wrap">
 <div class="stat"><b>${fmt(st.active)}</b><span>active roles tracked</span></div>
 <div class="stat"><b>${fmt(st.employers)}</b><span>employers hiring</span></div>
 <div class="stat"><b>${fmt(st.week)}</b><span>new roles this week</span></div>
-<div class="stat"><b>${fmt(st.sources)}</b><span>hiring systems checked daily</span></div>
-</div></section>
+<div class="stat"><b>${fmt(st.sources)}</b><span>hiring systems monitored</span></div>
+</div></section>` : ''}
 <section class="sec"><div class="wrap">
 <div class="sec-h"><span class="kicker">How it works</span><h2>Three steps, then it runs every day</h2><p>You tell us what you are looking for once. The engine does the reading.</p></div>
 <div class="grid3">
-<div class="card"><div class="num">1</div><h3>Tell us your search</h3><p>The roles you want, where you can work from, your experience, and the titles you would rather skip.</p></div>
-<div class="card"><div class="num">2</div><h3>The engine screens daily</h3><p>New postings from employers' own hiring systems are checked against your profile: role, location rules, eligibility wording, pay if published.</p></div>
-<div class="card"><div class="num">3</div><h3>You get a shortlist</h3><p>Your private dashboard shows ready, stretch and review lists, with the posting's own words for every decision. Track applications in the same place.</p></div>
+<div class="card"><div class="num">1</div><h3>Tell us your search</h3><p>The roles you want, where you can work from, and the titles you would rather skip. We write them into your search profile.</p></div>
+<div class="card"><div class="num">2</div><h3>The engine screens daily</h3><p>New postings from employers' own hiring systems are checked against your profile: the job title against your roles, and the posting's own words about where the work can be done and who can be hired.</p></div>
+<div class="card"><div class="num">3</div><h3>You get a shortlist</h3><p>Your private dashboard shows ready, stretch and review lists, with the posting's own words for every decision, and the applications your advisor tracks for you.</p></div>
 </div></div></section>
 <section class="sec sec-alt"><div class="wrap">
 <div class="sec-h"><span class="kicker">What you get</span><h2>Built to save hours, not add noise</h2></div>
 <div class="grid3">
-<div class="card"><div class="ico">◎</div><h3>Location rules that are checked</h3><p>"Remote" is not taken at face value. A posting counts only when it says you can work from where you are, and anything restricted elsewhere is flagged.</p></div>
+<div class="card"><div class="ico">◎</div><h3>Location rules that are checked</h3><p>"Remote" is not taken at face value. A posting counts as eligible only when it says you can work from where you are; when it does not say, it stays "unknown".</p></div>
 <div class="card"><div class="ico">❝</div><h3>Evidence, not guesses</h3><p>Each match shows the sentence from the posting it is based on, so you can judge it in seconds.</p></div>
 <div class="card"><div class="ico">⚑</div><h3>Nothing promoted automatically</h3><p>The engine never marks a role "ready" on its own. A person reviews it first, so your shortlist stays honest.</p></div>
-<div class="card"><div class="ico">↻</div><h3>Fresh every day</h3><p>Postings are re-checked; roles that close are taken off your list instead of lingering.</p></div>
-<div class="card"><div class="ico">▤</div><h3>Your tracker included</h3><p>Saved, applied, interviewing, offer: keep your whole pipeline next to your matches.</p></div>
+<div class="card"><div class="ico">↻</div><h3>New roles every day</h3><p>Employers' hiring systems are visited on a rolling schedule, so new postings reach your lists within days of going up, not weeks.</p></div>
+<div class="card"><div class="ico">▤</div><h3>Your pipeline in one place</h3><p>Saved, applied, interviewing, offer: your advisor keeps your applications up to date next to your matches.</p></div>
 <div class="card"><div class="ico">⇩</div><h3>Your data, exportable</h3><p>Download your list as a spreadsheet whenever you like. Your dashboard is private to you and anyone you share it with.</p></div>
 </div></div></section>
 <section class="sec"><div class="wrap"><div class="band"><div><h2>Ready to hand over the scrolling?</h2><p>Apply in two minutes. We set up your search and send you your private dashboard link.</p></div><a class="btn btn-coral btn-lg" href="/apply">Apply now</a></div></div></section>`;
@@ -246,12 +263,12 @@ export function homePage(s: Record<string, string>, st: Stats): string {
 export function howPage(): string {
   return `<section class="page-h"><div class="wrap"><span class="kicker">How it works</span><h1>From thousands of postings to a short, honest list</h1><p>What happens between a job being posted and it appearing on your dashboard.</p></div></section>
 <section class="sec" style="padding-top:30px"><div class="wrap grid2">
-<div class="card"><div class="num">1</div><h3>We set up your search profile</h3><p>From your application we record the role keywords that matter (for example "implementation", "data analyst"), titles to rank down, your location rule (fully remote from your country, or open to relocation), your experience and the score a role needs to reach.</p></div>
+<div class="card"><div class="num">1</div><h3>We set up your search profile</h3><p>From your application we record the role keywords that matter (for example "implementation", "data analyst"), titles to rank down, your location rule (fully remote from your country, or open to relocation) and your main skills.</p></div>
 <div class="card"><div class="num">2</div><h3>Postings come from the source</h3><p>The engine checks employers' own applicant-tracking systems and a few public job feeds on a rolling schedule. It stores each posting's full text, so every decision can be traced back to it.</p></div>
-<div class="card"><div class="num">3</div><h3>Every posting is screened for you</h3><p>Title against your role keywords; location wording against your rule; clearance, citizenship or licensing restrictions; sponsorship or worldwide-remote wording; published pay. The result is a preliminary score and a status.</p></div>
-<div class="card"><div class="num">4</div><h3>People make the final call</h3><p>Matches start as "needs review". A role becomes "ready" or "stretch" only after a person has looked at it, and the reason is written down. Your own decisions (applied, dismissed) are never overwritten.</p></div>
-<div class="card"><div class="num">5</div><h3>Your private dashboard</h3><p>Ready, stretch and review lists, the posting evidence, filters by fit, role family and pay, and your application tracker. Open it with your private link from any device.</p></div>
-<div class="card"><div class="num">6</div><h3>Closed roles drop off</h3><p>When an employer takes a posting down, it is closed on our side too, unless you have already applied, in which case it stays in your tracker.</p></div>
+<div class="card"><div class="num">3</div><h3>Every posting is screened for you</h3><p>The title against your role keywords; the location wording against your rule; security-clearance, citizenship or export-control requirements; sponsorship or worldwide-remote wording; your skills against the description. The result is a preliminary score and a status. Published pay is shown and can be filtered on.</p></div>
+<div class="card"><div class="num">4</div><h3>People make the final call</h3><p>Matches start as "needs review". A role becomes "ready" or "stretch" only after a person has looked at it, and the reason is written down. Decisions made by people (applied, dismissed, promoted) are never overwritten by the engine.</p></div>
+<div class="card"><div class="num">5</div><h3>Your private dashboard</h3><p>Ready, stretch and review lists, the posting evidence, filters by fit, role family and published pay, and the applications your advisor tracks for you. Open it with your private link from any device; it is read-only for you.</p></div>
+<div class="card"><div class="num">6</div><h3>Removed postings are closed</h3><p>When the engine fetches a posting and the employer's system reports it as removed, it is closed on our side, unless you have already applied, in which case it stays in your tracker. Check the posting before applying; some close without notice.</p></div>
 </div></section>
 <section class="sec sec-alt"><div class="wrap"><div class="sec-h"><h2>What the engine will not do</h2><p>Being clear about limits is part of the product.</p></div>
 <div class="grid3"><div class="card"><h3>Apply for you</h3><p>Applications are yours. We help you choose where; you decide and submit.</p></div>
@@ -272,7 +289,7 @@ ${priceBlock(s[`plan${i}_price`], s[`plan${i}_period`])}
   return `<section class="page-h"><div class="wrap"><span class="kicker">Pricing</span><h1>Simple plans, cancel any time</h1><p>Every plan includes a private dashboard, daily screening and your data to export.</p></div></section>
 <section class="sec" style="padding-top:34px"><div class="wrap"><div class="plans">${plan(1, false)}${plan(2, true)}${plan(3, false)}</div>
 <div class="faq" style="max-width:820px;margin:52px auto 0"><h2 style="text-align:center;margin-bottom:22px">Pricing questions</h2>
-<details><summary>Is there a contract?</summary><p>No. Plans run month to month. Your dashboard link stops working when you cancel, and you can export your list before that.</p></details>
+<details><summary>Is there a contract?</summary><p>No. Plans run month to month. If you cancel, access ends at the end of the paid period, and you can export your list before then.</p></details>
 <details><summary>Can I change plans?</summary><p>Yes, up or down at any time; tell us and it applies from your next period.</p></details>
 <details><summary>Do you guarantee a job?</summary><p>No one honestly can. We guarantee the work: daily screening, honest statuses and a dashboard you can check any time.</p></details>
 </div></div></section>`;
@@ -281,10 +298,11 @@ ${priceBlock(s[`plan${i}_price`], s[`plan${i}_period`])}
 export function faqPage(): string {
   const qa: [string, string][] = [
     ['Where do the postings come from?', 'Mostly from employers’ own hiring systems (applicant-tracking systems such as Lever and Greenhouse), plus a few public job feeds. Each posting is stored in full so every decision can be traced back to its text.'],
-    ['How do you decide whether I am eligible?', 'Only from what the posting says. A role counts as eligible for "fully remote from your country" only if the posting says that work from your country is supported. Restrictions such as citizenship, clearance or licensing exclude it. If the posting is silent, it stays "unknown".'],
+    ['How do you decide whether I am eligible?', 'Only from what the posting says. A role counts as eligible for "fully remote from your country" only if the posting says that work from your country is supported. Requirements such as a security clearance, specific citizenship or export-control eligibility exclude it. If the posting is silent, it stays "unknown".'],
     ['Will the engine apply to jobs for me?', 'No. It finds and screens roles and tracks your applications. You decide and apply.'],
     ['What does "ready", "stretch" and "needs review" mean?', 'New matches start as "needs review". After a person has checked them, they become "ready" (a strong fit), "stretch" (worth a try) or are set aside. The screen never promotes a role on its own.'],
     ['Who can see my dashboard?', 'Only you, anyone you share your private link with, and your advisor. Your dashboard is not listed publicly.'],
+    ['Can I update my applications myself?', 'Your link is read-only, so nothing can be changed by accident or by anyone you share it with. Tell your advisor what you applied to and they update your tracker.'],
     ['Can I download my matches?', 'Yes. Every dashboard has an export button that downloads your list as a spreadsheet file.'],
     ['What if I lose my link?', 'Ask your advisor for a new one; the old link can be switched off at the same time.'],
     ['Which roles and countries do you cover?', 'The engine is strongest for roles posted on employers’ own hiring systems, which covers most technology, operations and many engineering roles. Tell us your target in the application and we will say honestly how well we can cover it.'],
@@ -294,11 +312,11 @@ export function faqPage(): string {
 <p style="text-align:center;margin-top:34px">Still unsure? <a href="/apply">Apply</a> and ask in the message box; there is no commitment.</p></div></section>`;
 }
 
-export function aboutPage(s: Record<string, string>, st: Stats): string {
+export function aboutPage(s: Record<string, string>, st: Stats | null): string {
   return `<section class="page-h"><div class="wrap"><span class="kicker">About</span><h1>A job search engine that shows its work</h1><p>${esc(s.brand_name)} started as a private tool to run two real job searches without drowning in listings.</p></div></section>
 <section class="prose"><p>Job boards are built to show you more postings. We wanted the opposite: fewer, better ones, and a clear reason for each. So the engine reads postings at the source, screens them against a written profile and keeps a record of every decision, including the ones made by people.</p>
 <h2>What we believe</h2><ul><li>Every match should come with evidence you can check in seconds.</li><li>"Unknown" is an honest answer; guessing is not.</li><li>People make the final call, and their decisions are never silently overwritten.</li><li>Your data is yours to export.</li></ul>
-<h2>Right now</h2><p>The engine is tracking ${fmt(st.active)} active roles from ${fmt(st.employers)} employers, checking ${fmt(st.sources)} hiring systems on a rolling daily schedule.</p>
+${st ? `<h2>Right now</h2><p>The engine is tracking ${fmt(st.active)} active roles from ${fmt(st.employers)} employers and monitors ${fmt(st.sources)} hiring systems on a rolling schedule.</p>` : ''}
 <p style="margin-top:28px"><a class="btn btn-coral" href="/apply">Apply now</a></p></section>`;
 }
 
@@ -307,7 +325,7 @@ export const APPLY_FIELDS = ['full_name', 'email', 'phone', 'current_location', 
 export function applyPage(s: Record<string, string>, v: ApplyValues = {}, errors: string[] = []): string {
   const val = (k: string) => esc(v[k] || '');
   const sel = (k: string, opts: [string, string][]) => opts.map(([o, t]) => `<option value="${esc(o)}"${v[k] === o ? ' selected' : ''}>${esc(t)}</option>`).join('');
-  return `<section class="page-h"><div class="wrap"><span class="kicker">Apply</span><h1>Tell us about your search</h1><p>Two minutes. We read every application and reply with next steps, usually within two working days.</p></div></section>
+  return `<section class="page-h"><div class="wrap"><span class="kicker">Apply</span><h1>Tell us about your search</h1><p>Two minutes. We read every application and reply with next steps.</p></div></section>
 <section class="sec" style="padding-top:26px"><div class="wrap">
 <form class="f" method="post" action="/apply" novalidate>
 ${errors.length ? `<div class="err" role="alert"><b>Please check:</b> ${errors.map(esc).join(' ')}</div>` : ''}
@@ -348,15 +366,15 @@ if(!t||!c){document.getElementById('perr').style.display='block';return false}lo
 }
 
 export function privacyPage(s: Record<string, string>): string {
-  const brand = esc(s.brand_name), mail = s.contact_email ? `<a href="mailto:${esc(s.contact_email)}">${esc(s.contact_email)}</a>` : 'the contact address your advisor gave you';
+  const brand = esc(s.brand_name), mail = s.contact_email ? `<a href="mailto:${esc(s.contact_email)}">${esc(s.contact_email)}</a>` : 'the address any email from us came from (reply to it)';
   return `<section class="page-h"><div class="wrap"><span class="kicker">Privacy</span><h1>Privacy notice</h1><p>Plain language: what we keep, why, and how to have it removed.</p></div></section>
 <section class="prose">
-<h2>What we collect</h2><p>When you apply: your name, email, optional phone number, location, the roles you are looking for, your work preferences, experience range, an optional profile link and anything you write in the message box. To protect the form from abuse we also keep a one-way fingerprint of your connection for a day; we cannot turn it back into an address.</p>
+<h2>What we collect</h2><p>When you apply: your name, email, optional phone number, location, the roles you are looking for, your work preferences, experience range, an optional profile link and anything you write in the message box. To protect the form from abuse we keep a keyed fingerprint of your network for at most a day, then erase it; we do not store your IP address.</p>
 <p>When you are a client: your search profile, the postings screened for you, the statuses decided for them and the applications you track.</p>
 <h2>Why</h2><p>Only to set up and run your job search and to contact you about it. We do not sell your data and do not use it for advertising.</p>
 <h2>Who can see it</h2><p>${brand} staff who run your search. Your dashboard is visible only to you and anyone you share your private link with. Job postings themselves are public information from employers.</p>
-<h2>Where it is stored</h2><p>On Cloudflare's infrastructure (Workers and the D1 database).</p>
-<h2>Keeping and deleting</h2><p>We keep your details while you are a client and for as long as needed to answer your application. Ask us at ${mail} to receive a copy or to have everything deleted.</p>
+<h2>Where it is stored</h2><p>On Cloudflare's infrastructure (Workers and the D1 database). Pages load their typefaces from Google Fonts, which receives your IP address when it serves them.</p>
+<h2>Keeping and deleting</h2><p>We keep your details while you are a client and for as long as needed to answer your application. Ask us at ${mail} to receive a copy or to have everything deleted; we delete it from our database.</p>
 <h2>Cookies</h2><p>This site does not set tracking cookies. Your dashboard link is kept in your browser tab's own storage until you close it.</p>
 <p style="color:var(--muted);font-size:13px">Last updated ${new Date().toISOString().slice(0, 10)}.</p></section>`;
 }
@@ -396,3 +414,5 @@ export function validateApply(form: Record<string, string>): { ok: true; value: 
   return errors.length ? { ok: false, errors, value } : { ok: true, value };
 }
 export const APPLY_PER_SOURCE_PER_DAY = 5;
+// at most this many stored applications per UTC day in total (bounds what the public form can write: ~4 row writes each)
+export const APPLY_PER_DAY_TOTAL = 200;
