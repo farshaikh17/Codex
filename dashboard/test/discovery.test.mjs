@@ -266,3 +266,44 @@ test('review round 4: a denial anywhere beats a welcoming sponsorship phrase; wo
   assert.equal(foreignLocation('Mexico'), true); assert.equal(foreignLocation('Remote, excluding the US'), false);
   assert.equal(foreignLocation('Remote, non-US'), false); assert.equal(foreignLocation('Remote, ex-US'), false);
 });
+
+test('Greenhouse postings whose absolute_url is the employer careers page are kept with the canonical Greenhouse link; invalid ones still fail loudly', async () => {
+  const { normalize, greenhouseBoardURL } = await import('../worker/discovery.ts');
+  const src = { id: 'greenhouse:elastic', kind: 'greenhouse', slug: 'elastic', name: 'Elastic', cursor: 0, failures: 0 };
+  const posting = (o) => ({ id: 8346463, title: 'Senior Solutions Architect', absolute_url: 'https://jobs.elastic.co/jobs?gh_jid=8346463', location: { name: 'Mexico City' }, content: 'Solutions work', ...o });
+  const kept = normalize(src, posting({}));
+  assert.equal(kept.url, 'https://boards.greenhouse.io/elastic/jobs/8346463'); assert.equal(kept.url, greenhouseBoardURL('elastic', 8346463));
+  assert.equal(kept.title, 'Senior Solutions Architect');
+  // an official Greenhouse link is used as given; an arbitrary or non-https host is never copied into the application link
+  assert.equal(normalize(src, posting({ absolute_url: 'https://job-boards.greenhouse.io/elastic/jobs/8346463' })).url, 'https://job-boards.greenhouse.io/elastic/jobs/8346463');
+  assert.equal(normalize(src, posting({ absolute_url: 'http://evil.example/x' })).url, 'https://boards.greenhouse.io/elastic/jobs/8346463');
+  assert.equal(normalize(src, posting({ absolute_url: undefined })).url, 'https://boards.greenhouse.io/elastic/jobs/8346463');
+  // real defects are still errors, with a message that says which
+  assert.throws(() => normalize(src, posting({ title: '' })), /missing title/);
+  assert.throws(() => normalize(src, posting({ id: undefined })), /stable ID/);
+  const lever = { id: 'lever:acme', kind: 'lever', slug: 'acme', name: 'Acme', cursor: 0, failures: 0 };
+  assert.throws(() => normalize(lever, { id: 'abc', text: 'Implementation Manager', hostedUrl: 'https://evil.example/abc', categories: {}, descriptionPlain: 'x' }), /not an official HTTPS URL/);
+  assert.equal(normalize(lever, { id: 'abc', text: 'Implementation Manager', hostedUrl: 'https://jobs.lever.co/acme/abc', categories: {}, descriptionPlain: 'x' }).url, 'https://jobs.lever.co/acme/abc');
+});
+
+test('end to end: a queued Greenhouse posting on an employer-hosted careers page is stored (canonical link), not failed; a posting without a title still fails and is recorded', async () => {
+  const { runDiscovery } = await import('../worker/discovery.ts');
+  const { sqlite, d1 } = createDb(); seed(sqlite);
+  sqlite.exec("UPDATE cloud_automation SET enabled=1, lease_until=0 WHERE id=1");
+  sqlite.exec("INSERT OR IGNORE INTO cloud_sources(id,kind,slug,name,enabled,next_due) VALUES ('greenhouse:elastic','greenhouse','elastic','Elastic',1,9999999999)");
+  const queue = (id, payload) => sqlite.prepare("INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,next_due,updated_at) VALUES (?,?,?,?, 'PENDING', 0, 'x')").run('greenhouse:elastic:' + id, 'greenhouse:elastic', id, JSON.stringify(payload));
+  queue('8346463', { id: 8346463, title: 'Senior Solutions Architect' });
+  const transport = async (url) => new Response(JSON.stringify(String(url).includes('8346463')
+    ? { id: 8346463, title: 'Senior Solutions Architect', absolute_url: 'https://jobs.elastic.co/jobs?gh_jid=8346463', location: { name: 'Mumbai, India' }, content: '<p>CRM configuration and workflow automation.</p>' }
+    : { id: 1, title: '', absolute_url: 'https://jobs.elastic.co/jobs?gh_jid=1', content: '<p>x</p>' }), { status: 200 });
+  const ok = await runDiscovery({ DB: d1 }, 'MANUAL', transport, 'greenhouse:elastic');
+  assert.equal(ok.status, 'SUCCESS');
+  const job = sqlite.prepare("SELECT original_posting_url u, title FROM jobs WHERE id = 'greenhouse:elastic:8346463'").get();
+  assert.equal(job.u, 'https://boards.greenhouse.io/elastic/jobs/8346463');
+  assert.equal(sqlite.prepare("SELECT state FROM cloud_discovery_queue WHERE id='greenhouse:elastic:8346463'").get().state, 'DONE');
+  queue('1', { id: 1, title: '' });
+  const bad = await runDiscovery({ DB: d1 }, 'MANUAL', transport, 'greenhouse:elastic');
+  assert.equal(bad.status, 'ERROR'); assert.match(bad.error, /missing title/);
+  const row = sqlite.prepare("SELECT attempts, last_error FROM cloud_discovery_queue WHERE id='greenhouse:elastic:1'").get();
+  assert.equal(row.attempts, 1); assert.match(row.last_error, /missing title/);
+});

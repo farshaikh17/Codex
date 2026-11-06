@@ -13,6 +13,10 @@ export const relevant = (title:string) => /operations|implementation|integration
 function officialURL(url:string) {
  try { const u=new URL(url); return u.protocol==='https:' && /(^|\.)(lever\.co|greenhouse\.io|smartrecruiters\.com|ashbyhq\.com)$/.test(u.hostname); }catch{return false;}
 }
+// Greenhouse's absolute_url is often the EMPLOYER's own careers page (for example https://jobs.example.com/jobs?gh_jid=123), which is a
+// valid posting but not on an applicant-tracking host. Rather than discard it, the application link falls back to the posting's canonical
+// page on Greenhouse itself, built only from the source slug and the posting id (never from posting text).
+export function greenhouseBoardURL(slug:string,id:any){return `https://boards.greenhouse.io/${encodeURIComponent(slug)}/jobs/${encodeURIComponent(String(id))}`;}
 export function sourceURL(s:Source, detail?:string) {
  if(isBroad(s.kind))return broadURL(s,detail);
  const slug=encodeURIComponent(s.slug), id=detail?encodeURIComponent(detail):'';
@@ -36,9 +40,10 @@ export function normalize(s:Source, x:any):Posting {
  if(!x?.id)throw Error('Posting missing stable ID');
  let p:Posting;
  if(s.kind==='lever')p={id:String(x.id),title:x.text,url:x.hostedUrl||x.applyUrl,location:x.categories?.location||'',description:plain([x.descriptionPlain||x.description,...(x.lists||[]).map((l:any)=>`${l.text} ${l.content}`),x.additionalPlain||x.additional].join(' ')),remote:x.workplaceType==='remote',salary:x.salaryRange};
- else if(s.kind==='greenhouse')p={id:String(x.id),title:x.title,url:x.absolute_url,location:x.location?.name||'',description:plain(x.content),remote:/remote/i.test(x.location?.name||'')};
+ else if(s.kind==='greenhouse')p={id:String(x.id),title:x.title,url:officialURL(x.absolute_url)?x.absolute_url:greenhouseBoardURL(s.slug,x.id),location:x.location?.name||'',description:plain(x.content),remote:/remote/i.test(x.location?.name||'')};
  else {const loc=x.location||{};const sections=x.jobAd?.sections||{};p={id:String(x.id),title:x.name,url:x.ref?.startsWith('https://jobs.smartrecruiters.com/')?x.ref:`https://jobs.smartrecruiters.com/${encodeURIComponent(s.slug)}/${encodeURIComponent(x.id)}`,location:[loc.city,loc.region,loc.country].filter(Boolean).join(', '),description:plain(Object.values(sections).map((v:any)=>v.text).join(' ')),remote:loc.remote===true};}
- if(!p.title||!officialURL(p.url))throw Error('Posting missing title or official HTTPS application URL');
+ if(!p.title)throw Error('Posting missing title');
+ if(!officialURL(p.url))throw Error('Posting application URL is not an official HTTPS URL of a supported applicant-tracking host');
  if(p.description.length>100000)throw Error('Posting description exceeds evaluation budget');
  return p;
 }

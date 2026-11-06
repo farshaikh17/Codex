@@ -137,6 +137,8 @@ jobs:
             echo '#### Discovery queue and run health (read-only)'
             npx wrangler d1 execute career-job-engine --remote --command "SELECT state, COUNT(*) n FROM cloud_discovery_queue GROUP BY state" --json 2>&1 | grep -E '"(state|n)"|rror' | paste - - | head -10
             npx wrangler d1 execute career-job-engine --remote --command "SELECT status, run_type, COUNT(*) n FROM cloud_discovery_runs WHERE started_at >= strftime('%Y-%m-%dT%H:%M:%SZ','now','-1 day') GROUP BY 1,2 ORDER BY n DESC" --json 2>&1 | grep -E '"(status|run_type|n)"|rror' | paste - - - | head -10
+            echo '--- sources whose last attempt failed (id, status, failures, error)'
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT id, last_status, failures, substr(last_error,1,120) err FROM cloud_sources WHERE last_status='ERROR' OR failures>0 ORDER BY failures DESC LIMIT 10" --json 2>&1 | grep -E '"(id|last_status|failures|err)"|rror' | paste - - - - | head -10
             echo '--- queue items with an error (source, posting id, state, attempts, error, title and application URL host/path from the stored payload)'
             npx wrangler d1 execute career-job-engine --remote --command "SELECT source_id, posting_id, state, attempts, substr(last_error,1,140) err, substr(COALESCE(json_extract(payload,'\$.title'),json_extract(payload,'\$.text'),json_extract(payload,'\$.name')),1,70) title, substr(COALESCE(json_extract(payload,'\$.absolute_url'),json_extract(payload,'\$.hostedUrl'),json_extract(payload,'\$.applyUrl'),json_extract(payload,'\$.ref'),json_extract(payload,'\$.url')),1,110) url FROM cloud_discovery_queue WHERE last_error IS NOT NULL OR state='FAILED' ORDER BY updated_at DESC LIMIT 15" --json 2>&1 | grep -E '"(source_id|posting_id|state|attempts|err|title|url)"|rror' | paste - - - - - - - | head -15
           } 2>&1 | tee diag.txt
@@ -236,6 +238,16 @@ jobs:
           npx wrangler deploy --var "GIT_COMMIT:$GITHUB_SHA" --var "DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee deploy.log
           VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
           echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Requeue postings rejected only by the old application-URL rule (Greenhouse employer-hosted links; idempotent)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # The Worker now keeps these postings with their canonical Greenhouse link. Items that failed with the OLD generic message, on a
+          # Greenhouse source, with a stored title are put back in the queue once; a posting that is genuinely invalid fails again, visibly.
+          npx wrangler d1 execute career-job-engine --remote --command "UPDATE cloud_discovery_queue SET state='PENDING', attempts=0, last_error=NULL, next_due=0 WHERE source_id LIKE 'greenhouse:%' AND last_error='Posting missing title or official HTTPS application URL' AND COALESCE(json_extract(payload,'\$.title'),'')<>''" --json 2>&1 | grep -E 'changes|rows_written|rror' | head -5
 
       - name: Correct stored preliminary scores AFTER the deploy (owner-approved ranking change; dry run first, idempotent, refuses above 20,000 rows written)
         if: ${{ inputs.mode == 'release' }}
