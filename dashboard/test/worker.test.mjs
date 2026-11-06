@@ -9,7 +9,7 @@ import { seed } from './fixtures.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const worker = await loadWorker();
 const fresh = (extra) => { const { sqlite, d1 } = createDb(); seed(sqlite); return { sqlite, env: makeEnv(d1, extra) }; };
-const PUBLIC = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+const PUBLIC = new Set(['/api/health', '/api/version', '/api/auth/verify', '/api/brand']);
 
 // Every route registered in worker/index.ts, with path parameters filled in.
 function routes() {

@@ -106,7 +106,7 @@ function jsonResponse(data: any, status = 200, headers: HeadersInit = {}): Respo
 }
 
 // Routes that carry no candidate data: liveness, build identity and the key check itself.
-const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify', '/api/brand']);
 
 // Read-only routes any visitor may call without a key (the dashboard is publicly viewable). This is an explicit
 // allowlist: a route that is not listed here, and every POST/PUT/DELETE, needs the operator key. Audit trails
@@ -756,6 +756,12 @@ router.post('/api/auth/verify', async (request, env) => {
   }
 });
 
+
+// The brand the operator set for the public site, so the app shows the same name (white-label). Settings are memoised for 60 s.
+router.get('/api/brand', async (request, env) => {
+  const s = await site.loadSettings(env.DB);
+  return jsonResponse({ brand_name: s.brand_name, brand_sub: s.brand_sub, contact_email: s.contact_email || null }, 200, { ...corsHeaders(request, env), 'Cache-Control': 'public, max-age=60' });
+});
 
 router.get('/api/version', async (request, env) => {
   return jsonResponse({

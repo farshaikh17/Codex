@@ -19,6 +19,7 @@ import {
   clearShareView,
   fetchCandidateList,
   downloadExport,
+  fetchBrand,
   CandidateRef
 } from './api';
 import { ClientsView } from './components/ClientsView';
@@ -48,6 +49,8 @@ export const App: React.FC = () => {
   const [candidateId, setCandidateId] = useState(initialShareView?.candidate || 'farhan_shaikh');
   const [candidateList, setCandidateList] = useState<CandidateRef[]>([]);
   const [exportNote, setExportNote] = useState<string | null>(null);
+  const [brand, setBrand] = useState('Career Job Engine');
+  useEffect(() => { fetchBrand().then((b) => { setBrand(b.brand_name); document.title = `Dashboard · ${b.brand_name}`; }); }, []);
   const setActiveTab = (tab: NavTab, clientId?: string) => {
     if (tab === 'farhan' || tab === 'sana' || (tab === 'client' && clientId)) {
       const nextCandidate = tab === 'client' ? clientId! : tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
@@ -286,6 +289,8 @@ export const App: React.FC = () => {
         clients={clientTabs}
         activeClient={activeTab === 'client' ? candidateId : null}
         onSelectClient={(id) => setActiveTab('client', id)}
+        brand={brand}
+        viewer={shareView && !isOperator ? { name: (viewingName || '').split(' ')[0] || 'Your', onOpen: () => openCandidate(shareView.candidate) } : null}
       />
       <AuthModal
         isOpen={authOpen}

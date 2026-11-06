@@ -18,6 +18,10 @@ interface NavbarProps {
   clients?: { id: string; full_name: string }[];
   activeClient?: string | null;
   onSelectClient?: (id: string) => void;
+  /** brand set for the public site */
+  brand?: string;
+  /** a client viewing through a share link: only their own workspace, never other people's */
+  viewer?: { name: string; onOpen: () => void } | null;
 }
 
 // Same visual language as the public site: navy announcement bar, cream header, serif wordmark, coral for the active item.
@@ -25,7 +29,7 @@ const item = (on: boolean) =>
   `px-3 py-1.5 text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 ${on ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:text-coral-600 hover:bg-white'}`;
 
 export const Navbar: React.FC<NavbarProps> = ({
-  activeTab, setActiveTab, savedCount, onReloadFixtures, isLoading, isOperator = false, onOpenAuth, clients = [], activeClient = null, onSelectClient,
+  activeTab, setActiveTab, savedCount, onReloadFixtures, isLoading, isOperator = false, onOpenAuth, clients = [], activeClient = null, onSelectClient, brand = 'Career Job Engine', viewer = null,
 }) => {
   return (
     <header className="sticky top-0 z-40">
@@ -40,12 +44,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Briefcase className="w-4 h-4" />
             </span>
             <span>
-              <span className="block font-serif text-lg font-semibold text-slate-900 leading-tight">Career Job Engine</span>
-              <span className="block text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500">Client dashboards</span>
+              <span className="block font-serif text-lg font-semibold text-slate-900 leading-tight">{brand}</span>
+              <span className="block text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500">{viewer ? `${viewer.name}'s dashboard` : 'Client dashboards'}</span>
             </span>
           </a>
 
           <nav className="flex flex-wrap items-center gap-1 max-w-full" aria-label="Dashboard">
+            {viewer ? (
+              <button aria-label="My jobs" onClick={viewer.onOpen} className={item(['farhan', 'sana', 'client', 'discovery'].includes(activeTab))}>
+                <Briefcase className="w-4 h-4" /><span>My jobs</span>
+              </button>
+            ) : <>
             <button aria-label="Dashboard" onClick={() => setActiveTab('dashboard')} className={item(activeTab === 'dashboard')}>
               <LayoutDashboard className="w-4 h-4" /><span>Dashboard</span>
             </button>
@@ -67,16 +76,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </select>
               </label>
             )}
+            </>}
             <button aria-label="Applications" onClick={() => setActiveTab('tracker')} className={item(activeTab === 'tracker')}>
               <BookmarkCheck className="w-4 h-4" /><span>Applications</span>
               {savedCount > 0 && <span className={`ml-0.5 text-xs px-1.5 rounded-full font-mono ${activeTab === 'tracker' ? 'bg-white/20' : 'bg-slate-200'}`}>{savedCount}</span>}
             </button>
-            <button aria-label="Discovery" onClick={() => setActiveTab('discovery')} className={item(activeTab === 'discovery')}>
+            {!viewer && <button aria-label="Discovery" onClick={() => setActiveTab('discovery')} className={item(activeTab === 'discovery')}>
               <Radio className="w-4 h-4" /><span className="hidden sm:inline">Discovery / review</span>
-            </button>
-            <button aria-label="Settings" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
+            </button>}
+            {!viewer && <button aria-label="Settings" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
               <Sliders className="w-4 h-4" /><span className="hidden sm:inline">Profile</span>
-            </button>
+            </button>}
             {isOperator && (
               <button aria-label="Clients" onClick={() => setActiveTab('clients')} className={item(activeTab === 'clients')}>
                 <Users className="w-4 h-4" /><span>Clients</span>

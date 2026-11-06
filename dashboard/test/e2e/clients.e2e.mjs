@@ -99,6 +99,10 @@ await viewer.waitForSelector('[data-testid="share-banner"]', { timeout: 15000 })
 await viewer.waitForSelector('tr[data-job-id]', { timeout: 15000 });
 const banner = await viewer.textContent('[data-testid="share-banner"]');
 check('C9 the viewer lands in the client’s workspace with a read-only banner naming the client', banner.includes(NAME) && /read-only/i.test(banner), banner);
+check('C9b the viewer\u2019s menu offers only their own dashboard: no other candidates, no client picker, no operator pages',
+  (await viewer.getByRole('button', { name: 'My jobs' }).count()) === 1 && (await viewer.getByRole('button', { name: 'Farhan', exact: true }).count()) === 0
+  && (await viewer.getByRole('button', { name: 'Dashboard', exact: true }).count()) === 0 && (await viewer.locator('[data-testid="client-select"]').count()) === 0
+  && (await viewer.getByRole('button', { name: 'Clients', exact: true }).count()) === 0);
 check('C10 the token is removed from the address bar', !viewer.url().includes('view=') && !viewer.url().includes(token), viewer.url());
 const viewRows = await tableIds(viewer);
 const viewApi = (await api(`/api/jobs?candidate_id=${ID}&limit=50&exclude_applied=true&exclude_dismissed=true&sort_by=score_desc`, { key: null, view: token })).json.jobs.map((j) => j.id);

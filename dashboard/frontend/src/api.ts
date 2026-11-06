@@ -817,3 +817,9 @@ export async function fetchSiteSettings(): Promise<{ settings: Record<string, st
 export async function saveSiteSettings(values: Record<string, string>): Promise<Record<string, string>> {
   return (await jsonOrThrow(await authedFetch(`${API_BASE}/site-settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) }), 'Saving site settings')).settings;
 }
+
+/** The brand set for the public site (public, white-label). Falls back to the product name. */
+export async function fetchBrand(): Promise<{ brand_name: string; brand_sub: string }> {
+  try { const r = await fetch(`${API_BASE}/brand`); if (r.ok) return await r.json(); } catch {}
+  return { brand_name: 'Career Job Engine', brand_sub: 'Job search engine' };
+}
