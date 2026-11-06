@@ -2,8 +2,9 @@
 open-source JobSpy library (MIT). Owner decision 2026-11-06: a handful of targeted searches per candidate per day, never
 bulk scraping. Results are job-board reports, so the screen treats eligibility as unknown until verified.
 
-Writes the same matches.json format as dataset_discovery.py (with "board": true on each job).
-Usage: python engine/jobsite_discovery.py --out work/ [--d1-local PATH] [--results 20] [--hours 48]
+Runs WITHOUT database credentials: it reads the search profiles the dataset step wrote (work/profiles.json) and writes
+work/jobsite_raw.json; duplicates against D1 are removed afterwards by `dataset_discovery.py --dedupe` in a separate step.
+Usage: python engine/jobsite_discovery.py --profiles work/profiles.json --out work/ [--results 20] [--hours 48]
 """
 import argparse
 import hashlib
@@ -13,7 +14,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from engine.dataset_discovery import d1, existing, profiles  # noqa: E402
+from engine.dataset_discovery import clean  # noqa: E402
 
 SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google']
 # A few searches per built-in candidate; the title filter below (the Worker's own role rule) removes loose matches.
@@ -38,11 +39,11 @@ def run_search(site, term, location, results, hours):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', required=True)
-    ap.add_argument('--d1-local', default=None)
+    ap.add_argument('--profiles', required=True)
     ap.add_argument('--results', type=int, default=20)
     ap.add_argument('--hours', type=int, default=48)
     a = ap.parse_args()
-    profs = profiles(a.d1_local)
+    profs = json.loads(Path(a.profiles).read_text())
     found, log = {}, []
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
@@ -76,14 +77,11 @@ def main():
                         j['candidates'].append(cid)
                     kept += 1
                 log.append({'site': site, 'term': term, 'returned': len(rows), 'kept': kept})
-    jobs = list(found.values())
-    ids, urls, pairs = existing(jobs, a.d1_local) if jobs else (set(), set(), set())
-    fresh = [j for j in jobs if j['id'] not in ids and j['url'] not in urls
-             and (j['company'].strip().lower(), j['title'].strip().lower()) not in pairs]
+    jobs = [clean(j) for j in found.values()]
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    report = {'searches': len(log), 'blocked': sum(1 for x in log if 'error' in x), 'selected': len(jobs), 'new': len(fresh),
+    report = {'searches': len(log), 'blocked': sum(1 for x in log if 'error' in x), 'selected': len(jobs),
               'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}}
-    (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': []}, default=str))
+    (out / 'jobsite_raw.json').write_text(json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str))
     (out / 'jobsite_report.json').write_text(json.dumps({**report, 'log': log}, indent=1, default=str))
     print(json.dumps(report))
 

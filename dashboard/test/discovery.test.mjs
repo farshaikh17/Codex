@@ -348,6 +348,10 @@ test('skills count when their key words appear, not only the exact phrase; a lon
   assert.equal(skillFound('Reliability', 'plant reliability programs'), true);
   assert.equal(skillFound('Electrical Maintenance', 'maintenance of electrical systems'), true);
   assert.equal(skillFound('Electrical Maintenance', 'electrical design only'), false);
+  // the review's false matches stay false: a word must be a word of its own, single-word skills match exactly, words must be close
+  for (const [skill, text] of [['Sales', 'salary negotiable'], ['Ads', 'address and advanced'], ['Gas', 'gain experience'], ['Commissioning', 'commission-based'],
+    ['Open Source', 'sourcing open roles'], ['Writing', 'write code'], ['Operations', 'operator role'], ['Technical Team Leadership', 'technical skills. ' + 'x'.repeat(200) + ' leadership']])
+    assert.equal(skillFound(skill, text), false, `${skill} / ${text.slice(0, 30)}`);
   // never fewer matches than the exact-phrase rule
   const exact = (s, x) => x.includes(s.toLowerCase());
   for (const s of ['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) if (exact(s, 'crm configuration and workflow automation in gohighlevel')) assert.equal(skillFound(s, 'crm configuration and workflow automation in gohighlevel'), true);

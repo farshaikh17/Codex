@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { createDb } from './harness.mjs';
+import { createDb } from "./harness.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const F = 'farhan_shaikh', S = 'sana_ansari';
@@ -108,4 +108,35 @@ test('re-score: only screen-owned rows without skills scoring, never a decided o
   const once = s('j1').sc;
   w.sqlite.exec(again);
   assert.equal(s('j1').sc, once, 'tagged rows are not re-scored again');
+});
+
+test('reopen, two-run closures, job-site expiry and storage clean-up; hostile field values are stored safely', () => {
+  const w = world();
+  const old = new Date(Date.now() - 40 * 86400000).toISOString();
+  const ins = w.sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,source_channel,expired_at,description) VALUES (?,?,?,?,?,?,?,?,?)`);
+  ins.run('ds:r:1', 'T', 'C', 'greenhouse', 0, '2026-10-01', 'ATS_DATASET', '2026-11-05', 'kept text');     // came back: reopen
+  ins.run('lever:x:1', 'T', 'C', 'lever', 0, '2026-10-01', 'PUBLIC_ATS', '2026-11-05', null);              // not ours: never reopened
+  ins.run('js:old:1', 'T', 'C', 'naukri', 1, old, 'JOB_SITES', null, 'board text');                         // job-site, 40 days: expires
+  ins.run('js:old:2', 'T', 'C', 'naukri', 1, old, 'JOB_SITES', null, 'board text');                         // same, but applied to: stays
+  ins.run('ds:gone:1', 'T', 'C', 'greenhouse', 0, '2026-09-01', 'ATS_DATASET', old, 'long-closed text');    // closed 40 days ago: text dropped
+  w.sqlite.exec(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('a3','${F}','js:old:2','APPLIED')`);
+  const m = JSON.parse(fs.readFileSync(path.join(w.dir, 'matches.json'), 'utf8'));
+  Object.assign(m, { reopen: ['ds:r:1', 'lever:x:1'], missing_mark: ['ds:m:1'], missing_clear: [], ats_counts: { greenhouse: 178125 } });
+  m.jobs.push({ id: 'ds:greenhouse:9', url: 'https://boards.example/9', title: "Implementation Manager \u0000 O'Brien\\", company: 'Acme\u0007 Ltd', ats_type: 'greenhouse',
+    location: 'Remote - India', is_remote: true, description: 'Configure the CRM and automation of workflows. ' + 'x'.repeat(20000), salary_min: 'Infinity', salary_summary: 's'.repeat(50000), candidates: [F] });
+  m.jobs.push({ id: 'ds:greenhouse:10', url: 'https://x/' + 'a'.repeat(3000), title: 'Implementation Manager', company: 'Acme', ats_type: 'greenhouse', location: 'Remote - India', is_remote: true, description: 'CRM', candidates: [F] });
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify(m));
+  w.sqlite.exec(run(w.dir).sql);
+  const job = (id) => w.sqlite.prepare('SELECT is_active a, description d, title t, company c, salary_published sp, salary_raw_text st FROM jobs WHERE id = ?').get(id);
+  assert.equal(job('ds:r:1').a, 1); assert.equal(job('ds:r:1').d, 'kept text');
+  assert.equal(job('lever:x:1').a, 0, 'only this pipeline’s jobs are reopened');
+  assert.equal(job('js:old:1').a, 0); assert.equal(job('js:old:2').a, 1, 'a job someone applied to never expires');
+  assert.equal(job('ds:gone:1').d, null);
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM discovery_missing WHERE job_id='ds:m:1'`).get().n, 1, 'first miss is recorded, not closed');
+  assert.equal(JSON.parse(w.sqlite.prepare(`SELECT value FROM discovery_state WHERE key='ats_counts'`).get().value).greenhouse, 178125);
+  const h = job('ds:greenhouse:9');
+  assert.equal(h.t, "Implementation Manager   O'Brien\\", 'control characters removed, quotes and backslashes kept');
+  assert.equal(h.c, 'Acme  Ltd');
+  assert.ok(h.d.length <= 6000 && h.st.length <= 300 && h.sp === 0, 'every field bounded; infinite pay is not "published"');
+  assert.equal(job('ds:greenhouse:10'), undefined, 'an absurd URL is skipped, not written');
 });

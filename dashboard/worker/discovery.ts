@@ -117,20 +117,26 @@ function inHomeCountry(country: string, location: string) {
  return country.toLowerCase() === 'india' ? sanaIndiaCity(location) : new RegExp(`\\b${escapeRe(country)}\\b`, 'i').test(location || '');
 }
 
-// A skill counts when its exact phrase appears, or when every one of its key words appears as a whole word anywhere in the
-// posting ("CRM Configuration" matches "configure the CRM"; "Workflow Automation" matches "automation of workflows"). Short
-// and generic words are ignored. Only adds matches compared with the exact-phrase rule; never removes one (2026-11-06).
+// A skill counts when its exact phrase appears (the original rule), or, for a multi-word skill, when at least two of its key
+// words appear as words close together in the posting ("CRM Configuration" matches "configure the CRM"; "Workflow Automation"
+// matches "automation of workflows"). A key word may take a short ending (configure/configuration) but must be a word of its own,
+// so "sales" never matches "salary"; a single-word skill only ever matches exactly. Only adds matches (2026-11-06).
 const SKILL_STOP=new Set(['and','the','for','with','of','in','on','to','a','an','assisted','based','team','skills','experience']);
-const stem=(w:string)=>w.replace(/(ations?|ing|ed|es|s)$/,'');
+const SKILL_WINDOW=80;
+const stem=(w:string)=>{const t=w.replace(/(ations?|ing|ed|es|s)$/,'');return t.length>=4?t:w;};
+const escRe=(x:string)=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 export function skillFound(skill:string,lower:string){
  const s=String(skill||'').toLowerCase().trim();
  if(!s)return false;
  if(lower.includes(s))return true;
  const raw=s.split(/[^a-z0-9+#]+/).filter(Boolean);
+ if(raw.length<2)return false;
  const words=raw.filter(w=>w.length>=3&&!SKILL_STOP.has(w));
- // a multi-word skill needs at least two of its key words, so "AI-assisted workflows" is not matched by "workflow" alone
- if(!words.length||(raw.length>1&&words.length<2))return false;
- return words.every(w=>new RegExp(`(^|[^a-z0-9])${stem(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}[a-z]*`).test(lower));
+ if(words.length<2)return false;
+ const hits=words.map(w=>{const re=new RegExp(`(?:^|[^a-z0-9])(${escRe(stem(w))}[a-z]{0,5})(?![a-z0-9])`,'g');const at:number[]=[];let m:RegExpExecArray|null;while((m=re.exec(lower))&&at.length<50)at.push(m.index);return at;});
+ if(hits.some(h=>!h.length))return false;
+ // all key words within one window of SKILL_WINDOW characters
+ return hits[0].some(p=>hits.slice(1).every(h=>h.some(q=>Math.abs(q-p)<=SKILL_WINDOW)));
 }
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting) {
@@ -213,7 +219,7 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
    statements.push(db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
     VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(candidate_id,job_id) DO UPDATE SET overall_score=excluded.overall_score,skill_score=excluded.skill_score,role_score=excluded.role_score,strategy_lane=excluded.strategy_lane,score_breakdown=excluded.score_breakdown,calculated_at=excluded.calculated_at
     WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
-    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,ranking_v2:true,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
+    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,ranking_v2:true,skills_v1:list(candidate.primary_skills).length>0,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
   }
  }
  else if(!p.board)statements.push(db.prepare('UPDATE jobs SET last_verified_at=? WHERE id=?').bind(now,jobId));
@@ -251,7 +257,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

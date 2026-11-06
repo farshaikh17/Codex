@@ -14,15 +14,18 @@ import { evaluate, RULE_VERSION } from '../worker/discovery.ts';
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
 const many = (name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
-const MAX_NEW = Number(opt('--max-new', 1500));
+const MAX_NEW = Math.max(0, Math.floor(Number(opt('--max-new', 800)) || 800));
 const MAX_CLOSE = Number(opt('--max-close', 2000));
 const MIN_SCORE = Number(opt('--min-score', 30));
 const now = new Date().toISOString();
 
-const q = (v) => (v === null || v === undefined || (typeof v === 'number' && !Number.isFinite(v)) ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`);
+// SQL literal: control characters removed (a NUL byte would abort the whole import), quotes doubled, non-finite numbers NULL.
+const q = (v) => (v === null || v === undefined || (typeof v === 'number' && !Number.isFinite(v)) ? 'NULL' : typeof v === 'number' ? String(v)
+  : `'${String(v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ').replace(/'/g, "''")}'`);
+const cap = (v, n) => (v === null || v === undefined ? null : String(v).slice(0, n));
 const plain = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
 const adapter = (s) => String(s || 'ats').toLowerCase().replace(/[^a-z]/g, '').slice(0, 20) || 'ats';
-const num = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+const num = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
 
 const candidates = JSON.parse(fs.readFileSync(opt('--candidates'), 'utf8'));   // [{ id, primary_skills, search_profile }]
 const byId = new Map(candidates.map((c) => [c.id, c]));
@@ -39,8 +42,10 @@ for (const file of many('--in')) {
   for (const id of m.closed || []) closed.add(id);
   for (const j of m.jobs || []) {
     const board = !!j.board;
-    const description = plain(j.description).slice(0, 8000);
+    const description = plain(j.description).slice(0, 6000);
+    if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
+    const onsite = j.is_remote === false;
     const posting = { id: j.id, title: j.title, url: j.url, location: j.location || '', description, remote };
     const rows = [];
     for (const cid of j.candidates || []) {
@@ -57,18 +62,18 @@ for (const file of many('--in')) {
       if (r.score < MIN_SCORE) { report.skipped_low++; continue; }
       rows.push({ cid, r });
     }
-    if (rows.length) planned.push({ j, board, description, remote, rows, best: Math.max(...rows.map((x) => x.r.score)) });
+    if (rows.length) planned.push({ j, board, description, remote, onsite, rows, best: Math.max(...rows.map((x) => x.r.score)) });
   }
 }
 planned.sort((a, b) => b.best - a.best || String(b.j.posted_at || '').localeCompare(String(a.j.posted_at || '')));
 report.capped = Math.max(0, planned.length - MAX_NEW);
-for (const { j, board, description, remote, rows } of planned.slice(0, MAX_NEW)) {
+for (const { j, board, description, remote, onsite, rows } of planned.slice(0, MAX_NEW)) {
   const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
   const salary = num(j.salary_min) !== null || num(j.salary_max) !== null;
   out.push(`INSERT OR IGNORE INTO jobs(id,title,company,source_adapter,source_url,original_posting_url,employment_type,workplace_type,location_restrictions,description,required_skills,salary_published,salary_currency,salary_min,salary_max,salary_period,salary_raw_text,discovered_at,last_verified_at,is_active,content_sha256,source_id,source_channel,provenance) VALUES (${[
-    j.id, String(j.title).slice(0, 300), String(j.company).slice(0, 200), adapter(j.ats_type), j.url, j.apply_url || j.url, j.employment_type || 'FULL_TIME',
-    remote ? 'REMOTE_RESTRICTED' : board ? 'UNKNOWN' : 'ONSITE', String(j.location || '').slice(0, 300), description, '[]', salary ? 1 : 0,
-    j.salary_currency || null, num(j.salary_min), num(j.salary_max), j.salary_period || null, j.salary_summary || null, now, board ? null : now, 1, sha,
+    j.id, cap(j.title, 300), cap(j.company, 200), adapter(j.ats_type), cap(j.url, 2000), cap(j.apply_url && String(j.apply_url).length <= 2000 ? j.apply_url : j.url, 2000), cap(j.employment_type || 'FULL_TIME', 40),
+    remote ? 'REMOTE_RESTRICTED' : onsite && !board ? 'ONSITE' : 'UNKNOWN', cap(j.location || '', 300), description, '[]', salary ? 1 : 0,
+    cap(j.salary_currency, 10), num(j.salary_min), num(j.salary_max), cap(j.salary_period, 20), cap(j.salary_summary, 300), now, board ? null : now, 1, sha,
     `${board ? 'jobsites' : 'dataset'}:${adapter(j.ats_type)}`, board ? 'JOB_SITES' : 'ATS_DATASET', board ? 'PUBLIC_FEED_UNVERIFIED' : 'ATS_DATASET'].map(q).join(',')});`);
   report.new_jobs++;
   for (const { cid, r } of rows) {
@@ -80,13 +85,33 @@ for (const { j, board, description, remote, rows } of planned.slice(0, MAX_NEW))
   }
 }
 
-// ---- closures: jobs this pipeline added that left the dataset -----------------------------------------------------------
-const toClose = [...closed].slice(0, MAX_CLOSE);
-for (let i = 0; i < toClose.length; i += 200) {
-  const ids = JSON.stringify(toClose.slice(i, i + 200));
-  out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN (SELECT value FROM json_each(${q(ids)})) AND source_channel = 'ATS_DATASET' AND is_active = 1 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL);`);
+// ---- reopen, two-run closures, expiry --------------------------------------------------------------------------------
+const reopen = [], missingMark = [], missingClear = [];
+let atsCounts = null;
+for (const file of many('--in')) {
+  const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+  reopen.push(...(m.reopen || [])); missingMark.push(...(m.missing_mark || [])); missingClear.push(...(m.missing_clear || []));
+  if (m.ats_counts && Object.keys(m.ats_counts).length) atsCounts = m.ats_counts;
 }
-report.closed = toClose.length;
+const guarded = `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL)`;
+const inList = (ids) => `(SELECT value FROM json_each(${q(JSON.stringify(ids))}))`;
+for (let i = 0; i < reopen.length; i += 200)   // a dataset job that came back after being closed
+  out.push(`UPDATE jobs SET is_active = 1, expired_at = NULL, last_verified_at = ${q(now)} WHERE id IN ${inList(reopen.slice(i, i + 200))} AND source_channel = 'ATS_DATASET' AND is_active = 0;`);
+const toClose = [...closed].slice(0, MAX_CLOSE);   // missing from two consecutive full snapshots, ATS count healthy
+for (let i = 0; i < toClose.length; i += 200) {
+  const part = toClose.slice(i, i + 200);
+  out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN ${inList(part)} AND source_channel = 'ATS_DATASET' AND is_active = 1 ${guarded};`);
+  out.push(`DELETE FROM discovery_missing WHERE job_id IN ${inList(part)};`);
+}
+for (let i = 0; i < missingMark.length; i += 200) out.push(`INSERT OR IGNORE INTO discovery_missing(job_id, first_missing_at) SELECT value, ${q(now)} FROM json_each(${q(JSON.stringify(missingMark.slice(i, i + 200)))});`);
+for (let i = 0; i < missingClear.length; i += 200) out.push(`DELETE FROM discovery_missing WHERE job_id IN ${inList(missingClear.slice(i, i + 200))};`);
+if (atsCounts) out.push(`INSERT INTO discovery_state(key, value, updated_at) VALUES ('ats_counts', ${q(JSON.stringify(atsCounts))}, ${q(now)}) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at;`);
+// job-site reports are never re-checked, so they expire after 30 days (unless someone applied or decided)
+const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE source_channel = 'JOB_SITES' AND is_active = 1 AND discovered_at < ${q(monthAgo)} ${guarded};`);
+// storage: the text of jobs closed for more than 30 days is dropped (title, company and links stay), unless someone applied or decided
+out.push(`UPDATE jobs SET description = NULL WHERE source_channel IN ('ATS_DATASET', 'JOB_SITES') AND is_active = 0 AND expired_at < ${q(monthAgo)} AND description IS NOT NULL ${guarded};`);
+report.closed = toClose.length; report.reopened = reopen.length; report.missing_marked = missingMark.length; report.missing_cleared = missingClear.length;
 
 // ---- one-time re-score of earlier preliminary rows (score only; status, eligibility and decisions untouched) -------------
 const rescoreFile = opt('--rescore');

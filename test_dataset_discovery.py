@@ -3,7 +3,7 @@ look-alikes found in the first real run, and the home-country match is a whole w
 import re
 import unittest
 
-from engine.dataset_discovery import BUILTIN, location_sql, job_id
+from engine.dataset_discovery import BUILTIN, INSIDE, kw_regex, job_id, clean, profiles  # noqa: F401
 
 
 def picks(cid, title):
@@ -29,14 +29,27 @@ class Searches(unittest.TestCase):
                   'Network Reliability Engineer', 'Commercial Energy Sales Executive']:
             self.assertFalse(picks('sana_ansari', t), t)
 
-    def test_home_is_a_whole_word(self):
-        where, inside = location_sql(BUILTIN['farhan_shaikh'])
-        rx = re.search(r"'\(\^\|\[\^a-z\]\)(\w+)\(\[\^a-z\]\|\$\)'", inside)
-        self.assertIsNotNone(rx, inside)
-        word = re.compile(r'(^|[^a-z])india([^a-z]|$)')
+    def test_home_is_a_whole_word_and_values_are_parameters(self):
+        self.assertIn('$home', INSIDE)
+        self.assertIn('$countries', INSIDE)
+        word = re.compile('(^|[^a-z])' + re.escape('india') + '([^a-z]|$)')
         self.assertTrue(word.search('pune, india'))
         self.assertFalse(word.search('indianapolis, in'))
         self.assertFalse(word.search('fort wayne, indiana'))
+
+    def test_client_keywords_with_quotes_build_valid_patterns(self):
+        rx = kw_regex(["women's health", 'c++ developer', 'data (bi) analyst'])
+        self.assertTrue(re.search(rx, "senior women's health program lead"))
+        self.assertTrue(re.search(rx, 'c++ developer'))
+        self.assertTrue(re.search(rx, 'data (bi) analyst'))
+        self.assertIsNone(kw_regex(['', '  ']))
+
+    def test_fields_are_bounded_and_control_characters_removed(self):
+        j = clean({'title': 'A\x00B\x07C', 'description': 'x' * 10000, 'salary_summary': 's' * 50000, 'url': 'https://x/' + 'a' * 5000})
+        self.assertEqual(j['title'], 'A B C')
+        self.assertEqual(len(j['description']), 6000)
+        self.assertEqual(len(j['salary_summary']), 300)
+        self.assertEqual(len(j['url']), 2000)
 
     def test_ids_are_stable(self):
         self.assertEqual(job_id('greenhouse', 'https://x/1'), job_id('greenhouse', 'https://x/1'))
