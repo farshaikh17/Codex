@@ -103,3 +103,27 @@ Reviewed commit for this round: `d7b7849` (documentation-only commits follow it)
   Greenhouse source error) predates the release.
 * Whether the existing Cloudflare token can deploy was proven by the deploy itself; Workers Scripts write permission is therefore confirmed.
 
+
+## Production releases of 2026-11-06 (after the D1 daily read-limit reset)
+
+| | Release 1 (PR #26: cache, read meter, query fix) | Release 2 (PR #28: ranking correction, Sana wording, UI) |
+|---|---|---|
+| Commit / Worker | `0dcff71` (main at the time; code of PR #26), deployed 00:04:01 UTC | `efdcb7c`, deployed 00:19:05 UTC |
+| Workflow runs | preflight 42133687913, release 42133904922, verify 42134563242, diagnose 42134915250 | preflight 42135603612, release 42135783491, diagnose 42136407653 |
+| Result | Deploy, cache flush and public smoke test passed. The first release run's browser check failed 1 of 26 checks (Sana READY card showed 0, API 2). A verify run on the same commit passed desktop 26/26 and mobile 26/26; a manual run from outside GitHub passed twice. Cause not proven; most likely the card shows 0 until the first jobs query returns after a cache flush. The check now waits up to 20 s for the card to settle. | All steps green: deploy, correction (after the deploy), cache flush, smoke test, desktop and mobile browser checks, protected-record comparison. |
+| Protected records | applications 12 `d594d21e`, history 44 `221fc998`, overrides 11 `43499257`, candidates 2 `08c63807`, qualifications 4276, scores 4276: identical to the baseline in the verify run | applications, history, overrides, candidates identical before and after (the workflow compares and fails on any difference) |
+
+Score correction (release 2, run after the deploy): 317 stored preliminary rows examined; 52 scores lowered (1 Farhan avoid-list cap, 50 Farhan foreign-location, 1 Sana) and 7 Sana rows changed from ELIGIBLE (city only) to UNKNOWN; 59 SQL statements, about 111 rows written. A dry run afterwards examined 265 rows and planned 0 changes. No status, lane, override, application or history row was written.
+
+D1 usage measured by the diagnose runs (UTC day 2026-11-06, which started at 00:00):
+
+| Time | Dashboard read meter (rows read by cache misses) | Public cache misses |
+|---|---|---|
+| 00:12, after release 1 and its checks | 321,609 | 27 |
+| 00:24, after release 2 and its checks | 642,990 | 52 |
+
+The `d1 info` field `rows_read_24h` (9.99M, then 10.37M) is a rolling 24-hour window that still contains the previous day's incident traffic, so it is not today's figure. The 1-hour insights list at 00:24 shows the same pattern: the largest cost is the per-candidate status-count query (about 32,000 rows per run) and verification traffic (fingerprint queries read 4,276 rows each). The first 25 minutes after reset, almost entirely release and verification traffic, used roughly 0.64M rows (about 13% of the 5M daily allowance). **This does not yet show steady-state usage with real visitors, cron and collector activity over a full day; the free-tier problem is mitigated and bounded by the read meter (public budget 2.5M rows per day), not proven resolved.**
+
+Observed in the Worker log during diagnose: the 2-minute discovery cron recorded one failed work unit ("Posting missing title or official HTTPS application URL"), kept in the durable run history. Not investigated further.
+
+Known gap in the table-count query of diagnose mode: it returned an API error on 2026-11-06 (the error is now shown, not hidden); the job inventory queries beside it worked.

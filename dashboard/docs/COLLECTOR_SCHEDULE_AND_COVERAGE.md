@@ -46,3 +46,9 @@ had (22 MB, 2,123 jobs). A read-only inventory by source and by day (diagnose mo
 * The Worker's own discovery polls **14 sources** (Greenhouse, Lever, SmartRecruiters boards, Jobicy, Remotive and Hacker News jobs) within a
   fixed daily budget (48 source pages and 120 posting fetches per UTC day).
 * This is a curated list of employer feeds, not a crawl of the internet. Coverage grows by adding employers to the source registry.
+
+## Measurements added 2026-11-06
+
+* Scheduled runs after the previous report: `collect.yml` started at 22:13:34 UTC on 2026-11-05 (nominal 21:37, about 36 minutes late) and the matching sync at 22:18:37 UTC; both succeeded. The nominal 16:37 slot produced no run. Schedules and tokens were not changed.
+* Current inventory in D1 (active jobs, 2,136): Ashby 789, Greenhouse 627, Lever 468, SmartRecruiters 91, public feeds 87, Jobicy 36, HN jobs 35, synthetic or test fixtures 3. Jobs first discovered per day were mostly 20 to 55, with two bursts (1,070 on 2026-10-26 and 713 on 2026-11-02).
+* **The 20,380 figure is still unresolved.** No table, day or source in D1 comes near it. The largest single day is 1,070 jobs and the whole database holds about 2,140. The origin (synthetic stress-test corpus, accumulated inventory or real daily discovery) cannot be established from this evidence, so it is not used as a coverage claim. Current coverage is the inventory above.
