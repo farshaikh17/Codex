@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-04T18:50:19.577531+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-06T18:22:30.804221+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "posthog",
  "changes": [],
@@ -45,7 +45,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      },
      {
       "interpretation": null,
@@ -53,7 +53,7 @@
       "quote": "US | EU",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      },
      {
       "interpretation": null,
@@ -61,7 +61,7 @@
       "quote": "We provide support across EU and US time zones, and we're hiring in both. We work in public by default, so you'll ask for help, share what you learn, and discuss problems in team channels rather than DMs.",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      }
     ],
     "state": "stated"
@@ -74,7 +74,7 @@
       "quote": "We're looking for a Technical Support Engineer who loves helping customers and can't leave a problem alone until it's solved.\nYou're an engineer who happens to do support. You pick up new things fast and you're comfortable with a problem nobody has seen before. That matters more to us than your previous job title, and people on our team came to support from various backgrounds.\nYou care about how a customer feels when they leave the conversation, not only whether the ticket closed. You take feedback well, say when you don't know something yet, and learn from anyone on the team.",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      },
      {
       "interpretation": null,
@@ -82,7 +82,7 @@
       "quote": "- Experience in at least two programming languages, whether from a previous role, side projects, or something else\n- Experience debugging unfamiliar code or systems, and checking your fix works\n- Clear, concise writing that explains a complex fix without burying the customer in options\n- Thorough investigations that don't slow down your reply to the customer\n- Good at prioritizing and context switching across a busy queue that spans many products",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      }
     ],
     "state": "stated"
@@ -95,7 +95,7 @@
       "quote": "- Experience supporting similar products, e.g. analytics, session replay, feature flags, experiments, or LLM observability\n- A background in support, teaching, product, or another role where you explain technical things to people\nIf you have a disability, please let us know if there's any way we can make the interview process better for you - we're happy to accommodate!\n#LI-DNI",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      }
     ],
     "state": "stated"
@@ -108,7 +108,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
      }
     ],
     "state": "stated"
@@ -125,8 +125,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7",
-  "url": "https://jobs.ashbyhq.com/posthog/db808740-242e-4a40-ad43-d41f26c049d7"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7",
+  "url": "https://jobs.ashbyhq.com/PostHog/db808740-242e-4a40-ad43-d41f26c049d7"
  }
 }

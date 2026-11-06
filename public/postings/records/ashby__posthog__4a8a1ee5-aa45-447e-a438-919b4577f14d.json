@@ -49,7 +49,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
      },
      {
       "interpretation": null,
@@ -57,7 +57,7 @@
       "quote": "US | EU",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
      }
     ],
     "state": "stated"
@@ -74,7 +74,7 @@
       "quote": "- You have created content for developer communities or technical audiences.\n- Basic video editing. Enough to rough out how your animation sits in the cut.\n- You have translated product UI / UX into animated assets.\nIf you have a disability, please let us know if there's any way we can make the interview process better for you - we're happy to accommodate!\n#LI-DNI",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
      }
     ],
     "state": "stated"
@@ -87,7 +87,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
      }
     ],
     "state": "stated"
@@ -104,8 +104,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d",
-  "url": "https://jobs.ashbyhq.com/posthog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d",
+  "url": "https://jobs.ashbyhq.com/PostHog/4a8a1ee5-aa45-447e-a438-919b4577f14d"
  }
 }

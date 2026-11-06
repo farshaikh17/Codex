@@ -41,10 +41,19 @@
    "from_hash": "b39b6ef826bf14e0a845d0b4c27bbd59e30fd64794f76424d1a1e02e873fe4c3",
    "kind": "content_changed",
    "to_hash": "40d328ab57b3f310b6142e3cb6676fb34c6a2283b5c1d8fe73d545c991849678"
+  },
+  {
+   "changed_at": "2026-11-06T18:22:30.804221+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "40d328ab57b3f310b6142e3cb6676fb34c6a2283b5c1d8fe73d545c991849678",
+   "kind": "content_changed",
+   "to_hash": "a2cec969d67ea3c65f4d5da740e66d2e3155ecbf0869f1e39f247a839019acb3"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"RON 225K – RON 280K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"Romania\",\"summary\":\"RON 225K – RON 280K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"RON\",\"interval\":\"1 YEAR\",\"minValue\":225000,\"maxValue\":280000,\"summary\":\"RON 225K – RON 280K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Poland\",\"summary\":\"PLN 170K – PLN 210K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"PLN\",\"interval\":\"1 YEAR\",\"minValue\":170000,\"maxValue\":210000,\"summary\":\"PLN 170K – PLN 210K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Hungary\",\"summary\":\"HUF 13.2M – HUF 17M • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"HUF\",\"interval\":\"1 YEAR\",\"minValue\":13200000,\"maxValue\":17000000,\"summary\":\"HUF 13.2M – HUF 17M\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Bulgaria\",\"summary\":\"BGN 72K – BGN 90K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"BGN\",\"interval\":\"1 YEAR\",\"minValue\":72000,\"maxValue\":90000,\"summary\":\"BGN 72K – BGN 90K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"RON 225K – RON 280K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"Romania\",\"summary\":\"RON 225K – RON 280K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"RON\",\"interval\":\"1 YEAR\",\"minValue\":225000,\"maxValue\":280000,\"summary\":\"RON 225K – RON 280K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Poland\",\"summary\":\"PLN 170K – PLN 210K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"PLN\",\"interval\":\"1 YEAR\",\"minValue\":170000,\"maxValue\":210000,\"summary\":\"PLN 170K – PLN 210K\"}]},{\"title\":\"Hungary\",\"summary\":\"HUF 13.2M – HUF 17M • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"HUF\",\"interval\":\"1 YEAR\",\"minValue\":13200000,\"maxValue\":17000000,\"summary\":\"HUF 13.2M – HUF 17M\"}]},{\"title\":\"Bulgaria\",\"summary\":\"BGN 72K – BGN 90K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"BGN\",\"interval\":\"1 YEAR\",\"minValue\":72000,\"maxValue\":90000,\"summary\":\"BGN 72K – BGN 90K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]}]}",
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nLocation: While this position is posted in a specific region, all of Oyster’s positions are fully remote, and you can work from home. Forever. To create the best experience for our new hire, this role requires that you be based within UTC -1 to UTC +3\n\nIn this highly strategic and cross-functional role, you’ll own and evolve Oyster’s global network of external payroll partners and core compliance providers that underpins end-to-end payroll delivery across our markets. Operating with a primary focus (~80%) on core multi-country payroll delivery, vendor accuracy, calendar adherence, and operational controls, alongside secondary oversight (~20%) of specialized Compliance vendors, you’ll ensure our partners deliver scalable, high-quality, and fully compliant solutions that enable our customers to hire anyone, anywhere. You’ll combine commercial acumen, operational excellence, regulatory monitoring, and strong relationship management to drive vendor performance, execute risk assessments, resolve complex payroll escalations, and continuously strengthen our global partner ecosystem. From leading commercial negotiations, compliance tracking, and governance frameworks to identifying new partner opportunities and ensuring alignment with local legal and statutory payroll standards, you’ll play a critical role in shaping how Oyster delivers global employment solutions at scale.\n\nThis role is ideal for someone who thrives in ambiguity, enjoys solving complex operational challenges, and can confidently influence stakeholders internally and externally. You are commercially minded, data-driven, solutions-oriented, and energized by building strong partnerships that create long-term business impact.\n\nKey Responsibilities\n\n- Act as the Subject Matter Expert and primary operational and commercial owner for Oyster's strategic multi-country payroll partners worldwide.\n\n- Maintain deep operational mastery of end-to-end payroll delivery workflows, cut-off calendars, variance analysis, Gross-to-Net (GTN) calculations, statutory filings, and failure modes across key markets\n\n- Partner with internal Pay & Payroll operations teams to monitor partner SLA compliance, data payload delivery, and payroll cut-off adherence\n\n- Proactively evaluate vendor capacity, operational readiness, and processing controls ahead of peak payroll cycles and expansion into new markets\n\n- Define partner strategy, governance, scorecards, review cadences, escalation thresholds, and improvement plans\n\n- Hold partners accountable for payroll accuracy, timeliness, statutory compliance, compliance tracking, responsiveness, controls, and customer outcomes\n\n- Manage the full vendor relationship lifecycle, from partner selection and onboarding through transition, consolidation, or exit decisions\n\n- Evaluate partner capabilities, market coverage, operational maturity, security/compliance posture, and scalability\n\n- Build and maintain expertise in multi-country payroll delivery, regulatory dependencies, and contractual trade-offs\n\nVendor Performance & Governance\n\n- Establish baselines and monitor vendor performance through KPIs, SLAs, scorecards, and remediation plans\n\n- Lead recurring executive business reviews and performance discussions with partner leadership teams\n\n- Translate payroll-partner performance data into recommendations for Operations, Product, Finance, Legal, Customer teams, and leadership\n\n- Monitor operational performance and proactively identify service risks or quality concerns\n\n- Conduct structured vendor compliance audits, risk assessments, and operational reviews across the partner ecosystem\n\n- Drive consistent governance standards, regulatory alignment, and operational excellence across vendors\n\n- Lead ongoing regulatory monitoring, risk assessments, and compliance tracking to ensure there are no gaps in compliance across all payroll and compliance vendor operations and local legal standards across all operating regions\n\nCommercial & Partnership Management\n\n- Build trusted, long-term relationships with external partner leadership teams\n\n- Lead or materially shape commercial negotiations, contract renewals, pricing, remedies, and service changes\n\n- Strengthen strategic partnerships to support business growth and customer outcomes\n\n- Lead complex, multi-market payroll escalations through root-cause analysis, recovery, prevention, and executive communication\n\n- Collaborate cross-functionally and externally to resolve sensitive operational challenges\n\n- Support customer and internal stakeholder conversations requiring partner expertise\n\n- Identify and source new partners to strengthen global coverage and capabilities\n\nVendor Ecosystem Development\n\n- Identify operational or geographic gaps within the vendor ecosystem\n\n- Evaluate and onboard new partners to strengthen Oyster’s global coverage\n\n- Recommend improvements to ecosystem strategy, scalability, and service quality\n\n- Partner cross-functionally to evolve how Oyster leverages and manages external vendors\n\n- Drive initiatives that improve partner consistency, efficiency, and customer experience\n\nStrategic Business Partnership\n\n- Advise internal teams on vendor capabilities, strengths, and operational considerations\n\n- Guide partner selection decisions based on customer needs and business priorities\n\n- Share insights from vendor trends, escalations, and operational performance data\n\n- Partner with Go-To-Market teams to support deal strategy and customer solutions\n\n- Enable scalable and commercially sound global employment solutions\n\n- Proactively partner with internal teams including HRBPs, Employee Lifecycle Teams, and Payroll/Pay teams to align vendor capabilities with employee support and operational workflows\n\nEscalation Leadership\n\n- Maintain secondary oversight (~20%) of specialized Health & Safety and Compliance vendor relationships, ensuring partner capabilities and SLAs support local statutory requirements\n\n- Lead high-impact escalations across external partners and internal teams with limited direction\n\n- Coordinate cross-functional and cross-partner responses to critical operational issues\n\n- Protect customer experience while balancing operational and commercial priorities\n\n- Identify root causes and recurring trends across escalations\n\n- Drive preventative improvements and operational maturity across the partner ecosystem\n\n- Lead in escalations on calls to get to root cause, find solutions, and manage end-to-end resolution.\n\nCONTINUOUS IMPROVEMENT & HIGH PERFORMANCE\n\n- Continuously audit and refine workflows and ways of working to reduce response times and elevate service quality.\n\n- Build scalable processes, knowledge, automation, and AI-enabled reporting while protecting payroll and personal data.\n\n- Analyze recurring ticket trends and received queries to identify systemic issues, proactively building preventative resources for internal teams.\n\n- Identify opportunities to improve workflows, documentation, and knowledge management, ensuring Pearls have accurate, accessible self-service resources to reduce dependency and improve operational efficiency.\n\nProjects\n\n- Lead People Services and cross-functional projects as we work towards our Mission to enable companies to hire anyone, anywhere!\n\nCore Requirements\n\n- 5+ years of direct experience managing multi-country Payroll Vendors and Compliance/Health & Safety partners in a global environment\n\n- Strong technical understanding of end-to-end payroll processing cycles, Gross-to-Net (GTN) calculations, statutory filings, and payroll controls\n\n- Significant experience owning strategic payroll and compliance vendor relationships in a global or multi-country environment\n\n- Deep understanding of payroll operations, compliance tracking, risk assessments, statutory controls, regulatory monitoring, and global legal standards\n\n- Evidence of improving vendor performance and regulatory alignment through KPIs, SLAs, vendor compliance audits, governance, remediation, and executive business reviews\n\n- Commercial negotiation and contract-management capability, including pricing, service levels, remedies, renewals, and trade-offs\n\n- Highly strategic thinker with the ability to balance operational detail with long-term business goals\n\n- Strong analytical and problem-solving skills, with the ability to use data to drive decisions and improvements\n\n- Commercially minded and solutions-oriented, with a pragmatic approach to operational challenges\n\n- Exceptional relationship-building and influencing skills across internal and external stakeholders\n\n- Strong ownership mindset with the ability to operate autonomously in a fast-paced environment\n\n- Experience managing complex escalations and driving resolution across multiple stakeholders\n\n- Excellent communication and presentation skills, both written and verbal\n\n- Collaborative and cross-functional by nature, with experience partnering across Operations, Legal, Support, Sales, and Customer-facing teams\n\n- Process-oriented and continuously looking for ways to improve scalability and operational maturity\n\n- Comfortable working in ambiguity and helping shape evolving operational functions and frameworks\n\n- Demonstrated track record of proactive business partnering with internal stakeholders such as HRBPs, Lifecycle Teams, and Pay teams\n\n- [BONUS] Experience working with global vendors across multiple regions (APAC, EMEA, LATAM, AMER)\n\n- [BONUS] Experience building or scaling vendor governance programs and operational frameworks\n\n- [BONUS] Additional languages\n\n- [BONUS] Have worked in a fast-paced, scaling startup or global tech environment\n\n- [BONUS] Experience implementing AI tools or automation workflows to improve workflows and vendor management\n\nYou'll also need\n\n- A reliable home internet connection (or be able to get one)\n\n- Fluent English language\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
   "locations": [
    {
@@ -88,8 +97,8 @@
   "title": "Senior Vendor Relationship Manager (Payroll and Compliance)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
- "content_hash": "40d328ab57b3f310b6142e3cb6676fb34c6a2283b5c1d8fe73d545c991849678",
+ "content_changed_at": "2026-11-06T18:22:30.804221+00:00",
+ "content_hash": "a2cec969d67ea3c65f4d5da740e66d2e3155ecbf0869f1e39f247a839019acb3",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -120,7 +129,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"RON\",\"interval\":\"1 YEAR\",\"minValue\":225000,\"maxValue\":280000,\"summary\":\"RON 225K – RON 280K\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -140,7 +149,27 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
+     },
+     {
+      "interpretation": {
+       "amount_unit": "percent",
+       "basis": "equity",
+       "component_type": "EquityPercentage",
+       "equity_mentioned": true,
+       "estimated": false,
+       "interval_raw": "NONE",
+       "label": "Poland",
+       "multiple_ranges": true,
+       "period": null,
+       "ranges": [],
+       "variable_mentioned": false
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -168,7 +197,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"PLN\",\"interval\":\"1 YEAR\",\"minValue\":170000,\"maxValue\":210000,\"summary\":\"PLN 170K – PLN 210K\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -180,7 +209,7 @@
        "equity_mentioned": true,
        "estimated": false,
        "interval_raw": "NONE",
-       "label": "Poland",
+       "label": "Hungary",
        "multiple_ranges": true,
        "period": null,
        "ranges": [],
@@ -188,7 +217,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -216,27 +245,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"HUF\",\"interval\":\"1 YEAR\",\"minValue\":13200000,\"maxValue\":17000000,\"summary\":\"HUF 13.2M – HUF 17M\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
-     },
-     {
-      "interpretation": {
-       "amount_unit": "percent",
-       "basis": "equity",
-       "component_type": "EquityPercentage",
-       "equity_mentioned": true,
-       "estimated": false,
-       "interval_raw": "NONE",
-       "label": "Hungary",
-       "multiple_ranges": true,
-       "period": null,
-       "ranges": [],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -264,7 +273,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"BGN\",\"interval\":\"1 YEAR\",\"minValue\":72000,\"maxValue\":90000,\"summary\":\"BGN 72K – BGN 90K\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -284,7 +293,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      }
@@ -301,7 +310,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Spain",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -309,7 +318,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Romania",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -317,7 +326,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Hungary",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -325,7 +334,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Bulgaria",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -333,7 +342,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Portugal",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -341,7 +350,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Slovakia",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -349,7 +358,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Poland",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -357,7 +366,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Estonia",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -365,7 +374,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific region, all of Oyster’s positions are fully remote, and you can work from home. Forever. To create the best experience for our new hire, this role requires that you be based within UTC -1 to UTC +3",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      }
@@ -378,7 +387,7 @@
       "interpretation": null,
       "method": "description_section:Core Requirements",
       "quote": "- 5+ years of direct experience managing multi-country Payroll Vendors and Compliance/Health & Safety partners in a global environment\n- Strong technical understanding of end-to-end payroll processing cycles, Gross-to-Net (GTN) calculations, statutory filings, and payroll controls\n- Significant experience owning strategic payroll and compliance vendor relationships in a global or multi-country environment\n- Deep understanding of payroll operations, compliance tracking, risk assessments, statutory controls, regulatory monitoring, and global legal standards\n- Evidence of improving vendor performance and regulatory alignment through KPIs, SLAs, vendor compliance audits, governance, remediation, and executive business reviews\n- Commercial negotiation and contract-management capability, including pricing, service levels, remedies, renewals, and trade-offs\n- Highly strategic thinker with the ability to balance operational detail with long-term business goals\n- Strong analytical and problem-solving skills, with the ability to use data to drive decisions and improvements\n- Commercially minded and solutions-oriented, with a pragmatic approach to operational challenges\n- Exceptional relationship-building and influencing skills across internal and external stakeholders\n- Strong ownership mindset with the ability to operate autonomously in a fast-paced environment\n- Experience managing complex escalations and driving resolution across multiple stakeholders\n- Excellent communication and presentation skills, both written and verbal\n- Collaborative and cross-functional by nature, with experience partnering across Operations, Legal, Support, Sales, and Customer-facing teams\n- Process-oriented and continuously looking for ways to improve scalability and operational maturity\n- Comfortable working in ambiguity and helping shape evolving operational functions and frameworks\n- Demonstrated track record of proactive business partnering with internal stakeholders such as HRBPs, Lifecycle Teams, and Pay teams\n- [BONUS] Experience working with global vendors across multiple regions (APAC, EMEA, LATAM, AMER)\n- [BONUS] Experience building or scaling vendor governance programs and operational frameworks\n- [BONUS] Additional languages\n- [BONUS] Have worked in a fast-paced, scaling startup or global tech environment\n- [BONUS] Experience implementing AI tools or automation workflows to improve workflows and vendor management",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -386,7 +395,7 @@
       "interpretation": null,
       "method": "description_section:You'll also need",
       "quote": "- A reliable home internet connection (or be able to get one)\n- Fluent English language",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      }
@@ -403,7 +412,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      },
@@ -411,7 +420,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific region, all of Oyster’s positions are fully remote, and you can work from home. Forever. To create the best experience for our new hire, this role requires that you be based within UTC -1 to UTC +3",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/67167d3a-c169-4a0c-b839-3ae99ae717a7"
      }

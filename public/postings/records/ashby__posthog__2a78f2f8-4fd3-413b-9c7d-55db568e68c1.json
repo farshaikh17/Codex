@@ -45,7 +45,7 @@
       "quote": "Remote (US)",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      },
      {
       "interpretation": null,
@@ -53,7 +53,7 @@
       "quote": "United States",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      }
     ],
     "state": "stated"
@@ -66,7 +66,7 @@
       "quote": "- 5+ years of owning usage based revenue recognition experience in AI/SaaS companies\n- Strong working knowledge of GAAP and month-end/year-end close process\n- Comfortable working independently\n- Comfortable building processes and controls",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      }
     ],
     "state": "stated"
@@ -79,7 +79,7 @@
       "quote": "- Relevant education in accounting\n- Been through a financial audit\nIf you have a disability, please let us know if there's any way we can make the interview process better for you - we're happy to accommodate!\n#LI-DNI",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      }
     ],
     "state": "stated"
@@ -92,7 +92,7 @@
       "quote": "Remote (US)",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      },
      {
       "interpretation": "remote",
@@ -100,7 +100,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
      }
     ],
     "state": "stated"
@@ -117,8 +117,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1",
-  "url": "https://jobs.ashbyhq.com/posthog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1",
+  "url": "https://jobs.ashbyhq.com/PostHog/2a78f2f8-4fd3-413b-9c7d-55db568e68c1"
  }
 }

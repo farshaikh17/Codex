@@ -45,7 +45,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
      },
      {
       "interpretation": null,
@@ -53,7 +53,7 @@
       "quote": "US | EU",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
      }
     ],
     "state": "stated"
@@ -74,7 +74,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
      }
     ],
     "state": "stated"
@@ -93,8 +93,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d",
-  "url": "https://jobs.ashbyhq.com/posthog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d",
+  "url": "https://jobs.ashbyhq.com/PostHog/3c592b84-8b34-4ae4-ae23-cadce8f2212d"
  }
 }

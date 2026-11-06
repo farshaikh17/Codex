@@ -41,11 +41,22 @@
    "from_hash": "ab9c019c1767435b9285bfa25cbcba9dc8b5fad5c1aa36334def088ce4578825",
    "kind": "content_changed",
    "to_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e"
+  },
+  {
+   "changed_at": "2026-11-06T18:22:30.804221+00:00",
+   "fields": [
+    "compensation_raw",
+    "description",
+    "locations"
+   ],
+   "from_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e",
+   "kind": "content_changed",
+   "to_hash": "edd0be1c1ce14a439a53ad94d44139fd28635594116e8b39d9ba6430fd0c4501"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$54.6K – $61.2K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":54600,\"maxValue\":61200,\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K\"}]},{\"title\":\"Canada\",\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":58000,\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K\"}]}]}",
-  "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nTHE ROLE\n\nLocation: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be currently based within the Americas region.\n\nAt Oyster, we’re on a mission to create a more equal world by making it possible for companies everywhere to hire people anywhere.\n\nJoining as a Business Development Representative (BDR) is your chance to break into tech sales and build a career with real growth potential. From day one, you will be supported by dedicated sales enablement, training, and coaching programs designed to help you succeed and grow.\n\nYou will learn how to master outreach, qualify leads, and build relationships that drive business results — all while working with top-tier sales tools like Salesforce, Salesloft, and LinkedIn Sales Navigator.\n\nYou won’t be on your own. You will be surrounded by Business Development leaders, experienced Sales Executives, Revenue Operations experts, and an Enablement team that will invest in your development every step of the way.\n\nThis is an opportunity to learn fast, make an impact, and grow in a global, high-performing sales environment. If you are curious, ambitious, and ready to develop your career in tech sales, we’d love to hear from you.\n\nKey Responsibilities :\n\n- Create awareness and generate interest in Oyster through outbound prospecting (cold calling, email, and social outreach)\n\n- Partner seamlessly with Sales Executives to drive mid-market and SMB pipeline velocity\n\n- Qualify and schedule high-value meetings that convert into tangible sales opportunities\n\n- Present and clearly articulate Oyster’s global employment platform to target buyers\n\n- Organize, optimize, and manage your pipeline for maximum efficiency and predictable results\n\n- Serve as the voice of the market, collaborating with the GTM team (Sales, Marketing, Product, etc.) to translate buyer intelligence into strategy.\n\nWhat we value:\n\n- Driven & Motivated: You have a clear “why” that goes beyond money — whether it’s purpose, product, or personal growth\n\n- Ownership & Accountability: You take initiative, learn from mistakes, and find proactive solutions to move forward\n\n- Growth Mindset: You actively seek and implement feedback, always looking for ways to improve, master your craft, and ensure your career progression.\n\n- Resilient & Persistent: You don’t give up easily. You push through challenges and adapt in turbulent times\n\n- T.E.A.M.Oriented: Together Everyone Achieves More! You thrive in a collaborative environment, consistently seeking to elevate your teammates, celebrate team success, all while maintaining your own high standards for results\n\nWhat will make you successful:\n\n- Strategic Researcher: Finding the information is not your destination; you are naturally curious and synthesize data from diverse sources to strategically guide and focus outreach efforts.\n\n- Organized Precision: You possess exceptional attention to detail and organizational skills, consistently producing accurate work while balancing speed and quality--especially under pressure.\n\n- Creative Problem-Solver: Deconstructing complex challenges into practical steps to generate effective and innovative solutions comes second nature to you.\n\n- Agile and Adaptable: You are open and amenable to change, quickly mastering new tools (including AI) and processes, and swiftly pivoting strategies to progress the pipeline\n\n- Data-Driven Communicator : You view data as your currency for success, leveraging clear and persuasive communication (both written and verbal) as the vehicle to drive action.\n\nCandidates who stand out possess:\n\n- Minimum 6 months of demonstrated success in a customer-centric role (e.g., sales, hospitality, customer success, recruiting) where your results demonstrably relied on proactively engaging people and cultivating genuine relationships to drive a specific, measurable outcome.\n\n- Familiarity with B2B prospecting tools (Salesforce, Salesloft, LinkedIn Sales Navigator, etc.)\n\n- A genuine passion for remote work and an active curiosity about the evolving trends shaping the global workplace\n\nYou'll also need\n\n- A reliable home internet connection (or be able to get one)\n\n- Fluent English language skills\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
+  "compensation_raw": null,
+  "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nTHE ROLE\n\nLocation: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire (you?!), this role requires that you are based in the AMER region.\n\nAt Oyster, we’re on a mission to create a more equal world by making it possible for companies everywhere to hire people anywhere.\n\nJoining as a Business Development Representative (BDR) is your chance to take your outbound experience to the next level and build a long-term career in tech sales. You’ll sharpen your outreach, qualify leads, and build relationships that drive real business results, all while working with top-tier sales tools like Salesforce, Salesloft, Nooks, and LinkedIn Sales Navigator.\n\nWhy you’ll love it here\n\nYou won’t be on your own. You’ll be surrounded by Business Development leaders, experienced Sales Executives, Revenue Operations experts, and an Enablement team that will help you ramp fast, sharpen your pitch, and keep improving every week. You’ll learn from people who’ve done the job and want to see you win.\n\nAI-forward, and you own your process. Oyster is an AI-forward company, and our BDRs have real freedom to shape how they work. You’ll use the Nooks AI assistant (powered by Claude) and are encouraged to find your own ways to use AI to cut the busywork, so more of your day goes into real conversations with buyers.\n\nGrowth you earn. We take career progression seriously. Consistently hit your targets and you’ll earn protected time to build toward your next role, with coaching from BD leadership and our Enablement team. Your results open doors here, and we’ll help you walk through them.\n\nReal impact from day one. You’ll be talking to HR, Finance, and Legal leaders at companies hiring across the world, helping them solve a problem that matters to their business. Every conversation you start feeds directly into how Oyster grows.\n\nWhat you’ll do\n\n- Generate pipeline through high-volume, multichannel outbound: cold calls, email, and LinkedIn\n\n- Research and map target accounts with multiple stakeholders, then build tailored outreach to senior leaders up to the C-suite\n\n- Qualify prospects and book high-value meetings that convert into real opportunities for your Sales Executive partners\n\n- Clearly articulate how Oyster’s global employment platform solves the problems your buyers face\n\n- Run your book like a business: manage your pipeline, know your numbers, and keep finding smarter ways to work, including with AI\n\n- Be the voice of the market, sharing buyer insight back to Sales, Marketing, and Product\n\nWhat we’re looking for\n\n- 6+ months as an SDR/BDR in B2B SaaS, with outbound prospecting as the core of your role (not primarily inbound)\n\n- A track record of meeting or exceeding quota (meetings, SQLs, or SAOs), and you can walk us through your numbers\n\n- Comfort with high-volume outreach across cold calling, email, and LinkedIn, and confidence on live calls with senior leaders\n\n- Experience prospecting into accounts with multiple stakeholders, including the C-suite\n\n- Hands-on experience with Salesforce and at least one sales engagement platform or dialer (e.g. Salesloft, Outreach, Nooks)\n\n- A genuine interest in remote work and the trends shaping the global workplace\n\nYou’ll thrive here if you are...\n\n- Driven by a clear “why”: You’re motivated by more than money, whether it’s purpose, product, or your own growth, and it shows in how you show up every day.\n\n- An owner: You take initiative, own your pipeline and your results, learn from mistakes, and find solutions instead of waiting for them.\n\n- Always improving: You actively ask for feedback and put it into practice quickly. Here, that pays off: our Enablement team and BD leaders invest real time in coaching you.\n\n- Resilient and persistent: You push through rejection, adapt your approach when something isn’t working, and keep the pipeline moving, and you’ll be surrounded by a team that does the same.\n\n- A curious researcher: You dig into accounts, connect information from different sources, and use it to make your outreach sharper and more relevant.\n\n- A team player with high standards: You lift your teammates up, celebrate team wins, and still hold yourself to a high bar on accuracy, organization, and results.\n\nIf you’re ambitious, curious, and ready to take the next step in your sales career in a global, high-performing team, we’d love to hear from you.\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
   "locations": [
    {
     "source": "location",
@@ -57,7 +68,31 @@
    },
    {
     "source": "secondaryLocations",
+    "text": "Tampa"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "San Diego"
+   },
+   {
+    "source": "secondaryLocations",
     "text": "Chicago"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Seattle (WA)"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Miami"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Charlotte"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Portland"
    },
    {
     "source": "secondaryLocations",
@@ -72,6 +107,18 @@
     "text": "Atlanta"
    },
    {
+    "source": "secondaryLocations",
+    "text": "Boston"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Philadelphia"
+   },
+   {
+    "source": "secondaryLocations",
+    "text": "Pittsburgh"
+   },
+   {
     "source": "address.addressCountry",
     "text": "United States"
    }
@@ -80,112 +127,15 @@
   "title": "Business Development Representative (Americas)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
- "content_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e",
+ "content_changed_at": "2026-11-06T18:22:30.804221+00:00",
+ "content_hash": "edd0be1c1ce14a439a53ad94d44139fd28635594116e8b39d9ba6430fd0c4501",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
   "fields": {
    "compensation": {
-    "items": [
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "equity",
-       "component_type": "EquityCashValue",
-       "equity_mentioned": true,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "United States",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "ote",
-       "component_type": "Salary",
-       "equity_mentioned": false,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "United States",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [
-        {
-         "currency": "USD",
-         "currency_symbol": null,
-         "max": 61200,
-         "min": 54600,
-         "text": "91 000  - 102 000 OTE $54.6K – $61.2K"
-        }
-       ],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":54600,\"maxValue\":61200,\"summary\":\"91 000  - 102 000 OTE $54.6K – $61.2K\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "equity",
-       "component_type": "EquityCashValue",
-       "equity_mentioned": true,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "Canada",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"EquityCashValue\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "ote",
-       "component_type": "Salary",
-       "equity_mentioned": false,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "Canada",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [
-        {
-         "currency": "CAD",
-         "currency_symbol": null,
-         "max": 58000,
-         "min": 50000,
-         "text": "83 000 - 96 000 OTE CA$50K – CA$58K"
-        }
-       ],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":50000,\"maxValue\":58000,\"summary\":\"83 000 - 96 000 OTE CA$50K – CA$58K\"}",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     }
-    ],
-    "state": "stated"
+    "items": [],
+    "state": "not_stated"
    },
    "employment_type": {
     "items": [],
@@ -197,7 +147,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "United States",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -205,7 +155,23 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Austin",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Tampa",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "San Diego",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -213,7 +179,39 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Chicago",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Seattle (WA)",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Miami",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Charlotte",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Portland",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -221,7 +219,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Nashville",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -229,7 +227,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Denver",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -237,7 +235,39 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Atlanta",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Boston",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Philadelphia",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:secondaryLocations",
+      "quote": "Pittsburgh",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "description_text",
+      "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire (you?!), this role requires that you are based in the AMER region.",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -248,9 +278,9 @@
     "items": [
      {
       "interpretation": null,
-      "method": "description_section:You'll also need",
-      "quote": "- A reliable home internet connection (or be able to get one)\n- Fluent English language skills",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "method": "description_section:What we’re looking for",
+      "quote": "- 6+ months as an SDR/BDR in B2B SaaS, with outbound prospecting as the core of your role (not primarily inbound)\n- A track record of meeting or exceeding quota (meetings, SQLs, or SAOs), and you can walk us through your numbers\n- Comfort with high-volume outreach across cold calling, email, and LinkedIn, and confidence on live calls with senior leaders\n- Experience prospecting into accounts with multiple stakeholders, including the C-suite\n- Hands-on experience with Salesforce and at least one sales engagement platform or dialer (e.g. Salesloft, Outreach, Nooks)\n- A genuine interest in remote work and the trends shaping the global workplace\nYou’ll thrive here if you are...\n- Driven by a clear “why”: You’re motivated by more than money, whether it’s purpose, product, or your own growth, and it shows in how you show up every day.\n- An owner: You take initiative, own your pipeline and your results, learn from mistakes, and find solutions instead of waiting for them.\n- Always improving: You actively ask for feedback and put it into practice quickly. Here, that pays off: our Enablement team and BD leaders invest real time in coaching you.\n- Resilient and persistent: You push through rejection, adapt your approach when something isn’t working, and keep the pipeline moving, and you’ll be surrounded by a team that does the same.\n- A curious researcher: You dig into accounts, connect information from different sources, and use it to make your outreach sharper and more relevant.\n- A team player with high standards: You lift your teammates up, celebrate team wins, and still hold yourself to a high bar on accuracy, organization, and results.\nIf you’re ambitious, curious, and ready to take the next step in your sales career in a global, high-performing team, we’d love to hear from you.",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -267,15 +297,15 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
      {
       "interpretation": "remote",
       "method": "description_text",
-      "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be currently based within the Americas region.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire (you?!), this role requires that you are based in the AMER region.",
+      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }

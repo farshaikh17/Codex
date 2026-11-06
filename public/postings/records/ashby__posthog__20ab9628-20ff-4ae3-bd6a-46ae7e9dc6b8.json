@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-04T18:50:19.577531+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-06T18:22:30.804221+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "posthog",
  "changes": [],
@@ -45,7 +45,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      },
      {
       "interpretation": null,
@@ -53,7 +53,7 @@
       "quote": "USA",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      }
     ],
     "state": "stated"
@@ -66,7 +66,7 @@
       "quote": "We're hiring for a range of roles here. What you end up working on will depend on your exact skillset and preferences, so choose your own adventure.\nIn general we seek Product Engineers who are:\n- Enthusiastic drivers. We need proactive people that can fully own projects and get them done, and know to get help when needed. This is what being a product engineer https://posthog.com/blog/what-is-a-product-engineer is all about. \"Are we there yet?\" is the wrong question.\n- Optimistic problem solvers. Things get hard here sometimes – whether it's scaling, shipping complex products, handling a stream of support requests, or trying to ship something that touches multiple teams. We need people who won't get disheartened, and will collaborate, iterate, and ship their way out of anything.\n- Grown ups. We’re an international bunch of weirdos, but one thing unites us: everyone is kind, considerate, and professional towards each other. This isn't about age or experience https://posthog.com/handbook/company/grown-ups, it's about being low-ego, flexible, and respectful.\n- Genuine builders. PostHog is full of people who just love building stuff, people who would still be building software even if there wasn't a paycheck at the end. If this sounds like you, we should talk.",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      },
      {
       "interpretation": null,
@@ -74,7 +74,7 @@
       "quote": "- You've built things agents actually use. More and more of what we ship is used by agents, not people, and building for them is genuinely different. We want someone who's done it and has the scars: an API an agent can drive, an MCP server, evals, docs written for a machine. Side projects count.\n- Full-stack experience with relevant technologies https://posthog.com/handbook/engineering/stack – e.g. Python or similar, React or similar, something to do with big data is a bonus.\n- Experience taking a project from 0 to 1. You might have led a project, been a founder previously, or built an impressive side project.\n- Strong writing skills. We document everything https://posthog.com/handbook/company/culture#we-write-everything-down, most of it publicly. The ability to communicate your ideas and make persuasive arguments is essential.",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      }
     ],
     "state": "stated"
@@ -87,7 +87,7 @@
       "quote": "- Have worked at a high-growth SaaS company before.\n- Extensive knowledge of Django and/or TypeScript-based React.\n- Experience building AI-native products, or integrating AI into existing software.\nWe are committed to ensuring a fair and accessible interview process. If you need any accommodations or adjustments, please let us know\n#LI-DNI",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      }
     ],
     "state": "stated"
@@ -100,7 +100,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
      }
     ],
     "state": "stated"
@@ -117,8 +117,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8",
-  "url": "https://jobs.ashbyhq.com/posthog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8",
+  "url": "https://jobs.ashbyhq.com/PostHog/20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
  }
 }

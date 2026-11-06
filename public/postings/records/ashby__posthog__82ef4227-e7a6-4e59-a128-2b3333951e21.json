@@ -59,7 +59,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
      },
      {
       "interpretation": null,
@@ -67,7 +67,7 @@
       "quote": "US | EU",
       "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
      }
     ],
     "state": "stated"
@@ -80,7 +80,7 @@
       "quote": "- Excellent writing, researching, and communication skills\n- Development experience, though not necessarily in a formal role -- vibecoded side projects still count\n- Experience targeting developers as customers or writing for technical audiences\n- Experience building and maintaining sales enablement content that's actually used\n- Comfort working closely with Sales as your primary internal customer",
       "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
      }
     ],
     "state": "stated"
@@ -93,7 +93,7 @@
       "quote": "- Experience surfacing insights from call recordings (Gong, Granola, etc.)\n- Experience working with handbook-style documentation as the source of truth\n- Familiarity or experience working with devtool products\n- Experience working as a product marketer, growth marketer, or content marketer\nIf you have a disability, please let us know if there's any way we can make the interview process better for you - we're happy to accommodate!\n#LI-DNI",
       "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
      }
     ],
     "state": "stated"
@@ -106,7 +106,7 @@
       "quote": "Remote",
       "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
       "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+      "source_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
      }
     ],
     "state": "stated"
@@ -123,8 +123,8 @@
  "schema": "posting-record-1",
  "source_id": "posthog-ashby",
  "urls": {
-  "apply_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21/application",
-  "canonical_url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21",
-  "url": "https://jobs.ashbyhq.com/posthog/82ef4227-e7a6-4e59-a128-2b3333951e21"
+  "apply_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21/application",
+  "canonical_url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21",
+  "url": "https://jobs.ashbyhq.com/PostHog/82ef4227-e7a6-4e59-a128-2b3333951e21"
  }
 }
