@@ -9,8 +9,8 @@
   "scripts": {
     "build:frontend": "npm --prefix frontend ci && npm --prefix frontend run build",
     "build:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
-    "test": "node --import ./test/register.mjs --test test/worker.test.mjs test/bundle-privacy.test.mjs && node test_dst_transitions.js && node test_authed_fetch_regression.js && python3 test_migration_chain.py",
-    "test:worker": "node --import ./test/register.mjs --test test/worker.test.mjs",
+    "test": "node --import ./test/register.mjs --test test/worker.test.mjs test/discovery.test.mjs test/bundle-privacy.test.mjs && node test_dst_transitions.js && node test_authed_fetch_regression.js && python3 test_migration_chain.py",
+    "test:worker": "node --import ./test/register.mjs --test test/worker.test.mjs test/discovery.test.mjs",
     "verify": "npm run build:frontend && npm run build:worker && npm test",
     "e2e": "node test/e2e/browser.e2e.mjs",
     "seed:local": "node test/seed-sql.mjs"

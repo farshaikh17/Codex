@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 text-emerald-400/80 text-[11px]">
-          <span>Production Cloudflare D1 Storage • Zero Candidate Leakage</span>
+          <span>Public read-only view • Changes need the operator key</span>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 sm:gap-2 max-w-full overflow-x-auto no-scrollbar py-1">
+        <nav className="flex flex-wrap items-center gap-1 sm:gap-2 max-w-full py-1">
           {/* 1. DASHBOARD */}
           <button
             aria-label="Dashboard"

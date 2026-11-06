@@ -8,7 +8,7 @@ name: Dashboard release to production (manual)
 #   mode = diagnose            read-only incident check: D1 info and 24h usage (when the token can read it), one SELECT 1, and
 #                              the Worker's own error for one public request (wrangler tail, filtered). No fingerprint, no tests
 #                              against production beyond that single request.
-#   mode = release              preflight, fingerprint, migrations 0008-0009 (additive), deploy, public smoke test, real-browser
+#   mode = release              preflight, fingerprint, migrations 0008-0009 (additive), the owner-approved score correction (idempotent, capped writes), deploy, public smoke test, real-browser
 #                               check (desktop + 375px mobile), fingerprint comparison.
 #
 # Secrets (repository secrets; the collector's sync workflow already uses the same two):
@@ -123,8 +123,10 @@ jobs:
               npx wrangler d1 insights career-job-engine --time-period "$PERIOD" --sort-type sum --sort-by reads --limit 12 --json 2>/dev/null | node -e "
                 let t='';process.stdin.on('data',d=>t+=d).on('end',()=>{try{const a=JSON.parse(t.slice(t.indexOf('[')));let tot=0;for(const q of a){const o={};for(const [k,v] of Object.entries(q)){if(/^(query|sql)$/i.test(k))o.query=String(v).replace(/\\s+/g,' ').slice(0,110);else if(/row|time|count|times|run/i.test(k)&&typeof v==='number')o[k]=Math.round(v*100)/100;}console.log(JSON.stringify(o));}}catch(e){console.log('insights unavailable: '+String(e.message).slice(0,120)+' '+t.slice(0,160).replace(/token/ig,'***'));}})"
             done
+            echo '#### Pending score correction (dry run: counts only)'
+            node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | head -n 20
             echo '#### Table row counts and job inventory (read-only)'
-            npx wrangler d1 execute career-job-engine --remote --command "SELECT 'jobs' t, COUNT(*) n FROM jobs UNION ALL SELECT 'jobs_active', COUNT(*) FROM jobs WHERE is_active=1 UNION ALL SELECT 'candidate_qualifications', COUNT(*) FROM candidate_qualifications UNION ALL SELECT 'candidate_job_scores', COUNT(*) FROM candidate_job_scores UNION ALL SELECT 'applications', COUNT(*) FROM applications UNION ALL SELECT 'application_history', COUNT(*) FROM application_history UNION ALL SELECT 'cloud_discovery_runs', COUNT(*) FROM cloud_discovery_runs UNION ALL SELECT 'response_cache', COUNT(*) FROM response_cache UNION ALL SELECT 'auth_failures', COUNT(*) FROM auth_failures" --json 2>&1 | grep -E '"(t|n)"' | paste - - | head -20
+            npx wrangler d1 execute career-job-engine --remote --command "SELECT 'jobs' t, COUNT(*) n FROM jobs UNION ALL SELECT 'jobs_active', COUNT(*) FROM jobs WHERE is_active=1 UNION ALL SELECT 'candidate_qualifications', COUNT(*) FROM candidate_qualifications UNION ALL SELECT 'candidate_job_scores', COUNT(*) FROM candidate_job_scores UNION ALL SELECT 'applications', COUNT(*) FROM applications UNION ALL SELECT 'application_history', COUNT(*) FROM application_history UNION ALL SELECT 'cloud_discovery_runs', COUNT(*) FROM cloud_discovery_runs UNION ALL SELECT 'response_cache', COUNT(*) FROM response_cache UNION ALL SELECT 'auth_failures', COUNT(*) FROM auth_failures" --json 2>&1 | grep -E '"(t|n)"|rror' | paste - - | head -20
             npx wrangler d1 execute career-job-engine --remote --command "SELECT COALESCE(source_adapter,'(none)') src, COALESCE(provenance,'(none)') prov, is_active act, COUNT(*) n FROM jobs GROUP BY 1,2,3 ORDER BY n DESC LIMIT 30" --json 2>&1 | grep -E '"(src|prov|act|n)"' | paste - - - - | head -30
             npx wrangler d1 execute career-job-engine --remote --command "SELECT substr(discovered_at,1,10) day, COUNT(*) n FROM jobs GROUP BY 1 ORDER BY 1 DESC LIMIT 14" --json 2>&1 | grep -E '"(day|n)"' | paste - - | head -14
           } 2>&1 | tee diag.txt
@@ -224,6 +226,17 @@ jobs:
           npx wrangler deploy --var "GIT_COMMIT:$GITHUB_SHA" --var "DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee deploy.log
           VERSION=$(grep -oE 'Current Version ID: [0-9a-f-]+' deploy.log | awk '{print $4}' || true)
           echo "- deployed version id: \`${VERSION:-see log}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Correct stored preliminary scores AFTER the deploy (owner-approved ranking change; dry run first, idempotent, refuses above 20,000 rows written)
+        if: ${{ inputs.mode == 'release' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          echo '#### Dry run (reads only)'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee rescore.txt
+          echo '#### Apply'; node --import ./test/register.mjs scripts/rescore_ranking_v2.mjs --remote --apply 2>&1 | grep -v -i 'warning\|trace-warnings\|Reparsing\|eliminate this' | tee -a rescore.txt
+          { echo '### Score correction'; echo '```'; cat rescore.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Flush the read cache (a deploy never reuses an answer computed by the previous code)
         if: ${{ inputs.mode == 'release' }}

@@ -63,9 +63,13 @@ check('no private text on the dashboard', !PRIVATE_TEXT.test(dash) && !PRIVATE_C
 
 for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.farhan.full_name, overview.sana.full_name], ['SANA', 'sana_ansari', overview.sana.full_name, overview.farhan.full_name]]) {
   await tab(btn);
-  const t = await text();
+  let t = await text();
   const sc = (await api(`/jobs?candidate_id=${cid}&limit=1&exclude_applied=true&exclude_dismissed=true`)).status_counts;
-  const card = Number((t.match(/READY TO APPLY\s+(\d+)/i) || [])[1]);
+  // The card shows 0 until the candidate's first jobs query returns, which is slow right after a deploy flushes the cache. Wait (up to 20 s) for the
+  // value to settle; a count that never matches the API still fails.
+  const readCard = (x) => Number((x.match(/READY TO APPLY\s+(\d+)/i) || [])[1]);
+  for (let i = 0; i < 20 && readCard(t) !== sc.READY; i++) { await page.waitForTimeout(1000); t = await text(); }
+  const card = readCard(t);
   check(`${btn}: workspace heading and READY card match the API`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
   await tab('Analytics');
   const ta = await text();

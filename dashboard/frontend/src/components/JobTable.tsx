@@ -99,7 +99,7 @@ export const JobTable: React.FC<JobTableProps> = ({
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           {/* Keyword Search */}
-          <div className="relative flex-1">
+          <div className="relative w-full md:flex-1 md:min-w-[18rem]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"

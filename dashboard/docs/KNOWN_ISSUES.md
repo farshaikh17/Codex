@@ -2,24 +2,27 @@
 
 Nothing below blocks the release. Each item says who decides or what would close it.
 
-## Decisions that only the owner can make (nothing was changed for these)
+## Owner decisions (recorded 2026-11-05)
 
-1. **Sana's preferred Indian cities.** Earlier records disagree (Bengaluru, Hyderabad, Chennai vs Bengaluru, Pune,
-   Mumbai). The stored list (Bengaluru, Hyderabad, Chennai) is preserved and shown as stored.
-2. **Farhan's 12 application records.** The real-world meaning is not confirmed, so none was deleted, reclassified or
-   excluded from counts:
-   * 4 sit on synthetic or test-fixture jobs (`syn-001`, `syn-002`, and two `TEST_FIXTURE` jobs);
-   * 7 are rejections noted "Playwright verified rejection test" on real public postings, with no applied date;
-   * 1 is the Drivetrain `APPLIED` record `app-803e11ab` (the only record with an applied date).
-   Until answered, the tracker total (12) includes them. The dashboard card now shows the *applied-stage* count
-   separately from the tracker record count so the number is not mistaken for 12 submissions.
-3. **Relevance scoring (proposal only, not implemented).** In a read-only sample of Farhan's 200 highest-scoring review
-   items, 71 had titles matching his avoid list (software, SRE/DevOps, ML, security, finance, support, engineering
-   management, SDET) at 58-67%, and 53 named a US or European location with India eligibility unknown. The score is driven
-   by the role label plus one generic keyword and has no title or location negative gate. Proposal: cap the score at 40
-   for avoid-list titles and subtract a fixed amount when the only stated location is outside India; leave eligibility
-   and READY rules alone. Expected effect: those 71 titles drop below the review threshold; the 1 READY and 2 STRETCH
-   jobs and all unknown-eligibility jobs stay in review. Needs the owner's go-ahead because it changes ranking.
+1. **Sana's location preference: decided, with evidence required.** Remote is preferred. An on-site or hybrid role is acceptable where a
+   commercial airport is within about 2 hours; that is a preference to verify per posting, and no list of city names can establish it
+   (Mumbai and Pune are examples the owner gave, not a list). Middle East and Europe stay as relocation preferences, without assuming work
+   authorization. Consequently the Worker's discovery screen no longer calls an on-site role in a listed Indian city "eligible": it is
+   **unknown** until accessibility is verified, and only a role that is remote in India is affirmatively eligible. The score-correction script (`scripts/rescore_ranking_v2.mjs`, run by the release) applies
+   this to the preliminary rows already stored (reason text exactly "Posting is in an accessible Indian location."), lowering their score
+   by the 10 points that eligibility had added.
+2. **Farhan's 12 application records: owner's understanding recorded, nothing changed.** The owner believes they were listings added
+   very early on that were not eligible, not real applications. They remain in the tracker and in every count (none was deleted,
+   reclassified or excluded) until the owner confirms record by record, in particular the Drivetrain `APPLIED` record `app-803e11ab`, the
+   only one with an applied date. Facts: 4 sit on synthetic or test-fixture jobs, 7 are rejections noted "Playwright verified rejection
+   test" on real public postings, 1 is the Drivetrain record.
+3. **Relevance scoring: approved and implemented (`worker/discovery.ts`; stored rows corrected once by `scripts/rescore_ranking_v2.mjs`).** For Farhan, a title on his avoid list
+   (software, SRE/DevOps, ML, security, finance, support, engineering management, test automation) is capped at 40, and a posting
+   whose only stated location is outside India loses 15 points unless it affirmatively supports remote work from India. Sana keeps the
+   old scoring (she is open to relocation). Eligibility, status and READY rules are unchanged, human overrides and applications are
+   never touched, and scores from the collector's engine are not touched. The correction uses the Worker's own functions, lowers scores only, skips rows already scored under the new rules (tag `ranking_v2`), refuses to write more than 20,000 rows, and is safe to re-run.
+4. **Application tracker visibility: public is fine for now** (status and dates only, no notes).
+5. **Still open by choice:** one shared operator key for both candidates (not yet), uptime monitoring (not now).
 
 ## Behaviour to be aware of
 
@@ -84,3 +87,5 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 * `legacy/` holds the original Windows-path scripts; they are not run by anything.
 * The collector's two Python tests of the importer live in `legacy/` because they need that repository's `engine/`.
+
+- **Ranking correction and job-board rows.** Job-board rows are stored with eligibility forced to UNKNOWN after scoring, so the script re-runs the Worker's own evaluate() on the stored posting (title, location, workplace type, description) to get the eligibility the score was computed with, and applies the same foreign-location rule. A row with no stored description is left unpenalised. The script only ever lowers scores and never changes status, lane, overrides, applications or history. Foreign-location detection is a text rule: 'Hyderabad, Pakistan' reads as Indian, and unusual exclusion wording may be misread; both err toward not penalising.
