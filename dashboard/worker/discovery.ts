@@ -249,14 +249,16 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
 // A new client starts with no rows. This screens active jobs the client has no row for yet (newest first, a bounded batch per call)
 // with the same evaluate() as discovery. It only INSERTs: an existing row, an application or a human decision is never touched, and
 // nothing becomes READY. Job-board postings get the same "unverified" treatment as in discovery.
-export const BACKFILL_MAX = 200;
+// 40 per call, like the assessment batch: evaluate() over long descriptions costs CPU, and Workers Free allows about 10 ms per request.
+export const BACKFILL_MAX = 40;
 export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso()) {
  const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
  if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number> };
  const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
  const {results} = await db.prepare(`SELECT j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
   FROM jobs j WHERE j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
-  ORDER BY j.discovered_at DESC, j.id LIMIT ?`).bind(candidateId, n + 1).all<any>();
+   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ? AND a.job_id = j.id)
+  ORDER BY j.discovered_at DESC, j.id LIMIT ?`).bind(candidateId, candidateId, n + 1).all<any>();
  const rows = (results || []).slice(0, n);
  const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
  for (const r of rows) {
@@ -266,11 +268,14 @@ export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_M
   byStatus[result.status] = (byStatus[result.status] || 0) + 1;
   statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at)
    SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=? AND job_id=?)`).bind(candidateId, r.id, result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, candidateId, r.id));
-  statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) VALUES(?,?,?,?,?,?,?,?)`)
-   .bind(candidateId, r.id, result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane, JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, assessed_from: 'client_backfill', matched_skills: result.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now));
+  statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
+   SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=? AND job_id=?)`)
+   .bind(candidateId, r.id, result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane, JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, assessed_from: 'client_backfill', matched_skills: result.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now, candidateId, r.id));
  }
- if (statements.length) await db.batch(statements);
- return { inserted: rows.length, more: (results || []).length > n, by_status: byStatus };
+ const done = statements.length ? await db.batch(statements) : [];
+ // counted from what was actually written (every second statement is a qualification insert)
+ const inserted = done.filter((_: any, i: number) => i % 2 === 0).reduce((k: number, r: any) => k + Number(r?.meta?.changes || 0), 0);
+ return { inserted, more: (results || []).length > n, by_status: byStatus };
 }
 
 export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {
@@ -303,7 +308,7 @@ export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof
    for(const item of parsed.items){
     const title=item.jobTitle||item.text||item.title||item.name||'';if((source.kind!=='hnjobs'&&!relevant(title))||!item.id)continue;
     const postingId=String(item.id), id=`${source.id}:${postingId}`;
-    statements.push(db.prepare(`INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,next_due,updated_at) VALUES(?,?,?,?,'PENDING',?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,state='PENDING',next_due=excluded.next_due,attempts=0,last_error=NULL,updated_at=excluded.updated_at`).bind(id,source.id,postingId,JSON.stringify(item),seconds,now));
+    statements.push(db.prepare(`INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,next_due,updated_at) VALUES(?,?,?,?,'PENDING',?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,state='PENDING',next_due=excluded.next_due,attempts=0,last_error=NULL,updated_at=excluded.updated_at WHERE cloud_discovery_queue.state<>'GONE'`).bind(id,source.id,postingId,JSON.stringify(item),seconds,now));   // a posting its ATS answered 404 for is not fetched again
    }
    counts.jobs_seen=parsed.items.length;
    const interval=source.kind==='remotive'?86400:43200;

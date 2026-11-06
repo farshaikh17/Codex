@@ -452,7 +452,13 @@ async function syncRegistry(env: Env, force = false) {
   CANDIDATE_IDS.clear(); reg.ids.forEach((id) => CANDIDATE_IDS.add(id));
   PRIVATE_IDS.clear(); reg.privateIds.forEach((id) => PRIVATE_IDS.add(id));
   CLIENT_TITLES.clear(); reg.titles.forEach((t, id) => CLIENT_TITLES.set(id, t));
+  return reg;
 }
+// The registry generation each request decided visibility with: an answer is only cached under that same generation, so an
+// answer computed just before a visibility change can never be stored as current (it would be served for the cache TTL).
+const decidedUnder = new WeakMap<Request, number | null>();
+// A request about a client it may not see: answered by exactly the same path as an unknown id (budget check, no cache, same body).
+const hiddenFrom = new WeakMap<Request, string>();
 // The client a request's share link (X-View-Token) grants read access to. Set by the router; read-only, public field shape.
 const viewerOf = new WeakMap<Request, string>();
 /** Whether this request may see a candidate at all: operators see every client, others the public ones and their own share link's. */
@@ -546,12 +552,13 @@ class WorkerRouter {
     // Client visibility: a private client is answered exactly like an unknown one unless the operator asks, or the request carries
     // a share link for that client. Runs before the cache, so a cached answer can never reach someone who may not see it.
     if (isApi && accessLevel.has(request)) {
-      await syncRegistry(env);
+      const reg = await syncRegistry(env);
+      decidedUnder.set(request, reg.generation);
       if (accessLevel.get(request) === 'public') {
         const viewer = await viewTokenCandidate(env.DB, request.headers.get('X-View-Token'));
         if (viewer) viewerOf.set(request, viewer);
         const cid = referencedCandidate(url);
-        if (cid && CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) return badCandidate(request, env, cid);
+        if (cid && CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) hiddenFrom.set(request, cid);
       }
     }
 
@@ -568,7 +575,7 @@ class WorkerRouter {
         // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
         // (India Remote list) is metered by that inner call, so it is not counted twice.
         const metered = readRoute;
-        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !request.headers.has('X-View-Token') ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !viewerOf.has(request) && !hiddenFrom.has(request) ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
         const operatorChange = level === 'operator' && request.method !== 'GET';
         let meter: { db: D1Database; rows: () => number } | null = null;
@@ -591,7 +598,9 @@ class WorkerRouter {
         if (operatorChange) await invalidateResponseCache(env);   // before: if this fails the change is refused
         let res: Response;
         try {
-          res = await this.finish(request, await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
+          res = await this.finish(request, hiddenFrom.has(request)
+            ? badCandidate(request, env, hiddenFrom.get(request))
+            : await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
         } finally {
           if (meter) {
             const rows = meter.rows();
@@ -601,7 +610,8 @@ class WorkerRouter {
             try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
           }
         }
-        if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
+        const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
+        if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
           if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
           await flushMeter(env, env.METER_FLUSH === 'always');
@@ -992,7 +1002,7 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
       full_name: candidate.full_name,
       education: candidate.education,
       current_location: isOperatorRequest(request) ? candidate.current_location : publicLocation(candidate.current_location),
-      display_title: candidateId === 'sana_ansari'
+      display_title: !BUILTIN_IDS.includes(candidateId) ? (CLIENT_TITLES.get(candidateId) || '') : candidateId === 'sana_ansari'
         ? 'Power Plant Operations & Industrial Reliability Engineering'
         : 'Technical Operations & Workflow Automation Engineering',
       ready_count: counts['READY'] || 0,
@@ -1020,21 +1030,27 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
 
 router.get('/api/dashboard/overview', async (request, env) => {
   try {
-    // Helper to get candidate summary card
+    // Every visible candidate's figures in four grouped queries, whatever the number of clients (Workers Free allows 50 queries
+    // per request; one set of queries per client would run out at a handful of clients).
+    const visible = [...new Set([...BUILTIN_IDS, ...[...CANDIDATE_IDS].filter((x) => !BUILTIN_IDS.includes(x) && visibleTo(request, x)).sort()])];
+    const idsJson = JSON.stringify(visible);
+    const { results: candRows } = await env.DB.prepare(`SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
+      FROM candidates c LEFT JOIN candidate_strategy s ON c.id = s.candidate_id WHERE c.id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>();
+    const { results: allQ } = await env.DB.prepare(`SELECT q.candidate_id, q.qualification_status, q.strategy_lane, COUNT(*) as cnt
+      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id IN (SELECT value FROM json_each(?)) AND j.is_active = 1
+      GROUP BY q.candidate_id, q.qualification_status, q.strategy_lane`).bind(idsJson).all<any>();
+    const { results: allApps } = await env.DB.prepare(`SELECT candidate_id, COUNT(*) as records,
+      SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
+      FROM applications WHERE candidate_id IN (SELECT value FROM json_each(?)) GROUP BY candidate_id`).bind(idsJson).all<any>();
+    let profRows: any[] = [];
+    try { profRows = (await env.DB.prepare(`SELECT candidate_id, display_title, summary_line FROM client_profiles WHERE candidate_id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>()).results || []; } catch {}
+    const candBy = new Map((candRows || []).map((r: any) => [r.id, r]));
+    const appBy = new Map((allApps || []).map((r: any) => [r.candidate_id, r]));
+    const profBy = new Map(profRows.map((r: any) => [r.candidate_id, r]));
     const getSummary = async (cid: string) => {
-      const cand = await env.DB.prepare(`
-        SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
-        FROM candidates c
-        LEFT JOIN candidate_strategy s ON c.id = s.candidate_id
-        WHERE c.id = ?
-      `).bind(cid).first<any>();
-
-      const { results: qRows } = await env.DB.prepare(`
-        SELECT q.qualification_status, q.strategy_lane, COUNT(*) as cnt
-        FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-        WHERE q.candidate_id = ? AND j.is_active = 1
-        GROUP BY q.qualification_status, q.strategy_lane
-      `).bind(cid).all<any>();
+      const cand = candBy.get(cid) || null;
+      const qRows = (allQ || []).filter((r: any) => r.candidate_id === cid);
 
       const statusMap: Record<string, number> = {};
       const discLaneMap: Record<string, number> = {};
@@ -1051,14 +1067,10 @@ router.get('/api/dashboard/overview', async (request, env) => {
       const totalDisc = (discLaneMap['STRONGEST_FIT'] || 0) + (discLaneMap['BRIDGE'] || 0) + (discLaneMap['DREAM'] || 0) || 1;
       const totalReady = (readyLaneMap['STRONGEST_FIT'] || 0) + (readyLaneMap['BRIDGE'] || 0) + (readyLaneMap['DREAM'] || 0) || 1;
 
-      const appCnt = await env.DB.prepare(`
-        SELECT COUNT(*) as records,
-               SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
-        FROM applications WHERE candidate_id = ?
-      `).bind(cid).first<{ records: number; applied: number }>();
+      const appCnt = appBy.get(cid) as { records: number; applied: number } | undefined;
       const facts = candidateFacts(cid, cand);
       // a resold client's title and summary come from its profile (the built-in two keep their supplied facts)
-      const prof = BUILTIN_IDS.includes(cid) ? null : await env.DB.prepare('SELECT display_title, summary_line FROM client_profiles WHERE candidate_id = ?').bind(cid).first<any>();
+      const prof = BUILTIN_IDS.includes(cid) ? null : (profBy.get(cid) || {}) as any;
       if (prof) { facts.display_title = prof.display_title || ''; facts.summary_line = facts.public_summary = prof.summary_line || ''; }
 
       const target_distribution = {
@@ -1117,7 +1129,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
     const sanaCard = await getSummary('sana_ansari');
     // every client this request may see, the built-in two first (the farhan/sana keys stay for the existing pages)
     const clientCards: any[] = [];
-    for (const id of [...CANDIDATE_IDS].filter((x) => !BUILTIN_IDS.includes(x) && visibleTo(request, x)).sort()) clientCards.push(await getSummary(id));
+    for (const id of visible.filter((x) => !BUILTIN_IDS.includes(x))) clientCards.push(await getSummary(id));
 
     // one pass over jobs for both figures (it was two)
     const jobCounts = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active FROM jobs').first<{ cnt: number; active: number }>();
@@ -1973,12 +1985,10 @@ router.get('/api/analytics', async (request, env, _params, url) => {
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
-    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs, read in ONE pass (it was four).
+    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs, read in one pass (it was four; the average score is a second query, see below).
     const { results: eligCounts } = await env.DB.prepare(`
-      SELECT q.eligibility_status, COUNT(*) as cnt, SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub,
-             SUM(s.overall_score) as score_sum, COUNT(s.overall_score) as score_n
+      SELECT q.eligibility_status, COUNT(*) as cnt, SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub
       FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
       GROUP BY q.eligibility_status
     `).bind(candidateId).all<any>();
@@ -1988,13 +1998,15 @@ router.get('/api/analytics', async (request, env, _params, url) => {
       INELIGIBLE: 0,
       UNKNOWN: 0,
     };
-    let total = 0, pub = 0, scoreSum = 0, scoreN = 0;
+    let total = 0, pub = 0;
     (eligCounts || []).forEach((r: any) => {
       eligibility_counts[r.eligibility_status] = r.cnt;
-      total += r.cnt; pub += r.pub || 0; scoreSum += r.score_sum || 0; scoreN += r.score_n || 0;
+      total += r.cnt; pub += r.pub || 0;
     });
     const totalJobs = { cnt: total };
-    const avgScore = { avg_score: scoreN ? scoreSum / scoreN : 0 };
+    // The average keeps its old scope (every score row of an active job, with or without a qualification row), so it is its own query.
+    const avgScore = await env.DB.prepare(`SELECT AVG(s.overall_score) as avg_score FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id
+      WHERE s.candidate_id = ? AND j.is_active = 1`).bind(candidateId).first<{ avg_score: number }>();
     const salaryPub = { total, pub };
 
     const { results: appCounts } = await env.DB.prepare(`
@@ -2725,14 +2737,16 @@ const shapeClient = (r: any) => r && ({
 const readJson = async (request: Request) => { try { return await request.json<any>(); } catch { return null; } };
 
 router.get('/api/clients', async (request, env) => {
-  const { results } = await env.DB.prepare('SELECT id FROM candidates ORDER BY full_name').all<any>();
-  const clients = [];
-  for (const r of results || []) {
-    const row = shapeClient(await clientRow(env, r.id));
-    const counts = await env.DB.prepare(`SELECT COUNT(*) AS jobs, SUM(CASE WHEN qualification_status IN ('READY','READY_HIGH','STRETCH_READY') THEN 1 ELSE 0 END) AS apply_worthy
-      FROM candidate_qualifications WHERE candidate_id = ?`).bind(r.id).first<any>();
-    clients.push({ ...row, jobs_screened: counts?.jobs || 0, apply_worthy: counts?.apply_worthy || 0 });
-  }
+  // two queries for any number of clients (Workers Free allows 50 queries per request)
+  const { results } = await env.DB.prepare(`SELECT c.id, c.full_name, c.current_location, c.citizenship, c.primary_timezone, c.total_years_experience,
+    c.qualification_threshold, c.primary_skills, p.visibility, p.display_title, p.summary_line, p.search_profile, p.created_at, p.updated_at,
+    (SELECT COUNT(*) FROM client_view_tokens t WHERE t.candidate_id = c.id AND t.revoked_at IS NULL) AS active_share_links
+    FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id ORDER BY c.full_name`).all<any>();
+  const { results: counts } = await env.DB.prepare(`SELECT candidate_id, COUNT(*) AS jobs,
+    SUM(CASE WHEN qualification_status IN ('READY','READY_HIGH','STRETCH_READY') THEN 1 ELSE 0 END) AS apply_worthy
+    FROM candidate_qualifications GROUP BY candidate_id`).all<any>();
+  const by = new Map((counts || []).map((r: any) => [r.candidate_id, r]));
+  const clients = (results || []).map((r: any) => ({ ...shapeClient(r), jobs_screened: by.get(r.id)?.jobs || 0, apply_worthy: by.get(r.id)?.apply_worthy || 0 }));
   return jsonResponse({ clients }, 200, corsHeaders(request, env));
 });
 
@@ -2752,7 +2766,7 @@ router.post('/api/clients', async (request, env) => {
       .bind(id, v.visibility, v.display_title || null, v.summary_line || null, JSON.stringify(v.search_profile)),
   ]);
   forgetRegistry(env.DB); await syncRegistry(env, true);
-  return jsonResponse({ client: shapeClient(await clientRow(env, id)), next: 'POST /api/clients/' + id + '/backfill screens the existing active jobs for this client.' }, 201, corsHeaders(request, env));
+  return jsonResponse({ client: shapeClient(await clientRow(env, id)), next: 'POST /api/clients/' + id + '/backfill screens the existing active jobs for this client (40 per call; repeat while more is true).' }, 201, corsHeaders(request, env));
 });
 
 router.put('/api/clients/:id', async (request, env, params) => {
@@ -2787,7 +2801,7 @@ router.put('/api/clients/:id', async (request, env, params) => {
 router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
   const id = knownCandidate(params.id);
   if (!id) return badCandidate(request, env, params.id);
-  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '200', 10) || 200, 1), 200);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 40);
   const res = await backfillClient(env.DB, id, limit);
   return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
 });

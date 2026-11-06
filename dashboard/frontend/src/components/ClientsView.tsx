@@ -30,7 +30,7 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
   };
   const screenAll = async (id: string) => {
     let total = 0;
-    for (let i = 0; i < 25; i++) {                       // at most 25 batches of 200 per click
+    for (let i = 0; i < 150; i++) {                      // batches of 40 (CPU limit per request), at most 6,000 jobs per click
       const r = await backfillClient(id);
       total += r.inserted;
       if (!r.more) break;

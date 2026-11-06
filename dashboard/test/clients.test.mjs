@@ -219,3 +219,82 @@ test('a client profile shows only what was entered for it, never the built-in ca
   assert.equal(pub.json.current_location, 'India');
   assert.ok(!pub.text.includes('Pune'), 'the stored city stays operator-only');
 });
+
+test('a private id is indistinguishable from an unknown one: same status and same bytes on every route, also when the budget is used up', async () => {
+  const w = world({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'test' });
+  await req(w.env, 'POST', '/api/clients', { body: { ...analyst, full_name: 'Secret Person' } });
+  for (const path of ['/api/jobs?candidate_id=X', '/api/candidates/X/jobs', '/api/export?candidate_id=X', '/api/profile?candidate_id=X', '/api/jobs/k1?candidate_id=X', '/api/analytics?candidate_id=X']) {
+    const priv = await req(w.env, 'GET', path.replace('X', 'secret_person'), { key: null });
+    const unk = await req(w.env, 'GET', path.replace('X', 'secret_persoX'), { key: null });
+    assert.equal(priv.status, unk.status, path);
+    assert.equal(priv.text.replace('secret_person', 'ID'), unk.text.replace('secret_persoX', 'ID'), path);
+    assert.ok(!priv.text.includes('secret_person'), path);
+  }
+  w.run(`INSERT INTO read_meter(day, rows_read) VALUES (?, 99999999) ON CONFLICT(day) DO UPDATE SET rows_read = 99999999`, new Date().toISOString().slice(0, 10));
+  const a = await req(w.env, 'GET', '/api/jobs?candidate_id=secret_person', { key: null });
+  const b = await req(w.env, 'GET', '/api/jobs?candidate_id=secret_persoX', { key: null });
+  assert.equal(a.status, b.status, 'over budget');
+  assert.equal(a.text, b.text);
+});
+
+test('an answer computed under an older registry generation is never cached; an invalid share token does not bypass the cache', async () => {
+  const w = world({ RESPONSE_CACHE: 'on', GIT_COMMIT: 'test' });
+  // a visitor request whose visibility was decided, then an operator change lands before its cache write
+  const realPrepare = w.d1.prepare.bind(w.d1);
+  let bumped = false;
+  w.d1.prepare = (sql) => {
+    if (!bumped && /SELECT s\.generation AS current/.test(sql)) { bumped = true; w.run('UPDATE cache_state SET generation = generation + 1 WHERE id = 1'); }
+    return realPrepare(sql);
+  };
+  const first = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}`, { key: null });
+  assert.equal(first.status, 200);
+  assert.equal(first.headers.get('X-Cache'), null, 'not stored: visibility was decided under the previous generation');
+  w.d1.prepare = realPrepare;
+  assert.equal((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}`, { key: null })).headers.get('X-Cache'), 'MISS');
+  assert.equal((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}`, { key: null, view: 'garbage' })).headers.get('X-Cache'), 'HIT');
+});
+
+test('backfill skips a job the client already applied to (no orphan score), counts only what it wrote, and finishes', async () => {
+  const w = world();
+  await req(w.env, 'POST', '/api/clients', { body: analyst });
+  w.run(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('pa','priya_analyst','k2','APPLIED')`);
+  const b1 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.equal(b1.json.inserted, 4);
+  assert.equal(b1.json.more, false);
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_job_scores WHERE candidate_id='priya_analyst' AND job_id='k2'`).get().n, 0);
+  const b2 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.deepEqual([b2.json.inserted, b2.json.more], [0, false]);
+  // batches are bounded to 40 per call whatever is asked
+  for (let i = 0; i < 45; i++) w.run(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES (?,?,?,?,1,?)`, `m${i}`, 'Data Analyst', 'M', 'lever', '2026-11-05T00:00:00Z');
+  const b3 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill?limit=500');
+  assert.deepEqual([b3.json.inserted, b3.json.more], [40, true]);
+  const b4 = await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  assert.deepEqual([b4.json.inserted, b4.json.more], [5, false]);
+});
+
+test('analytics average score keeps its scope: every score row of an active job, with or without a qualification row', async () => {
+  const w = world();
+  w.run(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score) VALUES (?,?,?),(?,?,?),(?,?,?)`, F, 'k1', 60, F, 'k2', 60, F, 'k3', 90);
+  const a = await req(w.env, 'GET', `/api/analytics?candidate_id=${F}`);
+  assert.equal(a.json.average_match_score, 70, 'k3 has a score but no qualification row; it still counts');
+  assert.equal(a.json.total_jobs, 2);
+});
+
+test('overview and the client list stay within the 50-queries-per-request limit with many clients', async () => {
+  const w = world();
+  for (let i = 0; i < 12; i++) await req(w.env, 'POST', '/api/clients', { body: { ...analyst, full_name: `Client Number ${String.fromCharCode(97 + i)}`, visibility: i % 2 ? 'public' : 'private' } });
+  const realPrepare = w.d1.prepare.bind(w.d1);
+  let n = 0; w.d1.prepare = (sql) => { n++; return realPrepare(sql); };
+  const op = await req(w.env, 'GET', '/api/dashboard/overview');
+  assert.equal(op.json.candidates.length, 14);
+  assert.ok(n < 30, `overview used ${n} queries`);
+  n = 0;
+  const pub = await req(w.env, 'GET', '/api/dashboard/overview', { key: null });
+  assert.equal(pub.json.candidates.length, 2 + 6, 'only the public clients for a visitor');
+  assert.ok(n < 30, `public overview used ${n} queries`);
+  n = 0;
+  const list = await req(w.env, 'GET', '/api/clients');
+  assert.equal(list.json.clients.length, 14);
+  assert.ok(n < 20, `client list used ${n} queries`);
+  w.d1.prepare = realPrepare;
+});
