@@ -3,7 +3,7 @@
  * 100% Compatible with D1 Schema and Frontend UI
  */
 
-import { runDiscovery, automationStatus, sourceURL } from './discovery';
+import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS } from './discovery';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
 export interface Env {
@@ -2721,6 +2721,14 @@ export default {
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     const result = await runDiscovery(env, 'CRON');
     console.log(JSON.stringify({event:'cloud_discovery',...result}));
+    // Every fifth tick (about every 10 minutes) a small batch of collector imports is assessed. It is independent of discovery:
+    // a discovery error does not stop it, and its own error is reported, not swallowed.
+    let assessError: unknown = null;
+    if (Math.floor((controller?.scheduledTime || Date.now()) / 120000) % ASSESS_EVERY_TICKS === 0) {
+      try { const a = await assessBacklog(env.DB); if (a.assessed) console.log(JSON.stringify({ event: 'collector_assessment', ...a })); }
+      catch (e: any) { assessError = e; console.log(JSON.stringify({ event: 'collector_assessment', status: 'ERROR', error: String(e?.message || e).slice(0, 300) })); }
+    }
     if(result.status==='ERROR') throw new Error('Cloud discovery work unit failed; see durable run history.');
+    if (assessError) throw new Error('Collector assessment batch failed; see the Worker log.');
   },
 };
