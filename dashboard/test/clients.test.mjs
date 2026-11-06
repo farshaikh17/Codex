@@ -102,7 +102,7 @@ test('a share link opens exactly one client, read-only, uncached, until it is re
   const link = await req(w.env, 'POST', '/api/clients/priya_analyst/share-links', { body: { label: 'for Priya' } });
   assert.equal(link.status, 201);
   assert.match(link.json.token, /^v1_[0-9a-f]{48}$/);
-  assert.equal(link.json.path, `/#view=${link.json.token}&candidate=priya_analyst`);
+  assert.equal(link.json.path, `/app#view=${link.json.token}&candidate=priya_analyst`);
   assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_view_tokens WHERE token_hash = ?').get(link.json.token).n, 0, 'only the hash is stored');
   const t = link.json.token;
 

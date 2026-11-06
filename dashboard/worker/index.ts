@@ -4,6 +4,7 @@
  */
 
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
+import * as site from './site';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidate, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -2821,7 +2822,7 @@ router.post('/api/clients/:id/share-links', async (request, env, params) => {
   const token = newViewToken(), hash = await sha256Hex(token);
   await env.DB.prepare('INSERT INTO client_view_tokens(token_hash, candidate_id, label) VALUES (?, ?, ?)').bind(hash, id, label || null).run();
   // The token is returned once and never stored in plain form. The link carries it after '#', so it is not sent in requests or logged.
-  return jsonResponse({ candidate_id: id, link_id: hash.slice(0, 12), label: label || null, token, path: `/#view=${token}&candidate=${id}`,
+  return jsonResponse({ candidate_id: id, link_id: hash.slice(0, 12), label: label || null, token, path: `/app#view=${token}&candidate=${id}`,
     note: 'Shown once. Anyone with this link can read this client’s dashboard (read-only) until it is revoked.' }, 201, corsHeaders(request, env));
 });
 
@@ -2856,10 +2857,102 @@ router.get('/api/export', async (request, env, _params, url) => {
     'Content-Disposition': `attachment; filename="${id}-jobs-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
 });
 
+// -------------------------------------------------------------
+// Public site (server-rendered; the dashboard app lives at /app) and its operator settings and request inbox.
+// -------------------------------------------------------------
+const SITE_PATHS = new Set(['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/apply/thanks', '/portal', '/privacy', '/terms', '/robots.txt', '/sitemap.xml']);
+const SITE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
+async function handleSite(request: Request, env: Env, url: URL): Promise<Response | null> {
+  const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
+  if (!SITE_PATHS.has(path)) return null;
+  const origin = url.origin;
+  if (path === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`, { headers: { 'Content-Type': 'text/plain' } });
+  if (path === '/sitemap.xml') return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/privacy', '/terms'].map((p) => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`, { headers: { 'Content-Type': 'application/xml' } });
+  const s = await site.loadSettings(env.DB);
+  const page = (title: string, description: string, body: string, opts: { status?: number; noindex?: boolean; stats?: any; cache?: boolean } = {}) =>
+    new Response(site.layout(s, { title, description, path, body, origin, stats: opts.stats, noindex: opts.noindex }), { status: opts.status || 200,
+      headers: { ...SITE_HEADERS, 'Cache-Control': opts.cache === false ? 'no-store' : 'public, max-age=120' } });
+  const brand = s.brand_name;
+  if (path === '/apply' && request.method === 'POST') {
+    if (Number(request.headers.get('Content-Length') || 0) > 20000) return page(`Apply · ${brand}`, '', site.applyPage(s, {}, ['The form was too large.']), { status: 413, cache: false, noindex: true });
+    let form: Record<string, string> = {};
+    try { const fd = await request.formData(); fd.forEach((v, k) => { if (typeof v === 'string') form[k] = v; }); } catch { form = {}; }
+    if (form.company_website) return Response.redirect(origin + '/apply/thanks', 303);   // honeypot: look successful, store nothing
+    const checked = site.validateApply(form);
+    if (!checked.ok) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, checked.errors), { status: 400, cache: false, noindex: true });
+    const day = new Date().toISOString().slice(0, 10);
+    const sourceHash = await sha256Hex(`${request.headers.get('CF-Connecting-IP') || 'unknown'}|${day}|apply`);
+    const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM client_requests WHERE source_hash = ? AND created_at >= ?`).bind(sourceHash, day).first<any>();
+    if ((recent?.n || 0) >= site.APPLY_PER_SOURCE_PER_DAY) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, ['We already received several applications from this connection today. Please try again tomorrow.']), { status: 429, cache: false, noindex: true });
+    const v = checked.value;
+    await env.DB.prepare(`INSERT INTO client_requests(id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, source_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(crypto.randomUUID(), v.full_name, v.email, v.phone || null, v.current_location, v.target_roles, v.work_preference || null,
+      v.years_experience || null, v.linkedin_url || null, v.plan || null, v.message || null, sourceHash).run();
+    return Response.redirect(origin + '/apply/thanks', 303);
+  }
+  if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  switch (path) {
+    case '/': { const st = await site.siteStats(env.DB); return page(`${brand} · ${s.tagline}`, `${brand} screens new job postings from employers' own hiring systems every day and gives you a private shortlist with the evidence for every match.`, site.homePage(s, st), { stats: st }); }
+    case '/how-it-works': return page(`How it works · ${brand}`, 'From thousands of postings to a short, honest list: how the engine finds, screens and shortlists roles for you.', site.howPage());
+    case '/pricing': return page(`Pricing · ${brand}`, 'Simple monthly plans for a private, daily-screened job dashboard.', site.pricingPage(s));
+    case '/faq': return page(`FAQ · ${brand}`, 'Answers about sources, eligibility, privacy and how the job search engine works.', site.faqPage());
+    case '/about': { const st = await site.siteStats(env.DB); return page(`About · ${brand}`, `${brand}: a job search engine that shows its work.`, site.aboutPage(s, st), { stats: st }); }
+    case '/apply': { const plan = url.searchParams.get('plan') || ''; return page(`Apply · ${brand}`, 'Apply for a private, daily-screened job dashboard.', site.applyPage(s, { plan: ['1', '2', '3'].includes(plan) ? plan : '', work_preference: 'REMOTE_FROM_HOME' }), { cache: false }); }
+    case '/apply/thanks': return page(`Thank you · ${brand}`, '', site.thanksPage(s), { noindex: true });
+    case '/portal': return page(`Client login · ${brand}`, 'Open your private job dashboard.', site.portalPage(), { noindex: true });
+    case '/privacy': return page(`Privacy · ${brand}`, 'What we collect, why, and how to have it removed.', site.privacyPage(s));
+    case '/terms': return page(`Terms · ${brand}`, `Terms of service for ${brand}.`, site.termsPage(s));
+  }
+  return null;
+}
+
+const REQUEST_STATUSES = ['NEW', 'CONTACTED', 'CONVERTED', 'DECLINED'];
+router.get('/api/client-requests', async (request, env, _p, url) => {
+  const st = url.searchParams.get('status') || 'OPEN';
+  if (st !== 'OPEN' && st !== 'ALL' && !REQUEST_STATUSES.includes(st)) return jsonResponse({ error: 'Unsupported status.' }, 400, corsHeaders(request, env));
+  const where = st === 'ALL' ? '' : st === 'OPEN' ? `WHERE status IN ('NEW','CONTACTED')` : 'WHERE status = ?';
+  const { results } = await env.DB.prepare(`SELECT id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, status, candidate_id, created_at, updated_at
+    FROM client_requests ${where} ORDER BY created_at DESC LIMIT 200`).bind(...(REQUEST_STATUSES.includes(st) ? [st] : [])).all<any>();
+  const counts = await env.DB.prepare(`SELECT status, COUNT(*) AS n FROM client_requests GROUP BY status`).all<any>();
+  return jsonResponse({ requests: results || [], counts: Object.fromEntries((counts.results || []).map((r: any) => [r.status, r.n])) }, 200, corsHeaders(request, env));
+});
+router.put('/api/client-requests/:id', async (request, env, params) => {
+  const body = await readJson(request);
+  const status = body?.status;
+  if (!REQUEST_STATUSES.includes(status)) return jsonResponse({ error: 'status must be NEW, CONTACTED, CONVERTED or DECLINED.' }, 400, corsHeaders(request, env));
+  const cid = body?.candidate_id === undefined ? undefined : body.candidate_id === null ? null : knownCandidate(body.candidate_id);
+  if (body?.candidate_id && !cid) return jsonResponse({ error: 'Unknown candidate_id.' }, 400, corsHeaders(request, env));
+  const r = await env.DB.prepare(`UPDATE client_requests SET status = ?, candidate_id = COALESCE(?, candidate_id), updated_at = datetime('now') WHERE id = ?`).bind(status, cid ?? null, params.id).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: params.id, status, candidate_id: cid ?? null }, 200, corsHeaders(request, env));
+});
+router.get('/api/site-settings', async (request, env) => {
+  const s = await site.loadSettings(env.DB);
+  return jsonResponse({ settings: s, defaults: site.SETTING_DEFAULTS }, 200, corsHeaders(request, env));
+});
+router.put('/api/site-settings', async (request, env) => {
+  const body = await readJson(request);
+  if (!body || typeof body !== 'object') return jsonResponse({ error: 'A JSON object of settings is required.' }, 400, corsHeaders(request, env));
+  const stmts: D1PreparedStatement[] = [];
+  for (const [k, v] of Object.entries(body)) {
+    const clean = site.cleanSetting(k, v);
+    if (clean === null) return jsonResponse({ error: `Invalid setting '${String(k).slice(0, 40)}'.`, detail: k === 'contact_email' ? 'contact_email must be an email address or empty.' : 'Unknown setting or wrong type.' }, 400, corsHeaders(request, env));
+    stmts.push(env.DB.prepare(`INSERT INTO site_settings(key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`).bind(k, clean));
+  }
+  if (stmts.length) await env.DB.batch(stmts);
+  site.forgetSettings();
+  return jsonResponse({ settings: await site.loadSettings(env.DB) }, 200, corsHeaders(request, env));
+});
+
 // Main export for Cloudflare Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
+      const u = new URL(request.url);
+      if (!u.pathname.startsWith('/api/')) {
+        const page = await handleSite(request, env, u);
+        if (page) return page;
+      }
       const res = await router.handle(request, env);
       if (!new URL(request.url).pathname.startsWith('/api/')) return res;
       // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.

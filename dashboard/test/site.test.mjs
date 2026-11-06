@@ -1,0 +1,116 @@
+// The public site: pages render real figures and escape what they show, the apply form stores exactly one request (validated,
+// honeypot, per-source limit), the inbox and settings are operator-only, and settings change what the site shows.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createDb, loadWorker, makeEnv, ADMIN_KEY } from './harness.mjs';
+import { forgetSettings, forgetStats } from '../worker/site.ts';
+
+const worker = await loadWorker();
+function world() {
+  const { sqlite, d1 } = createDb();
+  const run = (sql, ...p) => sqlite.prepare(sql).run(...p);
+  run(`INSERT INTO candidates(id,full_name) VALUES ('farhan_shaikh','F'),('sana_ansari','S')`);
+  run(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,provenance,location_restrictions,workplace_type) VALUES
+    ('j1','<script>alert(1)</script> Engineer','Acme & Co','lever',1,?, 'LIVE_PUBLIC','Remote - India','REMOTE'),
+    ('j2','Analyst','Beta','lever',1,'2026-01-01T00:00:00Z','LIVE_PUBLIC','Pune','ONSITE'),
+    ('j3','Closed role','Gamma','lever',0,?, 'LIVE_PUBLIC','x','REMOTE')`, new Date().toISOString(), new Date().toISOString());
+  forgetSettings(); forgetStats();
+  return { sqlite, d1, run, env: makeEnv(d1) };
+}
+async function get(env, path, init = {}) {
+  const res = await worker.fetch(new Request('https://site.test' + path, { redirect: 'manual', ...init }), env, { waitUntil() {} });
+  return { status: res.status, text: await res.text(), headers: res.headers };
+}
+const form = (o) => new URLSearchParams(o).toString();
+const post = (env, body, ip = '1.2.3.4') => get(env, '/apply', { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'CF-Connecting-IP': ip } });
+const valid = { full_name: 'Asha Rao', email: 'asha@example.com', current_location: 'Pune, India', target_roles: 'Data analyst, BI analyst', work_preference: 'REMOTE_FROM_HOME', years_experience: '3-5', plan: '2', consent: 'yes', message: 'Notice: 30 days' };
+
+test('every site page renders, with real figures and escaped content', async () => {
+  const w = world();
+  for (const p of ['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/apply/thanks', '/portal', '/privacy', '/terms']) {
+    const r = await get(w.env, p);
+    assert.equal(r.status, 200, p);
+    assert.match(r.headers.get('Content-Type'), /text\/html/, p);
+    assert.equal(r.headers.get('X-Frame-Options'), 'DENY', p);
+    assert.ok(r.text.includes('Career Job Engine'), p);
+  }
+  const home = await get(w.env, '/');
+  assert.match(home.text, /<b>2<\/b><span>active roles tracked/, 'two active jobs; the closed one is not counted');
+  assert.ok(home.text.includes('&lt;script&gt;alert(1)&lt;/script&gt; Engineer') && !home.text.includes('<script>alert(1)'), 'job titles are escaped');
+  assert.ok(home.text.includes('Acme &amp; Co'));
+  assert.ok(!home.text.includes('Closed role'), 'only active postings are shown');
+  const pricing = await get(w.env, '/pricing');
+  assert.equal((pricing.text.match(/Ask for a quote/g) || []).length, 3, 'no invented prices');
+  assert.equal((await get(w.env, '/robots.txt')).status, 200);
+  assert.match((await get(w.env, '/sitemap.xml')).text, /<loc>https:\/\/site\.test\/pricing<\/loc>/);
+});
+
+test('apply: a valid application is stored once, then redirects; invalid input is refused with the reason and nothing stored', async () => {
+  const w = world();
+  const ok = await post(w.env, form(valid));
+  assert.equal(ok.status, 303);
+  assert.equal(ok.headers.get('Location'), 'https://site.test/apply/thanks');
+  const rows = w.sqlite.prepare('SELECT full_name, email, target_roles, plan, status, source_hash FROM client_requests').all();
+  assert.equal(rows.length, 1);
+  assert.deepEqual([rows[0].full_name, rows[0].email, rows[0].target_roles, rows[0].plan, rows[0].status], ['Asha Rao', 'asha@example.com', 'Data analyst, BI analyst', '2', 'NEW']);
+  assert.match(rows[0].source_hash, /^[0-9a-f]{64}$/, 'only a one-way fingerprint of the connection');
+  assert.ok(!JSON.stringify(rows).includes('1.2.3.4'));
+  for (const [bad, why] of [[{ email: 'not-an-email' }, /valid email/], [{ consent: '' }, /privacy notice/], [{ target_roles: '' }, /roles you are looking for/], [{ linkedin_url: 'javascript:alert(1)' }, /https:\/\//]]) {
+    const r = await post(w.env, form({ ...valid, ...bad }));
+    assert.equal(r.status, 400); assert.match(r.text, why);
+    assert.ok(r.text.includes('value="Asha Rao"'), 'what was typed is kept');
+  }
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n, 1);
+  // escaped when shown back
+  const xss = await post(w.env, form({ ...valid, email: 'x', full_name: '"><img src=x onerror=alert(1)>' }));
+  assert.ok(!xss.text.includes('<img src=x') && xss.text.includes('&quot;&gt;&lt;img'));
+});
+
+test('apply: the honeypot looks successful but stores nothing; one connection is limited to 5 a day', async () => {
+  const w = world();
+  const bot = await post(w.env, form({ ...valid, company_website: 'http://spam.example' }));
+  assert.equal(bot.status, 303);
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n, 0);
+  for (let i = 0; i < 5; i++) assert.equal((await post(w.env, form({ ...valid, email: `a${i}@example.com` }), '9.9.9.9')).status, 303);
+  const sixth = await post(w.env, form(valid), '9.9.9.9');
+  assert.equal(sixth.status, 429);
+  assert.equal((await post(w.env, form(valid), '8.8.8.8')).status, 303, 'another connection is not affected');
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) n FROM client_requests').get().n, 6);
+});
+
+test('the inbox and site settings are operator-only; settings change the site; invalid settings are refused', async () => {
+  const w = world();
+  await post(w.env, form(valid));
+  const call = (method, path, body, key = ADMIN_KEY) => worker.fetch(new Request('https://site.test' + path, { method, headers: { ...(key ? { Authorization: `Bearer ${key}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined }), w.env, { waitUntil() {} }).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }));
+  assert.equal((await call('GET', '/api/client-requests', null, null)).status, 401, 'applicants’ details are never public');
+  assert.equal((await call('PUT', '/api/site-settings', { brand_name: 'X' }, null)).status, 401);
+  const inbox = await call('GET', '/api/client-requests');
+  assert.equal(inbox.json.requests.length, 1);
+  assert.equal(inbox.json.requests[0].email, 'asha@example.com');
+  assert.equal(inbox.json.counts.NEW, 1);
+  const id = inbox.json.requests[0].id;
+  assert.equal((await call('PUT', `/api/client-requests/${id}`, { status: 'CONTACTED' })).status, 200);
+  assert.equal((await call('PUT', `/api/client-requests/${id}`, { status: 'BOGUS' })).status, 400);
+  assert.equal((await call('PUT', `/api/client-requests/${id}`, { status: 'CONVERTED', candidate_id: 'nobody' })).status, 400);
+  assert.equal((await call('PUT', `/api/client-requests/${id}`, { status: 'CONVERTED', candidate_id: 'farhan_shaikh' })).status, 200);
+  assert.equal((await call('GET', '/api/client-requests')).json.requests.length, 0, 'converted requests leave the open inbox');
+  assert.equal((await call('GET', '/api/client-requests?status=ALL')).json.requests[0].candidate_id, 'farhan_shaikh');
+
+  const saved = await call('PUT', '/api/site-settings', { brand_name: 'HireLane', plan2_price: '₹2,999', contact_email: 'hello@hirelane.example' });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.json.settings.brand_name, 'HireLane');
+  const pricing = await get(w.env, '/pricing');
+  assert.ok(pricing.text.includes('HireLane') && pricing.text.includes('₹2,999'));
+  assert.equal((pricing.text.match(/Ask for a quote/g) || []).length, 2);
+  assert.ok((await get(w.env, '/privacy')).text.includes('hello@hirelane.example'));
+  assert.equal((await call('PUT', '/api/site-settings', { contact_email: 'nope' })).status, 400);
+  assert.equal((await call('PUT', '/api/site-settings', { not_a_setting: 'x' })).status, 400);
+  assert.equal((await call('PUT', '/api/site-settings', { brand_name: '<b>X</b>' })).status, 200);
+  assert.ok((await get(w.env, '/')).text.includes('&lt;b&gt;X&lt;/b&gt;'), 'settings are escaped when shown');
+});
+
+test('old share links that land on the site root are forwarded to the dashboard app', async () => {
+  const w = world();
+  const home = await get(w.env, '/');
+  assert.ok(home.text.includes("if(/[#&]view=v1_/.test(location.hash))location.replace('/app'+location.hash);"));
+});

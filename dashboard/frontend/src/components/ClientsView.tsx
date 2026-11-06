@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { UserPlus, Link2, Download, RefreshCw, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { SiteSettingsPanel } from './SiteSettingsPanel';
 import {
+  ClientRequest, fetchClientRequests, updateClientRequest,
   ClientRecord, ShareLink, fetchClients, createClient, updateClient, backfillClient, fetchShareLinks, createShareLink, revokeShareLink, downloadExport,
 } from '../api';
 
@@ -18,6 +20,21 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
   const [busy, setBusy] = useState<string | null>(null);
   const [links, setLinks] = useState<Record<string, ShareLink[]>>({});
   const [newLink, setNewLink] = useState<{ id: string; url: string } | null>(null);
+  const [requests, setRequests] = useState<ClientRequest[] | null>(null);
+  const [requestCounts, setRequestCounts] = useState<Record<string, number>>({});
+  const [fromRequest, setFromRequest] = useState<ClientRequest | null>(null);
+  const [tab, setTab] = useState<'clients' | 'requests' | 'site'>('clients');
+  const loadRequests = useCallback(async () => {
+    try { const r = await fetchClientRequests('OPEN'); setRequests(r.requests); setRequestCounts(r.counts); } catch (e: any) { setError(e.message); }
+  }, []);
+  useEffect(() => { loadRequests(); }, [loadRequests]);
+  const useRequest = (r: ClientRequest) => {
+    setFromRequest(r);
+    setForm({ ...EMPTY, full_name: r.full_name, current_location: r.current_location || '', role_keywords: r.target_roles || '',
+      location_mode: r.work_preference === 'HOME_OR_RELOCATE' ? 'HOME_OR_RELOCATE' : 'REMOTE_FROM_HOME',
+      total_years_experience: r.years_experience === '10+' ? '10' : (r.years_experience || '').split('-')[0] || '' });
+    setTab('clients'); window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const load = useCallback(async () => {
     try { setClients(await fetchClients()); setError(null); } catch (e: any) { setError(e.message); }
@@ -48,6 +65,7 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
         search_profile: { role_keywords: split(form.role_keywords), avoid_keywords: split(form.avoid_keywords), location_mode: form.location_mode, home_country: form.home_country },
       });
       const n = await screenAll(c.id);
+      if (fromRequest) { await updateClientRequest(fromRequest.id, 'CONVERTED', c.id); setFromRequest(null); await loadRequests(); }
       setNotice(`Created ${c.full_name} (${c.id}) and screened ${n} active jobs for them.`);
       setForm({ ...EMPTY });
       await load(); onClientsChanged();
@@ -63,8 +81,44 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
     </label>
   );
 
+  const tabBtn = (k: typeof tab, label: string) => (
+    <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === k ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:border-coral-500'}`}>{label}</button>
+  );
+  const newCount = requestCounts.NEW || 0;
   return (
     <div className="space-y-6" data-testid="clients-view">
+      <div className="flex flex-wrap gap-2">{tabBtn('clients', 'Clients')}{tabBtn('requests', `Applications${newCount ? ` (${newCount} new)` : ''}`)}{tabBtn('site', 'Public site')}</div>
+      {tab !== 'clients' && error && <div role="alert" className="p-3 rounded-lg border border-rose-300 bg-rose-50 text-rose-900 text-sm">{error}</div>}
+      {tab === 'site' && <SiteSettingsPanel />}
+      {tab === 'requests' && (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm" data-testid="requests-view">
+          <div className="p-5 border-b border-slate-100"><h2 className="text-lg font-bold">Applications from the website</h2>
+            <p className="text-xs text-slate-500 mt-1">People who applied on the public site. Contact them, then use an application to create their client profile; it is marked converted when the client is created.</p></div>
+          {requests === null ? <div className="p-5 text-sm text-slate-400">Loading…</div> : requests.length === 0 ? <div className="p-5 text-sm text-slate-500">No open applications.</div> : (
+            <ul className="divide-y divide-slate-100">
+              {requests.map((r) => (
+                <li key={r.id} className="p-5 flex flex-col md:flex-row md:items-start gap-4" data-request-id={r.id}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap"><b className="text-slate-900">{r.full_name}</b>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${r.status === 'NEW' ? 'bg-coral-100 text-coral-700' : 'bg-slate-100 text-slate-600'}`}>{r.status}</span>
+                      <span className="text-xs text-slate-500">{r.created_at} UTC</span></div>
+                    <div className="text-sm text-slate-700 mt-1"><a className="text-coral-600 hover:underline" href={`mailto:${r.email}`}>{r.email}</a>{r.phone ? ` · ${r.phone}` : ''} · {r.current_location}</div>
+                    <div className="text-sm mt-1"><span className="text-slate-500">Looking for:</span> {r.target_roles}</div>
+                    <div className="text-xs text-slate-500 mt-1">{[r.work_preference, r.years_experience && `${r.years_experience} yrs`, r.plan && `plan ${r.plan}`].filter(Boolean).join(' · ')}
+                      {r.linkedin_url && <> · <a className="text-coral-600 hover:underline" href={r.linkedin_url} target="_blank" rel="noreferrer noopener">profile</a></>}</div>
+                    {r.message && <p className="text-sm text-slate-600 mt-2 whitespace-pre-wrap">{r.message}</p>}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-xs shrink-0">
+                    <button onClick={() => useRequest(r)} className="px-3 py-1.5 rounded-full bg-coral-500 text-white font-semibold hover:bg-coral-600">Create client from this</button>
+                    {r.status === 'NEW' && <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'CONTACTED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Mark contacted</button>}
+                    <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'DECLINED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Decline</button>
+                  </div>
+                </li>))}
+            </ul>)}
+        </div>
+      )}
+      {tab === 'clients' && <>
+      {fromRequest && <div role="status" className="p-3 rounded-lg border border-coral-100 bg-coral-50 text-slate-800 text-sm">Creating a client from {fromRequest.full_name}'s application. Check the role keywords (one idea per comma), then create. <button className="underline ml-2" onClick={() => { setFromRequest(null); setForm({ ...EMPTY }); }}>Cancel</button></div>}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <h2 className="text-lg font-bold flex items-center gap-2"><UserPlus className="w-5 h-5 text-emerald-600" /> Add a client</h2>
         <p className="text-xs text-slate-500 mt-1">Jobs are matched on the posting title against the role keywords (plain words). A new client is private: only you, and anyone you give a share link, can see it. Nothing is marked READY automatically.</p>
@@ -157,6 +211,7 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
           </tbody>
         </table>
       </div>
+      </>}
     </div>
   );
 };

@@ -43,7 +43,7 @@ const opCtx = await browser.newContext({ ...ctxOpts, acceptDownloads: true });
 await opCtx.addInitScript((k) => window.sessionStorage.setItem('admin_session_key', k), KEY);
 const op = await opCtx.newPage();
 const opErrs = watch(op, 'operator');
-await op.goto(BASE + '/');
+await op.goto(BASE + '/app');
 await op.getByRole('button', { name: 'Clients' }).click();
 await op.waitForSelector('[data-testid="clients-view"]');
 await op.fill('input[name="full_name"]', NAME);
@@ -62,7 +62,7 @@ check('C2 private by default, with the keywords given', rec?.visibility === 'pri
 check('C3 nothing was marked READY or STRETCH automatically', rec?.apply_worthy === 0, String(rec?.apply_worthy));
 
 // the client's workspace in the operator view lists exactly what the API returns for it
-await op.locator(`[data-client-tab="${ID}"]`).click();
+await op.selectOption('[data-testid="client-select"]', ID);
 await op.waitForSelector('tr[data-job-id]', { timeout: 15000 });
 const apiFirst = (await api(`/api/jobs?candidate_id=${ID}&limit=50&exclude_applied=true&exclude_dismissed=true&sort_by=score_desc`)).json.jobs.map((j) => j.id);
 const opRows = await tableIds(op);
@@ -77,16 +77,16 @@ await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'New 
 await op.waitForSelector('[data-testid="new-share-link"] input');
 const shareUrl = await op.inputValue('[data-testid="new-share-link"] input');
 const token = /#view=(v1_[0-9a-f]{48})&candidate=/.exec(shareUrl)?.[1];
-check('C6 a share link is shown once, carrying the token after #', !!token && shareUrl.startsWith(BASE + '/#view='), shareUrl);
+check('C6 a share link is shown once, carrying the token after #', !!token && shareUrl.startsWith(BASE + '/app#view='), shareUrl);
 
 // ---- an anonymous visitor cannot see the client ------------------------------------------------------------------------
 const anonCtx = await browser.newContext(ctxOpts);
 const anon = await anonCtx.newPage();
 const anonErrs = watch(anon, 'visitor');
-await anon.goto(BASE + '/');
+await anon.goto(BASE + '/app');
 await anon.waitForSelector('text=Open Sana', { timeout: 15000 });
 check('C7 a visitor has no tab and no dashboard card for the private client',
-  (await anon.locator(`[data-client-tab="${ID}"]`).count()) === 0 && (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 0);
+  (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0 && (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 0);
 check('C8 and the API refuses it without naming it', (await api(`/api/jobs?candidate_id=${ID}`, { key: null })).status === 400
   && !(await api(`/api/jobs?candidate_id=nobody_x`, { key: null })).text.includes(ID));
 
@@ -132,13 +132,13 @@ check('C14 after revoking, the same browser is told the link is no longer valid,
 await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'Make public' }).click();
 await op.waitForSelector(`tr[data-client-id="${ID}"] >> text=public`, { timeout: 10000 });
 await anon.reload();
-await anon.waitForSelector(`[data-client-tab="${ID}"]`, { timeout: 15000 });
+await anon.waitForSelector(`[data-testid="client-select"] option[value="${ID}"]`, { state: 'attached', timeout: 15000 });
 check('C15 made public: visitors get its tab and card', (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 1);
 await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'Make private' }).click();
 await op.waitForSelector(`tr[data-client-id="${ID}"] >> text=private`, { timeout: 10000 });
 await anon.reload();
 await anon.waitForSelector('text=Open Sana', { timeout: 15000 });
-check('C16 made private again: gone for visitors at once', (await anon.locator(`[data-client-tab="${ID}"]`).count()) === 0);
+check('C16 made private again: gone for visitors at once', (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0);
 
 check('C17 no console errors or page errors (operator, visitor, viewer before revoking)', errsBeforeRevoke.length === 0, errsBeforeRevoke.join(' | '));
 await browser.close();

@@ -2,6 +2,34 @@
 
 The engine runs job searches for more than the two original candidates. Each extra person is a **client**. You add clients yourself from the dashboard. No code change or deploy is needed, and everything stays on the free tier.
 
+## The public site
+
+The Worker serves a public website at the root of the domain, in the same visual language as the Goes Local sites: cream and navy, coral buttons, Fraunces headings. The dashboard app moved to **`/app`**. Old share links that point at `/#view=…` still work; the site forwards them to `/app`.
+
+| Page | What it is |
+|---|---|
+| `/` | Home. Live figures from the database (active roles, employers, new this week, hiring systems checked) and the latest postings found |
+| `/how-it-works`, `/faq`, `/about` | What the engine does, and what it will not do |
+| `/pricing` | Three plans. Names, prices, periods and features are site settings. An empty price shows "Ask for a quote"; nothing is invented |
+| `/apply` | Application form. It stores a request for the operator (see below) |
+| `/portal` | Client login: paste the private link. The link stays in the browser |
+| `/privacy`, `/terms` | Plain-language notice and terms. **Have these reviewed for your jurisdiction before you sell.** |
+
+- **Applications.** They go to **CLIENTS → Applications** in the app.
+  - **Create client from this** prefills the client form.
+  - Creating the client marks the application converted and links the two.
+  - **Mark contacted** and **Decline** keep the inbox tidy.
+- **Spam protection.**
+  - The form has a hidden honeypot field: a filled-in honeypot looks successful but stores nothing.
+  - Each connection is limited to 5 applications a day. Only a one-way daily fingerprint of the connection is stored, never the address.
+- **Site settings.** **CLIENTS → Public site** sets:
+  - brand name, small line and tagline
+  - contact email (shown on the privacy page and the thank-you page)
+  - the announcement bar
+  - the three plans
+
+  Changes show on the site within about a minute.
+
 ## What a client is
 
 - **A profile.** Name, headline, one-line summary, skills, years of experience, a score threshold, and a **search profile**.
@@ -30,7 +58,7 @@ The two original candidates (Farhan, Sana) keep their built-in rules and stay pu
 
 ## Sharing with a client
 
-- **New share link** creates a read-only link of the form `https://<site>/#view=<token>&candidate=<id>`.
+- **New share link** creates a read-only link of the form `https://<site>/app#view=<token>&candidate=<id>`.
 - The link is **shown once**. Only a SHA-256 of the token is stored.
 - The token sits after `#`, so it is never sent in a page request and never appears in server logs. The page reads it once, keeps it for that browser tab, and removes it from the address bar.
 - Anyone with the link sees that one client's dashboard: jobs, READY list, analytics and CSV export. They can change nothing and cannot see other private clients.
@@ -83,3 +111,6 @@ All of these need the operator key, except `/api/export`, which follows the same
 | `POST /api/clients/:id/share-links` | Create a link: `{ token, path }`, shown once |
 | `DELETE /api/clients/:id/share-links/:link_id` | Revoke a link |
 | `GET /api/export?candidate_id=…&qualification_status=ALL\|APPLY_WORTHY\|READY\|…` | CSV download |
+| `GET /api/client-requests?status=OPEN\|ALL\|NEW\|CONTACTED\|CONVERTED\|DECLINED` | Applications from the website, plus counts by status |
+| `PUT /api/client-requests/:id` | `{ status, candidate_id? }` |
+| `GET` / `PUT /api/site-settings` | Read or change site settings. Unknown keys and invalid emails are refused |

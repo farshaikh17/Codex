@@ -798,3 +798,22 @@ export async function downloadExport(candidateId: string, qualificationStatus = 
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
+
+// ---- Public-site inbox and settings (operator) ----------------------------------------------------------------------------
+export type ClientRequest = {
+  id: string; full_name: string; email: string; phone: string | null; current_location: string; target_roles: string; work_preference: string | null;
+  years_experience: string | null; linkedin_url: string | null; plan: string | null; message: string | null; status: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'DECLINED';
+  candidate_id: string | null; created_at: string;
+};
+export async function fetchClientRequests(status = 'OPEN'): Promise<{ requests: ClientRequest[]; counts: Record<string, number> }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/client-requests?status=${encodeURIComponent(status)}`), 'Loading applications');
+}
+export async function updateClientRequest(id: string, status: ClientRequest['status'], candidateId?: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/client-requests/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, ...(candidateId ? { candidate_id: candidateId } : {}) }) }), 'Updating the application');
+}
+export async function fetchSiteSettings(): Promise<{ settings: Record<string, string>; defaults: Record<string, string> }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/site-settings`), 'Loading site settings');
+}
+export async function saveSiteSettings(values: Record<string, string>): Promise<Record<string, string>> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/site-settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) }), 'Saving site settings')).settings;
+}

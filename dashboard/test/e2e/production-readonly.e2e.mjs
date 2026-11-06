@@ -48,7 +48,7 @@ for (const p of ['/candidates', '/profile?candidate_id=farhan_shaikh', '/profile
 check('public endpoints answer 200 and expose no private field, employer, pay, city, note or email', leaks.length === 0, leaks.join('; '));
 
 // Browser: public view first, no credentials involved at any point.
-await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+await page.goto(BASE + '/app', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 check('first visit: no unlock window, no key sent, no request refused', !(await modalOpen()) && apiLog.length > 3 && apiLog.every((r) => !r.auth && r.status === 200), JSON.stringify(apiLog.filter((r) => r.status !== 200).slice(0, 3)));
 const shell = await (await fetch(BASE + '/')).text();
