@@ -169,6 +169,45 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
  await db.batch(statements);
  return {job_id:jobId,jobs_new:existing?0:1,jobs_updated:existing&&!unchanged?1:0,jobs_unchanged:unchanged?1:0};
 }
+// ---- Assessment of collector imports ----------------------------------------------------------------------------------
+// The GitHub collector imports postings as "[GITHUB_COLLECTOR] Unassessed" rows (score 0, location UNKNOWN) and nothing scored them.
+// This step runs the same screen as discovery (evaluate()) over the stored title, location and description, a small batch at a time.
+// It never promotes to READY (evaluate() cannot), never touches a row with a human override or an application, and only rewrites a
+// row while it is still unassessed, so re-running is harmless and a later human or discovery decision is never overwritten.
+export const ASSESS_BATCH = 40, ASSESS_EVERY_TICKS = 5;
+// Reads go through the partial index (migration 0010) and only touch rows still waiting: INDEXED BY makes a missing index an error
+// instead of a silent full scan of every qualification row.
+const UNASSESSED = `q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'`;
+export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
+ const {results} = await db.prepare(`SELECT q.candidate_id, q.job_id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, c.primary_skills
+  FROM candidate_qualifications q INDEXED BY idx_cq_unassessed CROSS JOIN jobs j ON j.id = q.job_id CROSS JOIN candidates c ON c.id = q.candidate_id
+  WHERE ${UNASSESSED} AND q.manual_override_status IS NULL AND j.is_active = 1
+   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
+  LIMIT ?`).bind(limit).all<any>();
+ const rows = results || [];
+ if (!rows.length) return { assessed: 0, by_status: {} as Record<string, number> };
+ const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
+ for (const r of rows) {
+  const posting: Posting = { id: r.job_id, title: r.title || '', url: '', location: r.location || '', description: plain(r.description), remote: /^REMOTE/i.test(r.workplace_type || '') };
+  const result = evaluate({ id: r.candidate_id, primary_skills: r.primary_skills }, posting);
+  byStatus[result.status] = (byStatus[result.status] || 0) + 1;
+  const guard = `candidate_id = ? AND job_id = ? AND manual_override_status IS NULL AND qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'
+   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id)`;
+  // Score first (its guard reads the qualification row while it is still unassessed), then the qualification.
+  statements.push(db.prepare(`UPDATE candidate_job_scores SET overall_score = ?, skill_score = ?, role_score = ?, strategy_lane = ?, score_breakdown = ?, calculated_at = ?
+   WHERE candidate_id = ? AND job_id = ? AND EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id
+    AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
+   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
+   .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    now, r.candidate_id, r.job_id));
+  statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
+   .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));
+ }
+ await db.batch(statements);
+ return { assessed: rows.length, by_status: byStatus };
+}
+
 export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {
  const db=env.DB, now=iso(), seconds=epoch(), token=crypto.randomUUID(), day=now.slice(0,10);
  const acquired=await db.prepare(`UPDATE cloud_automation SET lease_token=?,lease_until=?,day=?,jobs_today=CASE WHEN day=? THEN jobs_today ELSE 0 END,sources_today=CASE WHEN day=? THEN sources_today ELSE 0 END WHERE id=1 AND enabled=1 AND lease_until<? RETURNING *`).bind(token,seconds+180,day,day,day,seconds).first<any>();
