@@ -14,6 +14,15 @@
    "from_hash": "7914bc927fe09db839c69ea9f82e6f3da0c11a914a363a9fba8934c65d35faa9",
    "kind": "content_changed",
    "to_hash": "1d849736d2b8397af4a0b4e7b4db846753315547d6eb7c7bbeea423bb58b6774"
+  },
+  {
+   "changed_at": "2026-11-06T08:28:12.366993+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "1d849736d2b8397af4a0b4e7b4db846753315547d6eb7c7bbeea423bb58b6774",
+   "kind": "content_changed",
+   "to_hash": "5f0d711b4080eec8eef9ecdf83dde8bc0bc33d1f1c67ac783ffd3c60eebf951c"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-10-26T22:37:16-04:00",
-  "title": "Sr. Director, Marketing Strategy, Analytics & Innovation",
+  "title": "Sr. Director, Marketing Strategy and Analytics",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "1d849736d2b8397af4a0b4e7b4db846753315547d6eb7c7bbeea423bb58b6774",
+ "content_changed_at": "2026-11-06T08:28:12.366993+00:00",
+ "content_hash": "5f0d711b4080eec8eef9ecdf83dde8bc0bc33d1f1c67ac783ffd3c60eebf951c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -76,7 +85,7 @@
       },
       "method": "description_section:Compensation",
       "quote": "*Please note this role is open to candidates outside of California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State. The information below is provided for candidates hired in those locations only.\nThe estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $227,840 - $284,800.\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $241,200 - $301,500.\nBased in the San Francisco Bay area, California: $268,000 - $335,000.\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      }
@@ -93,7 +102,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      },
@@ -101,7 +110,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in the USA.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      }
@@ -114,7 +123,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      },
@@ -122,7 +131,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "Bachelor’s degree in Marketing, Business, Analytics, or a related field.\n10+ years in marketing strategy, data analytics, or related functions, with 5+ years of people leadership.\nExpertise with analytics and BI tools (e.g., Tableau, Salesforce).\nStrong communication, leadership, and cross-functional collaboration skills.\nExceptional cross-functional communication and storytelling skills.\nComfortable operating in ambiguity and fast-paced environments.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      }
@@ -135,7 +144,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Advanced degree (MBA or similar) strongly preferred.\nExperience in SaaS, tech, or high-growth environments preferred.\nCertification in marketing analytics or data science is a plus.\nPassion for innovation, storytelling, and customer-centric thinking.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      }
@@ -148,7 +157,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8325734"
      }
