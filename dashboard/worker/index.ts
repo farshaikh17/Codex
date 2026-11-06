@@ -16,6 +16,8 @@ export interface Env {
   /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
   GIT_COMMIT?: string;
   DEPLOYED_AT?: string;
+  /** 'always' writes the read meter after every request (local cost measurement only; production leaves it unset) */
+  METER_FLUSH?: string;
 }
 
 // -------------------------------------------------------------
@@ -575,11 +577,11 @@ class WorkerRouter {
         if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
           if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
-          await flushMeter(env);
+          await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });
         }
-        if (meter) await flushMeter(env);
+        if (meter) await flushMeter(env, env.METER_FLUSH === 'always');
         return res;
       }
     }
@@ -1082,8 +1084,9 @@ router.get('/api/dashboard/overview', async (request, env) => {
     const farhanCard = await getSummary('farhan_shaikh');
     const sanaCard = await getSummary('sana_ansari');
 
-    const totalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs').first<{ cnt: number }>();
-    const activeJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
+    // one pass over jobs for both figures (it was two)
+    const jobCounts = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active FROM jobs').first<{ cnt: number; active: number }>();
+    const totalJobs = { cnt: jobCounts?.cnt ?? 0 }, activeJobs = { cnt: jobCounts?.active ?? 0 };
 
     return jsonResponse({
       farhan: farhanCard,
@@ -1159,6 +1162,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 });
 
 // Comprehensive /api/jobs for React Frontend
+// The latest application record for (candidate, job), if any, is SAVED or there is none: "not applied".
+const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
 const JOB_COLUMNS = `
         j.id, j.title, j.company, j.company_url, j.company_headquarters,
@@ -1285,122 +1290,83 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
 
   try {
+    // Cost: every predicate below reads only what it needs. The score row is joined only when a score filter or the order needs it,
+    // the application check is a per-row index lookup instead of a join, the total comes from the status counts, and full rows are
+    // fetched only for the page shown (measured locally at 2,200 jobs: ~29k rows read per uncached request before, a few thousand after).
+    const needsScoreJoin = minScore > 0;
     let baseWhere = `
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
-      LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+      ${needsScoreJoin ? 'LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id' : ''}
       WHERE q.candidate_id = ? AND j.is_active = 1
     `;
-
     const baseParams: any[] = [candidateId];
 
     // Exclude dismissed / marked irrelevant jobs when requested or in review queue
     if (excludeDismissed) {
       baseWhere += ` AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')`;
     }
-
     if (search) {
       baseWhere += ` AND (j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)`;
       const term = `%${search}%`;
       baseParams.push(term, term, term);
     }
-
-    if (eligibility && eligibility !== 'ALL') {
-      baseWhere += ` AND q.eligibility_status = ?`;
-      baseParams.push(eligibility);
-    }
-
-    if (minScore > 0) {
-      baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`;
-      baseParams.push(minScore);
-    }
-
-    if (workplaceType && workplaceType !== 'ALL') {
-      baseWhere += ` AND j.workplace_type = ?`;
-      baseParams.push(workplaceType);
-    }
-
-    if (sourceAdapter && sourceAdapter !== 'ALL') {
-      baseWhere += ` AND j.source_adapter = ?`;
-      baseParams.push(sourceAdapter);
-    }
-
-    if (strategyLane && strategyLane !== 'ALL') {
-      baseWhere += ` AND q.strategy_lane = ?`;
-      baseParams.push(strategyLane);
-    }
-
+    if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
+    if (minScore > 0) { baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`; baseParams.push(minScore); }
+    if (workplaceType && workplaceType !== 'ALL') { baseWhere += ` AND j.workplace_type = ?`; baseParams.push(workplaceType); }
+    if (sourceAdapter && sourceAdapter !== 'ALL') { baseWhere += ` AND j.source_adapter = ?`; baseParams.push(sourceAdapter); }
+    if (strategyLane && strategyLane !== 'ALL') { baseWhere += ` AND q.strategy_lane = ?`; baseParams.push(strategyLane); }
     if (fitParam !== 'ALL') baseWhere += ` AND ${FIT_SQL[fitParam as (typeof FIT_VALUES)[number]]}`;
     if (payParam) baseWhere += ` AND ${PAY_SQL[payParam]}`;
+    // Same meaning as before: the job's latest application record, if any, is SAVED (or there is none).
+    if (excludeApplied) baseWhere += ` AND ${NOT_APPLIED}`;
 
-    if (excludeApplied) {
-      baseWhere += ` AND (a.status IS NULL OR a.status = 'SAVED')`;
-    }
-
-    // 1. Compute status counts across this base filter predicate
-    const statusCountsQuery = `
-      SELECT q.qualification_status, COUNT(*) as cnt
-      ${baseWhere}
-      GROUP BY q.qualification_status
-    `;
-    const { results: rawStatusCounts } = await env.DB.prepare(statusCountsQuery).bind(...baseParams).all<any>();
-    const status_counts: Record<string, number> = {
-      READY: 0,
-      STRETCH_READY: 0,
-      NEEDS_REVIEW: 0,
-      INELIGIBLE: 0,
-      HOLD: 0,
-    };
+    // 1. Status counts over the base predicate (one query; the total below is derived from it)
+    const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
+    const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
     (rawStatusCounts || []).forEach((r: any) => {
-      if (r.qualification_status === 'READY_HIGH') {
-        status_counts['READY'] = (status_counts['READY'] || 0) + r.cnt;
-      } else if (status_counts[r.qualification_status] !== undefined) {
-        status_counts[r.qualification_status] = r.cnt;
-      }
+      if (r.qualification_status === 'READY_HIGH') status_counts['READY'] = (status_counts['READY'] || 0) + r.cnt;
+      else if (status_counts[r.qualification_status] !== undefined) status_counts[r.qualification_status] = r.cnt;
     });
 
-    // 2. Compute total matching rows with qualificationStatus filter applied
+    // 2. The total for the status filter, from the same counts
     let filteredWhere = baseWhere;
     const filterParams = [...baseParams];
-
+    let inStatus: (st: string) => boolean = () => true;
     if (qualificationStatus && qualificationStatus !== 'ALL') {
       if (qualificationStatus === 'APPLY_WORTHY') {
         filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH', 'STRETCH_READY')`;
+        inStatus = (st) => st === 'READY' || st === 'READY_HIGH' || st === 'STRETCH_READY';
       } else {
         filteredWhere += ` AND q.qualification_status = ?`;
         filterParams.push(qualificationStatus);
+        inStatus = (st) => st === qualificationStatus;
       }
     }
+    const totalMatching = (rawStatusCounts || []).reduce((n: number, r: any) => n + (inStatus(r.qualification_status) ? r.cnt : 0), 0);
 
-    const totalRow = await env.DB.prepare(`SELECT COUNT(*) as cnt ${filteredWhere}`).bind(...filterParams).first<{ cnt: number }>();
-    const totalMatching = totalRow?.cnt || 0;
-
-    // 3. Query paginated results
-    let selectQuery = `
-      SELECT ${JOB_COLUMNS}
-      ${filteredWhere}
-    `;
-
-    const selectParams = [...filterParams];
-
-    // Order clause
-    if (sortBy === 'score_desc') {
-      selectQuery += ` ORDER BY COALESCE(s.overall_score, 0) DESC, j.discovered_at DESC`;
-    } else if (sortBy === 'date_desc') {
-      selectQuery += ` ORDER BY j.discovered_at DESC`;
-    } else if (sortBy === 'title_asc') {
-      selectQuery += ` ORDER BY j.title ASC`;
-    } else if (sortBy === 'company_asc') {
-      selectQuery += ` ORDER BY j.company ASC`;
-    } else {
-      selectQuery += ` ORDER BY COALESCE(s.overall_score, 0) DESC`;
+    // 3. The ids of this page only (the score is joined here because the order uses it), then their full rows
+    const orderBy = sortBy === 'date_desc' ? 'j.discovered_at DESC, q.job_id'
+      : sortBy === 'title_asc' ? 'j.title ASC, q.job_id'
+      : sortBy === 'company_asc' ? 'j.company ASC, q.job_id'
+      : sortBy === 'score_desc' ? 'COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id'
+      : 'COALESCE(s2.overall_score, 0) DESC, q.job_id';
+    const scoreForOrder = /s2\./.test(orderBy) ? 'LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id' : '';
+    const pageWhere = filteredWhere.replace('WHERE q.candidate_id = ?', `${scoreForOrder}\n      WHERE q.candidate_id = ?`);
+    const { results: pageIds } = await env.DB.prepare(`SELECT q.job_id AS id ${pageWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...filterParams, limit, offset).all<any>();
+    let results: any[] = [];
+    if (pageIds?.length) {
+      const ids = pageIds.map((r: any) => r.id);
+      const { results: full } = await env.DB.prepare(`
+        SELECT ${JOB_COLUMNS}
+        FROM candidate_qualifications q
+        JOIN jobs j ON q.job_id = j.id
+        LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
+        LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+        WHERE q.candidate_id = ? AND j.id IN (${ids.map(() => '?').join(',')})`).bind(candidateId, ...ids).all<any>();
+      const byId = new Map((full || []).map((r: any) => [r.id, r]));
+      results = ids.map((id: string) => byId.get(id)).filter(Boolean);
     }
-
-    selectQuery += ` LIMIT ? OFFSET ?`;
-    selectParams.push(limit, offset);
-
-    const { results } = await env.DB.prepare(selectQuery).bind(...selectParams).all<any>();
 
     const threshold = await candidateThreshold(env, candidateId);
     const jobs = results.map((r: any) => shapeJob(r, candidateId, threshold));
@@ -1972,15 +1938,12 @@ router.get('/api/analytics', async (request, env, _params, url) => {
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
-    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs.
-    const totalJobs = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ cnt: number }>();
-
+    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs, read in ONE pass (it was four).
     const { results: eligCounts } = await env.DB.prepare(`
-      SELECT q.eligibility_status, COUNT(*) as cnt
+      SELECT q.eligibility_status, COUNT(*) as cnt, SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub,
+             SUM(s.overall_score) as score_sum, COUNT(s.overall_score) as score_n
       FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
       GROUP BY q.eligibility_status
     `).bind(candidateId).all<any>();
@@ -1990,9 +1953,14 @@ router.get('/api/analytics', async (request, env, _params, url) => {
       INELIGIBLE: 0,
       UNKNOWN: 0,
     };
+    let total = 0, pub = 0, scoreSum = 0, scoreN = 0;
     (eligCounts || []).forEach((r: any) => {
       eligibility_counts[r.eligibility_status] = r.cnt;
+      total += r.cnt; pub += r.pub || 0; scoreSum += r.score_sum || 0; scoreN += r.score_n || 0;
     });
+    const totalJobs = { cnt: total };
+    const avgScore = { avg_score: scoreN ? scoreSum / scoreN : 0 };
+    const salaryPub = { total, pub };
 
     const { results: appCounts } = await env.DB.prepare(`
       SELECT status, COUNT(*) as cnt
@@ -2005,20 +1973,6 @@ router.get('/api/analytics', async (request, env, _params, url) => {
     (appCounts || []).forEach((r: any) => {
       application_counts[r.status] = r.cnt;
     });
-
-    const avgScore = await env.DB.prepare(`
-      SELECT AVG(s.overall_score) as avg_score
-      FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id
-      WHERE s.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ avg_score: number }>();
-
-    const salaryPub = await env.DB.prepare(`
-      SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub
-      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ total: number; pub: number }>();
 
     return jsonResponse({
       candidate_id: candidateId,
@@ -2353,9 +2307,9 @@ router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
 
   try {
     // 1. Lifetime / all-time global inventory (explicitly labeled)
-    const lifetimeTotalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs').first<{ cnt: number }>();
-    const lifetimeActiveJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
-    const lifetimeClosedJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 0').first<{ cnt: number }>();
+    // one pass over jobs for all three figures (it was three)
+    const jc = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as closed FROM jobs').first<{ cnt: number; active: number; closed: number }>();
+    const lifetimeTotalJobs = { cnt: jc?.cnt ?? 0 }, lifetimeActiveJobs = { cnt: jc?.active ?? 0 }, lifetimeClosedJobs = { cnt: jc?.closed ?? 0 };
 
     const lifetimeQCounts = await env.DB.prepare(`
       SELECT qualification_status, COUNT(*) as cnt
