@@ -51,12 +51,14 @@ jobs:
           mkdir -p work
           curl -fsSL --retry 3 -A 'career-job-engine/1.0' -o work/all.parquet https://storage.stapply.ai/jobhive/v1/all.parquet
           ls -la work/all.parquet
-      - name: Discovery state tables (idempotent)
+      - name: Discovery state and past-applications tables (idempotent)
         working-directory: dashboard
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler d1 execute career-job-engine --remote --file=migrations/0014_discovery_state.sql > /dev/null
+        run: |
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0014_discovery_state.sql > /dev/null
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0016_past_applications.sql > /dev/null
       - name: Select matches from the dataset (and earlier rows to re-score)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -75,11 +77,19 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: python engine/dataset_discovery.py --dedupe work/jobsite_raw.json --out work
+      - name: Employers listed publicly as hiring worldwide (no credentials; read at run time, never stored in the repo)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: |
+          git clone -q --depth 1 https://github.com/remoteintech/remote-jobs work/remoteintech || true
+          curl -fsSL --retry 2 -o work/established-remote.md https://raw.githubusercontent.com/yanirs/established-remote/master/README.md || true
+          python engine/global_hirers.py --remoteintech work/remoteintech --established work/established-remote.md --out work
       - name: Score with the Worker's own screen and write SQL
         working-directory: dashboard
         run: |
           IN="--in ../work/matches.json"
           [ -f ../work/jobsite_matches.json ] && IN="$IN --in ../work/jobsite_matches.json"
+          [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
           node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN \
             --rescore ../work/rescore.json --out ../work/apply.sql --max-new "$MAX_NEW"
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql

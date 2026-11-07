@@ -122,6 +122,14 @@ def profiles(local=None):
     return out
 
 
+# What dataset_apply.mjs scores with: skills, years, pay floor, and employers that rejected the candidate before (applications
+# marked REJECTED in the dashboard and past applications entered by hand, migration 0016).
+CANDIDATES_SQL = """SELECT c.id, c.primary_skills, c.total_years_experience, c.cash_floor_inr_monthly, p.search_profile,
+  (SELECT json_group_array(json_object('company', x.company, 'on', x.decided_on)) FROM (
+     SELECT company, decided_on FROM past_applications WHERE candidate_id = c.id AND outcome = 'REJECTED'
+     UNION SELECT j.company, substr(coalesce(a.updated_at, a.created_at), 1, 10) FROM applications a JOIN jobs j ON j.id = a.job_id
+       WHERE a.candidate_id = c.id AND a.status = 'REJECTED') x) AS rejected_companies
+  FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id"""
 BASE_COLS = """url, title, company, ats_type, location, country_iso, lower(coalesce(CAST(is_remote AS VARCHAR), '')) AS remote_flag,
   left(description, 6000) AS description, CAST(posted_at AS VARCHAR) AS posted_at, TRY_CAST(salary_min AS DOUBLE) AS salary_min,
   TRY_CAST(salary_max AS DOUBLE) AS salary_max, salary_currency, salary_period, salary_summary, apply_url, employment_type"""
@@ -264,7 +272,7 @@ def main():
     profs = profiles(a.d1_local)
     # What the scoring step needs per candidate, and the search profiles for the job-site step (which runs without database
     # credentials). Both stay in the run's work folder and are never committed.
-    (out / 'candidates.json').write_text(json.dumps(d1("SELECT c.id, c.primary_skills, c.total_years_experience, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id", a.d1_local)))
+    (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
     (out / 'profiles.json').write_text(json.dumps(profs))
     if a.rescore_export:
         (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local)))
@@ -295,7 +303,7 @@ def rescore_rows(local=None, page=400):
     that have skills to score with."""
     rows, offset = [], 0
     while True:
-        part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
+        part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
           JOIN candidates c ON c.id = q.candidate_id
           WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')

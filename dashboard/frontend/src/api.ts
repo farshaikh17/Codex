@@ -831,3 +831,21 @@ export async function deleteClientRequest(id: string): Promise<void> {
 export async function unsaveJob(jobId: string, candidateId: string): Promise<void> {
   await jsonOrThrow(await authedFetch(`${API_BASE}/applications/${encodeURIComponent(jobId)}?candidate_id=${encodeURIComponent(candidateId)}`, { method: 'DELETE' }), 'Un-saving the job');
 }
+
+// Applications made outside the dashboard (owner decision 2026-11-07). Operator only; the daily discovery labels new jobs
+// from an employer that rejected the candidate before.
+export interface PastApplication { id: number; candidate_id: string; company: string; role: string | null; outcome: string; decided_on: string | null; created_at: string }
+export async function fetchPastApplications(candidateId: string): Promise<PastApplication[]> {
+  const res = await authedFetch(`${API_BASE}/past-applications?candidate_id=${encodeURIComponent(candidateId)}`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error('Failed to load past applications');
+  return (await res.json()).past_applications || [];
+}
+export async function addPastApplication(entry: { candidate_id: string; company: string; role?: string; outcome: string; decided_on?: string }): Promise<PastApplication> {
+  const res = await authedFetch(`${API_BASE}/past-applications`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(entry) });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || 'Failed to save');
+  return (await res.json()).past_application;
+}
+export async function deletePastApplication(id: number): Promise<void> {
+  const res = await authedFetch(`${API_BASE}/past-applications/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+  if (!res.ok) throw new Error('Failed to delete');
+}

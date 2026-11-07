@@ -153,8 +153,35 @@ export function skillFound(skill:string,lower:string){
  // all key words within one window of SKILL_WINDOW characters
  return hits[0].some(p=>hits.slice(1).every(h=>h.some(q=>Math.abs(q-p)<=SKILL_WINDOW)));
 }
+// ---- Daily-discovery context (owner rules 2026-11-07) -------------------------------------------------------------------
+// globalHirers: employer names (normalised) that public, community-kept lists record as hiring worldwide (remoteintech/remote-jobs,
+// ISC licence; yanirs/established-remote). rejected: per candidate, employers that rejected them before, with the date.
+export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null> };
+const COMPANY_SUFFIX = /(incorporated|inc|llc|ltd|limited|gmbh|corp|corporation|company|co|hq|io|ai|labs|technologies|technology|software|group|pvt|plc|sa|ag|bv)$/;
+/** Employer name for matching across sources: 'Perion Network Ltd.' and the ATS slug 'perionnetworkltd' both give 'perionnetwork'. */
+export function companyKey(name: string | null | undefined) {
+  let k = String(name || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '');
+  for (let i = 0; i < 2; i++) { const t = k.replace(COMPANY_SUFFIX, ''); if (t.length >= 3) k = t; }
+  return k.length >= 3 ? k : '';
+}
+// Pay check. Rough conversion to rupees per month (reference rates, 2026-11); only a published pay range is ever compared.
+const INR_PER: Record<string, number> = { INR: 1, USD: 85, EUR: 92, GBP: 108, AED: 23, SAR: 22.6, QAR: 23.3, OMR: 220, KWD: 276, BHD: 225, SGD: 64, AUD: 56, CAD: 61, NZD: 51, CHF: 96, JPY: 0.56, PHP: 1.5, MYR: 18 };
+const perMonth = (period: string) => /year|annual|yr/.test(period) ? 1 / 12 : /month/.test(period) ? 1 : /week/.test(period) ? 4.33 : /day|daily/.test(period) ? 21.7 : /hour/.test(period) ? 173 : 0;
+export const PAY_BELOW_FLOOR_PENALTY = 20, PAY_PREFERRED_BONUS = 5, GLOBAL_HIRER_BONUS = 5;
+/** Published pay as rupees per month {lo, hi}, or null when the posting gives no usable range. */
+export function monthlyInr(salary: any): { lo: number; hi: number } | null {
+  if (!salary || typeof salary !== 'object') return null;
+  const rate = INR_PER[String(salary.currency || '').toUpperCase()], per = perMonth(String(salary.period || salary.interval || '').toLowerCase());
+  const lo = Number(salary.min), hi = Number(salary.max);
+  const a = Number.isFinite(lo) && lo > 0 ? lo : null, b = Number.isFinite(hi) && hi > 0 ? hi : null;
+  if (!rate || !per || (a === null && b === null)) return null;
+  const top = (b ?? a)! * rate * per, bottom = (a ?? b)! * rate * per;
+  return top >= 1000 && top < 1e8 ? { lo: Math.round(bottom), hi: Math.round(top) } : null;   // implausible values are ignored
+}
+const lakhMonth = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}/month`;
+
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
-export function evaluate(candidate:any,p:Posting) {
+export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
  const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
  const india=sanaIndiaCity(p.location);
@@ -203,15 +230,28 @@ export function evaluate(candidate:any,p:Posting) {
  const have=Number(candidate.total_years_experience)||0, need=yearsRequired(p.description||'');
  const overReach=role&&have>0&&need>have+2, meets=role&&have>0&&need>0&&need<=have;
  if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(95,score+EXPERIENCE_MATCH_BONUS);
+ // Pay floor (owner rule 2026-11-07): only a published range is compared. Below the candidate's floor loses points; reaching the
+ // preferred level gains a little. A candidate with no floor on record is never compared.
+ const floor=Number(candidate.cash_floor_inr_monthly)||(candidate.id==='farhan_shaikh'?120000:0), preferred=candidate.id==='farhan_shaikh'?2500000/12:0;
+ const pay=floor>0?monthlyInr(p.salary):null, belowFloor=!!pay&&pay.hi<floor, preferredPay=!!pay&&!belowFloor&&preferred>0&&pay.hi>=preferred;
+ if(belowFloor)score=Math.max(0,score-PAY_BELOW_FLOOR_PENALTY);else if(preferredPay)score=Math.min(95,score+PAY_PREFERRED_BONUS);
+ // Employers recorded publicly as hiring worldwide (Farhan: remote from India). Not proof of eligibility, so eligibility is unchanged.
+ const key=companyKey(p.company), globalHirer=candidate.id==='farhan_shaikh'&&eligibility!=='INELIGIBLE'&&!!key&&!!ctx.globalHirers?.has(key);
+ if(globalHirer&&role)score=Math.min(95,score+GLOBAL_HIRER_BONUS);
+ const rejectedOn=key&&ctx.rejected?.has(key)?(ctx.rejected.get(key)||'date not recorded'):null;
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
  // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
  // Both only lower the preliminary score. Eligibility, status and READY rules are not touched, and a human override still wins.
  const avoided=prof?!!phraseRegex(prof.avoid_keywords)?.test(p.title||''):avoidedTitle(candidate.id,p.title);
- const foreignOnly=(prof?prof.foreign_penalty:candidate.id==='farhan_shaikh')&&eligibility!=='ELIGIBLE'&&foreignLocation(p.location);
+ const foreignOnly=(prof?prof.foreign_penalty:candidate.id==='farhan_shaikh')&&eligibility!=='ELIGIBLE'&&!globalHirer&&foreignLocation(p.location);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // New discoveries are never auto-promoted to READY using a simplified scorer.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')};
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+  +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
+  +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
+  +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
+  +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
 }
 async function hash(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');}
 function canonical(url:string){const u=new URL(url),keys:string[]=[];u.searchParams.forEach((_,k)=>keys.push(k));for(const k of keys)if(/^(utm_|gh_src|source|ref|lever-source)/.test(k))u.searchParams.delete(k);u.hash='';u.pathname=u.pathname.replace(/\/$/,'');return u.toString().replace(/\/$/,'');}

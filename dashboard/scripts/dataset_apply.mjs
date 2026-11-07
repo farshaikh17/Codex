@@ -3,13 +3,13 @@
 // the candidates' now-stored skills (owner-approved 2026-11-06).
 //
 //   node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates work/candidates.json \
-//        --in work/matches.json [--in work/jobsite_matches.json] [--rescore work/rescore.json] --out work/apply.sql [--max-new 1500]
+//        --in work/matches.json [--in work/jobsite_matches.json] [--rescore work/rescore.json] [--global-hirers work/global_hirers.json] --out work/apply.sql [--max-new 1500]
 //
 // Guarantees: nothing is ever marked READY or STRETCH; no row with a human override or an application is written; an existing
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, companyKey } from '../worker/discovery.ts';
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
@@ -29,10 +29,21 @@ const num = (v) => (v === null || v === undefined || v === '' || !Number.isFinit
 
 const candidates = JSON.parse(fs.readFileSync(opt('--candidates'), 'utf8'));   // [{ id, primary_skills, search_profile }]
 const byId = new Map(candidates.map((c) => [c.id, c]));
+// Daily-discovery context: employers listed publicly as hiring worldwide (engine/global_hirers.py, no credentials) and, per
+// candidate, employers that rejected them before (dashboard applications marked REJECTED and past applications entered by hand).
+const hirersFile = opt('--global-hirers');
+const globalHirers = new Set(hirersFile && fs.existsSync(hirersFile) ? (JSON.parse(fs.readFileSync(hirersFile, 'utf8')).keys || []) : []);
+const ctxFor = new Map(candidates.map((c) => {
+  let rows = []; try { rows = JSON.parse(c.rejected_companies || '[]') || []; } catch {}
+  const rejected = new Map();
+  for (const r of Array.isArray(rows) ? rows : []) { const k = companyKey(r?.company); if (k && !rejected.has(k)) rejected.set(k, r?.on ? String(r.on).slice(0, 10) : null); }
+  return [c.id, { globalHirers, rejected }];
+}));
+
 // A row is tagged as scored with stored skills only when the candidate has skills; otherwise the later re-score must still see it.
 const hasSkills = (c) => { try { const v = JSON.parse(c?.primary_skills || '[]'); return Array.isArray(v) && v.length > 0; } catch { return false; } };
 const out = [];
-const report = { new_jobs: 0, rows: 0, skipped_low: 0, skipped_ineligible: 0, capped: 0, closed: 0, rescored: 0, by_status: {} };
+const report = { new_jobs: 0, rows: 0, skipped_low: 0, skipped_ineligible: 0, capped: 0, closed: 0, rescored: 0, by_status: {}, global_hirers: globalHirers.size };
 
 // ---- new jobs -----------------------------------------------------------------------------------------------------------
 const planned = [];
@@ -46,12 +57,12 @@ for (const file of many('--in')) {
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
     const onsite = j.is_remote === false;
-    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote };
+    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
     const rows = [];
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);
       if (!cand) continue;
-      const r = evaluate(cand, posting);
+      const r = evaluate(cand, posting, ctxFor.get(cid));
       if (board) {   // a job-board report: eligibility is never taken from the board (same rule as the Worker's persist())
         r.eligibility = 'UNKNOWN';
         r.reason = `Reported by ${j.ats_type}; employer availability and eligibility are unverified.`;
@@ -122,14 +133,17 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
   for (const row of JSON.parse(fs.readFileSync(rescoreFile, 'utf8'))) {
     const cand = byId.get(row.candidate_id);
     if (!cand || !hasSkills(cand)) continue;   // nothing to re-score with yet
-    const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', location: row.location || '', description: plain(row.description), remote: /^REMOTE/i.test(row.workplace_type || '') };
-    const r = evaluate(cand, posting);
+    const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', location: row.location || '', description: plain(row.description), remote: /^REMOTE/i.test(row.workplace_type || ''),
+      salary: { min: row.salary_min, max: row.salary_max, currency: row.salary_currency, period: row.salary_period } };
+    const r = evaluate(cand, posting, ctxFor.get(row.candidate_id));
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
     const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v2: true, matched_skills: r.skills, rescored_at: now });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"profile_v2":true%' ${undecided('candidate_job_scores')}
       AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
+    out.push(`UPDATE candidate_qualifications SET qualification_reason = ${q(r.qualification_reason)} WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)}
+      AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
     if (r.status === 'INELIGIBLE') {
       out.push(`UPDATE candidate_qualifications SET qualification_status = 'INELIGIBLE', eligibility_status = 'INELIGIBLE', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)}
         WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);

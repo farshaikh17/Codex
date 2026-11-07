@@ -59,6 +59,26 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
 - **Applying the new rules to earlier jobs.** The re-score runs once with these rules. It also marks earlier undecided rows ineligible when the new rules say so, for example a role that is not remote, for Farhan. READY, STRETCH, applied and decided rows are never touched.
 - **Profiles.** Migration 0015 adds the skills from each CV to the stored lists (nothing stored is removed) and raises the stored years to 9. It runs once.
 
+## Signals added 2026-11-07 (owner-approved)
+
+- **Pay floor.** Only a published pay range is compared, converted to rupees a month at reference rates.
+  - Below the candidate's floor (Farhan: ₹1,20,000 a month): −20 points.
+  - At Farhan's preferred ₹25 LPA or more: +5 points.
+  - No published pay: no change. A candidate with no floor on record is never compared.
+- **Employers listed publicly as hiring worldwide** (Farhan only).
+  - Sources, read at run time and never stored in this repository:
+    - remoteintech/remote-jobs (ISC licence): kept when region is worldwide or Asia-Pacific and the company is fully remote or remote-first;
+    - yanirs/established-remote.
+  - About 370 employers.
+  - Effect: +5 points, no foreign-location penalty, and the note "confirm India is included". Eligibility is never changed.
+- **Rejected before.**
+  - Sources:
+    - dashboard applications marked REJECTED;
+    - applications made outside the dashboard, entered by the operator on the Profile page (`past_applications`, migration 0016).
+  - New jobs from that employer are labelled with the date. Nothing is hidden or re-scored.
+- **"Easy yes" note.** For a role-match it names the CV skills the posting asks for and the experience it asks for that the candidate meets. It is built only from the CV and the posting.
+- **Gulf job sites for Sana.** Bayt plus Indeed and LinkedIn in the UAE, Saudi Arabia, Qatar and Oman, next to the India searches. That is 7 searches for her and 5 for Farhan.
+
 ## Cost (free tiers)
 
 | Resource | Use |

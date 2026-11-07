@@ -1,3 +1,4 @@
+import { PastApplicationsPanel } from './PastApplicationsPanel';
 import React, { useState, useEffect } from 'react';
 import { CandidateProfile, ResumeImportResult } from '../types';
 import { importResume } from '../api';
@@ -443,6 +444,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
           </div>
         </form>
       </div>
+      <PastApplicationsPanel candidateId={profile.id} />
     </div>
   );
 };

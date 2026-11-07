@@ -16,22 +16,31 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
 
-SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google']
-# A few searches per built-in candidate; the title filter below (the Worker's own role rule) removes loose matches.
+SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google', 'bayt']
+INDIA_SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google']
+GULF_SITES = ['bayt', 'indeed', 'linkedin']   # Bayt is the largest Gulf job board; Indeed searched in that country
+# A few searches per built-in candidate: (search term, location, Indeed country, sites). The title filter below (the
+# Worker's own role rule) removes loose matches. Owner rules 2026-11-07: Farhan remote only, from any country;
+# Sana anywhere, so her searches cover India and the Gulf job boards.
 QUERIES = {
-    'farhan_shaikh': [('implementation manager', 'India'), ('solutions engineer', 'India'), ('technical operations', 'India'),
-                      ('CRM automation', 'India'), ('revenue operations', 'India')],
-    'sana_ansari': [('electrical maintenance engineer', 'India'), ('reliability engineer', 'India'), ('power plant engineer', 'India'),
-                    ('electrical engineer', 'Dubai'), ('maintenance engineer power', 'Saudi Arabia')],
+    'farhan_shaikh': [('implementation manager remote', 'India', 'India', INDIA_SITES), ('solutions engineer remote', 'India', 'India', INDIA_SITES),
+                      ('technical operations remote', 'India', 'India', INDIA_SITES), ('CRM automation remote', 'India', 'India', INDIA_SITES),
+                      ('chief of staff remote', 'India', 'India', INDIA_SITES)],
+    'sana_ansari': [('electrical maintenance engineer', 'India', 'India', INDIA_SITES), ('reliability engineer', 'India', 'India', INDIA_SITES),
+                    ('energy efficiency engineer', 'India', 'India', INDIA_SITES),
+                    ('power plant engineer', 'Dubai', 'United Arab Emirates', GULF_SITES), ('maintenance engineer power plant', 'Riyadh', 'Saudi Arabia', GULF_SITES),
+                    ('electrical maintenance engineer', 'Doha', 'Qatar', GULF_SITES), ('power plant engineer', 'Muscat', 'Oman', GULF_SITES)],
 }
-MAX_QUERIES = 5
+MAX_QUERIES = 7
 
 
-def run_search(site, term, location, results, hours):
+def run_search(site, term, location, results, hours, country='India'):
     from jobspy import scrape_jobs
-    kw = {'country_indeed': 'India' if location == 'India' else 'United Arab Emirates' if location == 'Dubai' else 'Saudi Arabia' if location == 'Saudi Arabia' else 'India'}
+    kw = {'country_indeed': country}
     if site == 'google':
         kw = {'google_search_term': f'{term} jobs in {location} since yesterday'}
+    if site in ('bayt', 'linkedin', 'naukri'):
+        kw = {}
     df = scrape_jobs(site_name=[site], search_term=term, location=location, results_wanted=results, hours_old=hours, verbose=0, **kw)
     return [] if df is None else df.to_dict('records')
 
@@ -47,12 +56,13 @@ def main():
     found, log = {}, []
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
-        queries = QUERIES.get(cid) or [(w, p['home'].title()) for w in p.get('keywords', [])]
+        home = p['home'].title()
+        queries = QUERIES.get(cid) or [(w, home, home, INDIA_SITES if home == 'India' else ['indeed', 'linkedin']) for w in p.get('keywords', [])]
         role = re.compile(p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
-        for term, loc in queries[:MAX_QUERIES]:
-            for site in SITES:
+        for term, loc, country, sites in queries[:MAX_QUERIES]:
+            for site in sites:
                 try:
-                    rows = run_search(site, term, loc, a.results, a.hours)
+                    rows = run_search(site, term, loc, a.results, a.hours, country)
                 except Exception as e:   # a blocked site is skipped, never fatal
                     log.append({'site': site, 'term': term, 'error': str(e)[:120]}); continue
                 kept = 0

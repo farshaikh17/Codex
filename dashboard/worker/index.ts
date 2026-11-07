@@ -585,8 +585,8 @@ class WorkerRouter {
         const metered = readRoute;
         const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !viewerOf.has(request) && !hiddenFrom.has(request) ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
-        // The applications inbox and site settings feed no cached dashboard answer, so changing them keeps the public cache.
-        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings)(\/|$)/.test(pathname);
+        // The applications inbox, site settings and past applications feed no cached dashboard answer, so changing them keeps the public cache.
+        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings|past-applications)(\/|$)/.test(pathname);
         let meter: { db: D1Database; rows: () => number } | null = null;
         let lookup: CacheLookup | null = null;
         const now = Math.floor(Date.now() / 1000);
@@ -2997,6 +2997,36 @@ router.delete('/api/client-requests/:id', async (request, env, params) => {
   const r = await env.DB.prepare('DELETE FROM client_requests WHERE id = ?').bind(params.id).run();
   if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
   return jsonResponse({ id: params.id, deleted: true }, 200, corsHeaders(request, env));
+});
+// Applications made outside the dashboard (operator only: not a public read route). Daily discovery reads them.
+const PAST_OUTCOMES = ['REJECTED', 'NO_RESPONSE', 'APPLIED', 'WITHDRAWN'];
+const shortText = (v: any, n: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n) : '');
+router.get('/api/past-applications', async (request, env, _p, url) => {
+  const cid = knownCandidate(url.searchParams.get('candidate_id'));
+  if (!cid) return jsonResponse({ error: 'A known candidate_id is required.' }, 400, corsHeaders(request, env));
+  const { results } = await env.DB.prepare('SELECT id, candidate_id, company, role, outcome, decided_on, created_at FROM past_applications WHERE candidate_id = ? ORDER BY created_at DESC, id DESC LIMIT 500').bind(cid).all<any>();
+  return jsonResponse({ past_applications: results || [] }, 200, corsHeaders(request, env));
+});
+router.post('/api/past-applications', async (request, env) => {
+  const body = await readJson(request);
+  const cid = knownCandidate(body?.candidate_id);
+  const company = shortText(body?.company, 120), role = shortText(body?.role, 160) || null;
+  const outcome = body?.outcome, decided = body?.decided_on == null || body.decided_on === '' ? null : String(body.decided_on);
+  if (!cid) return jsonResponse({ error: 'A known candidate_id is required.' }, 400, corsHeaders(request, env));
+  if (company.length < 2) return jsonResponse({ error: 'company is required.' }, 400, corsHeaders(request, env));
+  if (!PAST_OUTCOMES.includes(outcome)) return jsonResponse({ error: 'outcome must be REJECTED, NO_RESPONSE, APPLIED or WITHDRAWN.' }, 400, corsHeaders(request, env));
+  if (decided !== null && !/^\d{4}-\d{2}-\d{2}$/.test(decided)) return jsonResponse({ error: 'decided_on must be YYYY-MM-DD.' }, 400, corsHeaders(request, env));
+  const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM past_applications WHERE candidate_id = ?').bind(cid).first<any>();
+  if ((n?.n || 0) >= 500) return jsonResponse({ error: 'At most 500 entries per candidate.' }, 400, corsHeaders(request, env));
+  const row = await env.DB.prepare('INSERT INTO past_applications(candidate_id, company, role, outcome, decided_on) VALUES (?, ?, ?, ?, ?) RETURNING id, candidate_id, company, role, outcome, decided_on, created_at')
+    .bind(cid, company, role, outcome, decided).first<any>();
+  return jsonResponse({ past_application: row }, 201, corsHeaders(request, env));
+});
+router.delete('/api/past-applications/:id', async (request, env, params) => {
+  if (!/^\d{1,12}$/.test(params.id)) return jsonResponse({ error: 'Unknown entry.' }, 404, corsHeaders(request, env));
+  const r = await env.DB.prepare('DELETE FROM past_applications WHERE id = ?').bind(Number(params.id)).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown entry.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: Number(params.id), deleted: true }, 200, corsHeaders(request, env));
 });
 router.get('/api/site-settings', async (request, env) => {
   const s = await site.loadSettings(env.DB);
