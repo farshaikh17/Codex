@@ -128,3 +128,26 @@ test('the Python list builder uses the same employer key as the screen, and both
   const keys = JSON.parse(fs.readFileSync(path.join(dir, 'global_hirers.json'), 'utf8')).keys;
   assert.deepEqual(keys.sort(), [companyKey('Apac Labs'), companyKey('Doist'), companyKey('perionnetworkltd'), companyKey('Zapier')].sort());
 });
+
+test('Y Combinator companies that are hiring: a small boost and a note for Farhan role-matches only', async () => {
+  const { YC_BONUS } = await import('../worker/discovery.ts');
+  const ctx = { yc: new Map([[companyKey('Acme AI'), 'Winter 2024']]) };
+  const base = evaluate(farhan, post({ company: 'Other' }), ctx), yc = evaluate(farhan, post({ company: 'Acme AI' }), ctx);
+  assert.equal(yc.score, Math.min(95, base.score + YC_BONUS)); assert.match(yc.qualification_reason, /Y Combinator company \(Winter 2024\), currently hiring/);
+  assert.doesNotMatch(evaluate(farhan, post({ company: 'Acme AI', title: 'Account Executive' }), ctx).qualification_reason, /Y Combinator/, 'not for a title outside the role family');
+  assert.doesNotMatch(evaluate(sana, post({ title: 'Reliability Engineer', company: 'Acme AI' }), ctx).qualification_reason, /Y Combinator/);
+});
+
+test('a job-board posting whose own text rules the candidate out is not stored; others keep unknown eligibility', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'brd-'));
+  const F = 'farhan_shaikh';
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
+  const b = (id, location) => ({ id, url: `https://example.com/${id}`, title: 'Implementation Manager', company: 'C' + id, ats_type: 'weworkremotely', location, is_remote: true,
+    description: 'CRM Configuration and Workflow Automation.', candidates: [F], board: true });
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [b('js:w:1', 'USA Only'), b('js:w:2', 'Anywhere in the World')] }));
+  execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
+  const { sqlite } = createDb();
+  sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
+  sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
+  assert.deepEqual(sqlite.prepare('SELECT job_id, eligibility_status e FROM candidate_qualifications ORDER BY job_id').all().map((r) => [r.job_id, r.e]), [['js:w:2', 'UNKNOWN']]);
+});

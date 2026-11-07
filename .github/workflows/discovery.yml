@@ -71,6 +71,10 @@ jobs:
         run: |
           python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
           /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out work --results 20 --hours 48
+      - name: Remote job boards (official public feeds; no credentials)
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:
@@ -83,7 +87,8 @@ jobs:
         run: |
           git clone -q --depth 1 https://github.com/remoteintech/remote-jobs work/remoteintech || true
           curl -fsSL --retry 2 -o work/established-remote.md https://raw.githubusercontent.com/yanirs/established-remote/master/README.md || true
-          python engine/global_hirers.py --remoteintech work/remoteintech --established work/established-remote.md --out work
+          curl -fsSL --retry 2 -o work/yc-hiring.json https://yc-oss.github.io/api/companies/hiring.json || true
+          python engine/global_hirers.py --remoteintech work/remoteintech --established work/established-remote.md --yc work/yc-hiring.json --out work
       - name: Score with the Worker's own screen and write SQL
         working-directory: dashboard
         run: |
@@ -105,7 +110,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/apply.report.json; do
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/global_hirers.json work/apply.report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));d.pop('log',None);print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"

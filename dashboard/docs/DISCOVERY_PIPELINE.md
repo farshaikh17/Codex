@@ -79,6 +79,16 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
 - **"Easy yes" note.** For a role-match it names the CV skills the posting asks for and the experience it asks for that the candidate meets. It is built only from the CV and the posting.
 - **Gulf job sites for Sana.** Bayt plus Indeed and LinkedIn in the UAE, Saudi Arabia, Qatar and Oman, next to the India searches. That is 7 searches for her and 5 for Farhan.
 
+## Remote job boards and YC companies (2026-11-07)
+
+- **Remote job boards, through their official public feeds** (`engine/remote_boards.py`, no credentials, 5-minute limit). Each is filtered by the candidates' own role rules, and only jobs from the last 7 days are kept.
+  - Remote OK. Its terms ask for a link back and a source credit: every stored job links to its Remote OK page and is labelled `remoteok`.
+  - We Work Remotely: four category feeds.
+  - Himalayas: the 200 newest jobs.
+  - Working Nomads.
+- **Board postings the screen rules out.** A job-site or board posting whose own text rules the candidate out (not remote, United States only, a clearance) is no longer stored. Only a positive eligibility claim is never taken from a board.
+- **Y Combinator companies that are hiring** (yc-oss/api, about 1,500, read at run time). For Farhan's role-matches: +3 points and a note naming the batch. This serves the "well-funded, early-stage founder" goal.
+
 ## Cost (free tiers)
 
 | Resource | Use |

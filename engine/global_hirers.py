@@ -4,11 +4,13 @@ Sources (read at run time, never copied into this repository):
   * remoteintech/remote-jobs (ISC licence): company files with `region` and `remote_policy`. Kept: region worldwide or
     asia-pacific, and policy fully-remote or remote-first.
   * yanirs/established-remote: a list of established remote companies hiring globally (the README table).
+  * yc-oss/api (companies/hiring.json): Y Combinator companies marked as hiring, with their batch. Used for a separate,
+    smaller signal for Farhan's builder roles (funded, early-stage founders), not for the worldwide-hiring signal.
 A listed employer is a hint, not proof: the screen raises the score a little and says "confirm India is included"; it never
 changes eligibility.
 
 Runs WITHOUT database credentials. Usage:
-  python engine/global_hirers.py --remoteintech PATH/TO/remote-jobs --established PATH/TO/README.md --out work/
+  python engine/global_hirers.py --remoteintech PATH/TO/remote-jobs --established PATH/TO/README.md [--yc hiring.json] --out work/
 Either source may be missing (a failed download): the file is still written, with whatever was read.
 """
 import argparse
@@ -65,10 +67,24 @@ def from_established(readme):
     return names
 
 
+def from_yc(path):
+    out = {}
+    for c in json.loads(Path(path).read_text(encoding='utf-8')):
+        if not c.get('isHiring') or c.get('status') not in (None, 'Active'):
+            continue
+        batch = str(c.get('batch') or '')[:20]
+        for v in (c.get('name'), c.get('slug')):
+            k = company_key(v)
+            if k and k not in out:
+                out[k] = batch
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--remoteintech')
     ap.add_argument('--established')
+    ap.add_argument('--yc')
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     counts, keys = {}, set()
@@ -80,9 +96,15 @@ def main():
             got = set()
         counts[label] = len(got)
         keys |= got
+    yc = {}
+    try:
+        yc = from_yc(a.yc) if a.yc and Path(a.yc).exists() else {}
+    except Exception as e:
+        print(f'yc: {e}', file=sys.stderr)
+    counts['yc_hiring'] = len(yc)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / 'global_hirers.json').write_text(json.dumps({'keys': sorted(keys), 'counts': counts}))
+    (out / 'global_hirers.json').write_text(json.dumps({'keys': sorted(keys), 'yc': yc, 'counts': counts}))
     print(json.dumps({'employers': len(keys), **counts}))
 
 
