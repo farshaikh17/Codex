@@ -70,8 +70,8 @@ const FARHAN_SOFT_AVOID=/\b(accountant|accounting (?:manager|analyst)|financial 
 const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integrations?|automations?|crm|revops|operations|business systems|technical delivery|chief of staff|founder'?s? (?:office|associate)|gtm engineer)\b/i;
 // Builder roles (owner rule 2026-11-07): implementation, automation, technical/revenue operations, GTM engineering, Founder's Office
 // and Chief of Staff, in any industry.
-export const FARHAN_ROLE=/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery|chief of staff|founder'?s? (?:office|associate)|founding (?:operations|ops|generalist)|gtm engineer|go[- ]to[- ]market engineer|ai (?:ops|operations|workflow|implementation)/i;
-export const SANA_ROLE=/electrical|power|energy|turbine|boiler|field service engineer|plant operator|control room|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
+export const FARHAN_ROLE=/operations|implementation|integration|automation|business systems|crm|revops|sales ops|marketing ops|systems architect|onboarding|solutions|technical delivery|chief of staff|founder'?s? (?:office|associate)|founding (?:operations|ops|generalist)|gtm engineer|go[- ]to[- ]market engineer|ai (?:ops|operations|workflow|implementation)/i;
+export const SANA_ROLE=/electrical|power|energy|turbine|boiler|field service engineer|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro|betriebsingenieur|zuverl.ssigkeit|anlagen|ing.nieur|centrale|onderhoud|elektrotechnisch|energiebesparing|energieeffizienz|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
 // Employers the owner asked to skip (2026-11-07).
 const FARHAN_SKIP_EMPLOYER=/^\s*ajaia\b/i;
 // A location that names only the United States (owner rule 2026-11-07: US-only remote roles are rejected for Farhan).
@@ -157,7 +157,47 @@ export function skillFound(skill:string,lower:string){
 // globalHirers: employer names (normalised) that public, community-kept lists record as hiring worldwide (remoteintech/remote-jobs,
 // ISC licence; yanirs/established-remote). rejected: per candidate, employers that rejected them before, with the date.
 // yc: Y Combinator companies currently hiring (yc-oss/api), name key -> batch.
-export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null>; yc?: Map<string, string> };
+export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null>; yc?: Map<string, string>; ukSponsors?: Set<string> };
+// ---- Signals added 2026-11-07 (owner-approved "10 ideas") ------------------------------------------------------------------
+export const TIMEZONE_PENALTY = 10, AGENCY_PENALTY = 5, LANGUAGE_PENALTY = 10;
+const EU_ONLY = /\b(must (?:be |reside |live )?(?:based |located |resident )?in (?:the )?(?:eu|eea|european union|europe)|(?:eu|eea|european union)[- ]?(?:only|based only|residents? only|work (?:permit|authori[sz]ation) required)|right to work in the (?:eu|uk|eea|netherlands|germany) (?:is )?required|(?:eu|eea) citizens? only)\b/i;
+const TZ_RESTRICTED = /\b(?:(?:us|u\.s\.|north american?|eastern|pacific|central|est|pst|cst|cet|uk|european?) (?:time ?zones?|business hours|working hours|hours)|overlap with (?:us|u\.s\.|pacific|eastern|north american?|cet|european?) (?:time|hours|time ?zones?)|work(?:ing)? (?:us|u\.s\.|pst|est) hours|(?:between|within|at least) \d+ ?(?:hours?|hrs?) (?:of )?overlap)\b/i;
+/** Where a remote posting really allows the person to be. Read from its own words only. */
+export function locationClass(text: string, location: string): 'worldwide' | 'india_ok' | 'us_only' | 'eu_only' | 'timezone' | 'unknown' {
+  const t = `${location || ''} ${text || ''}`;
+  if (/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india|anywhere in india)\b/i.test(t)) return 'india_ok';
+  if (/worldwide remote|remote worldwide|remote.?global|work from anywhere|anywhere in the world|fully distributed|any time ?zone|all time ?zones/i.test(t)) return 'worldwide';
+  if (/\b(us|usa|u\.s\.|united states)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located|live) in (?:the )?(?:us|usa|united states)|authori[sz]ed to work in the (?:us|united states)/i.test(t)) return 'us_only';
+  if (EU_ONLY.test(t)) return 'eu_only';
+  if (TZ_RESTRICTED.test(t)) return 'timezone';
+  return 'unknown';
+}
+const AGENCY_NAME = /\b(recruit(?:ing|ment|ers?)?|staffing|talent (?:solutions|partners|acquisition|group)|manpower|headhunt|placements?|hr (?:solutions|services|consultants?)|workforce|consultants?|resourcing|executive search)\b/i;
+const AGENCY_TEXT = /\b(our client|on behalf of (?:our|a) client|for (?:one of )?our clients?|a leading client|client of ours|is recruiting (?:on behalf|for a))\b/i;
+/** A staffing agency or recruiter posting (common in Gulf O&M postings). */
+export function agencyPosting(company: string, description: string) { return AGENCY_NAME.test(company || '') || AGENCY_TEXT.test((description || '').slice(0, 1500)); }
+const LANG_RULES: [RegExp, string][] = [
+  [/\b(flie(?:ß|ss)end(?:e|es|er)? deutsch|deutsch(?:kenntnisse)? (?:auf )?(?:c1|c2|muttersprach|verhandlungssicher|flie(?:ß|ss)end)|german (?:is )?(?:required|mandatory|essential|a must)|fluent (?:in )?german|verhandlungssicheres? deutsch)\b/i, 'German'],
+  [/\b(dutch (?:is )?(?:required|mandatory|essential|a must)|fluent (?:in )?dutch|nederlands(?:e taal)? (?:is )?(?:vereist|verplicht)|vloeiend nederlands)\b/i, 'Dutch'],
+  [/\b(french (?:is )?(?:required|mandatory|essential|a must)|fluent (?:in )?french|fran(?:ç|c)ais (?:courant|exig(?:é|e)|obligatoire|requis)|ma(?:î|i)trise du fran(?:ç|c)ais)\b/i, 'French'],
+  [/\b(arabic (?:is )?(?:required|mandatory|essential|a must)|fluent (?:in )?arabic|arabic speakers? only)\b/i, 'Arabic'],
+  [/\b(spanish (?:is )?(?:required|mandatory|essential|a must)|fluent (?:in )?spanish|espa(?:ñ|n)ol (?:nativo|fluido|imprescindible))\b/i, 'Spanish'],
+];
+const DE_WORDS = /\b(und|der|die|das|mit|für|wir|sie|ihre|unsere|bei|nicht|eine|einen|werden|sind|oder|auch|aus|dem)\b/g;
+const FR_WORDS = /\b(et|les|des|pour|vous|nous|une|dans|est|sont|avec|sur|votre|notre|par|aux|cette|leur)\b/g;
+const NL_WORDS = /\b(en|het|een|van|voor|wij|zijn|met|niet|ook|onze|jouw|bij|naar|wordt|worden|als|dat)\b/g;
+/** A language the posting plainly requires, or is written in (German, Dutch, French, Arabic, Spanish); null when English or unclear. */
+export function languageRequired(title: string, description: string): string | null {
+  const t = `${title || ''} ${description || ''}`;
+  for (const [re, name] of LANG_RULES) if (re.test(t)) return name;
+  const body = (description || '').slice(0, 3000).toLowerCase(), words = Math.max(1, body.split(/\s+/).length);
+  if (words < 40) return null;
+  const score = (re: RegExp) => ((body.match(re) || []).length) / words;
+  if (score(DE_WORDS) > 0.07) return 'German';
+  if (score(FR_WORDS) > 0.07) return 'French';
+  if (score(NL_WORDS) > 0.08) return 'Dutch';
+  return null;
+}
 const COMPANY_SUFFIX = /(incorporated|inc|llc|ltd|limited|gmbh|corp|corporation|company|co|hq|io|ai|labs|technologies|technology|software|group|pvt|plc|sa|ag|bv)$/;
 /** Employer name for matching across sources: 'Perion Network Ltd.' and the ATS slug 'perionnetworkltd' both give 'perionnetwork'. */
 export function companyKey(name: string | null | undefined) {
@@ -216,6 +256,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   else if(FARHAN_SKIP_EMPLOYER.test(p.company||'')){eligibility='INELIGIBLE';reason='Employer the candidate asked to skip.';}
   else if(!remoteSignal||/\b(hybrid|on[- ]?site|in[- ]office)\b/i.test(p.location||'')){eligibility='INELIGIBLE';reason='Not a remote role (candidate rule: remote only).';}
   else if(!explicitIndiaRemote&&!globalRemote&&usOnlyLocation(p.location)){eligibility='INELIGIBLE';reason='Remote within the United States only.';}
+  else if(!explicitIndiaRemote&&!globalRemote&&locationClass(p.description||'',p.location||'')==='eu_only'){eligibility='INELIGIBLE';reason='Must be based in the EU or EEA (the posting says so).';}
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site|not remote|no remote)\b/i.test(p.location+' '+p.description)){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
   else if(globalRemote){eligibility='ELIGIBLE';reason='Posting explicitly advertises worldwide remote work.';}
  }else if(india){
@@ -245,6 +286,16 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Funded early-stage founders (Farhan's builder goal): a YC company that is hiring gains a little, for a role-match only.
  const ycBatch=candidate.id==='farhan_shaikh'&&role&&eligibility!=='INELIGIBLE'&&key&&ctx.yc?.has(key)?(ctx.yc.get(key)||'batch not listed'):null;
  if(ycBatch)score=Math.min(95,score+YC_BONUS);
+ // Time-zone restriction (remote, but on another region's hours): a cost, not a bar. Agency postings and language requirements likewise.
+ const locClass=locationClass(p.description||'',p.location||'');
+ const tzRestricted=candidate.id==='farhan_shaikh'&&eligibility!=='INELIGIBLE'&&locClass==='timezone';
+ if(tzRestricted)score=Math.max(0,score-TIMEZONE_PENALTY);
+ const agency=agencyPosting(p.company||'',p.description||'');
+ if(agency&&role)score=Math.max(0,score-AGENCY_PENALTY);
+ const lang=languageRequired(p.title||'',p.description||'');
+ if(lang&&role)score=Math.max(0,score-LANGUAGE_PENALTY);
+ const ukSponsor=candidate.id==='sana_ansari'&&!!key&&!!ctx.ukSponsors?.has(key)&&/\b(uk|united kingdom|england|scotland|wales|london|manchester|birmingham|leeds|glasgow|edinburgh)\b/i.test(p.location||'');
+ const reposted=!!(p as any).repost;
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
  // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
  // Both only lower the preliminary score. Eligibility, status and READY rules are not touched, and a human override still wins.
@@ -252,7 +303,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const foreignOnly=(prof?prof.foreign_penalty:candidate.id==='farhan_shaikh')&&eligibility!=='ELIGIBLE'&&!globalHirer&&foreignLocation(p.location);
  // Sana (owner rule 2026-11-07: anywhere that could be her dream job). From India, an on-site role abroad is realistic only in the
  // Gulf or when the posting offers sponsorship or relocation, so other foreign on-site roles lose points. Eligibility is unchanged.
- const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!remote&&!sponsorship&&foreignLocation(p.location)&&!GULF_PLACE.test(p.location||'');
+ const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!remote&&!sponsorship&&!ukSponsor&&foreignLocation(p.location)&&!GULF_PLACE.test(p.location||'');
  if(visaUnlikely)score=Math.max(0,score-VISA_UNLIKELY_PENALTY);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
@@ -262,6 +313,12 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
   +(ycBatch?` Y Combinator company (${ycBatch}), currently hiring.`:'')
+  +(tzRestricted?' Remote, but on another region\'s working hours (score reduced).':'')
+  +(agency?' Posted by a staffing agency or recruiter (score reduced).':'')
+  +(lang?` Requires ${lang} (score reduced).`:'')
+  +(ukSponsor?' Employer holds a UK Skilled Worker sponsor licence.':'')
+  +(reposted?' Reposted: an earlier listing of this role closed.':'')
+  +(locClass==='worldwide'?' Posting says: work from anywhere.':locClass==='india_ok'?' Posting names India as a remote location.':'')
   +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
 }
 async function hash(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');}

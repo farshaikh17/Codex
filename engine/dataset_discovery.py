@@ -40,12 +40,12 @@ HEALTHY_RATIO = 0.9   # an ATS whose row count fell more than 10% since the prev
 BUILTIN = {
     'farhan_shaikh': {
         # builder roles, any industry (owner rules 2026-11-07); roles needing hands-on Salesforce/HubSpot/Zoho work are excluded
-        'role': r'implementation|integration|automation|business systems|(^|[^a-z])crm([^a-z]|$)|revops|revenue operations|sales operations|marketing operations|gtm operations|go-to-market operations|gtm engineer|go-to-market engineer|solutions (engineer|consultant|architect|specialist|manager|lead)|technical (operations|delivery)|tech ops|platform operations|business operations (manager|lead)|operations (engineer|manager|lead)|chief of staff|founder.?s? (office|associate)|founding (operations|ops|generalist)|ai (ops|operations|workflow|implementation)',
+        'role': r'implementation|integration|automation|business systems|(^|[^a-z])crm([^a-z]|$)|revops|sales ops|marketing ops|systems architect|customer onboarding|onboarding (manager|specialist|lead)|business operations|revenue operations|sales operations|marketing operations|gtm operations|go-to-market operations|gtm engineer|go-to-market engineer|solutions (engineer|consultant|architect|specialist|manager|lead)|technical (operations|delivery)|tech ops|platform operations|business operations (manager|lead)|operations (engineer|manager|lead)|chief of staff|founder.?s? (office|associate)|founding (operations|ops|generalist)|ai (ops|operations|workflow|implementation)',
         'exclude': r'power bi|software (engineer|developer)|devops|site reliability|data scientist|data engineer|machine learning|security engineer|sdet|qa engineer|qa automation|automation (test|qa)|test automation|firewall|warehouse|driver|nurse|clinical|intern([^a-z]|$)|internship|junior|business analyst|deal desk|account executive|sales (development|representative)|(salesforce|hubspot|zoho|netsuite) (admin|administrator|developer|engineer)|administrative assistant',
         'countries': ['IN'], 'mode': 'REMOTE_FROM_HOME', 'home': 'india', 'keywords': [], 'public': True, 'remote_anywhere': True,
     },
     'sana_ansari': {
-        'role': r'electrical|power plant|power generation|turbine|boiler|field service engineer|plant operator|control room|power station|substation|switchgear|transmission|o ?& ?m|operations (&|and) maintenance|maintenance (engineer|manager|head|lead|planner|supervisor)|plant (engineer|manager|operations|maintenance)|reliability engineer|commissioning|asset performance|energy|utilities|renewable|solar|wind (farm|turbine|energy)|thermal|hydro|decarboni[sz]|sustainability (engineer|consultant|specialist|manager)|clean ?tech|net.?zero|emissions (engineer|specialist)|efficiency (engineer|consultant|specialist)|(technical|engineering) consultant',
+        'role': r'electrical|power plant|power generation|turbine|boiler|field service engineer|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro(?:ingenieur|techniker|technik)|betriebsingenieur|zuverl.ssigkeit|anlagen(?:ingenieur|techniker|betreuer)|ing.nieur(?:e)? (?:maintenance|.lectricien|exploitation|fiabilit)|centrale (?:.lectrique|thermique)|onderhouds(?:ingenieur|technicus|engineer)|elektrotechnisch|energiebesparing|energieeffizienz|power station|substation|switchgear|transmission|o ?& ?m|operations (&|and) maintenance|maintenance (engineer|manager|head|lead|planner|supervisor)|plant (engineer|manager|operations|maintenance)|reliability engineer|commissioning|asset performance|energy|utilities|renewable|solar|wind (farm|turbine|energy)|thermal|hydro|decarboni[sz]|sustainability (engineer|consultant|specialist|manager)|clean ?tech|net.?zero|emissions (engineer|specialist)|efficiency (engineer|consultant|specialist)|(technical|engineering) consultant',
         'exclude': r'(site|customer|product|network|platform|production|database|infrastructure|data|service|systems) reliability|software|cloud|devops|power platform|power bi|power apps|sales|account (executive|manager)|data (engineer|scientist|analyst)|developer|recruiter|research analyst',
         # India first, then anywhere in the world (owner rule 2026-11-07: "anywhere which can be her dream job")
         'countries': ['IN'], 'mode': 'HOME_OR_RELOCATE', 'home': 'india', 'keywords': [], 'public': True, 'worldwide': True,
@@ -194,7 +194,8 @@ def existing(jobs, local=None):
                     f"UNION SELECT original_posting_url FROM jobs WHERE original_posting_url IN (SELECT value FROM json_each({sql_str(url_list)}))", local):
             urls.add(r['u'])
     pairs = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 1", local)}
-    return ids, urls, pairs
+    closed = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
+    return ids, urls, pairs, closed
 
 
 def split_new(jobs, local=None):
@@ -204,9 +205,12 @@ def split_new(jobs, local=None):
         k = (norm(j['company']), norm(j['title']), norm(j.get('location')))
         if k not in seen:
             seen.add(k); unique.append(j)
-    ids, urls, pairs = existing(unique, local) if unique else ({}, set(), set())
+    ids, urls, pairs, closed = existing(unique, local) if unique else ({}, set(), set(), set())
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
     fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title'])) not in pairs]
+    for j in fresh:   # the same role closed within the last 180 days and is back under a new id
+        if (norm(j['company']), norm(j['title'])) in closed:
+            j['repost'] = True
     return fresh, reopen, len(jobs) - len(unique)
 
 
@@ -255,8 +259,16 @@ def main():
     ap.add_argument('--max-days', type=int, default=45)
     ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with stored skills')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
+    ap.add_argument('--profiles-only', action='store_true', help='only write candidates.json, profiles.json and taste_rows.json (watchlist runs)')
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    if a.profiles_only:
+        profs = profiles(a.d1_local)
+        (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
+        (out / 'profiles.json').write_text(json.dumps(profs))
+        (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
+        print(json.dumps({'profiles': len(profs)}))
+        return 0
     if a.dedupe:
         raw = json.loads(Path(a.dedupe).read_text())
         fresh, _, dup = split_new([clean(j) for j in raw.get('jobs', [])], a.d1_local)
@@ -276,6 +288,7 @@ def main():
     (out / 'profiles.json').write_text(json.dumps(profs))
     if a.rescore_export:
         (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local)))
+    (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
     found = {}
     for cid, p in profs.items():
         for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota):
@@ -296,6 +309,14 @@ def main():
     (out / 'report.json').write_text(json.dumps(report, indent=1))
     print(json.dumps(report))
     return 0
+
+
+def taste_rows(local=None):
+    """The operator's own decisions, for the taste model (engine/signals.py): title and company only, with a label."""
+    return d1("""SELECT a.candidate_id, j.title, j.company, a.status AS label FROM applications a JOIN jobs j ON j.id = a.job_id
+      WHERE a.status IN ('SAVED','APPLIED','SUBMITTED','INTERVIEWING','OFFER')
+      UNION ALL SELECT q.candidate_id, j.title, j.company, q.manual_override_status FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED') LIMIT 4000""", local)
 
 
 def rescore_rows(local=None, page=400):

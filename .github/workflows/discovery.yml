@@ -7,7 +7,7 @@ on:
     inputs:
       max_new:
         description: 'Most new jobs written this run (0-3000)'
-        default: '800'
+        default: '1500'
       job_sites:
         description: 'Also run the light job-site search (true/false)'
         default: 'true'
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  models: read   # the free AI review (engine/ai_triage.py) uses the workflow's own token
 
 concurrency:
   group: d1-collector-sync   # never overlaps the collector sync's D1 writes
@@ -37,7 +38,7 @@ jobs:
           node-version: '22'
       - name: Validate inputs
         env:
-          MAX_NEW: ${{ inputs.max_new || '800' }}
+          MAX_NEW: ${{ inputs.max_new || '1500' }}
         run: |
           case "$MAX_NEW" in ''|*[!0-9]*) echo "max_new must be a whole number"; exit 1;; esac
           [ "$MAX_NEW" -le 3000 ] || { echo "max_new must be at most 3000"; exit 1; }
@@ -75,9 +76,12 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
-      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers; no credentials)
+      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna when its free keys are set)
         continue-on-error: true
-        timeout-minutes: 12
+        timeout-minutes: 14
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
         run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
@@ -93,12 +97,20 @@ jobs:
           curl -fsSL --retry 2 -o work/established-remote.md https://raw.githubusercontent.com/yanirs/established-remote/master/README.md || true
           curl -fsSL --retry 2 -o work/yc-hiring.json https://yc-oss.github.io/api/companies/hiring.json || true
           python engine/global_hirers.py --remoteintech work/remoteintech --established work/established-remote.md --yc work/yc-hiring.json --out work
+      - name: Signals (UK sponsor register; taste model from the operator's decisions; no credentials)
+        continue-on-error: true
+        timeout-minutes: 4
+        run: |
+          CSV=$(curl -fsSL --retry 2 -A 'career-job-engine/1.0' https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers | grep -oE 'https://assets\.publishing\.service\.gov\.uk/[^"]+\.csv' | head -1 || true)
+          [ -n "$CSV" ] && curl -fsSL --retry 2 -A 'career-job-engine/1.0' -o work/uk_register.csv "$CSV" || echo "UK register link not found today"
+          python engine/signals.py --uk-register work/uk_register.csv --taste-rows work/taste_rows.json --out work
       - name: Score with the Worker's own screen and write SQL
         working-directory: dashboard
         run: |
           IN="--in ../work/matches.json"
           [ -f ../work/jobsite_matches.json ] && IN="$IN --in ../work/jobsite_matches.json"
           [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
+          [ -f ../work/signals.json ] && IN="$IN --signals ../work/signals.json"
           node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN \
             --rescore ../work/rescore.json --out ../work/apply.sql --max-new "$MAX_NEW"
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql
@@ -109,6 +121,22 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler d1 execute career-job-engine --remote --file=../work/apply.sql > /dev/null
+      - name: Free AI review of the best new jobs (GitHub Models; the job text and a generic profile line, never a name)
+        if: ${{ hashFiles('work/apply.top.json') != '' }}
+        continue-on-error: true
+        timeout-minutes: 12
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python engine/ai_triage.py --in work/apply.top.json --out work/triage.sql --max 100 | tee work/triage_report.json
+      - name: Write the AI review
+        if: ${{ hashFiles('work/triage.sql') != '' }}
+        continue-on-error: true
+        working-directory: dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          [ -s ../work/triage.sql ] && npx wrangler d1 execute career-job-engine --remote --file=../work/triage.sql > /dev/null || echo "no review to write"
       - name: Still open? List the best-ranked undecided jobs
         continue-on-error: true
         env:
@@ -137,7 +165,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json; do
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/triage_report.json work/liveness_report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"

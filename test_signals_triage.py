@@ -1,0 +1,74 @@
+"""engine/signals.py and engine/ai_triage.py: UK register parsing, the taste model, the AI review parser and its SQL. Offline."""
+import json
+import sqlite3
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from engine import ai_triage, signals, more_sources as ms
+
+
+class Signals(unittest.TestCase):
+    def test_uk_register(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, 'r.csv').write_text('﻿Organisation Name,Town/City,County,Type & Rating,Route\n Drax Group plc ,Selby,,Worker (A rating),Skilled Worker\n'
+                                        'Fish Shop Ltd,Hull,,Temporary Worker (A rating),Seasonal Worker\nSSE PLC,Perth,,Worker (A rating),Global Business Mobility: Senior or Specialist Worker\n')
+            keys = signals.uk_sponsors(Path(d, 'r.csv'))
+            self.assertEqual(keys, {signals.company_key('Drax Group'), signals.company_key('SSE')})
+
+    def test_taste_needs_enough_labels_and_learns(self):
+        rows = [{'candidate_id': 'f', 'title': 'RevOps Manager', 'company': 'A', 'label': 'SAVED'}] * 7 + \
+               [{'candidate_id': 'f', 'title': 'Zoho CRM Developer', 'company': 'B', 'label': 'INELIGIBLE'}] * 6 + \
+               [{'candidate_id': 's', 'title': 'x', 'company': 'y', 'label': 'SAVED'}] * 3
+        m = signals.train(rows)
+        self.assertTrue(m['f']['active']); self.assertGreater(m['f']['weights']['revops'], 0); self.assertLess(m['f']['weights']['zoho'], 0)
+        self.assertFalse(m['s']['active'], 'too few decisions')
+        self.assertGreater(signals.taste_score(m['f'], 'RevOps Lead', 'Z'), 0); self.assertLess(signals.taste_score(m['f'], 'Zoho Developer', 'Z'), 0)
+        self.assertEqual(signals.taste_score(m['s'], 'x', 'y'), 0.0)
+
+
+class Triage(unittest.TestCase):
+    def test_parse_and_sql(self):
+        out = ai_triage.parse('Sure: [{"i":0,"fit":82,"eligible":"yes","why":"Good match."},{"i":1,"fit":20,"eligible":"no","why":"US only."},{"i":9,"fit":50}]', 2)
+        self.assertEqual(set(out), {0, 1}); self.assertEqual(out[1]['eligible'], 'no')
+        self.assertEqual(ai_triage.parse('no json here', 2), {})
+        job = {'candidate_id': 'f', 'job_id': 'j1'}
+        db = sqlite3.connect(':memory:')
+        db.executescript("""CREATE TABLE candidate_job_scores(candidate_id, job_id, overall_score, score_breakdown, calculated_at);
+          CREATE TABLE candidate_qualifications(candidate_id, job_id, qualification_status, manual_override_status, qualification_reason);
+          CREATE TABLE applications(candidate_id, job_id); CREATE TABLE cache_state(id, generation);
+          INSERT INTO candidate_job_scores VALUES ('f','j1',70,'{"preliminary":true}',NULL),('f','j2',70,'{"preliminary":true}',NULL);
+          INSERT INTO candidate_qualifications VALUES ('f','j1','NEEDS_REVIEW',NULL,'Cloud match.'),('f','j2','NEEDS_REVIEW','READY','Cloud match.');""")
+        sql = '\n'.join(ai_triage.to_sql(job, out[0], 'now') + ai_triage.to_sql({'candidate_id': 'f', 'job_id': 'j2'}, out[1], 'now'))
+        db.executescript(sql); db.executescript(sql)   # idempotent
+        self.assertEqual(db.execute("SELECT overall_score FROM candidate_job_scores WHERE job_id='j1'").fetchone()[0], 76)
+        self.assertTrue(db.execute("SELECT qualification_reason FROM candidate_qualifications WHERE job_id='j1'").fetchone()[0].startswith('AI review (fit 82, eligibility yes): Good match. Cloud'))
+        self.assertIn('ai_review', db.execute("SELECT score_breakdown FROM candidate_job_scores WHERE job_id='j1'").fetchone()[0])
+        self.assertEqual(db.execute("SELECT overall_score FROM candidate_job_scores WHERE job_id='j2'").fetchone()[0], 70, 'a decided row is never touched')
+
+    def test_no_token_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, 'top.json').write_text('[{"candidate_id":"f","job_id":"j","title":"t","company":"c","location":"l","description":"d","profile":"p"}]')
+            with mock.patch.dict('os.environ', {'GITHUB_TOKEN': ''}), mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
+                ai_triage.main()
+            self.assertEqual(Path(d, 't.sql').read_text(), '')
+
+
+class Eures(unittest.TestCase):
+    def test_parse(self):
+        payload = {'jvs': [{'id': 'abc', 'title': 'Instandhaltungsingenieur', 'creationDate': '1793690760202', 'locationMap': {'DE': ['DE1']},
+                            'employer': {'name': 'Kraftwerk GmbH'}, 'translations': {'en': {'title': 'Maintenance Engineer', 'description': 'Plant <b>work</b>'}}}]}
+        with mock.patch.object(ms, 'http', lambda *a, **k: json.dumps(payload).encode()):
+            rows = list(ms.eures({'sana_ansari': ['maintenance engineer']}))
+        self.assertEqual(len(rows), 1); j = rows[0]
+        self.assertEqual((j['title'], j['company'], j['location'], j['ats_type']), ('Maintenance Engineer', 'Kraftwerk GmbH', 'DE', 'eures'))
+        self.assertTrue(j['url'].endswith('/jv-details/abc?lang=en')); self.assertEqual(j['description'], 'Plant work')
+
+    def test_adzuna_off_without_keys(self):
+        with mock.patch.dict('os.environ', {'ADZUNA_APP_ID': '', 'ADZUNA_APP_KEY': ''}):
+            self.assertEqual(list(ms.adzuna({'sana_ansari': [('gb', 'x')]})), [])
+
+
+if __name__ == '__main__':
+    unittest.main()

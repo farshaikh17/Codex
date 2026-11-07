@@ -115,12 +115,27 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
 
 The research file with all 20 verified sources and 17 ideas is kept outside the repository. The next candidates are EURES, The Muse, ReliefWeb, YC's job pages, free-key sources (Adzuna, Careerjet) and per-company Recruitee, Personio and Teamtailor boards.
 
+## The ten additions of 2026-11-07 (owner-approved)
+
+1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.
+2. **Title synonyms.** The searches and the screen's role rules now include German, French and Dutch power-plant titles (Instandhaltung, Kraftwerk, Elektroingenieur, ingénieur maintenance, onderhoudsingenieur and more) and Farhan's adjacent titles (sales ops, marketing ops, systems architect, customer onboarding, business operations).
+3. **Learning from decisions.** Saves, applies and hand-set READY rows are positive; hand-set INELIGIBLE, HOLD and CLOSED rows are negative. A small word model per person (`engine/signals.py`) moves a score by at most 5 points and says "like roles you saved" or "like roles you dismissed". It switches on only after 10 decisions.
+4. **UK sponsor register.** GOV.UK's daily list of Skilled Worker sponsors. For Sana, a UK posting from a licensed sponsor is not penalised as "no visa route", and the note says so.
+5. **Free AI review** (`engine/ai_triage.py`). The 50 best new jobs per person go to GitHub Models' free tier with the job text and a generic description of what the person wants (never a name). The review moves the score by at most 10 points and is put in front of the note. Applied, decided, READY and STRETCH rows are never touched.
+6. **Watchlist, three times a day** (`.github/workflows/watchlist.yml`). The priority employer sites and the remote boards are read at 03:07, 09:07 and 21:07 UTC, between the daily runs. Up to 300 new jobs each time.
+7. **Reposts and long-open listings.** A role that closed in the last 180 days and is back under a new id is noted as reposted. Undecided rows for jobs first seen more than 60 days ago get a "listed for 60+ days" note.
+8. **Agency flag.** Staffing-agency names and "on behalf of our client" wording cost 5 points and are said in the note.
+9. **Language gate.** A posting that requires German, Dutch, French, Arabic or Spanish, or is written in German, French or Dutch, costs 10 points and is said in the note.
+10. **EURES and Adzuna.** EURES (the EU portal, about 2 million vacancies) is searched for Sana's and Farhan's terms, English titles first. Adzuna (India, UK, Germany, Netherlands) runs when the free `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` secrets are set.
+
+The daily cap is now 1,500 new jobs (about 35,000 of the 100,000 free daily writes at the cap).
+
 ## Cost (free tiers)
 
 | Resource | Use |
 |---|---|
-| GitHub Actions | About 5 to 10 minutes a day (the repository's free allowance is 2,000 minutes a month) |
-| D1 writes | About 18 to 27 row writes per new job, counting indexes. 800 jobs is about 15,000 to 22,000 a day, plus closures and the one-time re-score; inside the free 100,000 a day |
+| GitHub Actions | About 10 minutes for the daily run plus about 4 minutes for each of the three watchlist runs: about 25 minutes a day, inside the 2,000 minutes a month |
+| D1 writes | About 18 to 27 row writes per new job, counting indexes. 1,500 jobs is about 27,000 to 40,000 a day, plus closures, the watchlist and the AI review; inside the free 100,000 a day |
 | D1 reads | Duplicate checks (about 2 rows per selected posting), one scan of active jobs, one of this pipeline's jobs, and the re-score export (one-time) |
 | D1 storage | About 4 to 6 MB a day at the cap, reclaimed as closed jobs' text is dropped. The free database limit is 500 MB; the diagnose workflow reports the size |
 | Worker CPU | None: scoring happens in the Action |

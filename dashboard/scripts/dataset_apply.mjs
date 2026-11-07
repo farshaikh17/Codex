@@ -3,7 +3,7 @@
 // the candidates' now-stored skills (owner-approved 2026-11-06).
 //
 //   node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates work/candidates.json \
-//        --in work/matches.json [--in work/jobsite_matches.json] [--rescore work/rescore.json] [--global-hirers work/global_hirers.json] --out work/apply.sql [--max-new 1500]
+//        --in work/matches.json [--in work/jobsite_matches.json] [--rescore work/rescore.json] [--global-hirers work/global_hirers.json] [--signals work/signals.json] --out work/apply.sql [--max-new 1500]
 //
 // Guarantees: nothing is ever marked READY or STRETCH; no row with a human override or an application is written; an existing
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
@@ -14,7 +14,7 @@ import { evaluate, RULE_VERSION, companyKey } from '../worker/discovery.ts';
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
 const many = (name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
-const MAX_NEW = Math.max(0, Math.floor(Number(opt('--max-new', 800)) || 800));
+const MAX_NEW = Math.max(0, Math.floor(Number(opt('--max-new', 1500)) || 1500));
 const MAX_CLOSE = Number(opt('--max-close', 2000));
 const MIN_SCORE = Number(opt('--min-score', 30));
 const now = new Date().toISOString();
@@ -35,11 +35,24 @@ const hirersFile = opt('--global-hirers');
 const hirers = hirersFile && fs.existsSync(hirersFile) ? JSON.parse(fs.readFileSync(hirersFile, 'utf8')) : {};
 const globalHirers = new Set(hirers.keys || []);
 const yc = new Map(Object.entries(hirers.yc || {}));
+// Signals (engine/signals.py): UK Skilled Worker sponsors, and the taste model learned from the operator's own decisions.
+const signalsFile = opt('--signals');
+const signals = signalsFile && fs.existsSync(signalsFile) ? JSON.parse(fs.readFileSync(signalsFile, 'utf8')) : {};
+const ukSponsors = new Set(signals.uk_sponsors || []);
+const TASTE_STOP = new Set(['and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an', 'at', 'or', 'by', 'ltd', 'inc', 'llc', 'remote', 'senior', 'junior', 'ii', 'iii']);
+const TASTE_MAX = 5;
+/** Same formula as engine/signals.py taste_score(): token log-odds summed, squashed to [-1, 1]. */
+function tasteScore(model, title, company) {
+  if (!model || !model.active) return 0;
+  const words = new Set((String(title || '') + ' ' + String(company || '')).toLowerCase().match(/[a-z][a-z0-9+#]+/g) || []);
+  let sum = 0; for (const w of words) if (!TASTE_STOP.has(w)) sum += model.weights[w] || 0;
+  return Math.max(-1, Math.min(1, sum / 3));
+}
 const ctxFor = new Map(candidates.map((c) => {
   let rows = []; try { rows = JSON.parse(c.rejected_companies || '[]') || []; } catch {}
   const rejected = new Map();
   for (const r of Array.isArray(rows) ? rows : []) { const k = companyKey(r?.company); if (k && !rejected.has(k)) rejected.set(k, r?.on ? String(r.on).slice(0, 10) : null); }
-  return [c.id, { globalHirers, rejected, yc }];
+  return [c.id, { globalHirers, rejected, yc, ukSponsors }];
 }));
 
 // A row is tagged as scored with stored skills only when the candidate has skills; otherwise the later re-score must still see it.
@@ -59,7 +72,7 @@ for (const file of many('--in')) {
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
     const onsite = j.is_remote === false;
-    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
+    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, repost: !!j.repost, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
     const rows = [];
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);
@@ -74,6 +87,8 @@ for (const file of many('--in')) {
         r.status = r.status === 'HOLD' ? 'HOLD' : 'NEEDS_REVIEW';
         r.qualification_reason = 'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.';
       }
+      const taste = tasteScore((signals.taste || {})[cid], j.title, j.company);
+      if (taste && r.status !== 'INELIGIBLE') { r.score = Math.max(0, Math.min(100, Math.round(r.score + taste * TASTE_MAX))); r.qualification_reason += taste > 0 ? ' Like roles you saved before.' : ' Like roles you dismissed before.'; }
       if (r.status === 'INELIGIBLE') { report.skipped_ineligible++; continue; }
       if (r.score < MIN_SCORE) { report.skipped_low++; continue; }
       rows.push({ cid, r });
@@ -126,6 +141,23 @@ out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN (
   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id)
   AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
 
+// ---- the best new rows per candidate, for the free AI review (engine/ai_triage.py); no names, a generic profile line ----
+{
+  const PROFILE = {
+    farhan_shaikh: 'About 9 years in CRM/GoHighLevel implementation, workflow automation and technical operations; leads a small team. Wants fully remote work open to someone living in India (any employer country, employee or contractor); builder roles: implementation, RevOps/technical ops, automation, GTM engineering, Chief of Staff or Founder\'s Office. Not a software developer.',
+    sana_ansari: 'Electrical engineer, about 9 years at thermal power plants (operations on a 195 MW unit; maintenance of water-treatment and auxiliary systems on a 660 MW supercritical unit): reliability, root-cause analysis, maintenance planning, procurement. Based in India, will relocate anywhere. Wants plant O&M, reliability, energy-efficiency, decarbonisation or technical-consulting roles.',
+  };
+  const per = {};
+  for (const { j, description, rows } of planned.slice(0, MAX_NEW)) for (const { cid, r } of rows) {
+    if (!PROFILE[cid]) continue;
+    (per[cid] = per[cid] || []).push({ candidate_id: cid, job_id: j.id, title: cap(j.title, 200), company: cap(j.company, 120), location: cap(j.location || '', 200), description: description.slice(0, 2000), profile: PROFILE[cid], score: r.score });
+  }
+  const top = [];
+  for (const list of Object.values(per)) { list.sort((a, b) => b.score - a.score); top.push(...list.slice(0, 50)); }
+  fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.top.json', JSON.stringify(top));
+  report.ai_review_candidates = top.length;
+}
+
 // ---- reopen, two-run closures, expiry --------------------------------------------------------------------------------
 const reopen = [], missingMark = [], missingClear = [];
 let atsCounts = null;
@@ -153,6 +185,15 @@ out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE source_cha
 // storage: the text of jobs closed for more than 30 days is dropped (title, company and links stay), unless someone applied or decided
 out.push(`UPDATE jobs SET description = NULL WHERE source_channel IN ('ATS_DATASET', 'JOB_SITES') AND is_active = 0 AND expired_at < ${q(monthAgo)} AND description IS NOT NULL ${guarded};`);
 report.closed = toClose.length; report.reopened = reopen.length; report.missing_marked = missingMark.length; report.missing_cleared = missingClear.length;
+
+// ---- long-open listings: a note on undecided rows for jobs first seen more than 60 days ago (reposts are noted at insert time)
+{
+  const old = new Date(Date.now() - 60 * 86400000).toISOString();
+  out.push(`UPDATE candidate_qualifications SET qualification_reason = qualification_reason || ' Listed for 60+ days (may be stale or evergreen).'
+    WHERE manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND qualification_reason NOT LIKE '%Listed for 60+ days%'
+    AND job_id IN (SELECT id FROM jobs WHERE is_active = 1 AND discovered_at < ${q(old)} AND source_channel IN ('ATS_DATASET', 'JOB_SITES'))
+    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id);`);
+}
 
 // ---- one-time re-score of earlier preliminary rows with the current rules (owner-approved 2026-11-06, rules of 2026-11-07) ----
 // Score always; status and eligibility only when the current rules make the row ineligible (for example a role that is not

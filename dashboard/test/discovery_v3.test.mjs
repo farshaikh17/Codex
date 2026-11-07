@@ -180,3 +180,66 @@ test('one role posted in 3+ places by one employer is written once (best copy); 
   assert.deepEqual(active.filter((x) => x.startsWith('old')), ['old:1', 'old:3'], 'one stored copy stays, and one with an application is never closed');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 2);
 });
+
+test('location class, time-zone restriction and EU-only rules read the posting\'s own words', async () => {
+  const { locationClass, TIMEZONE_PENALTY } = await import('../worker/discovery.ts');
+  assert.equal(locationClass('We hire anywhere in the world.', 'Remote'), 'worldwide');
+  assert.equal(locationClass('Remote in India; we have a Bengaluru hub.', 'Remote'), 'india_ok');
+  assert.equal(locationClass('Candidates must reside in the US.', 'Remote'), 'us_only');
+  assert.equal(locationClass('You must be based in the EU.', 'Remote'), 'eu_only');
+  assert.equal(locationClass('Remote, with at least 4 hours overlap with Pacific time.', 'Remote'), 'timezone');
+  assert.equal(locationClass('A normal posting.', 'Remote'), 'unknown');
+  const base = evaluate(farhan, post({ location: 'Remote' }));
+  const tz = evaluate(farhan, post({ location: 'Remote', description: 'Fully remote role. CRM Configuration and Workflow Automation. Working US hours.' }));
+  assert.equal(tz.score, Math.max(0, base.score - TIMEZONE_PENALTY)); assert.match(tz.qualification_reason, /another region's working hours/);
+  assert.equal(tz.status, base.status, 'a cost, not a bar');
+  const eu = evaluate(farhan, post({ location: 'Remote - Europe', description: 'Fully remote. You must be based in the EU. CRM.' }));
+  assert.equal(eu.status, 'INELIGIBLE'); assert.match(eu.reason, /EU or EEA/);
+  assert.notEqual(evaluate(sana, post({ title: 'Reliability Engineer', location: 'Remote - Europe', description: 'You must be based in the EU.' })).status, 'INELIGIBLE', 'Sana relocates');
+});
+
+test('agency postings and language requirements lower the score and say so', async () => {
+  const { agencyPosting, languageRequired, AGENCY_PENALTY, LANGUAGE_PENALTY } = await import('../worker/discovery.ts');
+  assert.ok(agencyPosting('Gulf Manpower Recruitment LLC', 'x')); assert.ok(agencyPosting('Acme', 'We are hiring on behalf of our client, a utility.'));
+  assert.ok(!agencyPosting('Siemens Energy', 'Join our team.'));
+  assert.equal(languageRequired('Ingenieur', 'Fließend Deutsch in Wort und Schrift.'), 'German');
+  assert.equal(languageRequired('Engineer', 'Dutch is required for this role.'), 'Dutch');
+  assert.equal(languageRequired('Engineer', 'Nous recherchons un ingénieur pour les installations et les équipes dans notre centrale avec une expérience sur les turbines et les réseaux, pour vous et pour nous, dans une équipe qui est sur le terrain avec les clients et avec votre expertise sur les projets dans notre société par les équipes avec leur savoir et cette mission aux enjeux.'), 'French');
+  assert.equal(languageRequired('Engineer', 'An English posting about reliability and maintenance planning with no language requirement at all, written for an international audience and long enough to be measured as English text by the word counter in this test.'), null);
+  const base = evaluate(sana, post({ title: 'Reliability Engineer', location: 'Dubai, United Arab Emirates', description: 'Plant reliability role.' }));
+  const ag = evaluate(sana, post({ title: 'Reliability Engineer', company: 'Desert Staffing Solutions', location: 'Dubai, United Arab Emirates', description: 'Plant reliability role.' }));
+  const de = evaluate(sana, post({ title: 'Reliability Engineer', location: 'Dubai, United Arab Emirates', description: 'Plant reliability role. Fluent German required.' }));
+  assert.equal(ag.score, Math.max(0, base.score - AGENCY_PENALTY)); assert.match(ag.qualification_reason, /staffing agency/);
+  assert.equal(de.score, Math.max(0, base.score - LANGUAGE_PENALTY)); assert.match(de.qualification_reason, /Requires German/);
+});
+
+test('a UK employer on the sponsor register removes Sana\'s visa penalty; a repost is noted', async () => {
+  const { VISA_UNLIKELY_PENALTY } = await import('../worker/discovery.ts');
+  const ctx = { ukSponsors: new Set([companyKey('Drax Group plc')]) };
+  const plain = evaluate(sana, post({ title: 'Reliability Engineer', company: 'Other Co', location: 'Selby, United Kingdom', description: 'Plant reliability role.', remote: false }), ctx);
+  const sponsor = evaluate(sana, post({ title: 'Reliability Engineer', company: 'Drax Group', location: 'Selby, United Kingdom', description: 'Plant reliability role.', remote: false }), ctx);
+  assert.equal(sponsor.score, plain.score + VISA_UNLIKELY_PENALTY); assert.match(sponsor.qualification_reason, /UK Skilled Worker sponsor licence/);
+  assert.match(evaluate(farhan, post({ repost: true })).qualification_reason, /Reposted/);
+});
+
+test('taste model, AI-review list and the 60-day note in the daily apply', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ten-'));
+  const F = 'farhan_shaikh';
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
+  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { [F]: { n: 12, active: true, weights: { revops: 1.5, zoho: -1.8 } } } }));
+  const j = (id, title) => ({ id, url: `https://example.com/${id}`, title, company: 'Acme', ats_type: 'lever', location: 'Remote - India', is_remote: true, description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:t:1', 'RevOps Implementation Manager'), j('ds:t:2', 'Implementation Manager, Zoho'), j('ds:t:3', 'Implementation Manager')] }));
+  execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--signals', path.join(dir, 'signals.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
+  const { sqlite } = createDb();
+  sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
+  sqlite.exec(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,source_channel) VALUES ('old:9','Ops Lead','Old','lever',1,'2026-08-01','ATS_DATASET');
+    INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason) VALUES ('${F}','old:9','NEEDS_REVIEW','Cloud discovery match.')`);
+  sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
+  const sc = (id) => sqlite.prepare(`SELECT overall_score s FROM candidate_job_scores WHERE job_id=?`).get(id).s;
+  const why = (id) => sqlite.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id=?`).get(id).r;
+  assert.ok(sc('ds:t:1') > sc('ds:t:3') && sc('ds:t:2') < sc('ds:t:3'), `${sc('ds:t:1')} ${sc('ds:t:3')} ${sc('ds:t:2')}`);
+  assert.match(why('ds:t:1'), /Like roles you saved before/); assert.match(why('ds:t:2'), /Like roles you dismissed before/);
+  assert.match(why('old:9'), /Listed for 60\+ days/);
+  const top = JSON.parse(fs.readFileSync(path.join(dir, 'a.top.json'), 'utf8'));
+  assert.equal(top.length, 3); assert.equal(top[0].job_id, 'ds:t:1'); assert.ok(top[0].profile.includes('India') && !/farhan|shaikh|sana|ansari/i.test(top.map((t) => `${t.profile} ${t.title} ${t.company} ${t.description}`).join(' ')), 'no names in what is sent for review');
+});
