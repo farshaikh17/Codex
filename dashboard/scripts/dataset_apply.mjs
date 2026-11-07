@@ -46,7 +46,7 @@ for (const file of many('--in')) {
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
     const onsite = j.is_remote === false;
-    const posting = { id: j.id, title: j.title, url: j.url, location: j.location || '', description, remote };
+    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote };
     const rows = [];
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);
@@ -80,7 +80,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
     const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
     out.push(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at) SELECT ${[cid, j.id, r.status, r.lane, r.eligibility, r.reason, r.qualification_reason, now].map(q).join(',')} ${guard};`);
     out.push(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) SELECT ${[cid, j.id, r.score, Math.min(100, r.skills.length * 20), r.lane === 'STRONGEST_FIT' ? 70 : 0, r.lane,
-      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
+      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v2: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
     report.rows++; report.by_status[r.status] = (report.by_status[r.status] || 0) + 1;
   }
 }
@@ -113,20 +113,28 @@ out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE source_cha
 out.push(`UPDATE jobs SET description = NULL WHERE source_channel IN ('ATS_DATASET', 'JOB_SITES') AND is_active = 0 AND expired_at < ${q(monthAgo)} AND description IS NOT NULL ${guarded};`);
 report.closed = toClose.length; report.reopened = reopen.length; report.missing_marked = missingMark.length; report.missing_cleared = missingClear.length;
 
-// ---- one-time re-score of earlier preliminary rows (score only; status, eligibility and decisions untouched) -------------
+// ---- one-time re-score of earlier preliminary rows with the current rules (owner-approved 2026-11-06, rules of 2026-11-07) ----
+// Score always; status and eligibility only when the current rules make the row ineligible (for example a role that is not
+// remote for a remote-only candidate). Rows someone applied to or decided on, and READY/STRETCH rows, are never touched.
 const rescoreFile = opt('--rescore');
 if (rescoreFile && fs.existsSync(rescoreFile)) {
+  report.rescored_ineligible = 0;
   for (const row of JSON.parse(fs.readFileSync(rescoreFile, 'utf8'))) {
     const cand = byId.get(row.candidate_id);
     if (!cand || !hasSkills(cand)) continue;   // nothing to re-score with yet
-    const posting = { id: row.job_id, title: row.title || '', url: '', location: row.location || '', description: plain(row.description), remote: /^REMOTE/i.test(row.workplace_type || '') };
+    const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', location: row.location || '', description: plain(row.description), remote: /^REMOTE/i.test(row.workplace_type || '') };
     const r = evaluate(cand, posting);
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
-    const tagged = JSON.stringify({ ...bd, skills_v1: true, matched_skills: r.skills, rescored_at: now });
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v2: true, matched_skills: r.skills, rescored_at: now });
+    const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
-      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"skills_v1":true%'
-      AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)
+      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"profile_v2":true%' ${undecided('candidate_job_scores')}
       AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
+    if (r.status === 'INELIGIBLE') {
+      out.push(`UPDATE candidate_qualifications SET qualification_status = 'INELIGIBLE', eligibility_status = 'INELIGIBLE', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)}
+        WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
+      report.rescored_ineligible++;
+    }
     report.rescored++;
   }
 }

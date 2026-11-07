@@ -12,7 +12,10 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
      - Search values are passed to DuckDB as bound parameters. A keyword like `women's health` or a country like `Côte d'Ivoire` is safe.
    - **Two quotas per person,** so neither crowds out the other:
      - up to 400 in the home country. For a remote-only search, remote roles come first. The country is matched as a whole word, so Indiana is not India.
-     - up to 200 remote roles open to anyone. Sana's search also covers the Gulf states she named.
+     - up to 200 remote roles open to anyone.
+     - up to 300 more per person (owner rules, 2026-11-07):
+       - **Farhan:** remote roles posted in other countries, never the United States.
+       - **Sana:** on-site roles anywhere in the world, with postings that offer visa sponsorship or relocation first.
    - **Recency:** postings up to 45 days old, newest first.
    - **Duplicates.**
      - Within the run: same company, title and location.
@@ -38,6 +41,23 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
    - **One-time re-score (owner-approved):** earlier rows the screen created are re-scored with the candidates' stored skills, score only. READY, STRETCH, applied and decided rows are excluded. Rows are tagged and not re-scored again.
    - **Storage:** the description of a job closed for more than 30 days is dropped. Title, company and links stay.
    - **Writing:** everything is sent as one D1 import, all or nothing, and the dashboard's cache is cleared.
+
+## Candidate rules (owner-confirmed 2026-11-07)
+
+- **Farhan.**
+  - **Location:** remote only, from any country, as an employee or a contractor. A role that is not remote, a hybrid role, or one that is remote within the United States only is marked ineligible and is not shown.
+  - **Builder roles, in any industry:** implementation, automation, technical and revenue operations, GTM engineering, Founder's Office and Chief of Staff.
+  - **Score capped (avoid list):** business analyst, deal desk, sales, admin, junior and intern roles, data engineering, and roles that need hands-on Salesforce, HubSpot or Zoho administration or development, on top of the earlier list.
+  - **Skipped:** one employer the candidate asked to skip.
+- **Sana.**
+  - **Location:** anywhere that could be her dream job.
+  - **Roles:** power-plant O&M, reliability and maintenance, plus energy efficiency, decarbonization, sustainability, clean tech and technical consulting.
+- **Experience fit (both).**
+  - A posting asking for more than two years beyond the candidate's own experience loses 15 points.
+  - A posting whose stated requirement the candidate meets gains 5 points.
+  - This puts first the roles where the candidate is an easy yes.
+- **Applying the new rules to earlier jobs.** The re-score runs once with these rules. It also marks earlier undecided rows ineligible when the new rules say so, for example a role that is not remote, for Farhan. READY, STRETCH, applied and decided rows are never touched.
+- **Profiles.** Migration 0015 adds the skills from each CV to the stored lists (nothing stored is removed) and raises the stored years to 9. It runs once.
 
 ## Cost (free tiers)
 

@@ -30,7 +30,7 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
 
 test('ranking: a posting whose only stated location is outside India loses points for Farhan unless it supports remote work from India', () => {
   const india = evaluate(farhan, post('Implementation Manager', 'Remote - India'));
-  const us = evaluate(farhan, post('Implementation Manager', 'Austin, TX', 'CRM Configuration and Workflow Automation.'));
+  const us = evaluate(farhan, post('Implementation Manager', 'Remote, London, United Kingdom', 'CRM Configuration and Workflow Automation.'));
   const usSame = evaluate({ ...farhan }, post('Implementation Manager', 'Remote', 'CRM Configuration and Workflow Automation.'));
   assert.equal(foreignLocation('Austin, TX'), true); assert.equal(foreignLocation('London, United Kingdom'), true);
   assert.equal(foreignLocation('Remote'), false); assert.equal(foreignLocation('Bengaluru, India'), false); assert.equal(foreignLocation(''), false);

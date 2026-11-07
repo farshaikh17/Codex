@@ -39,15 +39,16 @@ HEALTHY_RATIO = 0.9   # an ATS whose row count fell more than 10% since the prev
 # screen will score, and broad words like a bare "operations" do not pull in warehouse or sales roles.
 BUILTIN = {
     'farhan_shaikh': {
-        'role': r'implementation|integration|automation|business systems|(^|[^a-z])crm([^a-z]|$)|revops|revenue operations|sales operations|marketing operations|gtm operations|go-to-market operations|solutions (engineer|consultant|architect|specialist|manager|lead)|technical (operations|delivery)|tech ops|platform operations|business operations (manager|analyst|lead)|operations (engineer|analyst)|salesforce (admin|administrator|consultant|developer)|hubspot',
-        'exclude': r'power bi|software (engineer|developer)|devops|site reliability|data scientist|machine learning|security engineer|sdet|qa engineer|qa automation|automation (test|qa)|test automation|firewall|warehouse|driver|nurse|clinical|intern([^a-z]|$)',
-        'countries': ['IN'], 'mode': 'REMOTE_FROM_HOME', 'home': 'india', 'keywords': [], 'public': True,
+        # builder roles, any industry (owner rules 2026-11-07); roles needing hands-on Salesforce/HubSpot/Zoho work are excluded
+        'role': r'implementation|integration|automation|business systems|(^|[^a-z])crm([^a-z]|$)|revops|revenue operations|sales operations|marketing operations|gtm operations|go-to-market operations|gtm engineer|go-to-market engineer|solutions (engineer|consultant|architect|specialist|manager|lead)|technical (operations|delivery)|tech ops|platform operations|business operations (manager|lead)|operations (engineer|manager|lead)|chief of staff|founder.?s? (office|associate)|founding (operations|ops|generalist)|ai (ops|operations|workflow|implementation)',
+        'exclude': r'power bi|software (engineer|developer)|devops|site reliability|data scientist|data engineer|machine learning|security engineer|sdet|qa engineer|qa automation|automation (test|qa)|test automation|firewall|warehouse|driver|nurse|clinical|intern([^a-z]|$)|internship|junior|business analyst|deal desk|account executive|sales (development|representative)|(salesforce|hubspot|zoho|netsuite) (admin|administrator|developer|engineer)|administrative assistant',
+        'countries': ['IN'], 'mode': 'REMOTE_FROM_HOME', 'home': 'india', 'keywords': [], 'public': True, 'remote_anywhere': True,
     },
     'sana_ansari': {
-        'role': r'electrical|power plant|power generation|power station|substation|switchgear|transmission|o ?& ?m|operations (&|and) maintenance|maintenance (engineer|manager|head|lead|planner|supervisor)|plant (engineer|manager|operations|maintenance)|reliability engineer|commissioning|asset performance|energy|utilities|renewable|solar|wind (farm|turbine|energy)|thermal|hydro|decarbon',
+        'role': r'electrical|power plant|power generation|power station|substation|switchgear|transmission|o ?& ?m|operations (&|and) maintenance|maintenance (engineer|manager|head|lead|planner|supervisor)|plant (engineer|manager|operations|maintenance)|reliability engineer|commissioning|asset performance|energy|utilities|renewable|solar|wind (farm|turbine|energy)|thermal|hydro|decarboni[sz]|sustainability (engineer|consultant|specialist|manager)|clean ?tech|net.?zero|emissions (engineer|specialist)|efficiency (engineer|consultant|specialist)|(technical|engineering) consultant',
         'exclude': r'(site|customer|product|network|platform|production|database|infrastructure|data|service|systems) reliability|software|cloud|devops|power platform|power bi|power apps|sales|account (executive|manager)|data (engineer|scientist|analyst)|developer|recruiter|research analyst',
-        # India, and the Gulf states she named as relocation preferences
-        'countries': ['IN', 'AE', 'SA', 'QA', 'OM', 'KW', 'BH'], 'mode': 'HOME_OR_RELOCATE', 'home': 'india', 'keywords': [], 'public': True,
+        # India first, then anywhere in the world (owner rule 2026-11-07: "anywhere which can be her dream job")
+        'countries': ['IN'], 'mode': 'HOME_OR_RELOCATE', 'home': 'india', 'keywords': [], 'public': True, 'worldwide': True,
     },
 }
 COUNTRY_ISO = {
@@ -60,6 +61,7 @@ COUNTRY_ISO = {
     'new zealand': 'NZ', 'argentina': 'AR', 'colombia': 'CO', 'chile': 'CL', 'turkey': 'TR', 'israel': 'IL', 'china': 'CN', 'south korea': 'KR',
 }
 OPEN_REMOTE = r'anywhere|worldwide|global|apac|asia'
+RELOCATION = r'visa sponsorship|sponsorship (is )?available|relocation (assistance|support|package|provided)|will sponsor'
 # Every field written is bounded; control characters are removed (a NUL byte would abort the whole import).
 LIMITS = {'url': 2000, 'apply_url': 2000, 'title': 300, 'company': 200, 'location': 300, 'description': 6000, 'salary_summary': 300,
           'employment_type': 40, 'salary_currency': 10, 'salary_period': 20, 'ats_type': 40, 'posted_at': 40, 'country_iso': 4}
@@ -131,7 +133,7 @@ OPEN = f"""(lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' AND (nullif
   OR regexp_matches(lower(coalesce(location,'')), '{OPEN_REMOTE}')))"""
 
 
-def select(con, src, p, home_quota, remote_quota, max_days):
+def select(con, src, p, home_quota, remote_quota, max_days, abroad_quota=300):
     """Two bounded selections per profile: in the home country (remote ones first for a remote-only search), and remote roles
     open to anyone that are not in the home country. Every search value is a bound parameter."""
     params = {'role': p['role'], 'exclude': p.get('exclude') or '', 'countries': p['countries'],
@@ -139,7 +141,12 @@ def select(con, src, p, home_quota, remote_quota, max_days):
               'since': (datetime.now(timezone.utc) - timedelta(days=max_days)).date().isoformat()}
     remote_first = "CASE WHEN lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' OR regexp_matches(lower(coalesce(location,'')), 'remote') THEN 0 ELSE 1 END," if p['mode'] == 'REMOTE_FROM_HOME' else ''
     rows = []
-    for where, order, limit in ((INSIDE, remote_first, home_quota), (f'{OPEN} AND NOT {INSIDE}', '', remote_quota)):
+    quotas = [(INSIDE, remote_first, home_quota), (f'{OPEN} AND NOT {INSIDE}', '', remote_quota)]
+    if p.get('worldwide'):   # on-site roles abroad; postings that offer visa sponsorship or relocation come first
+        quotas.append((f'NOT {INSIDE} AND NOT {OPEN}', f"CASE WHEN regexp_matches(lower(coalesce(description,'')), '{RELOCATION}') THEN 0 ELSE 1 END,", abroad_quota))
+    if p.get('remote_anywhere'):   # remote roles posted in another country (not the United States), newest first
+        quotas.append((f"lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' AND NOT {INSIDE} AND NOT {OPEN} AND coalesce(country_iso, '') <> 'US'", '', abroad_quota))
+    for where, order, limit in quotas:
         cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON} AND {where} ORDER BY {order} posted_at DESC NULLS LAST LIMIT {int(limit)}",
                           {**params, 'src': src})
         cols = [d[0] for d in cur.description]
@@ -236,6 +243,7 @@ def main():
     ap.add_argument('--d1-local', default=None, help='a local wrangler --persist-to path instead of the remote database')
     ap.add_argument('--home-quota', type=int, default=400)
     ap.add_argument('--remote-quota', type=int, default=200)
+    ap.add_argument('--abroad-quota', type=int, default=300)
     ap.add_argument('--max-days', type=int, default=45)
     ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with stored skills')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
@@ -256,13 +264,13 @@ def main():
     profs = profiles(a.d1_local)
     # What the scoring step needs per candidate, and the search profiles for the job-site step (which runs without database
     # credentials). Both stay in the run's work folder and are never committed.
-    (out / 'candidates.json').write_text(json.dumps(d1("SELECT c.id, c.primary_skills, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id", a.d1_local)))
+    (out / 'candidates.json').write_text(json.dumps(d1("SELECT c.id, c.primary_skills, c.total_years_experience, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id", a.d1_local)))
     (out / 'profiles.json').write_text(json.dumps(profs))
     if a.rescore_export:
         (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local)))
     found = {}
     for cid, p in profs.items():
-        for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days):
+        for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota):
             jid = job_id(r['ats_type'], r['url'])
             j = found.setdefault(jid, {**clean(r), 'id': jid, 'candidates': [], 'public': False})
             if cid not in j['candidates']:
@@ -287,12 +295,12 @@ def rescore_rows(local=None, page=400):
     that have skills to score with."""
     rows, offset = [], 0
     while True:
-        part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
+        part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
           JOIN candidates c ON c.id = q.candidate_id
           WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
             AND c.primary_skills IS NOT NULL AND trim(c.primary_skills) NOT IN ('', '[]', 'null')
-            AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"skills_v1":true%'
+            AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v2":true%'
             AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
           ORDER BY q.candidate_id, q.job_id LIMIT {page} OFFSET {offset}""", local)
         rows += part

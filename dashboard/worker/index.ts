@@ -31,24 +31,31 @@ const CANDIDATE_FACTS: Record<string, {
   display_title: string; education_short: string; education_detail: string; summary_line: string; public_summary: string; career_start: string | null; employment_history: EmploymentEntry[];
 }> = {
   farhan_shaikh: {
-    display_title: 'Technical Operations & Workflow Automation Engineering',
+    display_title: 'Technical Operations, CRM Implementation & Workflow Automation',
     education_short: 'BMS Marketing',
-    education_detail: 'BMS in Marketing',
-    summary_line: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)',
-    public_summary: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India',
-    career_start: null, // total years are not derivable from the dates supplied; the stored value is used and labelled as stored
-    employment_history: [{ role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'five direct reports' }],
+    education_detail: 'BMS in Marketing, NM College (University of Mumbai), 2017',
+    summary_line: 'Tech Ops Lead • CRM/GoHighLevel Implementation & Workflow Automation • Remote only, from any country (employee or contractor)',
+    public_summary: 'Tech Ops Lead • CRM Implementation & Workflow Automation • Remote',
+    career_start: '2017-06-01',
+    employment_history: [
+      { role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'remote; five-person team' },
+      { role: 'Technical CRM & Automation Specialist', employer: 'HighLevel', from: '2025-12', to: '2026-06' },
+      { role: 'Product Support Specialist (Compliance)', employer: 'Rippling', from: '2024-09', to: '2025-11' },
+      { role: 'Founding Operations & Growth Associate', employer: 'Glow Up', from: '2022-05', to: '2024-08' },
+      { role: 'Retail Operations & Insights Specialist', employer: 'Harding Brothers', from: '2020-09', to: '2022-03' },
+      { role: 'Customer Engagement Specialist (Travel Retail)', employer: 'Dufry', from: '2017-06', to: '2020-03' },
+    ],
   },
   sana_ansari: {
     display_title: 'Power Plant Operations & Industrial Reliability Engineering',
     education_short: 'B.Tech Electrical',
     education_detail: 'B.Tech in Electrical Engineering, Rajasthan Technical University, 2016',
-    summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Transition',
+    summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Efficiency & Decarbonization • Open to relocating anywhere for the right role',
     public_summary: 'Power Plant O&M • Industrial Reliability • Energy Transition',
     career_start: '2017-09-01',
     employment_history: [
-      { role: 'Maintenance (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
-      { role: 'Operations (Kota)', employer: 'RRVUNL', from: '2025-02', to: null },
+      { role: 'Maintenance Engineer, 660 MW supercritical (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
+      { role: 'Operations Engineer, 195 MW subcritical (Kota)', employer: 'RRVUNL', from: '2025-02', to: null },
     ],
   },
 };
@@ -66,7 +73,7 @@ function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) 
   const inr = (n: number) => '₹' + Number(n).toLocaleString('en-IN');
   let pay: string;
   if (candidateId === 'farhan_shaikh') {
-    pay = `Monthly cash floor: ${inr(cand?.cash_floor_inr_monthly ?? 120000)} fixed, or $${cand?.min_acceptable_salary_usd ?? 25}/hour contract (no guaranteed minimum hours). Preferred: ₹25–30 LPA+. Notice: 30 days.`;
+    pay = `Monthly cash floor: ${inr(cand?.cash_floor_inr_monthly ?? 120000)} fixed (equity does not count), or $${cand?.min_acceptable_salary_usd ?? 25}/hour contract (no guaranteed minimum hours). Preferred: ₹25–30 LPA+. Notice: 30 days.`;
   } else {
     pay = 'Pay floor and notice period: unknown (not provided).';
   }
