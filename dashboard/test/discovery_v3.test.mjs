@@ -243,3 +243,20 @@ test('taste model, AI-review list and the 60-day note in the daily apply', () =>
   const top = JSON.parse(fs.readFileSync(path.join(dir, 'a.top.json'), 'utf8'));
   assert.equal(top.length, 3); assert.equal(top[0].job_id, 'ds:t:1'); assert.ok(top[0].profile.includes('India') && !/farhan|shaikh|sana|ansari/i.test(top.map((t) => `${t.profile} ${t.title} ${t.company} ${t.description}`).join(' ')), 'no names in what is sent for review');
 });
+
+test('"unable to provide visa sponsorship" is a denial, not a sponsorship offer (Novelis, 7 Nov)', () => {
+  const sa = { id: 'sana_ansari', primary_skills: '[]' };
+  const mk = (d, loc = 'Uhrichsville | US-OH-Uhrichsville, US') => evaluate(sa, { id: 'x', title: 'Associate Maintenance Leader', url: 'https://e.com/x', location: loc, description: d, remote: false });
+  const real = 'Please note that we are unable to provide visa sponsorship for this position. Candidates must be legally authorized to work in the United States without the need for current or future sponsorship.';
+  assert.equal(mk(real).eligibility, 'UNKNOWN');
+  assert.match(mk(real).reason, /no visa sponsorship/);
+  for (const d of ['We are not able to offer visa sponsorship.', 'We will not sponsor; visa sponsorship is not provided.', 'Sorry, we won\'t provide visa sponsorship.',
+    'We never offer visa sponsorship.', 'Visa sponsorship is no longer available.', 'We don\'t provide visa sponsorship.', 'Relocation assistance isn\'t offered.']) {
+    assert.notEqual(mk(d, 'Berlin, Germany').eligibility, 'ELIGIBLE', d);
+  }
+  // genuine offers still count
+  assert.equal(mk('Visa sponsorship available for the right candidate.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
+  assert.equal(mk('Relocation assistance provided.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
+  // a denial in one sentence does not hide an offer of a different kind in the next? it does not: ANY denial wins (documented rule)
+  assert.notEqual(mk('We are unable to provide visa sponsorship. Relocation assistance provided.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
+});

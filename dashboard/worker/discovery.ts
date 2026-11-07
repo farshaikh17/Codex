@@ -226,13 +226,15 @@ const lakhMonth = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}/mo
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
- const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|do not|cannot)\b[^.!?]*$/.test(before)||/^\s+(?:is |will be )?(?:not|unavailable|unsupported)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
+ const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|unable|never|cannot|can't|won't|isn't|aren't|doesn't|don't|no longer)\b[^.!?]*$/.test(before)||/^\s+(?:(?:is |are |will be )?(?:not|no longer|never|unavailable|unsupported)|isn't|aren't|won't be|will not be)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
  const india=sanaIndiaCity(p.location);
  const remote=p.remote||/\b(remote|work from home|telecommut)/i.test(p.location);
  const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
+ // The posting itself says it offers no visa route ("unable to provide visa sponsorship", "must be authorized to work in the US without current or future sponsorship").
+ const noVisaRoute=/\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)/i.test(text);
  const globalRemote=/worldwide remote|remote worldwide|remote.?global|work from anywhere in the world/i.test(text);
  let eligibility='UNKNOWN',reason='No affirmative candidate-specific location evidence.';
  const prof=parseProfile(candidate.search_profile);
@@ -266,6 +268,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   else reason=SANA_UNKNOWN_ACCESS_REASON;
  }
  else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
+ if(noVisaRoute&&eligibility==='UNKNOWN')reason='Posting says it offers no visa sponsorship, so nothing here shows the candidate may work at this location. '+reason;
  const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?FARHAN_ROLE.test(p.title||''):SANA_ROLE.test(p.title||'');
  const skills=list(candidate.primary_skills).filter(s=>skillFound(s,lower));
  let score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
