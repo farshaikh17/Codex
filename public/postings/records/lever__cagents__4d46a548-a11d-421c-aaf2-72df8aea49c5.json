@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "cagents",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-07T01:08:29.080346+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "bba2c65555f9a43c5795db07bb6a9104697ebea0eace23c38e22073d388ec88d",
+   "kind": "content_changed",
+   "to_hash": "4249427029bf734b68296625dba1ccc30b8113d2cfab3e93cb3bc6c94e4d6678"
+  }
+ ],
  "content": {
   "compensation_raw": "Average salary range, not including benefits or compensatory time and possible discretionary bonuses.\n \nCAI Benefits:\n•Comprehensive Health Insurance coverage\n•24 days of Paid Time Off\n•Company paid Life Insurance\n•Company paid Long Term Disability",
   "description": "THIS IS NOT A DATA ENGINEERING RELATED POSITION\n\nCAI seeks DC Services Project Manager with Data Center Commissioning and Project Management experience to support development and execution of all aspects of commissioning projects.\n\nCAI Operations DCx Project Managers will be exposed to cutting edge technologies in the Hyperscale and other spaces. You will have an opportunity to work with recognized subject matter experts allowing YOU to be a key player in bringing data technologies to market. As part of our company culture, we invest in YOUR future, and commit to hands on certifications as well as professional training. Our collaborative culture ensures that our customers benefit from exemplary work across our entire range of professional services.\n\nPosition Description:\nYour responsibilities as a Data Center Cx PM will include:\nWorking with project teams at client sites to inspect, test, and troubleshoot data center/ building commissioning facilities and/ or equipment. This person is responsible for identifying and coordinating activities for commissioning and reporting. The Project Manager will be the POC with client (data center/ building commissioning companies) personnel and the Regional Manager. The Project Manager will execute the work as well as oversee it. Electrical and/or Mechanical commissioning experience is required.\n\nRequirements include:\nPosition Requirements:\nBS in an electrical, mechanical, engineering field or equivalent experience\nMinimum of 5-10+ years or more of experience in commissioning and qualification in the Data Center industry, Leading large (minimum of 4 megawatts) projects/facilities.\nComfort in the Construction industry (managing vendors, clients, subcontractors) is a plus.\nExperience with commissioning plans/test scripts, schedules, budgets, change orders and summary reports is desired.\nExperience managing multi-disciplinary teams with full commissioning responsibility is desired.\n\nOther Requirements:\nExcellent oral and written communication skills in English\nAble to travel domestically and internationally as required\nAble to work (paid) overtime\nAble to work in the US without sponsorship now or any time in the future.\n\nAbout CAI\nCAI is established in 1996, that has grown year over year to more than 800 people worldwide. We provide commissioning, qualification, validation, start-up, project management and consulting services related to operational readiness to FDA regulated and other mission critical industries.\n\nAre You Ready?\nOur approach is simple; we put the client’s interests first, we do not stop until it is right, and we will do whatever it takes to get there.\nWe are committed to living our Foundational Principles, both professionally and personally:\nWe act with integrity\nWe serve each other\nWe serve society\nWe work for our future\n\nBenefits\nOur full-time positions offer competitive compensation and benefits which include: 24 days PTO and 5 sick days per year, health insurance at extremely low cost to employee, financial support for both internal and external professional education as well as 70% long term disability paid for by the company.\n#LI-MV1 #MISSIONCRITICAL\nWe are an equal opportunity employer; we are proud to employ veterans and promote diversity and inclusion in our workplace. Diversity is a strength for our global company. We pledge that CAI will be operated in a way that is fair and equitable to all – our employees, our customers, and the broader society.\n\nThis job description is not all inclusive and you may be asked to do other duties. CAI will also consider for employment qualified applicants with criminal histories in a manner consistent with the requirements of the Fair Chance Act (FCA) / Fair Chance Ordinance (FCO).",
@@ -53,14 +63,22 @@
    {
     "source": "categories.allLocations",
     "text": "South Bend, IN"
+   },
+   {
+    "source": "categories.allLocations",
+    "text": "Dallas, Texas"
+   },
+   {
+    "source": "categories.allLocations",
+    "text": "Austin, Texas"
    }
   ],
   "published": "2023-11-10T20:47:47.514000+00:00",
   "title": "Data Center Services Commissioning Project Manager",
   "workplace_type": "hybrid"
  },
- "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
- "content_hash": "bba2c65555f9a43c5795db07bb6a9104697ebea0eace23c38e22073d388ec88d",
+ "content_changed_at": "2026-11-07T01:08:29.080346+00:00",
+ "content_hash": "4249427029bf734b68296625dba1ccc30b8113d2cfab3e93cb3bc6c94e4d6678",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -71,7 +89,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Average salary range, not including benefits or compensatory time and possible discretionary bonuses.\n \nCAI Benefits:",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -79,7 +97,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Comprehensive Health Insurance coverage",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -87,7 +105,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "24 days of Paid Time Off",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -95,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Company paid Life Insurance",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -103,7 +121,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Company paid Long Term Disability",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      }
@@ -120,7 +138,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "United States",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -128,7 +146,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Phoenix, Arizona",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -136,7 +154,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Ashburn, Virginia",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -144,7 +162,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Des Moines, Iowa",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -152,7 +170,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Atlanta, Georgia",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -160,7 +178,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Lansing, Michigan",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -168,7 +186,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Indianapolis, Indiana",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -176,7 +194,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Columbus, Ohio",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -184,7 +202,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Chicago, Illinois",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      },
@@ -192,7 +210,23 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "South Bend, IN",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:categories.allLocations",
+      "quote": "Dallas, Texas",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:categories.allLocations",
+      "quote": "Austin, Texas",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      }
@@ -213,7 +247,7 @@
       "interpretation": "hybrid",
       "method": "ats_field:workplace_type",
       "quote": "hybrid",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/4d46a548-a11d-421c-aaf2-72df8aea49c5"
      }

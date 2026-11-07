@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-26T23:58:52.793071+00:00|ashby:clipboard:95b7dffa-c179-47a2-9ebf-ae9b4c8f32c1",
+ "cursor_to": "pc1|2026-10-26T23:58:52.793071+00:00|ashby:clipboard:aa9721b1-5cf1-4c90-badd-ac6273714057",
  "entries": [
   {
    "availability": "listed",
@@ -177,14 +177,6 @@
    "posting_id": "ashby:weave:620b28fc-1d1f-48b7-86b3-b2a23abafc8a",
    "record": "records/ashby__weave__620b28fc-1d1f-48b7-86b3-b2a23abafc8a.json",
    "record_sha256": "9989dce280276558a1d4f379fde1126c10ef84794acd0cd9b986079eff714fd3"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "6e09b920574e7e8b2882308bd788861406976f1a0eb38fc7e938f8853c65426e",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:weave:841df1d3-5de6-4099-88c7-6d358fa36dfc",
-   "record": "records/ashby__weave__841df1d3-5de6-4099-88c7-6d358fa36dfc.json",
-   "record_sha256": "e196565ce1c2c37cc969bcf24a41253cce0f347f5ffa7be34cdac159437ffb5c"
   },
   {
    "availability": "listed",
@@ -745,14 +737,6 @@
    "posting_id": "greenhouse:gitlab:8894457002",
    "record": "records/greenhouse__gitlab__8894457002.json",
    "record_sha256": "017f30e8050b14d36a2021e9b5392321e44e5a89e9a140e2223ec643d710ad74"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "25aade9849696dc52c80dd1f408f64275932fe9c86d8542a9d4df69859bab4ff",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8896290002",
-   "record": "records/greenhouse__gitlab__8896290002.json",
-   "record_sha256": "1f6e3e1e0f365f954d957d1110c21f462fee591aebac28fdb901528d54178b6b"
   },
   {
    "availability": "listed",
@@ -1601,6 +1585,22 @@
    "posting_id": "ashby:clipboard:95b7dffa-c179-47a2-9ebf-ae9b4c8f32c1",
    "record": "records/ashby__clipboard__95b7dffa-c179-47a2-9ebf-ae9b4c8f32c1.json",
    "record_sha256": "bc1e515c1d269b0eff57cc5d18646717f6cffbe4782d4a99fc46a058c42f2a16"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "168f1d7667a681dda8a2fe7925af44559b52e3832d4c8496894b65b9f2775ed3",
+   "last_change": "2026-10-26T23:58:52.793071+00:00",
+   "posting_id": "ashby:clipboard:a321f456-4d07-4311-a6f0-9faef9a945fc",
+   "record": "records/ashby__clipboard__a321f456-4d07-4311-a6f0-9faef9a945fc.json",
+   "record_sha256": "1c983d29f6a00a8394f2339049f8d5b874b98f8d67969735dde7d5d0c2833692"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "beab5b0eccd70bf12efdc55a17522086221994e3d2b376b8c7ea9832427cba3d",
+   "last_change": "2026-10-26T23:58:52.793071+00:00",
+   "posting_id": "ashby:clipboard:aa9721b1-5cf1-4c90-badd-ac6273714057",
+   "record": "records/ashby__clipboard__aa9721b1-5cf1-4c90-badd-ac6273714057.json",
+   "record_sha256": "e5eeb48b3822e511babe2a53997a49e072f2f62c0379c79a2ddfa704b48c518a"
   }
  ],
  "has_more": true,

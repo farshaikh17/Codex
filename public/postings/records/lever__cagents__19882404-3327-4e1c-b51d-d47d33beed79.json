@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "cagents",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-07T01:08:29.080346+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "f0c8760ea7c81527e9ba4d1b8ccab6e02159f0a57ca035b7e8cb77ebf6793f25",
+   "kind": "content_changed",
+   "to_hash": "ad54fd94673210306f509f4abbb516f28e6a2c65d87d2a73962527745c5cecd1"
+  }
+ ],
  "content": {
   "compensation_raw": "Average salary range, not including benefits or compensatory time and possible discretionary bonuses.\n \nCAI Benefits:\n•Comprehensive Health Insurance coverage\n•24 days of Paid Time Off\n•Company paid Life Insurance\n•Company paid Long Term Disability",
   "description": "THIS IS NOT A DATA ENGINEERING RELATED POSITION\n\nCAI seeks Mechanical Commissioning Engineers, minimum of two years' experience in Data Center Commissioning to support development and execution of all mechanical aspects of commissioning projects.\n\nPosition Description:\nThis position supports development and execution of all mechanical aspects of assigned commissioning projects from initial engagement, design reviews, checklists, safety support, script development, vendor coordination, testing and report development through turn over to the client. The Mechanical Commissioning Engineer will support the development of the mechanical test schedule, finalize mechanical test procedures, review project submittals for consistency with the design intent, basis of design and the owner’s project requirements, and maintain project cadence for the mechanical systems testing and associated Building Automation Systems. The Mechanical Commissioning Engineer is to support the planning and execution of commissioning for the mechanical infrastructure of the mission critical facility. They will be expected to execute against the project schedule through the coordination of contractors and/or vendors to complete the desired mechanical systems testing.\n\nCAI DC Mechanical Commissioning Engineer will be exposed to cutting edge technologies in the Hyperscale and other spaces. You will have an opportunity to work with recognized subject matter experts allowing YOU to be a key player in bringing data technologies to market. As part of our company culture, we invest in YOUR future, and commit to hands on certifications as well as professional training. Our collaborative culture ensures that our customers benefit from exemplary work across our entire range of professional services.\n\nResponsibilities:\nSupport and contribute to all aspects of safety for all mechanical tests.\nSupport complete commissioning and performance acceptance testing of the mechanical infrastructure systems.\nDevelopment of all mechanical test procedures, MOPS, SOO’s and checklists.\nQA/QC of all mechanical test procedures.\nProvide input and insight to the overall commissioning plan.\nDevelop reports for the mechanical testing and contribute to a daily report to the Commissioning Project Manager.\nAttend and be an active participant of customer equipment Factory Witness Test\nAssist with vendor coordination and management.\nPerform equipment inspection to ensure build adherence to vendor submittal.\nProvide test documentation that equipment is delivered, installed, and tested correctly and set to function properly for the customer.\nSupport and perform design specification review, manufacturer submittals, one line drawing sets, and project schedule documentation.\nQA/QC of mechanical equipment installation\\startup\nExecute test scripts to confirm equipment and system operation to design specification.\nEnsure safe work practices are followed by the commissioning team and customer site.\nEngage with customers and vendors to ensure positive experience, goals achievement, and schedule adherence.\nProvide daily status reports for mechanical commissioning team status.\nConduct facility walk downs, turnover, and punch list reviews.\nGeneral understanding of LEED specifications and requirements.\nLook for new opportunities for CAI to provide service and value to customer.\nDuties may be increased as experience and skill allow.\n\nRequirements include:\nPosition Requirements:\nBachelor’s degree or equivalent experience\nMinimum of 2 years Data Center Commissioning experience.\nKnowledge of OSHA safety requirements.\nGood written and verbal communication skills.\nAbility to read and interpret mechanical drawings, P&ID’s and specifications.\nKnowledge of mission critical design concepts.\nKnowledge of various Building Automation/Monitoring Systems (BAS/BMS), Air Handlers, Humidifiers, Variable Refrigerant Flow, Computer Room Air Conditioners/Handlers (CRAC/CRAH), Evaporators, Adiabatic Coolers, Pressure/Temperature/Humidity sensors & Flowmeters.\nKnowledge of basic thermodynamics and heat transfer and fluid flow.\nKnowledge of the Test, Adjust and Balance (TAB) process.\nKnowledge of mechanical trend analysis.\nStrong experience with Word, Excel and PowerPoint. Can effectively create final products in all three programs.\nWork under construction site conditions\n\nOther Requirements:\nExcellent oral and written English is required\nExtensive travel may be required (75%)\nCandidates must have a Passport or the ability to immediately get a Passport\nAble to work in the US without sponsorship now or any time in the future.\n\nAbout CAI\nCAI was established in 1996, that has grown year over year to more than 800 people worldwide. We provide commissioning, qualification, validation, start-up, project management and consulting services related to operational readiness to FDA regulated and other mission critical industries.\n\nAre You Ready?\nOur approach is simple; we put the client’s interests first, we do not stop until it is right, and we will do whatever it takes to get there.\nWe are committed to living our Foundational Principles, both professionally and personally:\nWe act with integrity\nWe serve each other\nWe serve society\nWe work for our future\n\nBenefits\nOur full-time positions offer competitive compensation and benefits which include: 24 days PTO and 5 sick days per year, health insurance at extremely low cost to employee, financial support for both internal and external professional education as well as 70% long term disability paid for by the company.\n#LI-MV1 #MISSIONCRITICAL\nWe are an equal opportunity employer; we are proud to employ veterans and promote a diverse culture in our workplace. Diversity is a strength for our global company. We pledge that CAI will be operated in a way that is fair and equitable to all – our employees, our customers, and the broader society.\n\nThis job description is not all inclusive and you may be asked to do other duties. CAI will also consider for employment qualified applicants with criminal histories in a manner consistent with the requirements of the FCO.",
@@ -49,14 +59,18 @@
    {
     "source": "categories.allLocations",
     "text": "Miami, Florida"
+   },
+   {
+    "source": "categories.allLocations",
+    "text": "Dallas, Texas"
    }
   ],
   "published": "2024-02-20T17:24:49.573000+00:00",
   "title": "Data Center Services Mechanical Commissioning Engineer",
   "workplace_type": "hybrid"
  },
- "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
- "content_hash": "f0c8760ea7c81527e9ba4d1b8ccab6e02159f0a57ca035b7e8cb77ebf6793f25",
+ "content_changed_at": "2026-11-07T01:08:29.080346+00:00",
+ "content_hash": "ad54fd94673210306f509f4abbb516f28e6a2c65d87d2a73962527745c5cecd1",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -67,7 +81,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Average salary range, not including benefits or compensatory time and possible discretionary bonuses.\n \nCAI Benefits:",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -75,7 +89,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Comprehensive Health Insurance coverage",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -83,7 +97,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "24 days of Paid Time Off",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -91,7 +105,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Company paid Life Insurance",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -99,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Company paid Long Term Disability",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      }
@@ -116,7 +130,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "Phoenix, Arizona",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -124,7 +138,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Reno, Nevada",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -132,7 +146,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Austin, Texas",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -140,7 +154,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Portland, Oregon",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -148,7 +162,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "United States",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -156,7 +170,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Des Moines, Iowa",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -164,7 +178,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Raleigh, North Carolina",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -172,7 +186,7 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Atlanta, Georgia",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      },
@@ -180,7 +194,15 @@
       "interpretation": null,
       "method": "ats_field:categories.allLocations",
       "quote": "Miami, Florida",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:categories.allLocations",
+      "quote": "Dallas, Texas",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      }
@@ -201,7 +223,7 @@
       "interpretation": "hybrid",
       "method": "ats_field:workplace_type",
       "quote": "hybrid",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79"
      }

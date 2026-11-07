@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-07T01:08:29.080346+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "548d3c691e73515b0f9cef9cefa9a8b36b27526135b3fdf93b7d45f6003de828",
+   "kind": "content_changed",
+   "to_hash": "079e61d38591b38c1a6ab4fd64c04faa6d46cdfc5d266be754c34b947387c46f"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAs the first line of defense for securing privileged customer data, our work is crucial for customer and company success. Operating at the intersection of security, infrastructure, and feature development, our developers tackle creative technical challenges daily and engage with Cognite's most impactful business problems.\n\nThe Impact you bring to Cognite\n\nAs an engineer at Cognite you will\n\nOwn major parts of our identity platform, such as token introspection, external IdP federation, or the audit log pipeline from design through to production.\n\nLead design reviews and set the technical direction, testing practices, and operational standards for your domain.\n\nTranslate ambiguous requirements into scalable, secure designs for identity, access management, and auditing at scale.\n\nBuild and operate services end to end in Rust and Kotlin, and applications in TypeScript.\n\nShape our product's direction by working closely with teams across engineering, product, and customer success.\n\nMentor engineers and raise the standard of code review, reliability, and operational excellence across the team.\n\nRequired Qualifications\n\n5yrs or more production experience in Rust or Kotlin, ideally from a SaaS product environment, and the flexibility to learn the other.\n\nA track record of owning a business-critical service in production, through design, delivery, and operation.\n\nDeep interest or hands-on expertise in authorization, authentication, and security, OAuth2/OIDC, tokens, and multi-tenancy.\n\nHands-on experience with large-scale cloud deployments (AWS, GCP, or Azure) and Kubernetes.\n\nExperienced using AI coding assistants and agents in day-to-day engineering, with sound judgement about when to rely on their output and when to verify it.\n\nSkilled at resolving complex issues from logs, traces, and metrics, prioritizing for impact, and communicating clearly across teams.\n\nA snapshot of our many perks and benefits as a Cogniter\n\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n\n* Flat structure with direct access to decision-makers\n\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n\n* Get access to private health services with Cognite Care.\n\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
@@ -20,11 +30,11 @@
    }
   ],
   "published": "2026-10-22T10:11:26-04:00",
-  "title": "Senior Software Engineer, Backend",
+  "title": "Senior Software Engineer - Backend",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T20:34:22.271289+00:00",
- "content_hash": "548d3c691e73515b0f9cef9cefa9a8b36b27526135b3fdf93b7d45f6003de828",
+ "content_changed_at": "2026-11-07T01:08:29.080346+00:00",
+ "content_hash": "079e61d38591b38c1a6ab4fd64c04faa6d46cdfc5d266be754c34b947387c46f",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Norway (Oslo)",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5003747101"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "A track record of owning a business-critical service in production, through design, delivery, and operation.\nDeep interest or hands-on expertise in authorization, authentication, and security, OAuth2/OIDC, tokens, and multi-tenancy.\nHands-on experience with large-scale cloud deployments (AWS, GCP, or Azure) and Kubernetes.\nExperienced using AI coding assistants and agents in day-to-day engineering, with sound judgement about when to rely on their output and when to verify it.\nSkilled at resolving complex issues from logs, traces, and metrics, prioritizing for impact, and communicating clearly across teams.\nA snapshot of our many perks and benefits as a Cogniter\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n* Flat structure with direct access to decision-makers\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n* Get access to private health services with Cognite Care.\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\nLearn more about us\nImpact 2025\nCognite's Industrial AI: Moonshot\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5003747101"
      }
@@ -69,7 +79,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "5yrs or more production experience in Rust or Kotlin, ideally from a SaaS product environment, and the flexibility to learn the other.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-07T01:08:29.080346+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5003747101"
      }
