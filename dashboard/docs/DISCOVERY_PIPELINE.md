@@ -89,6 +89,16 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
 - **Board postings the screen rules out.** A job-site or board posting whose own text rules the candidate out (not remote, United States only, a clearance) is no longer stored. Only a positive eligibility claim is never taken from a board.
 - **Y Combinator companies that are hiring** (yc-oss/api, about 1,500, read at run time). For Farhan's role-matches: +3 points and a note naming the batch. This serves the "well-funded, early-stage founder" goal.
 
+## Hacker News and the daily "still open?" check (2026-11-07)
+
+- **Hacker News "Ask HN: Who is hiring?"** (the current monthly thread, through the official Algolia HN API). Each role named on a post's first line (`Company | Role(s) | Location | REMOTE`) becomes one posting, linked to the post. Posts are kept for 35 days, because the thread is monthly.
+- **Still open?** After each run, the 50 best-ranked undecided jobs per person are re-checked (`engine/liveness.py`).
+  - A job is closed only on HTTP 404/410 seen twice, or on a Greenhouse error redirect.
+  - Blocked sites (403/429), server errors and timeouts prove nothing.
+  - Live postings get `last_verified_at`.
+  - Never closed: a job with an application or a human decision.
+  - The check runs in three steps, so credentials never reach the step that visits outside websites.
+
 ## Cost (free tiers)
 
 | Resource | Use |

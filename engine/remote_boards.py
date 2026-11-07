@@ -6,6 +6,8 @@ Sources, each read through its own public feed (no scraping, no login):
   * We Work Remotely  category RSS feeds
   * Himalayas      https://himalayas.app/jobs/api  (newest pages)
   * Working Nomads https://www.workingnomads.com/api/exposed_jobs/
+  * Hacker News "Ask HN: Who is hiring?" (the current monthly thread, through the official Algolia HN API): one posting per
+    role named in each top-level post ("Company | Role | Location | REMOTE | ..."); linked to the post on news.ycombinator.com
 Postings are kept only when the title matches a candidate's own role rule (profiles.json, written by dataset_discovery.py).
 Results are job-board reports: the screen never takes eligibility from them.
 
@@ -101,7 +103,36 @@ def workingnomads():
                   text(r.get('description')), when(r.get('pub_date')))
 
 
-SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads}
+HN_API = 'https://hn.algolia.com/api/v1'
+LOCATION_WORD = re.compile(r'remote|onsite|on-site|hybrid|anywhere|worldwide|\b[A-Z][a-z]+,\s*[A-Z]{2}\b|europe|india|usa|\bus\b|uk|canada|germany|london|berlin|bangalore|bengaluru', re.I)
+
+
+def hn():
+    """The current month's 'Ask HN: Who is hiring?' thread. Posts follow 'Company | Role(s) | Location | ...' on their first line."""
+    hits = json.loads(get(f'{HN_API}/search_by_date?tags=story,author_whoishiring&hitsPerPage=5')).get('hits') or []
+    story = next((h for h in hits if str(h.get('title', '')).startswith('Ask HN: Who is hiring?')), None)
+    if not story:
+        return
+    thread = json.loads(get(f"{HN_API}/items/{story['objectID']}", timeout=60))
+    for c in thread.get('children') or []:
+        body = c.get('text') or ''
+        first = text(re.split(r'<p>|\n', body, maxsplit=1)[0])
+        parts = [x.strip() for x in first.split('|') if x.strip()]
+        if len(parts) < 2 or not c.get('id'):
+            continue
+        company, rest = parts[0][:120], parts[1:]
+        roles = [r.strip() for r in re.split(r',|;| / ', rest[0]) if len(r.strip()) >= 3] if not LOCATION_WORD.fullmatch(rest[0].strip()) else []
+        where = ' | '.join(x for x in rest[1:] if LOCATION_WORD.search(x) and not x.lower().startswith('http'))[:200] or 'See post'
+        remote = bool(re.search(r'\bremote\b', first, re.I))
+        for i, role in enumerate(roles[:6]):
+            j = job('hnhiring', f"https://news.ycombinator.com/item?id={c['id']}", role[:200], company, where, text(body), when(c.get('created_at')))
+            j['is_remote'] = remote
+            j['_key'] = f"{c['id']}:{i}"
+            yield j
+
+
+SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn}
+MAX_DAYS = {'hnhiring': 35}   # the thread is monthly: its posts stay current all month
 
 
 def main():
@@ -125,13 +156,14 @@ def main():
                 seen += 1
                 if not j['title'] or not j['company'] or not str(j['url']).startswith('https://'):
                     continue
-                if j['posted_at'] and when(j['posted_at']) and when(j['posted_at']) < since:
+                cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_DAYS[name]) if name in MAX_DAYS else since
+                if j['posted_at'] and when(j['posted_at']) and when(j['posted_at']) < cutoff:
                     continue
                 t = j['title'].lower()
                 cands = [cid for cid, (role, excl) in rules.items() if role.search(t) and not (excl and excl.search(t))]
                 if not cands:
                     continue
-                j['id'] = f"js:{name}:{hashlib.sha1(j['url'].encode()).hexdigest()[:20]}"
+                j['id'] = f"js:{name}:{hashlib.sha1(j.pop('_key', j['url']).encode()).hexdigest()[:20]}"
                 if j['id'] in have:
                     continue
                 j['candidates'] = cands
