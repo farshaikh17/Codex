@@ -59,3 +59,40 @@ class Searches(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RescorePaging(unittest.TestCase):
+    """rescore_rows pages by the last (candidate, job) seen, not by OFFSET, and returns exactly the same rows."""
+
+    def test_keyset_paging_returns_every_row_once(self):
+        import sqlite3
+        from unittest import mock
+        from engine import dataset_discovery as dd
+        db = sqlite3.connect(':memory:'); db.row_factory = sqlite3.Row
+        db.executescript("""
+          CREATE TABLE candidates(id TEXT PRIMARY KEY, primary_skills TEXT);
+          CREATE TABLE jobs(id TEXT PRIMARY KEY, title TEXT, company TEXT, salary_min REAL, salary_max REAL, salary_currency TEXT, salary_period TEXT,
+                            location_restrictions TEXT, description TEXT, workplace_type TEXT, is_active INTEGER);
+          CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, qualification_status TEXT, manual_override_status TEXT);
+          CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, score_breakdown TEXT);
+          CREATE TABLE applications(candidate_id TEXT, job_id TEXT);
+          INSERT INTO candidates VALUES ('farhan', '["a"]'), ('sana', '["b"]');""")
+        for c in ('farhan', 'sana'):
+            for i in range(23):
+                db.execute("INSERT OR IGNORE INTO jobs VALUES (?,?,?,NULL,NULL,NULL,NULL,'x','d','REMOTE',1)", (f'j{i:02d}', 't', 'c'))
+                db.execute("INSERT INTO candidate_qualifications VALUES (?,?, 'NEEDS_REVIEW', NULL)", (c, f'j{i:02d}'))
+                db.execute("INSERT INTO candidate_job_scores VALUES (?,?, ?)", (c, f'j{i:02d}', '{"preliminary":true}' if i % 5 else '{"preliminary":true,"profile_v3":true}'))
+        db.execute("INSERT INTO applications VALUES ('farhan','j01')")
+        calls = []
+        def fake_d1(sql, local=None):
+            calls.append(sql)
+            return [dict(r) for r in db.execute(sql).fetchall()]
+        with mock.patch.object(dd, 'd1', fake_d1):
+            small, big = dd.rescore_rows(page=7), dd.rescore_rows(page=1000)
+        keys = [(r['candidate_id'], r['job_id']) for r in small]
+        self.assertEqual(keys, [(r['candidate_id'], r['job_id']) for r in big])
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertNotIn(('farhan', 'j01'), keys, 'an application is never re-scored')
+        self.assertNotIn(('sana', 'j05'), keys, 'already profile_v3')
+        self.assertTrue(all('OFFSET' not in c for c in calls))
+        self.assertGreater(len(calls), 2, 'it did page')
