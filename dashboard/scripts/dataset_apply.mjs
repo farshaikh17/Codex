@@ -136,8 +136,8 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
 // ---- stored copies of one role (3 or more places, same employer): keep the best-scored one active --------------------
 out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN (
   SELECT id FROM (SELECT j.id, COUNT(*) OVER (PARTITION BY lower(j.company), lower(j.title)) AS n,
-    ROW_NUMBER() OVER (PARTITION BY lower(j.company), lower(j.title) ORDER BY (SELECT MAX(s.overall_score) FROM candidate_job_scores s WHERE s.job_id = j.id) DESC, j.discovered_at) AS rk
-    FROM jobs j WHERE j.is_active = 1 AND j.source_channel IN ('ATS_DATASET', 'JOB_SITES')) WHERE n >= 3 AND rk > 1)
+    ROW_NUMBER() OVER (PARTITION BY lower(j.company), lower(j.title) ORDER BY ms.best DESC, j.discovered_at) AS rk
+    FROM jobs j LEFT JOIN (SELECT job_id, MAX(overall_score) AS best FROM candidate_job_scores GROUP BY job_id) ms ON ms.job_id = j.id WHERE j.is_active = 1 AND j.source_channel IN ('ATS_DATASET', 'JOB_SITES')) WHERE n >= 3 AND rk > 1)
   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id)
   AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
 

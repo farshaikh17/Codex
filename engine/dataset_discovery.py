@@ -321,21 +321,23 @@ def taste_rows(local=None):
 
 def rescore_rows(local=None, page=400):
     """Preliminary rows (the screen's own, not yet scored with stored skills) that no person has decided on, for candidates
-    that have skills to score with."""
-    rows, offset = [], 0
+    that have skills to score with. Paged by the last (candidate, job) seen, never by OFFSET: OFFSET makes every page re-read
+    all earlier pages, so the cost of the whole export grew with the square of the row count."""
+    rows, last = [], None
     while True:
+        after = f"AND (q.candidate_id, q.job_id) > ({sql_str(last[0])}, {sql_str(last[1])})" if last else ''
         part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
           JOIN candidates c ON c.id = q.candidate_id
           WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
             AND c.primary_skills IS NOT NULL AND trim(c.primary_skills) NOT IN ('', '[]', 'null')
             AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v3":true%'
-            AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
-          ORDER BY q.candidate_id, q.job_id LIMIT {page} OFFSET {offset}""", local)
+            AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) {after}
+          ORDER BY q.candidate_id, q.job_id LIMIT {int(page)}""", local)
         rows += part
         if len(part) < page:
             return rows
-        offset += page
+        last = (part[-1]['candidate_id'], part[-1]['job_id'])
 
 
 if __name__ == '__main__':
