@@ -1,21 +1,9 @@
 import React from 'react';
-import { Job, EligibilityClassification } from '../types';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  HelpCircle, 
-  Search, 
-  Bookmark, 
-  Building, 
-  SlidersHorizontal,
-  ChevronRight,
-  ThumbsUp,
-  ThumbsDown,
-  Sparkles,
-  RotateCcw,
-  History as HistoryIcon,
-  AlertTriangle
-} from 'lucide-react';
+import { Job } from '../types';
+import { Search, Bookmark, XCircle, ChevronRight, RotateCcw, MapPin, Building, Sparkles, CheckCircle2, HelpCircle } from 'lucide-react';
+
+// The job list, in plain words (owner request 2026-11-07: "much simpler for our dumb human brain").
+// Every filter maps to a value the API actually stores; see /api/jobs in worker/index.ts.
 
 interface JobTableProps {
   jobs: Job[];
@@ -35,6 +23,7 @@ interface JobTableProps {
   setMinScore: (score: number) => void;
   workplaceFilter: string;
   setWorkplaceFilter: (w: string) => void;
+  /** where the posting was found: ALL | EMPLOYER | JOB_SITES | BOARDS (API parameter found_on) */
   sourceFilter?: string;
   setSourceFilter?: (s: string) => void;
   sortBy: string;
@@ -42,471 +31,190 @@ interface JobTableProps {
   isLoading: boolean;
 }
 
-export const JobTable: React.FC<JobTableProps> = ({
-  jobs,
-  totalJobsCount,
-  currentPage = 1,
-  pageSize = 50,
-  onPageChange,
-  onResetFilters,
-  onSelectJob,
-  onSaveJob,
-  onDismissJob,
-  search,
-  setSearch,
-  eligibilityFilter,
-  setEligibilityFilter,
-  minScore,
-  setMinScore,
-  workplaceFilter,
-  setWorkplaceFilter,
-  sourceFilter = 'ALL',
-  setSourceFilter,
-  sortBy,
-  setSortBy,
-  isLoading
-}) => {
-  const renderEligibilityBadge = (classification: EligibilityClassification) => {
-    switch (classification) {
-      case 'ELIGIBLE':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Eligible
-          </span>
-        );
-      case 'INELIGIBLE':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            <XCircle className="w-3.5 h-3.5 text-rose-600" />
-            Ineligible
-          </span>
-        );
-      case 'UNKNOWN':
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-            Unknown
-          </span>
-        );
-    }
-  };
+export const STATUS_WORDS: Record<string, { label: string; cls: string }> = {
+  READY: { label: 'Ready to apply', cls: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+  READY_HIGH: { label: 'Ready to apply', cls: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+  STRETCH_READY: { label: 'Stretch', cls: 'bg-blue-50 text-blue-800 border-blue-300' },
+  NEEDS_REVIEW: { label: 'To review', cls: 'bg-amber-50 text-amber-800 border-amber-300' },
+  HOLD: { label: 'On hold', cls: 'bg-slate-100 text-slate-700 border-slate-300' },
+  INELIGIBLE: { label: 'Not eligible', cls: 'bg-rose-50 text-rose-800 border-rose-300' },
+  CLOSED: { label: 'Closed', cls: 'bg-slate-100 text-slate-500 border-slate-300' },
+};
 
+const SOURCE_WORDS: Record<string, string> = {
+  indeed: 'Indeed', linkedin: 'LinkedIn', naukri: 'Naukri', glassdoor: 'Glassdoor', bayt: 'Bayt', adzuna: 'Adzuna',
+  remoteok: 'Remote OK', weworkremotely: 'We Work Remotely', himalayas: 'Himalayas', workingnomads: 'Working Nomads',
+  hnhiring: 'Hacker News', hnjobs: 'Hacker News', jobicy: 'Jobicy', remotive: 'Remotive', workable: 'Workable', arbeitnow: 'Arbeitnow',
+  getro: 'VC job board', uncareers: 'UN Careers', eures: 'EURES (EU)', eightfold: 'Company site', avature: 'Company site',
+  successfactors: 'Company site', greenhouse: 'Company site', lever: 'Company site', ashby: 'Company site', workday: 'Company site',
+  smartrecruiters: 'Company site', icims: 'Company site', oracle: 'Company site', darwinbox: 'Company site', breezy: 'Company site',
+  fixture: 'Test data',
+};
+export const sourceWord = (a?: string | null) => (a ? SOURCE_WORDS[a] || 'Company site' : 'Company site');
+
+// The screen's standard opening sentences say nothing a person needs; the rest of the note is the useful "why".
+const BOILERPLATE = [
+  'Cloud discovery match. Full requirements, pay and experience require review before READY.',
+  'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.',
+  'Conservative discovery screen; full qualification review pending.',
+];
+export function whyText(reason?: string | null) {
+  let t = String(reason || '');
+  for (const b of BOILERPLATE) t = t.replace(b, '');
+  t = t.replace('Outside candidate target role family; retained for review.', 'Outside the usual role family.').trim();
+  return t || 'Matches the role family. Open it to see the full posting.';
+}
+
+const payText = (job: Job) => {
+  if (!job.salary_published) return null;
+  if (job.salary_raw_text) return job.salary_raw_text;
+  const f = (n?: number | null) => (n ? Number(n).toLocaleString() : '');
+  const range = [f(job.salary_min), f(job.salary_max)].filter(Boolean).join(' – ');
+  return range ? `${job.salary_currency || ''} ${range}${job.salary_period ? ' / ' + job.salary_period : ''}`.trim() : null;
+};
+
+const scoreCls = (s: number) => (s >= 75 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : s >= 55 ? 'text-blue-700 bg-blue-50 border-blue-200' : 'text-amber-700 bg-amber-50 border-amber-200');
+
+const Seg: React.FC<{ value: string; onChange: (v: string) => void; options: [string, string][]; label: string }> = ({ value, onChange, options, label }) => (
+  <div role="group" aria-label={label} className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
+    {options.map(([v, l]) => (
+      <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
+        className={`px-3 py-1.5 min-h-[34px] rounded-md transition-all ${value === v ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-600 hover:text-slate-900'}`}>{l}</button>
+    ))}
+  </div>
+);
+
+export const JobTable: React.FC<JobTableProps> = ({
+  jobs, totalJobsCount, currentPage = 1, pageSize = 50, onPageChange, onResetFilters, onSelectJob, onSaveJob, onDismissJob,
+  search, setSearch, eligibilityFilter, setEligibilityFilter, minScore, setMinScore, workplaceFilter, setWorkplaceFilter,
+  sourceFilter = 'ALL', setSourceFilter, sortBy, setSortBy, isLoading,
+}) => {
+  const pages = Math.max(1, Math.ceil((totalJobsCount || 0) / pageSize));
+  const select = 'border border-slate-300 rounded-lg px-3 py-1.5 min-h-[34px] text-xs text-slate-700 bg-white focus:ring-2 focus:ring-emerald-500 outline-none';
   return (
     <div className="space-y-4">
-      {/* Search & Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          {/* Keyword Search */}
-          <div className="relative w-full md:flex-1 md:min-w-[18rem]">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3" data-testid="job-filters">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search job title, company, tech stack, or location..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-            />
+            <input type="text" aria-label="Search jobs" placeholder="Search a title, company, skill or place…" value={search} onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
           </div>
-
-          {/* Quick Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
-              {(['ALL', 'ELIGIBLE', 'UNKNOWN', 'INELIGIBLE'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setEligibilityFilter(tab)}
-                  className={`px-3 py-1.5 min-h-[32px] rounded-md transition-all text-xs ${
-                    eligibilityFilter === tab
-                      ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {tab === 'ALL' ? 'All India Statuses' : tab === 'ELIGIBLE' ? 'India: Eligible' : tab === 'INELIGIBLE' ? 'India: Ineligible' : 'India: Unknown'}
-                </button>
-              ))}
-            </div>
-
-            {/* Workplace Select */}
-            <select
-              aria-label="Filter by workplace type"
-              value={workplaceFilter}
-              onChange={(e) => setWorkplaceFilter(e.target.value)}
-              className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              <option value="ALL">All Workplaces</option>
-              <option value="REMOTE_GLOBAL">Remote (Global)</option>
-              <option value="REMOTE_RESTRICTED">Remote (Restricted)</option>
-              <option value="HYBRID">Hybrid</option>
-              <option value="ONSITE">Onsite</option>
+          <div className="flex gap-2">
+            <select aria-label="Sort jobs" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={select}>
+              <option value="score_desc">Best match first</option>
+              <option value="date_desc">Newest first</option>
+              <option value="company_asc">Company A–Z</option>
+              <option value="title_asc">Job title A–Z</option>
             </select>
-
-            {/* Source Adapter Filter */}
-            {setSourceFilter && (
-              <select
-                aria-label="Filter by data source"
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
-              >
-                <option value="ALL">All Sources</option>
-                <option value="fixture">Synthetic Fixtures</option>
-                <option value="greenhouse">Greenhouse Feeds</option>
-                <option value="lever">Lever Feeds</option>
-                  <option value="jobicy">Jobicy — multiple employers</option>
-                  <option value="remotive">Remotive — multiple employers</option>
-                  <option value="hnjobs">Startup announcements</option>
-              </select>
-            )}
-
-            {/* Sort Select */}
-            <select
-              aria-label="Sort jobs by"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border border-slate-300 rounded-lg px-3 py-1.5 min-h-[32px] text-xs text-slate-700 bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              <option value="score_desc">Match Score (High to Low)</option>
-              <option value="date_desc">Latest Discovered</option>
-              <option value="title_asc">Job Title (A-Z)</option>
-              <option value="company_asc">Company (A-Z)</option>
-            </select>
-
             {onResetFilters && (
-              <button
-                type="button"
-                onClick={onResetFilters}
-                title="Reset all filters to default"
-                className="px-3 py-1.5 min-h-[32px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                <span>Reset Filters</span>
+              <button type="button" onClick={onResetFilters} className="px-3 py-1.5 min-h-[34px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5">
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" /><span>Clear filters</span>
               </button>
             )}
           </div>
         </div>
-
-        {/* Min Score Slider & Quick Shortcuts */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 text-xs text-slate-600">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 font-medium text-slate-700">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Min Match Score:</span>
-            </div>
-            <input
-              aria-label="Minimum match score slider"
-              type="range"
-              min={0}
-              max={90}
-              step={10}
-              value={minScore}
-              onChange={(e) => setMinScore(Number(e.target.value))}
-              className="w-32 accent-emerald-600 cursor-pointer"
-            />
-            <span className="font-mono font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              {minScore}%
-            </span>
-
-            {/* Quick High-Match Shortcut */}
-            <button
-              onClick={() => setMinScore(minScore === 70 ? 0 : 70)}
-              className={`px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors border ${
-                minScore === 70
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-              }`}
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>High Match (≥70%)</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">
-              {totalJobsCount !== undefined 
-                ? `Showing ${jobs.length} of ${totalJobsCount} matching jobs (Page ${currentPage})`
-                : `Showing ${jobs.length} jobs`}
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Seg label="Eligibility" value={eligibilityFilter === 'INELIGIBLE' ? 'ALL' : eligibilityFilter} onChange={setEligibilityFilter}
+            options={[['ALL', 'All jobs'], ['ELIGIBLE', 'Can apply ✓'], ['UNKNOWN', 'Needs checking']]} />
+          <button type="button" aria-pressed={minScore >= 70} onClick={() => setMinScore(minScore >= 70 ? 0 : 70)}
+            className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-semibold flex items-center gap-1 border transition-colors ${minScore >= 70 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'}`}>
+            <Sparkles className="w-3.5 h-3.5" />Strong matches only
+          </button>
+          <select aria-label="Workplace" value={workplaceFilter} onChange={(e) => setWorkplaceFilter(e.target.value)} className={select}>
+            <option value="ALL">Any workplace</option>
+            <option value="REMOTE_ANY">Remote</option>
+            <option value="HYBRID">Hybrid</option>
+            <option value="ONSITE">On-site</option>
+            <option value="UNKNOWN">Not stated</option>
+          </select>
+          {setSourceFilter && (
+            <select aria-label="Found on" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className={select}>
+              <option value="ALL">Found anywhere</option>
+              <option value="EMPLOYER">Company career sites</option>
+              <option value="JOB_SITES">Job sites (Indeed, LinkedIn, Naukri…)</option>
+              <option value="BOARDS">Remote job boards</option>
+            </select>
+          )}
+          <span className="text-xs text-slate-500 sm:ml-auto" data-testid="job-count">
+            {isLoading ? 'Loading…' : `${(totalJobsCount ?? jobs.length).toLocaleString()} job${(totalJobsCount ?? jobs.length) === 1 ? '' : 's'}${pages > 1 ? ` · page ${currentPage} of ${pages}` : ''}`}
+          </span>
         </div>
       </div>
 
-      {/* Discovery Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-slate-500">
-            <div className="animate-spin w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full mx-auto mb-2" />
-            Loading job listings...
+            <div className="animate-spin w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full mx-auto mb-2" />Loading jobs…
           </div>
         ) : jobs.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <p className="font-medium text-slate-700">No jobs match your filter criteria.</p>
-            <p className="text-xs text-slate-400 mt-1">Try lowering the match score or clearing the search keyword.</p>
+            <p className="font-medium text-slate-700">No jobs match these filters.</p>
+            <p className="text-xs text-slate-400 mt-1">Try "Clear filters", or turn off "Strong matches only".</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Job Title & Company</th>
-                  <th className="py-3 px-4">Qualification & Override</th>
-                  <th className="py-3 px-4">India Eligibility</th>
-                  <th className="py-3 px-4">Explainable Match Score</th>
-                  <th className="py-3 px-4">Salary (Published)</th>
-                  <th className="py-3 px-4">Workplace</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {jobs.map((job) => {
-                  const isSaved = job.application?.status === 'SAVED';
-                  const isApplied = job.application?.status === 'APPLIED';
-                  const feedbackRating = job.feedback?.rating;
-
-                  return (
-                    <tr
-                      key={job.id}
-                      data-job-id={job.id}
-                      onClick={() => onSelectJob(job)}
-                      className="hover:bg-slate-50/80 cursor-pointer transition-colors group"
-                    >
-                      {/* Title & Company */}
-                      <td className="py-3 px-4 max-w-xs">
-                        <div className="font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
-                          {job.title}
-                          {job.strategy_lane && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold border ${
-                              job.strategy_lane === 'STRONGEST_FIT'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : job.strategy_lane === 'BRIDGE'
-                                ? 'bg-teal-50 text-teal-800 border-teal-300'
-                                : job.strategy_lane === 'DREAM'
-                                ? 'bg-purple-50 text-purple-800 border-purple-300'
-                                : 'bg-slate-100 text-slate-600 border-slate-300'
-                            }`}>
-                              {job.strategy_lane === 'STRONGEST_FIT' ? 'STRONGEST' : job.strategy_lane}
-                            </span>
-                          )}
-                          {isApplied && (
-                            <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono font-medium border border-blue-200">
-                              Applied
-                            </span>
-                          )}
-                          {isSaved && !isApplied && (
-                            <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-mono font-medium border border-amber-200">
-                              Saved
-                            </span>
-                          )}
-                          {!job.is_active && (
-                            <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono font-medium border border-slate-300">
-                              Delisted
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                          <Building className="w-3 h-3 text-slate-400" />
-                          <span>{job.company}</span>
-                          {job.company_headquarters && (
-                            <>
-                              <span>•</span>
-                              <span className="text-slate-400 truncate">{job.company_headquarters}</span>
-                            </>
-                          )}
-                          <span>•</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                            job.source_adapter === 'fixture'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold'
-                          }`}>
-                              {job.source_adapter === 'fixture' ? 'Synthetic' : job.source_adapter === 'hnjobs' ? 'Startup announcement — unverified' : ['jobicy','remotive'].includes(job.source_adapter) ? `${job.source_adapter === 'jobicy' ? 'Jobicy' : 'Remotive'} — unverified` : 'Employer feed'}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Qualification Status & Override Marker */}
-                      <td className="py-3 px-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold border ${
-                              job.qualification_status === 'READY'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : job.qualification_status === 'STRETCH_READY'
-                                ? 'bg-blue-50 text-blue-800 border-blue-300'
-                                : job.qualification_status === 'INELIGIBLE'
-                                ? 'bg-rose-50 text-rose-800 border-rose-300'
-                                : 'bg-amber-50 text-amber-800 border-amber-300'
-                            }`}>
-                              {job.qualification_status}
-                            </span>
-                            {job.manual_override_status && (
-                              <span 
-                                title={`Manual Override: ${job.manual_override_status}\nReason: ${job.manual_override_reason || 'Manual candidate decision'}`}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 cursor-help"
-                              >
-                                <HistoryIcon className="w-3 h-3 text-purple-600" />
-                                OVERRIDDEN
-                              </span>
-                            )}
-                            {job.assessment_conflict && (
-                              <span 
-                                title="Unresolved Assessment Conflict: Stored as READY/STRETCH but algorithm evaluates score 0 / NOT_FIT. Human decision preserved."
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 cursor-help"
-                              >
-                                <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                CONFLICT
-                              </span>
-                            )}
-                          </div>
-                          {job.qualification_reason && (
-                            <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={job.qualification_reason}>
-                              {job.qualification_reason}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Eligibility */}
-                      <td className="py-3 px-4">
-                        <div className="space-y-1">
-                          {renderEligibilityBadge(job.eligibility.classification)}
-                          <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={job.eligibility.reason ?? undefined}>
-                            {job.eligibility.reason}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Match Score & Explainability Indicator */}
-                      <td className="py-3 px-4">
-                        <div className="space-y-1 w-32">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-900 font-mono flex items-center gap-1">
-                              {job.score.overall_score}%
-                              {feedbackRating === 'THUMBS_UP' || feedbackRating === 'UP' ? (
-                                <span title="Boosted (+15) by user" className="text-emerald-600">
-                                  <ThumbsUp className="w-3 h-3 inline" />
-                                </span>
-                              ) : feedbackRating === 'THUMBS_DOWN' || feedbackRating === 'DOWN' ? (
-                                <span title="Downranked (-40) by user" className="text-rose-600">
-                                  <ThumbsDown className="w-3 h-3 inline" />
-                                </span>
-                              ) : null}
-                            </span>
-                            <span className="text-[10px] text-slate-400">Match</span>
-                          </div>
-                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                job.score.overall_score >= 80
-                                  ? 'bg-emerald-500'
-                                  : job.score.overall_score >= 60
-                                  ? 'bg-blue-500'
-                                  : 'bg-amber-500'
-                              }`}
-                              style={{ width: `${job.score.overall_score}%` }}
-                            />
-                          </div>
-                          <div className="text-[10px] text-slate-400 flex items-center justify-between">
-                            <span>{job.score.score_breakdown?.seniority_assessment?.job_seniority || 'Mid'}</span>
-                            <span>{job.score.score_breakdown?.experience_assessment?.status === 'MET' ? 'Exp ✓' : 'Exp ○'}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Salary */}
-                      <td className="py-3 px-4">
-                        {job.salary_published ? (
-                          <div className="text-xs font-medium text-slate-800">
-                            <span className="text-emerald-700 font-semibold">{job.salary_raw_text}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">
-                            Not Disclosed
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Workplace */}
-                      <td className="py-3 px-4">
-                        <span className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-mono">
-                          {job.workplace_type.replace('_', ' ')}
-                        </span>
-                        {job.location_restrictions && (
-                          <div className="text-[11px] text-slate-400 truncate max-w-[140px] mt-0.5" title={job.location_restrictions}>
-                            {job.location_restrictions}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          {onDismissJob && (
-                            <button
-                              onClick={(e) => onDismissJob(job.id, e)}
-                              title="Dismiss / Mark Irrelevant (Remove from review queue)"
-                              className="min-h-[32px] min-w-[32px] flex items-center justify-center p-1.5 rounded border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 transition-colors"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={(e) => onSaveJob(job.id, e)}
-                            title={isSaved ? "Saved" : "Save job"}
-                            className={`min-h-[32px] min-w-[32px] flex items-center justify-center p-1.5 rounded border transition-colors ${
-                              isSaved
-                                ? 'bg-amber-50 border-amber-300 text-amber-600'
-                                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50'
-                            }`}
-                          >
-                            <Bookmark className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} />
-                          </button>
-
-                          <button
-                            onClick={() => onSelectJob(job)}
-                            className="min-h-[32px] min-w-[32px] flex items-center justify-center p-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 rounded transition-colors"
-                            title="View Inspection Details"
-                          >
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-slate-100" data-testid="job-list">
+            {jobs.map((job) => {
+              const app = job.application?.status;
+              const isSaved = app === 'SAVED';
+              const st = STATUS_WORDS[String(job.qualification_status || 'NEEDS_REVIEW')] || STATUS_WORDS.NEEDS_REVIEW;
+              const score = Number(job.score?.overall_score) || 0;
+              const pay = payText(job);
+              const elig = job.eligibility?.classification;
+              return (
+                <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start">
+                  <div className={`shrink-0 w-14 text-center rounded-lg border py-1.5 ${scoreCls(score)}`} title="Match score: how well the posting fits the profile">
+                    <div className="text-lg font-bold leading-none">{score}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wide mt-0.5">match</div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-semibold text-slate-900 group-hover:text-emerald-700">{job.title}</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${st.cls}`}>{st.label}</span>
+                      {app && app !== 'SAVED' && <span className="text-[11px] px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 font-semibold">{app === 'APPLIED' ? 'Applied' : app.charAt(0) + app.slice(1).toLowerCase()}</span>}
+                      {isSaved && <span className="text-[11px] px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 font-semibold">Saved</span>}
+                      {!job.is_active && <span className="text-[11px] px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-300">No longer listed</span>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500 mt-1">
+                      <span className="flex items-center gap-1"><Building className="w-3 h-3 text-slate-400" />{job.company}</span>
+                      {job.location_restrictions && <span className="flex items-center gap-1 max-w-[22rem] truncate"><MapPin className="w-3 h-3 text-slate-400" />{job.location_restrictions}</span>}
+                      <span className="text-slate-400">via {sourceWord(job.source_adapter)}</span>
+                      {pay && <span className="text-emerald-700 font-semibold">{pay}</span>}
+                      {elig === 'ELIGIBLE' && <span className="flex items-center gap-1 text-emerald-700 font-semibold"><CheckCircle2 className="w-3 h-3" />Can apply</span>}
+                      {elig === 'UNKNOWN' && <span className="flex items-center gap-1 text-amber-700" title={job.eligibility?.reason || ''}><HelpCircle className="w-3 h-3" />Check location</span>}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1.5 line-clamp-2" data-testid="job-why">{whyText(job.qualification_reason)}</p>
+                  </div>
+                  <div className="shrink-0 flex flex-col sm:flex-row items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={(e) => onSaveJob(job.id, e)} aria-label={isSaved ? 'Saved' : 'Save this job'} title={isSaved ? 'Saved' : 'Save this job'}
+                      className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border transition-colors ${isSaved ? 'bg-amber-50 border-amber-300 text-amber-600' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'}`}>
+                      <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
+                    </button>
+                    {onDismissJob && (
+                      <button onClick={(e) => onDismissJob(job.id, e)} aria-label="Not for me (hide this job)" title="Not for me (hide this job)"
+                        className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-200">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button onClick={() => onSelectJob(job)} aria-label="Open details" title="Open details"
+                      className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600">
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
 
-        {/* Server-Driven Pagination Bar */}
-        {totalJobsCount !== undefined && totalJobsCount > 0 && (
-          <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs text-slate-500">
-              Showing <span className="font-semibold text-slate-800">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-semibold text-slate-800">{Math.min(currentPage * pageSize, totalJobsCount)}</span> of <span className="font-semibold text-slate-800">{totalJobsCount}</span> total jobs
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={currentPage <= 1}
-                onClick={() => onPageChange && onPageChange(currentPage - 1)}
-                className="px-3 py-1.5 min-h-[32px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous Page
-              </button>
-              <span className="text-xs text-slate-600 font-mono px-2">
-                Page {currentPage} of {Math.ceil(totalJobsCount / pageSize)}
-              </span>
-              <button
-                type="button"
-                disabled={currentPage >= Math.ceil(totalJobsCount / pageSize)}
-                onClick={() => onPageChange && onPageChange(currentPage + 1)}
-                className="px-3 py-1.5 min-h-[32px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next Page
-              </button>
-            </div>
+        {totalJobsCount !== undefined && totalJobsCount > pageSize && (
+          <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+            <button type="button" disabled={currentPage <= 1} onClick={() => onPageChange && onPageChange(currentPage - 1)}
+              className="px-3 py-1.5 min-h-[36px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold disabled:opacity-40">← Previous</button>
+            <span className="text-xs text-slate-600">Page {currentPage} of {pages}</span>
+            <button type="button" disabled={currentPage >= pages} onClick={() => onPageChange && onPageChange(currentPage + 1)}
+              className="px-3 py-1.5 min-h-[36px] rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold disabled:opacity-40">Next →</button>
           </div>
         )}
       </div>

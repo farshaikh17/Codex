@@ -171,7 +171,8 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   qualification_status: (v) => QUAL.includes(v),
   farhan_fit: enumOf('ALL', ...FIT_VALUES), pay_filter: enumOf('ALL', 'PUBLISHED', 'UNPUBLISHED', 'UNKNOWN'), role_family: validRoleFamily,
   strategy_lane: LANES, lane: LANES,
-  workplace_type: enumOf('ALL', 'REMOTE', 'REMOTE_RESTRICTED', 'HYBRID', 'ONSITE', 'UNKNOWN'),
+  workplace_type: enumOf('ALL', 'REMOTE_ANY', 'REMOTE', 'REMOTE_GLOBAL', 'REMOTE_RESTRICTED', 'HYBRID', 'ONSITE', 'UNKNOWN'),
+  found_on: enumOf('ALL', 'EMPLOYER', 'JOB_SITES', 'BOARDS'),
   source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
   sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
   exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'),
@@ -180,7 +181,7 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
-  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
+  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
   [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
@@ -1226,6 +1227,9 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 
 // Comprehensive /api/jobs for React Frontend
 // The latest application record for (candidate, job), if any, is SAVED or there is none: "not applied".
+const sqlList = (xs: string[]) => xs.map((x) => `'${x}'`).join(', ');
+const JOB_SITE_ADAPTERS = sqlList(['indeed', 'linkedin', 'naukri', 'glassdoor', 'google', 'bayt', 'adzuna', 'ziprecruiter']);
+const BOARD_ADAPTERS = sqlList(['remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'workable', 'arbeitnow', 'getro', 'uncareers', 'eures']);
 const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
 const JOB_COLUMNS = `
@@ -1339,6 +1343,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const eligibility = url.searchParams.get('eligibility');
   const minScore = parseInt(url.searchParams.get('min_score') || '0', 10);
   const workplaceType = url.searchParams.get('workplace_type');
+  const foundOn = (url.searchParams.get('found_on') || 'ALL').toUpperCase();
   const sourceAdapter = url.searchParams.get('source_adapter');
   const qualificationStatus = url.searchParams.get('qualification_status');
   const strategyLane = url.searchParams.get('strategy_lane');
@@ -1376,7 +1381,14 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     }
     if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
     if (minScore > 0) { baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`; baseParams.push(minScore); }
-    if (workplaceType && workplaceType !== 'ALL') { baseWhere += ` AND j.workplace_type = ?`; baseParams.push(workplaceType); }
+    // REMOTE_ANY: every remote value the sources store (REMOTE, REMOTE_GLOBAL, REMOTE_RESTRICTED); UNKNOWN also covers rows with no value.
+    if (workplaceType === 'REMOTE_ANY') baseWhere += ` AND j.workplace_type IN ('REMOTE', 'REMOTE_GLOBAL', 'REMOTE_RESTRICTED')`;
+    else if (workplaceType === 'UNKNOWN') baseWhere += ` AND COALESCE(j.workplace_type, 'UNKNOWN') = 'UNKNOWN'`;
+    else if (workplaceType && workplaceType !== 'ALL') { baseWhere += ` AND j.workplace_type = ?`; baseParams.push(workplaceType); }
+    // Where the posting was found: job sites (JobSpy), remote job boards and aggregators, or an employer's own career site (everything else).
+    if (foundOn === 'JOB_SITES') baseWhere += ` AND j.source_adapter IN (${JOB_SITE_ADAPTERS})`;
+    else if (foundOn === 'BOARDS') baseWhere += ` AND j.source_adapter IN (${BOARD_ADAPTERS})`;
+    else if (foundOn === 'EMPLOYER') baseWhere += ` AND j.source_adapter NOT IN (${JOB_SITE_ADAPTERS}, ${BOARD_ADAPTERS})`;
     if (sourceAdapter && sourceAdapter !== 'ALL') { baseWhere += ` AND j.source_adapter = ?`; baseParams.push(sourceAdapter); }
     if (strategyLane && strategyLane !== 'ALL') { baseWhere += ` AND q.strategy_lane = ?`; baseParams.push(strategyLane); }
     if (fitParam !== 'ALL') baseWhere += ` AND ${FIT_SQL[fitParam as (typeof FIT_VALUES)[number]]}`;

@@ -33,7 +33,7 @@ const waitForIds = async (expected, label) => {   // poll: the server answers as
 const select = async (labelText, value) => { await page.locator('select').filter({ has: page.locator('option', { hasText: labelText }) }).first().selectOption(value); await settle(); };
 const fitSelect = (v) => page.locator('select').nth(0).selectOption(v).then(settle);
 
-const openIndiaRemote = async (btn) => { await tab(btn); await page.getByText('Explore Queue').first().click(); await settle(); };
+const openIndiaRemote = async (btn) => { await tab(btn); await page.getByText('See these jobs').first().click(); await settle(); };
 const openReady = async (btn) => { await tab(btn); await page.getByText('View READY').first().click(); await settle(); };
 const reset = async () => { await page.getByRole('button', { name: /^Reset$/ }).first().click(); await settle(); };
 

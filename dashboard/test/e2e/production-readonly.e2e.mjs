@@ -86,7 +86,7 @@ const onScreen = () => page.$$eval('[data-job-id]', (els) => els.map((e) => e.ge
 const sameAsApi = async (expected) => { let got = []; for (let i = 0; i < 20; i++) { got = await onScreen(); if (JSON.stringify(got) === JSON.stringify(expected)) return { ok: true, got }; await page.waitForTimeout(1000); } return { ok: false, got }; };
 for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']]) {
   await tab(btn);
-  await page.getByText('Explore Queue').first().click(); await page.waitForTimeout(1500);
+  await page.getByText('See these jobs').first().click(); await page.waitForTimeout(1500);
   const all = await api(`/india-remote/jobs?candidate_id=${cid}&sort_by=score_desc&exclude_applied=true&limit=25&offset=0`);
   let r = await sameAsApi(all.jobs.map((j) => j.id));
   check(`${btn}: India Remote shows exactly the server's first page (${all.jobs.length} of ${all.total})`, r.ok, `screen [${r.got}] api [${all.jobs.map((j) => j.id)}]`);
