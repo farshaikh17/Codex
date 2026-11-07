@@ -13,8 +13,17 @@ import {
   isOperatorAuthenticated,
   OPERATOR_AUTH_EVENT,
   logoutOperator,
-  checkStoredOperatorKey
+  checkStoredOperatorKey,
+  captureShareLink,
+  getShareView,
+  clearShareView,
+  fetchCandidateList,
+  downloadExport,
+  fetchBrand,
+  unsaveJob,
+  CandidateRef
 } from './api';
+import { ClientsView } from './components/ClientsView';
 import { PilotView } from './components/PilotView';
 import { Navbar, NavTab } from './components/Navbar';
 import { JobTable } from './components/JobTable';
@@ -31,17 +40,27 @@ import { IndiaRemoteView } from './components/IndiaRemoteView';
 import { DashboardOverview } from './components/DashboardOverview';
 import { AuthModal } from './components/AuthModal';
 
+// A share link (#view=...) is read before the first render, so the first requests already carry it.
+captureShareLink();
+const BUILTIN = ['farhan_shaikh', 'sana_ansari'];
+
 export const App: React.FC = () => {
-  const [activeTab, changeActiveTab] = useState<NavTab>('dashboard');
-  const [candidateId, setCandidateId] = useState('farhan_shaikh');
-  const setActiveTab = (tab: NavTab) => {
-    if (tab === 'farhan' || tab === 'sana') {
-      const nextCandidate = tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
+  const initialShareView = getShareView();
+  const [activeTab, changeActiveTab] = useState<NavTab>(initialShareView ? (initialShareView.candidate === 'sana_ansari' ? 'sana' : initialShareView.candidate === 'farhan_shaikh' ? 'farhan' : 'client') : 'dashboard');
+  const [candidateId, setCandidateId] = useState(initialShareView?.candidate || 'farhan_shaikh');
+  const [candidateList, setCandidateList] = useState<CandidateRef[]>([]);
+  const [exportNote, setExportNote] = useState<string | null>(null);
+  const [brand, setBrand] = useState('Career Job Engine');
+  useEffect(() => { fetchBrand().then((b) => { setBrand(b.brand_name); document.title = `Dashboard · ${b.brand_name}`; }); }, []);
+  const setActiveTab = (tab: NavTab, clientId?: string) => {
+    if (tab === 'farhan' || tab === 'sana' || (tab === 'client' && clientId)) {
+      const nextCandidate = tab === 'client' ? clientId! : tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
       if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); setWeeklyMetrics(null); setIndiaRemoteSummary(null); setTotalJobsCount(0); setStatusCounts({ READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 }); setProfile(null); }
       setCandidateId(nextCandidate);
     }
     changeActiveTab(tab);
   };
+  const openCandidate = (id: string) => setActiveTab(id === 'farhan_shaikh' ? 'farhan' : id === 'sana_ansari' ? 'sana' : 'client', id);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalJobsCount, setTotalJobsCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -162,6 +181,21 @@ export const App: React.FC = () => {
     }
   }, [debouncedSearch, eligibilityFilter, minScore, workplaceFilter, sourceFilter, sortBy, selectedLane, candidateId, currentPage, pageSize]);
 
+  const [candidateListLoaded, setCandidateListLoaded] = useState(false);
+  const loadCandidates = useCallback(() => { fetchCandidateList().then((l) => { setCandidateList(l); setCandidateListLoaded(true); }).catch(() => setCandidateList([])); }, []);
+  useEffect(() => { loadCandidates(); }, [isOperator, authEpoch, loadCandidates]);
+  // A revoked or wrong share link: the client is not in the list this link can see. Say so once, drop the link, show the public view.
+  const [shareView, setShareView] = useState(initialShareView);
+  useEffect(() => {
+    if (!shareView || !candidateListLoaded || isOperator) return;
+    if (!candidateList.some((c) => c.id === shareView.candidate)) {
+      clearShareView(); setShareView(null);
+      setSessionNotice('This shared link is no longer valid (it was revoked or is incomplete). Ask the sender for a new link. You are viewing the public dashboard.');
+      setCandidateId('farhan_shaikh'); changeActiveTab('dashboard'); setError(null); loadData();
+    }
+  }, [shareView, candidateList, candidateListLoaded, isOperator]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const clientTabs = candidateList.filter((c) => !BUILTIN.includes(c.id)).map((c) => ({ id: c.id, full_name: c.full_name }));
+  const viewingName = shareView ? (candidateList.find((c) => c.id === shareView.candidate)?.full_name || shareView.candidate) : null;
   useEffect(() => { if (authEpoch > 0) loadData(); }, [authEpoch]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData();
@@ -185,9 +219,9 @@ export const App: React.FC = () => {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    const newStatus: ApplicationStatus = job.application?.status === 'SAVED' ? 'WITHDRAWN' : 'SAVED';
     try {
-      await updateApplication({ job_id: jobId, status: newStatus, candidate_id: candidateId });
+      if (job.application?.status === 'SAVED') await unsaveJob(jobId, candidateId);
+      else await updateApplication({ job_id: jobId, status: 'SAVED', candidate_id: candidateId });
       await loadData();
     } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to save this job. Please retry."); }
   };
@@ -253,8 +287,11 @@ export const App: React.FC = () => {
         pilotActive={activeTab === 'pilot'}
         isOperator={isOperator}
         onOpenAuth={() => setAuthOpen(true)}
-        
-        
+        clients={clientTabs}
+        activeClient={activeTab === 'client' ? candidateId : null}
+        onSelectClient={(id) => setActiveTab('client', id)}
+        brand={brand}
+        viewer={shareView && !isOperator ? { name: (viewingName || '').split(' ')[0] || 'Your', onOpen: () => openCandidate(shareView.candidate) } : null}
       />
       <AuthModal
         isOpen={authOpen}
@@ -269,6 +306,12 @@ export const App: React.FC = () => {
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {shareView && !isOperator && (
+          <div role="status" data-testid="share-banner" className="mb-4 p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm flex items-start justify-between gap-3">
+            <span>Shared read-only view{viewingName ? ` for ${viewingName}` : ''}. Nothing can be changed from this link.</span>
+            <button className="underline text-xs shrink-0" onClick={() => { clearShareView(); window.location.reload(); }}>Leave shared view</button>
+          </div>
+        )}
         {sessionNotice && (
           <div role="status" className="mb-4 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm flex items-start justify-between gap-3">
             <span>{sessionNotice}</span>
@@ -286,13 +329,17 @@ export const App: React.FC = () => {
             {activeTab === 'dashboard' && (
               <DashboardOverview
                 isOperator={isOperator}
-                onSelectCandidate={(cid) => setActiveTab(cid === 'farhan_shaikh' ? 'farhan' : 'sana')}
+                onSelectCandidate={openCandidate}
                 onOpenAutomation={() => setActiveTab('automation')}
                 onOpenApplications={() => setActiveTab('tracker')}
               />
             )}
 
-            {(activeTab === 'farhan' || activeTab === 'sana' || activeTab === 'discovery') && (
+            {activeTab === 'clients' && (isOperator
+              ? <ClientsView onOpenClient={openCandidate} onClientsChanged={loadCandidates} />
+              : <OperatorOnlyPanel what="Client management" onUnlock={() => setAuthOpen(true)} />)}
+
+            {(activeTab === 'farhan' || activeTab === 'sana' || activeTab === 'client' || activeTab === 'discovery') && (
               <div className="space-y-6">
                 {/* Candidate Workspace Header */}
                 <div className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm ${
@@ -318,6 +365,13 @@ export const App: React.FC = () => {
                         ? `${profile.summary_line || ''} ${profile.location_preferences && profile.location_preferences.length ? 'Location preferences: ' + profile.location_preferences.join(', ') + '.' : ''} ${profile.pay_line || ''}`
                         : ''}
                     </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button data-testid="export-csv" className="text-xs px-2.5 py-1 rounded border border-white/20 text-slate-200 hover:bg-white/10"
+                        onClick={() => { setExportNote(null); downloadExport(candidateId, 'ALL').catch((e) => setExportNote(e.message)); }}>Export CSV</button>
+                      <button className="text-xs px-2.5 py-1 rounded border border-white/20 text-slate-200 hover:bg-white/10"
+                        onClick={() => { setExportNote(null); downloadExport(candidateId, 'APPLY_WORTHY').catch((e) => setExportNote(e.message)); }}>Export Ready + Stretch</button>
+                      {exportNote && <span className="text-xs text-rose-300">{exportNote}</span>}
+                    </div>
                   </div>
 
                   {/* Strategy Lane Selector Pills */}
@@ -340,7 +394,7 @@ export const App: React.FC = () => {
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      STRONGEST FIT ({candidateId === 'sana_ansari' ? '20%' : '70%'})
+                      STRONGEST FIT{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '20%' : '70%'})` : ''}
                     </button>
                     <button
                       onClick={() => setSelectedLane('BRIDGE')}
@@ -350,7 +404,7 @@ export const App: React.FC = () => {
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      BRIDGE ({candidateId === 'sana_ansari' ? '30%' : '20%'})
+                      BRIDGE{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '30%' : '20%'})` : ''}
                     </button>
                     <button
                       onClick={() => setSelectedLane('DREAM')}
@@ -360,7 +414,7 @@ export const App: React.FC = () => {
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      DREAM ({candidateId === 'sana_ansari' ? '50%' : '10%'})
+                      DREAM{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '50%' : '10%'})` : ''}
                     </button>
                   </div>
                 </div>

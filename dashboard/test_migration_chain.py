@@ -13,6 +13,9 @@ migrations = [
     '0008_auth_failures.sql',
     '0009_response_cache.sql',
     '0010_assessment.sql',
+    '0011_clients.sql',
+    '0012_site.sql',
+    '0013_candidate_skills.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:

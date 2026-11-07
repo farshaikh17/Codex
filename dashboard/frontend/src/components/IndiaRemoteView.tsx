@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Job, IndiaRemoteResult } from '../types';
-import { fetchIndiaRemoteJobs, updateApplication } from '../api';
+import { fetchIndiaRemoteJobs, updateApplication, unsaveJob } from '../api';
 import {
   Globe2,
   CheckCircle2,
@@ -102,9 +102,9 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
 
   const handleToggleSave = async (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newStatus = job.application?.status === 'SAVED' ? 'WITHDRAWN' : 'SAVED';
     try {
-      await updateApplication({ job_id: job.id, status: newStatus, candidate_id: candidateId });
+      if (job.application?.status === 'SAVED') await unsaveJob(job.id, candidateId);
+      else await updateApplication({ job_id: job.id, status: 'SAVED', candidate_id: candidateId });
       await loadData();
       if (onRefreshGlobal) onRefreshGlobal();
     } catch {

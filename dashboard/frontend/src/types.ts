@@ -221,6 +221,8 @@ export interface CandidateDashboardCard {
 export interface DashboardOverviewData {
   farhan: CandidateDashboardCard;
   sana: CandidateDashboardCard;
+  /** every candidate this viewer may see: the built-in two first, then resold clients */
+  candidates?: CandidateDashboardCard[];
   total_jobs_tracked: number;
   active_jobs_count: number;
   automation_status: string;

@@ -10,7 +10,8 @@ export const ADMIN_KEY = 'unit-test-key-not-a-secret';
 
 class Stmt {
   constructor(db, sql) { this.db = db; this.sql = sql; this.params = []; }
-  bind(...a) { this.params = a; return this; }
+  // D1 refuses a statement with more than 100 bound parameters (SQLite itself allows far more), so the harness does too.
+  bind(...a) { if (a.length > 100) throw new Error('D1_ERROR: too many SQL variables (harness mirrors the D1 limit of 100)'); this.params = a; return this; }
   async first() { return this.db.prepare(this.sql).get(...this.params) ?? null; }
   async all() { return { results: this.db.prepare(this.sql).all(...this.params) }; }
   async run() { const r = this.db.prepare(this.sql).run(...this.params); return { success: true, meta: { changes: Number(r.changes) } }; }

@@ -9,7 +9,7 @@ import { seed } from './fixtures.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const worker = await loadWorker();
 const fresh = (extra) => { const { sqlite, d1 } = createDb(); seed(sqlite); return { sqlite, env: makeEnv(d1, extra) }; };
-const PUBLIC = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+const PUBLIC = new Set(['/api/health', '/api/version', '/api/auth/verify', '/api/brand']);
 
 // Every route registered in worker/index.ts, with path parameters filled in.
 function routes() {
@@ -24,7 +24,7 @@ const PUBLIC_READ = [
   '/api/candidates', '/api/candidates/x/strategy', '/api/candidates/x/dashboard', '/api/candidates/x/jobs', '/api/candidates/x/applications',
   '/api/dashboard/overview', '/api/jobs', '/api/jobs/x', '/api/jobs/x/explanation', '/api/applications', '/api/india-remote/summary',
   '/api/india-remote/jobs', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics',
-  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status',
+  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status', '/api/export',
 ];
 const isPublicRead = (r) => r.method === 'GET' && PUBLIC_READ.includes(r.path);
 
@@ -44,7 +44,7 @@ test('the public read list matches the registered routes (a new GET route is pro
   for (const p of PUBLIC_READ) assert.ok(have.has(p), `${p} is not a registered GET route`);
   const src = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
   const listed = (src.match(/PUBLIC_READ_PATTERNS: RegExp\[\] = \[([\s\S]*?)\n\];/) || [])[1] || '';
-  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 15);
+  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 16);
   for (const bad of ['history', 'qualification-audit', 'runs', 'backups', 'sync', 'meta', 'pilot', 'canonical-sync', 'url-checks']) assert.ok(!listed.includes(bad), `${bad} must stay protected`);
 });
 

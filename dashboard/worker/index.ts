@@ -3,7 +3,9 @@
  * 100% Compatible with D1 Schema and Frontend UI
  */
 
-import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS } from './discovery';
+import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
+import * as site from './site';
+import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidate, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
 export interface Env {
@@ -16,6 +18,8 @@ export interface Env {
   /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
   GIT_COMMIT?: string;
   DEPLOYED_AT?: string;
+  /** 'always' writes the read meter after every request (local cost measurement only; production leaves it unset) */
+  METER_FLUSH?: string;
 }
 
 // -------------------------------------------------------------
@@ -85,7 +89,7 @@ function corsHeaders(request: Request, env: Env): HeadersInit {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion, X-View-Token',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
@@ -102,7 +106,7 @@ function jsonResponse(data: any, status = 200, headers: HeadersInit = {}): Respo
 }
 
 // Routes that carry no candidate data: liveness, build identity and the key check itself.
-const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify']);
+const PUBLIC_API_PATHS = new Set(['/api/health', '/api/version', '/api/auth/verify', '/api/brand']);
 
 // Read-only routes any visitor may call without a key (the dashboard is publicly viewable). This is an explicit
 // allowlist: a route that is not listed here, and every POST/PUT/DELETE, needs the operator key. Audit trails
@@ -124,6 +128,7 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
   /^\/api\/profile$/,
   /^\/api\/sources$/,
   /^\/api\/automation\/status$/,
+  /^\/api\/export$/,
 ];
 function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
@@ -175,7 +180,7 @@ const CACHE_PARAMS: [RegExp, string[]][] = [
   [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
 // Nothing is excluded from the cache by path any more: /api/india-remote/jobs has its own query and its own key (every filter it honours is in CACHE_PARAMS).
-const NOT_CACHED = /^\/api\/never-cached$/;
+const NOT_CACHED = /^\/api\/export$/;   // exports are metered but never stored in the cache
 const STATUS_VALUE: Record<string, (v: string) => boolean> = {
   '/api/applications': enumOf('SAVED', 'SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'ARCHIVED', 'ALL'),
 };
@@ -439,14 +444,34 @@ async function checkOperatorAuth(request: Request, env: Env): Promise<Response |
 const publicLocation = (v: unknown) => (typeof v === 'string' && /india/i.test(v) ? 'India' : '');
 
 // Candidate isolation: a candidate-scoped route never falls back to a default candidate.
-const CANDIDATE_IDS = new Set(['farhan_shaikh', 'sana_ansari']);
+// The set is the client registry (clients.ts), refreshed from the database at most once a minute; the built-in two are always in it.
+const CANDIDATE_IDS = new Set<string>(BUILTIN_IDS);
+const PRIVATE_IDS = new Set<string>();
+const CLIENT_TITLES = new Map<string, string | null>();
+async function syncRegistry(env: Env, force = false) {
+  const reg = await loadRegistry(env.DB, force);
+  CANDIDATE_IDS.clear(); reg.ids.forEach((id) => CANDIDATE_IDS.add(id));
+  PRIVATE_IDS.clear(); reg.privateIds.forEach((id) => PRIVATE_IDS.add(id));
+  CLIENT_TITLES.clear(); reg.titles.forEach((t, id) => CLIENT_TITLES.set(id, t));
+  return reg;
+}
+// The registry generation each request decided visibility with: an answer is only cached under that same generation, so an
+// answer computed just before a visibility change can never be stored as current (it would be served for the cache TTL).
+const decidedUnder = new WeakMap<Request, number | null>();
+// A request about a client it may not see: answered by exactly the same path as an unknown id (budget check, no cache, same body).
+const hiddenFrom = new WeakMap<Request, string>();
+// The client a request's share link (X-View-Token) grants read access to. Set by the router; read-only, public field shape.
+const viewerOf = new WeakMap<Request, string>();
+/** Whether this request may see a candidate at all: operators see every client, others the public ones and their own share link's. */
+const visibleTo = (request: Request, id: string) => isOperatorRequest(request) || !PRIVATE_IDS.has(id) || viewerOf.get(request) === id;
 function knownCandidate(value: unknown): string | null {
   return typeof value === 'string' && CANDIDATE_IDS.has(value) ? value : null;
 }
 function badCandidate(request: Request, env: Env, given: unknown): Response {
   return jsonResponse({
     error: given ? `Unknown candidate_id '${String(given).slice(0, 40)}'.` : 'candidate_id is required for this endpoint.',
-    allowed_candidate_ids: [...CANDIDATE_IDS],
+    // never names a private client to someone who may not see it
+    allowed_candidate_ids: [...CANDIDATE_IDS].filter((id) => visibleTo(request, id)),
   }, 400, corsHeaders(request, env));
 }
 
@@ -525,6 +550,18 @@ class WorkerRouter {
         accessLevel.set(request, 'operator');
       }
     }
+    // Client visibility: a private client is answered exactly like an unknown one unless the operator asks, or the request carries
+    // a share link for that client. Runs before the cache, so a cached answer can never reach someone who may not see it.
+    if (isApi && accessLevel.has(request)) {
+      const reg = await syncRegistry(env);
+      decidedUnder.set(request, reg.generation);
+      if (accessLevel.get(request) === 'public') {
+        const viewer = await viewTokenCandidate(env.DB, request.headers.get('X-View-Token'));
+        if (viewer) viewerOf.set(request, viewer);
+        const cid = referencedCandidate(url);
+        if (cid && CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) hiddenFrom.set(request, cid);
+      }
+    }
 
     for (const route of this.routes) {
       if (route.method !== request.method && route.method !== 'ALL') continue;
@@ -538,10 +575,11 @@ class WorkerRouter {
         const readRoute = !!level && request.method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
         // Every public read is budgeted and metered, cached or not. A route that hands its work to another public route
         // (India Remote list) is metered by that inner call, so it is not counted twice.
-        const metered = readRoute && !NOT_CACHED.test(pathname);
-        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
+        const metered = readRoute;
+        const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !viewerOf.has(request) && !hiddenFrom.has(request) ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
-        const operatorChange = level === 'operator' && request.method !== 'GET';
+        // The applications inbox and site settings feed no cached dashboard answer, so changing them keeps the public cache.
+        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings)(\/|$)/.test(pathname);
         let meter: { db: D1Database; rows: () => number } | null = null;
         let lookup: CacheLookup | null = null;
         const now = Math.floor(Date.now() / 1000);
@@ -562,7 +600,9 @@ class WorkerRouter {
         if (operatorChange) await invalidateResponseCache(env);   // before: if this fails the change is refused
         let res: Response;
         try {
-          res = await this.finish(request, await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
+          res = await this.finish(request, hiddenFrom.has(request)
+            ? badCandidate(request, env, hiddenFrom.get(request))
+            : await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
         } finally {
           if (meter) {
             const rows = meter.rows();
@@ -572,14 +612,15 @@ class WorkerRouter {
             try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
           }
         }
-        if (cacheKey && lookup && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
+        const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
+        if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
           if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
-          await flushMeter(env);
+          await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });
         }
-        if (meter) await flushMeter(env);
+        if (meter) await flushMeter(env, env.METER_FLUSH === 'always');
         return res;
       }
     }
@@ -717,6 +758,12 @@ router.post('/api/auth/verify', async (request, env) => {
 });
 
 
+// The brand the operator set for the public site, so the app shows the same name (white-label). Settings are memoised for 60 s.
+router.get('/api/brand', async (request, env) => {
+  const s = await site.loadSettings(env.DB);
+  return jsonResponse({ brand_name: s.brand_name, brand_sub: s.brand_sub, contact_email: s.contact_email || null }, 200, { ...corsHeaders(request, env), 'Cache-Control': 'public, max-age=60' });
+});
+
 router.get('/api/version', async (request, env) => {
   return jsonResponse({
     version: '2026-11-05-public-view',
@@ -772,11 +819,13 @@ router.get('/api/candidates', async (request, env) => {
       ORDER BY c.full_name ASC
     `).all<any>();
 
-    const formatted = results.map((r: any) => ({
+    const formatted = results.filter((r: any) => visibleTo(request, r.id)).map((r: any) => ({
       id: r.id,
       name: r.full_name,
       full_name: r.full_name,
-      display_title: r.id === 'sana_ansari'
+      builtin: BUILTIN_IDS.includes(r.id),
+      ...(isOperatorRequest(request) ? { visibility: PRIVATE_IDS.has(r.id) ? 'private' : 'public' } : {}),
+      display_title: !BUILTIN_IDS.includes(r.id) ? (CLIENT_TITLES.get(r.id) || '') : r.id === 'sana_ansari'
         ? 'Power Plant Operations & Industrial Reliability Engineering'
         : 'Technical Operations & Workflow Automation Engineering',
       citizenship: r.citizenship,
@@ -961,7 +1010,7 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
       full_name: candidate.full_name,
       education: candidate.education,
       current_location: isOperatorRequest(request) ? candidate.current_location : publicLocation(candidate.current_location),
-      display_title: candidateId === 'sana_ansari'
+      display_title: !BUILTIN_IDS.includes(candidateId) ? (CLIENT_TITLES.get(candidateId) || '') : candidateId === 'sana_ansari'
         ? 'Power Plant Operations & Industrial Reliability Engineering'
         : 'Technical Operations & Workflow Automation Engineering',
       ready_count: counts['READY'] || 0,
@@ -989,21 +1038,27 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
 
 router.get('/api/dashboard/overview', async (request, env) => {
   try {
-    // Helper to get candidate summary card
+    // Every visible candidate's figures in four grouped queries, whatever the number of clients (Workers Free allows 50 queries
+    // per request; one set of queries per client would run out at a handful of clients).
+    const visible = [...new Set([...BUILTIN_IDS, ...[...CANDIDATE_IDS].filter((x) => !BUILTIN_IDS.includes(x) && visibleTo(request, x)).sort()])];
+    const idsJson = JSON.stringify(visible);
+    const { results: candRows } = await env.DB.prepare(`SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
+      FROM candidates c LEFT JOIN candidate_strategy s ON c.id = s.candidate_id WHERE c.id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>();
+    const { results: allQ } = await env.DB.prepare(`SELECT q.candidate_id, q.qualification_status, q.strategy_lane, COUNT(*) as cnt
+      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      WHERE q.candidate_id IN (SELECT value FROM json_each(?)) AND j.is_active = 1
+      GROUP BY q.candidate_id, q.qualification_status, q.strategy_lane`).bind(idsJson).all<any>();
+    const { results: allApps } = await env.DB.prepare(`SELECT candidate_id, COUNT(*) as records,
+      SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
+      FROM applications WHERE candidate_id IN (SELECT value FROM json_each(?)) GROUP BY candidate_id`).bind(idsJson).all<any>();
+    let profRows: any[] = [];
+    try { profRows = (await env.DB.prepare(`SELECT candidate_id, display_title, summary_line FROM client_profiles WHERE candidate_id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>()).results || []; } catch {}
+    const candBy = new Map((candRows || []).map((r: any) => [r.id, r]));
+    const appBy = new Map((allApps || []).map((r: any) => [r.candidate_id, r]));
+    const profBy = new Map(profRows.map((r: any) => [r.candidate_id, r]));
     const getSummary = async (cid: string) => {
-      const cand = await env.DB.prepare(`
-        SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
-        FROM candidates c
-        LEFT JOIN candidate_strategy s ON c.id = s.candidate_id
-        WHERE c.id = ?
-      `).bind(cid).first<any>();
-
-      const { results: qRows } = await env.DB.prepare(`
-        SELECT q.qualification_status, q.strategy_lane, COUNT(*) as cnt
-        FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-        WHERE q.candidate_id = ? AND j.is_active = 1
-        GROUP BY q.qualification_status, q.strategy_lane
-      `).bind(cid).all<any>();
+      const cand = candBy.get(cid) || null;
+      const qRows = (allQ || []).filter((r: any) => r.candidate_id === cid);
 
       const statusMap: Record<string, number> = {};
       const discLaneMap: Record<string, number> = {};
@@ -1020,12 +1075,11 @@ router.get('/api/dashboard/overview', async (request, env) => {
       const totalDisc = (discLaneMap['STRONGEST_FIT'] || 0) + (discLaneMap['BRIDGE'] || 0) + (discLaneMap['DREAM'] || 0) || 1;
       const totalReady = (readyLaneMap['STRONGEST_FIT'] || 0) + (readyLaneMap['BRIDGE'] || 0) + (readyLaneMap['DREAM'] || 0) || 1;
 
-      const appCnt = await env.DB.prepare(`
-        SELECT COUNT(*) as records,
-               SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
-        FROM applications WHERE candidate_id = ?
-      `).bind(cid).first<{ records: number; applied: number }>();
+      const appCnt = appBy.get(cid) as { records: number; applied: number } | undefined;
       const facts = candidateFacts(cid, cand);
+      // a resold client's title and summary come from its profile (the built-in two keep their supplied facts)
+      const prof = BUILTIN_IDS.includes(cid) ? null : (profBy.get(cid) || {}) as any;
+      if (prof) { facts.display_title = prof.display_title || ''; facts.summary_line = facts.public_summary = prof.summary_line || ''; }
 
       const target_distribution = {
         strongest_fit: cand?.strongest_fit_target_pct ?? (cid === 'sana_ansari' ? 20.0 : 70.0),
@@ -1049,7 +1103,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
         candidate_id: cid,
         name: cand?.full_name || cid,
         full_name: cand?.full_name || cid,
-        title: cid === 'sana_ansari'
+        title: !BUILTIN_IDS.includes(cid) ? (prof?.display_title || '') : cid === 'sana_ansari'
           ? 'Electrical Engineering & Industrial Operations'
           : 'Technical Operations & Workflow Automation Lead',
         education: cand?.education || '',
@@ -1081,13 +1135,18 @@ router.get('/api/dashboard/overview', async (request, env) => {
 
     const farhanCard = await getSummary('farhan_shaikh');
     const sanaCard = await getSummary('sana_ansari');
+    // every client this request may see, the built-in two first (the farhan/sana keys stay for the existing pages)
+    const clientCards: any[] = [];
+    for (const id of visible.filter((x) => !BUILTIN_IDS.includes(x))) clientCards.push(await getSummary(id));
 
-    const totalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs').first<{ cnt: number }>();
-    const activeJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
+    // one pass over jobs for both figures (it was two)
+    const jobCounts = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active FROM jobs').first<{ cnt: number; active: number }>();
+    const totalJobs = { cnt: jobCounts?.cnt ?? 0 }, activeJobs = { cnt: jobCounts?.active ?? 0 };
 
     return jsonResponse({
       farhan: farhanCard,
       sana: sanaCard,
+      candidates: [farhanCard, sanaCard, ...clientCards],
       total_jobs_tracked: totalJobs?.cnt ?? 0,
       active_jobs_count: activeJobs?.cnt ?? 0,
       automation_status: (await env.DB.prepare('SELECT enabled FROM cloud_automation WHERE id=1').first<{enabled:number}>())?.enabled ? 'ACTIVE' : 'PAUSED',
@@ -1159,6 +1218,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 });
 
 // Comprehensive /api/jobs for React Frontend
+// The latest application record for (candidate, job), if any, is SAVED or there is none: "not applied".
+const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
 const JOB_COLUMNS = `
         j.id, j.title, j.company, j.company_url, j.company_headquarters,
@@ -1285,122 +1346,83 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
 
   try {
+    // Cost: every predicate below reads only what it needs. The score row is joined only when a score filter or the order needs it,
+    // the application check is a per-row index lookup instead of a join, the total comes from the status counts, and full rows are
+    // fetched only for the page shown (measured locally at 2,200 jobs: ~29k rows read per uncached request before, a few thousand after).
+    const needsScoreJoin = minScore > 0;
     let baseWhere = `
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
-      LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-      LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+      ${needsScoreJoin ? 'LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id' : ''}
       WHERE q.candidate_id = ? AND j.is_active = 1
     `;
-
     const baseParams: any[] = [candidateId];
 
     // Exclude dismissed / marked irrelevant jobs when requested or in review queue
     if (excludeDismissed) {
       baseWhere += ` AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')`;
     }
-
     if (search) {
       baseWhere += ` AND (j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)`;
       const term = `%${search}%`;
       baseParams.push(term, term, term);
     }
-
-    if (eligibility && eligibility !== 'ALL') {
-      baseWhere += ` AND q.eligibility_status = ?`;
-      baseParams.push(eligibility);
-    }
-
-    if (minScore > 0) {
-      baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`;
-      baseParams.push(minScore);
-    }
-
-    if (workplaceType && workplaceType !== 'ALL') {
-      baseWhere += ` AND j.workplace_type = ?`;
-      baseParams.push(workplaceType);
-    }
-
-    if (sourceAdapter && sourceAdapter !== 'ALL') {
-      baseWhere += ` AND j.source_adapter = ?`;
-      baseParams.push(sourceAdapter);
-    }
-
-    if (strategyLane && strategyLane !== 'ALL') {
-      baseWhere += ` AND q.strategy_lane = ?`;
-      baseParams.push(strategyLane);
-    }
-
+    if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
+    if (minScore > 0) { baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`; baseParams.push(minScore); }
+    if (workplaceType && workplaceType !== 'ALL') { baseWhere += ` AND j.workplace_type = ?`; baseParams.push(workplaceType); }
+    if (sourceAdapter && sourceAdapter !== 'ALL') { baseWhere += ` AND j.source_adapter = ?`; baseParams.push(sourceAdapter); }
+    if (strategyLane && strategyLane !== 'ALL') { baseWhere += ` AND q.strategy_lane = ?`; baseParams.push(strategyLane); }
     if (fitParam !== 'ALL') baseWhere += ` AND ${FIT_SQL[fitParam as (typeof FIT_VALUES)[number]]}`;
     if (payParam) baseWhere += ` AND ${PAY_SQL[payParam]}`;
+    // Same meaning as before: the job's latest application record, if any, is SAVED (or there is none).
+    if (excludeApplied) baseWhere += ` AND ${NOT_APPLIED}`;
 
-    if (excludeApplied) {
-      baseWhere += ` AND (a.status IS NULL OR a.status = 'SAVED')`;
-    }
-
-    // 1. Compute status counts across this base filter predicate
-    const statusCountsQuery = `
-      SELECT q.qualification_status, COUNT(*) as cnt
-      ${baseWhere}
-      GROUP BY q.qualification_status
-    `;
-    const { results: rawStatusCounts } = await env.DB.prepare(statusCountsQuery).bind(...baseParams).all<any>();
-    const status_counts: Record<string, number> = {
-      READY: 0,
-      STRETCH_READY: 0,
-      NEEDS_REVIEW: 0,
-      INELIGIBLE: 0,
-      HOLD: 0,
-    };
+    // 1. Status counts over the base predicate (one query; the total below is derived from it)
+    const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
+    const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
     (rawStatusCounts || []).forEach((r: any) => {
-      if (r.qualification_status === 'READY_HIGH') {
-        status_counts['READY'] = (status_counts['READY'] || 0) + r.cnt;
-      } else if (status_counts[r.qualification_status] !== undefined) {
-        status_counts[r.qualification_status] = r.cnt;
-      }
+      if (r.qualification_status === 'READY_HIGH') status_counts['READY'] = (status_counts['READY'] || 0) + r.cnt;
+      else if (status_counts[r.qualification_status] !== undefined) status_counts[r.qualification_status] = r.cnt;
     });
 
-    // 2. Compute total matching rows with qualificationStatus filter applied
+    // 2. The total for the status filter, from the same counts
     let filteredWhere = baseWhere;
     const filterParams = [...baseParams];
-
+    let inStatus: (st: string) => boolean = () => true;
     if (qualificationStatus && qualificationStatus !== 'ALL') {
       if (qualificationStatus === 'APPLY_WORTHY') {
         filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH', 'STRETCH_READY')`;
+        inStatus = (st) => st === 'READY' || st === 'READY_HIGH' || st === 'STRETCH_READY';
       } else {
         filteredWhere += ` AND q.qualification_status = ?`;
         filterParams.push(qualificationStatus);
+        inStatus = (st) => st === qualificationStatus;
       }
     }
+    const totalMatching = (rawStatusCounts || []).reduce((n: number, r: any) => n + (inStatus(r.qualification_status) ? r.cnt : 0), 0);
 
-    const totalRow = await env.DB.prepare(`SELECT COUNT(*) as cnt ${filteredWhere}`).bind(...filterParams).first<{ cnt: number }>();
-    const totalMatching = totalRow?.cnt || 0;
-
-    // 3. Query paginated results
-    let selectQuery = `
-      SELECT ${JOB_COLUMNS}
-      ${filteredWhere}
-    `;
-
-    const selectParams = [...filterParams];
-
-    // Order clause
-    if (sortBy === 'score_desc') {
-      selectQuery += ` ORDER BY COALESCE(s.overall_score, 0) DESC, j.discovered_at DESC`;
-    } else if (sortBy === 'date_desc') {
-      selectQuery += ` ORDER BY j.discovered_at DESC`;
-    } else if (sortBy === 'title_asc') {
-      selectQuery += ` ORDER BY j.title ASC`;
-    } else if (sortBy === 'company_asc') {
-      selectQuery += ` ORDER BY j.company ASC`;
-    } else {
-      selectQuery += ` ORDER BY COALESCE(s.overall_score, 0) DESC`;
+    // 3. The ids of this page only (the score is joined here because the order uses it), then their full rows
+    const orderBy = sortBy === 'date_desc' ? 'j.discovered_at DESC, q.job_id'
+      : sortBy === 'title_asc' ? 'j.title ASC, q.job_id'
+      : sortBy === 'company_asc' ? 'j.company ASC, q.job_id'
+      : sortBy === 'score_desc' ? 'COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id'
+      : 'COALESCE(s2.overall_score, 0) DESC, q.job_id';
+    const scoreForOrder = /s2\./.test(orderBy) ? 'LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id' : '';
+    const pageWhere = filteredWhere.replace('WHERE q.candidate_id = ?', `${scoreForOrder}\n      WHERE q.candidate_id = ?`);
+    const { results: pageIds } = await env.DB.prepare(`SELECT q.job_id AS id ${pageWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...filterParams, limit, offset).all<any>();
+    let results: any[] = [];
+    if (pageIds?.length) {
+      const ids = pageIds.map((r: any) => r.id);
+      const { results: full } = await env.DB.prepare(`
+        SELECT ${JOB_COLUMNS}
+        FROM candidate_qualifications q
+        JOIN jobs j ON q.job_id = j.id
+        LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
+        LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+        WHERE q.candidate_id = ? AND j.id IN (SELECT value FROM json_each(?))`).bind(candidateId, JSON.stringify(ids)).all<any>();   // one parameter: D1 allows at most 100 per statement
+      const byId = new Map((full || []).map((r: any) => [r.id, r]));
+      results = ids.map((id: string) => byId.get(id)).filter(Boolean);
     }
-
-    selectQuery += ` LIMIT ? OFFSET ?`;
-    selectParams.push(limit, offset);
-
-    const { results } = await env.DB.prepare(selectQuery).bind(...selectParams).all<any>();
 
     const threshold = await candidateThreshold(env, candidateId);
     const jobs = results.map((r: any) => shapeJob(r, candidateId, threshold));
@@ -1839,6 +1861,26 @@ router.post('/api/applications', async (request, env) => {
   return handleApplicationSave(request, env);
 });
 
+// Un-save: removes a tracker record that is still only SAVED (never one that has moved on, has notes, or carries a
+// decision), and writes a history row so the action is on record. Before this, un-saving set WITHDRAWN, which every
+// list counted as applied.
+router.delete('/api/applications/:id', async (request, env, params, url) => {
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
+  const jobId = params.id;
+  const existing = await env.DB.prepare('SELECT id, status, notes FROM applications WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).first<any>();
+  if (!existing) return jsonResponse({ error: 'No tracker record for this job.' }, 404, corsHeaders(request, env));
+  if (existing.status !== 'SAVED' || (existing.notes && String(existing.notes).trim()))
+    return jsonResponse({ error: 'Only a record that is still SAVED (with no notes) can be un-saved; change its status in the tracker instead.' }, 409, corsHeaders(request, env));
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
+      VALUES (?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?)`).bind(candidateId, jobId, existing.id, now),
+    env.DB.prepare('DELETE FROM applications WHERE id = ? AND candidate_id = ? AND job_id = ? AND status = ?').bind(existing.id, candidateId, jobId, 'SAVED'),
+  ]);
+  return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
+});
+
 // Application History Audit Trail
 router.get('/api/applications/:id/history', async (request, env, params, url) => {
   const jobId = params.id;
@@ -1945,14 +1987,13 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
     // Step 3: full detail for the ids of this page only, returned in page order.
     let jobs: any[] = [];
     if (page.ids.length) {
-      const marks = page.ids.map(() => '?').join(',');
       const { results } = await env.DB.prepare(`
         SELECT ${JOB_COLUMNS}
         FROM candidate_qualifications q
         JOIN jobs j ON q.job_id = j.id
         LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
         LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
-        WHERE q.candidate_id = ? AND j.id IN (${marks})`).bind(candidateId, ...page.ids).all<any>();
+        WHERE q.candidate_id = ? AND j.id IN (SELECT value FROM json_each(?))`).bind(candidateId, JSON.stringify(page.ids)).all<any>();   // one parameter: D1 allows at most 100 per statement
       const threshold = await candidateThreshold(env, candidateId);
       const byId = new Map((results || []).map((r: any) => [r.id, shapeJob(r, candidateId, threshold)]));
       jobs = page.ids.map((id) => byId.get(id)).filter(Boolean);
@@ -1972,14 +2013,9 @@ router.get('/api/analytics', async (request, env, _params, url) => {
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
 
   try {
-    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs.
-    const totalJobs = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ cnt: number }>();
-
+    // Every figure below uses one scope: this candidate's qualifications over ACTIVE jobs, read in one pass (it was four; the average score is a second query, see below).
     const { results: eligCounts } = await env.DB.prepare(`
-      SELECT q.eligibility_status, COUNT(*) as cnt
+      SELECT q.eligibility_status, COUNT(*) as cnt, SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub
       FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1
       GROUP BY q.eligibility_status
@@ -1990,9 +2026,16 @@ router.get('/api/analytics', async (request, env, _params, url) => {
       INELIGIBLE: 0,
       UNKNOWN: 0,
     };
+    let total = 0, pub = 0;
     (eligCounts || []).forEach((r: any) => {
       eligibility_counts[r.eligibility_status] = r.cnt;
+      total += r.cnt; pub += r.pub || 0;
     });
+    const totalJobs = { cnt: total };
+    // The average keeps its old scope (every score row of an active job, with or without a qualification row), so it is its own query.
+    const avgScore = await env.DB.prepare(`SELECT AVG(s.overall_score) as avg_score FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id
+      WHERE s.candidate_id = ? AND j.is_active = 1`).bind(candidateId).first<{ avg_score: number }>();
+    const salaryPub = { total, pub };
 
     const { results: appCounts } = await env.DB.prepare(`
       SELECT status, COUNT(*) as cnt
@@ -2005,20 +2048,6 @@ router.get('/api/analytics', async (request, env, _params, url) => {
     (appCounts || []).forEach((r: any) => {
       application_counts[r.status] = r.cnt;
     });
-
-    const avgScore = await env.DB.prepare(`
-      SELECT AVG(s.overall_score) as avg_score
-      FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id
-      WHERE s.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ avg_score: number }>();
-
-    const salaryPub = await env.DB.prepare(`
-      SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN j.salary_published = 1 THEN 1 ELSE 0 END) as pub
-      FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.candidate_id = ? AND j.is_active = 1
-    `).bind(candidateId).first<{ total: number; pub: number }>();
 
     return jsonResponse({
       candidate_id: candidateId,
@@ -2353,9 +2382,9 @@ router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
 
   try {
     // 1. Lifetime / all-time global inventory (explicitly labeled)
-    const lifetimeTotalJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs').first<{ cnt: number }>();
-    const lifetimeActiveJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 1').first<{ cnt: number }>();
-    const lifetimeClosedJobs = await env.DB.prepare('SELECT COUNT(*) as cnt FROM jobs WHERE is_active = 0').first<{ cnt: number }>();
+    // one pass over jobs for all three figures (it was three)
+    const jc = await env.DB.prepare('SELECT COUNT(*) as cnt, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as closed FROM jobs').first<{ cnt: number; active: number; closed: number }>();
+    const lifetimeTotalJobs = { cnt: jc?.cnt ?? 0 }, lifetimeActiveJobs = { cnt: jc?.active ?? 0 }, lifetimeClosedJobs = { cnt: jc?.closed ?? 0 };
 
     const lifetimeQCounts = await env.DB.prepare(`
       SELECT qualification_status, COUNT(*) as cnt
@@ -2556,6 +2585,27 @@ router.get('/api/profile', async (request, env, _params, url) => {
       target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : (isSana ? ['MID', 'SENIOR', 'LEAD'] : ['SENIOR', 'LEAD', 'STAFF']),
       qualification_threshold: cand.qualification_threshold,
     };
+    // A resold client: only what was entered for them. None of the built-in candidates' facts (pay floors, preferences,
+    // briefs) are borrowed; anything not entered is empty, not invented.
+    if (!BUILTIN_IDS.includes(cand.id)) {
+      const cp = await env.DB.prepare('SELECT display_title, summary_line, search_profile FROM client_profiles WHERE candidate_id = ?').bind(cand.id).first<any>();
+      let sp: any = null; try { sp = cp?.search_profile ? JSON.parse(cp.search_profile) : null; } catch {}
+      const home = sp?.home_country || 'India';
+      Object.assign(full, {
+        display_title: cp?.display_title || '', summary_line: cp?.summary_line || '',
+        target_roles: sp?.role_keywords || (cand.target_roles ? JSON.parse(cand.target_roles) : []),
+        secondary_skills: cand.secondary_skills ? JSON.parse(cand.secondary_skills) : [],
+        target_seniorities: cand.target_seniorities ? JSON.parse(cand.target_seniorities) : [],
+        disqualifying_keywords: sp?.avoid_keywords || [],
+        acceptable_hiring_models: [], min_acceptable_salary_usd: null, min_fixed_monthly_inr: null, preferred_inr_range: null, notice_period_days: null,
+        location_preferences: sp ? [sp.location_mode === 'HOME_OR_RELOCATE' ? `${home}, or postings offering sponsorship or worldwide remote work` : `Fully remote from ${home}`] : [],
+        relocation_interest: sp?.location_mode === 'HOME_OR_RELOCATE',
+        work_authorization: [], profile_basis: 'Client profile entered by the operator',
+        pay_line: 'Pay floor and notice period: not provided.', employment_history: [],
+        search_profile: sp,
+      });
+      (facts as any).public_summary = cp?.summary_line || '';
+    }
     if (isOperatorRequest(request)) return jsonResponse(full, 200, corsHeaders(request, env));
     // Public profile summary: explicitly selected fields only. Employers, pay, notice, city, relocation and location
     // preferences, contact details and documents are operator-only.
@@ -2700,10 +2750,274 @@ router.get('/api/canonical-sync/status', async (request, env) => {
   }, 200, corsHeaders(request, env));
 });
 
+// -------------------------------------------------------------
+// Clients (operator only): onboarding, profile edits, backfill, share links. Plus the CSV export (public read, visibility-checked).
+// -------------------------------------------------------------
+const clientRow = async (env: Env, id: string) => env.DB.prepare(`SELECT c.id, c.full_name, c.current_location, c.citizenship, c.primary_timezone, c.total_years_experience,
+  c.qualification_threshold, c.primary_skills, p.visibility, p.display_title, p.summary_line, p.search_profile, p.created_at, p.updated_at,
+  (SELECT COUNT(*) FROM client_view_tokens t WHERE t.candidate_id = c.id AND t.revoked_at IS NULL) AS active_share_links
+  FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?`).bind(id).first<any>();
+const shapeClient = (r: any) => r && ({
+  ...r, builtin: BUILTIN_IDS.includes(r.id), visibility: r.visibility || (BUILTIN_IDS.includes(r.id) ? 'public' : 'private'),
+  primary_skills: (() => { try { return JSON.parse(r.primary_skills || '[]'); } catch { return []; } })(),
+  search_profile: (() => { try { return r.search_profile ? JSON.parse(r.search_profile) : null; } catch { return null; } })(),
+});
+const readJson = async (request: Request) => { try { return await request.json<any>(); } catch { return null; } };
+
+router.get('/api/clients', async (request, env) => {
+  // two queries for any number of clients (Workers Free allows 50 queries per request)
+  const { results } = await env.DB.prepare(`SELECT c.id, c.full_name, c.current_location, c.citizenship, c.primary_timezone, c.total_years_experience,
+    c.qualification_threshold, c.primary_skills, p.visibility, p.display_title, p.summary_line, p.search_profile, p.created_at, p.updated_at,
+    (SELECT COUNT(*) FROM client_view_tokens t WHERE t.candidate_id = c.id AND t.revoked_at IS NULL) AS active_share_links
+    FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id ORDER BY c.full_name`).all<any>();
+  const { results: counts } = await env.DB.prepare(`SELECT candidate_id, COUNT(*) AS jobs,
+    SUM(CASE WHEN qualification_status IN ('READY','READY_HIGH','STRETCH_READY') THEN 1 ELSE 0 END) AS apply_worthy
+    FROM candidate_qualifications GROUP BY candidate_id`).all<any>();
+  const by = new Map((counts || []).map((r: any) => [r.candidate_id, r]));
+  const clients = (results || []).map((r: any) => ({ ...shapeClient(r), jobs_screened: by.get(r.id)?.jobs || 0, apply_worthy: by.get(r.id)?.apply_worthy || 0 }));
+  return jsonResponse({ clients }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients', async (request, env) => {
+  const body = await readJson(request);
+  const parsed = parseClient(body);
+  if (!parsed.ok) return jsonResponse({ error: parsed.error, detail: parsed.error }, 400, corsHeaders(request, env));
+  const v = parsed.value as any;
+  const id = body?.id ? String(body.id) : slugId(v.full_name);
+  if (!CLIENT_ID.test(id)) return jsonResponse({ error: 'id must be 3-40 characters: lowercase letters, digits and _ , starting with a letter.' }, 400, corsHeaders(request, env));
+  if (await env.DB.prepare('SELECT 1 FROM candidates WHERE id = ?').bind(id).first()) return jsonResponse({ error: `A client with id '${id}' already exists.` }, 409, corsHeaders(request, env));
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO candidates(id, full_name, current_location, citizenship, primary_timezone, total_years_experience, qualification_threshold, primary_skills, target_roles)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(id, v.full_name, v.current_location || null, v.citizenship || 'India', v.primary_timezone || 'Asia/Kolkata',
+      v.total_years_experience ?? 0, v.qualification_threshold, JSON.stringify(v.primary_skills || []), JSON.stringify(v.search_profile.role_keywords)),
+    env.DB.prepare(`INSERT INTO client_profiles(candidate_id, visibility, display_title, summary_line, search_profile) VALUES (?, ?, ?, ?, ?)`)
+      .bind(id, v.visibility, v.display_title || null, v.summary_line || null, JSON.stringify(v.search_profile)),
+  ]);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  return jsonResponse({ client: shapeClient(await clientRow(env, id)), next: 'POST /api/clients/' + id + '/backfill screens the existing active jobs for this client (40 per call; repeat while more is true).' }, 201, corsHeaders(request, env));
+});
+
+router.put('/api/clients/:id', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const body = await readJson(request);
+  const parsed = parseClient(body, true);
+  if (!parsed.ok) return jsonResponse({ error: parsed.error, detail: parsed.error }, 400, corsHeaders(request, env));
+  const v = parsed.value as any;
+  if (BUILTIN_IDS.includes(id) && (v.visibility !== undefined || v.search_profile !== undefined))
+    return jsonResponse({ error: 'The two built-in candidates keep their visibility and built-in screening rules.' }, 400, corsHeaders(request, env));
+  const cand: [string, any][] = [['full_name', v.full_name], ['current_location', v.current_location], ['citizenship', v.citizenship], ['primary_timezone', v.primary_timezone],
+    ['total_years_experience', v.total_years_experience], ['qualification_threshold', v.qualification_threshold],
+    ['primary_skills', v.primary_skills === undefined ? undefined : JSON.stringify(v.primary_skills)]];
+  const prof: [string, any][] = [['visibility', v.visibility], ['display_title', v.display_title], ['summary_line', v.summary_line],
+    ['search_profile', v.search_profile === undefined ? undefined : JSON.stringify(v.search_profile)]];
+  const set = (list: [string, any][]) => list.filter(([, x]) => x !== undefined);
+  const stmts: D1PreparedStatement[] = [];
+  const c = set(cand), pr = set(prof);
+  if (c.length) stmts.push(env.DB.prepare(`UPDATE candidates SET ${c.map(([k]) => k + ' = ?').join(', ')}, updated_at = datetime('now') WHERE id = ?`).bind(...c.map(([, x]) => x), id));
+  if (pr.length) {
+    stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO client_profiles(candidate_id, visibility) VALUES (?, ?)`).bind(id, BUILTIN_IDS.includes(id) ? 'public' : 'private'));
+    stmts.push(env.DB.prepare(`UPDATE client_profiles SET ${pr.map(([k]) => k + ' = ?').join(', ')}, updated_at = datetime('now') WHERE candidate_id = ?`).bind(...pr.map(([, x]) => x), id));
+  }
+  if (!stmts.length) return jsonResponse({ error: 'Nothing to change.' }, 400, corsHeaders(request, env));
+  await env.DB.batch(stmts);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  // A changed search profile applies to new screening; rows already screened keep their recorded result (no silent rewrite).
+  return jsonResponse({ client: shapeClient(await clientRow(env, id)) }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 40);
+  const res = await backfillClient(env.DB, id, limit);
+  return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
+});
+
+router.get('/api/clients/:id/share-links', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const { results } = await env.DB.prepare(`SELECT substr(token_hash, 1, 12) AS link_id, label, created_at, revoked_at FROM client_view_tokens WHERE candidate_id = ? ORDER BY created_at DESC`).bind(id).all<any>();
+  return jsonResponse({ candidate_id: id, share_links: results || [] }, 200, corsHeaders(request, env));
+});
+
+router.post('/api/clients/:id/share-links', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  const body = await readJson(request);
+  const label = typeof body?.label === 'string' ? body.label.trim().slice(0, 60) : '';
+  const token = newViewToken(), hash = await sha256Hex(token);
+  await env.DB.prepare('INSERT INTO client_view_tokens(token_hash, candidate_id, label) VALUES (?, ?, ?)').bind(hash, id, label || null).run();
+  // The token is returned once and never stored in plain form. The link carries it after '#', so it is not sent in requests or logged.
+  return jsonResponse({ candidate_id: id, link_id: hash.slice(0, 12), label: label || null, token, path: `/app#view=${token}&candidate=${id}`,
+    note: 'Shown once. Anyone with this link can read this client’s dashboard (read-only) until it is revoked.' }, 201, corsHeaders(request, env));
+});
+
+router.delete('/api/clients/:id/share-links/:link', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  if (!/^[0-9a-f]{12}$/.test(params.link || '')) return jsonResponse({ error: 'Unknown share link.' }, 404, corsHeaders(request, env));
+  const r = await env.DB.prepare(`UPDATE client_view_tokens SET revoked_at = datetime('now') WHERE candidate_id = ? AND substr(token_hash, 1, 12) = ? AND revoked_at IS NULL`).bind(id, params.link).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown or already revoked share link.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ candidate_id: id, link_id: params.link, revoked: true }, 200, corsHeaders(request, env));
+});
+
+// CSV of one client's screened jobs (active only), in the list's score order (score, then newest, then id), at most 1,000 rows. Public field set only (no notes,
+// override reasons or pay floors); the visibility guard above already decided whether this request may see the client.
+const EXPORT_MAX = 1000;
+router.get('/api/export', async (request, env, _params, url) => {
+  const id = knownCandidate(url.searchParams.get('candidate_id'));
+  if (!id) return badCandidate(request, env, url.searchParams.get('candidate_id'));
+  const st = url.searchParams.get('qualification_status') || 'ALL';
+  if (st !== 'ALL' && st !== 'APPLY_WORTHY' && !QUAL.includes(st)) return jsonResponse({ error: 'Unsupported qualification_status.', detail: 'Unsupported qualification_status.' }, 400, corsHeaders(request, env));
+  const where = st === 'ALL' ? '' : st === 'APPLY_WORTHY' ? ` AND q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')` : ' AND q.qualification_status = ?';
+  const { results } = await env.DB.prepare(`SELECT j.id, j.title, j.company, j.location_restrictions, j.workplace_type, COALESCE(j.original_posting_url, j.source_url) AS url,
+      j.salary_published, j.salary_raw_text, j.discovered_at, q.qualification_status, q.eligibility_status, q.strategy_lane, s.overall_score,
+      (SELECT a.status FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id ORDER BY a.rowid DESC LIMIT 1) AS application_status
+    FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1${where} ORDER BY COALESCE(s.overall_score, 0) DESC, j.discovered_at DESC, q.job_id LIMIT ${EXPORT_MAX}`)
+    .bind(...(st === 'ALL' || st === 'APPLY_WORTHY' ? [id] : [id, st])).all<any>();
+  const head = ['job_id', 'title', 'company', 'location', 'workplace', 'posting_url', 'qualification_status', 'eligibility', 'lane', 'preliminary_score', 'pay_published', 'pay_text', 'application_status', 'discovered_at'];
+  const lines = [csvRow(head), ...(results || []).map((r: any) => csvRow([r.id, r.title, r.company, r.location_restrictions, r.workplace_type, r.url, r.qualification_status,
+    r.eligibility_status, r.strategy_lane, r.overall_score ?? '', r.salary_published ? 'yes' : 'no', r.salary_published ? r.salary_raw_text : '', r.application_status || '', r.discovered_at]))];
+  return new Response(lines.join('\r\n') + '\r\n', { status: 200, headers: { ...corsHeaders(request, env), 'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${id}-jobs-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
+});
+
+// -------------------------------------------------------------
+// Public site (server-rendered; the dashboard app lives at /app) and its operator settings and request inbox.
+// -------------------------------------------------------------
+const SITE_PATHS = new Set(['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/apply/thanks', '/portal', '/privacy', '/terms', '/robots.txt', '/sitemap.xml']);
+const APPLY_MAX_BYTES = 20000;
+/** The request body as text, or null when it exceeds `max` bytes (stops reading at the cap). */
+async function readCapped(request: Request, max: number): Promise<string | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return '';
+  const chunks: Uint8Array[] = []; let n = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    n += value.byteLength;
+    if (n > max) { try { await reader.cancel(); } catch {} return null; }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(n); let o = 0; for (const c of chunks) { all.set(c, o); o += c.byteLength; }
+  return new TextDecoder().decode(all);
+}
+const SITE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
+async function handleSite(request: Request, env: Env, url: URL): Promise<Response | null> {
+  const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
+  if (!SITE_PATHS.has(path)) {
+    // anything else under /apply/ is a site address that does not exist: an HTML page, not the API's JSON
+    if (!path.startsWith('/apply/')) return null;
+    const s404 = await site.loadSettings(env.DB);
+    return new Response(site.layout(s404, { title: `Not found · ${s404.brand_name}`, description: '', path, body: site.notFoundPage(), origin: url.origin, noindex: true }), { status: 404, headers: { ...SITE_HEADERS, 'Cache-Control': 'no-store' } });
+  }
+  const origin = url.origin;
+  if (path === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`, { headers: { 'Content-Type': 'text/plain' } });
+  if (path === '/sitemap.xml') return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/privacy', '/terms'].map((p) => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`, { headers: { 'Content-Type': 'application/xml' } });
+  const s = await site.loadSettings(env.DB);
+  const page = (title: string, description: string, body: string, opts: { status?: number; noindex?: boolean; stats?: any; cache?: boolean } = {}) =>
+    new Response(site.layout(s, { title, description, path, body, origin, stats: opts.stats, noindex: opts.noindex }), { status: opts.status || 200,
+      headers: { ...SITE_HEADERS, 'Cache-Control': opts.cache === false ? 'no-store' : 'public, max-age=120' } });
+  const brand = s.brand_name;
+  if (path === '/apply' && request.method === 'POST') {
+    const tooLarge = () => page(`Apply · ${brand}`, '', site.applyPage(s, {}, ['The form was too large.']), { status: 413, cache: false, noindex: true });
+    if (Number(request.headers.get('Content-Length') || 0) > APPLY_MAX_BYTES) return tooLarge();
+    // The body is read with a hard byte cap whatever the headers say (a chunked body has no Content-Length).
+    const raw = await readCapped(request, APPLY_MAX_BYTES);
+    if (raw === null) return tooLarge();
+    const form: Record<string, string> = {};
+    if (/application\/x-www-form-urlencoded/i.test(request.headers.get('Content-Type') || '')) new URLSearchParams(raw).forEach((v, k) => { if (!(k in form)) form[k] = v; });
+    if (form.company_website) return Response.redirect(origin + '/apply/thanks', 303);   // honeypot: look successful, store nothing
+    const checked = site.validateApply(form);
+    if (!checked.ok) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, checked.errors), { status: 400, cache: false, noindex: true });
+    const day = new Date().toISOString().slice(0, 10);
+    // One bucket per network (/64 for IPv6), keyed with a server secret so the stored value cannot be reversed by enumerating
+    // addresses; erased after a day (below). A global daily cap bounds what the form can write in total.
+    const sourceHash = await sha256Hex(`${env.ADMIN_API_KEY || 'no-key'}|${await clientKey(request)}|${day}|apply`);
+    await env.DB.prepare(`UPDATE client_requests SET source_hash = NULL WHERE created_at < ? AND source_hash IS NOT NULL`).bind(day).run();
+    const v = checked.value;
+    // One statement: the limits are checked and the row inserted atomically, so concurrent posts cannot exceed them.
+    const ins = await env.DB.prepare(`INSERT INTO client_requests(id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, source_hash)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      WHERE (SELECT COUNT(*) FROM client_requests WHERE source_hash = ? AND created_at >= ?) < ?
+        AND (SELECT COUNT(*) FROM client_requests WHERE created_at >= ?) < ?`)
+      .bind(crypto.randomUUID(), v.full_name, v.email, v.phone || null, v.current_location, v.target_roles, v.work_preference || null, v.years_experience || null,
+        v.linkedin_url || null, v.plan || null, v.message || null, sourceHash, sourceHash, day, site.APPLY_PER_SOURCE_PER_DAY, day, site.APPLY_PER_DAY_TOTAL).run();
+    if (!ins.meta?.changes) return page(`Apply · ${brand}`, '', site.applyPage(s, checked.value, ['We cannot take more applications today. Please try again tomorrow.']), { status: 429, cache: false, noindex: true });
+    return Response.redirect(origin + '/apply/thanks', 303);
+  }
+  if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  switch (path) {
+    case '/': { const st = await site.siteStats(env.DB); return page(`${brand} · ${s.tagline}`, `${brand} screens new job postings from employers' own hiring systems every day and gives you a private shortlist with the evidence for every match.`, site.homePage(s, st), { stats: st }); }
+    case '/how-it-works': return page(`How it works · ${brand}`, 'From thousands of postings to a short, honest list: how the engine finds, screens and shortlists roles for you.', site.howPage());
+    case '/pricing': return page(`Pricing · ${brand}`, 'Simple monthly plans for a private, daily-screened job dashboard.', site.pricingPage(s));
+    case '/faq': return page(`FAQ · ${brand}`, 'Answers about sources, eligibility, privacy and how the job search engine works.', site.faqPage());
+    case '/about': { const st = await site.siteStats(env.DB); return page(`About · ${brand}`, `${brand}: a job search engine that shows its work.`, site.aboutPage(s, st), { stats: st }); }
+    case '/apply': { const plan = url.searchParams.get('plan') || ''; return page(`Apply · ${brand}`, 'Apply for a private, daily-screened job dashboard.', site.applyPage(s, { plan: ['1', '2', '3'].includes(plan) ? plan : '', work_preference: 'REMOTE_FROM_HOME' }), { cache: false }); }
+    case '/apply/thanks': return page(`Thank you · ${brand}`, '', site.thanksPage(s), { noindex: true });
+    case '/portal': return page(`Client login · ${brand}`, 'Open your private job dashboard.', site.portalPage(), { noindex: true });
+    case '/privacy': return page(`Privacy · ${brand}`, 'What we collect, why, and how to have it removed.', site.privacyPage(s));
+    case '/terms': return page(`Terms · ${brand}`, `Terms of service for ${brand}.`, site.termsPage(s));
+  }
+  return null;
+}
+
+const REQUEST_STATUSES = ['NEW', 'CONTACTED', 'CONVERTED', 'DECLINED'];
+router.get('/api/client-requests', async (request, env, _p, url) => {
+  const st = url.searchParams.get('status') || 'OPEN';
+  if (st !== 'OPEN' && st !== 'ALL' && !REQUEST_STATUSES.includes(st)) return jsonResponse({ error: 'Unsupported status.' }, 400, corsHeaders(request, env));
+  const where = st === 'ALL' ? '' : st === 'OPEN' ? `WHERE status IN ('NEW','CONTACTED')` : 'WHERE status = ?';
+  const { results } = await env.DB.prepare(`SELECT id, full_name, email, phone, current_location, target_roles, work_preference, years_experience, linkedin_url, plan, message, status, candidate_id, created_at, updated_at
+    FROM client_requests ${where} ORDER BY created_at DESC LIMIT 200`).bind(...(REQUEST_STATUSES.includes(st) ? [st] : [])).all<any>();
+  const counts = await env.DB.prepare(`SELECT status, COUNT(*) AS n FROM client_requests GROUP BY status`).all<any>();
+  return jsonResponse({ requests: results || [], counts: Object.fromEntries((counts.results || []).map((r: any) => [r.status, r.n])) }, 200, corsHeaders(request, env));
+});
+router.put('/api/client-requests/:id', async (request, env, params) => {
+  const body = await readJson(request);
+  const status = body?.status;
+  if (!REQUEST_STATUSES.includes(status)) return jsonResponse({ error: 'status must be NEW, CONTACTED, CONVERTED or DECLINED.' }, 400, corsHeaders(request, env));
+  const cid = body?.candidate_id === undefined ? undefined : body.candidate_id === null ? null : knownCandidate(body.candidate_id);
+  if (body?.candidate_id && !cid) return jsonResponse({ error: 'Unknown candidate_id.' }, 400, corsHeaders(request, env));
+  const r = await env.DB.prepare(`UPDATE client_requests SET status = ?, candidate_id = CASE WHEN ? THEN ? ELSE candidate_id END, updated_at = datetime('now') WHERE id = ?`)
+    .bind(status, cid === undefined ? 0 : 1, cid ?? null, params.id).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: params.id, status, candidate_id: cid ?? null }, 200, corsHeaders(request, env));
+});
+// Erases an application entirely (the privacy notice promises deletion on request).
+router.delete('/api/client-requests/:id', async (request, env, params) => {
+  const r = await env.DB.prepare('DELETE FROM client_requests WHERE id = ?').bind(params.id).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: params.id, deleted: true }, 200, corsHeaders(request, env));
+});
+router.get('/api/site-settings', async (request, env) => {
+  const s = await site.loadSettings(env.DB);
+  return jsonResponse({ settings: s, defaults: site.SETTING_DEFAULTS }, 200, corsHeaders(request, env));
+});
+router.put('/api/site-settings', async (request, env) => {
+  const body = await readJson(request);
+  if (!body || typeof body !== 'object') return jsonResponse({ error: 'A JSON object of settings is required.' }, 400, corsHeaders(request, env));
+  const stmts: D1PreparedStatement[] = [];
+  for (const [k, v] of Object.entries(body)) {
+    const clean = site.cleanSetting(k, v);
+    if (clean === null) return jsonResponse({ error: `Invalid setting '${String(k).slice(0, 40)}'.`, detail: k === 'contact_email' ? 'contact_email must be an email address or empty.' : 'Unknown setting or wrong type.' }, 400, corsHeaders(request, env));
+    stmts.push(env.DB.prepare(`INSERT INTO site_settings(key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`).bind(k, clean));
+  }
+  if (stmts.length) await env.DB.batch(stmts);
+  site.forgetSettings();
+  return jsonResponse({ settings: await site.loadSettings(env.DB) }, 200, corsHeaders(request, env));
+});
+
 // Main export for Cloudflare Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
+      const u = new URL(request.url);
+      if (!u.pathname.startsWith('/api/')) {
+        const page = await handleSite(request, env, u);
+        if (page) return page;
+      }
       const res = await router.handle(request, env);
       if (!new URL(request.url).pathname.startsWith('/api/')) return res;
       // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.
@@ -2727,6 +3041,11 @@ export default {
     if (Math.floor((controller?.scheduledTime || Date.now()) / 120000) % ASSESS_EVERY_TICKS === 0) {
       try { const a = await assessBacklog(env.DB); if (a.assessed) console.log(JSON.stringify({ event: 'collector_assessment', ...a })); }
       catch (e: any) { assessError = e; console.log(JSON.stringify({ event: 'collector_assessment', status: 'ERROR', error: String(e?.message || e).slice(0, 300) })); }
+    }
+    // The public site's figures, at most hourly (one row read per check, a full count only when stale).
+    if (Math.floor((controller?.scheduledTime || Date.now()) / 120000) % 15 === 1) {
+      try { if (await site.refreshSiteStats(env.DB)) console.log(JSON.stringify({ event: 'site_stats', status: 'UPDATED' })); }
+      catch (e: any) { console.log(JSON.stringify({ event: 'site_stats', status: 'ERROR', error: String(e?.message || e).slice(0, 200) })); }
     }
     if(result.status==='ERROR') throw new Error('Cloud discovery work unit failed; see durable run history.');
     if (assessError) throw new Error('Collector assessment batch failed; see the Worker log.');

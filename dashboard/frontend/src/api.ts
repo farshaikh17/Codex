@@ -60,6 +60,29 @@ export function isOperatorAuthenticated(): boolean {
 
 export const OPERATOR_AUTH_EVENT = 'operator-auth-required';
 
+// ---- Share links (read-only client view) ----------------------------------------------------------------------------
+// A share link looks like https://<site>/#view=<token>&candidate=<id>. The part after '#' never reaches the server or its
+// logs; it is read once, kept for this browser tab only, and removed from the address bar.
+const VIEW_KEY = 'client_view_token', VIEW_CANDIDATE = 'client_view_candidate';
+export function captureShareLink(): void {
+  if (typeof window === 'undefined') return;
+  const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const token = h.get('view'), cand = h.get('candidate');
+  if (token && /^v1_[0-9a-f]{48}$/.test(token) && cand && /^[a-z][a-z0-9_]{2,39}$/.test(cand)) {
+    try { window.sessionStorage.setItem(VIEW_KEY, token); window.sessionStorage.setItem(VIEW_CANDIDATE, cand); } catch {}
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+}
+export function getShareView(): { token: string; candidate: string } | null {
+  try {
+    const token = window.sessionStorage.getItem(VIEW_KEY), candidate = window.sessionStorage.getItem(VIEW_CANDIDATE);
+    return token && candidate ? { token, candidate } : null;
+  } catch { return null; }
+}
+export function clearShareView(): void {
+  try { window.sessionStorage.removeItem(VIEW_KEY); window.sessionStorage.removeItem(VIEW_CANDIDATE); } catch {}
+}
+
 /** Public pages are read-only for visitors. A read sends no key unless the operator has unlocked; a write without a
  *  key never leaves the browser, it asks for the operator unlock instead. */
 export async function authedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -69,6 +92,8 @@ export async function authedFetch(input: RequestInfo | URL, init?: RequestInit):
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
+  const view = getShareView();
+  if (view && !token && (method === 'GET' || method === 'HEAD')) headers.set('X-View-Token', view.token);
   const isWrite = method !== 'GET' && method !== 'HEAD';
   if (isWrite && !token && !headers.has('Authorization')) {
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('operator-auth-required', { detail: { status: 401, write: true, hadKey: false, url: typeof input === 'string' ? input : input.toString() } }));
@@ -721,3 +746,88 @@ export async function fetchRulesComparisonReport(): Promise<any> {
 
 
 
+
+
+// ---- Clients (operator) and exports ---------------------------------------------------------------------------------
+export type ClientSearchProfile = { role_keywords: string[]; avoid_keywords: string[]; location_mode: 'REMOTE_FROM_HOME' | 'HOME_OR_RELOCATE'; home_country: string };
+export type ClientRecord = {
+  id: string; full_name: string; builtin: boolean; visibility: 'public' | 'private'; display_title: string | null; summary_line: string | null;
+  current_location: string | null; primary_timezone: string | null; total_years_experience: number | null; qualification_threshold: number;
+  primary_skills: string[]; search_profile: ClientSearchProfile | null; active_share_links: number; jobs_screened: number; apply_worthy: number;
+};
+export type CandidateRef = { id: string; full_name: string; display_title?: string; builtin?: boolean; visibility?: 'public' | 'private' };
+
+async function jsonOrThrow(res: Response, what: string) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.detail || `${what} failed (${res.status})`);
+  return data;
+}
+export async function fetchCandidateList(): Promise<CandidateRef[]> {
+  const res = await authedFetch(`${API_BASE}/candidates`);
+  if (!res.ok) throw new Error('Unable to load candidates');
+  return res.json();
+}
+export async function fetchClients(): Promise<ClientRecord[]> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients`), 'Loading clients')).clients;
+}
+export async function createClient(body: any): Promise<ClientRecord> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), 'Creating the client')).client;
+}
+export async function updateClient(id: string, body: any): Promise<ClientRecord> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), 'Saving the client')).client;
+}
+export async function backfillClient(id: string): Promise<{ inserted: number; more: boolean }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/backfill?limit=40`, { method: 'POST' }), 'Screening jobs');
+}
+export type ShareLink = { link_id: string; label: string | null; created_at: string; revoked_at: string | null };
+export async function fetchShareLinks(id: string): Promise<ShareLink[]> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/share-links`), 'Loading share links')).share_links;
+}
+export async function createShareLink(id: string, label: string): Promise<{ token: string; path: string; link_id: string }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/share-links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label }) }), 'Creating the link');
+}
+export async function revokeShareLink(id: string, linkId: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/share-links/${encodeURIComponent(linkId)}`, { method: 'DELETE' }), 'Revoking the link');
+}
+/** Downloads the CSV through authedFetch, so the operator key or the share link applies to it like to any other read. */
+export async function downloadExport(candidateId: string, qualificationStatus = 'ALL'): Promise<void> {
+  const res = await authedFetch(`${API_BASE}/export?candidate_id=${encodeURIComponent(candidateId)}&qualification_status=${encodeURIComponent(qualificationStatus)}`);
+  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || d.detail || 'Export failed'); }
+  const blob = await res.blob();
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '')?.[1] || `${candidateId}-jobs.csv`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+// ---- Public-site inbox and settings (operator) ----------------------------------------------------------------------------
+export type ClientRequest = {
+  id: string; full_name: string; email: string; phone: string | null; current_location: string; target_roles: string; work_preference: string | null;
+  years_experience: string | null; linkedin_url: string | null; plan: string | null; message: string | null; status: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'DECLINED';
+  candidate_id: string | null; created_at: string;
+};
+export async function fetchClientRequests(status = 'OPEN'): Promise<{ requests: ClientRequest[]; counts: Record<string, number> }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/client-requests?status=${encodeURIComponent(status)}`), 'Loading applications');
+}
+export async function updateClientRequest(id: string, status: ClientRequest['status'], candidateId?: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/client-requests/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, ...(candidateId ? { candidate_id: candidateId } : {}) }) }), 'Updating the application');
+}
+export async function fetchSiteSettings(): Promise<{ settings: Record<string, string>; defaults: Record<string, string> }> {
+  return jsonOrThrow(await authedFetch(`${API_BASE}/site-settings`), 'Loading site settings');
+}
+export async function saveSiteSettings(values: Record<string, string>): Promise<Record<string, string>> {
+  return (await jsonOrThrow(await authedFetch(`${API_BASE}/site-settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) }), 'Saving site settings')).settings;
+}
+
+/** The brand set for the public site (public, white-label). Falls back to the product name. */
+export async function fetchBrand(): Promise<{ brand_name: string; brand_sub: string }> {
+  try { const r = await fetch(`${API_BASE}/brand`); if (r.ok) return await r.json(); } catch {}
+  return { brand_name: 'Career Job Engine', brand_sub: 'Job search engine' };
+}
+export async function deleteClientRequest(id: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/client-requests/${encodeURIComponent(id)}`, { method: 'DELETE' }), 'Deleting the application');
+}
+
+/** Removes a SAVED-only tracker record (the opposite of "Save"). A record that has moved on is left alone (409). */
+export async function unsaveJob(jobId: string, candidateId: string): Promise<void> {
+  await jsonOrThrow(await authedFetch(`${API_BASE}/applications/${encodeURIComponent(jobId)}?candidate_id=${encodeURIComponent(candidateId)}`, { method: 'DELETE' }), 'Un-saving the job');
+}

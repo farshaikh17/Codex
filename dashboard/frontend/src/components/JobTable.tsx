@@ -268,6 +268,7 @@ export const JobTable: React.FC<JobTableProps> = ({
                   return (
                     <tr
                       key={job.id}
+                      data-job-id={job.id}
                       onClick={() => onSelectJob(job)}
                       className="hover:bg-slate-50/80 cursor-pointer transition-colors group"
                     >

@@ -307,3 +307,33 @@ test('end to end: a queued Greenhouse posting on an employer-hosted careers page
   const row = sqlite.prepare("SELECT attempts, last_error FROM cloud_discovery_queue WHERE id='greenhouse:elastic:1'").get();
   assert.equal(row.attempts, 1); assert.match(row.last_error, /missing title/);
 });
+
+test('a posting the employer ATS answers 404 for is recorded as removed and its job closed; an applied-to or decided job stays; other errors still fail', async () => {
+  const { runDiscovery } = await import('../worker/discovery.ts');
+  const { sqlite, d1 } = createDb(); seed(sqlite);
+  sqlite.exec("UPDATE cloud_automation SET enabled=1, lease_until=0 WHERE id=1");
+  sqlite.exec("INSERT OR IGNORE INTO cloud_sources(id,kind,slug,name,enabled,next_due) VALUES ('greenhouse:elastic','greenhouse','elastic','Elastic',1,9999999999)");
+  const queue = (id) => sqlite.prepare("INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,next_due,updated_at) VALUES (?,?,?,?, 'PENDING', 0, 'x')").run('greenhouse:elastic:' + id, 'greenhouse:elastic', id, '{}');
+  const stored = (id) => {
+    sqlite.prepare("INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES (?,?,?,?,1,'2026-11-01')").run('gh:' + id, 'Role ' + id, 'Elastic', 'greenhouse');
+    sqlite.prepare("INSERT INTO cloud_job_evidence(job_id,source_id,posting_id,content_sha256,fetched_at,rule_version) VALUES (?,?,?,?,?,?)").run('gh:' + id, 'greenhouse:elastic', id, 'x', 'x', 'x');
+  };
+  stored('g1'); stored('g2'); stored('g3');
+  sqlite.prepare("INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('ap','farhan_shaikh','gh:g2','APPLIED')").run();
+  const transport = async (url) => String(url).includes('/g9') ? new Response('{}', { status: 500 }) : new Response('not found', { status: 404 });
+  for (const id of ['g1', 'g2', 'g4']) {
+    queue(id);
+    const r = await runDiscovery({ DB: d1 }, 'MANUAL', transport, 'greenhouse:elastic');
+    assert.equal(r.status, 'SUCCESS', id); assert.equal(r.posting_closed, true, id);
+    assert.equal(sqlite.prepare('SELECT state, last_error FROM cloud_discovery_queue WHERE posting_id = ?').get(id).state, 'GONE', id);
+  }
+  const active = (id) => sqlite.prepare('SELECT is_active a, expired_at e FROM jobs WHERE id = ?').get('gh:' + id);
+  assert.equal(active('g1').a, 0); assert.ok(active('g1').e, 'closing time recorded');
+  assert.equal(active('g2').a, 1, 'a job someone applied to is left as it is');
+  assert.equal(active('g3').a, 1, 'a job whose posting was not checked is untouched');
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM applications WHERE id='ap'").get().n, 1);
+  queue('g9');
+  const err = await runDiscovery({ DB: d1 }, 'MANUAL', transport, 'greenhouse:elastic');
+  assert.equal(err.status, 'ERROR', 'a server error is not mistaken for a removed posting');
+  assert.equal(sqlite.prepare("SELECT state FROM cloud_discovery_queue WHERE posting_id='g9'").get().state, 'PENDING');
+});

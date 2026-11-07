@@ -1,7 +1,7 @@
 import React from 'react';
-import { Briefcase, Sliders, BarChart3, BookmarkCheck, RefreshCw, ShieldCheck, Radio, LayoutDashboard, Zap, Users, Lock, Unlock } from 'lucide-react';
+import { BarChart3, BookmarkCheck, RefreshCw, Radio, LayoutDashboard, Users, Lock, Unlock, Sliders, Briefcase } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
+export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
 
 interface NavbarProps {
   activeTab: NavTab;
@@ -14,173 +14,103 @@ interface NavbarProps {
   pilotActive?: boolean;
   isOperator?: boolean;
   onOpenAuth?: () => void;
+  /** resold clients this viewer may see (the built-in two have their own buttons) */
+  clients?: { id: string; full_name: string }[];
+  activeClient?: string | null;
+  onSelectClient?: (id: string) => void;
+  /** brand set for the public site */
+  brand?: string;
+  /** a client viewing through a share link: only their own workspace, never other people's */
+  viewer?: { name: string; onOpen: () => void } | null;
 }
 
+// Same visual language as the public site: navy announcement bar, cream header, serif wordmark, coral for the active item.
+const item = (on: boolean) =>
+  `px-3 py-1.5 text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 ${on ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:text-coral-600 hover:bg-white'}`;
+
 export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  setActiveTab,
-  savedCount,
-  readyCount: _readyCount,
-  indiaRemoteCount: _indiaRemoteCount,
-  onReloadFixtures,
-  isLoading,
-  pilotActive: _pilotActive,
-  isOperator = false,
-  onOpenAuth,
+  activeTab, setActiveTab, savedCount, onReloadFixtures, isLoading, isOperator = false, onOpenAuth, clients = [], activeClient = null, onSelectClient, brand = 'Career Job Engine', viewer = null,
 }) => {
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40">
-      {/* Cloud-Aware Banner */}
-      <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-1.5 text-xs text-emerald-300 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
-          <span>
-            <strong className="font-semibold uppercase tracking-wider">Cloud Engine:</strong> Multi-Candidate Career Engine running on Cloudflare Workers &amp; D1. Independent pipelines per candidate.
-          </span>
-        </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-emerald-400/80 text-[11px]">
-          <span>Public read-only view • Changes need the operator key</span>
-        </div>
+    <header className="sticky top-0 z-40">
+      <div className="bg-gradient-to-r from-[#173a4f] to-slate-900 text-white text-xs font-semibold px-4 py-2 flex items-center justify-between gap-3">
+        <span>Daily-screened job dashboards · <span className="text-[#F5C451]">{isOperator ? 'Operator mode: changes enabled' : 'Read-only view'}</span></span>
+        <a href="/" className="hidden sm:inline text-white/80 hover:text-white">← Website</a>
       </div>
+      <div className="bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-3 items-center justify-between">
+          <a href="/" title="Back to the website" className="flex items-center gap-3 hover:opacity-90">
+            <span className="w-9 h-9 rounded-full grid place-items-center text-white shadow-sm" style={{ background: 'radial-gradient(circle at 30% 30%, #F5A35C, #E4572E 70%)' }}>
+              <Briefcase className="w-4 h-4" />
+            </span>
+            <span>
+              <span className="block font-serif text-lg font-semibold text-slate-900 leading-tight">{brand}</span>
+              <span className="block text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-500">{viewer ? `${viewer.name}'s dashboard` : 'Client dashboards'}</span>
+            </span>
+          </a>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-emerald-600 p-2 rounded-lg text-white shadow-sm shadow-emerald-500/20">
-            <Briefcase className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-              Career Job Engine
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-medium">Multi-Candidate</span>
-            </h1>
-            <p className="text-xs text-slate-400">Farhan • Sana</p>
-          </div>
-        </div>
-
-        <nav className="flex flex-wrap items-center gap-1 sm:gap-2 max-w-full py-1">
-          {/* 1. DASHBOARD */}
-          <button
-            aria-label="Dashboard"
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'dashboard'
-                ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>DASHBOARD</span>
-          </button>
-
-          {/* 2. FARHAN */}
-          <button
-            aria-label="Farhan"
-            onClick={() => setActiveTab('farhan')}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'farhan'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-blue-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>FARHAN</span>
-          </button>
-
-          {/* 3. SANA */}
-          <button
-            aria-label="Sana"
-            onClick={() => setActiveTab('sana')}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'sana'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-amber-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Zap className="w-4 h-4" />
-            <span>SANA</span>
-          </button>
-
-          {/* 4. APPLICATIONS */}
-          <button
-            aria-label="Applications"
-            onClick={() => setActiveTab('tracker')}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'tracker'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-purple-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <BookmarkCheck className="w-4 h-4" />
-            <span>APPLICATIONS</span>
-            {savedCount > 0 && (
-              <span className="ml-1 bg-white/20 text-white text-xs px-1.5 py-0.2 rounded-full font-mono">
-                {savedCount}
-              </span>
+          <nav className="flex flex-wrap items-center gap-1 max-w-full" aria-label="Dashboard">
+            {viewer ? (
+              <button aria-label="My jobs" onClick={viewer.onOpen} className={item(['farhan', 'sana', 'client', 'discovery'].includes(activeTab))}>
+                <Briefcase className="w-4 h-4" /><span>My jobs</span>
+              </button>
+            ) : <>
+            <button aria-label="Dashboard" onClick={() => setActiveTab('dashboard')} className={item(activeTab === 'dashboard')}>
+              <LayoutDashboard className="w-4 h-4" /><span>Dashboard</span>
+            </button>
+            <button aria-label="Farhan" onClick={() => setActiveTab('farhan')} className={item(activeTab === 'farhan')}>
+              <Users className="w-4 h-4" /><span>Farhan</span>
+            </button>
+            <button aria-label="Sana" onClick={() => setActiveTab('sana')} className={item(activeTab === 'sana')}>
+              <Users className="w-4 h-4" /><span>Sana</span>
+            </button>
+            {clients.length > 0 && (
+              <label className={`${item(activeTab === 'client')} pr-1`}>
+                <span className="sr-only">Client workspace</span>
+                <Users className="w-4 h-4" />
+                <select data-testid="client-select" aria-label="Client workspace" value={activeTab === 'client' && activeClient ? activeClient : ''}
+                  onChange={(e) => e.target.value && onSelectClient?.(e.target.value)}
+                  className="appearance-none bg-transparent font-semibold text-sm outline-none cursor-pointer max-w-[11rem] pr-1">
+                  <option value="" disabled>{clients.length === 1 ? "Client ▾" : `Clients (${clients.length}) ▾`}</option>
+                  {clients.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+                </select>
+              </label>
             )}
-          </button>
-
-          {/* 5. DISCOVERY / REVIEW */}
-          <button
-            aria-label="Discovery"
-            onClick={() => setActiveTab('discovery')}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'discovery'
-                ? 'bg-slate-800 text-teal-400 shadow-sm border border-slate-700'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Radio className="w-4 h-4 text-teal-400" />
-            <span className="hidden sm:inline">DISCOVERY / REVIEW</span>
-          </button>
-
-          {/* 6. SETTINGS */}
-          <button
-            aria-label="Settings"
-            onClick={() => setActiveTab('profile')}
-            title="Candidate Profile Settings"
-            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === 'profile'
-                ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Sliders className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">SETTINGS</span>
-          </button>
-
-          <div className="h-6 w-px bg-slate-800 mx-1 hidden sm:block" />
-
-          {/* Secondary links */}
-          <button
-            aria-label="Analytics"
-            onClick={() => setActiveTab('analytics')}
-            title="Funnel Analytics"
-            className={`p-2 text-xs font-medium rounded-md transition-colors ${
-              activeTab === 'analytics' ? 'text-emerald-400 bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={onReloadFixtures}
-            disabled={isLoading}
-            title="Sync / Refresh"
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-400' : ''}`} />
-          </button>
-
-          <button
-            aria-label={isOperator ? 'Operator mode on: records can be changed' : 'Viewing only. Operator sign-in is needed to change records'}
-            onClick={onOpenAuth}
-            title={isOperator ? 'Operator mode on (click to sign out)' : 'Viewing only (click for operator sign-in)'}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
-          >
-            {isOperator ? <Unlock className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-amber-400" />}
-          </button>
-
+            </>}
+            <button aria-label="Applications" onClick={() => setActiveTab('tracker')} className={item(activeTab === 'tracker')}>
+              <BookmarkCheck className="w-4 h-4" /><span>Applications</span>
+              {savedCount > 0 && <span className={`ml-0.5 text-xs px-1.5 rounded-full font-mono ${activeTab === 'tracker' ? 'bg-white/20' : 'bg-slate-200'}`}>{savedCount}</span>}
+            </button>
+            {!viewer && <button aria-label="Discovery" onClick={() => setActiveTab('discovery')} className={item(activeTab === 'discovery')}>
+              <Radio className="w-4 h-4" /><span className="hidden sm:inline">Discovery / review</span>
+            </button>}
+            {!viewer && <button aria-label="Settings" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
+              <Sliders className="w-4 h-4" /><span className="hidden sm:inline">Profile</span>
+            </button>}
+            {isOperator && (
+              <button aria-label="Manage clients" onClick={() => setActiveTab('clients')} className={item(activeTab === 'clients')}>
+                <Users className="w-4 h-4" /><span>Manage clients</span>
+              </button>
+            )}
+            <span className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+            <button aria-label="Analytics" title="Funnel analytics" onClick={() => setActiveTab('analytics')}
+              className={`p-2 rounded-full transition-colors ${activeTab === 'analytics' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-coral-600 hover:bg-white'}`}>
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <button onClick={onReloadFixtures} disabled={isLoading} title="Sync / Refresh"
+              className="p-2 text-slate-500 hover:text-coral-600 hover:bg-white rounded-full transition-colors disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-600' : ''}`} />
+            </button>
+            <button
+              aria-label={isOperator ? 'Operator mode on: records can be changed' : 'Viewing only. Operator sign-in is needed to change records'}
+              onClick={onOpenAuth}
+              title={isOperator ? 'Operator mode on (click to sign out)' : 'Viewing only (click for operator sign-in)'}
+              className="p-2 text-slate-500 hover:text-coral-600 hover:bg-white rounded-full transition-colors"
+            >
+              {isOperator ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-600" />}
+            </button>
           </nav>
+        </div>
       </div>
     </header>
   );
