@@ -151,3 +151,32 @@ test('a job-board posting whose own text rules the candidate out is not stored; 
   sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
   assert.deepEqual(sqlite.prepare('SELECT job_id, eligibility_status e FROM candidate_qualifications ORDER BY job_id').all().map((r) => [r.job_id, r.e]), [['js:w:2', 'UNKNOWN']]);
 });
+
+test('developer roles of any kind are on Farhan\'s avoid list', () => {
+  for (const t of ['Zoho CRM Developer', 'Guidewire Integration Developer', 'Senior AI Developer - Finance Automation', 'Salesforce CRM Administrator'])
+    assert.ok(evaluate(farhan, post({ title: t })).score <= 40, t);
+  assert.ok(evaluate(farhan, post({ title: 'Implementation Manager' })).score > 40);
+});
+
+test('one role posted in 3+ places by one employer is written once (best copy); two copies are both kept; stored copies are closed', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cp-'));
+  const F = 'farhan_shaikh';
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
+  const j = (id, company, location) => ({ id, url: `https://example.com/${id}`, title: 'Implementation Manager', company, ats_type: 'lever', location, is_remote: true,
+    description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:a:1', 'Agg', 'Remote - Chile'), j('ds:a:2', 'Agg', 'Remote - India'), j('ds:a:3', 'Agg', 'Remote - Greece'),
+    j('ds:b:1', 'Two', 'Remote - India'), j('ds:b:2', 'Two', 'Remote - Spain')] }));
+  const { sqlite } = createDb();
+  sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
+  // copies already stored from an earlier run: three of one role, one with an application
+  const ins = sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,source_channel) VALUES (?,?,?,?,?,?,?)`);
+  for (const id of ['old:1', 'old:2', 'old:3']) ins.run(id, 'Ops Lead', 'Old Co', 'lever', 1, '2026-11-01', 'ATS_DATASET');
+  sqlite.exec(`INSERT INTO applications(candidate_id,job_id,status) VALUES ('${F}','old:3','APPLIED')`);
+  execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
+  sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
+  const active = sqlite.prepare(`SELECT id FROM jobs WHERE is_active = 1 ORDER BY id`).all().map((r) => r.id);
+  assert.deepEqual(active.filter((x) => x.startsWith('ds:a')), ['ds:a:2'], 'the India copy scores best and is the one kept');
+  assert.deepEqual(active.filter((x) => x.startsWith('ds:b')), ['ds:b:1', 'ds:b:2']);
+  assert.deepEqual(active.filter((x) => x.startsWith('old')), ['old:1', 'old:3'], 'one stored copy stays, and one with an application is never closed');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 2);
+});

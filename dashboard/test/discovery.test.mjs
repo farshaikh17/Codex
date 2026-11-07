@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { seed } from './fixtures.mjs';
-import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { VISA_UNLIKELY_PENALTY, evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 import { plan, SELECT_ROWS } from '../scripts/rescore_ranking_v2.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,10 +37,15 @@ test('ranking: a posting whose only stated location is outside India loses point
   assert.equal(us.score, Math.max(0, usSame.score - FOREIGN_LOCATION_PENALTY), `${us.score} vs ${usSame.score}`);
   assert.equal(india.eligibility, 'ELIGIBLE'); assert.ok(india.score >= us.score);
   assert.equal(us.eligibility, 'UNKNOWN', 'eligibility rules are not changed by the penalty');
-  // Sana is open to relocation: no penalty and no avoid list
-  const sa = evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability and Plant Engineering role.'));
+  // Sana relocates anywhere: no foreign-location penalty, but an on-site role abroad needs a realistic route from India
+  // (the Gulf, or a sponsorship/relocation offer); otherwise it loses VISA_UNLIKELY_PENALTY (owner rule 2026-11-07)
   const sb = evaluate(sana, post('Reliability Engineer', 'Remote', 'Reliability and Plant Engineering role.'));
-  assert.equal(sa.score, sb.score);
+  const london = evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability and Plant Engineering role.'));
+  const sponsored = evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability and Plant Engineering role. Visa sponsorship available.'));
+  const dubai = evaluate(sana, post('Reliability Engineer', 'Dubai, United Arab Emirates', 'Reliability and Plant Engineering role.'));
+  assert.equal(london.score, Math.max(0, sb.score - VISA_UNLIKELY_PENALTY)); assert.match(london.qualification_reason, /no visa sponsorship/);
+  assert.ok(sponsored.score >= sb.score, 'a sponsorship offer removes the penalty');
+  assert.equal(dubai.score, sb.score, 'the Gulf is a normal route from India');
 });
 
 

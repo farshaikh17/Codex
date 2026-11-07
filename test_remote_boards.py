@@ -20,6 +20,14 @@ def fake_get(url, timeout=30):
                                                  'description': '<b>Ops</b>', 'date': '2026-11-06T00:00:00+00:00', 'salary_min': 60000, 'salary_max': 0}]).encode()
     if 'weworkremotely' in url:
         return RSS
+    if 'search_by_date' in url:
+        return json.dumps({'hits': [{'title': 'Ask HN: Who wants to be hired? (November 2026)', 'objectID': '1'},
+                                    {'title': 'Ask HN: Who is hiring? (November 2026)', 'objectID': '2'}]}).encode()
+    if '/items/2' in url:
+        return json.dumps({'children': [
+            {'id': 11, 'created_at': '2026-11-02T16:00:00Z', 'text': 'Acme | Chief of Staff, RevOps Lead | REMOTE (worldwide) | Full-time<p>We build things.'},
+            {'id': 12, 'created_at': '2026-11-02T16:00:00Z', 'text': 'Beta | ONSITE | San Francisco, CA<p>Many roles.'},
+            {'id': 13, 'created_at': '2026-11-02T16:00:00Z', 'text': 'no pipes here'}]}).encode()
     if 'himalayas' in url:
         raise TimeoutError('feed down')
     return json.dumps([{'title': 'Reliability Engineer', 'company_name': 'Delta', 'url': 'https://www.workingnomads.com/jobs/2', 'location': 'Dubai',
@@ -44,6 +52,11 @@ class RemoteBoards(unittest.TestCase):
             self.assertEqual(by['remoteok']['salary_min'], 60000)
             self.assertEqual(by['workingnomads']['candidates'], ['sana_ansari'])
             self.assertTrue(all(j.get('board') and j['is_remote'] for j in by.values()))
+            hn = [j for j in jobs if j.get('ats_type') == 'hnhiring']
+            self.assertEqual(sorted(j['title'] for j in hn), ['RevOps Lead'], 'one posting per role; only role-matches; a location-only post yields none')
+            self.assertEqual(hn[0]['url'], 'https://news.ycombinator.com/item?id=11')
+            self.assertTrue(hn[0]['is_remote']); self.assertIn('REMOTE (worldwide)', hn[0]['location'])
+            by = {k: v for k, v in by.items() if k != 'hnhiring'}
             self.assertEqual(len(by), 3, 'the software role was filtered out')
             report = json.loads(Path(d, 'boards_report.json').read_text())
             self.assertIn('error', report['himalayas'])

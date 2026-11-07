@@ -24,7 +24,7 @@ concurrency:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
     # Cloudflare credentials are given only to the steps that use the database; the job-site step (third-party scraping
     # library) runs without them.
     steps:
@@ -75,6 +75,10 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
+      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers; no credentials)
+        continue-on-error: true
+        timeout-minutes: 12
+        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:
@@ -105,12 +109,35 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler d1 execute career-job-engine --remote --file=../work/apply.sql > /dev/null
+      - name: Still open? List the best-ranked undecided jobs
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python engine/liveness.py --export work/liveness_targets.json
+      - name: Still open? Check each posting (no credentials; only 404/410 twice closes a job)
+        id: live_check
+        if: ${{ hashFiles('work/liveness_targets.json') != '' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          python engine/liveness.py --check work/liveness_targets.json --out work/liveness_result.json | tee work/liveness_report.json
+          python engine/liveness.py --sql work/liveness_result.json --out work/liveness.sql
+      - name: Still open? Close dead postings, mark live ones verified
+        if: ${{ hashFiles('work/liveness.sql') != '' }}
+        continue-on-error: true
+        working-directory: dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          [ -s ../work/liveness.sql ] && npx wrangler d1 execute career-job-engine --remote --file=../work/liveness.sql > /dev/null || echo "nothing to write"
       - name: Summary (counts only)
         if: always()
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/global_hirers.json work/apply.report.json; do
-              [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));d.pop('log',None);print(json.dumps(d,indent=1))" "$f"; echo '```'; }
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json; do
+              [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"
