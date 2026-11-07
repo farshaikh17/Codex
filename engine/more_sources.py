@@ -11,6 +11,8 @@ Results merge into work/jobsite_raw.json as job-board reports (the screen never 
   * Arbeitnow                the public job-board API, visa-sponsorship jobs (terms: link back; every job links to Arbeitnow)
   * Getro VC networks        public collection search (startup and climate-fund portfolio jobs)
   * UN Careers               the public openings list (consultancies are often home-based)
+  * EURES                    the EU job-mobility portal's public search (about 2 million EU vacancies), English titles where given
+  * Adzuna                   only when the free ADZUNA_APP_ID / ADZUNA_APP_KEY secrets are set (India, UK, Germany, Netherlands)
 
 Runs WITHOUT database credentials. One failing source is skipped, never fatal.
 Usage: python engine/more_sources.py --profiles work/profiles.json --out work/ [--days 30]
@@ -18,6 +20,7 @@ Usage: python engine/more_sources.py --profiles work/profiles.json --out work/ [
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -42,6 +45,15 @@ EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom
 SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com')]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
 GETRO = [628, 1198]
+EURES_TERMS = {'sana_ansari': ['maintenance engineer', 'power plant', 'reliability engineer', 'electrical engineer', 'energy efficiency', 'Instandhaltungsingenieur',
+                               'Kraftwerk', 'ingénieur maintenance', 'onderhoudsingenieur'],
+               'farhan_shaikh': ['revenue operations', 'implementation manager', 'crm automation']}
+EURES_BODY = {'resultsPerPage': 50, 'page': 1, 'sortSearch': 'MOST_RECENT', 'publicationPeriod': None, 'occupationUris': [], 'skillUris': [],
+              'requiredExperienceCodes': [], 'positionScheduleCodes': [], 'sectorCodes': [], 'educationAndQualificationLevelCodes': [],
+              'positionOfferingCodes': [], 'locationCodes': [], 'euresFlagCodes': [], 'otherBenefitsCodes': [], 'requiredLanguages': [], 'sessionId': 'x'}
+ADZUNA = {'sana_ansari': [('in', 'maintenance engineer'), ('in', 'power plant'), ('gb', 'power plant engineer'), ('gb', 'reliability engineer'),
+                          ('de', 'Instandhaltungsingenieur'), ('nl', 'maintenance engineer'), ('gb', 'energy efficiency engineer')],
+          'farhan_shaikh': [('in', 'revenue operations'), ('gb', 'remote implementation manager'), ('in', 'crm automation')]}
 
 
 def http(url, data=None, headers=None, timeout=40):
@@ -173,17 +185,63 @@ def un_careers(pages=5):
             break
 
 
+def eures(terms):
+    seen = set()
+    for cid, words in terms.items():
+        for w in words:
+            for page in (1, 2):
+                d = json.loads(http('https://europa.eu/eures/api/jv-searchengine/public/jv-search/search',
+                                    {**EURES_BODY, 'page': page, 'keywords': [{'keyword': w, 'specificSearchCode': 'EVERYWHERE'}]}))
+                rows = d.get('jvs') or []
+                for r in rows:
+                    if r.get('id') in seen:
+                        continue
+                    seen.add(r.get('id'))
+                    en = ((r.get('translations') or {}).get('en')) or {}
+                    title = text(en.get('title') or r.get('title'))
+                    countries = ', '.join(sorted((r.get('locationMap') or {}).keys())) or 'EU'
+                    j = job('eures', f"https://europa.eu/eures/portal/jv-se/jv-details/{r.get('id')}?lang=en", title, text((r.get('employer') or {}).get('name')),
+                            countries, text(en.get('description') or r.get('description')), when(int(r.get('creationDate')) / 1000 if str(r.get('creationDate') or '').isdigit() else None))
+                    j['is_remote'] = False
+                    yield j
+                if len(rows) < 50:
+                    break
+
+
+def adzuna(queries):
+    app_id, key = os.environ.get('ADZUNA_APP_ID', ''), os.environ.get('ADZUNA_APP_KEY', '')
+    if not app_id or not key:
+        return
+    for cid, pairs in queries.items():
+        for country, what in pairs:
+            url = f'https://api.adzuna.com/v1/api/jobs/{country}/search/1?' + urllib.parse.urlencode(
+                {'app_id': app_id, 'app_key': key, 'results_per_page': 50, 'what': what, 'max_days_old': 14, 'content-type': 'application/json'})
+            d = json.loads(http(url))
+            for r in d.get('results') or []:
+                loc = r.get('location') or {}
+                place = loc.get('display_name') or ', '.join(loc.get('area') or []) or country.upper()
+                j = job('adzuna', r.get('redirect_url') or '', text(r.get('title')), text((r.get('company') or {}).get('display_name')), place,
+                        text(r.get('description')), when(r.get('created')), r.get('salary_min') or None, r.get('salary_max') or None,
+                        {'in': 'INR', 'gb': 'GBP', 'de': 'EUR', 'nl': 'EUR'}.get(country), 'year' if r.get('salary_min') or r.get('salary_max') else None)
+                j['is_remote'] = bool(re.search(r'\bremote\b', (r.get('title') or '') + ' ' + place, re.I))
+                yield j
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--profiles', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--days', type=int, default=30)
+    ap.add_argument('--fast', action='store_true')
     a = ap.parse_args()
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
     sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors,
-               'arbeitnow': arbeitnow, 'getro': getro, 'uncareers': un_careers}
+               'arbeitnow': arbeitnow, 'getro': getro, 'uncareers': un_careers,
+               'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
+    if a.fast:   # watchlist runs: the employer sites and the big aggregator only
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
