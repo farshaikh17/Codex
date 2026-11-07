@@ -93,6 +93,14 @@ def workable(queries):
 
 def eightfold():
     for company, host, domain in EIGHTFOLD:
+        try:
+            yield from eightfold_site(company, host, domain)
+        except Exception as e:   # one employer's site down never loses the others
+            print(f'eightfold {company}: {type(e).__name__}', file=sys.stderr)
+
+
+def eightfold_site(company, host, domain):
+    if True:
         for start in range(0, 1000, 100):
             d = json.loads(http(f'https://{host}/api/apply/v2/jobs?domain={domain}&num=100&start={start}'))
             rows = d.get('positions') or []
@@ -243,6 +251,7 @@ def main():
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
+    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}
@@ -255,7 +264,7 @@ def main():
                 seen += 1
                 if not j['title'] or not j['company'] or not str(j['url']).startswith('https://'):
                     continue
-                if j['posted_at'] and when(j['posted_at']) and when(j['posted_at']) < since:
+                if name not in no_cutoff and j['posted_at'] and when(j['posted_at']) and when(j['posted_at']) < since:
                     continue
                 t = j['title'].lower()
                 cands = [cid for cid, (role, excl) in rules.items() if role.search(t) and not (excl and excl.search(t))]
