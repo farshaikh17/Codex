@@ -1,0 +1,111 @@
+name: Daily discovery (open ATS dataset + light job-site search)
+# Once a day: selects matching postings for every candidate from an open dataset of about 5 million live ATS jobs, runs a
+# handful of job-site searches, scores everything with the Worker's own screen and writes it to D1 (bounded per run).
+# Nothing is ever marked READY; human decisions and applications are never written. See dashboard/docs/DISCOVERY_PIPELINE.md.
+on:
+  workflow_dispatch:
+    inputs:
+      max_new:
+        description: 'Most new jobs written this run (0-3000)'
+        default: '800'
+      job_sites:
+        description: 'Also run the light job-site search (true/false)'
+        default: 'true'
+  schedule:
+    - cron: '13 15 * * *'   # 15:13 UTC, after the dataset's daily refresh (about 14:30 UTC)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-collector-sync   # never overlaps the collector sync's D1 writes
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # Cloudflare credentials are given only to the steps that use the database; the job-site step (third-party scraping
+    # library) runs without them.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate inputs
+        env:
+          MAX_NEW: ${{ inputs.max_new || '800' }}
+        run: |
+          case "$MAX_NEW" in ''|*[!0-9]*) echo "max_new must be a whole number"; exit 1;; esac
+          [ "$MAX_NEW" -le 3000 ] || { echo "max_new must be at most 3000"; exit 1; }
+          echo "MAX_NEW=$MAX_NEW" >> "$GITHUB_ENV"
+      - name: Install (pinned)
+        run: |
+          pip install duckdb==2.0.0
+          npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
+      - name: Download today's dataset once (about 2.3 GB; queried locally)
+        run: |
+          mkdir -p work
+          curl -fsSL --retry 3 -A 'career-job-engine/1.0' -o work/all.parquet https://storage.stapply.ai/jobhive/v1/all.parquet
+          ls -la work/all.parquet
+      - name: Discovery state and past-applications tables (idempotent)
+        working-directory: dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0014_discovery_state.sql > /dev/null
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0016_past_applications.sql > /dev/null
+      - name: Select matches from the dataset (and earlier rows to re-score)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export
+      - name: Light job-site search (no credentials; a blocked site is skipped)
+        if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
+          /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out work --results 20 --hours 48
+      - name: Remove job-site results already stored
+        if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python engine/dataset_discovery.py --dedupe work/jobsite_raw.json --out work
+      - name: Employers listed publicly as hiring worldwide (no credentials; read at run time, never stored in the repo)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: |
+          git clone -q --depth 1 https://github.com/remoteintech/remote-jobs work/remoteintech || true
+          curl -fsSL --retry 2 -o work/established-remote.md https://raw.githubusercontent.com/yanirs/established-remote/master/README.md || true
+          python engine/global_hirers.py --remoteintech work/remoteintech --established work/established-remote.md --out work
+      - name: Score with the Worker's own screen and write SQL
+        working-directory: dashboard
+        run: |
+          IN="--in ../work/matches.json"
+          [ -f ../work/jobsite_matches.json ] && IN="$IN --in ../work/jobsite_matches.json"
+          [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
+          node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN \
+            --rescore ../work/rescore.json --out ../work/apply.sql --max-new "$MAX_NEW"
+          echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql
+          ls -la ../work/apply.sql
+      - name: Write to D1 (one import; all or nothing)
+        working-directory: dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 execute career-job-engine --remote --file=../work/apply.sql > /dev/null
+      - name: Summary (counts only)
+        if: always()
+        run: |
+          {
+            echo '### Daily discovery'
+            for f in work/report.json work/jobsite_report.json work/apply.report.json; do
+              [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));d.pop('log',None);print(json.dumps(d,indent=1))" "$f"; echo '```'; }
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

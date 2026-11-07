@@ -147,7 +147,7 @@ test('unauthenticated writes change nothing: applications, overrides and history
 test('profile: stored education wins, documented fallback is never the generic placeholder, cross-candidate save refused', async () => {
   const { sqlite, env } = fresh();
   const f = await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh');
-  assert.equal(f.json.education, 'BMS in Marketing');
+  assert.equal(f.json.education, 'BMS in Marketing, NM College (University of Mumbai), 2017');
   const s = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari');
   assert.equal(s.json.education, 'B.Tech in Electrical Engineering');
   assert.equal(s.json.full_name, 'Test Sana');
@@ -359,7 +359,7 @@ test('overview and metrics: active-only inventory, applied stage vs tracker reco
   assert.ok(JSON.stringify(c).length > 10);
 });
 
-test('profile facts: experience is computed from dates for Sana, Farhan keeps his stored value, no private text without the key', async () => {
+test('profile facts: experience is computed from dates for both candidates, no private text without the key', async () => {
   const { env } = fresh();
   const s = (await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari')).json;
   const years = (Date.now() - Date.UTC(2017, 8, 1)) / (365.25 * 86400000);
@@ -368,8 +368,10 @@ test('profile facts: experience is computed from dates for Sana, Farhan keeps hi
   assert.deepEqual(s.employment_history.map((e) => [e.employer, e.from, e.to]), [['RRVUNL', '2017-09', '2025-02'], ['RRVUNL', '2025-02', null]]);
   assert.match(s.pay_line, /unknown/i);
   const f = (await call(worker, env, 'GET', '/api/profile?candidate_id=farhan_shaikh')).json;
-  assert.equal(f.total_years_experience, 4); assert.match(f.years_basis, /stored/);
-  assert.equal(f.education, 'BMS in Marketing');
+  const fyears = (Date.now() - Date.UTC(2017, 5, 1)) / (365.25 * 86400000);   // career start from his CV (2017-06)
+  assert.ok(Math.abs(f.total_years_experience - fyears) < 0.11, `${f.total_years_experience} vs ${fyears}`); assert.match(f.years_basis, /computed from career start 2017-06/);
+  assert.equal(f.education, 'BMS in Marketing, NM College (University of Mumbai), 2017');
+  assert.equal(f.employment_history.length, 6);
   assert.equal(f.employment_history[0].employer, 'Mianro Systems');
   assert.match(f.pay_line, /1,20,000/); assert.match(f.pay_line, /\$25\/hour/);
   const anon = await call(worker, env, 'GET', '/api/profile?candidate_id=sana_ansari', { key: null });

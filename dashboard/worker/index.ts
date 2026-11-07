@@ -31,24 +31,31 @@ const CANDIDATE_FACTS: Record<string, {
   display_title: string; education_short: string; education_detail: string; summary_line: string; public_summary: string; career_start: string | null; employment_history: EmploymentEntry[];
 }> = {
   farhan_shaikh: {
-    display_title: 'Technical Operations & Workflow Automation Engineering',
+    display_title: 'Technical Operations, CRM Implementation & Workflow Automation',
     education_short: 'BMS Marketing',
-    education_detail: 'BMS in Marketing',
-    summary_line: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India (employer must hire or contract in India)',
-    public_summary: 'Tech Ops Lead • CRM & Workflow Automation • 100% remote from India',
-    career_start: null, // total years are not derivable from the dates supplied; the stored value is used and labelled as stored
-    employment_history: [{ role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'five direct reports' }],
+    education_detail: 'BMS in Marketing, NM College (University of Mumbai), 2017',
+    summary_line: 'Tech Ops Lead • CRM/GoHighLevel Implementation & Workflow Automation • Remote only, from any country (employee or contractor)',
+    public_summary: 'Tech Ops Lead • CRM Implementation & Workflow Automation • Remote',
+    career_start: '2017-06-01',
+    employment_history: [
+      { role: 'Technical Team Lead', employer: 'Mianro Systems', from: '2026-06', to: null, note: 'remote; five-person team' },
+      { role: 'Technical CRM & Automation Specialist', employer: 'HighLevel', from: '2025-12', to: '2026-06' },
+      { role: 'Product Support Specialist (Compliance)', employer: 'Rippling', from: '2024-09', to: '2025-11' },
+      { role: 'Founding Operations & Growth Associate', employer: 'Glow Up', from: '2022-05', to: '2024-08' },
+      { role: 'Retail Operations & Insights Specialist', employer: 'Harding Brothers', from: '2020-09', to: '2022-03' },
+      { role: 'Customer Engagement Specialist (Travel Retail)', employer: 'Dufry', from: '2017-06', to: '2020-03' },
+    ],
   },
   sana_ansari: {
     display_title: 'Power Plant Operations & Industrial Reliability Engineering',
     education_short: 'B.Tech Electrical',
     education_detail: 'B.Tech in Electrical Engineering, Rajasthan Technical University, 2016',
-    summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Transition',
+    summary_line: 'Power Plant O&M (RRVUNL) • Industrial Reliability • Energy Efficiency & Decarbonization • Open to relocating anywhere for the right role',
     public_summary: 'Power Plant O&M • Industrial Reliability • Energy Transition',
     career_start: '2017-09-01',
     employment_history: [
-      { role: 'Maintenance (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
-      { role: 'Operations (Kota)', employer: 'RRVUNL', from: '2025-02', to: null },
+      { role: 'Maintenance Engineer, 660 MW supercritical (Chhabra)', employer: 'RRVUNL', from: '2017-09', to: '2025-02' },
+      { role: 'Operations Engineer, 195 MW subcritical (Kota)', employer: 'RRVUNL', from: '2025-02', to: null },
     ],
   },
 };
@@ -66,7 +73,7 @@ function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) 
   const inr = (n: number) => '₹' + Number(n).toLocaleString('en-IN');
   let pay: string;
   if (candidateId === 'farhan_shaikh') {
-    pay = `Monthly cash floor: ${inr(cand?.cash_floor_inr_monthly ?? 120000)} fixed, or $${cand?.min_acceptable_salary_usd ?? 25}/hour contract (no guaranteed minimum hours). Preferred: ₹25–30 LPA+. Notice: 30 days.`;
+    pay = `Monthly cash floor: ${inr(cand?.cash_floor_inr_monthly ?? 120000)} fixed (equity does not count), or $${cand?.min_acceptable_salary_usd ?? 25}/hour contract (no guaranteed minimum hours). Preferred: ₹25–30 LPA+. Notice: 30 days.`;
   } else {
     pay = 'Pay floor and notice period: unknown (not provided).';
   }
@@ -578,8 +585,8 @@ class WorkerRouter {
         const metered = readRoute;
         const keyInfo = readRoute && env.RESPONSE_CACHE !== 'off' && !viewerOf.has(request) && !hiddenFrom.has(request) ? responseCacheKey(level!, url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`) : null;
         const cacheKey = keyInfo?.key ?? null;
-        // The applications inbox and site settings feed no cached dashboard answer, so changing them keeps the public cache.
-        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings)(\/|$)/.test(pathname);
+        // The applications inbox, site settings and past applications feed no cached dashboard answer, so changing them keeps the public cache.
+        const operatorChange = level === 'operator' && request.method !== 'GET' && !/^\/api\/(client-requests|site-settings|past-applications)(\/|$)/.test(pathname);
         let meter: { db: D1Database; rows: () => number } | null = null;
         let lookup: CacheLookup | null = null;
         const now = Math.floor(Date.now() / 1000);
@@ -2990,6 +2997,36 @@ router.delete('/api/client-requests/:id', async (request, env, params) => {
   const r = await env.DB.prepare('DELETE FROM client_requests WHERE id = ?').bind(params.id).run();
   if (!r.meta?.changes) return jsonResponse({ error: 'Unknown request.' }, 404, corsHeaders(request, env));
   return jsonResponse({ id: params.id, deleted: true }, 200, corsHeaders(request, env));
+});
+// Applications made outside the dashboard (operator only: not a public read route). Daily discovery reads them.
+const PAST_OUTCOMES = ['REJECTED', 'NO_RESPONSE', 'APPLIED', 'WITHDRAWN'];
+const shortText = (v: any, n: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n) : '');
+router.get('/api/past-applications', async (request, env, _p, url) => {
+  const cid = knownCandidate(url.searchParams.get('candidate_id'));
+  if (!cid) return jsonResponse({ error: 'A known candidate_id is required.' }, 400, corsHeaders(request, env));
+  const { results } = await env.DB.prepare('SELECT id, candidate_id, company, role, outcome, decided_on, created_at FROM past_applications WHERE candidate_id = ? ORDER BY created_at DESC, id DESC LIMIT 500').bind(cid).all<any>();
+  return jsonResponse({ past_applications: results || [] }, 200, corsHeaders(request, env));
+});
+router.post('/api/past-applications', async (request, env) => {
+  const body = await readJson(request);
+  const cid = knownCandidate(body?.candidate_id);
+  const company = shortText(body?.company, 120), role = shortText(body?.role, 160) || null;
+  const outcome = body?.outcome, decided = body?.decided_on == null || body.decided_on === '' ? null : String(body.decided_on);
+  if (!cid) return jsonResponse({ error: 'A known candidate_id is required.' }, 400, corsHeaders(request, env));
+  if (company.length < 2) return jsonResponse({ error: 'company is required.' }, 400, corsHeaders(request, env));
+  if (!PAST_OUTCOMES.includes(outcome)) return jsonResponse({ error: 'outcome must be REJECTED, NO_RESPONSE, APPLIED or WITHDRAWN.' }, 400, corsHeaders(request, env));
+  if (decided !== null && !/^\d{4}-\d{2}-\d{2}$/.test(decided)) return jsonResponse({ error: 'decided_on must be YYYY-MM-DD.' }, 400, corsHeaders(request, env));
+  const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM past_applications WHERE candidate_id = ?').bind(cid).first<any>();
+  if ((n?.n || 0) >= 500) return jsonResponse({ error: 'At most 500 entries per candidate.' }, 400, corsHeaders(request, env));
+  const row = await env.DB.prepare('INSERT INTO past_applications(candidate_id, company, role, outcome, decided_on) VALUES (?, ?, ?, ?, ?) RETURNING id, candidate_id, company, role, outcome, decided_on, created_at')
+    .bind(cid, company, role, outcome, decided).first<any>();
+  return jsonResponse({ past_application: row }, 201, corsHeaders(request, env));
+});
+router.delete('/api/past-applications/:id', async (request, env, params) => {
+  if (!/^\d{1,12}$/.test(params.id)) return jsonResponse({ error: 'Unknown entry.' }, 404, corsHeaders(request, env));
+  const r = await env.DB.prepare('DELETE FROM past_applications WHERE id = ?').bind(Number(params.id)).run();
+  if (!r.meta?.changes) return jsonResponse({ error: 'Unknown entry.' }, 404, corsHeaders(request, env));
+  return jsonResponse({ id: Number(params.id), deleted: true }, 200, corsHeaders(request, env));
 });
 router.get('/api/site-settings', async (request, env) => {
   const s = await site.loadSettings(env.DB);

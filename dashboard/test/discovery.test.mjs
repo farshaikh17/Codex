@@ -30,7 +30,7 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
 
 test('ranking: a posting whose only stated location is outside India loses points for Farhan unless it supports remote work from India', () => {
   const india = evaluate(farhan, post('Implementation Manager', 'Remote - India'));
-  const us = evaluate(farhan, post('Implementation Manager', 'Austin, TX', 'CRM Configuration and Workflow Automation.'));
+  const us = evaluate(farhan, post('Implementation Manager', 'Remote, London, United Kingdom', 'CRM Configuration and Workflow Automation.'));
   const usSame = evaluate({ ...farhan }, post('Implementation Manager', 'Remote', 'CRM Configuration and Workflow Automation.'));
   assert.equal(foreignLocation('Austin, TX'), true); assert.equal(foreignLocation('London, United Kingdom'), true);
   assert.equal(foreignLocation('Remote'), false); assert.equal(foreignLocation('Bengaluru, India'), false); assert.equal(foreignLocation(''), false);
@@ -336,4 +336,25 @@ test('a posting the employer ATS answers 404 for is recorded as removed and its 
   const err = await runDiscovery({ DB: d1 }, 'MANUAL', transport, 'greenhouse:elastic');
   assert.equal(err.status, 'ERROR', 'a server error is not mistaken for a removed posting');
   assert.equal(sqlite.prepare("SELECT state FROM cloud_discovery_queue WHERE posting_id='g9'").get().state, 'PENDING');
+});
+
+test('skills count when their key words appear, not only the exact phrase; a lone generic word is not enough', async () => {
+  const { skillFound, evaluate } = await import('../worker/discovery.ts');
+  const t = 'you will configure the crm and build automation of workflows using apis for a technical team';
+  assert.equal(skillFound('CRM Configuration', t), true);
+  assert.equal(skillFound('Workflow Automation', t), true);
+  assert.equal(skillFound('AI-assisted workflows', t), false, 'only "workflows" remains: not enough on its own');
+  assert.equal(skillFound('GoHighLevel', t), false);
+  assert.equal(skillFound('Reliability', 'plant reliability programs'), true);
+  assert.equal(skillFound('Electrical Maintenance', 'maintenance of electrical systems'), true);
+  assert.equal(skillFound('Electrical Maintenance', 'electrical design only'), false);
+  // the review's false matches stay false: a word must be a word of its own, single-word skills match exactly, words must be close
+  for (const [skill, text] of [['Sales', 'salary negotiable'], ['Ads', 'address and advanced'], ['Gas', 'gain experience'], ['Commissioning', 'commission-based'],
+    ['Open Source', 'sourcing open roles'], ['Writing', 'write code'], ['Operations', 'operator role'], ['Technical Team Leadership', 'technical skills. ' + 'x'.repeat(200) + ' leadership']])
+    assert.equal(skillFound(skill, text), false, `${skill} / ${text.slice(0, 30)}`);
+  // never fewer matches than the exact-phrase rule
+  const exact = (s, x) => x.includes(s.toLowerCase());
+  for (const s of ['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) if (exact(s, 'crm configuration and workflow automation in gohighlevel')) assert.equal(skillFound(s, 'crm configuration and workflow automation in gohighlevel'), true);
+  const p = { id: 'x', title: 'Implementation Manager', url: '', location: 'Remote - India', description: 'Fully remote. You will configure our CRM and own automation of sales workflows.', remote: true };
+  assert.equal(evaluate({ id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) }, p).score, 50 + 16, 'two skills found by key words');
 });
