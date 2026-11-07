@@ -47,6 +47,35 @@ class Triage(unittest.TestCase):
         self.assertIn('ai_review', db.execute("SELECT score_breakdown FROM candidate_job_scores WHERE job_id='j1'").fetchone()[0])
         self.assertEqual(db.execute("SELECT overall_score FROM candidate_job_scores WHERE job_id='j2'").fetchone()[0], 70, 'a decided row is never touched')
 
+    def test_batches_never_mix_candidates(self):
+        """7 jobs for one person then 3 for another, batch size 5: the old slicing made [f,f,f,f,f] [f,f,s,s,s]; the second request
+        then described the wrong person for three of its five postings."""
+        jobs = [{'candidate_id': 'farhan', 'job_id': f'f{i}', 'profile': 'builder'} for i in range(7)] + \
+               [{'candidate_id': 'sana', 'job_id': f's{i}', 'profile': 'plant'} for i in range(3)]
+        out = list(ai_triage.batches(jobs, 5))
+        self.assertEqual([len(b) for b in out], [5, 2, 3])
+        for b in out:
+            self.assertEqual(len({j['candidate_id'] for j in b}), 1)
+            self.assertEqual(len({j['profile'] for j in b}), 1)
+        self.assertEqual(sorted(j['job_id'] for b in out for j in b), sorted(j['job_id'] for j in jobs), 'every job is reviewed exactly once')
+        self.assertEqual(list(ai_triage.batches([], 5)), [])
+
+    def test_each_request_carries_its_own_candidate_profile(self):
+        jobs = [{'candidate_id': 'f', 'job_id': f'f{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'PROFILE_F'} for i in range(7)] + \
+               [{'candidate_id': 's', 'job_id': f's{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'PROFILE_S'} for i in range(3)]
+        seen = []
+        def fake_call(messages, token, timeout=60):
+            seen.append(messages[1]['content']); return '[]'
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ai_triage, 'call', fake_call), mock.patch.object(ai_triage.time, 'sleep'), \
+                mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'x'}):
+            Path(d, 'top.json').write_text(json.dumps(jobs))
+            with mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
+                ai_triage.main()
+        self.assertEqual(len(seen), 3)
+        for text in seen:
+            self.assertEqual(('PROFILE_F' in text) + ('PROFILE_S' in text), 1, 'one profile per request')
+            self.assertEqual(text.count('PROFILE_F') + text.count('PROFILE_S'), 1)
+
     def test_no_token_writes_nothing(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'top.json').write_text('[{"candidate_id":"f","job_id":"j","title":"t","company":"c","location":"l","description":"d","profile":"p"}]')

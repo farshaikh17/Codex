@@ -76,6 +76,17 @@ def to_sql(job, rev, now):
     ]
 
 
+def batches(jobs, size):
+    """Groups of at most `size` jobs that all belong to ONE candidate: a request carries a single candidate description, so a group
+    must never mix candidates (the input lists one person's jobs after another's, and a group of 5 can straddle the boundary)."""
+    by = {}
+    for j in jobs:
+        by.setdefault(j['candidate_id'], []).append(j)
+    for group in by.values():
+        for i in range(0, len(group), size):
+            yield group[i:i + size]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--in', dest='inp', required=True)
@@ -91,8 +102,7 @@ def main():
         return
     now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     lines, reviewed, failed = [], 0, 0
-    for i in range(0, len(jobs), a.batch):
-        batch = jobs[i:i + a.batch]
+    for batch in batches(jobs, a.batch):
         user = 'Candidate: ' + batch[0]['profile'] + '\n\nPostings:\n' + '\n\n'.join(
             f"[{k}] Title: {j['title']}\nEmployer: {j['company']}\nLocation: {j['location']}\n{j['description'][:1800]}" for k, j in enumerate(batch))
         try:
