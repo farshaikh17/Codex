@@ -308,7 +308,7 @@ def rescore_rows(local=None, page=400):
           JOIN candidates c ON c.id = q.candidate_id
           WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
             AND c.primary_skills IS NOT NULL AND trim(c.primary_skills) NOT IN ('', '[]', 'null')
-            AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v2":true%'
+            AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v3":true%'
             AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
           ORDER BY q.candidate_id, q.job_id LIMIT {page} OFFSET {offset}""", local)
         rows += part
