@@ -32,12 +32,14 @@ const byId = new Map(candidates.map((c) => [c.id, c]));
 // Daily-discovery context: employers listed publicly as hiring worldwide (engine/global_hirers.py, no credentials) and, per
 // candidate, employers that rejected them before (dashboard applications marked REJECTED and past applications entered by hand).
 const hirersFile = opt('--global-hirers');
-const globalHirers = new Set(hirersFile && fs.existsSync(hirersFile) ? (JSON.parse(fs.readFileSync(hirersFile, 'utf8')).keys || []) : []);
+const hirers = hirersFile && fs.existsSync(hirersFile) ? JSON.parse(fs.readFileSync(hirersFile, 'utf8')) : {};
+const globalHirers = new Set(hirers.keys || []);
+const yc = new Map(Object.entries(hirers.yc || {}));
 const ctxFor = new Map(candidates.map((c) => {
   let rows = []; try { rows = JSON.parse(c.rejected_companies || '[]') || []; } catch {}
   const rejected = new Map();
   for (const r of Array.isArray(rows) ? rows : []) { const k = companyKey(r?.company); if (k && !rejected.has(k)) rejected.set(k, r?.on ? String(r.on).slice(0, 10) : null); }
-  return [c.id, { globalHirers, rejected }];
+  return [c.id, { globalHirers, rejected, yc }];
 }));
 
 // A row is tagged as scored with stored skills only when the candidate has skills; otherwise the later re-score must still see it.
@@ -63,6 +65,9 @@ for (const file of many('--in')) {
       const cand = byId.get(cid);
       if (!cand) continue;
       const r = evaluate(cand, posting, ctxFor.get(cid));
+      // A board posting whose own text rules the candidate out (not remote, US only, clearance...) is not stored. Only a
+      // positive eligibility claim is never taken from a board.
+      if (board && r.status === 'INELIGIBLE') { report.skipped_ineligible++; continue; }
       if (board) {   // a job-board report: eligibility is never taken from the board (same rule as the Worker's persist())
         r.eligibility = 'UNKNOWN';
         r.reason = `Reported by ${j.ats_type}; employer availability and eligibility are unverified.`;

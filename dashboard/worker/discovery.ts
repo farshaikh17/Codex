@@ -156,7 +156,8 @@ export function skillFound(skill:string,lower:string){
 // ---- Daily-discovery context (owner rules 2026-11-07) -------------------------------------------------------------------
 // globalHirers: employer names (normalised) that public, community-kept lists record as hiring worldwide (remoteintech/remote-jobs,
 // ISC licence; yanirs/established-remote). rejected: per candidate, employers that rejected them before, with the date.
-export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null> };
+// yc: Y Combinator companies currently hiring (yc-oss/api), name key -> batch.
+export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null>; yc?: Map<string, string> };
 const COMPANY_SUFFIX = /(incorporated|inc|llc|ltd|limited|gmbh|corp|corporation|company|co|hq|io|ai|labs|technologies|technology|software|group|pvt|plc|sa|ag|bv)$/;
 /** Employer name for matching across sources: 'Perion Network Ltd.' and the ATS slug 'perionnetworkltd' both give 'perionnetwork'. */
 export function companyKey(name: string | null | undefined) {
@@ -167,7 +168,7 @@ export function companyKey(name: string | null | undefined) {
 // Pay check. Rough conversion to rupees per month (reference rates, 2026-11); only a published pay range is ever compared.
 const INR_PER: Record<string, number> = { INR: 1, USD: 85, EUR: 92, GBP: 108, AED: 23, SAR: 22.6, QAR: 23.3, OMR: 220, KWD: 276, BHD: 225, SGD: 64, AUD: 56, CAD: 61, NZD: 51, CHF: 96, JPY: 0.56, PHP: 1.5, MYR: 18 };
 const perMonth = (period: string) => /year|annual|yr/.test(period) ? 1 / 12 : /month/.test(period) ? 1 : /week/.test(period) ? 4.33 : /day|daily/.test(period) ? 21.7 : /hour/.test(period) ? 173 : 0;
-export const PAY_BELOW_FLOOR_PENALTY = 20, PAY_PREFERRED_BONUS = 5, GLOBAL_HIRER_BONUS = 5;
+export const PAY_BELOW_FLOOR_PENALTY = 20, PAY_PREFERRED_BONUS = 5, GLOBAL_HIRER_BONUS = 5, YC_BONUS = 3;
 /** Published pay as rupees per month {lo, hi}, or null when the posting gives no usable range. */
 export function monthlyInr(salary: any): { lo: number; hi: number } | null {
   if (!salary || typeof salary !== 'object') return null;
@@ -239,6 +240,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const key=companyKey(p.company), globalHirer=candidate.id==='farhan_shaikh'&&eligibility!=='INELIGIBLE'&&!!key&&!!ctx.globalHirers?.has(key);
  if(globalHirer&&role)score=Math.min(95,score+GLOBAL_HIRER_BONUS);
  const rejectedOn=key&&ctx.rejected?.has(key)?(ctx.rejected.get(key)||'date not recorded'):null;
+ // Funded early-stage founders (Farhan's builder goal): a YC company that is hiring gains a little, for a role-match only.
+ const ycBatch=candidate.id==='farhan_shaikh'&&role&&eligibility!=='INELIGIBLE'&&key&&ctx.yc?.has(key)?(ctx.yc.get(key)||'batch not listed'):null;
+ if(ycBatch)score=Math.min(95,score+YC_BONUS);
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
  // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
  // Both only lower the preliminary score. Eligibility, status and READY rules are not touched, and a human override still wins.
@@ -251,6 +255,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
+  +(ycBatch?` Y Combinator company (${ycBatch}), currently hiring.`:'')
   +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
 }
 async function hash(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');}

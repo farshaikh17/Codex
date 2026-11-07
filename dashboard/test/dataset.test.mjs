@@ -32,7 +32,7 @@ function world() {
     job('ds:greenhouse:2', 'Maintenance Engineer', 'Pune, India', 'Electrical maintenance and reliability programs for the plant.', [S]),
     job('ds:greenhouse:3', 'Security Operations Engineer', 'Remote - India', 'Active secret clearance required.', [F]),                // ineligible: skipped
     job('ds:greenhouse:4', 'Operations Associate', 'Remote - India', 'General office work.', [F]),                                     // role match, weak: kept or skipped by score
-    job('js:naukri:5', 'Implementation Lead', 'Bengaluru, India', 'Implementation of CRM automation.', [F], { board: true, ats_type: 'naukri' }),
+    job('js:naukri:5', 'Implementation Lead', 'Remote - Bengaluru, India', 'Fully remote role. Implementation of CRM automation.', [F], { board: true, ats_type: 'naukri' }),
   ], closed: [] };
   fs.writeFileSync(path.join(dir, 'matches.json'), JSON.stringify(matches));
   return { dir, sqlite };
