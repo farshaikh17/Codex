@@ -1,56 +1,51 @@
 """engine/liveness.py: only 404/410 (twice) or a Greenhouse error redirect closes a job; blocked or failing sites prove
-nothing; the SQL never closes a job with an application or a human decision. Uses a local HTTP server, no internet."""
-import json
+nothing; the SQL never closes a job with an application or a human decision. Offline: urlopen is replaced."""
 import sqlite3
-import threading
 import unittest
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.error
+from unittest import mock
 
 from engine import liveness
 
+CODES = {'/ok': 200, '/gone': 404, '/removed': 410, '/blocked': 403, '/busy': 429, '/err': 500}
 
-class H(BaseHTTPRequestHandler):
-    def do_GET(self):
-        code = {'/ok': 200, '/gone': 404, '/removed': 410, '/blocked': 403, '/busy': 429, '/err': 500}.get(self.path.split('?')[0], 200)
-        if self.path == '/gh':
-            self.send_response(302); self.send_header('Location', '/boards.greenhouse.io/acme?error=true'); self.end_headers(); return
-        self.send_response(code); self.end_headers(); self.wfile.write(b'x')
 
-    def log_message(self, *a):
-        pass
+def fake_urlopen(req, timeout=20):
+    url = req.full_url
+    path = '/' + url.split('/', 3)[-1] if url.count('/') >= 3 else '/'
+    if path == '/timeout':
+        raise TimeoutError('timed out')
+    code = CODES.get(path, 200)
+    if code >= 400:
+        raise urllib.error.HTTPError(url, code, 'x', {}, None)
+    r = mock.MagicMock()
+    r.__enter__.return_value = r
+    r.geturl.return_value = 'https://boards.greenhouse.io/acme?error=true' if path == '/gh' else url
+    r.status = code
+    r.read.return_value = b''
+    return r
 
 
 class Liveness(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=cls.srv.serve_forever, daemon=True).start()
-        cls.base = f'http://127.0.0.1:{cls.srv.server_address[1]}'
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.srv.shutdown()
+    def setUp(self):
+        p = mock.patch.object(liveness.urllib.request, 'urlopen', fake_urlopen)
+        p.start(); self.addCleanup(p.stop)
+        s = mock.patch.object(liveness.time, 'sleep', lambda *_: None)
+        s.start(); self.addCleanup(s.stop)
 
     def test_probe_rules(self):
-        st = lambda p: liveness.probe(self.base + p)[0]
+        st = lambda p: liveness.probe('https://jobs.example' + p)[0]
         self.assertEqual(st('/ok'), 'alive')
         self.assertEqual(st('/gone'), 'dead')
         self.assertEqual(st('/removed'), 'dead')
-        for p in ('/blocked', '/busy', '/err'):
+        self.assertEqual(st('/gh'), 'dead', 'a Greenhouse error redirect means the posting is gone')
+        for p in ('/blocked', '/busy', '/err', '/timeout'):
             self.assertEqual(st(p), 'unknown', p)
-        self.assertEqual(liveness.probe('http://127.0.0.1:1/x', timeout=2)[0], 'unknown')
-
-    def test_greenhouse_error_redirect(self):
-        # the final URL carries greenhouse.io and error=true
-        with unittest.mock.patch.object(liveness.urllib.request, 'urlopen') as m:
-            r = unittest.mock.MagicMock(); r.__enter__.return_value = r
-            r.geturl.return_value = 'https://boards.greenhouse.io/acme?error=true'; r.status = 200; r.read.return_value = b''
-            m.return_value = r
-            self.assertEqual(liveness.probe('https://boards.greenhouse.io/acme/jobs/1')[0], 'dead')
 
     def test_check_and_sql(self):
-        t = [{'id': 'a', 'url': self.base + '/ok'}, {'id': 'b', 'url': self.base + '/gone'}, {'id': 'c', 'url': self.base + '/blocked'},
-             {'id': 'd', 'url': self.base + '/gone'}, {'id': 'a', 'url': self.base + '/ok'}]
+        b = 'https://jobs.example'
+        t = [{'id': 'a', 'url': b + '/ok'}, {'id': 'b', 'url': b + '/gone'}, {'id': 'c', 'url': b + '/blocked'},
+             {'id': 'd', 'url': b + '/gone'}, {'id': 'a', 'url': b + '/ok'}]
         res = liveness.check(t, pause=0)
         self.assertEqual(sorted(res['dead']), ['b', 'd']); self.assertEqual(res['alive'], ['a']); self.assertEqual(res['unknown'], 1)
         db = sqlite3.connect(':memory:')
@@ -66,8 +61,6 @@ class Liveness(unittest.TestCase):
         self.assertEqual(db.execute('SELECT generation FROM cache_state').fetchone()[0], 6)
         self.assertEqual(liveness.to_sql({'dead': [], 'alive': [], 'unknown': 0}).strip(), '')
 
-
-import unittest.mock  # noqa: E402
 
 if __name__ == '__main__':
     unittest.main()
