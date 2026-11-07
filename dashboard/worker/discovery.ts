@@ -71,7 +71,7 @@ const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integrations?
 // Builder roles (owner rule 2026-11-07): implementation, automation, technical/revenue operations, GTM engineering, Founder's Office
 // and Chief of Staff, in any industry.
 export const FARHAN_ROLE=/operations|implementation|integration|automation|business systems|crm|revops|solutions|technical delivery|chief of staff|founder'?s? (?:office|associate)|founding (?:operations|ops|generalist)|gtm engineer|go[- ]to[- ]market engineer|ai (?:ops|operations|workflow|implementation)/i;
-export const SANA_ROLE=/electrical|power|energy|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
+export const SANA_ROLE=/electrical|power|energy|turbine|boiler|field service engineer|plant operator|control room|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
 // Employers the owner asked to skip (2026-11-07).
 const FARHAN_SKIP_EMPLOYER=/^\s*ajaia\b/i;
 // A location that names only the United States (owner rule 2026-11-07: US-only remote roles are rejected for Farhan).

@@ -75,6 +75,10 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
+      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers; no credentials)
+        continue-on-error: true
+        timeout-minutes: 12
+        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:
@@ -133,7 +137,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json; do
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"
