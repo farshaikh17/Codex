@@ -20,8 +20,15 @@ const QUERIES = {
 };
 const out = {};
 for (const [name, sql] of Object.entries(QUERIES)) {
-  const r = spawnSync('npx', ['wrangler', 'd1', 'execute', DB, mode, ...persist, '--json', '--command', sql], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  if (r.status !== 0) { console.error(`query failed for ${name}`); process.exit(1); }
+  // One transient API error (a 5xx from Cloudflare, a reset) is retried once after a pause; the real error is printed either way.
+  let r;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    r = spawnSync('npx', ['wrangler', 'd1', 'execute', DB, mode, ...persist, '--json', '--command', sql], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+    if (r.status === 0) break;
+    console.error(`query failed for ${name} (attempt ${attempt}): ${String(r.stderr || r.stdout || '').trim().split('\n').slice(-3).join(' | ').slice(0, 400)}`);
+    if (attempt === 1) spawnSync('sleep', ['8']);
+  }
+  if (r.status !== 0) process.exit(1);
   const text = r.stdout.slice(r.stdout.indexOf('['));
   const rows = JSON.parse(text)[0].results || [];
   out[name] = { rows: rows.length, sha256: createHash('sha256').update(JSON.stringify(rows)).digest('hex') };
