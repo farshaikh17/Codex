@@ -76,6 +76,48 @@ class Triage(unittest.TestCase):
             self.assertEqual(('PROFILE_F' in text) + ('PROFILE_S' in text), 1, 'one profile per request')
             self.assertEqual(text.count('PROFILE_F') + text.count('PROFILE_S'), 1)
 
+    def test_bad_replies_are_described_and_stop_after_three(self):
+        """The first production run failed all 20 batches with a bare JSONDecodeError and a 'success' mark. Now the reason is printed, and
+        three failures in a row stop the review instead of hammering the endpoint for the rest of the list."""
+        import io, urllib.error
+        class Resp:
+            status = 200
+            headers = {'Content-Type': 'text/html'}
+            def __init__(self, raw): self._raw = raw
+            def read(self): return self._raw
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        jobs = [{'candidate_id': 'f', 'job_id': f'j{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'p'} for i in range(40)]
+        calls = []
+        def fake_urlopen(req, timeout=0):
+            calls.append(1); return Resp(b'<html><body>Sign in to GitHub</body></html>')
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ai_triage.urllib.request, 'urlopen', fake_urlopen), mock.patch.object(ai_triage.time, 'sleep'), \
+                mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'x'}), mock.patch('sys.stdout', new_callable=io.StringIO) as out, mock.patch('sys.stderr', new_callable=io.StringIO) as err:
+            Path(d, 'top.json').write_text(json.dumps(jobs))
+            with mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
+                ai_triage.main()
+        rep = json.loads(out.getvalue().strip().splitlines()[-1])
+        self.assertEqual(len(calls), 3, 'stopped after three failures in a row, not 8 batches')
+        self.assertEqual(rep['reviewed'], 0); self.assertEqual(rep['failed_batches'], 3)
+        self.assertIn('Sign in to GitHub', rep['failure_samples'][0]); self.assertIn('text/html', rep['failure_samples'][0])
+
+    def test_probe_reports_failure_and_success(self):
+        import io
+        class Resp:
+            status = 200
+            headers = {'Content-Type': 'application/json'}
+            def __init__(self, raw): self._raw = raw
+            def read(self): return self._raw
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        good = json.dumps({'choices': [{'message': {'content': 'ready'}}]}).encode()
+        for raw, expect, rc in ((good, 'ok', 0), (b'', 'failed', 1)):
+            with mock.patch.object(ai_triage.urllib.request, 'urlopen', lambda req, timeout=0, raw=raw: Resp(raw)), mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'secret-token'}), \
+                    mock.patch('sys.stdout', new_callable=io.StringIO) as out, mock.patch('sys.argv', ['x', '--in', 'a', '--out', 'b', '--probe']):
+                self.assertEqual(ai_triage.main(), rc)
+            self.assertEqual(json.loads(out.getvalue())['probe'], expect)
+            self.assertNotIn('secret-token', out.getvalue())
+
     def test_no_token_writes_nothing(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'top.json').write_text('[{"candidate_id":"f","job_id":"j","title":"t","company":"c","location":"l","description":"d","profile":"p"}]')

@@ -1,0 +1,24 @@
+name: AI review probe (manual, one tiny request)
+# Sends ONE request ("reply with the word ready") to GitHub Models with this workflow's own token and prints what came back
+# (status, content type, the first characters of a bad reply). No job data, no database, no secrets printed. Used to see why the
+# daily AI review fails; the daily run itself now prints the same diagnosis.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: One request to GitHub Models
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python engine/ai_triage.py --probe | tee probe.json

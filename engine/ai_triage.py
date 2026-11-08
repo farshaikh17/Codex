@@ -28,13 +28,34 @@ SYSTEM = ('You screen job postings for a job seeker. For each posting return str
           'Judge fit from the posting text and the candidate description only. Never invent requirements.')
 
 
+class ReplyError(Exception):
+    """The endpoint answered, but not with the JSON a chat completion should be. Carries what is needed to see why (no secrets)."""
+
+
 def call(messages, token, timeout=60):
     body = json.dumps({'model': MODEL, 'messages': messages, 'temperature': 0.1, 'max_tokens': 900}).encode()
     req = urllib.request.Request(ENDPOINT, data=body, method='POST', headers={
-        'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/json', 'User-Agent': 'career-job-engine/1.0'})
+        'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28', 'Accept-Encoding': 'identity', 'User-Agent': 'career-job-engine/1.0'})
     with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310
-        d = json.loads(r.read())
-    return d['choices'][0]['message']['content']
+        raw, status, ctype = r.read(), getattr(r, 'status', '?'), r.headers.get('Content-Type', '?')
+    try:
+        d = json.loads(raw)
+        return d['choices'][0]['message']['content']
+    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
+        snippet = re.sub(r'\s+', ' ', raw[:160].decode('utf-8', 'replace'))
+        raise ReplyError(f'{type(e).__name__}: HTTP {status}, {ctype}, {len(raw)} bytes, starts: {snippet!r}') from None
+
+
+def describe(e):
+    """One line saying what went wrong, safe to print."""
+    if isinstance(e, urllib.error.HTTPError):
+        try:
+            detail = re.sub(r'\s+', ' ', e.read(160).decode('utf-8', 'replace'))
+        except Exception:   # noqa: BLE001
+            detail = ''
+        return f'HTTP {e.code} {e.reason}: {detail!r}'
+    return str(e) if isinstance(e, ReplyError) else f'{type(e).__name__}: {str(e)[:120]}'
 
 
 def parse(content, n):
@@ -93,30 +114,43 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--batch', type=int, default=5)
     ap.add_argument('--max', type=int, default=100)
+    ap.add_argument('--probe', action='store_true', help='send one tiny request and print what came back (no job data)')
     a = ap.parse_args()
     token = os.environ.get('GITHUB_TOKEN', '')
+    if a.probe:
+        try:
+            out = call([{'role': 'user', 'content': 'Reply with the single word: ready'}], token, 30)
+            print(json.dumps({'probe': 'ok', 'model': MODEL, 'reply': out[:60]}))
+            return 0
+        except Exception as e:   # noqa: BLE001
+            print(json.dumps({'probe': 'failed', 'model': MODEL, 'endpoint': ENDPOINT, 'why': describe(e), 'token_present': bool(token)}))
+            return 1
     jobs = json.loads(Path(a.inp).read_text())[:a.max]
     if not token or not jobs:
         Path(a.out).write_text('')
         print(json.dumps({'reviewed': 0, 'skipped': 'no token or no jobs'}))
         return
     now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    lines, reviewed, failed = [], 0, 0
+    lines, reviewed, failed, samples, streak = [], 0, 0, [], 0
     for batch in batches(jobs, a.batch):
         user = 'Candidate: ' + batch[0]['profile'] + '\n\nPostings:\n' + '\n\n'.join(
             f"[{k}] Title: {j['title']}\nEmployer: {j['company']}\nLocation: {j['location']}\n{j['description'][:1800]}" for k, j in enumerate(batch))
         try:
             content = call([{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': user}], token)
-        except urllib.error.HTTPError as e:
-            failed += 1
-            if e.code == 429:
+        except Exception as e:   # noqa: BLE001
+            failed += 1; streak += 1
+            why = describe(e)
+            if len(samples) < 3 and why not in samples:
+                samples.append(why)
+            print(f'batch failed: {why}', file=sys.stderr)
+            if isinstance(e, urllib.error.HTTPError) and e.code == 429:
                 print('rate limited; stopping', file=sys.stderr)
                 break
+            if streak >= 3:   # the same wall three times in a row is not going to move; do not hammer it for the rest of the list
+                print('three failed batches in a row; stopping the review', file=sys.stderr)
+                break
             continue
-        except Exception as e:
-            failed += 1
-            print(f'batch failed: {type(e).__name__}', file=sys.stderr)
-            continue
+        streak = 0
         for k, rev in parse(content, len(batch)).items():
             lines += to_sql(batch[k], rev, now)
             reviewed += 1
@@ -124,7 +158,7 @@ def main():
     if lines:
         lines.append('UPDATE cache_state SET generation = generation + 1 WHERE id = 1;')
     Path(a.out).write_text('\n'.join(lines) + ('\n' if lines else ''))
-    print(json.dumps({'reviewed': reviewed, 'failed_batches': failed, 'model': MODEL}))
+    print(json.dumps({'reviewed': reviewed, 'failed_batches': failed, 'model': MODEL, 'failure_samples': samples}))
 
 
 if __name__ == '__main__':
