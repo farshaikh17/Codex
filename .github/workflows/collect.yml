@@ -20,6 +20,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Start from the latest published snapshot
+        # Runs are serialized (concurrency group above), but a run queued behind another one checked out the commit it was
+        # triggered by, so it started from a snapshot the earlier run had already replaced and its own publication conflicted
+        # (the "Update public ATS snapshots" rebase failures of 7 Nov). Fast-forward to the branch tip before collecting.
+        run: |
+          git fetch origin "$GITHUB_REF_NAME"
+          git merge --ff-only "origin/$GITHUB_REF_NAME" || git reset --hard "origin/$GITHUB_REF_NAME"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -61,5 +68,18 @@ jobs:
           git add public/
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update public ATS snapshots'
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push origin "HEAD:$GITHUB_REF_NAME"
+          # Someone merged to main while this run was collecting: replay the new snapshot on top (a data conflict is resolved in
+          # favour of the snapshot this run just built and verified), and try again if the push races another one.
+          for attempt in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            if ! git rebase -X theirs "origin/$GITHUB_REF_NAME"; then
+              git rebase --abort || true
+              echo "::warning::rebase conflict on attempt $attempt"; sleep 5; continue
+            fi
+            if [ -n "$(git diff --name-only "origin/$GITHUB_REF_NAME" HEAD -- public/)" ] && ! python collect.py --verify; then
+              echo '::error::the rebased snapshot did not verify'; exit 1
+            fi
+            if git push origin "HEAD:$GITHUB_REF_NAME"; then exit 0; fi
+            sleep 5
+          done
+          echo '::error::could not publish after 3 attempts'; exit 1
