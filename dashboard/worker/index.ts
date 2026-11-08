@@ -2546,7 +2546,7 @@ router.get('/api/profile', async (request, env, _params, url) => {
       citizenship: cand.citizenship || 'India',
       primary_timezone: cand.primary_timezone || 'Asia/Kolkata',
       target_roles: cand.target_roles ? JSON.parse(cand.target_roles) : (isSana ? [
-        'Electrical Maintenance Engineer',
+        'Maintenance Engineer (Power Plant)',
         'Industrial Maintenance Engineer',
         'Reliability Engineer',
         'Power Plant Operations Engineer',
@@ -2560,7 +2560,7 @@ router.get('/api/profile', async (request, env, _params, url) => {
         'Solutions Implementation'
       ]),
       primary_skills: cand.primary_skills ? JSON.parse(cand.primary_skills) : (isSana ? [
-        'Electrical Maintenance',
+        'Rotating Equipment Maintenance',
         'Industrial Maintenance',
         'Power Plant Operations',
         'Reliability',

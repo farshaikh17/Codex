@@ -9,6 +9,7 @@ Usage: python engine/jobsite_discovery.py --profiles work/profiles.json --out wo
 import argparse
 import hashlib
 import json
+import logging
 import re
 import sys
 from pathlib import Path
@@ -34,6 +35,34 @@ QUERIES = {
 MAX_QUERIES = 7
 
 
+BLOCK_WORDS = re.compile(r'\b(403|429)\b|forbidden|too many requests|rate.?limit|captcha|access denied|blocked', re.I)
+
+
+class BlockWatch(logging.Handler):
+    """JobSpy does not raise when a site refuses it (403/429): it logs the refusal and returns an empty result, so a blocked search
+    looked like 'nothing found' and the report said blocked: 0. This remembers JobSpy's own refusal messages so the search can
+    be counted as blocked."""
+
+    def __init__(self):
+        super().__init__(level=logging.WARNING)
+        self.messages = []
+
+    def emit(self, record):
+        if record.name.startswith('JobSpy'):
+            text = record.getMessage()
+            if BLOCK_WORDS.search(text):
+                self.messages.append(text[:120])
+
+    def take(self):
+        out, self.messages = self.messages, []
+        return out
+
+
+def blocked_note(rows, messages):
+    """The refusal message when a search returned nothing AND JobSpy logged a refusal; None otherwise."""
+    return messages[0] if (not rows and messages) else None
+
+
 def run_search(site, term, location, results, hours, country='India'):
     from jobspy import scrape_jobs
     kw = {'country_indeed': country}
@@ -54,6 +83,7 @@ def main():
     a = ap.parse_args()
     profs = json.loads(Path(a.profiles).read_text())
     found, log = {}, []
+    watch = BlockWatch(); logging.getLogger().addHandler(watch)
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
         home = p['home'].title()
@@ -61,10 +91,14 @@ def main():
         role = re.compile(p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
         for term, loc, country, sites in queries[:MAX_QUERIES]:
             for site in sites:
+                watch.take()
                 try:
                     rows = run_search(site, term, loc, a.results, a.hours, country)
                 except Exception as e:   # a blocked site is skipped, never fatal
-                    log.append({'site': site, 'term': term, 'error': str(e)[:120]}); continue
+                    watch.take(); log.append({'site': site, 'term': term, 'error': str(e)[:120]}); continue
+                note = blocked_note(rows, watch.take())
+                if note:   # an empty answer plus a refusal in JobSpy's own log is a blocked search, not 'nothing found'
+                    log.append({'site': site, 'term': term, 'error': note}); continue
                 kept = 0
                 for r in rows:
                     title, url, company = str(r.get('title') or ''), str(r.get('job_url') or ''), str(r.get('company') or '')

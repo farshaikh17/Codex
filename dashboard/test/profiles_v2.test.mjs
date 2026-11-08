@@ -117,3 +117,35 @@ test('re-score applies the current rules to earlier undecided rows: a non-remote
   assert.equal(q('o3').st, 'HOLD', 'a job someone applied to is never touched');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).rescored_ineligible, 3, 'planned for all three; the SQL guards decide');
 });
+
+test('migration 0017 removes the electrical/substation maintenance claims from Sana only, keeps hand-added entries, runs once', () => {
+  const m14 = fs.readFileSync(path.join(root, 'migrations', '0014_discovery_state.sql'), 'utf8');
+  const m17 = fs.readFileSync(path.join(root, 'migrations', '0017_sana_profile_cv.sql'), 'utf8');
+  const { sqlite } = createDb();
+  sqlite.exec(m14);
+  sqlite.exec(`DELETE FROM discovery_state WHERE key = 'sana_profile_cv_v1'`);
+  sqlite.prepare(`INSERT INTO candidates(id,full_name,primary_skills,secondary_skills,target_roles) VALUES
+    ('sana_ansari','S','["Electrical Maintenance","Substation Maintenance","Industrial Maintenance","Hand Added"]','["Electrical Maintenance Planning","HVAC & Utility Systems"]','["Electrical Maintenance Engineer","Substation Maintenance Engineer","Plant Engineer"]'),
+    ('farhan_shaikh','F','["Electrical Maintenance"]',NULL,NULL)`).run();
+  sqlite.exec(m17);
+  const get = (id) => { const r = sqlite.prepare('SELECT primary_skills p, secondary_skills s, target_roles t FROM candidates WHERE id=?').get(id); return { p: JSON.parse(r.p), s: JSON.parse(r.s), t: JSON.parse(r.t) }; };
+  const s = get('sana_ansari');
+  for (const list of [s.p, s.s, s.t]) assert.ok(!list.some((x) => /^(electrical maintenance|substation)/i.test(x)), JSON.stringify(list));
+  assert.ok(s.p.includes('Hand Added') && s.p.includes('Industrial Maintenance') && s.p.includes('Rotating Equipment Maintenance') && s.p.includes('DCS Monitoring'));
+  assert.ok(s.s.includes('HVAC & Utility Systems') && s.t.includes('Plant Engineer') && s.t.includes('Energy Efficiency Engineer'));
+  const f = sqlite.prepare('SELECT primary_skills p, secondary_skills s FROM candidates WHERE id=?').get('farhan_shaikh');
+  assert.equal(f.p, '["Electrical Maintenance"]', 'another candidate is untouched'); assert.equal(f.s, null);
+  // a hand edit afterwards is not undone by a later release
+  sqlite.prepare(`UPDATE candidates SET primary_skills='["Only This"]' WHERE id='sana_ansari'`).run();
+  sqlite.exec(m17);
+  assert.deepEqual(get('sana_ansari').p, ['Only This']);
+});
+
+test('inspection panel: a discovery row (quick screen only) is told apart from a fully assessed one', async () => {
+  const { isQuickScreen } = await import('../frontend/src/quickScreen.ts');
+  assert.equal(isQuickScreen({ preliminary: true, matched_skills: ['Reliability'] }), true);
+  assert.equal(isQuickScreen({ preliminary: true, experience_assessment: { status: 'MET' } }), false);
+  assert.equal(isQuickScreen({ preliminary: true, skill_matches_detailed: [{ skill: 'x' }] }), false);
+  assert.equal(isQuickScreen({ primary_ratio: 0.5 }), false, 'older rows without the preliminary flag keep the full panel');
+  assert.equal(isQuickScreen(null), false); assert.equal(isQuickScreen(undefined), false);
+});

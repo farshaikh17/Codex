@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { isQuickScreen } from '../quickScreen';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
 import { submitJobFeedback, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
@@ -184,6 +185,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const experienceAssessment = breakdown?.experience_assessment;
   const hardRequirements = breakdown?.hard_requirements;
   const feedbackModifier = breakdown?.feedback_modifier;
+  // A discovery row has only the quick screen (matched skills, no seniority/experience/coverage). Showing the full panel's defaults for it
+  // ("no skills", "0% primary", "no explicit minimum") contradicted the list, so those parts are replaced by what the screen really knows.
+  const quickScreen = isQuickScreen(breakdown);
+  const quickSkills = breakdown?.matched_skills || [];
 
   return (
     <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Job inspection" className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -415,7 +420,23 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               </div>
             )}
 
+            {quickScreen && (
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2 text-xs" data-testid="quick-screen">
+                <div className="font-semibold text-slate-700">Quick screen <span className="font-normal text-slate-500">(full review not done yet)</span></div>
+                <div>
+                  <span className="text-slate-500 block mb-1">Skills found in the posting:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quickSkills.length > 0
+                      ? quickSkills.map((k) => <span key={k} className="px-2 py-0.5 rounded font-mono text-[11px] bg-emerald-100 text-emerald-800">✓ {k}</span>)
+                      : <span className="text-slate-400 italic">None of the stored skills were found in the text</span>}
+                  </div>
+                </div>
+                <p className="text-slate-500">Seniority, years required and skill coverage are not assessed yet, so they are not shown instead of being guessed.</p>
+              </div>
+            )}
+
             {/* Explainability Grid: Seniority + Experience */}
+            {!quickScreen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {/* Seniority Assessment */}
               <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
@@ -461,8 +482,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 )}
               </div>
             </div>
+            )}
 
             {/* Skills Alignment & Evidence Quotations */}
+            {!quickScreen && (
             <div className="space-y-3 pt-2 text-xs">
               <div>
                 <span className="font-semibold text-slate-700 block mb-1">
@@ -523,6 +546,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 <span>Skills Ratio: {Math.round((breakdown?.primary_ratio || 0) * 100)}% Primary</span>
               </div>
             </div>
+            )}
           </div>
 
           {/* Section 3: Compensation & Employment Structure */}

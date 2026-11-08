@@ -61,6 +61,10 @@ export interface ScoreBreakdown {
   matched_role_name: string | null;
   calculation_formula: string;
   skill_matches_detailed?: SkillMatchDetail[];
+  // Rows written by the daily/watchlist discovery carry only this quick screen, not the full assessment above.
+  preliminary?: boolean;
+  matched_skills?: string[];
+  note?: string;
   extra_job_skills?: string[];
   seniority_assessment?: SeniorityAssessment;
   experience_assessment?: ExperienceAssessment;
