@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, BookmarkCheck, RefreshCw, Radio, LayoutDashboard, Users, Lock, Unlock, Sliders, Briefcase } from 'lucide-react';
+import { BarChart3, BookmarkCheck, RefreshCw, LayoutDashboard, Users, Lock, Unlock, Sliders, Briefcase } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
 
@@ -81,9 +81,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <BookmarkCheck className="w-4 h-4" /><span>Applications</span>
               {savedCount > 0 && <span className={`ml-0.5 text-xs px-1.5 rounded-full font-mono ${activeTab === 'tracker' ? 'bg-white/20' : 'bg-slate-200'}`}>{savedCount}</span>}
             </button>
-            {!viewer && <button aria-label="Discovery" onClick={() => setActiveTab('discovery')} className={item(activeTab === 'discovery')}>
-              <Radio className="w-4 h-4" /><span className="hidden sm:inline">Discovery / review</span>
-            </button>}
             {!viewer && <button aria-label="Settings" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
               <Sliders className="w-4 h-4" /><span className="hidden sm:inline">Profile</span>
             </button>}

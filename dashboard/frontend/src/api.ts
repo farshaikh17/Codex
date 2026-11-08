@@ -217,6 +217,7 @@ export async function fetchJobs(params?: {
   pay_filter?: string;
   candidate_id?: string;
   strategy_lane?: string;
+  found_on?: string;
   page?: number;
   limit?: number;
   offset?: number;
@@ -241,6 +242,7 @@ export async function fetchJobs(params?: {
   if (params?.pay_filter && params.pay_filter !== 'ALL') query.append('pay_filter', params.pay_filter);
   if (params?.candidate_id) query.append('candidate_id', params.candidate_id);
   if (params?.strategy_lane && params.strategy_lane !== 'ALL') query.append('strategy_lane', params.strategy_lane);
+  if (params?.found_on && params.found_on !== 'ALL') query.append('found_on', params.found_on);
   
   const limit = params?.limit || 50;
   const offset = params?.offset !== undefined ? params.offset : (params?.page ? (params.page - 1) * limit : 0);

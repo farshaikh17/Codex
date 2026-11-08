@@ -13,7 +13,6 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   isOperator,
   onSelectCandidate,
-  onOpenAutomation,
   onOpenApplications
 }) => {
   const [data, setData] = useState<DashboardOverviewData | null>(null);
@@ -34,7 +33,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     return (
       <div className="flex flex-col items-center justify-center p-12 text-slate-500">
         <Activity className="w-8 h-8 animate-spin text-emerald-700 mb-3" />
-        <p className="text-sm">Loading Multi-Candidate Career Engine Telemetry...</p>
+        <p className="text-sm">Loading…</p>
       </div>
     );
   }
@@ -42,7 +41,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   if (error || !data) {
     return (
       <div className="p-8 text-center text-rose-700 bg-rose-50 rounded-xl border border-rose-200">
-        <p className="font-semibold mb-2">Error Loading Dashboard</p>
+        <p className="font-semibold mb-2">The overview could not load</p>
         <p className="text-xs text-rose-600">{error || 'Unknown error'}</p>
       </div>
     );
@@ -54,30 +53,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono uppercase tracking-wider bg-emerald-500/10 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-500/20 font-semibold">
-              Production Multi-Candidate Architecture
-            </span>
-            <span className="text-xs text-slate-500">•</span>
-            <span className="text-xs text-slate-500">Cloudflare D1 Ledger</span>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Career Job Engine</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Independent qualification pipelines per candidate. Viewing is open to everyone; changing records needs the operator key.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenAutomation}
-            className="flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
-          >
-            <Activity className="w-4 h-4 text-emerald-700" />
-            <span>Automation: <strong className="text-emerald-700 font-mono">{data.automation_status}</strong></span>
-          </button>
-        </div>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Today's job search</h2>
+        <p className="text-sm text-slate-500 mt-1">
+          New jobs are found every day and ranked best first. Open a person to see their list, save the ones worth applying to, and hide the rest.
+        </p>
       </div>
 
       {/* Two Candidate Command Cards */}
@@ -97,7 +77,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   {farhan.summary_line || ''}
                 </p>
                 <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
-                  {farhan.pay_line || ''} • Target Strategy: {farhan.target_distribution?.strongest_fit} / {farhan.target_distribution?.bridge} / {farhan.target_distribution?.dream}
+                  {farhan.pay_line || ''}
                 </p>
               </div>
 
@@ -110,66 +90,29 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <div className="grid grid-cols-4 gap-2.5 mb-6 text-center">
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-emerald-700 font-mono">{farhan.ready_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">READY</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Ready to apply</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-emerald-600 font-mono">{farhan.stretch_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">STRETCH</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Stretch</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-amber-700 font-mono">{farhan.review_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">REVIEW</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">To review</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-blue-700 font-mono">{farhan.applied_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">APPLIED</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Applied</div>
               </div>
             </div>
 
-            {/* Strategy Allocation Bars */}
-            <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                <span>Strategy Lane Allocation</span>
-                <span className="text-[11px] font-normal text-slate-500">Target vs Actual READY</span>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Strongest Fit (Target: {farhan.target_distribution?.strongest_fit ?? 70}%)</span>
-                  <span className="font-mono text-emerald-700 font-semibold">{farhan.actual_ready_distribution?.strongest_fit ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, farhan.actual_ready_distribution?.strongest_fit ?? 0)}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Bridge (Target: {farhan.target_distribution?.bridge ?? 20}%)</span>
-                  <span className="font-mono text-emerald-600 font-semibold">{farhan.actual_ready_distribution?.bridge ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-teal-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, farhan.actual_ready_distribution?.bridge ?? 0)}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Dream (Target: {farhan.target_distribution?.dream ?? 10}%)</span>
-                  <span className="font-mono text-purple-700 font-semibold">{farhan.actual_ready_distribution?.dream ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-purple-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, farhan.actual_ready_distribution?.dream ?? 0)}%` }} />
-                </div>
-              </div>
-            </div>
           </div>
 
           <button
             onClick={() => onSelectCandidate('farhan_shaikh')}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm transition-colors shadow-sm"
           >
-            <span>Open Farhan's Workspace</span>
+            <span>Open Farhan's jobs</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -189,7 +132,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   {sana.summary_line || ''}
                 </p>
                 <p className="text-[11px] text-amber-700 font-medium mt-0.5">
-                  {sana.pay_line || ''} • Target Strategy: {sana.target_distribution?.strongest_fit} / {sana.target_distribution?.bridge} / {sana.target_distribution?.dream}
+                  {sana.pay_line || ''}
                 </p>
               </div>
 
@@ -202,66 +145,29 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <div className="grid grid-cols-4 gap-2.5 mb-6 text-center">
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-emerald-700 font-mono">{sana.ready_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">READY</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Ready to apply</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-emerald-600 font-mono">{sana.stretch_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">STRETCH</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Stretch</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-amber-700 font-mono">{sana.review_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">REVIEW</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">To review</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <div className="text-xl font-bold text-blue-700 font-mono">{sana.applied_count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">APPLIED</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Applied</div>
               </div>
             </div>
 
-            {/* Strategy Allocation Bars */}
-            <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                <span>Strategy Lane Allocation</span>
-                <span className="text-[11px] font-normal text-slate-500">Target vs Actual READY</span>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Strongest Fit (Target: {sana.target_distribution?.strongest_fit ?? 20}%)</span>
-                  <span className="font-mono text-emerald-700 font-semibold">{sana.actual_ready_distribution?.strongest_fit ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, sana.actual_ready_distribution?.strongest_fit ?? 0)}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Bridge (Target: {sana.target_distribution?.bridge ?? 30}%)</span>
-                  <span className="font-mono text-emerald-600 font-semibold">{sana.actual_ready_distribution?.bridge ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-teal-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, sana.actual_ready_distribution?.bridge ?? 0)}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                  <span>Dream (Target: {sana.target_distribution?.dream ?? 50}%)</span>
-                  <span className="font-mono text-purple-700 font-semibold">{sana.actual_ready_distribution?.dream ?? 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-purple-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, sana.actual_ready_distribution?.dream ?? 0)}%` }} />
-                </div>
-              </div>
-            </div>
           </div>
 
           <button
             onClick={() => onSelectCandidate('sana_ansari')}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-coral-500 hover:bg-coral-600 text-white font-medium text-sm transition-colors shadow-sm"
           >
-            <span>Open Sana's Workspace</span>
+            <span>Open Sana's jobs</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -292,13 +198,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-6">
           <div>
-            <span className="text-slate-500 uppercase tracking-wider text-[10px] block">Total Tracked Inventory</span>
-            <span className="text-base font-bold text-slate-900 font-mono">{(data.total_jobs_tracked ?? 0).toLocaleString()} Stored Listings</span>
+            <span className="text-slate-500 uppercase tracking-wider text-[10px] block">Jobs found so far</span>
+            <span className="text-base font-bold text-slate-900 font-mono">{(data.total_jobs_tracked ?? 0).toLocaleString()} </span>
           </div>
           <div className="h-8 w-px bg-slate-100" />
           <div>
-            <span className="text-slate-500 uppercase tracking-wider text-[10px] block">Active Vacancies</span>
-            <span className="text-base font-bold text-emerald-700 font-mono">{(data.active_jobs_count ?? 0).toLocaleString()} Active</span>
+            <span className="text-slate-500 uppercase tracking-wider text-[10px] block">Still open</span>
+            <span className="text-base font-bold text-emerald-700 font-mono">{(data.active_jobs_count ?? 0).toLocaleString()}</span>
           </div>
         </div>
 
@@ -308,7 +214,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5"
           >
             <FileText className="w-3.5 h-3.5 text-blue-700" />
-            <span>Applications Tracker</span>
+            <span>My applications</span>
           </button>
         </div>
       </div>

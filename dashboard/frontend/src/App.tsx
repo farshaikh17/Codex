@@ -145,7 +145,7 @@ export const App: React.FC = () => {
           eligibility: eligibilityFilter,
           min_score: minScore,
           workplace_type: workplaceFilter,
-          source_adapter: sourceFilter,
+          found_on: sourceFilter,
           sort_by: sortBy,
           exclude_applied: true,
           candidate_id: candidateForFetch,
@@ -374,49 +374,6 @@ export const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Strategy Lane Selector Pills */}
-                  <div className="flex flex-wrap items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-lg border border-slate-800">
-                    <button
-                      onClick={() => setSelectedLane('ALL')}
-                      className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                        selectedLane === 'ALL'
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      ALL LANES
-                    </button>
-                    <button
-                      onClick={() => setSelectedLane('STRONGEST_FIT')}
-                      className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                        selectedLane === 'STRONGEST_FIT'
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      STRONGEST FIT{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '20%' : '70%'})` : ''}
-                    </button>
-                    <button
-                      onClick={() => setSelectedLane('BRIDGE')}
-                      className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                        selectedLane === 'BRIDGE'
-                          ? 'bg-teal-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      BRIDGE{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '30%' : '20%'})` : ''}
-                    </button>
-                    <button
-                      onClick={() => setSelectedLane('DREAM')}
-                      className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                        selectedLane === 'DREAM'
-                          ? 'bg-purple-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      DREAM{BUILTIN.includes(candidateId) ? ` (${candidateId === 'sana_ansari' ? '50%' : '10%'})` : ''}
-                    </button>
-                  </div>
                 </div>
 
                 {/* Executive Funnel Summary Cards */}
@@ -425,9 +382,9 @@ export const App: React.FC = () => {
                     onClick={() => setActiveTab('india-remote')}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-teal-400 hover:shadow-md cursor-pointer transition-all"
                   >
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Eligible (posting text)</div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Can apply (confirmed)</div>
                     <div className="text-2xl font-black text-teal-700 font-mono mt-0.5">{indiaRemoteSummary?.total_confirmed ?? 0}</div>
-                    <div className="text-[11px] text-teal-600 font-semibold mt-0.5">Explore Queue →</div>
+                    <div className="text-[11px] text-teal-600 font-semibold mt-0.5">See these jobs →</div>
                   </div>
 
                   <div
@@ -445,16 +402,16 @@ export const App: React.FC = () => {
                   >
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stretch Matches</div>
                     <div className="text-2xl font-black text-blue-700 font-mono mt-0.5">{statusCounts.STRETCH_READY}</div>
-                    <div className="text-[11px] text-blue-600 font-semibold mt-0.5">View Stretch →</div>
+                    <div className="text-[11px] text-blue-600 font-semibold mt-0.5">Worth a try →</div>
                   </div>
 
                   <div
-                    onClick={() => setActiveTab('ready')}
+                    onClick={() => document.querySelector('[data-testid="job-filters"]')?.scrollIntoView({ behavior: 'smooth' })}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-amber-400 hover:shadow-md cursor-pointer transition-all"
                   >
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Needs Review</div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">To review</div>
                     <div className="text-2xl font-black text-amber-700 font-mono mt-0.5">{statusCounts.NEEDS_REVIEW}</div>
-                    <div className="text-[11px] text-amber-600 font-semibold mt-0.5">Operator Audit →</div>
+                    <div className="text-[11px] text-amber-600 font-semibold mt-0.5">In the list below ↓</div>
                   </div>
 
                   <div
@@ -463,7 +420,7 @@ export const App: React.FC = () => {
                   >
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Applications</div>
                     <div className="text-2xl font-black text-purple-700 font-mono mt-0.5">{savedCount}</div>
-                    <div className="text-[11px] text-purple-600 font-semibold mt-0.5">Track Pipeline →</div>
+                    <div className="text-[11px] text-purple-600 font-semibold mt-0.5">Track them →</div>
                   </div>
                 </div>
 

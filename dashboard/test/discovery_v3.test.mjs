@@ -244,6 +244,30 @@ test('taste model, AI-review list and the 60-day note in the daily apply', () =>
   assert.equal(top.length, 3); assert.equal(top[0].job_id, 'ds:t:1'); assert.ok(top[0].profile.includes('India') && !/farhan|shaikh|sana|ansari/i.test(top.map((t) => `${t.profile} ${t.title} ${t.company} ${t.description}`).join(' ')), 'no names in what is sent for review');
 });
 
+test('job filters: Remote covers every stored remote value, Not stated covers empty values, Found on splits by where the posting came from', async () => {
+  const { sqlite, d1 } = createDb(); seed(sqlite);
+  const worker = await loadWorker(); const env = makeEnv(d1);
+  const F = 'farhan_shaikh';
+  const add = (id, wp, adapter) => {
+    sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,workplace_type,source_url) VALUES (?,?,?,?,1,'2026-11-06',?,?)`).run(id, 'Implementation Manager', 'Co ' + id, adapter, wp, 'https://x.example/' + id);
+    sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status) VALUES (?,?,'NEEDS_REVIEW','UNKNOWN')`).run(F, id);
+  };
+  add('f1', 'REMOTE', 'greenhouse'); add('f2', 'REMOTE_GLOBAL', 'workday'); add('f3', 'REMOTE_RESTRICTED', 'indeed'); add('f4', 'HYBRID', 'remoteok');
+  add('f5', 'UNKNOWN', 'workable'); add('f6', 'ONSITE', 'linkedin');
+  const ids = async (q) => {
+    const r = await call(worker, env, 'GET', `/api/jobs?candidate_id=${F}&limit=100&search=Implementation&${q}`, { key: null });
+    return r.json.jobs.map((j) => j.id).filter((x) => /^f\d$/.test(x)).sort();
+  };
+  assert.deepEqual(await ids('workplace_type=REMOTE_ANY'), ['f1', 'f2', 'f3']);
+  assert.deepEqual(await ids('workplace_type=UNKNOWN'), ['f5']);
+  assert.deepEqual(await ids('found_on=JOB_SITES'), ['f3', 'f6']);
+  assert.deepEqual(await ids('found_on=BOARDS'), ['f4', 'f5']);
+  assert.deepEqual(await ids('found_on=EMPLOYER'), ['f1', 'f2']);
+  assert.deepEqual(await ids('found_on=ALL'), ['f1', 'f2', 'f3', 'f4', 'f5', 'f6']);
+  // different filters are different cache entries (found_on is part of the cache key)
+  assert.notDeepEqual(await ids('found_on=BOARDS'), await ids('found_on=EMPLOYER'));
+});
+
 test('"unable to provide visa sponsorship" is a denial, not a sponsorship offer (Novelis, 7 Nov)', () => {
   const sa = { id: 'sana_ansari', primary_skills: '[]' };
   const mk = (d, loc = 'Uhrichsville | US-OH-Uhrichsville, US') => evaluate(sa, { id: 'x', title: 'Associate Maintenance Leader', url: 'https://e.com/x', location: loc, description: d, remote: false });
