@@ -149,3 +149,10 @@ test('inspection panel: a discovery row (quick screen only) is told apart from a
   assert.equal(isQuickScreen({ primary_ratio: 0.5 }), false, 'older rows without the preliminary flag keep the full panel');
   assert.equal(isQuickScreen(null), false); assert.equal(isQuickScreen(undefined), false);
 });
+
+test('inspection panel reads the breakdown under the name the Worker sends (score.breakdown), not only the old score_breakdown', () => {
+  const src = fs.readFileSync(path.join(root, 'frontend', 'src', 'components', 'JobDetailModal.tsx'), 'utf8');
+  assert.match(src, /job\.score\.breakdown\s*\?\?\s*job\.score\.score_breakdown/, 'the panel showed defaults for every row while it read only score_breakdown');
+  const worker = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
+  assert.match(worker, /score: \{[^}]*breakdown: scoreBreakdown/s, 'the Worker sends score.breakdown');
+});

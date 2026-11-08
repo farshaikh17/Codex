@@ -86,7 +86,10 @@ export interface JobScore {
   overall_score: number;
   skill_score: number;
   role_score: number;
-  score_breakdown: ScoreBreakdown;
+  // The Worker sends the breakdown as `breakdown`; `score_breakdown` was the name this type and the inspection panel used, which never
+  // matched, so the panel showed defaults for every row. Both are accepted.
+  breakdown?: ScoreBreakdown;
+  score_breakdown?: ScoreBreakdown;
 }
 
 export interface JobFeedback {
