@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isQuickScreen } from '../quickScreen';
+import { sourceWord } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
 import { submitJobFeedback, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
@@ -179,7 +180,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     }
   };
 
-  const breakdown = job.score.score_breakdown;
+  const breakdown = job.score.breakdown ?? job.score.score_breakdown;
   const detailedSkillMatches = breakdown?.skill_matches_detailed || [];
   const seniorityAssessment = breakdown?.seniority_assessment;
   const experienceAssessment = breakdown?.experience_assessment;
@@ -215,7 +216,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 </span>
               )}
               <span className="text-[11px] text-amber-700 font-semibold px-2 py-0.5 rounded bg-amber-50 border border-amber-200">
-                {job.source_adapter === 'fixture' ? 'SYNTHETIC FIXTURE' : ['jobicy','remotive','hnjobs'].includes(job.source_adapter) ? 'PUBLIC LISTING — EMPLOYER NOT VERIFIED' : 'EMPLOYER FEED — REVIEW REQUIRED'}
+                {job.source_adapter === 'fixture' ? 'SYNTHETIC FIXTURE' : ['jobicy','remotive','hnjobs'].includes(job.source_adapter) ? 'PUBLIC LISTING — EMPLOYER NOT VERIFIED' : `FOUND ON ${sourceWord(job.source_adapter).toUpperCase()} — REVIEW REQUIRED`}
               </span>
             </div>
             <h2 className="text-xl font-bold text-slate-900">{job.title}</h2>
