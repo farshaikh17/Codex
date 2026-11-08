@@ -30,7 +30,15 @@ for (const [name, sql] of Object.entries(QUERIES)) {
   }
   if (r.status !== 0) process.exit(1);
   const text = r.stdout.slice(r.stdout.indexOf('['));
-  const rows = JSON.parse(text)[0].results || [];
+  let rows = JSON.parse(text)[0].results || [];
+  if (name === 'candidates') {
+    // The skill / role lists and updated_at are changed on purpose by owner-approved profile migrations (e.g. 0017) and by edits in
+    // Settings; they are fingerprinted separately and informationally. Everything else on the candidate row (thresholds, pay floor,
+    // preferences, identity) stays in the compared hash.
+    const LISTS = ['primary_skills', 'secondary_skills', 'target_roles', 'updated_at'];
+    out.candidate_profile_lists = { rows: rows.length, sha256: createHash('sha256').update(JSON.stringify(rows.map((r) => Object.fromEntries(LISTS.map((k) => [k, r[k]]))))).digest('hex') };
+    rows = rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !LISTS.includes(k))));
+  }
   out[name] = { rows: rows.length, sha256: createHash('sha256').update(JSON.stringify(rows)).digest('hex') };
 }
 console.log(JSON.stringify(out, null, 1));
