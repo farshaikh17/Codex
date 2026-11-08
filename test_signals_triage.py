@@ -118,6 +118,15 @@ class Triage(unittest.TestCase):
             self.assertEqual(json.loads(out.getvalue())['probe'], expect)
             self.assertNotIn('secret-token', out.getvalue())
 
+    def test_probe_needs_no_input_files_but_a_review_run_does(self):
+        import io
+        with mock.patch('sys.argv', ['x', '--probe']), mock.patch.dict('os.environ', {'GITHUB_TOKEN': ''}), mock.patch('sys.stdout', new_callable=io.StringIO) as out:
+            self.assertEqual(ai_triage.main(), 1)   # no token: it fails visibly, but it did not complain about missing --in/--out
+        self.assertEqual(json.loads(out.getvalue())['probe'], 'failed')
+        with mock.patch('sys.argv', ['x']), mock.patch('sys.stderr', new_callable=io.StringIO):
+            with self.assertRaises(SystemExit):
+                ai_triage.main()
+
     def test_no_token_writes_nothing(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'top.json').write_text('[{"candidate_id":"f","job_id":"j","title":"t","company":"c","location":"l","description":"d","profile":"p"}]')
