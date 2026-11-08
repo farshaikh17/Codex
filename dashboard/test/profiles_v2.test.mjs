@@ -140,3 +140,12 @@ test('migration 0017 removes the electrical/substation maintenance claims from S
   sqlite.exec(m17);
   assert.deepEqual(get('sana_ansari').p, ['Only This']);
 });
+
+test('inspection panel: a discovery row (quick screen only) is told apart from a fully assessed one', async () => {
+  const { isQuickScreen } = await import('../frontend/src/quickScreen.ts');
+  assert.equal(isQuickScreen({ preliminary: true, matched_skills: ['Reliability'] }), true);
+  assert.equal(isQuickScreen({ preliminary: true, experience_assessment: { status: 'MET' } }), false);
+  assert.equal(isQuickScreen({ preliminary: true, skill_matches_detailed: [{ skill: 'x' }] }), false);
+  assert.equal(isQuickScreen({ primary_ratio: 0.5 }), false, 'older rows without the preliminary flag keep the full panel');
+  assert.equal(isQuickScreen(null), false); assert.equal(isQuickScreen(undefined), false);
+});
