@@ -110,12 +110,14 @@ def batches(jobs, size):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--in', dest='inp', required=True)
-    ap.add_argument('--out', required=True)
+    ap.add_argument('--in', dest='inp')
+    ap.add_argument('--out')
     ap.add_argument('--batch', type=int, default=5)
     ap.add_argument('--max', type=int, default=100)
     ap.add_argument('--probe', action='store_true', help='send one tiny request and print what came back (no job data)')
     a = ap.parse_args()
+    if not a.probe and not (a.inp and a.out):
+        ap.error('--in and --out are required (unless --probe)')
     token = os.environ.get('GITHUB_TOKEN', '')
     if a.probe:
         try:

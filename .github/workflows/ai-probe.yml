@@ -21,4 +21,5 @@ jobs:
       - name: One request to GitHub Models
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash   # bash with pipefail: a failing probe must fail the step, not be hidden by tee
         run: python engine/ai_triage.py --probe | tee probe.json
