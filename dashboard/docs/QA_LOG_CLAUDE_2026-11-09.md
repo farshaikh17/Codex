@@ -108,3 +108,18 @@ a security trade-off to approve explicitly.
 * Reviewed and fine: `Network` in `market_discovery.py` (requests counted and deadline-bound, redirects refused, no retries, body reads time- and
   byte-bounded, HTTP 429 halts the run, robots rules and a capped crawl-delay respected). JobSpy block handling is being changed on
   `codex/jobspy-refusal-detection`, so it was left alone.
+
+## Segment 6: frontend (10:36 UTC)
+* Crawled Dashboard, Farhan, Sana, Analytics, Applications and Settings at 1440 px and 375 px (isMobile, touch) against a local server with seeded data:
+  zero console errors, zero failed API requests, zero horizontal overflow, no off-screen elements; screenshots of the dashboard and a candidate workspace
+  checked by eye (layout holds at phone width, nothing clipped).
+* Fault injection (API replaced by 503, 500, dropped connection, captive-portal HTML with 200): all show "Unable to connect to Career Job Engine backend",
+  no blank page. Slow API (6 s) shows "Loading…" and recovers.
+* DEFECT FIXED: a 200 answer in the wrong shape (`{}`, `[]`, `null`) threw during render and left a blank white page (`E.filter is not a function`,
+  `Cannot read properties of null`). Realistic after an update when a cached bundle meets a newer API. There was no React error boundary. Added
+  `components/ErrorBoundary.tsx` (plain message plus a Reload button, nothing sent anywhere) wrapped around `<App />` in `main.tsx`.
+* New `test/e2e/faults.e2e.mjs` (local only, like the other browser suites): 7 scenarios x 2 checks. New build passes mobile and desktop; the
+  build without the boundary fails 6 of 14, so it detects the regression.
+* Observation, not changed (owner's call): the Dashboard card says Farhan has 40 READY / 41 STRETCH / 121 TO REVIEW while his workspace says 39 / 40 / 119.
+  Both are right: the overview counts every job, the workspace excludes jobs applied to or dismissed. A visitor will see two different numbers with no explanation.
+* The 503 message is the generic "Unable to connect" rather than the server's own wording ("temporarily unavailable"); fine for now.
