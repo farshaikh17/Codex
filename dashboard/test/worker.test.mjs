@@ -933,3 +933,43 @@ test('outage backup never stores an answer produced for a share-link holder, so 
   } finally { delete globalThis.caches; }
 });
 
+// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): un-save checks the record, then writes. A change made by someone else in between must neither
+// lose their notes nor leave a false "UNSAVED" entry in the history while the record is still there.
+test('un-save: a note added after the check is not lost, and the history only records an un-save that really happened', async () => {
+  const racing = async (mutateSql) => {
+    const { sqlite, d1 } = createDb(); seed(sqlite);
+    const J = sqlite.prepare(`SELECT id FROM jobs WHERE id NOT IN (SELECT job_id FROM applications WHERE candidate_id='farhan_shaikh') ORDER BY id LIMIT 1`).get().id;   // a job with no record yet
+    let armed = false, injected = 0;
+    const env = makeEnv({ ...d1, async batch(stmts) { if (armed && !injected) { injected++; sqlite.exec(mutateSql); } return d1.batch(stmts); } });   // someone else's change lands between the check and the write (armed only for the un-save, not for the save)
+    const save = await call(worker, env, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: J, status: 'SAVED' } });
+    assert.ok(save.status === 200 || save.status === 201, 'setup: saved ' + save.status);
+    armed = true;
+    const res = await call(worker, env, 'DELETE', `/api/applications/${J}?candidate_id=farhan_shaikh`);
+    assert.equal(injected, 1, 'the concurrent change was applied between the check and the write');
+    const rec = sqlite.prepare(`SELECT status, notes FROM applications WHERE candidate_id='farhan_shaikh' AND job_id=?`).get(J);
+    const unsavedRows = sqlite.prepare(`SELECT COUNT(*) n FROM application_history WHERE candidate_id='farhan_shaikh' AND job_id=? AND new_status='UNSAVED'`).get(J).n;
+    return { res, rec, unsavedRows };
+  };
+  // 1) notes appear after the check: the record (and the notes) must survive
+  const a = await racing(`UPDATE applications SET notes = 'phone screen booked for Tuesday' WHERE candidate_id='farhan_shaikh' AND job_id=(SELECT job_id FROM applications WHERE candidate_id='farhan_shaikh' AND status='SAVED' AND notes IS NULL ORDER BY rowid DESC LIMIT 1)`);
+  assert.ok(a.rec && /phone screen/.test(a.rec.notes), `the note was lost: record is ${JSON.stringify(a.rec)}`);
+  assert.equal(a.res.status, 409, 'the un-save is refused, not reported as done');
+  assert.equal(a.unsavedRows, 0, 'no un-save is recorded');
+  // 2) the status moves on after the check: nothing is removed, so the answer is not "unsaved" and no UNSAVED history row exists
+  const b = await racing(`UPDATE applications SET status = 'APPLIED' WHERE candidate_id='farhan_shaikh' AND job_id=(SELECT job_id FROM applications WHERE candidate_id='farhan_shaikh' AND status='SAVED' AND notes IS NULL ORDER BY rowid DESC LIMIT 1)`);
+  assert.ok(b.rec && b.rec.status === 'APPLIED', 'the record is still there');
+  assert.equal(b.res.status, 409, `reported ${b.res.status} ${JSON.stringify(b.res.json)} although nothing was removed`);
+  assert.equal(b.unsavedRows, 0, 'a false UNSAVED history row was written for a record that still exists');
+});
+test('un-save: the ordinary cases still work (plain SAVED record is removed and recorded once; one with notes or a later status is refused)', async () => {
+  const { sqlite, env } = fresh();
+  const [j1, j2] = sqlite.prepare(`SELECT id FROM jobs WHERE id NOT IN (SELECT job_id FROM applications WHERE candidate_id='farhan_shaikh') ORDER BY id LIMIT 2`).all().map((r) => r.id);
+  const mk = async (job, body = {}) => assert.ok([200, 201].includes((await call(worker, env, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: job, status: 'SAVED', ...body } })).status));
+  await mk(j1); await mk(j2, { notes: 'keep this' });
+  const ok = await call(worker, env, 'DELETE', `/api/applications/${j1}?candidate_id=farhan_shaikh`);
+  assert.equal(ok.status, 200); assert.equal(ok.json.unsaved, true);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM applications WHERE job_id=? AND candidate_id='farhan_shaikh'`).get(j1).n, 0);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM application_history WHERE job_id=? AND new_status='UNSAVED'`).get(j1).n, 1);
+  assert.equal((await call(worker, env, 'DELETE', `/api/applications/${j2}?candidate_id=farhan_shaikh`)).status, 409, 'a record with notes is refused');
+  assert.equal((await call(worker, env, 'DELETE', `/api/applications/${j1}?candidate_id=farhan_shaikh`)).status, 404, 'already gone');
+});

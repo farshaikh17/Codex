@@ -1917,11 +1917,18 @@ router.delete('/api/applications/:id', async (request, env, params, url) => {
   if (existing.status !== 'SAVED' || (existing.notes && String(existing.notes).trim()))
     return jsonResponse({ error: 'Only a record that is still SAVED (with no notes) can be un-saved; change its status in the tracker instead.' }, 409, corsHeaders(request, env));
   const now = new Date().toISOString();
-  await env.DB.batch([
+  // The check above and the write below are separate round trips, so someone else can change the record in between (add a note, move the status on).
+  // Both statements therefore repeat the rule themselves, inside one atomic batch: the history row exists only if the same conditions still hold for the delete, and the
+  // answer reports what the delete really did.
+  const STILL_PLAIN_SAVED = `id = ? AND candidate_id = ? AND job_id = ? AND status = 'SAVED' AND (notes IS NULL OR trim(notes, ' ' || char(9) || char(10) || char(13)) = '')`;
+  const done = await env.DB.batch([
     env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
-      VALUES (?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?)`).bind(candidateId, jobId, existing.id, now),
-    env.DB.prepare('DELETE FROM applications WHERE id = ? AND candidate_id = ? AND job_id = ? AND status = ?').bind(existing.id, candidateId, jobId, 'SAVED'),
+      SELECT ?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?
+      WHERE EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, now, existing.id, candidateId, jobId),
+    env.DB.prepare(`DELETE FROM applications WHERE ${STILL_PLAIN_SAVED}`).bind(existing.id, candidateId, jobId),
   ]);
+  if (Number(done[1]?.meta?.changes || 0) !== 1)
+    return jsonResponse({ error: 'This record changed while it was being un-saved (a note was added or its status moved on), so nothing was removed. Check it in the tracker.' }, 409, corsHeaders(request, env));
   return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
 });
 
