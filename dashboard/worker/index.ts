@@ -2637,7 +2637,8 @@ router.get('/api/profile', async (request, env, _params, url) => {
       full_name: full.full_name,
       display_title: full.display_title,
       summary_line: facts.public_summary,
-      education: full.education,
+      // The stored value, else only the short label: the full built-in degree line (college and year) is operator-only.
+      education: cand.education || facts.education_short,
       education_short: full.education_short,
       current_location: publicLocation(cand.current_location),
       primary_timezone: full.primary_timezone,

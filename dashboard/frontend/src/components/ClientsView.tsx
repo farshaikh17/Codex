@@ -105,7 +105,7 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
                     <div className="text-sm text-slate-700 mt-1"><a className="text-coral-600 hover:underline" href={`mailto:${r.email}`}>{r.email}</a>{r.phone ? ` · ${r.phone}` : ''} · {r.current_location}</div>
                     <div className="text-sm mt-1"><span className="text-slate-500">Looking for:</span> {r.target_roles}</div>
                     <div className="text-xs text-slate-500 mt-1">{[r.work_preference, r.years_experience && `${r.years_experience} yrs`, r.plan && `plan ${r.plan}`].filter(Boolean).join(' · ')}
-                      {r.linkedin_url && <> · <a className="text-coral-600 hover:underline" href={r.linkedin_url} target="_blank" rel="noreferrer noopener">profile</a></>}</div>
+                      {r.linkedin_url && /^https:\/\//i.test(r.linkedin_url) && <> · <a className="text-coral-600 hover:underline" href={r.linkedin_url} target="_blank" rel="noreferrer noopener">profile</a></>}</div>
                     {r.message && <p className="text-sm text-slate-600 mt-2 whitespace-pre-wrap">{r.message}</p>}
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs shrink-0">

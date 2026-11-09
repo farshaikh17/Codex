@@ -123,3 +123,28 @@ a security trade-off to approve explicitly.
 * Observation, not changed (owner's call): the Dashboard card says Farhan has 40 READY / 41 STRETCH / 121 TO REVIEW while his workspace says 39 / 40 / 119.
   Both are right: the overview counts every job, the workspace excludes jobs applied to or dismissed. A visitor will see two different numbers with no explanation.
 * The 503 message is the generic "Unable to connect" rather than the server's own wording ("temporarily unavailable"); fine for now.
+
+## Segment 7: security and privacy (11:35 UTC)
+Checked and fine:
+* Secrets: scanned the working tree and every commit (433) for cloud, GitHub, Slack, JWT, private-key and long key-like strings: nothing but the unit-test
+  constant `unit-test-key-not-a-secret`. No CV or document files are tracked (the only "cv" file is migration 0017, which holds skill lists).
+* Public API: requested every GET route for both candidates with three query shapes (234 requests, 110 public 200s, 393 distinct JSON keys) against a
+  database seeded with private markers (notes, resume text, private city): no marker, e-mail, stack trace, SQL error or path in any body, success or error.
+  Reviewed the key list by eye: the sensitive-sounding ones are `citizenship` (country only), `manual_override_status` (a status, not the reason),
+  `eligibility_reason`/`qualification_reason` (system text) and `contact_email` (empty).
+* Login limiter: 8 wrong keys get 403, the 9th 429; the right key is also refused while that address is locked; another address is unaffected;
+  `X-Forwarded-For` is ignored; a key in the URL is ignored. Lockout is per address (IPv6 per /64), so one person cannot lock out everyone.
+* Share links: 192-bit random token (`crypto.getRandomValues`), only its SHA-256 stored, shown once, revocable. Logging records the path only.
+* `/apply` re-render escapes hostile input (no raw script or `onerror`); links must start with `https://`.
+Fixed (commit with this entry):
+* LATENT LEAK: public `GET /api/profile` returned `education: cand.education || facts.education_detail`, so for a candidate with no stored education it
+  published the full built-in line (college name and graduation year, e.g. "BMS in Marketing, NM College (University of Mumbai), 2017"). Every other endpoint falls
+  back to blank. The public answer now falls back to the short label only; the operator view is unchanged. New test `QA: a visitor never gets the full built-in
+  degree line` fails on the old code. Production may already be unaffected if both candidates have a stored value (release run 44's privacy check passed there),
+  but nothing in the code guaranteed it.
+* Defence in depth: the operator inbox only renders an applicant's link as a link if it starts with `https://` (the server already enforces this).
+Open, for the owner:
+* The two candidates' employer, role and date history, and degree details, are written into `dashboard/worker/index.ts` as built-in profile data. The repo is private
+  and the public API does not serve it, but it must be removed from the code (kept in D1 only) before the code is shared with, or sold to, anyone. Also
+  `migration/source-commits.json` contains the owner's git e-mail.
+* `/api/profile` still returns the stored `education` value as saved; whether that stored text should be the short label is the owner's call.

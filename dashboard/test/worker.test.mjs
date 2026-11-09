@@ -831,3 +831,17 @@ test('QA: junk paging parameters never cause a 500 on the job lists', async () =
     }
   }
 });
+
+test('QA: a visitor never gets the full built-in degree line (college, year), even when the stored education is empty; the operator still does', async () => {
+  const { sqlite, env } = fresh();
+  sqlite.exec(`UPDATE candidates SET education = NULL`);
+  for (const id of ['farhan_shaikh', 'sana_ansari']) {
+    const pub = await call(worker, env, 'GET', `/api/profile?candidate_id=${id}`, { key: null });
+    assert.equal(pub.status, 200);
+    const t = JSON.stringify(pub.json);
+    assert.ok(!/NM College|Rajasthan Technical|University of Mumbai/.test(t) && !/\b20\d\d\b/.test(`${pub.json.education} ${pub.json.education_short}`), `${id}: public profile leaks the degree line: ${pub.json.education}`);
+    assert.ok(pub.json.education && pub.json.education === pub.json.education_short, `${id}: falls back to the short label`);
+    const op = await call(worker, env, 'GET', `/api/profile?candidate_id=${id}`, { key: ADMIN_KEY });
+    assert.ok(/College|University/.test(op.json.education), `${id}: the operator view keeps the full line`);
+  }
+});
