@@ -904,3 +904,32 @@ test('QA: DELETE /api/clients/:id erases the client and everything tied to them,
   assert.equal(gone.status, 400, 'its share link no longer works');
   assert.equal((await call(worker, env, 'DELETE', `/api/clients/${a}`)).status, 400, 'a second delete is a clean "unknown client", not an error');
 });
+
+// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): a share-link holder's answer must never become the outage copy served to anonymous visitors.
+test('outage backup never stores an answer produced for a share-link holder, so a private client is not handed to anonymous visitors during an outage', async () => {
+  const store = new Map(); const HOST = 'https://share-link-leak-check.invalid';   // own host: the Worker remembers recently stored URLs per instance
+  globalThis.caches = { default: { async put(req, res) { store.set(req.url, await res.text()); }, async match(req) { return store.has(req.url) ? new Response(store.get(req.url), { headers: { 'Content-Type': 'application/json' } }) : undefined; } } };
+  try {
+    const { sqlite, d1 } = createDb(); seed(sqlite); const env = makeEnv(d1);
+    const pending = []; const ctx = { waitUntil: (p) => pending.push(p) };
+    const get = async (e, path, token) => { const res = await worker.fetch(new Request(HOST + path, { headers: token ? { 'X-View-Token': token } : {} }), e, ctx); const text = await res.text(); await Promise.all(pending.splice(0)); return { status: res.status, xcache: res.headers.get('x-cache'), text }; };
+    const created = await call(worker, env, 'POST', '/api/clients', { body: { full_name: 'Private Client Zed', role_keywords: ['analyst'], location_mode: 'REMOTE_FROM_HOME', home_country: 'India', visibility: 'private',
+      search_profile: { role_keywords: ['analyst'], avoid_keywords: [], location_mode: 'REMOTE_FROM_HOME', home_country: 'India' } } });
+    const cid = created.json.client.id; const token = (await call(worker, env, 'POST', `/api/clients/${cid}/share-links`, { body: {} })).json.token;
+    const URLS = ['/api/candidates', '/api/dashboard/overview', `/api/jobs?candidate_id=${cid}&limit=5`];
+    for (const u of URLS) { const mine = await get(env, u, token); assert.equal(mine.status, 200, u); }
+    const holderSees = (await get(env, '/api/candidates', token)).text.includes('Private Client Zed'); assert.ok(holderSees, 'the link holder does see their client');
+    assert.equal(store.size, 0, 'nothing produced for a link holder is kept as a backup copy');
+    // an anonymous visitor's answers are still backed up and still served during an outage
+    for (const u of ['/api/candidates', '/api/dashboard/overview']) assert.equal((await get(env, u)).status, 200);
+    assert.ok(store.has(HOST + '/api/candidates'), 'anonymous answers are still backed up');
+    const boom = () => { throw new Error("D1_ERROR: Your account has exceeded D1's free tier daily row read limit"); };
+    const down = makeEnv({ ...d1, prepare: boom, batch: boom, exec: boom });
+    for (const u of ['/api/candidates', '/api/dashboard/overview']) {
+      const r = await get(down, u);
+      assert.equal(r.status, 200); assert.equal(r.xcache, 'STALE-OUTAGE');
+      assert.ok(!r.text.includes('Private Client Zed') && !r.text.includes(cid), `${u}: the outage copy must not contain the private client`);
+    }
+  } finally { delete globalThis.caches; }
+});
+

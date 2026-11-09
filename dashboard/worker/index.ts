@@ -3106,7 +3106,10 @@ const BACKUP_TTL_SECONDS = 3 * 24 * 3600, BACKUP_REFRESH_MS = 5 * 60 * 1000;
 const backupStamp = new Map<string, number>();
 const backupCache = (): any => (globalThis as any).caches?.default || null;
 function backupEligible(request: Request): boolean {
-  return request.method === 'GET' && accessLevel.get(request) === 'public' && !BACKUP_SKIP.has(new URL(request.url).pathname);
+  // A request that carries a share link (X-View-Token) is "public" level but its answer can include the link's private client (the candidate list, the overview),
+  // and the backup copy is keyed by URL alone: storing it would hand that client to the next anonymous visitor during an outage. Only answers produced for a
+  // plain anonymous visitor are kept.
+  return request.method === 'GET' && accessLevel.get(request) === 'public' && !viewerOf.has(request) && !BACKUP_SKIP.has(new URL(request.url).pathname);
 }
 async function backupStore(request: Request, body: string): Promise<void> {
   try {
