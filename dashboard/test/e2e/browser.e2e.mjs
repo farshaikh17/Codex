@@ -48,7 +48,7 @@ const checkCandidate = async (btn, cid, label, other) => {
   const sc = (await apiPublic(`/jobs?candidate_id=${cid}&limit=1&exclude_applied=true&exclude_dismissed=true`)).status_counts;
   const card = Number((t.match(/READY TO APPLY\s+(\d+)/i) || [])[1]);
   check(`A5 ${btn}: workspace heading and READY card match the API, jobs are listed`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
-  check(`A6 ${btn}: job rows are visible without a key`, (await page.locator('table tbody tr').count()) > 0 || /Role j\d/.test(t));
+  check(`A6 ${btn}: job rows are visible without a key`, (await page.locator('[data-job-id]').count()) > 0 || /Role j\d/.test(t));
   await tab('Analytics');
   const ta = await bodyText();
   const who = cid === 'sana_ansari' ? 'Sana' : 'Farhan'; const not = cid === 'sana_ansari' ? /Farhan has/ : /Sana has/;

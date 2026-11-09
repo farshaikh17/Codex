@@ -821,3 +821,13 @@ test('resume import is honest: no invented profile for any pasted text', async (
   const body = await r.json();
   assert.equal(body.status, 'not_implemented'); assert.ok(!body.parsed, 'no parsed profile'); assert.ok(!/Farhan|Python|TypeScript/i.test(JSON.stringify(body)));
 });
+
+test('QA: junk paging parameters never cause a 500 on the job lists', async () => {
+  const { env } = fresh();
+  for (const q of ['limit=-5&offset=abc', 'limit=abc', 'limit=0&offset=-9', 'offset=NaN', 'limit=1e9']) {
+    for (const p of ['/api/jobs?candidate_id=farhan_shaikh&', '/api/candidates/farhan_shaikh/jobs?']) {
+      const res = await call(worker, env, 'GET', p + q, { key: null });
+      assert.ok(res.status < 500, `${p}${q} -> ${res.status}`);
+    }
+  }
+});

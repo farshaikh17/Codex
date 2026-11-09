@@ -1173,8 +1173,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
   if (!candidateId) return badCandidate(request, env, params.id);
   const statusFilter = url.searchParams.get('status') || 'READY,STRETCH_READY';
   const laneFilter = url.searchParams.get('lane') || 'ALL';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), isOperatorRequest(request) ? 500 : 100);
-  const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '100', 10) || 100), isOperatorRequest(request) ? 500 : 100);
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
 
   try {
     const statuses = statusFilter.split(',').map((s) => s.trim()).filter(Boolean);
@@ -1354,8 +1354,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
-  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)), isOperatorRequest(request) ? 1000 : 100);
-  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10) || 50), isOperatorRequest(request) ? 1000 : 100);
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
 
   try {
     // Cost: every predicate below reads only what it needs. The score row is joined only when a score filter or the order needs it,
