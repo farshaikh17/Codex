@@ -3058,6 +3058,38 @@ router.put('/api/site-settings', async (request, env) => {
   return jsonResponse({ settings: await site.loadSettings(env.DB) }, 200, corsHeaders(request, env));
 });
 
+
+// ---- Backup copy outside D1 (serves the last good public answer while D1 refuses reads) ----
+// The D1 response cache cannot help when D1 itself is refusing queries (daily free-tier read limit, outage). A second copy of every
+// successful PUBLIC GET answer is kept in Cloudflare's own edge cache (Cache API, not D1, free) and is served only when the live answer
+// is a 503. Never stored: health and version, anything an operator asked for, any non-GET. It is per data centre and best effort: if
+// the Cache API is unavailable or empty the visitor simply gets the same 503 as before.
+const BACKUP_SKIP = new Set(['/api/health', '/api/version']);
+const BACKUP_TTL_SECONDS = 3 * 24 * 3600, BACKUP_REFRESH_MS = 5 * 60 * 1000;
+const backupStamp = new Map<string, number>();
+const backupCache = (): any => (globalThis as any).caches?.default || null;
+function backupEligible(request: Request): boolean {
+  return request.method === 'GET' && accessLevel.get(request) === 'public' && !BACKUP_SKIP.has(new URL(request.url).pathname);
+}
+async function backupStore(request: Request, body: string): Promise<void> {
+  try {
+    const c = backupCache(); if (!c || backupStamp.size > 2000 && !backupStamp.has(request.url)) return;
+    const last = backupStamp.get(request.url) || 0;
+    if (Date.now() - last < BACKUP_REFRESH_MS) return;       // at most one copy per URL per 5 minutes per isolate
+    backupStamp.set(request.url, Date.now());
+    await c.put(new Request(request.url, { method: 'GET' }), new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${BACKUP_TTL_SECONDS}` } }));
+  } catch { /* best effort */ }
+}
+async function backupServe(request: Request, env: Env): Promise<Response | null> {
+  try {
+    if (!backupEligible(request)) return null;
+    const c = backupCache(); if (!c) return null;
+    const hit = await c.match(new Request(request.url, { method: 'GET' }));
+    if (!hit) return null;
+    return new Response(await hit.text(), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': 'STALE-OUTAGE', 'X-Worker-Commit': env.GIT_COMMIT || 'unknown' } });
+  } catch { return null; }
+}
+
 // Main export for Cloudflare Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -3072,11 +3104,17 @@ export default {
       // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.
       const headers = new Headers(res.headers);
       headers.set('X-Worker-Commit', env.GIT_COMMIT || 'unknown');
-      return new Response(res.body, { status: res.status, headers });
+      const out = new Response(res.body, { status: res.status, headers });
+      if (backupEligible(request)) {
+        if (res.status === 200 && (headers.get('Content-Type') || '').includes('json')) ctx.waitUntil(out.clone().text().then((t) => backupStore(request, t)));
+        else if (res.status === 503) { const stale = await backupServe(request, env); if (stale) return stale; }
+      }
+      return out;
     } catch (err: any) {
       const pathname = new URL(request.url).pathname;
       logPrivately('worker_error', pathname, err?.message || err);
       if (!pathname.startsWith('/api/')) return new Response('Temporarily unavailable', { status: 503, headers: { 'Retry-After': '300' } });
+      if (isDatabaseFailure(err?.message)) { const stale = await backupServe(request, env); if (stale) return stale; }
       return jsonResponse(isDatabaseFailure(err?.message) ? UNAVAILABLE : { error: 'Internal error. The request was not completed.' },
         isDatabaseFailure(err?.message) ? 503 : 500, { ...corsHeaders(request, env), 'Retry-After': '300', 'X-Worker-Commit': env.GIT_COMMIT || 'unknown' });
     }
