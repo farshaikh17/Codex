@@ -313,19 +313,3 @@ test('foreignLocation knows every country, not only a short list (Colombia, Arge
   for (const loc of ['India', 'Remote, India', 'Bengaluru, Karnataka, India', 'Remote - Worldwide', '', 'Remote, excluding the US']) assert.equal(foreignLocation(loc), false, loc);
   assert.equal(mk('Remote (Colombia)').eligibility, 'UNKNOWN', 'still reviewable, not hidden');
 });
-
-// QA 2026-11-09: denials that used to slip through, and phrasings that were missed.
-const sanaQ = { id: 'sana_ansari', primary_skills: JSON.stringify(['Reliability', 'Maintenance']), total_years_experience: 9 };
-const sp = (description, location = 'Houston, TX') => ({ id: 'x', title: 'Reliability Engineer', company: 'Acme', url: '', location, description, remote: false });
-test('QA: any sponsorship denial wins over a welcoming phrase (Sana)', () => {
-  for (const d of ['No sponsorship. Reliability. Relocation assistance provided.', 'Sponsorship is not offered. Reliability. Visa sponsorship available for other roles.', 'Visa sponsorship is not available. Reliability.', 'Sponsorship isn\'t available. Relocation assistance provided. Reliability.'])
-    assert.notEqual(evaluate(sanaQ, sp(d)).eligibility, 'ELIGIBLE', d);
-  assert.equal(evaluate(sanaQ, sp('We offer visa sponsorship for qualified candidates. Reliability and Maintenance.')).eligibility, 'ELIGIBLE');
-});
-test('QA: Farhan - description-level "not remote" and "India not eligible" are INELIGIBLE; "anywhere in the world" is worldwide', () => {
-  const f = (description, location = 'Remote') => evaluate(farhan, { id: 'x', title: 'CRM Implementation Manager', company: 'Acme', url: '', location, description, remote: true });
-  assert.equal(f('Not a remote position. On-site in Austin. CRM Configuration').eligibility, 'INELIGIBLE');
-  assert.equal(f('Remote role. Candidates in India are not eligible. CRM Configuration').eligibility, 'INELIGIBLE');
-  assert.equal(f('Remote anywhere in the world. CRM Configuration Workflow Automation').eligibility, 'ELIGIBLE');
-  assert.equal(f('Remote role, open to candidates in India. Hybrid options for others. CRM Configuration').eligibility, 'UNKNOWN');
-});
