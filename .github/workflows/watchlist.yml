@@ -5,10 +5,11 @@ name: Watchlist (priority employers and boards, three times a day)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '7 3,9,21 * * *'   # 03:07, 09:07, 21:07 UTC; the daily run is at 15:13 UTC
+    - cron: '7 */2 * * *'   # every 2 hours at :07; the guard lets a real run happen only when none did in the last 7 hours (about 3 a day, caught up if GitHub drops a trigger)
 
 permissions:
   contents: read
+  actions: read   # the recent-run guard reads this workflow's earlier runs
 
 concurrency:
   group: d1-collector-sync
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
-      skip: ${{ steps.g.outputs.skip }}
+      skip: ${{ steps.g.outputs.skip == 'true' || steps.r.outputs.skip == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - name: Budget guard (account rows read today, from Cloudflare analytics; reads nothing from D1)
@@ -30,6 +31,15 @@ jobs:
           MAX_READS: '3500000'
           EVENT: ${{ github.event_name }}
         run: node dashboard/scripts/budget_guard.mjs
+      - name: Recent-run guard (GitHub schedules start late or not at all, so this is triggered more often than needed and does the real work only when it is due)
+        id: r
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_FILE: watchlist.yml
+          REAL_JOB: watch
+          MIN_GAP_HOURS: '7'
+          EVENT: ${{ github.event_name }}
+        run: node dashboard/scripts/recent_run_guard.mjs
 
   watch:
     needs: guard
