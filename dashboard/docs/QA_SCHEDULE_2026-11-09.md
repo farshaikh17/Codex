@@ -6,7 +6,7 @@ result + evidence here. Before each run: `git fetch`, look at `origin/main` and 
 
 | # | Segment | Status | Result / evidence |
 |---|---|---|---|
-| 1 | Worker API: every route's auth, validation, error paths, response shapes | [ ] | |
+| 1 | Worker API: every route's auth, validation, error paths, response shapes | [x] 05:35 UTC | 63 routes probed anon + keyed: no 5xx, every protected route 401 anonymously, CSV export escapes formulas. Fixed 2 dead controls: navbar Sync/Refresh POSTed to the retired fixtures endpoint (410; unlock window for visitors) and now just re-reads data; "Reverify READY Jobs" always hit a 501 and is now disabled like "Verify URLs". Browser check added. |
 | 2 | D1 quota and usage: live account reads/writes today (Cloudflare, read-only), budget guards, query costs | [ ] | |
 | 3 | Pipelines: last runs of collect, sync, discovery, watchlist, release; failures, drift, concurrency | [ ] | |
 | 4 | Data integrity: re-score sample (30 rows per candidate), stale/duplicate/closed rows, guards on applications | [ ] | |

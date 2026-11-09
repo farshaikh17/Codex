@@ -6,7 +6,6 @@ import {
   updateProfile, 
   updateApplication, 
   fetchAnalytics, 
-  reloadSyntheticFixtures,
   fetchWeeklyMetrics,
   fetchIndiaRemoteSummary,
   overrideJobQualification,
@@ -262,12 +261,10 @@ export const App: React.FC = () => {
     await loadData();
   };
 
-  // Fixture reload
+  // The navbar's refresh button: re-read the data. (It used to POST to the retired synthetic-fixture endpoint, which a visitor could not
+  // call without the unlock window and which always answers 410 for the operator.)
   const handleReloadFixtures = async () => {
-    try {
-      await reloadSyntheticFixtures();
-      await loadData();
-    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to reload test jobs. Please retry."); }
+    try { await loadData(); } catch { setError('Unable to refresh. Please retry.'); }
   };
 
   const savedCount = trackedJobs.length;
