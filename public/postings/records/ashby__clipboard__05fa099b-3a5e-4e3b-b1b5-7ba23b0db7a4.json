@@ -14,11 +14,20 @@
    "from_hash": "843187ce9afc83d6dbd1811d81d0a1ae148de7b21812ba7da586d4fe22d2e3f2",
    "kind": "content_changed",
    "to_hash": "656eef4487bfd1a668337e7a2a6fcd98d157ed33806ead4bc57fcc0946a9793b"
+  },
+  {
+   "changed_at": "2026-11-09T21:36:41.943769+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "656eef4487bfd1a668337e7a2a6fcd98d157ed33806ead4bc57fcc0946a9793b",
+   "kind": "content_changed",
+   "to_hash": "99f0719c6766a361aec756f7967a0506c7709671e376d2bc2624dabc33f47088"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$190K – $220K\",\"tiers\":[{\"title\":null,\"summary\":\"Estimated annual compensation: $190K – $220K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":190000,\"maxValue\":220000,\"summary\":\"Estimated annual compensation: $190K – $220K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nABOUT THE ROLE:\n\nThis isn’t the type of in-house counsel position where you will be siloed into a few narrow workstreams or deal with the same issue day after day. At Clipboard, you’ll be tasked with tackling novel legal challenges, flexing different muscles across various areas of law, and making high-impact decisions in a fast-moving environment. You’ll be tasked with building internal processes and systems, not simply managing a docket of individual cases.\n\nYou have both the sharp instincts of a high-stakes litigator and an entrepreneurial spirit. You crave a creative and collaborative—rather than purely adversarial—experience in the law. You are a skilled and concise writer and communicator, and excel at and enjoy detail-oriented tasks, fact-finding, and investigative work. You have a strong degree of curiosity and are particularly adept at identifying subtle clues which may be indicative of a much wider and important universe of issues you need to dive into. You can navigate fairly esoteric internal databases to collect and digest complex sets of data. You are eager to bring your experience with litigation and investigations to an in-house role on a small and supportive team that affords opportunity for professional growth. You look forward to channeling your skills as a litigator into supporting and advocating for a mission-driven and groundbreaking business. You embrace and are not daunted by ambiguity or a challenge, have a perennially positive attitude, and are eager to help build a legal department and support the business in a fast-paced environment. You enjoy taking the lead on projects, and naturally take the initiative to solve problems and improve and streamline systems and processes.\n\nRESPONSIBILITIES:\n\n- Manage various litigation workstreams relating to independent contractor classification, including but not limited to matters relating to unemployment insurance claims and disputes with users of the Clipboard marketplace.\n\n- Manage other litigation workstreams, including but not limited to professional negligence and data privacy matters.\n\n- Partner with both internal and outside counsel on managing high-stakes litigation matters, including by drafting responsive pleadings, briefs, and other important documents.\n\n- Work closely with outside counsel on developing and participating in the company’s eDiscovery strategy, including custodial document collection, review, and production.\n\n- Manage the company’s third-party subpoena response strategy.\n\n- Provide legal guidance to a wide range of cross function teams, including the Company’s product and operations teams.\n\n- Support other legal workstreams depending on the needs of the team and company.\n\nWHAT SUCCESS LOOKS LIKE 90 DAYS IN:\n\n- You are deeply familiar with all pending litigation and investigation matters and have taken over leadership of at least one high-stakes matter, including communicating and coordinating with outside counsel and internal stakeholders.\n\n- You have a deep understanding of the company’s internal databases and can quickly collect and analyze complex sets of data, both for the purposes of developing proactive risk mitigation strategies and responding to high-stakes litigation document requests.\n\n- You fully own the unemployment response workstream, third-party subpoena response process, and a docket of other litigation matters, including a subset of the company’s medical malpractice matters, and can operate completely independently on these fronts with minimal supervision.\n\n- In at least one litigation matter, you worked with outside counsel to develop an eDiscovery plan that minimizes the costs related to custodial document collection and review while still meeting our discovery obligations.\n\n- You proactively and quickly jump in to respond to requests for legal guidance from other business functions, and provide high quality legal advice that incorporates the risk tolerance of the business.\n\n- You are contributing to legal strategy decisions made by the Head of Legal.\n\nNEED TO HAVE:\n\n- JD with at least 5 years of experience\n\n- Bias toward action and solving (not just spotting) problems\n\n- Ability to take ownership of your work and manage projects independently\n\n- Excellent communication and writing abilities\n\n- Comfort and skill in navigating complexity and ambiguity, and working on a leanly staffed team\n\n- Willingness to quickly dive into new and “unfamiliar” legal issues\n\n- Ability to work under pressure and autonomously, and meet tight deadlines\n\n- Agility and flexibility to take on new tasks and responsibilities when necessary to support the business and legal team’s needs in a fast-moving, rapidly scaling, and dynamic tech company\n\n- Willingness and ability to engage with and interpret data, especially from unfamiliar sources\n\nNICE TO HAVE:\n\n- Experience handling arbitrations and class actions\n\n- Experience with eDiscovery issues, including large-scale custodial data collection, review, and production\n\n- Clerkship experience\n\n- Government experience\n\n- Experience working cross-culturally and with diverse, global teams\n\nINTERVIEW PROCESS:\n\n- Application Review\n\n- Case Study\n\n- Case Interview with a member of our Legal team\n\n- Hiring Manager interview with our Head of Legal\n\n- Executive Interview with our Co-CEO\n\nSALARY:\n\nThe base salary range for this position is $190,000 - $220,000. This role will also be eligible for discretionary annual bonus (paid on a quarterly basis) and/or equity compensation.\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nABOUT THE ROLE:\n\nThis isn’t the type of in-house counsel position where you will be siloed into a few narrow workstreams or deal with the same issue day after day. At Clipboard, you’ll be tasked with tackling novel legal challenges, flexing different muscles across various areas of law, and making high-impact decisions in a fast-moving environment. You’ll be tasked with building internal processes and systems, not simply managing a docket of individual cases.\n\nYou have both the sharp instincts of a high-stakes litigator and an entrepreneurial spirit. You crave a creative and collaborative—rather than purely adversarial—experience in the law. You are a skilled and concise writer and communicator, and excel at and enjoy detail-oriented tasks, fact-finding, and investigative work. You have a strong degree of curiosity and are particularly adept at identifying subtle clues which may be indicative of a much wider and important universe of issues you need to dive into. You can navigate fairly esoteric internal databases to collect and digest complex sets of data. You are eager to bring your experience with litigation and investigations to an in-house role on a small and supportive team that affords opportunity for professional growth. You look forward to channeling your skills as a litigator into supporting and advocating for a mission-driven and groundbreaking business. You embrace and are not daunted by ambiguity or a challenge, have a perennially positive attitude, and are eager to help build a legal department and support the business in a fast-paced environment. You enjoy taking the lead on projects, and naturally take the initiative to solve problems and improve and streamline systems and processes.\n\nRESPONSIBILITIES:\n\n- Manage various litigation workstreams relating to independent contractor classification, including but not limited to matters relating to unemployment insurance claims and disputes with users of the Clipboard marketplace.\n\n- Manage other litigation workstreams, including but not limited to professional negligence and data privacy matters.\n\n- Partner with both internal and outside counsel on managing high-stakes litigation matters, including by drafting responsive pleadings, briefs, and other important documents.\n\n- Work closely with outside counsel on developing and participating in the company’s eDiscovery strategy, including custodial document collection, review, and production.\n\n- Manage the company’s third-party subpoena response strategy.\n\n- Provide legal guidance to a wide range of cross function teams, including the Company’s product and operations teams.\n\n- Support other legal workstreams depending on the needs of the team and company.\n\nWHAT SUCCESS LOOKS LIKE 90 DAYS IN:\n\n- You are deeply familiar with all pending litigation and investigation matters and have taken over leadership of at least one high-stakes matter, including communicating and coordinating with outside counsel and internal stakeholders.\n\n- You have a deep understanding of the company’s internal databases and can quickly collect and analyze complex sets of data, both for the purposes of developing proactive risk mitigation strategies and responding to high-stakes litigation document requests.\n\n- You fully own the unemployment response workstream, third-party subpoena response process, and a docket of other litigation matters, including a subset of the company’s medical malpractice matters, and can operate completely independently on these fronts with minimal supervision.\n\n- In at least one litigation matter, you worked with outside counsel to develop an eDiscovery plan that minimizes the costs related to custodial document collection and review while still meeting our discovery obligations.\n\n- You proactively and quickly jump in to respond to requests for legal guidance from other business functions, and provide high quality legal advice that incorporates the risk tolerance of the business.\n\n- You are contributing to legal strategy decisions made by the Head of Legal.\n\nNEED TO HAVE:\n\n- JD with at least 5 years of experience\n\n- Bias toward action and solving (not just spotting) problems\n\n- Ability to take ownership of your work and manage projects independently\n\n- Excellent communication and writing abilities\n\n- Comfort and skill in navigating complexity and ambiguity, and working on a leanly staffed team\n\n- Willingness to quickly dive into new and “unfamiliar” legal issues\n\n- Ability to work under pressure and autonomously, and meet tight deadlines\n\n- Agility and flexibility to take on new tasks and responsibilities when necessary to support the business and legal team’s needs in a fast-moving, rapidly scaling, and dynamic tech company\n\n- Willingness and ability to engage with and interpret data, especially from unfamiliar sources\n\nNICE TO HAVE:\n\n- Experience handling arbitrations and class actions\n\n- Experience with eDiscovery issues, including large-scale custodial data collection, review, and production\n\n- Clerkship experience\n\n- Government experience\n\n- Experience working cross-culturally and with diverse, global teams\n\nINTERVIEW PROCESS:\n\n- Application Review\n\n- Case Study\n\n- Case Interview with a member of our Legal team\n\n- Hiring Manager interview with our Head of Legal\n\n- Executive Interview with our Co-CEO\n\nSALARY:\n\nThe base salary range for this position is $190,000 - $220,000. This role includes a discretionary annual bonus (paid on a quarterly basis) and equity compensation.\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -33,8 +42,8 @@
   "title": "Litigation Counsel",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "656eef4487bfd1a668337e7a2a6fcd98d157ed33806ead4bc57fcc0946a9793b",
+ "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
+ "content_hash": "99f0719c6766a361aec756f7967a0506c7709671e376d2bc2624dabc33f47088",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -65,7 +74,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":190000,\"maxValue\":220000,\"summary\":\"Estimated annual compensation: $190K – $220K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      },
@@ -89,8 +98,8 @@
        "variable_mentioned": true
       },
       "method": "description_section:SALARY:",
-      "quote": "The base salary range for this position is $190,000 - $220,000. This role will also be eligible for discretionary annual bonus (paid on a quarterly basis) and/or equity compensation.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "The base salary range for this position is $190,000 - $220,000. This role includes a discretionary annual bonus (paid on a quarterly basis) and equity compensation.",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      }
@@ -107,7 +116,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "U.S. (Remote)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      },
@@ -115,7 +124,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      }
@@ -132,7 +141,7 @@
       "interpretation": null,
       "method": "description_section:NICE TO HAVE:",
       "quote": "- Experience handling arbitrations and class actions\n- Experience with eDiscovery issues, including large-scale custodial data collection, review, and production\n- Clerkship experience\n- Government experience\n- Experience working cross-culturally and with diverse, global teams\nINTERVIEW PROCESS:\n- Application Review\n- Case Study\n- Case Interview with a member of our Legal team\n- Hiring Manager interview with our Head of Legal\n- Executive Interview with our Co-CEO",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      }
@@ -145,7 +154,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "U.S. (Remote)",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      },
@@ -153,7 +162,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/05fa099b-3a5e-4e3b-b1b5-7ba23b0db7a4"
      }
