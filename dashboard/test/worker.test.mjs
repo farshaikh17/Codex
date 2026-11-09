@@ -813,3 +813,11 @@ test('outage backup: the last good PUBLIC answer is kept outside D1 and served w
     assert.equal((await get(down, '/api/candidates', ADMIN_KEY)).status, 503);
   } finally { delete globalThis.caches; }
 });
+
+test('resume import is honest: no invented profile for any pasted text', async () => {
+  const { env } = fresh();
+  const r = await worker.fetch(new Request('https://test.invalid/api/profile/import-resume', { method: 'POST', headers: { Authorization: `Bearer ${ADMIN_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Jane Doe, welder, 20 years, Rust' }) }), env, { waitUntil() {} });
+  assert.equal(r.status, 501);
+  const body = await r.json();
+  assert.equal(body.status, 'not_implemented'); assert.ok(!body.parsed, 'no parsed profile'); assert.ok(!/Farhan|Python|TypeScript/i.test(JSON.stringify(body)));
+});

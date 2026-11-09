@@ -49,7 +49,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ profile, onUpdate })
       const result = await importResume(resumeText, false);
       setResumeParseResult(result);
     } catch {
-      setResumeError('Could not parse resume text. Please ensure it contains relevant details.');
+      setResumeError('Resume import is not available yet, so nothing was read or changed. Please edit the profile fields below directly.');
     } finally {
       setIsParsingResume(false);
     }
