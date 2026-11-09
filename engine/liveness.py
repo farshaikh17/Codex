@@ -18,13 +18,14 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 PER_CANDIDATE = 50
 UA = 'Mozilla/5.0 (compatible; career-job-engine/1.0; private job search)'
 EXPORT_SQL = f"""SELECT id, url FROM (
-  SELECT j.id, coalesce(nullif(j.original_posting_url, ''), j.source_url) AS url,
+  SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
          ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY s.overall_score DESC, j.discovered_at DESC) AS rk
   FROM candidate_job_scores s
   JOIN jobs j ON j.id = s.job_id
@@ -33,7 +34,7 @@ EXPORT_SQL = f"""SELECT id, url FROM (
     AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
     AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id
                     AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')))
-    AND coalesce(nullif(j.original_posting_url, ''), j.source_url) LIKE 'https://%'
+    AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
 ) WHERE rk <= {PER_CANDIDATE}"""
 
 
@@ -46,6 +47,10 @@ def probe(url, timeout=20):
             r.read(65536)
             if 'greenhouse.io' in final and 'error=true' in final:
                 return 'dead', 'greenhouse error redirect'
+            initial_url, final_url = urlsplit(url), urlsplit(final)
+            # A generic homepage after a redirect does not prove that a specific posting remains open.
+            if initial_url.path.strip('/') and not final_url.path.strip('/'):
+                return 'unknown', 'redirected to homepage'
             return 'alive', str(r.status)
     except urllib.error.HTTPError as e:
         return ('dead' if e.code in (404, 410) else 'unknown'), str(e.code)
