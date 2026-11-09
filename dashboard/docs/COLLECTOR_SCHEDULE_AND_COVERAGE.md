@@ -52,3 +52,16 @@ had (22 MB, 2,123 jobs). A read-only inventory by source and by day (diagnose mo
 * Scheduled runs after the previous report: `collect.yml` started at 22:13:34 UTC on 2026-11-05 (nominal 21:37, about 36 minutes late) and the matching sync at 22:18:37 UTC; both succeeded. The nominal 16:37 slot produced no run. Schedules and tokens were not changed.
 * Current inventory in D1 (active jobs, 2,136): Ashby 789, Greenhouse 627, Lever 468, SmartRecruiters 91, public feeds 87, Jobicy 36, HN jobs 35, synthetic or test fixtures 3. Jobs first discovered per day were mostly 20 to 55, with two bursts (1,070 on 2026-10-26 and 713 on 2026-11-02).
 * **The 20,380 figure is still unresolved.** No table, day or source in D1 comes near it. The largest single day is 1,070 jobs and the whole database holds about 2,140. The origin (synthetic stress-test corpus, accumulated inventory or real daily discovery) cannot be established from this evidence, so it is not used as a coverage claim. Current coverage is the inventory above.
+
+## Measurements added 2026-11-09 (schedules of 2026-11-08)
+
+GitHub starts scheduled workflows on a best-effort basis. Observed on 2026-11-07 and 2026-11-08:
+
+| Workflow | Nominal | What ran |
+|---|---|---|
+| `collect.yml` (01:37, 06:37, 11:37, 16:37, 21:37) | 5 slots a day | on 2026-11-08: 07:54 (about 77 min after the 06:37 slot) and 17:13 (about 36 min after 16:37); the 01:37, 11:37 and 21:37 slots did not start. A 00:52 run was the previous day's 21:37 slot, 3 h 15 min late |
+| `sync_collector_to_d1.yml` | follows the collector | 00:54, 07:58, 17:14 on 2026-11-08 |
+| `watchlist.yml` (03:07, 09:07, 21:07) | 3 slots a day | 2026-11-07 09:50 (43 min late) and 2026-11-08 00:19 (the 21:07 slot of the day before, 3 h 12 min late) and 10:04; the 03:07 and 21:07 slots of 2026-11-08 did not start |
+| `discovery.yml` (15:13) | 1 a day | 2026-11-07 19:25 and 2026-11-08 19:40 (about 4 h 12 min and 4 h 27 min late) |
+
+Change made (PR #55, 2026-11-09): the watchlist now triggers every 2 hours and discovery at 15:13, 17:13, 19:13 and 21:13 UTC; a recent-run guard lets the real job run only when its last real run (the job succeeded, not skipped) is older than 7 hours (watchlist) or 18 hours (discovery). A late or dropped trigger is therefore caught up by the next one. Manual runs are always allowed.

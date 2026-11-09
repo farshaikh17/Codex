@@ -127,3 +127,27 @@ The `d1 info` field `rows_read_24h` (9.99M, then 10.37M) is a rolling 24-hour wi
 Observed in the Worker log during diagnose: the 2-minute discovery cron recorded one failed work unit ("Posting missing title or official HTTPS application URL"), kept in the durable run history. Not investigated further.
 
 Known gap in the table-count query of diagnose mode: it returned an API error on 2026-11-06 (the error is now shown, not hidden); the job inventory queries beside it worked.
+
+## D1 usage by UTC day, measured 2026-11-09 00:12 UTC (diagnose run 42538823105)
+
+Two different numbers, and they must not be mixed up:
+* **Account usage** is Cloudflare's own analytics for the database. It counts every client (the Worker's visitors and 2-minute cron, the collector sync, the daily discovery and watchlist imports, release checks, diagnose runs). **This is what the free limits (5,000,000 rows read, 100,000 rows written per UTC day) apply to.**
+* **The application read meter** (`read_meter`) counts only rows read by the Worker's own cache misses (public and operator). It excludes cache lookups, the cron, the collector sync, imports run through `wrangler` and diagnose queries. The public cap (`PUBLIC_DAILY_READ_BUDGET`, 2,500,000) is judged on the meter only.
+
+| UTC day | What happened that day | Account rows read | Account rows written | Meter rows read (public misses) | Gap (account minus meter) |
+|---|---|---|---|---|---|
+| 2026-11-05 | incident day, old Worker | 9,687,915 | 11,760 | n/a | n/a |
+| 2026-11-06 | four releases, QA, the public cap tripped at 2,553,470 | 3,125,694 | 24,391 | 2,553,470 (192) | about 0.57M |
+| 2026-11-07 | discovery runs 1 and 2 with the new import (no budget guard yet), then the quota ran out about 02:24 | **17,026,513** | 54,927 | 2,057,557 (189) | **about 15.0M** |
+| 2026-11-08 | **not a normal day**: three releases (00:21, 03:03, 03:16 UTC), three diagnose runs, browser checks, first discovery run with the fixes (19:40 UTC) | 2,102,528 | 69,341 | 1,352,196 (138) | about 0.75M |
+| 2026-11-09 (to 00:12) | fresh day | 14,953 | 315 | n/a | n/a |
+
+**Cause of the 2026-11-07 overrun (inference, strongly supported):** about 15M of the 17.0M rows were not Worker reads. The import's copy-collapse statement looked up each job's best score with a subquery over `candidate_job_scores`, which has no `job_id` index, so it scanned all ~5,700 score rows once per in-scope job (~1,400 jobs): roughly 8-16M rows read in a few seconds. It ran inside discovery run 2 (02:03 UTC), and the quota was exhausted at about 02:24. Fixed in PR #45 (one grouped join; 38 s to 0.05 s on a 22k-job local copy) and bounded by the budget guard (PR #42). It is an inference from the arithmetic and the timing, not a direct measurement; the 8 Nov figure of 2.10M, with the same discovery code path running once (19:40), is consistent with it.
+
+**Headroom on 2026-11-08:** meter 2,500,000 - 1,352,196 = 1,147,804 below the public cap (the cap did not activate); reads 5,000,000 - 2,102,528 = 2,897,472; **writes 100,000 - 69,341 = 30,659 (69% used)**. Writes, not reads, are now the tighter limit on a busy day: the Worker's assessment cron wrote 21,220 rows to `candidate_qualifications` and 10,036 to `candidate_job_scores` in one day (5,305 and 5,018 statements), mostly working through the collector-import backlog (now 101 rows for Sana, 0 for Farhan; it was 771 and 929 on 2026-11-08 00:17 UTC).
+
+**Per-query evidence (insights, last 24 h at 2026-11-09 00:12):** the largest readers are still the Worker's listing and count queries at roughly 5k-17k rows per call (for example the list-id query at 13,329 rows x 24 calls = 320k; the eligibility/salary facet count at 5,242 rows x 18). Together the top twelve account for under 1.0M of the day's 2.1M.
+
+**Database after 2026-11-08:** jobs 3,699 (3,553 active), qualifications and scores 5,921 each, applications 12, history 44, cache entries 112, auth failures 0. Jobs first seen 2026-11-08: 213; 2026-11-07: 1,298. Queue DONE 297, FAILED 5, PENDING 6; last-day runs 71 posting and 50 source successes, 1 posting and 1 source error.
+
+**Remaining errors:** five `greenhouse:elastic` postings return HTTP 404 upstream (they end FAILED legitimately); `lever:gohighlevel` timed out once; `greenhouse:canonical` is disabled by design (the board exceeds the 512 KiB free-tier processing budget). The free AI review is off: GitHub Models was retired on 2026-07-30 (probe run 42518603571 saw HTTP 200 text/plain "OK").
