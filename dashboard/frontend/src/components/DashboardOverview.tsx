@@ -165,7 +165,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           <button
             onClick={() => onSelectCandidate('sana_ansari')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-coral-500 hover:bg-coral-600 text-white font-medium text-sm transition-colors shadow-sm"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-coral-600 hover:bg-coral-700 text-white font-medium text-sm transition-colors shadow-sm"
           >
             <span>Open Sana's jobs</span>
             <ArrowRight className="w-4 h-4" />

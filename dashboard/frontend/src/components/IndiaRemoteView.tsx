@@ -378,7 +378,8 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                   key={job.id}
                   data-job-id={job.id}
                   onClick={() => onSelectJob(job)}
-                  className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer space-y-3"
+                  tabIndex={0} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectJob(job); } }}
+                  className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer space-y-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="space-y-1">

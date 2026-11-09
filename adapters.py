@@ -68,6 +68,10 @@ def _s(v):
         return ''
     return v.strip() if isinstance(v, str) else str(v)
 
+def _list(v):
+    # A feed may send a number, boolean or string where a list belongs; treat anything but a list as empty instead of failing the whole board.
+    return v if isinstance(v, list) else []
+
 def extract_jobs(provider, data):
     if provider == 'lever':
         if not isinstance(data, list):
@@ -132,7 +136,7 @@ def normalize(provider, board, j):
         loc = j.get('location')
         name = _s(loc.get('name') if isinstance(loc, dict) else loc)
         locs = [(p, 'location.name') for p in name.split(';')]
-        for o in j.get('offices') or []:
+        for o in _list(j.get('offices')):
             if isinstance(o, dict):
                 locs += [(o.get('location'), 'offices.location'), (o.get('name'), 'offices.name')]
         comp = json.dumps(j['pay_input_ranges'], ensure_ascii=False) if j.get('pay_input_ranges') else None
@@ -142,9 +146,9 @@ def normalize(provider, board, j):
     if provider == 'lever':
         cats = j.get('categories') if isinstance(j.get('categories'), dict) else {}
         locs = [(cats.get('location'), 'categories.location')]
-        locs += [(x, 'categories.allLocations') for x in (cats.get('allLocations') or [])]
+        locs += [(x, 'categories.allLocations') for x in _list(cats.get('allLocations'))]
         parts = [_s(j.get('descriptionPlain')) or html_to_text(_s(j.get('description')))]
-        for lst in j.get('lists') or []:
+        for lst in _list(j.get('lists')):
             if isinstance(lst, dict):
                 parts.append(_s(lst.get('text')) + NL + html_to_text(_s(lst.get('content'))))
         parts.append(_s(j.get('additionalPlain')) or html_to_text(_s(j.get('additional'))))
@@ -156,7 +160,7 @@ def normalize(provider, board, j):
         if j.get('isListed') is False:
             raise Skip('unlisted', 'job %s is not listed' % req)
         locs = [(j.get('location'), 'location')]
-        for sec in j.get('secondaryLocations') or []:
+        for sec in _list(j.get('secondaryLocations')):
             locs.append((sec.get('location') if isinstance(sec, dict) else sec, 'secondaryLocations'))
         addr = j.get('address') if isinstance(j.get('address'), dict) else {}
         postal = addr.get('postalAddress') if isinstance(addr.get('postalAddress'), dict) else {}

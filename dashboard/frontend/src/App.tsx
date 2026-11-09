@@ -6,7 +6,6 @@ import {
   updateProfile, 
   updateApplication, 
   fetchAnalytics, 
-  reloadSyntheticFixtures,
   fetchWeeklyMetrics,
   fetchIndiaRemoteSummary,
   overrideJobQualification,
@@ -262,12 +261,10 @@ export const App: React.FC = () => {
     await loadData();
   };
 
-  // Fixture reload
+  // The navbar's refresh button: re-read the data. (It used to POST to the retired synthetic-fixture endpoint, which a visitor could not
+  // call without the unlock window and which always answers 410 for the operator.)
   const handleReloadFixtures = async () => {
-    try {
-      await reloadSyntheticFixtures();
-      await loadData();
-    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to reload test jobs. Please retry."); }
+    try { await loadData(); } catch { setError('Unable to refresh. Please retry.'); }
   };
 
   const savedCount = trackedJobs.length;
@@ -306,6 +303,7 @@ export const App: React.FC = () => {
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 className="sr-only">Career Job Engine dashboard</h1>
         {shareView && !isOperator && (
           <div role="status" data-testid="share-banner" className="mb-4 p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm flex items-start justify-between gap-3">
             <span>Shared read-only view{viewingName ? ` for ${viewingName}` : ''}. Nothing can be changed from this link.</span>
@@ -360,7 +358,7 @@ export const App: React.FC = () => {
                     <h2 className="text-xl font-bold text-white mt-1">
                       {profile && profile.id === candidateId ? (profile.display_title || '') : ''}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-300 mt-0.5">
                       {profile && profile.id === candidateId
                         ? `${profile.summary_line || ''} ${profile.location_preferences && profile.location_preferences.length ? 'Location preferences: ' + profile.location_preferences.join(', ') + '.' : ''} ${profile.pay_line || ''}`
                         : ''}

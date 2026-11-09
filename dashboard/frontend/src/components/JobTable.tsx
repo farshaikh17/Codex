@@ -163,7 +163,7 @@ export const JobTable: React.FC<JobTableProps> = ({
               const pay = payText(job);
               const elig = job.eligibility?.classification;
               return (
-                <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start">
+                <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} tabIndex={0} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectJob(job); } }} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600">
                   <div className={`shrink-0 w-14 text-center rounded-lg border py-1.5 ${scoreCls(score)}`} title="Match score: how well the posting fits the profile">
                     <div className="text-lg font-bold leading-none">{score}</div>
                     <div className="text-[10px] font-semibold uppercase tracking-wide mt-0.5">match</div>
@@ -187,17 +187,17 @@ export const JobTable: React.FC<JobTableProps> = ({
                     <p className="text-xs text-slate-600 mt-1.5 line-clamp-2" data-testid="job-why">{whyText(job.qualification_reason)}</p>
                   </div>
                   <div className="shrink-0 flex flex-col sm:flex-row items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => onSaveJob(job.id, e)} aria-label={isSaved ? 'Saved' : 'Save this job'} title={isSaved ? 'Saved' : 'Save this job'}
+                    <button onClick={(e) => onSaveJob(job.id, e)} aria-label={`${isSaved ? 'Saved' : 'Save this job'}: ${job.title}`} title={isSaved ? 'Saved' : 'Save this job'}
                       className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border transition-colors ${isSaved ? 'bg-amber-50 border-amber-300 text-amber-600' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'}`}>
                       <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
                     </button>
                     {onDismissJob && (
-                      <button onClick={(e) => onDismissJob(job.id, e)} aria-label="Not for me (hide this job)" title="Not for me (hide this job)"
+                      <button onClick={(e) => onDismissJob(job.id, e)} aria-label={`Not for me (hide this job): ${job.title}`} title="Not for me (hide this job)"
                         className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-200">
                         <XCircle className="w-4 h-4" />
                       </button>
                     )}
-                    <button onClick={() => onSelectJob(job)} aria-label="Open details" title="Open details"
+                    <button onClick={() => onSelectJob(job)} aria-label={`Open details: ${job.title}`} title="Open details"
                       className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600">
                       <ChevronRight className="w-4 h-4" />
                     </button>

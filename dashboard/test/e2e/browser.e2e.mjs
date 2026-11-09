@@ -48,7 +48,7 @@ const checkCandidate = async (btn, cid, label, other) => {
   const sc = (await apiPublic(`/jobs?candidate_id=${cid}&limit=1&exclude_applied=true&exclude_dismissed=true`)).status_counts;
   const card = Number((t.match(/READY TO APPLY\s+(\d+)/i) || [])[1]);
   check(`A5 ${btn}: workspace heading and READY card match the API, jobs are listed`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
-  check(`A6 ${btn}: job rows are visible without a key`, (await page.locator('table tbody tr').count()) > 0 || /Role j\d/.test(t));
+  check(`A6 ${btn}: job rows are visible without a key`, (await page.locator('[data-job-id]').count()) > 0 || /Role j\d/.test(t));
   await tab('Analytics');
   const ta = await bodyText();
   const who = cid === 'sana_ansari' ? 'Sana' : 'Farhan'; const not = cid === 'sana_ansari' ? /Farhan has/ : /Sana has/;
@@ -78,13 +78,13 @@ await tab('DASHBOARD');
 const autoBtn = page.getByRole('button', { name: /automation|discovery runs|cloud discovery/i }).first();
 if (await autoBtn.count()) { await autoBtn.click(); await page.waitForTimeout(2500); }
 await tab('DASHBOARD'); await tab('FARHAN');
-await page.getByText(/Needs Review/i).first().click(); await page.waitForTimeout(2000);   // review queue (qualification audit is operator-only)
+{ const nr = page.getByText(/Needs Review/i).first(); if (await nr.count()) { await nr.click(); await page.waitForTimeout(2000); } }   // review queue (qualification audit is operator-only)
 check('A12 across every screen a visitor never triggered a refusal, a key or the unlock window', apiLog.every((r) => r.status === 200 || r.status === 404) && !(await modalOpen()) && !apiLog.some((r) => r.auth), JSON.stringify(apiLog.filter((r) => r.status >= 400 || r.auth).slice(0, 3)));
 check('A13 no horizontal scrolling at this width', (await overflowX()) <= 1, String(await overflowX()));
 
 // a visitor cannot change records: the UI asks for sign-in and sends nothing
 await tab('FARHAN');
-const row = page.locator('table tbody tr').first();
+const row = page.locator('[data-job-id]').first();
 apiLog.length = 0;
 if (await row.count()) {
   await row.click(); await page.waitForTimeout(800);
@@ -112,7 +112,7 @@ check('B1 wrong key: error shown, nothing stored', (await bodyText()).includes('
 await page.fill('#operator-key-input', KEY); await page.getByRole('button', { name: /unlock/i }).last().click(); await page.waitForTimeout(1800);
 check('B2 correct key: stored for the session and the window closes', (await storedKey()) === KEY && !(await modalOpen()));
 await tab('FARHAN');
-const row2 = page.locator('table tbody tr').first();
+const row2 = page.locator('[data-job-id]').first();
 if (await row2.count()) {
   await row2.click(); await page.waitForTimeout(800);
   apiLog.length = 0;

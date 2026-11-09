@@ -92,9 +92,13 @@ function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) 
 
 // Standard CORS headers
 function corsHeaders(request: Request, env: Env): HeadersInit {
-  const origin = request.headers.get('Origin') || '*';
+  // Only this site itself (and a local rehearsal server) may read the API from a browser page. Other origins get no CORS grant, so a page
+  // on another site cannot read it with the visitor's browser; writes already need the operator key in an Authorization header.
+  const origin = request.headers.get('Origin') || '';
+  let allowed = '';
+  try { if (origin && (origin === new URL(request.url).origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) allowed = origin; } catch { /* no grant */ }
   return {
-    'Access-Control-Allow-Origin': origin,
+    ...(allowed ? { 'Access-Control-Allow-Origin': allowed } : {}),
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion, X-View-Token',
     'Access-Control-Max-Age': '86400',
@@ -369,6 +373,27 @@ async function clientKey(request: Request): Promise<string> {
 }
 
 /** Seconds until the client may try again, or 0. A missing table or D1 error never locks the operator out. */
+// If D1 itself is unavailable (quota, outage) the limiter used to fail open: wrong keys were not counted at all. This per-isolate fallback keeps
+// a bound on guessing during an outage; it is weaker than the shared table (each isolate counts separately) but never worse than no limit.
+const memFailures = new Map<string, { n: number; start: number; last: string }>();
+function memLockout(key: string): number {
+  const e = memFailures.get(key), now = Math.floor(Date.now() / 1000);
+  if (!e) return 0;
+  const left = e.start + AUTH_WINDOW_SECONDS - now;
+  if (left <= 0) { memFailures.delete(key); return 0; }
+  return e.n >= AUTH_MAX_FAILURES ? left : 0;
+}
+function memRecord(key: string, keyHash: string): number {
+  const now = Math.floor(Date.now() / 1000);
+  let e = memFailures.get(key);
+  if (!e || now - e.start >= AUTH_WINDOW_SECONDS) {
+    if (memFailures.size >= 5000) memFailures.delete(memFailures.keys().next().value as string);
+    e = { n: 1, start: now, last: keyHash };
+  } else if (e.last !== keyHash) { e.n += 1; e.last = keyHash; }   // the identical wrong key again is not a new guess (same rule as the table)
+  memFailures.set(key, e);
+  return e.n;
+}
+
 async function lockoutSeconds(env: Env, key: string): Promise<number> {
   try {
     const row = await env.DB.prepare('SELECT failures, window_start FROM auth_failures WHERE ip_hash = ?').bind(key).first<{ failures: number; window_start: number }>();
@@ -378,17 +403,17 @@ async function lockoutSeconds(env: Env, key: string): Promise<number> {
     return row.failures >= AUTH_MAX_FAILURES && left > 0 ? left : 0;
   } catch (err) {
     console.warn('auth limiter unavailable (lockout check):', (err as Error).message);
-    return 0;
+    return memLockout(key);
   }
 }
 
 /** Counts one wrong key atomically (single upsert) and returns the failures now in the window, or 0 if unavailable.
  *  Repeating the identical wrong key is not a guess, so it adds nothing; every different wrong key adds one. */
 async function recordAuthFailure(env: Env, key: string, presented: string): Promise<number> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wrong-key:' + presented));
+  const keyHash = [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
   try {
     const now = Math.floor(Date.now() / 1000);
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wrong-key:' + presented));
-    const keyHash = [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
     const row = await env.DB.prepare(`
       INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at, last_key_hash) VALUES (?, 1, ?, ?, ?)
       ON CONFLICT(ip_hash) DO UPDATE SET
@@ -412,7 +437,7 @@ async function recordAuthFailure(env: Env, key: string, presented: string): Prom
     return row?.failures ?? 0;
   } catch (err) {
     console.warn('auth limiter unavailable (record):', (err as Error).message);
-    return 0;
+    return memRecord(key, keyHash);
   }
 }
 
@@ -1173,8 +1198,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
   if (!candidateId) return badCandidate(request, env, params.id);
   const statusFilter = url.searchParams.get('status') || 'READY,STRETCH_READY';
   const laneFilter = url.searchParams.get('lane') || 'ALL';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), isOperatorRequest(request) ? 500 : 100);
-  const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '100', 10) || 100), isOperatorRequest(request) ? 500 : 100);
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
 
   try {
     const statuses = statusFilter.split(',').map((s) => s.trim()).filter(Boolean);
@@ -1354,8 +1379,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
-  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)), isOperatorRequest(request) ? 1000 : 100);
-  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10) || 50), isOperatorRequest(request) ? 1000 : 100);
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
 
   try {
     // Cost: every predicate below reads only what it needs. The score row is joined only when a score filter or the order needs it,
@@ -1892,11 +1917,18 @@ router.delete('/api/applications/:id', async (request, env, params, url) => {
   if (existing.status !== 'SAVED' || (existing.notes && String(existing.notes).trim()))
     return jsonResponse({ error: 'Only a record that is still SAVED (with no notes) can be un-saved; change its status in the tracker instead.' }, 409, corsHeaders(request, env));
   const now = new Date().toISOString();
-  await env.DB.batch([
+  // The check above and the write below are separate round trips, so someone else can change the record in between (add a note, move the status on).
+  // Both statements therefore repeat the rule themselves, inside one atomic batch: the history row exists only if the same conditions still hold for the delete, and the
+  // answer reports what the delete really did.
+  const STILL_PLAIN_SAVED = `id = ? AND candidate_id = ? AND job_id = ? AND status = 'SAVED' AND (notes IS NULL OR trim(notes, ' ' || char(9) || char(10) || char(13)) = '')`;
+  const done = await env.DB.batch([
     env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
-      VALUES (?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?)`).bind(candidateId, jobId, existing.id, now),
-    env.DB.prepare('DELETE FROM applications WHERE id = ? AND candidate_id = ? AND job_id = ? AND status = ?').bind(existing.id, candidateId, jobId, 'SAVED'),
+      SELECT ?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?
+      WHERE EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, now, existing.id, candidateId, jobId),
+    env.DB.prepare(`DELETE FROM applications WHERE ${STILL_PLAIN_SAVED}`).bind(existing.id, candidateId, jobId),
   ]);
+  if (Number(done[1]?.meta?.changes || 0) !== 1)
+    return jsonResponse({ error: 'This record changed while it was being un-saved (a note was added or its status moved on), so nothing was removed. Check it in the tracker.' }, 409, corsHeaders(request, env));
   return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
 });
 
@@ -2633,7 +2665,8 @@ router.get('/api/profile', async (request, env, _params, url) => {
       full_name: full.full_name,
       display_title: full.display_title,
       summary_line: facts.public_summary,
-      education: full.education,
+      // The stored value, else only the short label: the full built-in degree line (college and year) is operator-only.
+      education: cand.education || facts.education_short,
       education_short: full.education_short,
       current_location: publicLocation(cand.current_location),
       primary_timezone: full.primary_timezone,
@@ -2839,7 +2872,10 @@ router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
   const id = knownCandidate(params.id);
   if (!id) return badCandidate(request, env, params.id);
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 40);
-  const res = await backfillClient(env.DB, id, limit);
+  // `cursor` (returned as next_cursor by the previous call) lets a call start where the last stopped; without it the walk starts from the newest job.
+  const rawCursor = url.searchParams.get('cursor');
+  const cursor = rawCursor && /^\d{1,15}$/.test(rawCursor) ? Number(rawCursor) : null;
+  const res = await backfillClient(env.DB, id, limit, undefined, cursor);
   return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
 });
 
@@ -2869,6 +2905,27 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
   const r = await env.DB.prepare(`UPDATE client_view_tokens SET revoked_at = datetime('now') WHERE candidate_id = ? AND substr(token_hash, 1, 12) = ? AND revoked_at IS NULL`).bind(id, params.link).run();
   if (!r.meta?.changes) return jsonResponse({ error: 'Unknown or already revoked share link.' }, 404, corsHeaders(request, env));
   return jsonResponse({ candidate_id: id, link_id: params.link, revoked: true }, 200, corsHeaders(request, env));
+});
+
+// Removes a client and everything held about them, in one atomic batch (the privacy notice promises deletion on request). Operator only. The two built-in
+// candidates cannot be removed. Shared job postings stay; what is removed is every row tied to this client, their application record (name, e-mail, phone)
+// and any cached answers that mention the client.
+const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'applications', 'past_applications',
+  'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests'] as const;
+router.delete('/api/clients/:id', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  if (BUILTIN_IDS.includes(id)) return jsonResponse({ error: 'The two built-in candidates cannot be deleted here.' }, 400, corsHeaders(request, env));
+  const out = await env.DB.batch([
+    ...CLIENT_DATA_TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE candidate_id = ?`).bind(id)),
+    env.DB.prepare('DELETE FROM response_cache WHERE key LIKE ?').bind('%' + id + '%'),
+    env.DB.prepare('DELETE FROM candidates WHERE id = ?').bind(id),
+  ]);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  const rows: Record<string, number> = {};
+  CLIENT_DATA_TABLES.forEach((t, i) => { rows[t] = Number(out[i]?.meta?.changes || 0); });
+  rows.candidates = Number(out[out.length - 1]?.meta?.changes || 0);
+  return jsonResponse({ candidate_id: id, deleted: rows.candidates === 1, rows_removed: rows }, 200, corsHeaders(request, env));
 });
 
 // CSV of one client's screened jobs (active only), in the list's score order (score, then newest, then id), at most 1,000 rows. Public field set only (no notes,
@@ -3059,7 +3116,10 @@ const BACKUP_TTL_SECONDS = 3 * 24 * 3600, BACKUP_REFRESH_MS = 5 * 60 * 1000;
 const backupStamp = new Map<string, number>();
 const backupCache = (): any => (globalThis as any).caches?.default || null;
 function backupEligible(request: Request): boolean {
-  return request.method === 'GET' && accessLevel.get(request) === 'public' && !BACKUP_SKIP.has(new URL(request.url).pathname);
+  // A request that carries a share link (X-View-Token) is "public" level but its answer can include the link's private client (the candidate list, the overview),
+  // and the backup copy is keyed by URL alone: storing it would hand that client to the next anonymous visitor during an outage. Only answers produced for a
+  // plain anonymous visitor are kept.
+  return request.method === 'GET' && accessLevel.get(request) === 'public' && !viewerOf.has(request) && !BACKUP_SKIP.has(new URL(request.url).pathname);
 }
 async function backupStore(request: Request, body: string): Promise<void> {
   try {
@@ -3094,6 +3154,7 @@ export default {
       // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.
       const headers = new Headers(res.headers);
       headers.set('X-Worker-Commit', env.GIT_COMMIT || 'unknown');
+      headers.set('X-Content-Type-Options', 'nosniff'); headers.set('X-Frame-Options', 'DENY'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
       const out = new Response(res.body, { status: res.status, headers });
       if (backupEligible(request)) {
         if (res.status === 200 && (headers.get('Content-Type') || '').includes('json')) ctx.waitUntil(out.clone().text().then((t) => backupStore(request, t)));
@@ -3110,7 +3171,14 @@ export default {
     }
   },
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    const result = await runDiscovery(env, 'CRON');
+    let result: any;
+    try { result = await runDiscovery(env, 'CRON'); }
+    catch (e: any) {
+      // D1 refusing queries (daily quota, overload) is an outage, not a bug: say so once, skip this tick, and the next one tries again in 2 minutes.
+      // Anything else still fails loudly.
+      if (isDatabaseFailure(e?.message)) { console.warn(JSON.stringify({ event: 'cloud_discovery', status: 'DB_UNAVAILABLE', error: String(e?.message || e).slice(0, 200) })); return; }
+      throw e;
+    }
     console.log(JSON.stringify({event:'cloud_discovery',...result}));
     // Every fifth tick (about every 10 minutes) a small batch of collector imports is assessed. It is independent of discovery:
     // a discovery error does not stop it, and its own error is reported, not swallowed.

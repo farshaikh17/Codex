@@ -40,6 +40,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } catch { usage = null; }
   const d = decide(usage, { maxReads, event });
   console.log(`Budget guard: ${d.skip ? 'SKIP' : 'go'} - ${d.reason}`);
+  if (!usage && process.env.GITHUB_ACTIONS) console.log('::warning title=Budget guard::Usage figures could not be read (check CLOUDFLARE_API_TOKEN has Account Analytics read); scheduled runs stay skipped until fixed.');
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `skip=${d.skip}\n`);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `**Budget guard:** ${d.skip ? 'skipped this run' : 'ok'} - ${d.reason}\n`);
 }
