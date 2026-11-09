@@ -2839,7 +2839,10 @@ router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
   const id = knownCandidate(params.id);
   if (!id) return badCandidate(request, env, params.id);
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 40);
-  const res = await backfillClient(env.DB, id, limit);
+  // `cursor` (returned as next_cursor by the previous call) lets a call start where the last stopped; without it the walk starts from the newest job.
+  const rawCursor = url.searchParams.get('cursor');
+  const cursor = rawCursor && /^\d{1,15}$/.test(rawCursor) ? Number(rawCursor) : null;
+  const res = await backfillClient(env.DB, id, limit, undefined, cursor);
   return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
 });
 
