@@ -156,3 +156,31 @@ test('inspection panel reads the breakdown under the name the Worker sends (scor
   const worker = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
   assert.match(worker, /score: \{[^}]*breakdown: scoreBreakdown/s, 'the Worker sends score.breakdown');
 });
+
+test('re-score v4: a row scored on the old profile is corrected and tagged; a row already on the current profile is left alone', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'p4-'));
+  const { sqlite } = createDb();
+  const S = 'sana_ansari', skills = JSON.stringify(['Preventive Maintenance', 'Reliability', 'Root Cause Analysis']);
+  sqlite.prepare(`INSERT INTO candidates(id,full_name,primary_skills,total_years_experience) VALUES (?,?,?,9)`).run(S, 'S', skills);
+  sqlite.exec(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,description,location_restrictions,workplace_type) VALUES
+    ('s1','Reliability Engineer','A','workday',1,'2026-11-01','Preventive Maintenance and Reliability work. Electrical Maintenance noted.','Dubai, UAE','ONSITE'),
+    ('s2','Reliability Engineer','B','workday',1,'2026-11-01','Preventive Maintenance and Reliability work.','Dubai, UAE','ONSITE')`);
+  sqlite.exec(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('${S}','s1','NEEDS_REVIEW',NULL),('${S}','s2','NEEDS_REVIEW',NULL)`);
+  sqlite.exec(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES
+    ('${S}','s1',77,'{"preliminary":true,"profile_v3":true,"matched_skills":["Electrical Maintenance","Reliability"]}'),
+    ('${S}','s2',77,'{"preliminary":true,"profile_v3":true,"profile_v4":true,"matched_skills":["KEEP"]}')`);
+  const rows = ['s1', 's2'].map((id) => ({ candidate_id: S, job_id: id, title: 'Reliability Engineer', company: 'X', location: 'Dubai, UAE', description: 'Preventive Maintenance and Reliability work.', workplace_type: 'ONSITE',
+    score_breakdown: sqlite.prepare('SELECT score_breakdown b FROM candidate_job_scores WHERE job_id=?').get(id).b }));
+  fs.writeFileSync(path.join(dir, 'rescore.json'), JSON.stringify(rows));
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: S, primary_skills: skills, total_years_experience: 9, search_profile: null }]));
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [] }));
+  execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'),
+    '--rescore', path.join(dir, 'rescore.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
+  sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
+  const bd = (id) => JSON.parse(sqlite.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE candidate_id='${S}' AND job_id=?`).get(id).b);
+  assert.equal(bd('s1').profile_v4, true, 'tagged so it is not redone');
+  assert.ok(!bd('s1').matched_skills.includes('Electrical Maintenance'), 'a skill she no longer claims is gone from the match list');
+  assert.ok(bd('s1').matched_skills.includes('Reliability') && bd('s1').matched_skills.includes('Preventive Maintenance'));
+  assert.deepEqual(bd('s2').matched_skills, ['KEEP'], 'a row already on the current profile is untouched');
+  assert.equal(sqlite.prepare(`SELECT overall_score s FROM candidate_job_scores WHERE job_id='s2'`).get().s, 77);
+});

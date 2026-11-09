@@ -257,7 +257,8 @@ def main():
     ap.add_argument('--remote-quota', type=int, default=200)
     ap.add_argument('--abroad-quota', type=int, default=300)
     ap.add_argument('--max-days', type=int, default=45)
-    ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with stored skills')
+    ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with the current profile and rules')
+    ap.add_argument('--rescore-per-candidate', type=int, default=1500, help='most rows re-scored per person per run (bounds the writes)')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
     ap.add_argument('--profiles-only', action='store_true', help='only write candidates.json, profiles.json and taste_rows.json (watchlist runs)')
     a = ap.parse_args()
@@ -287,7 +288,7 @@ def main():
     (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
     (out / 'profiles.json').write_text(json.dumps(profs))
     if a.rescore_export:
-        (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local)))
+        (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local, per_candidate=a.rescore_per_candidate)))
     (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
     found = {}
     for cid, p in profs.items():
@@ -319,25 +320,29 @@ def taste_rows(local=None):
       WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED') LIMIT 4000""", local)
 
 
-def rescore_rows(local=None, page=400):
-    """Preliminary rows (the screen's own, not yet scored with stored skills) that no person has decided on, for candidates
-    that have skills to score with. Paged by the last (candidate, job) seen, never by OFFSET: OFFSET makes every page re-read
-    all earlier pages, so the cost of the whole export grew with the square of the row count."""
-    rows, last = [], None
-    while True:
-        after = f"AND (q.candidate_id, q.job_id) > ({sql_str(last[0])}, {sql_str(last[1])})" if last else ''
-        part = d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
-          FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
-          JOIN candidates c ON c.id = q.candidate_id
-          WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
-            AND c.primary_skills IS NOT NULL AND trim(c.primary_skills) NOT IN ('', '[]', 'null')
-            AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v3":true%'
-            AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) {after}
-          ORDER BY q.candidate_id, q.job_id LIMIT {int(page)}""", local)
-        rows += part
-        if len(part) < page:
-            return rows
-        last = (part[-1]['candidate_id'], part[-1]['job_id'])
+def rescore_rows(local=None, page=400, per_candidate=1500):
+    """Preliminary rows that no person has decided on and that were not yet scored with the CURRENT profile and rules (marker profile_v4),
+    for candidates that have skills to score with. At most `per_candidate` rows each, best-ranked first, so one run writes a bounded
+    number of rows (writes are the tight free-tier limit) and the queue a person actually reads is corrected first; the rest follow on
+    the next runs. Paged by the last (score, job) seen, never by OFFSET (OFFSET re-reads every earlier page)."""
+    rows = []
+    cands = [r['id'] for r in d1("SELECT id FROM candidates WHERE primary_skills IS NOT NULL AND trim(primary_skills) NOT IN ('', '[]', 'null') ORDER BY id", local)]
+    for cid in cands:
+        taken, last = 0, None
+        while taken < per_candidate:
+            after = f"AND (s.overall_score < {int(last[0])} OR (s.overall_score = {int(last[0])} AND q.job_id > {sql_str(last[1])}))" if last else ''
+            part = d1(f"""SELECT q.candidate_id, q.job_id, s.overall_score AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
+              FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+              WHERE q.candidate_id = {sql_str(cid)} AND j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
+                AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v4":true%'
+                AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) {after}
+              ORDER BY s.overall_score DESC, q.job_id LIMIT {int(min(page, per_candidate - taken))}""", local)
+            rows += part
+            taken += len(part)
+            if len(part) < min(page, per_candidate - taken + len(part)):
+                break
+            last = (part[-1]['cur_score'], part[-1]['job_id'])
+    return rows
 
 
 if __name__ == '__main__':
