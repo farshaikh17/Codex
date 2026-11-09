@@ -249,7 +249,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   }else if(home){
    if(remote){eligibility='ELIGIBLE';reason=`Remote role in ${country}.`;}
    else reason=`Located in ${country}. Whether this location is workable for the candidate is not verified, so it is unknown.`;
-  }else if(!blockedHome&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
+  }else if(!blockedHome&&((sponsorship&&!noVisaRoute)||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship&&!noVisaRoute?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  }
  else if(candidate.id==='farhan_shaikh'){
   // Owner rules 2026-11-07: remote only (from anywhere; a role that is not remote is not shown), US-only remote is rejected.
@@ -267,7 +267,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   if(remote){eligibility='ELIGIBLE';reason='Remote role in India.';}
   else reason=SANA_UNKNOWN_ACCESS_REASON;
  }
- else if(!blocked&&(sponsorship||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
+ else if(!blocked&&((sponsorship&&!noVisaRoute)||globalRemote)){eligibility='ELIGIBLE';reason=sponsorship&&!noVisaRoute?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  if(noVisaRoute&&eligibility==='UNKNOWN')reason='Posting says it offers no visa sponsorship, so nothing here shows the candidate may work at this location. '+reason;
  const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?FARHAN_ROLE.test(p.title||''):SANA_ROLE.test(p.title||'');
  const skills=list(candidate.primary_skills).filter(s=>skillFound(s,lower));
@@ -523,3 +523,4 @@ export async function automationStatus(db:DB) {
  const coverage=await db.prepare(`SELECT (SELECT COUNT(*) FROM cloud_sources WHERE enabled=1 AND kind IN ('jobicy','remotive','hnjobs')) multi_employer_sources,(SELECT COUNT(*) FROM cloud_sources WHERE enabled=1 AND kind NOT IN ('jobicy','remotive','hnjobs')) direct_employer_sources,(SELECT COUNT(DISTINCT company) FROM jobs WHERE provenance='PUBLIC_FEED_UNVERIFIED') employers_discovered,(SELECT COUNT(*) FROM jobs WHERE provenance='PUBLIC_FEED_UNVERIFIED') broad_listings`).first<any>();
  return {coverage,config:{id:1,is_enabled:enabled,interval_seconds:120,verify_urls:false,reverify_inventory:false,last_run_at:latest?.started_at||null,next_run_at:enabled?new Date(Math.ceil(Date.now()/120000)*120000).toISOString():null,status:enabled?'ACTIVE':'PAUSED',updated_at:config?.updated_at||null},is_active:enabled,automation_state:enabled?'CLOUD DISCOVERY ACTIVE':'CLOUD DISCOVERY PAUSED',latest_run:latest,last_discovery_run:latest,last_successful_run:lastSuccess,next_scheduled_discovery:enabled?'Every 2 minutes; one bounded work unit per tick (UTC)':'Paused',last_weekly_refresh:null,current_run_status:latest?.status||'NEVER_RUN',last_error:config?.last_error||null,pending_jobs:pending?.count||0,source_count:sources?.count||0,daily_budgets:{posting_attempts:DAY_JOBS,source_pages:DAY_SOURCES},today:{day:config?.day,posting_attempts:config?.jobs_today||0,source_pages:config?.sources_today||0},qualification_mode:'conservative_review',schedules:{discovery:'Cloudflare cron: every 2 minutes',weekly_refresh:'Continuous rotating source refresh; no separate weekly bulk scan',server_startup:'Cloudflare managed; PC not required'}};
 }
+
