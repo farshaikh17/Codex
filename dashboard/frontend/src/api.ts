@@ -778,8 +778,9 @@ export async function createClient(body: any): Promise<ClientRecord> {
 export async function updateClient(id: string, body: any): Promise<ClientRecord> {
   return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), 'Saving the client')).client;
 }
-export async function backfillClient(id: string): Promise<{ inserted: number; more: boolean }> {
-  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/backfill?limit=40`, { method: 'POST' }), 'Screening jobs');
+export async function backfillClient(id: string, cursor: number | null = null): Promise<{ inserted: number; more: boolean; next_cursor?: number | null }> {
+  const after = cursor ? `&cursor=${encodeURIComponent(String(cursor))}` : '';
+  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/backfill?limit=40${after}`, { method: 'POST' }), 'Screening jobs');
 }
 export type ShareLink = { link_id: string; label: string | null; created_at: string; revoked_at: string | null };
 export async function fetchShareLinks(id: string): Promise<ShareLink[]> {

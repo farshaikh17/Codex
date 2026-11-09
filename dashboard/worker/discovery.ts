@@ -409,14 +409,19 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
 // nothing becomes READY. Job-board postings get the same "unverified" treatment as in discovery.
 // 40 per call, like the assessment batch: evaluate() over long descriptions costs CPU, and Workers Free allows about 10 ms per request.
 export const BACKFILL_MAX = 40;
-export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso()) {
- const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
- if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number> };
- const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
- const {results} = await db.prepare(`SELECT j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
-  FROM jobs j WHERE j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
+// The job rows a call looks at. Walks `jobs` by rowid, newest first (rowid grows with insertion), starting below `cursor` (the rowid of the last job the previous call looked at), so a call
+// reads about n rows however large the catalogue is. The previous version ordered by discovered_at and skipped screened jobs with NOT EXISTS, which made the planner read, probe and sort
+// EVERY active job on EVERY call (measured on 21,120 active jobs: 11.2 million job rows scanned to onboard one client, against 21,647 with the cursor).
+export const BACKFILL_SELECT = `SELECT j.rowid AS rid, j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
+  FROM jobs j WHERE j.rowid < ? AND j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ? AND a.job_id = j.id)
-  ORDER BY j.discovered_at DESC, j.id LIMIT ?`).bind(candidateId, candidateId, n + 1).all<any>();
+  ORDER BY j.rowid DESC LIMIT ?`;
+export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso(), cursor:number|null=null) {
+ const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
+ if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number>, next_cursor: null as number | null };
+ const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
+ const before = cursor !== null && Number.isSafeInteger(cursor) && cursor > 0 ? cursor : Number.MAX_SAFE_INTEGER;   // no cursor: start from the newest job
+ const {results} = await db.prepare(BACKFILL_SELECT).bind(before, candidateId, candidateId, n + 1).all<any>();
  const rows = (results || []).slice(0, n);
  const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
  for (const r of rows) {
@@ -433,7 +438,8 @@ export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_M
  const done = statements.length ? await db.batch(statements) : [];
  // counted from what was actually written (every second statement is a qualification insert)
  const inserted = done.filter((_: any, i: number) => i % 2 === 0).reduce((k: number, r: any) => k + Number(r?.meta?.changes || 0), 0);
- return { inserted, more: (results || []).length > n, by_status: byStatus };
+ const more = (results || []).length > n;
+ return { inserted, more, by_status: byStatus, next_cursor: more ? Number(rows[rows.length - 1].rid) : null as number | null };
 }
 
 export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {

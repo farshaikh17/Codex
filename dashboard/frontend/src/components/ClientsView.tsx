@@ -46,11 +46,12 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
     try { await fn(); } catch (e: any) { setError(e.message); } finally { setBusy(null); }
   };
   const screenAll = async (id: string) => {
-    let total = 0;
+    let total = 0, cursor: number | null = null;       // each call continues where the previous one stopped, so it reads about 40 jobs, not the whole catalogue
     for (let i = 0; i < 150; i++) {                      // batches of 40 (CPU limit per request), at most 6,000 jobs per click
-      const r = await backfillClient(id);
+      const r = await backfillClient(id, cursor);
       total += r.inserted;
       if (!r.more) break;
+      cursor = r.next_cursor ?? null;
     }
     return total;
   };
