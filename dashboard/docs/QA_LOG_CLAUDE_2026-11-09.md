@@ -60,3 +60,22 @@ Findings (none fixed; none block the release):
   keep a per-candidate counts table updated by the importers.
 * Guard: the current script filters the analytics by this database only, while the free limit is per account (two other Workers exist on the
   account). ChatGPT's `codex/account-d1-budget` changes it to account-wide; it merges cleanly with this branch.
+
+## Segment 3: pipelines (07:35 UTC), from the GitHub Actions run list (74 scheduled runs on record, last 3 days read)
+Health: every scheduled run in the window succeeded. Failures in the last 40 runs: release run 42 (the browser flake, rerun passed) and the PR 63
+tests (cured by ChatGPT's next push). Daily discovery run 42545243046 (the fourth re-score batch) finished successfully at 01:33 UTC.
+Schedule delivery (observed, UTC): cron times are what the workflow files ask for.
+| Workflow | Cron asks for | Scheduled runs actually seen |
+|---|---|---|
+| collect | 01:37, 06:37, 11:37, 16:37, 21:37 | 7 Nov 01:08, 07:43, 16:58; 8 Nov 00:52, 07:54, 17:13; 9 Nov 01:10 (about 3 a day) |
+| sync collector to D1 | 01:45, 06:45, 11:45, 16:45, 21:45 | 7 Nov 01:13, 07:47, 16:59; 8 Nov 00:54, 07:58, 17:14; 9 Nov 01:14 (about 3 a day) |
+| daily discovery | 15:13, 17:13, 19:13, 21:13 | 7 Nov 19:25 (9 s, guard skip during the quota outage); 8 Nov 19:40 (real run). The 15:13 and 17:13 triggers never arrived. |
+| watchlist | every 2 h at :07 | 7 Nov 09:50; 8 Nov 00:19, 10:04; 9 Nov 06:24 (2-3 a day, 12 asked for) |
+| career pipeline | 03:23 | 6 Nov 11:11, 7 Nov 10:28, 8 Nov 10:36 (about 7 h late every day) |
+Reading: GitHub treats `schedule` as best effort and this repo gets roughly one delivery per 6-9 hours whatever the cron says, so a trigger
+is "dropped" most of the time. The recent-run guards turn that into the intended cadence, so nothing is broken, but any plan that needs a
+run at a given hour (e.g. a morning report) cannot rely on `schedule`. The shared concurrency group theory from the first pass is NOT the main
+cause: drops happen while nothing else is running.
+Options for the owner (none applied): (a) accept the cadence, since the guards catch up; (b) let the Worker's own cron (reliable, already every
+2 minutes) start the GitHub workflows with `workflow_dispatch`, which needs a GitHub token stored as a Worker secret with only `actions:write`,
+a security trade-off to approve explicitly.
