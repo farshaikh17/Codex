@@ -71,6 +71,8 @@ for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.far
   for (let i = 0; i < 20 && readCard(t) !== sc.READY; i++) { await page.waitForTimeout(1000); t = await text(); }
   const card = readCard(t);
   check(`${btn}: workspace heading and READY card match the API`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
+  const rowButtons = await page.$$eval('[data-job-id] button[aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')));   // a screen-reader user must be able to tell the rows apart
+  check(`${btn}: job-row buttons have names that tell the rows apart`, rowButtons.length > 0 && new Set(rowButtons).size === rowButtons.length, `${rowButtons.length} buttons, e.g. ${rowButtons.slice(0, 2).join(' | ')}`);
   await tab('Analytics');
   const ta = await text();
   check(`${btn}: Analytics is scoped to this candidate`, new RegExp('Current inventory for ' + (cid === 'sana_ansari' ? 'Sana' : 'Farhan')).test(ta) && !(cid === 'sana_ansari' ? /Farhan has/ : /Sana has/).test(ta));
