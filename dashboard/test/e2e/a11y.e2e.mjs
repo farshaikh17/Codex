@@ -42,6 +42,12 @@ check('Enter opens the job details as a labelled dialog that holds focus', !!dlg
 check('no sign-in window appears for a visitor who only reads', (await page.locator('#operator-key-input').count()) === 0);
 await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 check('Escape closes the dialog and focus returns to the list', (await page.locator('[role=dialog],[aria-modal=true]').count()) === 0 && await page.evaluate(() => !!document.activeElement?.closest('[data-job-id]')));
+// every job row's action buttons carry the job's title, so a screen-reader user can tell the rows apart (they used to read "Save this job" fifty times over)
+{
+  const names = await page.$$eval('[data-job-id] button[aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')));
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  check('job-row buttons have names that tell the rows apart', names.length > 0 && dupes.length === 0, `${names.length} buttons, duplicates e.g. ${dupes.slice(0, 2).join(' | ')}`);
+}
 await browser.close();
 console.log(failed ? `\n${failed} check(s) failed` : '\nall passed');
 process.exit(failed ? 1 : 0);

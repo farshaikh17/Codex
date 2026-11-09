@@ -187,17 +187,17 @@ export const JobTable: React.FC<JobTableProps> = ({
                     <p className="text-xs text-slate-600 mt-1.5 line-clamp-2" data-testid="job-why">{whyText(job.qualification_reason)}</p>
                   </div>
                   <div className="shrink-0 flex flex-col sm:flex-row items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => onSaveJob(job.id, e)} aria-label={isSaved ? 'Saved' : 'Save this job'} title={isSaved ? 'Saved' : 'Save this job'}
+                    <button onClick={(e) => onSaveJob(job.id, e)} aria-label={`${isSaved ? 'Saved' : 'Save this job'}: ${job.title}`} title={isSaved ? 'Saved' : 'Save this job'}
                       className={`min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border transition-colors ${isSaved ? 'bg-amber-50 border-amber-300 text-amber-600' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'}`}>
                       <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
                     </button>
                     {onDismissJob && (
-                      <button onClick={(e) => onDismissJob(job.id, e)} aria-label="Not for me (hide this job)" title="Not for me (hide this job)"
+                      <button onClick={(e) => onDismissJob(job.id, e)} aria-label={`Not for me (hide this job): ${job.title}`} title="Not for me (hide this job)"
                         className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-200">
                         <XCircle className="w-4 h-4" />
                       </button>
                     )}
-                    <button onClick={() => onSelectJob(job)} aria-label="Open details" title="Open details"
+                    <button onClick={() => onSelectJob(job)} aria-label={`Open details: ${job.title}`} title="Open details"
                       className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600">
                       <ChevronRight className="w-4 h-4" />
                     </button>
