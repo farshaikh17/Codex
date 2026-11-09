@@ -12,10 +12,11 @@ on:
         description: 'Also run the light job-site search (true/false)'
         default: 'true'
   schedule:
-    - cron: '13 15 * * *'   # 15:13 UTC, after the dataset's daily refresh (about 14:30 UTC)
+    - cron: '13 15,17,19,21 * * *'   # first trigger after the dataset refresh (about 14:30 UTC); the guard allows one real run per 18 hours, so a late or dropped trigger is caught up by the next
 
 permissions:
   contents: read
+  actions: read   # the recent-run guard reads this workflow's earlier runs
   models: read   # the free AI review (engine/ai_triage.py) uses the workflow's own token
 
 concurrency:
@@ -27,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
-      skip: ${{ steps.g.outputs.skip }}
+      skip: ${{ steps.g.outputs.skip == 'true' || steps.r.outputs.skip == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - name: Budget guard (account rows read today, from Cloudflare analytics; reads nothing from D1)
@@ -38,6 +39,15 @@ jobs:
           MAX_READS: '2500000'
           EVENT: ${{ github.event_name }}
         run: node dashboard/scripts/budget_guard.mjs
+      - name: Recent-run guard (GitHub schedules start late or not at all, so this is triggered more often than needed and does the real work only when it is due)
+        id: r
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_FILE: discovery.yml
+          REAL_JOB: discover
+          MIN_GAP_HOURS: '18'
+          EVENT: ${{ github.event_name }}
+        run: node dashboard/scripts/recent_run_guard.mjs
 
   discover:
     needs: guard
