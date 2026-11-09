@@ -184,3 +184,28 @@ Open for the owner (documented in KNOWN_ISSUES.md):
   client's role keywords, or add a write meter.
 * No "Delete client" button in the dashboard (API only), deliberately: a destructive action should get its own confirmation design.
 * Other reselling items not built: per-client limits (number of clients, share links, jobs), billing, a client-facing audit trail, and per-client data export other than the CSV of jobs.
+
+## Segment 10: accessibility and performance (14:35 UTC)
+Tool: axe-core 4.10.2 (rules wcag2a, wcag2aa, wcag21a, wcag21aa, best-practice) in Chromium, 1440 px and 375 px (touch), against a local server with seeded data. Pages: `/`,
+`/how-it-works`, `/pricing`, `/faq`, `/about`, `/apply`, `/portal`, `/privacy`, `/terms`; app: dashboard, Farhan, Sana, Analytics, Applications, Settings, the open job dialog, and
+(signed in with a local key) every operator-only screen.
+BEFORE: color-contrast 787 nodes (serious), heading-order 22, region 18, page-has-heading-one 12, link-in-text-block 6 (serious), select-name 2 (critical).
+Root causes and fixes:
+* The app's custom grey scale (`tailwind.config.js`): `slate-500` #7A8CA0 was 3.45:1 on white (3.17 on the cream page) and `slate-400` #A4B2C0 was 2.16:1, yet both are used for
+  small body text in about 300 places. Darkened to #4F6379 and #5D6F86 (6.2/5.1:1 on white, 5.7/4.7 on cream). Because that grey is also used on dark cards, the one navy header
+  subtitle that used it now uses `slate-300`; the two accent colours used for 11 px text (`teal-600`, `amber-600`) were darkened to #0F766E and #B45309; white-on-coral buttons moved to the
+  darker coral step (4.9:1). The public site's `--muted` (#5F7186, 4.0 to 4.6:1) became #546579 (5.1 to 5.5).
+* Inline links in the public site's paragraphs, list items and form labels were told apart from text by colour alone (2.5:1 or worse): now underlined.
+* The Applications stage filter `<select>` had no accessible name (aria-label added); `/app` had no `<h1>` (visually hidden one added); footer headings `h4` jumped levels (now `h3`); the
+  announcement bar was outside any landmark (now a labelled region).
+AFTER: no serious or critical violation anywhere; 14 moderate `heading-order` notes remain (card titles that are `h3` straight after the page `h1`) and are left as they are.
+Keyboard: tab order reaches every control with a visible focus ring, but the job rows (`<li onClick>` in the list, `<div onClick>` in India Remote) could not take focus, so a keyboard user
+could not open any job; Enter on whichever button was focused before opened the operator sign-in window instead. Rows now have `tabIndex=0`, Enter/Space open the job (only when the row itself
+has focus, so buttons and links inside keep working) and a focus ring. The job dialog is `aria-modal`, labelled, takes focus, closes on Escape and returns focus to the row.
+New: `test/e2e/a11y.e2e.mjs` (axe on every page and screen at both widths, failing on serious/critical, plus the keyboard open/close check); `axe-core` added as a frontend devDependency
+(lockfile change is 11 added lines; npm on the sandbox also tried to strip `libc` markers from native packages, that unrelated churn was discarded).
+Side effect worth knowing: the local `production-readonly` check, which had failed on the education-line leak fixed in segment 7, now passes 33/33.
+Performance (local, so network time to D1 is not included): bundle 535 KB raw / 135 KB gzip JS and 7 KB gzip CSS; Google Fonts are loaded from `fonts.googleapis.com`
+(a third-party request that shows each visitor's address to Google and is a small availability dependency; self-hosting the two font files would remove it). With 30,000 jobs
+per candidate, cold (uncached) answers took 35 to 190 ms and cached answers 10 to 17 ms: `/api/jobs` 189 ms cold, overview 151, analytics 175, India Remote 88, candidates 20.
+Reads per cold request are the real cost (see segment 2). Not measured: real-device performance (LCP/CLS), screen-reader behaviour with a real reader, high-contrast mode, text zoom to 200%.

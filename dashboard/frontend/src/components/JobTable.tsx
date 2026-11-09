@@ -163,7 +163,7 @@ export const JobTable: React.FC<JobTableProps> = ({
               const pay = payText(job);
               const elig = job.eligibility?.classification;
               return (
-                <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start">
+                <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} tabIndex={0} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectJob(job); } }} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600">
                   <div className={`shrink-0 w-14 text-center rounded-lg border py-1.5 ${scoreCls(score)}`} title="Match score: how well the posting fits the profile">
                     <div className="text-lg font-bold leading-none">{score}</div>
                     <div className="text-[10px] font-semibold uppercase tracking-wide mt-0.5">match</div>

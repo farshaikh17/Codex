@@ -88,7 +88,7 @@ const ago = (iso: string) => { const h = Math.max(0, (Date.now() - Date.parse(is
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
-:root{--cream:#FBF5EA;--card:#FFFFFF;--sand:#F1E7D6;--navy:#12263F;--ink:#1B2A3A;--body:#42556B;--muted:#5F7186;--faint:#A4B2C0;
+:root{--cream:#FBF5EA;--card:#FFFFFF;--sand:#F1E7D6;--navy:#12263F;--ink:#1B2A3A;--body:#42556B;--muted:#546579;--faint:#A4B2C0;
 --coral:#E4572E;--coral-d:#C6461F;--teal:#2E8B8B;--teal-s:#E4F1F1;--gold:#C8901F;--line:#E8DCC8;--line-s:#F0E8DA;
 --r:14px;--r-lg:20px;--pill:999px;--sh:0 1px 2px rgba(18,38,63,.04),0 8px 24px rgba(18,38,63,.06);--sh-lg:0 2px 4px rgba(18,38,63,.05),0 18px 44px rgba(18,38,63,.10);--wrap:1240px}
 *,*::before,*::after{box-sizing:border-box}
@@ -96,7 +96,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--cream);color:var(--ink);font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{margin:0;font-family:'Fraunces',Georgia,serif;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:var(--navy)}
 h1{font-size:52px}h2{font-size:34px}h3{font-size:20px}
-p{margin:0 0 12px}a{color:#B23F1A;text-decoration:none}a:hover{text-decoration:underline}
+p{margin:0 0 12px}a{color:#B23F1A;text-decoration:none}a:hover{text-decoration:underline}p a:not(.btn),li a:not(.btn),.hint a,label a{text-decoration:underline;text-underline-offset:2px}
 :focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:4px}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
 .skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:var(--navy);color:#fff;padding:10px 18px;z-index:999;border-radius:8px}
@@ -173,7 +173,7 @@ textarea.in{min-height:110px;resize:vertical}
 .hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
 .ftr{background:#EFE6D8;border-top:1px solid var(--line);margin-top:0;padding:52px 0 26px}
 .ftr .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px}
-.ftr h4{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--navy);margin-bottom:14px;font-family:'Fraunces',Georgia,serif}
+.ftr h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--navy);margin-bottom:14px;font-family:'Fraunces',Georgia,serif}
 .ftr a{display:block;color:var(--body);padding:4px 0}.ftr a.logo{display:flex;color:var(--navy)}.ftr p{color:var(--body);font-size:14px;margin-top:12px;max-width:340px}
 .ftr .base{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:36px;padding-top:18px;font-size:13px;color:#4F6075}
 @media(max-width:960px){h1{font-size:38px}h2{font-size:28px}.hero{padding:44px 0 36px}.hero .wrap,.grid3,.grid2,.plans{grid-template-columns:1fr}
@@ -199,7 +199,7 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
 <script>if(/[#&]view=v1_/.test(location.hash))location.replace('/app'+location.hash);</script>
 </head><body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="topbar">${announce}</div>
+<div class="topbar" role="region" aria-label="Site announcement">${announce}</div>
 <header class="hdr"><div class="wrap">
 <a class="logo" href="/" aria-label="${brand} home"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a>
 <nav class="nav" aria-label="Main">${navLinks}</nav>
@@ -209,9 +209,9 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
 <main id="main">${opts.body}</main>
 <footer class="ftr"><div class="wrap"><div class="cols">
 <div><a class="logo" href="/"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a><p>${esc(s.tagline)} Postings are read straight from employers' own hiring systems and screened against your profile, with the evidence quoted.</p></div>
-<div><h4>Product</h4><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/app">Live dashboard</a><a href="/faq">FAQ</a></div>
-<div><h4>Clients</h4><a href="/apply">Apply</a><a href="/portal">Client login</a>${contact}</div>
-<div><h4>Company</h4><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/app">Operator sign-in</a></div>
+<div><h3>Product</h3><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/app">Live dashboard</a><a href="/faq">FAQ</a></div>
+<div><h3>Clients</h3><a href="/apply">Apply</a><a href="/portal">Client login</a>${contact}</div>
+<div><h3>Company</h3><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/app">Operator sign-in</a></div>
 </div><div class="base"><span>© ${new Date().getUTCFullYear()} ${brand}</span><span>Screening is automated and conservative; final decisions are always made by people.</span></div></div></footer>
 </body></html>`;
 }

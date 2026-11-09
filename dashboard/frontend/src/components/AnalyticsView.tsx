@@ -314,7 +314,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics, candida
                   <span className="text-xs text-emerald-700 font-medium block">
                     Active READY in review queue
                   </span>
-                  <span className="text-[11px] text-slate-400 block">
+                  <span className="text-[11px] text-slate-500 block">
                     {funnel.conversion_rates.overall_funnel_efficiency_pct}% overall yield
                   </span>
                 </div>

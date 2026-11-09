@@ -303,6 +303,7 @@ export const App: React.FC = () => {
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 className="sr-only">Career Job Engine dashboard</h1>
         {shareView && !isOperator && (
           <div role="status" data-testid="share-banner" className="mb-4 p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm flex items-start justify-between gap-3">
             <span>Shared read-only view{viewingName ? ` for ${viewingName}` : ''}. Nothing can be changed from this link.</span>
@@ -357,7 +358,7 @@ export const App: React.FC = () => {
                     <h2 className="text-xl font-bold text-white mt-1">
                       {profile && profile.id === candidateId ? (profile.display_title || '') : ''}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-300 mt-0.5">
                       {profile && profile.id === candidateId
                         ? `${profile.summary_line || ''} ${profile.location_preferences && profile.location_preferences.length ? 'Location preferences: ' + profile.location_preferences.join(', ') + '.' : ''} ${profile.pay_line || ''}`
                         : ''}
