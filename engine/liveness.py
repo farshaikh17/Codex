@@ -31,6 +31,8 @@ EXPORT_SQL = f"""SELECT id, url FROM (
   JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
   WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW', 'HOLD')
     AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
+    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id
+                    AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')))
     AND coalesce(nullif(j.original_posting_url, ''), j.source_url) LIKE 'https://%'
 ) WHERE rk <= {PER_CANDIDATE}"""
 
@@ -79,7 +81,8 @@ def q(v):
 def to_sql(result, now=None):
     now = now or datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     guard = ("AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) "
-             "AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL)")
+             "AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id "
+             "AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')))")
     lines = []
     for i in range(0, len(result['dead']), 100):
         ids = json.dumps(result['dead'][i:i + 100])
@@ -116,3 +119,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
