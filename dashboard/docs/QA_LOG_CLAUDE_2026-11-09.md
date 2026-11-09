@@ -209,3 +209,18 @@ Performance (local, so network time to D1 is not included): bundle 535 KB raw / 
 (a third-party request that shows each visitor's address to Google and is a small availability dependency; self-hosting the two font files would remove it). With 30,000 jobs
 per candidate, cold (uncached) answers took 35 to 190 ms and cached answers 10 to 17 ms: `/api/jobs` 189 ms cold, overview 151, analytics 175, India Remote 88, candidates 20.
 Reads per cold request are the real cost (see segment 2). Not measured: real-device performance (LCP/CLS), screen-reader behaviour with a real reader, high-contrast mode, text zoom to 200%.
+
+## Segment 11: merge state and open decisions (15:35 UTC)
+State on GitHub: `origin/main` is only data snapshots since `5832c43`. ChatGPT has six open DRAFT pull requests: #62 visa/relocation conflict, #63 JobSpy refusal detection, #64 shared D1 budget,
+#65 application links and import limit, #66 decided-job protection in liveness, #67 distinct openings with the same employer and title. This QA branch has no pull request.
+Integration test: a scratch worktree from `origin/main` with the six branches and this branch merged one after the other (no conflict at any step), frontend built, then every suite:
+205 Node tests and 357 Python tests pass on the combined code (the nine tests the new branches added also pass, so there is no semantic clash with the QA changes).
+Finding: tests that exist but never run in CI.
+* `dashboard/package.json` listed test files by name, so `npm test` (and therefore `npm run verify` and the "Dashboard verify" check on every pull request) skipped
+  `budget_account_regression`, `visa_conflict`, `discovery_zero_limit`, `posting_urls_regression` (all four new, from ChatGPT's branches) and the older `budget_guard` and `recent_run_guard`:
+  20 tests across six files. Their green checks on the pull requests therefore said nothing about those tests. All 20 pass when run directly.
+* `tests/test_jobsite_blockwatch_regression.py` (ChatGPT, 3 tests) sits in a folder without `__init__.py`; the CI command `discover('.', pattern='test*.py', top_level_dir='.')` does not descend
+  into such folders, so it was never found. It passes when run directly.
+Fixes on this branch: the Node `test` script now runs `test/*.test.mjs` (no list to forget), and `tests/__init__.py` is added (the folder is created here with only that file, so the merge with
+ChatGPT's branch is clean). Result on the combined code: 205 Node tests (was 185) and 357 Python tests (was 354).
+`OWNER_DECISIONS_2026-11-09.md` lists every open decision in one page with a recommendation.
