@@ -321,7 +321,7 @@ def taste_rows(local=None):
 
 
 def rescore_rows(local=None, page=400, per_candidate=1500):
-    """Preliminary rows that no person has decided on and that were not yet scored with the CURRENT profile and rules (marker profile_v4),
+    """Preliminary rows that no person has decided on and that were not yet scored with the CURRENT profile and rules (marker profile_v5),
     for candidates that have skills to score with. At most `per_candidate` rows each, best-ranked first, so one run writes a bounded
     number of rows (writes are the tight free-tier limit) and the queue a person actually reads is corrected first; the rest follow on
     the next runs. Paged by the last (score, job) seen, never by OFFSET (OFFSET re-reads every earlier page)."""
@@ -334,7 +334,7 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
             part = d1(f"""SELECT q.candidate_id, q.job_id, s.overall_score AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, s.score_breakdown
               FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
               WHERE q.candidate_id = {sql_str(cid)} AND j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
-                AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v4":true%'
+                AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v5":true%'
                 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) {after}
               ORDER BY s.overall_score DESC, q.job_id LIMIT {int(min(page, per_candidate - taken))}""", local)
             rows += part
