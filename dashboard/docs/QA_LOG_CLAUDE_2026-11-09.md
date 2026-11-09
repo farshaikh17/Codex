@@ -79,3 +79,17 @@ cause: drops happen while nothing else is running.
 Options for the owner (none applied): (a) accept the cadence, since the guards catch up; (b) let the Worker's own cron (reliable, already every
 2 minutes) start the GitHub workflows with `workflow_dispatch`, which needs a GitHub token stored as a Worker secret with only `actions:write`,
 a security trade-off to approve explicitly.
+
+## Segment 4: data integrity (08:38 UTC)
+* A production sample of re-scored rows could not be taken: the live site is unreachable from the sandbox and no production D1 query was run.
+  The owner or ChatGPT can still do it with the public API: sample 30 `ds:` rows per candidate, check `score.breakdown.rescored_at` and `profile_v5`.
+* Added `re-score property` to `test/dataset.test.mjs`: 400 rows with random status (incl. READY/STRETCH/INELIGIBLE), manual override, own-candidate
+  application, existing marker, and varied posting text. Invariants checked: jobs and applications tables byte-identical; a protected row's
+  qualification and score rows are identical before and after; an untagged undecided row gets the marker; its status can only stay or become
+  INELIGIBLE; the same SQL applied again changes nothing. Mutation check: removing the guard from the score update makes the test fail.
+* `engine/dataset_discovery.py: rescore_rows` reviewed: pages by (score, job) with no OFFSET, excludes applications and overrides, bounded by
+  `per_candidate`, injection-safe quoting. Cost note: it filters on `score_breakdown LIKE` after walking the candidate's score index from the top, so
+  rows already re-scored at the head of the ranking are re-read on every run, and once the re-score has finished it still walks every row each
+  discovery run (about two reads per row, per candidate). A "done" flag in `discovery_state` would stop that; not changed because `engine/`
+  is being edited on the `codex/*` branches.
+* All six `codex/*` branches still merge cleanly with this branch.
