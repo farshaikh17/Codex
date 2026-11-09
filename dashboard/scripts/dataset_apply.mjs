@@ -97,23 +97,8 @@ for (const file of many('--in')) {
   }
 }
 planned.sort((a, b) => b.best - a.best || String(b.j.posted_at || '').localeCompare(String(a.j.posted_at || '')));
-// One role posted in 3 or more places by the same employer (an aggregator's copy per country, or one requisition per city) is kept
-// once: the best-scored copy, which is the first after the sort. Two copies (two real plants, say) are both kept.
-{
-  const norm = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  const groups = new Map();
-  for (const x of planned) { const k = norm(x.j.company) + '|' + norm(x.j.title); groups.set(k, (groups.get(k) || 0) + 1); }
-  const kept = new Set();
-  const before = planned.length;
-  const out2 = [];
-  for (const x of planned) {
-    const k = norm(x.j.company) + '|' + norm(x.j.title);
-    if (groups.get(k) >= 3) { if (kept.has(k)) continue; kept.add(k); }
-    out2.push(x);
-  }
-  planned.length = 0; planned.push(...out2);
-  report.collapsed_copies = before - planned.length;
-}
+// Do not collapse postings based only on title and employer: location and requisition can differ.
+report.collapsed_copies = 0;
 report.capped = Math.max(0, planned.length - MAX_NEW);
 for (const { j, board, description, remote, onsite, rows } of planned.slice(0, MAX_NEW)) {
   const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
@@ -133,14 +118,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
   }
 }
 
-// ---- stored copies of one role (3 or more places, same employer): keep the best-scored one active --------------------
-out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN (
-  SELECT id FROM (SELECT j.id, COUNT(*) OVER (PARTITION BY lower(j.company), lower(j.title)) AS n,
-    ROW_NUMBER() OVER (PARTITION BY lower(j.company), lower(j.title) ORDER BY ms.best DESC, j.discovered_at) AS rk
-    FROM jobs j LEFT JOIN (SELECT job_id, MAX(overall_score) AS best FROM candidate_job_scores GROUP BY job_id) ms ON ms.job_id = j.id WHERE j.is_active = 1 AND j.source_channel IN ('ATS_DATASET', 'JOB_SITES')) WHERE n >= 3 AND rk > 1)
-  AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id)
-  AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
-
+// Distinct requisitions are not closed based only on company and title.
 // ---- the best new rows per candidate, for the free AI review (engine/ai_triage.py); no names, a generic profile line ----
 {
   const PROFILE = {
