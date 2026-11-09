@@ -8,10 +8,11 @@ class BlockWatchRegression(unittest.TestCase):
         watch = BlockWatch()
         for name, message in [('jobspy.linkedin', 'response status code 429'),
                               ('jobspy.bayt', 'response status code 403'),
-                              ('JobSpy.indeed', 'rate limited')]:
+                              ('JobSpy.indeed', 'rate limited'),
+                              ('JobSpy:Bayt', '403 forbidden')]:
             watch.emit(logging.LogRecord(name, logging.ERROR, '', 0, message, (), None))
         messages = watch.take()
-        self.assertEqual(len(messages), 3)
+        self.assertEqual(len(messages), 4)
         self.assertIn('429', blocked_note([], messages))
 
     def test_ignores_unrelated_loggers_and_nonblocking_messages(self):
