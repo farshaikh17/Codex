@@ -19,8 +19,8 @@ commit `5832c43`. Changes only reach it when they are merged to `main` and the m
 
 ## C. Free-tier limits and reliability
 8. **Outage backup does nothing on `workers.dev`** (Cloudflare does not run the Cache API there). Options: custom domain (no code change), a KV namespace (small code change), or remove the code. Recommend: custom domain.
-9. **Job-list queries cost about 150,000 rows read per uncached request at 30,000 jobs per candidate** (about 16 distinct views a day against the public cap). Recommend: measure real numbers, then rewrite the page query to stop early and cache counts separately.
-10. **Onboarding a client writes about two rows per active job** (about 44,000 for 22,000 jobs) and nothing counts daily writes. Recommend: screen only jobs matching the client's role keywords, or add a write meter, before the second client.
+9. **Job-list queries cost roughly 9 rows read per qualification row per uncached view** (model, index entries included): about 13,000 reads for Farhan's 1,408 rows and 22,000 for Sana's 2,462, i.e. 110 to 200 distinct uncached views a day against the 2.5M public cap; at 30,000 rows per candidate it would be about 270,000. Recommend: measure real `rows_read`, then rewrite the page query to stop early and cache counts separately.
+10. **Onboarding a client writes about NINE rows per active job (index entries count)**, so 27,000 writes for 3,000 jobs and 45,000 for 5,000, and nothing counts daily writes. (The backfill's READ cost, previously about N x N / 40 job rows, is fixed on the QA branch.) Recommend: screen only jobs matching the client's role keywords, or add a write meter, before the second client.
 11. **GitHub delivers only about a third of the scheduled runs asked for** (guards make up for it). If a run is needed at a fixed hour (a morning report), let the Worker's own cron start the workflow with a minimum-permission token. Recommend: only if a fixed hour matters.
 12. **Google Fonts are loaded from Google** (shows visitors' addresses to Google). Recommend: host the two font files yourself.
 

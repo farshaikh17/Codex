@@ -179,7 +179,7 @@ Added `DELETE /api/clients/:id` (operator only): one atomic batch over 10 client
 with 400; the registry and cache generation refresh; a second call answers "unknown client". Test `QA: DELETE /api/clients/:id erases the client ...` checks every table that has a
 `candidate_id` column ends at zero for that client while another client and the built-ins keep every row, the share link dies, and an anonymous caller gets 401.
 Open for the owner (documented in KNOWN_ISSUES.md):
-* Onboarding write cost: 2 rows per active job; the UI's "screen all" caps one click at 6,000 jobs (about 12,000 writes) but a full catalogue (22,000 jobs, about 44,000 writes) plus
+* [CORRECTED in the completion round: it is about 9 rows per active job, index entries count; see COST_MODEL_2026-11-09.md] Onboarding write cost: 2 rows per active job; the UI's "screen all" caps one click at 6,000 jobs (about 12,000 writes) but a full catalogue (22,000 jobs, about 44,000 writes) plus
   the daily import can pass the free tier's 100,000 daily writes. No Worker-side daily write counter exists (reads have one). Options: spread onboarding, screen only jobs matching the
   client's role keywords, or add a write meter.
 * No "Delete client" button in the dashboard (API only), deliberately: a destructive action should get its own confirmation design.
@@ -224,3 +224,6 @@ Finding: tests that exist but never run in CI.
 Fixes on this branch: the Node `test` script now runs `test/*.test.mjs` (no list to forget), and `tests/__init__.py` is added (the folder is created here with only that file, so the merge with
 ChatGPT's branch is clean). Result on the combined code: 205 Node tests (was 185) and 357 Python tests (was 354).
 `OWNER_DECISIONS_2026-11-09.md` lists every open decision in one page with a recommendation.
+
+## Completion round (evening of 2026-11-09)
+Integration commit `732897124cdbb886282c41620fb320716582de78`; verification, dispositions of the two open concerns, the backfill scan defect (fixed), cost model, test-discovery negative controls and the release recommendation are in `QA_FINAL_SUMMARY_2026-11-09.md` and `COST_MODEL_2026-11-09.md`.
