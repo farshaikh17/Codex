@@ -284,3 +284,20 @@ test('"unable to provide visa sponsorship" is a denial, not a sponsorship offer 
   // a denial in one sentence does not hide an offer of a different kind in the next? it does not: ANY denial wins (documented rule)
   assert.notEqual(mk('We are unable to provide visa sponsorship. Relocation assistance provided.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
 });
+
+test('Farhan rule gaps found in his top-of-queue review (9 Nov): worldwide wording, US state names, apprentice and SDE titles', () => {
+  const fa = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']), total_years_experience: 9 };
+  const mk = (title, location, remote = true) => evaluate(fa, { id: 'x', title, company: 'Acme', url: 'https://e.com/x', location, description: 'CRM Configuration and Workflow Automation, implementation.', remote });
+  // "wherever he can be hired": an affirmative worldwide posting is eligible, whatever the separator
+  for (const loc of ['Remote - Worldwide', 'Worldwide (Remote)', 'Remote, Worldwide', 'Remote/Worldwide']) assert.equal(mk('Solutions Engineer', loc).eligibility, 'ELIGIBLE', loc);
+  // a US state or NYC only is a US-only posting; the country Georgia is not
+  for (const loc of ['Remote - Pennsylvania', 'Remote, Texas', 'NYC Office', 'Remote - Bay Area']) assert.equal(mk('Implementation Manager', loc).status, 'INELIGIBLE', loc);
+  assert.notEqual(mk('Implementation Manager', 'Remote - Georgia').status, 'INELIGIBLE', 'the country');
+  // one foreign country, no worldwide or India wording: stays UNKNOWN (reviewable), ranked below an affirmative posting
+  const colombia = mk('Implementation Consultant', 'Remote (Colombia)'), india = mk('Implementation Consultant', 'India (Remote)');
+  assert.equal(colombia.eligibility, 'UNKNOWN'); assert.equal(india.eligibility, 'ELIGIBLE'); assert.ok(india.score > colombia.score);
+  // junior-type and developer-type titles he already excluded, in the spellings that slipped through
+  for (const t of ['Marketing Operations Apprentice', 'Operations Trainee', 'SDE (Automation & Quality Focus)', 'Sales Operations Apprenticeship']) assert.ok(mk(t, 'India (Remote)').score < 70, t);
+  assert.ok(mk('Implementation Manager', 'India (Remote)').score >= 60, 'his own roles are not affected');
+  assert.ok(mk('Solutions Engineer', 'Remote - Worldwide').score >= 60);
+});
