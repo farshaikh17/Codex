@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb, loadWorker, makeEnv, call } from './harness.mjs';
 import { seed } from './fixtures.mjs';
-import { evaluate, monthlyInr, companyKey, PAY_BELOW_FLOOR_PENALTY, PAY_PREFERRED_BONUS, GLOBAL_HIRER_BONUS, FOREIGN_LOCATION_PENALTY } from '../worker/discovery.ts';
+import { evaluate, foreignLocation, monthlyInr, companyKey, PAY_BELOW_FLOOR_PENALTY, PAY_PREFERRED_BONUS, GLOBAL_HIRER_BONUS, FOREIGN_LOCATION_PENALTY } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']), total_years_experience: 9, cash_floor_inr_monthly: 120000 };
@@ -300,4 +300,16 @@ test('Farhan rule gaps found in his top-of-queue review (9 Nov): worldwide wordi
   for (const t of ['Marketing Operations Apprentice', 'Operations Trainee', 'SDE (Automation & Quality Focus)', 'Sales Operations Apprenticeship']) assert.ok(mk(t, 'India (Remote)').score < 70, t);
   assert.ok(mk('Implementation Manager', 'India (Remote)').score >= 60, 'his own roles are not affected');
   assert.ok(mk('Solutions Engineer', 'Remote - Worldwide').score >= 60);
+});
+
+test('foreignLocation knows every country, not only a short list (Colombia, Argentina, Greece, Egypt ... lost no points before)', () => {
+  const fa = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']), total_years_experience: 9 };
+  const mk = (loc) => evaluate(fa, { id: 'x', title: 'Implementation Consultant', company: 'Acme', url: 'https://e.com/x', location: loc, description: 'CRM Configuration and Workflow Automation, implementation.', remote: true });
+  const base = mk('Remote - Worldwide').score;
+  for (const loc of ['Remote (Colombia)', 'Remote (Argentina)', 'Athens, Greece', 'Egypt', 'Switzerland', 'Prague, Czech Republic', 'Belgium', 'Remote - Nigeria', 'Cologne']) {
+    assert.ok(foreignLocation(loc), loc);
+    assert.ok(mk(loc).score < base, `${loc} should rank below an affirmative worldwide posting`);
+  }
+  for (const loc of ['India', 'Remote, India', 'Bengaluru, Karnataka, India', 'Remote - Worldwide', '', 'Remote, excluding the US']) assert.equal(foreignLocation(loc), false, loc);
+  assert.equal(mk('Remote (Colombia)').eligibility, 'UNKNOWN', 'still reviewable, not hidden');
 });
