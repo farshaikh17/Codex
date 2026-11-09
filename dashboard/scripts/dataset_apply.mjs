@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { evaluate, RULE_VERSION, companyKey } from '../worker/discovery.ts';
+import { safeApplicationUrl } from './posting_urls.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
@@ -119,7 +120,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
   const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
   const salary = num(j.salary_min) !== null || num(j.salary_max) !== null;
   out.push(`INSERT OR IGNORE INTO jobs(id,title,company,source_adapter,source_url,original_posting_url,employment_type,workplace_type,location_restrictions,description,required_skills,salary_published,salary_currency,salary_min,salary_max,salary_period,salary_raw_text,discovered_at,last_verified_at,is_active,content_sha256,source_id,source_channel,provenance) VALUES (${[
-    j.id, cap(j.title, 300), cap(j.company, 200), adapter(j.ats_type), cap(j.url, 2000), cap(j.apply_url && String(j.apply_url).length <= 2000 ? j.apply_url : j.url, 2000), cap(j.employment_type || 'FULL_TIME', 40),
+    j.id, cap(j.title, 300), cap(j.company, 200), adapter(j.ats_type), cap(j.url, 2000), safeApplicationUrl(j.apply_url, j.url), cap(j.employment_type || 'FULL_TIME', 40),
     remote ? 'REMOTE_RESTRICTED' : onsite && !board ? 'ONSITE' : 'UNKNOWN', cap(j.location || '', 300), description, '[]', salary ? 1 : 0,
     cap(j.salary_currency, 10), num(j.salary_min), num(j.salary_max), cap(j.salary_period, 20), cap(j.salary_summary, 300), now, board ? null : now, 1, sha,
     `${board ? 'jobsites' : 'dataset'}:${adapter(j.ats_type)}`, board ? 'JOB_SITES' : 'ATS_DATASET', board ? 'PUBLIC_FEED_UNVERIFIED' : 'ATS_DATASET'].map(q).join(',')});`);
@@ -227,3 +228,4 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
 fs.writeFileSync(opt('--out'), out.join('\n') + '\n');
 fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.report.json', JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report));
+
