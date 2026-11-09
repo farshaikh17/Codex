@@ -2693,19 +2693,9 @@ router.put('/api/profile', async (request, env, _params, url) => {
 });
 
 router.post('/api/profile/import-resume', async (request, env) => {
-  return jsonResponse({
-    status: 'parsed_preview',
-    parsed: {
-      full_name: 'Farhan Shaikh',
-      seniority: 'Senior',
-      total_years_experience: 4,
-      detected_skills: ['Python', 'Automation', 'TypeScript', 'SQL'],
-      primary_skills: ['Python', 'Automation'],
-      secondary_skills: ['TypeScript', 'SQL'],
-      detected_roles: ['Workflow Automation Engineer'],
-      suggested_profile: {},
-    },
-  }, 200, corsHeaders(request, env));
+  // There is no resume parser. This route used to return one fixed, invented profile (a different name, seniority, years and skills)
+  // for ANY text, which looked like a real parse of the pasted resume. It now says plainly that nothing was parsed.
+  return jsonResponse({ error: 'Resume import is not available: nothing was parsed or changed. Edit the profile fields directly.', status: 'not_implemented' }, 501, corsHeaders(request, env));
 });
 
 // Real cloud discovery source state and durable execution history.
