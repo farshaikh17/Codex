@@ -148,3 +148,20 @@ Open, for the owner:
   and the public API does not serve it, but it must be removed from the code (kept in D1 only) before the code is shared with, or sold to, anyone. Also
   `migration/source-commits.json` contains the owner's git e-mail.
 * `/api/profile` still returns the stored `education` value as saved; whether that stored text should be the short label is the owner's call.
+
+## Segment 8: reliability (12:35 UTC)
+Method: the real Worker in the test harness with a database whose every call throws one of four messages (the free-tier read limit, "network connection
+lost", a Durable Object reset, and an unrecognised error), then requests of every kind plus the 2-minute cron.
+Good: data routes answer 503 with `Retry-After: 300` and the friendly JSON; `/api/version` and `/api/brand` still answer; the marketing site (`/`, `/pricing`,
+`/faq`, `/apply`, `/robots.txt`) renders without D1; an unrecognised error stays a plain 500 with no detail; the correct operator key still signs in during an outage.
+Fixed:
+* The login limiter FAILED OPEN when D1 was unavailable: the table lookup threw, was logged, and wrong keys were not counted at all, so guessing was unlimited
+  for the length of an outage. Now a per-isolate in-memory counter (same limit, same window, same "identical wrong key is not a new guess" rule, capped at 5,000 addresses)
+  takes over when the table cannot be reached. Weaker than the shared table (each isolate counts separately) but never worse than no limit.
+* `scheduled()` rethrew the D1 error on every tick, so a quota outage produced a failed-invocation entry every 2 minutes. A database failure is now logged once as
+  `cloud_discovery DB_UNAVAILABLE` and the tick returns; the next tick retries. Any other error still throws so real bugs stay loud.
+* Tests: `QA: with D1 down the login limiter still limits ...`, `QA: repeating the identical wrong key ...`, `QA: the cron skips a tick quietly ...` (the first and last fail on
+  the old code), and `lease: a second tick while one holds the lease is skipped ...` (the lease logic was correct but untested).
+Migrations: applied each of the 17 files a second time to a finished database. All re-run cleanly except `0004_broad_discovery.sql` (SQLite cannot `ADD COLUMN IF NOT EXISTS`;
+Wrangler records applied migrations so it is not re-run). No re-run changed any row count, so the data migration `0017` is idempotent.
+Not covered: real D1 behaviour under load (the harness is SQLite), GitHub workflow retries, the Cache API backup (needs a custom domain, see KNOWN_ISSUES).

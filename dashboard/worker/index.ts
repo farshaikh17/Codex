@@ -373,6 +373,27 @@ async function clientKey(request: Request): Promise<string> {
 }
 
 /** Seconds until the client may try again, or 0. A missing table or D1 error never locks the operator out. */
+// If D1 itself is unavailable (quota, outage) the limiter used to fail open: wrong keys were not counted at all. This per-isolate fallback keeps
+// a bound on guessing during an outage; it is weaker than the shared table (each isolate counts separately) but never worse than no limit.
+const memFailures = new Map<string, { n: number; start: number; last: string }>();
+function memLockout(key: string): number {
+  const e = memFailures.get(key), now = Math.floor(Date.now() / 1000);
+  if (!e) return 0;
+  const left = e.start + AUTH_WINDOW_SECONDS - now;
+  if (left <= 0) { memFailures.delete(key); return 0; }
+  return e.n >= AUTH_MAX_FAILURES ? left : 0;
+}
+function memRecord(key: string, keyHash: string): number {
+  const now = Math.floor(Date.now() / 1000);
+  let e = memFailures.get(key);
+  if (!e || now - e.start >= AUTH_WINDOW_SECONDS) {
+    if (memFailures.size >= 5000) memFailures.delete(memFailures.keys().next().value as string);
+    e = { n: 1, start: now, last: keyHash };
+  } else if (e.last !== keyHash) { e.n += 1; e.last = keyHash; }   // the identical wrong key again is not a new guess (same rule as the table)
+  memFailures.set(key, e);
+  return e.n;
+}
+
 async function lockoutSeconds(env: Env, key: string): Promise<number> {
   try {
     const row = await env.DB.prepare('SELECT failures, window_start FROM auth_failures WHERE ip_hash = ?').bind(key).first<{ failures: number; window_start: number }>();
@@ -382,17 +403,17 @@ async function lockoutSeconds(env: Env, key: string): Promise<number> {
     return row.failures >= AUTH_MAX_FAILURES && left > 0 ? left : 0;
   } catch (err) {
     console.warn('auth limiter unavailable (lockout check):', (err as Error).message);
-    return 0;
+    return memLockout(key);
   }
 }
 
 /** Counts one wrong key atomically (single upsert) and returns the failures now in the window, or 0 if unavailable.
  *  Repeating the identical wrong key is not a guess, so it adds nothing; every different wrong key adds one. */
 async function recordAuthFailure(env: Env, key: string, presented: string): Promise<number> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wrong-key:' + presented));
+  const keyHash = [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
   try {
     const now = Math.floor(Date.now() / 1000);
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wrong-key:' + presented));
-    const keyHash = [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
     const row = await env.DB.prepare(`
       INSERT INTO auth_failures (ip_hash, failures, window_start, updated_at, last_key_hash) VALUES (?, 1, ?, ?, ?)
       ON CONFLICT(ip_hash) DO UPDATE SET
@@ -416,7 +437,7 @@ async function recordAuthFailure(env: Env, key: string, presented: string): Prom
     return row?.failures ?? 0;
   } catch (err) {
     console.warn('auth limiter unavailable (record):', (err as Error).message);
-    return 0;
+    return memRecord(key, keyHash);
   }
 }
 
@@ -3116,7 +3137,14 @@ export default {
     }
   },
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    const result = await runDiscovery(env, 'CRON');
+    let result: any;
+    try { result = await runDiscovery(env, 'CRON'); }
+    catch (e: any) {
+      // D1 refusing queries (daily quota, overload) is an outage, not a bug: say so once, skip this tick, and the next one tries again in 2 minutes.
+      // Anything else still fails loudly.
+      if (isDatabaseFailure(e?.message)) { console.warn(JSON.stringify({ event: 'cloud_discovery', status: 'DB_UNAVAILABLE', error: String(e?.message || e).slice(0, 200) })); return; }
+      throw e;
+    }
     console.log(JSON.stringify({event:'cloud_discovery',...result}));
     // Every fifth tick (about every 10 minutes) a small batch of collector imports is assessed. It is independent of discovery:
     // a discovery error does not stop it, and its own error is reported, not swallowed.

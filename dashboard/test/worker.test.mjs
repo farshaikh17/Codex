@@ -845,3 +845,31 @@ test('QA: a visitor never gets the full built-in degree line (college, year), ev
     assert.ok(/College|University/.test(op.json.education), `${id}: the operator view keeps the full line`);
   }
 });
+
+// QA 2026-11-09 (segment 8): behaviour while D1 itself refuses queries (daily quota, outage).
+const downEnv = (msg) => { const { sqlite, d1 } = createDb(); seed(sqlite); const boom = () => { throw new Error(msg); }; return makeEnv({ ...d1, prepare: boom, batch: boom, exec: boom }); };
+const DB_DOWN = "D1_ERROR: Exceeded the number of rows read allowed on the free tier";
+const verify = (env, key, ip) => worker.fetch(new Request('https://test.invalid/api/auth/verify', { method: 'POST', headers: { 'content-type': 'application/json', 'CF-Connecting-IP': ip }, body: JSON.stringify({ key }) }), env, { waitUntil() {} });
+
+test('QA: with D1 down the login limiter still limits guessing (per isolate), the right key still works from another address, and X-Forwarded-For is ignored', async () => {
+  const env = downEnv(DB_DOWN), ip = '203.0.113.201';
+  const codes = [];
+  for (let i = 0; i < 10; i++) codes.push((await verify(env, `wrong-${i}`, ip)).status);
+  assert.deepEqual(codes, [403, 403, 403, 403, 403, 403, 403, 403, 429, 429], 'eight wrong keys, then locked out, although D1 is unavailable');
+  assert.equal((await verify(env, ADMIN_KEY, ip)).status, 429, 'locked address: even the right key waits');
+  assert.equal((await verify(env, ADMIN_KEY, '203.0.113.202')).status, 200, 'another address is not affected, and the operator can still sign in during the outage');
+  const spoof = await worker.fetch(new Request('https://test.invalid/api/auth/verify', { method: 'POST', headers: { 'content-type': 'application/json', 'CF-Connecting-IP': ip, 'X-Forwarded-For': '198.51.100.9' }, body: JSON.stringify({ key: 'wrong-new' }) }), env, { waitUntil() {} });
+  assert.equal(spoof.status, 429, 'a spoofed X-Forwarded-For does not give a fresh bucket');
+});
+test('QA: repeating the identical wrong key is not a new guess when D1 is down (same rule as the table)', async () => {
+  const env = downEnv(DB_DOWN), ip = '203.0.113.211';
+  for (let i = 0; i < 12; i++) assert.equal((await verify(env, 'same-wrong-key', ip)).status, 403);
+});
+test('QA: the cron skips a tick quietly while D1 is unavailable, but still fails loudly on any other error', async () => {
+  const quiet = console.warn; const seen = []; console.warn = (...a) => seen.push(a.join(' '));
+  try {
+    await worker.scheduled({ cron: '*/2 * * * *', scheduledTime: Date.now() }, downEnv(DB_DOWN), { waitUntil() {} });
+    assert.ok(seen.some((l) => /DB_UNAVAILABLE/.test(l)), 'the outage is logged once');
+  } finally { console.warn = quiet; }
+  await assert.rejects(() => worker.scheduled({ cron: '*/2 * * * *', scheduledTime: Date.now() }, downEnv('a programming error'), { waitUntil() {} }), /programming error/);
+});
