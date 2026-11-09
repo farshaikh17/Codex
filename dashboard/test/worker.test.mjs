@@ -782,3 +782,34 @@ test("Sana's profile keeps remote-preferred and her Middle East / Europe relocat
   assert.ok(!/Bengaluru|Hyderabad|Chennai/.test(prefs), 'no fixed city list');
   assert.equal(op.relocation_interest, true);
 });
+
+test('outage backup: the last good PUBLIC answer is kept outside D1 and served while D1 refuses reads; never health, operator or errors', async () => {
+  const store = new Map();
+  globalThis.caches = { default: { async put(req, res) { store.set(req.url, await res.text()); }, async match(req) { return store.has(req.url) ? new Response(store.get(req.url), { headers: { 'Content-Type': 'application/json' } }) : undefined; } } };
+  try {
+    const pending = [];
+    const get = (env, p, key) => worker.fetch(new Request('https://test.invalid' + p, { headers: key ? { Authorization: `Bearer ${key}` } : {} }), env, { waitUntil: (x) => pending.push(x) });
+    const { env } = fresh({ GIT_COMMIT: 'commit-a' });
+    const msg = "D1_ERROR: Your account has exceeded D1's free tier daily row read limit (simulated)";
+    const failing = { prepare() { const s = { bind: () => s, first: async () => { throw new Error(msg); }, all: async () => { throw new Error(msg); }, run: async () => { throw new Error(msg); } }; return s; }, async batch() { throw new Error(msg); } };
+    const down = { ...env, DB: failing };
+    // nothing stored yet: the same controlled 503 as before
+    assert.equal((await get(down, '/api/candidates')).status, 503);
+    // a good public read stores a copy
+    const good = await get(env, '/api/candidates'); assert.equal(good.status, 200);
+    const goodBody = await good.text(); await Promise.all(pending);
+    assert.ok([...store.keys()].some((k) => k.endsWith('/api/candidates')), 'stored outside D1');
+    assert.ok(![...store.keys()].some((k) => /health|version/.test(k)), 'health and version are never stored');
+    // D1 now refuses reads: the stored copy is served, marked, as a 200
+    const stale = await get(down, '/api/candidates');
+    assert.equal(stale.status, 200); assert.equal(stale.headers.get('x-cache'), 'STALE-OUTAGE'); assert.equal(await stale.text(), goodBody);
+    // a URL that was never stored still gets the honest 503; health tells the truth
+    assert.equal((await get(down, '/api/analytics?candidate_id=farhan_shaikh')).status, 503);
+    assert.equal((await get(down, '/api/health')).status, 503);
+    // an operator answer is never stored or served from the backup
+    store.clear(); pending.length = 0;
+    await get(env, '/api/candidates', ADMIN_KEY); await Promise.all(pending);
+    assert.equal(store.size, 0, 'operator reads are not backed up');
+    assert.equal((await get(down, '/api/candidates', ADMIN_KEY)).status, 503);
+  } finally { delete globalThis.caches; }
+});
