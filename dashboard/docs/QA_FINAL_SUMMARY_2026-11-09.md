@@ -20,7 +20,7 @@ No duplicate fix existed: neither `main` nor any `codex/*` branch contained eith
 
 ### Other confirmed defects fixed (all on this branch; each with a test that fails on the old code)
 Public profile fell back to the full degree line; login limiter failed open while D1 was down; the cron failed loudly every tick of an outage; one malformed feed value failed a whole board; a wrong-shape answer blanked the app (error boundary); no way to delete a client; 787 low-contrast elements and keyboard-unreachable job rows; identical job-button names; CORS reflected any origin; junk paging parameters caused a 500; CI never ran 9 Node test files and 3 Python tests.
-**New this round: the onboarding backfill scanned every active job on every call** (11.15 million job rows to onboard 21,120 jobs in the local model; now 21,647, 515 times fewer; see `COST_MODEL_2026-11-09.md`). Isolated branches (one commit each on `main` `75a092e`): `qa/outage-backup-share-link`, `qa/unsave-race`, `qa/job-row-button-names`, `qa/backfill-cursor`; patches in `dashboard/docs/qa-patches/`.
+**New this round: the onboarding backfill scanned every active job on every call** (11.15 million job rows to onboard 21,120 jobs in the local model; now 21,647, 515 times fewer; see `COST_MODEL_2026-11-09.md`). **Draft pull request for this branch: https://github.com/farshaikh17/Codex/pull/68** (draft, not merged). Isolated branches (one commit each on `main` `75a092e`): `qa/outage-backup-share-link`, `qa/unsave-race`, `qa/job-row-button-names`, `qa/backfill-cursor`; patches in `dashboard/docs/qa-patches/`.
 
 ### Disproved, retracted or narrowed
 * ChatGPT's outage-cache concern is narrower than stated: candidate-specific URLs do not leak. The leak is the two list-style answers.
