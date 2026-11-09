@@ -100,3 +100,8 @@ Nothing below blocks the release. Each item says who decides or what would close
 - **Tab numbers on the READY dashboard count the whole queue; the list under a search or review sub-filter is narrower and says so.**
 - **Skill matching (changed 2026-11-06).** A skill used to count only when its exact phrase appeared in a posting, which phrases such as "CRM Configuration" almost never do. A skill now also counts when every one of its key words appears as a whole word; a multi-word skill needs at least two key words, so a lone generic word ("workflows") is not enough. This only ever adds matches. Rows already stored keep their scores until the owner-approved re-score (run by the daily discovery pipeline) updates the screen's own rows.
 - **Daily discovery pipeline.** See DISCOVERY_PIPELINE.md. The dataset is a third-party open dataset (MIT); if it disappears, the pipeline finds nothing new and closes nothing (closures need a full-size snapshot), and the Worker's own discovery keeps running.
+
+* **Outage backup needs a custom domain.** The edge-cache copy of public answers (`backupStore`/`backupServe`, `X-Cache: STALE-OUTAGE`)
+  relies on the Workers Cache API, which Cloudflare documents as not active on `*.workers.dev` hostnames. On the current
+  `workers.dev` address it most likely stores nothing, so visitors still see the 503 during a D1 outage. It starts working once the
+  Worker is served from a custom domain; a KV namespace would work on any hostname. Not yet verified live.

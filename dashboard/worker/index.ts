@@ -92,9 +92,13 @@ function candidateFacts(candidateId: string, cand: any, now: Date = new Date()) 
 
 // Standard CORS headers
 function corsHeaders(request: Request, env: Env): HeadersInit {
-  const origin = request.headers.get('Origin') || '*';
+  // Only this site itself (and a local rehearsal server) may read the API from a browser page. Other origins get no CORS grant, so a page
+  // on another site cannot read it with the visitor's browser; writes already need the operator key in an Authorization header.
+  const origin = request.headers.get('Origin') || '';
+  let allowed = '';
+  try { if (origin && (origin === new URL(request.url).origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) allowed = origin; } catch { /* no grant */ }
   return {
-    'Access-Control-Allow-Origin': origin,
+    ...(allowed ? { 'Access-Control-Allow-Origin': allowed } : {}),
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cf-Access-Jwt-Assertion, X-View-Token',
     'Access-Control-Max-Age': '86400',
@@ -3094,6 +3098,7 @@ export default {
       // Every API answer names the commit that produced it, so post-deploy checks can tell this version from the previous one.
       const headers = new Headers(res.headers);
       headers.set('X-Worker-Commit', env.GIT_COMMIT || 'unknown');
+      headers.set('X-Content-Type-Options', 'nosniff'); headers.set('X-Frame-Options', 'DENY'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
       const out = new Response(res.body, { status: res.status, headers });
       if (backupEligible(request)) {
         if (res.status === 200 && (headers.get('Content-Type') || '').includes('json')) ctx.waitUntil(out.clone().text().then((t) => backupStore(request, t)));
