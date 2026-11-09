@@ -93,3 +93,18 @@ a security trade-off to approve explicitly.
   discovery run (about two reads per row, per candidate). A "done" flag in `discovery_state` would stop that; not changed because `engine/`
   is being edited on the `codex/*` branches.
 * All six `codex/*` branches still merge cleanly with this branch.
+
+## Segment 5: Python engine under fault injection (09:35 UTC)
+* Fuzzed `adapters.normalize` / `extract_jobs` for greenhouse, lever and ashby: every field of a valid sample job replaced in turn by 18 odd values
+  (null, 0, -1, 1.5, NaN, booleans, empty containers, a 100 KB string, markup, a 10^30 integer, an impossible date), plus whole-job and whole-response
+  mismatches. 12 unexpected `TypeError`s, all the same bug: four fields iterated as lists without a type check (greenhouse `offices`, lever
+  `categories.allLocations` and `lists`, ashby `secondaryLocations`).
+* Why it mattered: `collect.py` catches the error per source, so one malformed job marked the WHOLE board failed and kept stale data (and bumped its
+  failure count) until the vendor fixed the record; `market_discovery.py` caught only `ValueError`/`KeyError` around the employer-target pass, so the same
+  error escaped and could end that pass.
+* Fixed: `adapters._list()` treats a non-list as empty; the employer-target `except` also catches `TypeError`/`AttributeError`. Behaviour for valid
+  data is unchanged (all 352 Python tests pass). `adapters.py` keeps its CRLF line endings so the diff is 12 lines.
+* New `test_adapters_robustness.py` (4 tests); the same tests fail against the old `adapters.py`.
+* Reviewed and fine: `Network` in `market_discovery.py` (requests counted and deadline-bound, redirects refused, no retries, body reads time- and
+  byte-bounded, HTTP 429 halts the run, robots rules and a capped crawl-delay respected). JobSpy block handling is being changed on
+  `codex/jobspy-refusal-detection`, so it was left alone.

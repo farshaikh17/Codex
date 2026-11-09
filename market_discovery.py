@@ -488,7 +488,7 @@ def run(config,sources,employers,out,network=None,now=None):
             if data is None: continue
             for raw in extract_jobs(board["provider"],data):
                 try: rec=normalize(board["provider"],board["board"],raw)
-                except (ValueError,KeyError): continue
+                except (ValueError,KeyError,TypeError,AttributeError): continue
                 if not rec["req_id"] or not rec["title"] or not rec["url"]: continue
                 jobs.append({**rec,"employer":target["employer"],"source_id":None,"discovery":{"method":"employer_target_board"},
                     "provenance":board["evidence"],"observed_at":now.isoformat(),"freshness":"fresh_feed"})
