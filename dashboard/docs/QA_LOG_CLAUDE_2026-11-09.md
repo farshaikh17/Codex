@@ -44,3 +44,19 @@ Findings (none fixed; none block the release):
    query scans one candidate's score rows per cache miss. Both are fine at today's size; neither has a measured `rows_read`.
 3. Minor: `/apply` consent checkbox is a 13 px target; `/app` has no `<h1>`; a handful of unused imports in Python files (left alone to avoid
    conflicts with the `codex/*` branches that edit `engine/`).
+
+## Segment 2: D1 quota and query cost (06:35 UTC)
+* Database `career-job-engine`: 43.6 MB, 28 tables, APAC, no replicas. Storage is far from any free-tier limit.
+* The connector tools cannot read "rows read today" (that needs the GraphQL analytics token the GitHub workflows hold), so no live figure was taken
+  and no production query was run.
+* Modelled on a local copy scaled to 30,000 jobs per candidate (60,000 qualification and score rows), using `EXPLAIN QUERY PLAN` and row counts:
+  every uncached `/api/jobs` request runs (1) a status-count query that walks all of the candidate's qualification rows and looks each job up
+  (about 60k rows read) and (2) a page query that must sort the whole candidate set by score before `LIMIT 50` (about 90k rows read), so
+  **about 150k rows per cache miss, per filter combination**. With the public read cap at 2,500,000 that is roughly 16 distinct uncached views a day
+  at this size, and it grows linearly with jobs per candidate. It explains why the cap trips under QA and why many filter combinations are costly.
+  Real per-candidate sizes in production are unmeasured; treat the numbers as an order of magnitude.
+* Options (none applied; each needs equivalence tests and a measurement against real `rows_read`): drive the page query from
+  `candidate_job_scores` using `idx_cjs_cand_score` so `LIMIT 50` stops early; cache the status counts separately from the page and for longer;
+  keep a per-candidate counts table updated by the importers.
+* Guard: the current script filters the analytics by this database only, while the free limit is per account (two other Workers exist on the
+  account). ChatGPT's `codex/account-d1-budget` changes it to account-wide; it merges cleanly with this branch.

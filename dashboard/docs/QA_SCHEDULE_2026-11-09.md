@@ -7,7 +7,7 @@ result + evidence here. Before each run: `git fetch`, look at `origin/main` and 
 | # | Segment | Status | Result / evidence |
 |---|---|---|---|
 | 1 | Worker API: every route's auth, validation, error paths, response shapes | [x] 05:35 UTC | 63 routes probed anon + keyed: no 5xx, every protected route 401 anonymously, CSV export escapes formulas. Fixed 2 dead controls: navbar Sync/Refresh POSTed to the retired fixtures endpoint (410; unlock window for visitors) and now just re-reads data; "Reverify READY Jobs" always hit a 501 and is now disabled like "Verify URLs". Browser check added. |
-| 2 | D1 quota and usage: live account reads/writes today (Cloudflare, read-only), budget guards, query costs | [ ] | |
+| 2 | D1 quota and usage: live account reads/writes today (Cloudflare, read-only), budget guards, query costs | [x] 06:35 UTC | DB is 43.6 MB / 28 tables (storage no concern). Live rows-read-today is NOT readable with the connector tools (needs the analytics token), so cost was modelled: an uncached job-list request costs about 150k rows read at 30k jobs per candidate (see QA log). Agrees with ChatGPT's `codex/account-d1-budget` (guard must count the whole account, not one database). No code change this run. |
 | 3 | Pipelines: last runs of collect, sync, discovery, watchlist, release; failures, drift, concurrency | [ ] | |
 | 4 | Data integrity: re-score sample (30 rows per candidate), stale/duplicate/closed rows, guards on applications | [ ] | |
 | 5 | Python engine: collectors, dataset discovery, liveness, JobSpy block handling, tests under fault injection | [ ] | |
