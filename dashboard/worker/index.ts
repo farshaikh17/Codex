@@ -2897,6 +2897,27 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
   return jsonResponse({ candidate_id: id, link_id: params.link, revoked: true }, 200, corsHeaders(request, env));
 });
 
+// Removes a client and everything held about them, in one atomic batch (the privacy notice promises deletion on request). Operator only. The two built-in
+// candidates cannot be removed. Shared job postings stay; what is removed is every row tied to this client, their application record (name, e-mail, phone)
+// and any cached answers that mention the client.
+const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'applications', 'past_applications',
+  'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests'] as const;
+router.delete('/api/clients/:id', async (request, env, params) => {
+  const id = knownCandidate(params.id);
+  if (!id) return badCandidate(request, env, params.id);
+  if (BUILTIN_IDS.includes(id)) return jsonResponse({ error: 'The two built-in candidates cannot be deleted here.' }, 400, corsHeaders(request, env));
+  const out = await env.DB.batch([
+    ...CLIENT_DATA_TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE candidate_id = ?`).bind(id)),
+    env.DB.prepare('DELETE FROM response_cache WHERE key LIKE ?').bind('%' + id + '%'),
+    env.DB.prepare('DELETE FROM candidates WHERE id = ?').bind(id),
+  ]);
+  forgetRegistry(env.DB); await syncRegistry(env, true);
+  const rows: Record<string, number> = {};
+  CLIENT_DATA_TABLES.forEach((t, i) => { rows[t] = Number(out[i]?.meta?.changes || 0); });
+  rows.candidates = Number(out[out.length - 1]?.meta?.changes || 0);
+  return jsonResponse({ candidate_id: id, deleted: rows.candidates === 1, rows_removed: rows }, 200, corsHeaders(request, env));
+});
+
 // CSV of one client's screened jobs (active only), in the list's score order (score, then newest, then id), at most 1,000 rows. Public field set only (no notes,
 // override reasons or pay floors); the visibility guard above already decided whether this request may see the client.
 const EXPORT_MAX = 1000;

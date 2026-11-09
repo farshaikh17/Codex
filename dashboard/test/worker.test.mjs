@@ -873,3 +873,34 @@ test('QA: the cron skips a tick quietly while D1 is unavailable, but still fails
   } finally { console.warn = quiet; }
   await assert.rejects(() => worker.scheduled({ cron: '*/2 * * * *', scheduledTime: Date.now() }, downEnv('a programming error'), { waitUntil() {} }), /programming error/);
 });
+
+// QA 2026-11-09 (segment 9): removing a client on request.
+test('QA: DELETE /api/clients/:id erases the client and everything tied to them, and nothing else', async () => {
+  const { sqlite, env } = fresh();
+  const mk = async (name) => (await call(worker, env, 'POST', '/api/clients', { body: { full_name: name, role_keywords: ['analyst'], location_mode: 'REMOTE_FROM_HOME', home_country: 'India', visibility: 'private',
+    search_profile: { role_keywords: ['analyst'], avoid_keywords: [], location_mode: 'REMOTE_FROM_HOME', home_country: 'India' } } })).json.client.id;
+  const a = await mk('Client Alpha'), b = await mk('Client Beta');
+  for (const id of [a, b]) {
+    assert.equal((await call(worker, env, 'POST', `/api/clients/${id}/backfill`)).status, 200);
+    sqlite.prepare(`INSERT INTO client_requests(id, full_name, email, phone, target_roles, plan, status, candidate_id) VALUES (?,?,?,?,?,?,?,?)`).run('req-' + id, 'N ' + id, id + '@example.com', '999', 'Analyst', 'starter', 'CONVERTED', id);
+    sqlite.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, '{}', 1, 0)`).run(`https://x/api/jobs?candidate_id=${id}`);
+  }
+  const link = (await call(worker, env, 'POST', `/api/clients/${a}/share-links`, { body: {} })).json;
+  sqlite.prepare(`INSERT INTO applications(id, candidate_id, job_id, status) SELECT 'app-a', ?, job_id, 'APPLIED' FROM candidate_qualifications WHERE candidate_id = ? LIMIT 1`).run(a, a);
+  const tables = sqlite.prepare("SELECT m.name t FROM sqlite_master m WHERE m.type='table' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) WHERE name='candidate_id')").all().map((r) => r.t);
+  const count = (t, id) => sqlite.prepare(`SELECT COUNT(*) n FROM ${t} WHERE candidate_id = ?`).get(id).n;
+  const betaBefore = Object.fromEntries(tables.map((t) => [t, count(t, b)]));
+  const builtinBefore = Object.fromEntries(tables.map((t) => [t, count(t, 'farhan_shaikh')]));
+  assert.equal((await call(worker, env, 'DELETE', `/api/clients/${a}`, { key: null })).status, 401, 'operator only');
+  assert.equal((await call(worker, env, 'DELETE', '/api/clients/farhan_shaikh')).status, 400, 'a built-in candidate cannot be deleted');
+  assert.equal((await call(worker, env, 'DELETE', '/api/clients/nobody_here')).status, 400, 'unknown client');
+  const del = await call(worker, env, 'DELETE', `/api/clients/${a}`);
+  assert.equal(del.status, 200); assert.equal(del.json.deleted, true); assert.ok(del.json.rows_removed.candidate_qualifications > 0 && del.json.rows_removed.applications === 1 && del.json.rows_removed.client_requests === 1, JSON.stringify(del.json));
+  for (const t of tables) assert.equal(count(t, a), 0, `${t} still holds rows for the deleted client`);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM candidates WHERE id = ?').get(a).n, 0);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM response_cache WHERE key LIKE ?`).get('%' + a + '%').n, 0, 'cached answers about the client are gone');
+  for (const t of tables) { assert.equal(count(t, b), betaBefore[t], `${t}: another client is untouched`); assert.equal(count(t, 'farhan_shaikh'), builtinBefore[t], `${t}: built-ins untouched`); }
+  const gone = await worker.fetch(new Request(`https://test.invalid/api/jobs?candidate_id=${a}`, { headers: { 'X-View-Token': link.token } }), env, { waitUntil() {} });
+  assert.equal(gone.status, 400, 'its share link no longer works');
+  assert.equal((await call(worker, env, 'DELETE', `/api/clients/${a}`)).status, 400, 'a second delete is a clean "unknown client", not an error');
+});

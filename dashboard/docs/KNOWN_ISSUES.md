@@ -105,3 +105,12 @@ Nothing below blocks the release. Each item says who decides or what would close
   relies on the Workers Cache API, which Cloudflare documents as not active on `*.workers.dev` hostnames. On the current
   `workers.dev` address it most likely stores nothing, so visitors still see the 503 during a D1 outage. It starts working once the
   Worker is served from a custom domain; a KV namespace would work on any hostname. Not yet verified live.
+
+* **Deleting a client (data removal on request).** `DELETE /api/clients/<client_id>` with the operator key removes the client, their screening results, application
+  and history rows, share links, their application record (name, e-mail, phone) and cached answers that mention them, in one atomic step. Shared job postings stay.
+  It refuses the two built-in candidates and an unknown id, and the answer lists how many rows were removed per table. There is no button for it in the dashboard yet.
+  Example: `curl -X DELETE -H "Authorization: Bearer $KEY" https://<site>/api/clients/<client_id>`.
+* **Cost of onboarding a client.** Screening the existing jobs for a new client writes two rows per active job (a qualification row and a score row). The dashboard's
+  "screen all" button does at most 150 batches of 40 jobs (6,000 jobs, about 12,000 writes) per click; a catalogue of 22,000 active jobs is about 44,000 writes, nearly half
+  of the free tier's 100,000 per day, on top of the daily import (69,000 on 8 Nov). Nothing in the Worker counts writes per day, so onboarding more than one client on a busy
+  day can push the account over the limit. Spread onboarding over days, or decide to screen only jobs that match the client's role keywords.

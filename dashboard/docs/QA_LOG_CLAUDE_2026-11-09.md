@@ -165,3 +165,22 @@ Fixed:
 Migrations: applied each of the 17 files a second time to a finished database. All re-run cleanly except `0004_broad_discovery.sql` (SQLite cannot `ADD COLUMN IF NOT EXISTS`;
 Wrangler records applied migrations so it is not re-run). No re-run changed any row count, so the data migration `0017` is idempotent.
 Not covered: real D1 behaviour under load (the harness is SQLite), GitHub workflow retries, the Cache API backup (needs a custom domain, see KNOWN_ISSUES).
+
+## Segment 9: reselling readiness (13:35 UTC)
+Walked the whole client lifecycle in the harness (real Worker, seeded database):
+form `POST /apply` (303) -> operator sees the request -> `POST /api/clients` -> request linked and marked CONVERTED -> backfill loop screens every active job
+(qualification and score rows equal the active job count) -> share link -> anonymous callers cannot see the client (same answer as an unknown id) -> the link
+shows the client their own jobs and a CSV export -> client profile through the link has the public shape (no pay line, no employment history) -> revoke -> the old link
+stops working. All steps passed.
+Gap found and fixed: `GET`/`POST`/`PUT` existed for clients but no `DELETE`, while the privacy notice says "Ask us ... to have everything deleted; we delete it from our database".
+After a manual "delete" nothing could be removed through the product: the candidate row (name, skills), 4 screening tables, share links, `client_profiles` and the application
+record in `client_requests` (e-mail, phone, link; that table has no foreign key, so even a cascade would have missed it) all remained.
+Added `DELETE /api/clients/:id` (operator only): one atomic batch over 10 client tables, matching cached answers, then the candidate row; built-ins and unknown ids are refused
+with 400; the registry and cache generation refresh; a second call answers "unknown client". Test `QA: DELETE /api/clients/:id erases the client ...` checks every table that has a
+`candidate_id` column ends at zero for that client while another client and the built-ins keep every row, the share link dies, and an anonymous caller gets 401.
+Open for the owner (documented in KNOWN_ISSUES.md):
+* Onboarding write cost: 2 rows per active job; the UI's "screen all" caps one click at 6,000 jobs (about 12,000 writes) but a full catalogue (22,000 jobs, about 44,000 writes) plus
+  the daily import can pass the free tier's 100,000 daily writes. No Worker-side daily write counter exists (reads have one). Options: spread onboarding, screen only jobs matching the
+  client's role keywords, or add a write meter.
+* No "Delete client" button in the dashboard (API only), deliberately: a destructive action should get its own confirmation design.
+* Other reselling items not built: per-client limits (number of clients, share links, jobs), billing, a client-facing audit trail, and per-client data export other than the CSV of jobs.
