@@ -14,6 +14,15 @@
    "from_hash": "7b71d00c71547804e866b5209ad8b1ff89c5eb9aaa531234dd87497d76618c32",
    "kind": "content_changed",
    "to_hash": "0d9d285af35b6db9725b2c691cb1fab3c877ab320955d8fa2e6a2f3113dc8fcf"
+  },
+  {
+   "changed_at": "2026-11-09T21:36:41.943769+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "0d9d285af35b6db9725b2c691cb1fab3c877ab320955d8fa2e6a2f3113dc8fcf",
+   "kind": "content_changed",
+   "to_hash": "22d4d018286b2de296b4da230ba84f1125a0600e1b1de7955e39da9633d82a8c"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-10-06T11:25:19-04:00",
-  "title": "People Generalist",
+  "title": "HR Partner",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "0d9d285af35b6db9725b2c691cb1fab3c877ab320955d8fa2e6a2f3113dc8fcf",
+ "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
+ "content_hash": "22d4d018286b2de296b4da230ba84f1125a0600e1b1de7955e39da9633d82a8c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      },
@@ -61,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Remote - British Columbia, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      },
@@ -69,7 +78,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in Ontario, British Columbia or Alberta, Canada.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      }
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      },
@@ -90,7 +99,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "3+ years experience in an HR role.\nAbility to take initiative and be a self-starter\nYou are a decisive problem solver with a \"get it done\" attitude who will thrive in a fast-paced, sometimes ambiguous environment\nStrong ability to make administrative and procedural decisions and exercise judgment with sensitive and confidential issues\nStrong data analysis skills and ability to share recommendations with stakeholders\nData Storytelling: Connects internal data with external benchmarks to provide actionable executive insights\nAI-Enabled Efficiency: Enhances productivity through the sensible and strategic usage of AI tools.\nDemonstrates employee focus and managing proactive communication to ensure optimum HR support\nLeads the alignment between GTM and marketing HRBPs and COEs to ensure programs are scalable and reflect unique functional needs.\nKeen to continue learning and developing their skill set, having a growth mindset\nStrong ability to identify process gaps and improvement opportunities",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      }
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Experience partnering with or supporting GTM business units\nProficiency with HR systems, such as Workday and ServiceNow",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      }
@@ -116,7 +125,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      },
@@ -124,7 +133,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - British Columbia, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8256423"
      }

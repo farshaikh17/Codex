@@ -14,6 +14,15 @@
    "from_hash": "86782621974db607b8af80754b9e56bf672a491c49f3322b9a700e2ed89afa5b",
    "kind": "content_changed",
    "to_hash": "62b9539e295c9eaa28e122b337d8f2a090e2db680200ee9917f3d886a67e8dc9"
+  },
+  {
+   "changed_at": "2026-11-09T21:36:41.943769+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "62b9539e295c9eaa28e122b337d8f2a090e2db680200ee9917f3d886a67e8dc9",
+   "kind": "content_changed",
+   "to_hash": "3450f71c5cb729b2385eae37bda2d455e72d6e0138d38cc4d6a5b70f393be8be"
   }
  ],
  "content": {
@@ -27,14 +36,22 @@
    {
     "source": "location.name",
     "text": "Remote, United Kingdom"
+   },
+   {
+    "source": "offices.location",
+    "text": "Turkey"
+   },
+   {
+    "source": "offices.name",
+    "text": "EMEA"
    }
   ],
   "published": "2026-10-19T05:22:09-04:00",
   "title": "Backend Engineer (Ruby), Create: Change Record",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-06T08:28:12.366993+00:00",
- "content_hash": "62b9539e295c9eaa28e122b337d8f2a090e2db680200ee9917f3d886a67e8dc9",
+ "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
+ "content_hash": "3450f71c5cb729b2385eae37bda2d455e72d6e0138d38cc4d6a5b70f393be8be",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -62,7 +79,7 @@
       },
       "method": "description_text",
       "quote": "Poland base salary range: 248,000zł - 372,000zł",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      }
@@ -79,7 +96,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      },
@@ -87,7 +104,23 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.location",
+      "quote": "Turkey",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "EMEA",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      }
@@ -100,7 +133,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Professional experience building backend web applications, services, or application programming interfaces, with experience using Ruby and GraphQL.\nAn understanding of relational databases, structured query language, data modeling, caching, background processing, and backend performance practices.\nExperience with full-stack development to build and maintain user-facing workflows and their underlying systems.\nExperience writing backend unit and integration tests, with familiarity with the testing pyramid, Git, and collaborative code review processes.\nClear written and spoken English communication skills, including sharing useful status updates in a remote, asynchronous environment.\nThe ability to manage assigned priorities, work through ambiguity, take ownership of your work, and seek guidance when needed.\nExperience using AI coding agents to speed up software development while critically reviewing their output.\nBonus: you’ve built agents or agent-based workflows that run in production, not just prototypes.",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      }
@@ -117,7 +150,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      },
@@ -125,7 +158,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8891301002"
      }

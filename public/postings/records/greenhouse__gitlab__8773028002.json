@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-09T21:36:41.943769+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "d03d18691a7fd8161725dc4d40c464a5c8d7469f246926acc0b3d036072a9461",
+   "kind": "content_changed",
+   "to_hash": "e49c51e376c5b713a9088ce72d17ffd77c52d3acbf9312cd666d1fe77cff22ee"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nThe Pipeline Authoring group develops tools for creating and managing your pipelines. We balance maintaining core functionality of the product with developing newer areas. Our key areas of focus are CI/CD components and the CI/CD Catalog, which allows users to discover, reuse, and contribute CI/CD components to make software development more efficient and productive.\n\nAs a Backend Engineer, you will work on maturing our Catalog and Component functionality and reliability, improve and maintain performance, scalability and security of Pipeline Creation, and always consider usability and user experience in these key areas of the product. Your contributions and collaboration with your fellow team members will ensure that GitLab CI/CD remains a best in class solution.\n\nSome of the things we have recently been working on include:\n\nInputs for Pipelines\n\nInputs for Jobs\n\nInputs Enhancements\n\nCI/CD Catalog - UX improvements\n\nLearn more on the Pipeline Authoring direction pages:\n\nPipeline Composition\n\nComponent Catalog\n\nAbout the team\n\nThe Pipeline Authoring team is made up of experienced Engineers, some having worked in this area for many years and some having joined more recently. The team shares a passion for finding solutions to complex challenges that scale and are maintainable. Located across five countries and several time zones, async communication is key to our success. The team lives by GitLab’s core values and is always eager to improve. Many things in GitLab begin with a pipeline, so our team regularly interacts with other GitLab teams, community contributors and customers as we strive to create the best possible Pipeline Authoring experience.\n\nLearn more on the Pipeline Authoring group handbook page and Pipeline Authoring Unfiltered playlist.\n\nWhat you’ll do\n\nWrite high-quality, efficient, and maintainable code while adhering to best practices and contributing to code reviews.\n\nShip small features and improvements with minimal guidance and support from other team members. Collaborate with the team on larger projects.\n\nAdvocate for improvements to reliability, security, and performance.\n\nRecognize impediments to our efficiency as a team (“technical debt”), propose and implement solutions.\n\nParticipate in agile development practices, including async planning sessions, stand-ups, and retrospectives, to drive iterative software development and continuous improvement for the team.\n\nContribute to our development process by asking questions and providing feedback to make us better as a team.\n\nEmbrace continuous learning and stay connected with industry best practices, tools, and technologies to drive improvements in our software.\n\nParticipate in Tier 2 on-call rotations to assist troubleshooting product operations, security operations, and urgent engineering issues.\n\nWhat you’ll bring\n\nProficiency with Ruby and Ruby on Rails\n\nProven experience writing testable code in Ruby on Rails\n\nExperience with Relational Database Management Systems (PostgreSQL is a plus)\n\nExperience with GraphQL is a plus\n\nAn ability to self manage and organize in an asynchronous and collaborative work environment\n\nDemonstrated capacity to clearly and concisely communicate about complex technical, architectural, and/or organizational problems and propose thorough iterative solutions\n\nFamiliarity with various stages of software development end-to-end (Agile methodologies is a plus)\n\nProven ability to work effectively in a team including product managers, designers, and other engineers\n\nA commitment to continuous learning and openness to giving and receiving feedback as a part of fostering individual and team development\n\nThe base salary range for this role’s listed level is currently for residents of the EU, applicable in the specified country or countries only. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location and having regard to any applicable collective agreements. The base salary range does not include bonuses, equity, or benefits.\n\nPoland base salary range: 248,000zł- 372,000zł\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -13,14 +23,22 @@
    {
     "source": "location.name",
     "text": "Remote, Poland"
+   },
+   {
+    "source": "offices.location",
+    "text": "Turkey"
+   },
+   {
+    "source": "offices.name",
+    "text": "EMEA"
    }
   ],
   "published": "2026-09-09T10:16:04-04:00",
   "title": "Intermediate Backend Engineer, Pipeline Authoring",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T16:50:41.877596+00:00",
- "content_hash": "d03d18691a7fd8161725dc4d40c464a5c8d7469f246926acc0b3d036072a9461",
+ "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
+ "content_hash": "e49c51e376c5b713a9088ce72d17ffd77c52d3acbf9312cd666d1fe77cff22ee",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -48,7 +66,7 @@
       },
       "method": "description_text",
       "quote": "Poland base salary range: 248,000zł- 372,000zł",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      }
@@ -65,7 +83,23 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.location",
+      "quote": "Turkey",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "EMEA",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      },
@@ -73,7 +107,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "The Pipeline Authoring team is made up of experienced Engineers, some having worked in this area for many years and some having joined more recently. The team shares a passion for finding solutions to complex challenges that scale and are maintainable. Located across five countries and several time zones, async communication is key to our success. The team lives by GitLab’s core values and is always eager to improve. Many things in GitLab begin with a pipeline, so our team regularly interacts with other GitLab teams, community contributors and customers as we strive to create the best possible Pipeline Authoring experience.",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      }
@@ -86,7 +120,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Proficiency with Ruby and Ruby on Rails\nProven experience writing testable code in Ruby on Rails",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      },
@@ -94,7 +128,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "An ability to self manage and organize in an asynchronous and collaborative work environment\nDemonstrated capacity to clearly and concisely communicate about complex technical, architectural, and/or organizational problems and propose thorough iterative solutions",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      },
@@ -102,7 +136,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Proven ability to work effectively in a team including product managers, designers, and other engineers\nA commitment to continuous learning and openness to giving and receiving feedback as a part of fostering individual and team development\nThe base salary range for this role’s listed level is currently for residents of the EU, applicable in the specified country or countries only. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location and having regard to any applicable collective agreements. The base salary range does not include bonuses, equity, or benefits.\nPoland base salary range: 248,000zł- 372,000zł",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      }
@@ -115,7 +149,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Experience with Relational Database Management Systems (PostgreSQL is a plus)",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      },
@@ -123,7 +157,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Experience with GraphQL is a plus",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      },
@@ -131,7 +165,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Familiarity with various stages of software development end-to-end (Agile methodologies is a plus)",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      }
@@ -144,7 +178,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-10-27T16:50:41.877596+00:00",
+      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8773028002"
      }

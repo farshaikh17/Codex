@@ -20,7 +20,8 @@ def fake_urlopen(req, timeout=20):
         raise urllib.error.HTTPError(url, code, 'x', {}, None)
     r = mock.MagicMock()
     r.__enter__.return_value = r
-    r.geturl.return_value = 'https://boards.greenhouse.io/acme?error=true' if path == '/gh' else url
+    r.geturl.return_value = ('https://boards.greenhouse.io/acme?error=true' if path == '/gh'
+                             else 'https://jobs.example/' if path == '/homepage' else url)
     r.status = code
     r.read.return_value = b''
     return r
@@ -39,6 +40,7 @@ class Liveness(unittest.TestCase):
         self.assertEqual(st('/gone'), 'dead')
         self.assertEqual(st('/removed'), 'dead')
         self.assertEqual(st('/gh'), 'dead', 'a Greenhouse error redirect means the posting is gone')
+        self.assertEqual(st('/homepage'), 'unknown', 'a homepage is not evidence of a live posting')
         for p in ('/blocked', '/busy', '/err', '/timeout'):
             self.assertEqual(st(p), 'unknown', p)
 
@@ -50,7 +52,7 @@ class Liveness(unittest.TestCase):
         self.assertEqual(sorted(res['dead']), ['b', 'd']); self.assertEqual(res['alive'], ['a']); self.assertEqual(res['unknown'], 1)
         db = sqlite3.connect(':memory:')
         db.executescript("""CREATE TABLE jobs(id TEXT PRIMARY KEY, is_active INT, expired_at TEXT, last_verified_at TEXT);
-          CREATE TABLE applications(job_id TEXT); CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT);
+          CREATE TABLE applications(job_id TEXT); CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
           CREATE TABLE cache_state(id INT, generation INT); INSERT INTO cache_state VALUES (1, 5);
           INSERT INTO jobs(id, is_active) VALUES ('a',1),('b',1),('c',1),('d',1);
           INSERT INTO applications VALUES ('d');""")
@@ -61,6 +63,37 @@ class Liveness(unittest.TestCase):
         self.assertEqual(db.execute('SELECT generation FROM cache_state').fetchone()[0], 6)
         self.assertEqual(liveness.to_sql({'dead': [], 'alive': [], 'unknown': 0}).strip(), '')
 
+    def test_dead_job_with_other_candidates_ready_or_decided_status_is_preserved(self):
+        db = sqlite3.connect(':memory:')
+        db.executescript("""
+          CREATE TABLE jobs(id TEXT PRIMARY KEY, is_active INT, expired_at TEXT, last_verified_at TEXT);
+          CREATE TABLE applications(job_id TEXT);
+          CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
+          CREATE TABLE cache_state(id INT, generation INT);
+          INSERT INTO cache_state VALUES (1, 0);
+          INSERT INTO jobs(id,is_active) VALUES ('ready',1),('stretch',1),('manual',1),('undecided',1);
+          INSERT INTO candidate_qualifications VALUES
+            ('ready',NULL,'NEEDS_REVIEW'), ('ready',NULL,'READY'),
+            ('stretch',NULL,'STRETCH_READY'), ('manual','HOLD','NEEDS_REVIEW'),
+            ('undecided',NULL,'NEEDS_REVIEW');
+        """)
+        db.executescript(liveness.to_sql({'dead':['ready','stretch','manual','undecided'], 'alive':[], 'unknown':0}))
+        self.assertEqual(dict(db.execute('SELECT id,is_active FROM jobs')), {'ready':1,'stretch':1,'manual':1,'undecided':0})
+
+    def test_export_uses_source_when_application_url_is_placeholder(self):
+        db = sqlite3.connect(':memory:')
+        db.executescript("""
+          CREATE TABLE jobs(id TEXT PRIMARY KEY, original_posting_url TEXT, source_url TEXT, is_active INT, discovered_at TEXT);
+          CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, overall_score INT);
+          CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
+          CREATE TABLE applications(job_id TEXT);
+          INSERT INTO jobs VALUES ('j','nan','https://example.com/job',1,'2026-11-09');
+          INSERT INTO candidate_job_scores VALUES ('farhan','j',80);
+          INSERT INTO candidate_qualifications VALUES ('farhan','j',NULL,'NEEDS_REVIEW');
+        """)
+        self.assertEqual(db.execute(liveness.EXPORT_SQL).fetchall(), [('j','https://example.com/job')])
+
 
 if __name__ == '__main__':
     unittest.main()
+

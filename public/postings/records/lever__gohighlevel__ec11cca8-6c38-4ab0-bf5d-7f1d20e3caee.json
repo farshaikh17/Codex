@@ -1,14 +1,25 @@
 {
  "availability": {
-  "at": "2026-11-03T14:37:14.767045+00:00",
-  "reason": "first listed",
+  "at": "2026-11-10T16:01:54.121691+00:00",
+  "reason": "listed again after missing",
   "state": "listed"
  },
  "board": "gohighlevel",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-10T16:01:54.121691+00:00",
+   "fields": [
+    "description",
+    "title"
+   ],
+   "from_hash": "da64d51fc046d08a5478a5b248932117835f23ae640a90d07eafa2ce9181d164",
+   "kind": "content_changed",
+   "to_hash": "e90b960a72148c585b5b6303eeb98542aa705d1c942dd811928d1db817888680"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "About HighLevel:\nHighLevel is an AI-powered business operating system that gives agencies, entrepreneurs and SMBs the infrastructure to build, automate and scale. Today, HighLevel supports SMBs across 150+ countries, fueling community-driven growth rooted in real customer outcomes.\nTo date, businesses operating on HighLevel have generated over $7 billion in ecosystem value, demonstrating the impact of shared infrastructure at scale. By centralizing conversations, automation and intelligence into one system, we help businesses move faster, reduce complexity and execute efficiently.\nBehind the platform, HighLevel powers more than 4 billion API hits and 2.5 billion message events daily. With 250 terabytes of distributed data, 250+ microservices and over 1 million domain names supported, our architecture is built for performance, resilience and long-term scalability.\n\nOur People\nWith over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership. We value initiative, clarity and execution, creating space for ambitious people to build systems that support millions of businesses worldwide. Here, innovation thrives, ideas are celebrated and people come first, no matter where they call home.\n\nOur Impact\nEvery month, HighLevel enables more than 1.5 billion messages, 200 million leads and 20 million conversations for the more than 1 million businesses we support. Behind those numbers are real people building independence, expanding opportunity and creating measurable impact. We’re proud to be a part of that.\nLearn more about us on our YouTube Channel or Blog Posts.\nAbout the Role:\nHighLevel is looking for a Sr. SDET with 5+ years of experience to play a crucial role in ensuring the quality, performance, and scalability of our products. We are seeking engineers who thrive in a fast-paced startup environment, enjoy problem-solving, and stay updated with the latest models and solutions. This is a great opportunity to work on cutting-edge performance testing strategies and contribute to the success of our products.\nResponsibilities:\nPerformance baselines for critical services: SLIs, SLOs, and latency, throughput, and error-rate targets, plus workload models built from production traffic and real customer behaviour\n\nA shared performance testing framework and production-like environments (Kubernetes and cloud, test data included) that product-team SDETs can use without starting from scratch, and the evaluation of new tools through PoCs\n\nAutomated performance regression checks in CI/CD, with trend reports that catch regressions before release\n\nLoad, stress, soak, and spike testing, and capacity planning ahead of peak events\n\nRoot cause analysis of bottlenecks across API, database, queue, and frontend layers, using traces, metrics, logs, and profiling, in partnership with development, DevOps, and infrastructure teams\n\nStrong understanding of distributed systems, microservices architecture, concurrency, rate limiting and common performance bottlenecks\n\nAbility to interpret performance metrics, translate findings into actionable engineering recommendations, and influence technical decisions across engineering teams\n\nSupervise and mentor junior team members and contribute to capability building initiatives to raise the performance bar across the team\nRequirements:\n5+ years in performance, scalability, or reliability engineering or testing, with examples of finding and fixing bottlenecks in production-scale systems\n\nHands-on experience with at least one modern load-testing tool (k6, Gatling, or Locust), including realistic workload modeling and distributed load generation, and strong programming skills in Python, JavaScript/TypeScript, or Java\n\nExperience using observability tooling (for example New Relic, Prometheus/Grafana, OpenTelemetry) to isolate root cause across API, database, and queue layers, with a solid grasp of REST service performance, concurrency, and caching\n\nExperience integrating performance tests into CI/CD pipelines with pass/fail thresholds\n\nWorking knowledge of Kubernetes and at least one major cloud (GCP, AWS, or Azure) to deploy and debug test environments\nNice to Have:\nRuntime profiling and thread or heap analysis on the JVM or Node.js (GC behavior, event-loop lag)\n\nFrontend performance experience: Core Web Vitals, Lighthouse, real user monitoring\n\nExperience applying AI-assisted tooling to test design or result analysis\n\nExperience with NoSQL or search datastores and message brokers at scale\n\nChaos or resilience testing, and safe testing in production (canaries, shadow traffic)\nEEO Statement:\nThe company is an Equal Opportunity Employer. As an employer subject to affirmative action regulations, we invite you to voluntarily provide the following demographic information. This information is used solely for compliance with government recordkeeping, reporting, and other legal requirements. Providing this information is voluntary and refusal to do so will not affect your application status. This data will be kept separate from your application and will not be used in the hiring decision.\n\nWe encourage you to review our Privacy Policy before submitting your application",
+  "description": "About HighLevel:\nHighLevel is an AI-powered business operating system that gives agencies, entrepreneurs and SMBs the infrastructure to build, automate and scale. Today, HighLevel supports SMBs across 150+ countries, fueling community-driven growth rooted in real customer outcomes.\nTo date, businesses operating on HighLevel have generated over $7 billion in ecosystem value, demonstrating the impact of shared infrastructure at scale. By centralizing conversations, automation and intelligence into one system, we help businesses move faster, reduce complexity and execute efficiently.\nBehind the platform, HighLevel powers more than 4 billion API hits and 2.5 billion message events daily. With 250 terabytes of distributed data, 250+ microservices and over 1 million domain names supported, our architecture is built for performance, resilience and long-term scalability.\n\nOur People\nWith over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership. We value initiative, clarity and execution, creating space for ambitious people to build systems that support millions of businesses worldwide. Here, innovation thrives, ideas are celebrated and people come first, no matter where they call home.\n\nOur Impact\nEvery month, HighLevel enables more than 1.5 billion messages, 200 million leads and 20 million conversations for the more than 1 million businesses we support. Behind those numbers are real people building independence, expanding opportunity and creating measurable impact. We’re proud to be a part of that.\nLearn more about us on our YouTube Channel or Blog Posts.\nAbout the Role:\nHighLevel is hiring a Lead SDET with 8+ years of experience to own the performance, scalability and reliability of our products. This is a technical lead role on the SDET platform team: an individual contributor with no direct reports, working with product-team SDETs, developers, DevOps and infrastructure teams across every product team. You will set the performance direction, build the shared tooling other SDETs adopt, and use performance data to influence architecture and release decisions. We want someone who enjoys ownership, works well in a fast-moving environment, and stays current with new tools, including AI-assisted approaches.\nResponsibilities:\nBuild and evolve a shared performance testing framework and production-like environments (Kubernetes, cloud, test data) that product-team SDETs adopt\n\nIntegrate performance checks into CI/CD with agreed thresholds, and publish trend reports that engineering leaders use for release decisions\n\nDefine the performance strategy and roadmap, including SLIs, SLOs and baselines for critical services, prioritized by customer impact and risk\n\nModel workloads from production traffic and customer behavior, run load, stress, soak and spike tests across backend and frontend, and lead capacity planning ahead of peak events\n\nLead root cause analysis of complex bottlenecks across frontend, API, database and queue layers, using runtime profiling and observability data, and work with development, DevOps and infrastructure teams to fix them\n\nEvaluate new tools and approaches through PoCs and decide what we adopt\n\nMentor SDETs and developers on performance-aware design and testing, and use performance data to influence architecture decisions\nRequirements:\n8+ years in performance, scalability or reliability engineering or testing, with examples of measurable impact on production-scale distributed systems\n\nDeep hands-on experience with k6, Gatling or Locust, including realistic workload modeling and distributed load generation, and strong programming skills in Python, JavaScript/TypeScript or Java\n\nExperience using observability tooling (for example New Relic, Prometheus/Grafana, OpenTelemetry) to isolate root cause across API, database and queue layers, with a solid grasp of REST service performance, concurrency and caching\n\nHands-on runtime profiling and thread or heap analysis on the JVM or Node.js (GC behavior, event-loop lag)\n\nHands-on frontend performance experience: Core Web Vitals, Lighthouse and real user monitoring\n\nExperience designing performance gates in CI/CD that teams trust: stable baselines, controlled noise and clear pass/fail thresholds\n\nWorking knowledge of Kubernetes and at least one major cloud (GCP, AWS or Azure) to deploy and debug test environments\n\nExperience leading performance work across multiple teams: setting direction, mentoring engineers and influencing without direct authority\nNice to Have:\nExperience applying AI-assisted tooling to test design or result analysis\n\nExperience with NoSQL or search datastores and message brokers at scale\n\nChaos or resilience testing, and safe testing in production (canaries, shadow traffic\nEEO Statement:\nThe company is an Equal Opportunity Employer. As an employer subject to affirmative action regulations, we invite you to voluntarily provide the following demographic information. This information is used solely for compliance with government recordkeeping, reporting, and other legal requirements. Providing this information is voluntary and refusal to do so will not affect your application status. This data will be kept separate from your application and will not be used in the hiring decision.\n\nWe encourage you to review our Privacy Policy before submitting your application",
   "locations": [
    {
     "source": "categories.location",
@@ -20,11 +31,11 @@
    }
   ],
   "published": "2026-11-03T05:35:06.315000+00:00",
-  "title": "Sr SDET - Performance Testing",
+  "title": "Lead Software Development Engineer in Test - Performance Testing",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-11-03T14:37:14.767045+00:00",
- "content_hash": "da64d51fc046d08a5478a5b248932117835f23ae640a90d07eafa2ce9181d164",
+ "content_changed_at": "2026-11-10T16:01:54.121691+00:00",
+ "content_hash": "e90b960a72148c585b5b6303eeb98542aa705d1c942dd811928d1db817888680",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +54,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "India",
-      "retrieved_at": "2026-11-03T14:37:14.767045+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -55,8 +66,8 @@
      {
       "interpretation": null,
       "method": "description_section:Requirements:",
-      "quote": "5+ years in performance, scalability, or reliability engineering or testing, with examples of finding and fixing bottlenecks in production-scale systems\nHands-on experience with at least one modern load-testing tool (k6, Gatling, or Locust), including realistic workload modeling and distributed load generation, and strong programming skills in Python, JavaScript/TypeScript, or Java\nExperience using observability tooling (for example New Relic, Prometheus/Grafana, OpenTelemetry) to isolate root cause across API, database, and queue layers, with a solid grasp of REST service performance, concurrency, and caching\nExperience integrating performance tests into CI/CD pipelines with pass/fail thresholds\nWorking knowledge of Kubernetes and at least one major cloud (GCP, AWS, or Azure) to deploy and debug test environments",
-      "retrieved_at": "2026-11-03T14:37:14.767045+00:00",
+      "quote": "8+ years in performance, scalability or reliability engineering or testing, with examples of measurable impact on production-scale distributed systems\nDeep hands-on experience with k6, Gatling or Locust, including realistic workload modeling and distributed load generation, and strong programming skills in Python, JavaScript/TypeScript or Java\nExperience using observability tooling (for example New Relic, Prometheus/Grafana, OpenTelemetry) to isolate root cause across API, database and queue layers, with a solid grasp of REST service performance, concurrency and caching\nHands-on runtime profiling and thread or heap analysis on the JVM or Node.js (GC behavior, event-loop lag)\nHands-on frontend performance experience: Core Web Vitals, Lighthouse and real user monitoring\nExperience designing performance gates in CI/CD that teams trust: stable baselines, controlled noise and clear pass/fail thresholds\nWorking knowledge of Kubernetes and at least one major cloud (GCP, AWS or Azure) to deploy and debug test environments\nExperience leading performance work across multiple teams: setting direction, mentoring engineers and influencing without direct authority",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -68,8 +79,8 @@
      {
       "interpretation": null,
       "method": "description_section:Nice to Have:",
-      "quote": "Runtime profiling and thread or heap analysis on the JVM or Node.js (GC behavior, event-loop lag)\nFrontend performance experience: Core Web Vitals, Lighthouse, real user monitoring\nExperience applying AI-assisted tooling to test design or result analysis\nExperience with NoSQL or search datastores and message brokers at scale\nChaos or resilience testing, and safe testing in production (canaries, shadow traffic)",
-      "retrieved_at": "2026-11-03T14:37:14.767045+00:00",
+      "quote": "Experience applying AI-assisted tooling to test design or result analysis\nExperience with NoSQL or search datastores and message brokers at scale\nChaos or resilience testing, and safe testing in production (canaries, shadow traffic",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -82,7 +93,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-11-03T14:37:14.767045+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
