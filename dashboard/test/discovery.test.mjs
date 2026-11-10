@@ -21,7 +21,7 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
   assert.equal(avoided.eligibility, good.eligibility, 'eligibility is computed the same way');
   assert.equal(avoided.status, good.status, 'status rules unchanged (still review, never READY)');
   assert.match(avoided.qualification_reason, /avoid list/);
-  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET', 'Business Systems Analyst', 'Senior Business Systems Analyst', 'Sales Engineer', 'Pre-Sales Consultant', 'Treasury Consultant'])
+  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET', 'Business Systems Analyst', 'Senior Business Systems Analyst', 'Sales Engineer', 'Pre-Sales Consultant', 'Treasury Consultant', 'Senior Consultant – Ripple Treasury (GTreasury)', 'Strategic Solutions Engineer', 'Commercial Operations Specialist (RevOps)'])
     assert.ok(avoidedTitle('farhan_shaikh', t), t);
   for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), t);
