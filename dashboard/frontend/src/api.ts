@@ -852,3 +852,13 @@ export async function deletePastApplication(id: number): Promise<void> {
   const res = await authedFetch(`${API_BASE}/past-applications/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
   if (!res.ok) throw new Error('Failed to delete');
 }
+
+export interface DiscoveryDay { day: string; runs: number; new_jobs: number; rescored: number; closed: number; reopened: number; alive: number; dead: number;
+  sources: Record<string, { read: number; kept: number; full_text: number }>; }
+
+/** What the discovery and watchlist runs recorded, summed per UTC day (counts only). */
+export async function fetchDiscoveryDaily(): Promise<{ days: DiscoveryDay[] }> {
+  const res = await authedFetch(`${API_BASE}/discovery/daily`);
+  if (!res.ok) throw new Error('Failed to fetch the discovery log');
+  return res.json();
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnalyticsData, DiscoveryFunnelMetrics, SourceScorecardItem } from '../types';
 import { fetchDiscoveryFunnel, fetchSourcesEffectiveness } from '../api';
+import { DiscoveryLog } from './DiscoveryLog';
 import { 
   BarChart3, 
   CheckCircle2, 
@@ -118,6 +119,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics, candida
           </button>
         </div>
       </div>
+
+      <DiscoveryLog />
 
       {error && (
         <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl">

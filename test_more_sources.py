@@ -127,5 +127,39 @@ class MoreSources(unittest.TestCase):
         self.assertIn('keyword=maintenance', calls[0]); self.assertIn('siteNumber=CX_1', calls[0])
 
 
+    def test_full_text_replaces_the_thin_description_within_caps(self):
+        def fake(url, data=None, headers=None, timeout=40):
+            if 'api.smartrecruiters.com' in url and '/postings/7' in url:
+                return json.dumps({'jobAd': {'sections': {'jobDescription': {'text': '<p>Maintain gas turbines. Visa sponsorship is not available.</p>'},
+                                                          'qualifications': {'text': '<ul><li>5 years</li></ul>'}}}}).encode()
+            if 'myworkdayjobs.com/wday/cxs/kbr/KBR_Careers/job/X/Y_R1' in url:
+                return json.dumps({'jobPostingInfo': {'jobDescription': '<div>Plant reliability role, relocation assistance offered. ' + 'x' * 60 + '</div>', 'startDate': '2026-11-09'}}).encode()
+            if 'recruitingCEJobRequisitionDetails' in url and 'Id="42"' in url:
+                return json.dumps({'items': [{'ExternalDescriptionStr': '<p>Commissioning lead. ' + 'y' * 60 + '</p>', 'ExternalQualificationsStr': '<p>Degree</p>'}]}).encode()
+            raise OSError('down')
+        sr = {'url': 'https://jobs.smartrecruiters.com/Masdar/7', 'description': 'Engineering Renewables', 'location': 'Abu Dhabi', 'posted_at': ''}
+        wd = {'url': 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers/job/X/Y_R1', 'description': 'X', 'location': 'Rabigh', 'posted_at': ''}
+        orc = {'url': 'https://ehif.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/42', 'description': 'Z', 'location': 'Basra', 'posted_at': ''}
+        bad = {'url': 'https://jobs.smartrecruiters.com/Masdar/999', 'description': 'keep me', 'location': 'Oslo', 'posted_at': ''}
+        used, spent = {}, [0.0]
+        with mock.patch.object(ms, 'http', fake):
+            self.assertTrue(ms.enrich_full_text(sr, 'smartrecruiters', used, spent))
+            self.assertTrue(ms.enrich_full_text(wd, 'workday', used, spent))
+            self.assertTrue(ms.enrich_full_text(orc, 'oracle_hcm', used, spent))
+            self.assertFalse(ms.enrich_full_text(bad, 'smartrecruiters', used, spent), 'a failing detail call keeps the posting as it was')
+        self.assertIn('Visa sponsorship is not available', sr['description']); self.assertIn('5 years', sr['description']); self.assertNotIn('<p>', sr['description'])
+        self.assertIn('relocation assistance', wd['description']); self.assertTrue(wd['posted_at'].startswith('2026-11-09'))
+        self.assertIn('Commissioning lead', orc['description']); self.assertIn('Degree', orc['description'])
+        self.assertEqual(bad['description'], 'keep me')
+        # caps: per source count and total time
+        with mock.patch.object(ms, 'ENRICH_CAP', 1), mock.patch.object(ms, 'http', fake):
+            u = {}
+            self.assertTrue(ms.enrich_full_text(dict(sr, description='a'), 'smartrecruiters', u, [0.0]))
+            self.assertFalse(ms.enrich_full_text(dict(sr, description='a'), 'smartrecruiters', u, [0.0]), 'per-source cap')
+        with mock.patch.object(ms, 'http', fake):
+            self.assertFalse(ms.enrich_full_text(dict(sr, description='a'), 'smartrecruiters', {}, [ms.ENRICH_BUDGET_SECONDS + 1]), 'time budget spent')
+            self.assertFalse(ms.enrich_full_text(dict(sr, description='a'), 'workable', {}, [0.0]), 'sources without a detail reader are untouched')
+
+
 if __name__ == '__main__':
     unittest.main()

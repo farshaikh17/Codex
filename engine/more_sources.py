@@ -326,6 +326,64 @@ def adzuna(queries):
                 yield j
 
 
+ENRICH_CAP = 150          # full-text fetches per source per run; the rest keep their title-and-location description
+ENRICH_BUDGET_SECONDS = 240   # time spent in full-text fetches, all sources of one run together (not wall-clock: the list reads before them are slow)
+
+
+def _detail_smartrecruiters(j):
+    m = re.match(r'^https://jobs\.smartrecruiters\.com/([^/]+)/(\d+)$', j['url'])
+    if not m:
+        return None
+    r = json.loads(http(f'https://api.smartrecruiters.com/v1/companies/{urllib.parse.quote(m.group(1))}/postings/{m.group(2)}'))
+    sec = (r.get('jobAd') or {}).get('sections') or {}
+    return ' '.join(text((sec.get(k) or {}).get('text')) for k in ('jobDescription', 'qualifications', 'additionalInformation'))
+
+
+def _detail_workday(j):
+    m = re.match(r'^(https://([\w-]+)\.(wd\d+)\.myworkdayjobs\.com)/en-US/([^/]+)(/.+)$', j['url'])
+    if not m:
+        return None
+    base, tenant, _dc, site, path = m.groups()
+    info = (json.loads(http(f'{base}/wday/cxs/{tenant}/{site}{path}')).get('jobPostingInfo')) or {}
+    if info.get('startDate'):
+        j['posted_at'] = when(info['startDate']).isoformat() if when(info['startDate']) else j['posted_at']
+    return text(info.get('jobDescription'))
+
+
+def _detail_oracle(j):
+    m = re.match(r'^https://([^/]+)/hcmUI/CandidateExperience/en/sites/([^/]+)/job/(\d+)$', j['url'])
+    if not m:
+        return None
+    host, site, rid = m.groups()
+    d = json.loads(http(f'https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id="{rid}",siteNumber={site}',
+                        headers={'Accept': 'application/json'}))
+    it = (d.get('items') or [{}])[0]
+    return ' '.join(text(it.get(k)) for k in ('ExternalDescriptionStr', 'ExternalQualificationsStr'))
+
+
+ENRICH = {'smartrecruiters': _detail_smartrecruiters, 'workday': _detail_workday, 'oracle_hcm': _detail_oracle}
+
+
+def enrich_full_text(j, name, used, spent):
+    """Replace the thin list description of a kept posting by the posting's own text, so the screen can read sponsorship, years, pay and remote wording.
+    Bounded per source and by time; any failure keeps the posting with its list description."""
+    fn = ENRICH.get(name)
+    if not fn or used.get(name, 0) >= ENRICH_CAP or spent[0] > ENRICH_BUDGET_SECONDS:
+        return False
+    used[name] = used.get(name, 0) + 1
+    t0 = time.monotonic()
+    try:
+        body = (fn(j) or '').strip()
+    except Exception:   # never loses the posting
+        return False
+    finally:
+        spent[0] += time.monotonic() - t0
+    if len(body) < 40:
+        return False
+    j['description'] = (body + ' ' + (j.get('location') or ''))[:8000]
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--profiles', required=True)
@@ -348,6 +406,7 @@ def main():
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}
     have = {j['id'] for j in merged['jobs']}
     report = {}
+    used, enriched, spent = {}, {}, [0.0]
     for name, fn in sources.items():
         seen = kept = 0
         try:
@@ -365,8 +424,10 @@ def main():
                 if j['id'] in have:
                     continue
                 j['candidates'] = cands
+                if enrich_full_text(j, name, used, spent):
+                    enriched[name] = enriched.get(name, 0) + 1
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1
-            report[name] = {'read': seen, 'kept': kept}
+            report[name] = {'read': seen, 'kept': kept, **({'full_text': enriched[name]} if enriched.get(name) else {})}
         except Exception as e:   # one failing source is skipped
             report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept}
     raw_path.write_text(json.dumps(merged, default=str))
