@@ -25,6 +25,15 @@
    "from_hash": "31a141e0b7c78542ccaa249a00c9b2f2e7ab760aab6ceb5e537b2d91c6b296a2",
    "kind": "content_changed",
    "to_hash": "9275a6dd718e8814df7c29c028bf1857c33fb4341b9eeada89adbb7c31696fac"
+  },
+  {
+   "changed_at": "2026-11-10T21:55:32.315033+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "9275a6dd718e8814df7c29c028bf1857c33fb4341b9eeada89adbb7c31696fac",
+   "kind": "content_changed",
+   "to_hash": "538952cb3e8a965c97baa9a23800466fdb9488bf93e661cbb0d3a0922bccbeec"
   }
  ],
  "content": {
@@ -41,11 +50,11 @@
    }
   ],
   "published": "2026-11-09T18:21:03.251000+00:00",
-  "title": "WFM Central - Real Time Analyst",
+  "title": "Workforce Management - Real Time Analyst",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-10T18:02:29.060196+00:00",
- "content_hash": "9275a6dd718e8814df7c29c028bf1857c33fb4341b9eeada89adbb7c31696fac",
+ "content_changed_at": "2026-11-10T21:55:32.315033+00:00",
+ "content_hash": "538952cb3e8a965c97baa9a23800466fdb9488bf93e661cbb0d3a0922bccbeec",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -76,7 +85,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":20000,\"maxValue\":34000,\"summary\":\"$20K – $34K\"}",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      }
@@ -93,7 +102,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (Caribbean)",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      },
@@ -101,7 +110,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Jamaica",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      }
@@ -114,7 +123,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "- Exceptional Communication: Proven ability to translate complex data into a clear jargon-free business story. You must be comfortable presenting actionable insights to senior leadership under high-pressure conditions.",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      },
@@ -122,7 +131,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "- Strategic Judgment: Demonstrated experience making high-judgment decisions that impact the entire business, particularly in environments with aggressive SLAs and fluctuating volume patterns.\n- Operational Architecture: Take ownership in documenting best practices into governed frameworks and playbooks.\n- Resilient Mindset: Comfortable operating autonomously in a 24/7 environment, with the flexibility to adapt to operational needs as part of a high-impact, interdependent team.",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      }
@@ -135,7 +144,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Qualifications",
       "quote": "- Advanced Forensic Analysis: Expert proficiency in Google Sheets is required, familiarity with Metabase preferred. You must be able to build complex, automated tracking tools and forensic audits from scratch. Not just for basic queue health, but also analyzing business data that influences our operations.",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      },
@@ -143,7 +152,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Qualifications",
       "quote": "- Systems Fluency: Familiarity with Amazon Connect, Zendesk Omnichannel routing, and Assembled WFM is highly preferred.",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      }
@@ -156,7 +165,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (Caribbean)",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      },
@@ -164,7 +173,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-10T21:55:32.315033+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/56f271b8-25c9-4070-9c8a-5e9dad0294a1"
      }
