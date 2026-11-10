@@ -21,9 +21,9 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
   assert.equal(avoided.eligibility, good.eligibility, 'eligibility is computed the same way');
   assert.equal(avoided.status, good.status, 'status rules unchanged (still review, never READY)');
   assert.match(avoided.qualification_reason, /avoid list/);
-  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET'])
+  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET', 'Business Systems Analyst', 'Senior Business Systems Analyst', 'Sales Engineer', 'Pre-Sales Consultant', 'Treasury Consultant'])
     assert.ok(avoidedTitle('farhan_shaikh', t), t);
-  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Business Systems Analyst'])
+  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), t);
   assert.ok(!avoidedTitle('sana_ansari', 'Software Engineer'), "the avoid list is Farhan's only");
 });
@@ -53,7 +53,7 @@ test('ranking: a posting whose only stated location is outside India loses point
 test('avoid list: software/ML/security/test families always; finance/support/management families unless the title names his own target areas', () => {
   for (const t of ['Software Engineer', 'Senior Backend Engineer', 'Backend|Engineer', 'Software Engineer–Platform', 'Implementation Engineer - Backend/API', 'DevOps Engineer', 'Site Reliability Engineer', 'SRE', 'Machine Learning Engineer', 'Data Scientist', 'Security Engineer', 'SDET', 'QA Engineer', 'Test Automation Lead', 'Finance Manager', 'Financial Controller', 'Payroll Specialist', 'Customer Support Specialist', 'Support Engineer', 'Engineering Manager', 'Director of Engineering', 'Accountant'])
     assert.ok(avoidedTitle('farhan_shaikh', t), `${t} should be capped`);
-  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Business Systems Analyst', 'Finance Systems Analyst', 'Business Systems Analyst - Finance',
+  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Finance Systems Analyst',
     'Solutions Engineering Manager', 'Implementation Support Specialist', 'Payroll Implementation Specialist', 'Customer Support Operations Manager', 'Air Traffic Controller', 'Implementation Manager, Software Onboarding', 'Presre Lead'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), `${t} should not be capped`);
   assert.ok(!avoidedTitle('sana_ansari', 'Software Engineer'));

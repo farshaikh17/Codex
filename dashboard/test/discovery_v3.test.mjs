@@ -165,7 +165,7 @@ test('same-title jobs with distinct URLs or locations remain available', () => {
   const j = (id, company, location) => ({ id, url: `https://example.com/${id}`, title: 'Implementation Manager', company, ats_type: 'lever', location, is_remote: true,
     description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
   fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:a:1', 'Agg', 'Remote - Chile'), j('ds:a:2', 'Agg', 'Remote - India'), j('ds:a:3', 'Agg', 'Remote - Greece'),
-    j('ds:b:1', 'Two', 'Remote - India'), j('ds:b:2', 'Two', 'Remote - Spain')] }));
+    j('ds:b:1', 'Two', 'Remote - India'), j('ds:b:2', 'Two', 'Remote - Spain'), j('ds:c:1', 'Dup', 'Remote - India'), j('ds:c:2', 'Dup', 'remote - india')] }));
   const { sqlite } = createDb();
   sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
   // copies already stored from an earlier run: three of one role, one with an application
@@ -177,8 +177,9 @@ test('same-title jobs with distinct URLs or locations remain available', () => {
   const active = sqlite.prepare(`SELECT id FROM jobs WHERE is_active = 1 ORDER BY id`).all().map((r) => r.id);
   assert.deepEqual(active.filter((x) => x.startsWith('ds:a')), ['ds:a:1', 'ds:a:2', 'ds:a:3'], 'distinct listings are preserved');
   assert.deepEqual(active.filter((x) => x.startsWith('ds:b')), ['ds:b:1', 'ds:b:2']);
+  assert.equal(active.filter((x) => x.startsWith('ds:c')).length, 1, 'an exact duplicate (same employer, title and location) is written once');
   assert.deepEqual(active.filter((x) => x.startsWith('old')), ['old:1', 'old:2', 'old:3'], 'stored same-title jobs are not closed');
-  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 0);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 1);
 });
 
 test('location class, time-zone restriction and EU-only rules read the posting\'s own words', async () => {

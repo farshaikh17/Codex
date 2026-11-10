@@ -101,7 +101,19 @@ for (const file of many('--in')) {
 }
 planned.sort((a, b) => b.best - a.best || String(b.j.posted_at || '').localeCompare(String(a.j.posted_at || '')));
 // Do not collapse postings based only on title and employer: location and requisition can differ.
-report.collapsed_copies = 0;
+// Only exact duplicates collapse: same employer, same title AND same stated location (a recruiter's repost or an aggregator's second copy).
+// Different cities or countries are different openings and all stay. The best-scored copy is the first after the sort. Stored rows are never closed.
+{
+  const norm = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const seen = new Set(), kept = [];
+  for (const x of planned) {
+    const k = norm(x.j.company) + '|' + norm(x.j.title) + '|' + norm(x.j.location);
+    if (seen.has(k)) continue;
+    seen.add(k); kept.push(x);
+  }
+  report.collapsed_copies = planned.length - kept.length;
+  planned.length = 0; planned.push(...kept);
+}
 report.capped = Math.max(0, planned.length - MAX_NEW);
 for (const { j, board, description, remote, onsite, rows } of planned.slice(0, MAX_NEW)) {
   const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
