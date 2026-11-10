@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-26T23:58:52.793071+00:00|greenhouse:gitlab:8532272002",
+ "cursor_to": "pc1|2026-10-26T23:58:52.793071+00:00|greenhouse:gitlab:8592555002",
  "entries": [
   {
    "availability": "listed",
@@ -233,14 +233,6 @@
    "posting_id": "ashby:weave:e65e2365-1f1b-4c0b-8d27-cb7e0650a2ba",
    "record": "records/ashby__weave__e65e2365-1f1b-4c0b-8d27-cb7e0650a2ba.json",
    "record_sha256": "4a2263e352fb1c222c7e5767a87678de75381c586a834c094d2cb92e74c4ead2"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "13d33d5b4f7adf29788ec49d85d67076d36375205ebbf073046ef5d8cb67a723",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8522265002",
-   "record": "records/greenhouse__gitlab__8522265002.json",
-   "record_sha256": "0dccb36ecb7e69d464dcbe27bc9b9109d5bf7d1cbb82f93832712e1c4540928f"
   },
   {
    "availability": "listed",
@@ -1601,6 +1593,14 @@
    "posting_id": "greenhouse:gitlab:8532272002",
    "record": "records/greenhouse__gitlab__8532272002.json",
    "record_sha256": "bc4bf81a59ce5dc10b7591069292916f4829e31b4079b72d49e8de8116b1435d"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "eea8b436b13cabcd7256999e756f7b2e7225b4071a6b916c1fe3e973807c22f0",
+   "last_change": "2026-10-26T23:58:52.793071+00:00",
+   "posting_id": "greenhouse:gitlab:8592555002",
+   "record": "records/greenhouse__gitlab__8592555002.json",
+   "record_sha256": "92af3b74dc30f87b101a3e41041458f26a5edb52b6fc11acf512cd1dbe7e141e"
   }
  ],
  "has_more": true,
