@@ -1,14 +1,25 @@
 {
  "availability": {
-  "at": "2026-11-05T01:44:40.222329+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-10T16:44:59.028386+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-10T16:44:59.028386+00:00",
+   "fields": [
+    "description",
+    "title"
+   ],
+   "from_hash": "d53d721a95ffc20cffea079ad041535563643500efaeefffa55cf6dea1a805b8",
+   "kind": "content_changed",
+   "to_hash": "a53d2ac1cd6e608257c22f725b87c246de04aa19b80b36f550551b00ec884cb9"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Partner Program Manager.\n\nAbout the job\n\nAs we expand our partner ecosystem to support global growth targets, we are expanding our team to scale responsibly. We are seeking a versatile Partner Program Manager to drive an exceptional experience across our Systems Integrators (SIs), ISVs, Resell, and Technology partners. This balanced role bridges the gap between high-touch partner experience, strategic cross-functional project management, and advanced lifecycle automation. If you have a deep background in partnerships, an AI-forward mindset for process optimization, and hands-on experience with modern ecosystem toolsets, this role offers an exciting opportunity to shape the future of our global network.\n\nIn this role, you won't just follow a static blueprint—you will help build it. We are seeking a highly proactive partner program manager to drive exceptional experiences for our Systems Integrators (SIs), ISVs, Resell, and Technology partners. You will take the lead on optimizing the end-to-end partner journey, managing cross-functional projects, and eliminating operational friction.\n\nThis position requires a \"can-do\" attitude and a passion for continuous improvement. You will be responsible for transforming manual workflows into automated, scalable systems, managing key vendor capabilities, and implementing strategic initiatives that directly unlock ecosystem revenue velocity.\n\nResponsibilities\n\nIn this role, you’ll:\n\nDrive Program Modernization & Scale: Act as an operational engine for the team, identifying process bottlenecks and proactively designing new ways to automate existing manual workflows.\n\nOwn Problem-Solving: Step into complex challenges across the partner lifecycle and chart a clear path forward to build repeatable, programmatic solutions.\n\nOptimize the Partner Experience: Lead and refine core partner onboarding pathways, lifecycle touchpoints, and support workflows to deliver a seamless, world-class journey for external ecosystems.\n\nAccelerate Partner Revenue Mechanics: Build and execute operational frameworks that eliminate transaction friction, streamline incentive administration, and maximize partner-sourced revenue pipelines.\n\nManage Technology & Vendor Capabilities: Serve as a strategic owner for key components of our partner tech stack and vendor relationships, ensuring our data models and tools are optimized for ecosystem scale rather than mere maintenance.\n\nOrchestrate High-Touch Communications: Develop and execute comprehensive partner engagement strategies, ensuring clear, accessible program documentation, impactful updates, and consistent enablement communications across all segments.\n\nLead Cross-Functional Project Execution: Develop and run end-to-end project plans for new partner initiatives, collaborating closely with Product, Marketing, Sales, Legal, and Tech teams to ensure alignment and timely milestone delivery.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\nEducation: Bachelor’s degree in Business, Marketing, Communications, or a related field; relevant experience may be considered.\n\nExperience: 5–8 years of experience in partner program or project management, partner management, strategy and operations, or a similar role within a fast-paced technology company.\n\nThe \"Get-Stuff-Done\" Mindset: A proven track record of operating effectively in complex environments, turning ambiguous problems into plans, and delivering results without a rigid instructions script.\n\nProject Management & Collaboration: Strong project management skills, with the ability to manage complex cross-functional timelines, align diverse stakeholders, and drive accountability.\n\nCommunication & Content: Excellent written and verbal communication skills for translating complex program guidelines into clear, compelling partner assets, guides, and updates.\n\nDesired:\n\nEcosystem Acumen: Solid understanding of modern partner program structures, lifecycle methodologies, and experience working with SIs, ISVs, Resell, or Technology tracks.\n\nTech Stack & Automation Familiarity: Hands-on exposure to CRM and partner ecosystem technologies (such as PRMs, account-mapping utilities, or data integration tools) with a strong desire to leverage software and AI to remove manual tasks.\n\nRevenue Orientation: Experience designing or supporting commercial program models, referral paths, or joint sales plays that directly drive channel pipelines.\n\nAdvanced Degree: BA/BS degree or equivalent required. MBA is a plus.\n\nLocation\n\nThis role will be remote, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nCompensation\n\nThe estimated pay ranges for this role are as follows:\n\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $116,960 - $146,200.\n\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $123,760 - $154,700.\n\nBased in the San Francisco Bay area, California: $137,520 - $171,900.\n\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplication deadline information\n\nApplications for this role are intended to be accepted until November 23,2026, but may change based on business needs.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Senior Partner Program Manager.\n\nAbout the job\n\nAs our partner ecosystem matures, we are moving away from ad-hoc relationships toward a structured, highly incentivized, and globally consistent program. We are seeking a strategic Senior Partner Program Manager with a strong can-do attitude to lead our Program Architecture, Tiers & Incentives pillar. If you excel at designing global channel programs, managing Market Development Funds (MDF) , and leaning in with cross-functional teams to tackle complex and ambiguous challenges, this role is your opportunity to define the rules of engagement for Twilio's global partner network.\n\nIn this role, you will be a lead architect of the Twilio Partner Program. You will lead defining the criteria, benefits, and tiering structure for the future of our program.\n\nYou will take ownership of program governance, ensuring partners are accurately audited and elevated based on performance. Furthermore, you will optimize the operational framework for various programs, and ensure our incentive packages drive tangible pipeline and ROI. This role requires a proactive problem-solver and strategic thinker who brings a collaborative, hands-on approach to navigating ambiguity and aligning compliance with partner-friendly incentive designs.\n\nResponsibilities\n\nIn this role, you’ll:\n\nProgram Architecture & Tiering: Lead the design, planning and rollout of future program architectural enhancements, establishing clear, measurable criteria and tiered benefits for all partner tracks.\n\nIncentive & PAF Strategy: Optimize the rules, allocation models, and pre-approved packages for the Partner Acceleration Fund (PAF), ensuring investments drive localized pipeline generation.\n\nGovernance & Compliance: Establish and run the annual/semi-annual partner tier audit process. Enforce compliance, manage tier elevations, and ensure program integrity.\n\nPartner Engagement: Develop an engagement model for the program that incentivizes the right partner behaviors (certifications, deal registrations, co-marketing) over passive participation.\n\nLong Tail Partner Activation Strategy: Scale the unmanaged partner ecosystem using a one-to-many strategic framework, leveraging automated engagement paths, digital enablement, and self-service resources to drive activation and growth.\n\nQualifications\n\nRequired:\n\nExperience: 6–8 years of experience in Partner Programs, Channel Strategy, Ecosystem Architecture, or related functions in a fast-paced technology environment, with a track record of taking initiative and rolling up your sleeves.\n\nProgram Design: Proven track record of designing, launching, and managing tiered partner programs and defining clear programmatic requirements.\n\nIncentive Management: Deep experience managing MDF, Co-Op, or Partner Acceleration Funds, including ROI tracking and claim governance.\n\nExecutive Communication: Exceptional ability to distill complex program rules into executive-ready presentations and partner-facing program guides.\n\nDesired:\n\nGlobal Market Acumen: Experience managing program nuances across EMEA, NAMER, LATAM, and APJ markets.\n\nAmbiguity & Problem Solving: Demonstrated resilience and a positive, solution-oriented mindset when tackling novel business models or ill-defined, complex challenges across matrixed teams.\n\nLocation\n\nThis role will be remote, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nCompensation\n\nThe estimated pay ranges for this role are as follows:\n\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $141,520 - $176,900.\n\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $149,840 - $187,300.\n\nBased in the San Francisco Bay area, California: $166,400 - $208,000.\n\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplication deadline information\n\nApplications for this role are intended to be accepted until November 23,2026, but may change based on business needs.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -20,11 +31,11 @@
    }
   ],
   "published": "2026-10-23T11:43:38-04:00",
-  "title": "Partner Program Manager",
+  "title": "Senior Partner Program Manager",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "d53d721a95ffc20cffea079ad041535563643500efaeefffa55cf6dea1a805b8",
+ "content_changed_at": "2026-11-10T16:44:59.028386+00:00",
+ "content_hash": "a53d2ac1cd6e608257c22f725b87c246de04aa19b80b36f550551b00ec884cb9",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,30 +54,30 @@
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 146200.0,
-         "min": 116960.0,
-         "text": "$116,960 - $146,200"
+         "max": 176900.0,
+         "min": 141520.0,
+         "text": "$141,520 - $176,900"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 154700.0,
-         "min": 123760.0,
-         "text": "$123,760 - $154,700"
+         "max": 187300.0,
+         "min": 149840.0,
+         "text": "$149,840 - $187,300"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 171900.0,
-         "min": 137520.0,
-         "text": "$137,520 - $171,900"
+         "max": 208000.0,
+         "min": 166400.0,
+         "text": "$166,400 - $208,000"
         }
        ],
        "variable_mentioned": true
       },
       "method": "description_section:Compensation",
-      "quote": "The estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $116,960 - $146,200.\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $123,760 - $154,700.\nBased in the San Francisco Bay area, California: $137,520 - $171,900.\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "The estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $141,520 - $176,900.\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $149,840 - $187,300.\nBased in the San Francisco Bay area, California: $166,400 - $208,000.\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      }
@@ -83,7 +94,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - US",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      },
@@ -91,7 +102,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      }
@@ -102,17 +113,9 @@
     "items": [
      {
       "interpretation": null,
-      "method": "description_section:Qualifications",
-      "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
-     },
-     {
-      "interpretation": null,
-      "method": "description_section:*Required:",
-      "quote": "Education: Bachelor’s degree in Business, Marketing, Communications, or a related field; relevant experience may be considered.\nExperience: 5–8 years of experience in partner program or project management, partner management, strategy and operations, or a similar role within a fast-paced technology company.\nThe \"Get-Stuff-Done\" Mindset: A proven track record of operating effectively in complex environments, turning ambiguous problems into plans, and delivering results without a rigid instructions script.\nProject Management & Collaboration: Strong project management skills, with the ability to manage complex cross-functional timelines, align diverse stakeholders, and drive accountability.\nCommunication & Content: Excellent written and verbal communication skills for translating complex program guidelines into clear, compelling partner assets, guides, and updates.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "method": "description_section:Required:",
+      "quote": "Experience: 6–8 years of experience in Partner Programs, Channel Strategy, Ecosystem Architecture, or related functions in a fast-paced technology environment, with a track record of taking initiative and rolling up your sleeves.\nProgram Design: Proven track record of designing, launching, and managing tiered partner programs and defining clear programmatic requirements.\nIncentive Management: Deep experience managing MDF, Co-Op, or Partner Acceleration Funds, including ROI tracking and claim governance.\nExecutive Communication: Exceptional ability to distill complex program rules into executive-ready presentations and partner-facing program guides.",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      }
@@ -124,8 +127,8 @@
      {
       "interpretation": null,
       "method": "description_section:Desired:",
-      "quote": "Ecosystem Acumen: Solid understanding of modern partner program structures, lifecycle methodologies, and experience working with SIs, ISVs, Resell, or Technology tracks.\nTech Stack & Automation Familiarity: Hands-on exposure to CRM and partner ecosystem technologies (such as PRMs, account-mapping utilities, or data integration tools) with a strong desire to leverage software and AI to remove manual tasks.\nRevenue Orientation: Experience designing or supporting commercial program models, referral paths, or joint sales plays that directly drive channel pipelines.\nAdvanced Degree: BA/BS degree or equivalent required. MBA is a plus.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "Global Market Acumen: Experience managing program nuances across EMEA, NAMER, LATAM, and APJ markets.\nAmbiguity & Problem Solving: Demonstrated resilience and a positive, solution-oriented mindset when tackling novel business models or ill-defined, complex challenges across matrixed teams.",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      }
@@ -138,7 +141,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - US",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8287927"
      }
