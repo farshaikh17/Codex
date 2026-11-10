@@ -46,6 +46,8 @@ SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower
                   ('Emirates Global Aluminium', 'careers.ega.ae'), ('Black & Veatch', 'careers.bv.com'),
                   # jobs.doosan.com serves the whole Doosan group; Bobcat (vehicles) postings are skipped, Enerbility / Skoda Power / Fuel Cell are kept
                   ('Doosan', 'jobs.doosan.com', '/bobcat/')]
+# Workday public career-site JSON (no key). (display name, tenant, data-centre prefix, site id); all three answered on a live read.
+WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi')]
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
 SMARTRECRUITERS = [('Masdar', 'Masdar'), ('Vattenfall', 'Vattenfall'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1')]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
@@ -156,6 +158,31 @@ def successfactors():
                 yield j
 
 
+def workday(pages=3):
+    """Open postings of a few energy employers from Workday's public career-site JSON, searched with the same energy terms as SuccessFactors.
+    The list answer carries no job text and only a relative "Posted N Days Ago", so the description is the location text and the posted date is unknown."""
+    for company, tenant, dc, site in WORKDAY:
+        base = f'https://{tenant}.{dc}.myworkdayjobs.com'
+        seen = set()
+        try:
+            for term in SF_TERMS:
+                for page in range(pages):
+                    d = json.loads(http(f'{base}/wday/cxs/{tenant}/{site}/jobs', {'appliedFacets': {}, 'limit': 20, 'offset': page * 20, 'searchText': term}))
+                    rows = d.get('jobPostings') or []
+                    for r in rows:
+                        path = r.get('externalPath') or ''
+                        if not path or path in seen:
+                            continue
+                        seen.add(path)
+                        place = text(r.get('locationsText')) or 'See posting'
+                        remote = 'remote' in place.lower()
+                        j = job('workday', f'{base}/en-US/{site}{path}', text(r.get('title')), company, place, place, None)
+                        j['is_remote'] = remote
+                        yield j
+                    if len(rows) < 20:
+                        break
+        except Exception as e:   # one employer down never loses the others
+            print(f'workday {company}: {type(e).__name__}', file=sys.stderr)
 def smartrecruiters(pages=10):
     """Open postings of a few energy employers from SmartRecruiters' public API; the title filter in main() keeps the relevant ones.
     The list answer carries no job text, so the description is the function / industry / location labels only."""
@@ -277,13 +304,13 @@ def main():
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters,
+    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday,
                'arbeitnow': arbeitnow, 'getro': getro, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
-        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters')}
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
-    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters'}   # employer sites: the date is the original posting date; the still-open check guards staleness
+    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}

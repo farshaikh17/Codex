@@ -74,6 +74,24 @@ class MoreSources(unittest.TestCase):
         self.assertIn('Black & Veatch', [c[0] for c in ms.SUCCESSFACTORS])
 
 
+    def test_workday_reads_public_career_sites(self):
+        calls = []
+        def fake(url, data=None, headers=None, timeout=40):
+            calls.append((url, data))
+            if 'kbr.wd5' in url:
+                return json.dumps({'jobPostings': [{'title': 'Maintenance Engineer', 'externalPath': '/job/Saudi-Arabia-Rabigh/Maintenance-Engineer_R1',
+                                                    'locationsText': 'Saudi Arabia, Rabigh'},
+                                                   {'title': 'Remote Planner', 'externalPath': '/job/Remote/Planner_R2', 'locationsText': 'Remote - UK'}]}).encode()
+            raise OSError('down')
+        with mock.patch.object(ms, 'http', fake):
+            got = list(ms.workday(pages=1))
+        self.assertEqual([j['title'] for j in got], ['Maintenance Engineer', 'Remote Planner'], 'a repeated posting across search terms is read once; other tenants down keep KBR')
+        self.assertEqual(got[0]['url'], 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers/job/Saudi-Arabia-Rabigh/Maintenance-Engineer_R1')
+        self.assertEqual(got[0]['company'], 'KBR'); self.assertEqual(got[0]['location'], 'Saudi Arabia, Rabigh')
+        self.assertFalse(got[0]['is_remote']); self.assertTrue(got[1]['is_remote'])
+        self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
+        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi'})
+
     def test_smartrecruiters_reads_public_postings(self):
         page = {'content': [{'id': '7', 'name': 'Reliability Engineer', 'releasedDate': '2026-11-10T10:00:00.000Z',
                              'location': {'fullLocation': 'Abu Dhabi, United Arab Emirates', 'remote': False},
