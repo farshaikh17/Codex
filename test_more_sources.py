@@ -55,5 +55,23 @@ class MoreSources(unittest.TestCase):
             self.assertEqual(report['eightfold']['kept'], 1)
 
 
+    def test_doosan_group_feed_skips_bobcat_postings(self):
+        rss = (b'<rss><channel>'
+               b'<item><title>Forklift Operator (Statesville, NC, US, 28625)</title><link>https://jobs.doosan.com/bobcat/job/Statesville-Forklift/1/</link><description>x</description></item>'
+               b'<item><title>Turbine Maintenance Engineer (Changwon, KR, 51392)</title><link>https://jobs.doosan.com/job/Changwon-Turbine-Maintenance/2/</link><description>x</description></item>'
+               b'</channel></rss>')
+        def only_doosan(url, data=None, headers=None, timeout=40):
+            if 'jobs.doosan.com' in url:
+                return rss
+            return b'<rss><channel></channel></rss>'
+        with mock.patch.object(ms, 'http', only_doosan):
+            got = [j for j in ms.successfactors() if j['company'] == 'Doosan']
+        self.assertTrue(got)
+        self.assertTrue(all('/bobcat/' not in j['url'] for j in got), 'Bobcat postings are skipped')
+        self.assertEqual({j['title'] for j in got}, {'Turbine Maintenance Engineer'})
+        self.assertIn('Emirates Global Aluminium', [c[0] for c in ms.SUCCESSFACTORS])
+        self.assertIn('Black & Veatch', [c[0] for c in ms.SUCCESSFACTORS])
+
+
 if __name__ == '__main__':
     unittest.main()

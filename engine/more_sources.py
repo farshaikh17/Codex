@@ -42,7 +42,10 @@ QUERIES = {
                     'commissioning engineer', 'operations engineer', 'decarbonization'],
 }
 EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom.com', 'neom.com'), ('TAQA', 'careers.taqa.com', 'taqa.com')]
-SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com')]
+SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com'),
+                  ('Emirates Global Aluminium', 'careers.ega.ae'), ('Black & Veatch', 'careers.bv.com'),
+                  # jobs.doosan.com serves the whole Doosan group; Bobcat (vehicles) postings are skipped, Enerbility / Skoda Power / Fuel Cell are kept
+                  ('Doosan', 'jobs.doosan.com', '/bobcat/')]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
 GETRO = [628, 1198]
 EURES_TERMS = {'sana_ansari': ['maintenance engineer', 'power plant', 'reliability engineer', 'electrical engineer', 'energy efficiency', 'Instandhaltungsingenieur',
@@ -135,10 +138,12 @@ def siemens_energy(pages=60):
 
 
 def successfactors():
-    for company, host in SUCCESSFACTORS:
+    for company, host, *skip in SUCCESSFACTORS:
         for term in SF_TERMS:
             raw = http(f'https://{host}/services/rss/job/?locale=en_US&keywords={urllib.parse.quote(term)}')
             for it in rss_items(raw):
+                if any(x in (it.findtext('link') or '') for x in skip):
+                    continue
                 title = text(it.findtext('title'))
                 m = re.match(r'^(.*?)\s*\(([^()]*)\)\s*$', title)   # "Role (City, CC, zip)"
                 j = job('successfactors', (it.findtext('link') or '').strip(), m.group(1) if m else title, company, m.group(2) if m else '',
