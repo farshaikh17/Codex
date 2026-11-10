@@ -92,6 +92,24 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
         self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi'})
 
+    def test_smartrecruiters_reads_public_postings(self):
+        page = {'content': [{'id': '7', 'name': 'Reliability Engineer', 'releasedDate': '2026-11-10T10:00:00.000Z',
+                             'location': {'fullLocation': 'Abu Dhabi, United Arab Emirates', 'remote': False},
+                             'function': {'label': 'Engineering'}, 'industry': {'label': 'Renewables'}},
+                            {'id': '8', 'name': 'Remote Analyst', 'location': {'city': 'Oslo', 'country': 'no', 'remote': True}}]}
+        def fake(url, data=None, headers=None, timeout=40):
+            if 'api.smartrecruiters.com' in url and '/Masdar/' in url:
+                return json.dumps(page).encode()
+            raise OSError('down')
+        with mock.patch.object(ms, 'http', fake):
+            got = list(ms.smartrecruiters())
+        self.assertEqual([j['title'] for j in got], ['Reliability Engineer', 'Remote Analyst'], 'other employers failing keeps Masdar')
+        self.assertEqual(got[0]['company'], 'Masdar')
+        self.assertEqual(got[0]['url'], 'https://jobs.smartrecruiters.com/Masdar/7')
+        self.assertEqual(got[0]['location'], 'Abu Dhabi, United Arab Emirates')
+        self.assertTrue(got[1]['is_remote']); self.assertTrue(got[1]['location'].startswith('Remote'))
+        self.assertIn('Statkraft1', [c[1] for c in ms.SMARTRECRUITERS])
+
 
 if __name__ == '__main__':
     unittest.main()
