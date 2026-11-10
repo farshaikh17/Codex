@@ -356,9 +356,17 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         rdb=work/'run'/'engine.sqlite3'
         hour_after=lambda snap:(datetime.fromisoformat(json.loads((snap/'status.json').read_text())['attempted_at'])+timedelta(hours=1)).isoformat()
         run1=er.run(rdb,snap1,snapshot_sources,pages_root=root,now=hour_after(snap1))
-        r.check('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
-                run1['outcome']=='ok' and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
-                {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected']})
+        # The real snapshot is whatever the collector last committed. One transient fetch failure there (a rate-limited board) makes the run
+        # 'partial' for a reason that has nothing to do with the code under test, and used to fail every pull request's CI until the next collection.
+        # When the snapshot itself reports a non-ok source, this one check says so and is not run; every other check still runs on that snapshot.
+        degraded=[x['source'] for x in status1['sources'] if x['status']!='ok']
+        if degraded:
+            r.not_run('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
+                      'the latest collector snapshot has %d non-ok source(s) (%s); this check needs a fully healthy snapshot and runs again on the next collection (run outcome: %s)'%(len(degraded),', '.join(degraded[:5]),run1['outcome']))
+        else:
+            r.check('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
+                    run1['outcome']=='ok' and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
+                    {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected']})
         with RunLock(rdb,'acceptance: a run already in progress'):
             try: er.run(rdb,snap2,snapshot_sources,pages_root=root,now=hour_after(snap2));busy=False
             except LockBusy: busy=True
@@ -371,7 +379,7 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         rconn=connect(rdb)
         runs=[x[0] for x in rconn.execute('select outcome from engine_runs order by run_id')]
         rconn.close()
-        r.check('8 reliability','every run is recorded with its outcome',runs==['ok','partial'],runs)
+        r.check('8 reliability','every run is recorded with its outcome',runs==(['ok','partial'] if not degraded else [run1['outcome'],'partial']),runs)
         store.close();queue.close()
     except Exception as e:  # an unexpected failure is a failed acceptance, reported with its cause
         r.check('run','acceptance completed without an unexpected error',False,'%s: %s'%(type(e).__name__,e))
