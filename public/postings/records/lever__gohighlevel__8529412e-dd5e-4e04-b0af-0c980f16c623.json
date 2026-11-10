@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gohighlevel",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-10T16:01:54.121691+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "3dfce0ba53316b98c3807d817882f51072947b514785403253329ba5ac40a8bf",
+   "kind": "content_changed",
+   "to_hash": "6eb836e218a9b41d9ed641ba4ffc8003c148b12f844dc05537ee01f0837e7496"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "About HighLevel:HighLevel is an AI-powered business operating system that gives agencies, entrepreneurs and SMBs the infrastructure to build, automate and scale. Today, HighLevel supports SMBs across 150+ countries, fueling community-driven growth rooted in real customer outcomes.\nTo date, businesses operating on HighLevel have generated over $7 billion in ecosystem value, demonstrating the impact of shared infrastructure at scale. By centralizing conversations, automation and intelligence into one system, we help businesses move faster, reduce complexity and execute efficiently.\nBehind the platform, HighLevel powers more than 4 billion API hits and 2.5 billion message events daily. With 250 terabytes of distributed data, 250+ microservices and over 1 million domain names supported, our architecture is built for performance, resilience and long-term scalability.\n\nOur people\nWith over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership. We value initiative, clarity and execution, creating space for ambitious people to build systems that support millions of businesses worldwide. Here, innovation thrives, ideas are celebrated and people come first, no matter where they call home.\n\nOur impact\nEvery month, HighLevel enables more than 1.5 billion messages, 200 million leads and 20 million conversations for the more than 1 million businesses we support. Behind those numbers are real people building independence, expanding opportunity and creating measurable impact. We’re proud to be a part of that.\nLearn more about us on our YouTube Channel or Blog Posts\n\nAbout Us\nWe are building the future of automation by integrating AI into workflows to make processes seamless and intelligent. Join us to lead the development of innovative AI-driven features at scale.\nResponsibilities:\n• Build workflows that simplify automation through prompt-based inputs.\n\n• Integrate AI capabilities into actions like Email, SMS, and Code execution.\n\n• Implement AI-driven recipe and template suggestions based on user prompts.\n\n• Create tools for building custom AI agents to handle automation tasks.\n\n• Develop advanced AI features like Data Extraction, Text-to-Voice conversion, and Data Analysis.\n\n• Work with Retrieval-Augmented Generation (RAG) systems and knowledge bases to enable intelligent, context-aware workflows.\n\n• Optimize APIs to handle millions of hits monthly with low latency.\n\n• Mentor junior engineers and lead AI-driven projects.\nQualifications\n• Strong proficiency in JavaScript and Node.js for backend development.\n\n• Experience with AI platforms like OpenAI, Hugging Face, vector databases (e.g., Pinecone, Weaviate), and RAG systems.\n\n• Skilled in building and integrating knowledge bases and leveraging AI for context-aware solutions.\n\n• Proficient in data processing for LLMs and scaling AI systems.\n\n• Experimentation-driven with strong ownership and a hacker mindset.\n\n• 4+ years of software development experience, including 1.5+ years in AI-related projects.\nEEO Statement:\nThe company is an Equal Opportunity Employer. As an employer subject to affirmative action regulations, we invite you to voluntarily provide the following demographic information. This information is used solely for compliance with government recordkeeping, reporting, and other legal requirements. Providing this information is voluntary and refusal to do so will not affect your application status. This data will be kept separate from your application and will not be used in the hiring decision.\n\nWe encourage you to review our Privacy Policy before submitting your application",
@@ -20,11 +30,11 @@
    }
   ],
   "published": "2026-07-07T13:59:23.410000+00:00",
-  "title": "Software Development Engineer III - Workflow AI",
+  "title": "Sr.SDE - Workflow AI",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
- "content_hash": "3dfce0ba53316b98c3807d817882f51072947b514785403253329ba5ac40a8bf",
+ "content_changed_at": "2026-11-10T16:01:54.121691+00:00",
+ "content_hash": "6eb836e218a9b41d9ed641ba4ffc8003c148b12f844dc05537ee01f0837e7496",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "India",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/8529412e-dd5e-4e04-b0af-0c980f16c623"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "• Strong proficiency in JavaScript and Node.js for backend development.\n• Experience with AI platforms like OpenAI, Hugging Face, vector databases (e.g., Pinecone, Weaviate), and RAG systems.\n• Skilled in building and integrating knowledge bases and leveraging AI for context-aware solutions.\n• Proficient in data processing for LLMs and scaling AI systems.\n• Experimentation-driven with strong ownership and a hacker mindset.\n• 4+ years of software development experience, including 1.5+ years in AI-related projects.",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/8529412e-dd5e-4e04-b0af-0c980f16c623"
      }
@@ -73,7 +83,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/8529412e-dd5e-4e04-b0af-0c980f16c623"
      }

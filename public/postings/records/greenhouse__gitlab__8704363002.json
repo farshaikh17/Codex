@@ -14,6 +14,15 @@
    "from_hash": "21ba6986d828d0351967cd42056e8b603955357a6d7f2ecf04eba6ef4cf8752a",
    "kind": "content_changed",
    "to_hash": "0f256c557e0738e8b359ac5f9d09ffae84b133df4b48be8183db7a547d57b9b4"
+  },
+  {
+   "changed_at": "2026-11-10T16:01:54.121691+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "0f256c557e0738e8b359ac5f9d09ffae84b133df4b48be8183db7a547d57b9b4",
+   "kind": "content_changed",
+   "to_hash": "8584635edea0865a506a8502403010fc7b6d75a1339c180a0e6778a801560f0b"
   }
  ],
  "content": {
@@ -31,14 +40,18 @@
    {
     "source": "location.name",
     "text": "Remote, United Kingdom"
+   },
+   {
+    "source": "offices.name",
+    "text": "Poland"
    }
   ],
   "published": "2026-08-19T09:38:27-04:00",
   "title": "Backend Engineer (Python),AI Engineering: Agent Foundations",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "0f256c557e0738e8b359ac5f9d09ffae84b133df4b48be8183db7a547d57b9b4",
+ "content_changed_at": "2026-11-10T16:01:54.121691+00:00",
+ "content_hash": "8584635edea0865a506a8502403010fc7b6d75a1339c180a0e6778a801560f0b",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -57,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -65,7 +78,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -73,7 +86,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Poland",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -81,7 +102,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Our engineers work async-first across EMEA, AMER, and India timezones. We work with teams across AI engineering and the rest of GitLab so the Duo Agent Platform can power many of GitLab's AI features.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      }
@@ -94,7 +115,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Experience building and maintaining production Python backend applications, including APIs, asynchronous or background processing, and data models.\nExperience with LLM application frameworks such as LangGraph, or designing and shipping AI-powered backend features or harnesses.\nSkill in designing or extending APIs (REST, GraphQL or gRPC) with attention to scalability, maintainability and backward compatibility.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -102,7 +123,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Experience finding and fixing performance bottlenecks in applications.\nClear written and verbal communication, including technical proposals and documentation, in a remote, async, cross-functional team.\nOpenness to learning and to applying skills from related technologies or fields.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      }
@@ -115,7 +136,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you'll bring",
       "quote": "Comfort working across the stack in a mature codebase. Familiarity with Ruby on Rails and/or JavaScript and Vue is a plus.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      }
@@ -128,7 +149,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -136,7 +157,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      },
@@ -144,7 +165,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8704363002"
      }

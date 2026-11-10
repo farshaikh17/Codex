@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gohighlevel",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-10T16:01:54.121691+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "ae46fcf119220b1e26e60db7c3befc4e697238d1041be932b37c61f35877c632",
+   "kind": "content_changed",
+   "to_hash": "b52fa9a496348c11e000eed1edc8fc6efff931bb5c31568dcdef51d36cffcce8"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "About HighLevel:HighLevel is an AI-powered business operating system that gives agencies, entrepreneurs and SMBs the infrastructure to build, automate and scale. Today, HighLevel supports SMBs across 150+ countries, fueling community-driven growth rooted in real customer outcomes.\nTo date, businesses operating on HighLevel have generated over $7 billion in ecosystem value, demonstrating the impact of shared infrastructure at scale. By centralizing conversations, automation and intelligence into one system, we help businesses move faster, reduce complexity and execute efficiently.\nBehind the platform, HighLevel powers more than 4 billion API hits and 2.5 billion message events daily. With 250 terabytes of distributed data, 250+ microservices and over 1 million domain names supported, our architecture is built for performance, resilience and long-term scalability.\n\nOur people\nWith over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership. We value initiative, clarity and execution, creating space for ambitious people to build systems that support millions of businesses worldwide. Here, innovation thrives, ideas are celebrated and people come first, no matter where they call home.\n\nOur impact\nEvery month, HighLevel enables more than 1.5 billion messages, 200 million leads and 20 million conversations for the more than 1 million businesses we support. Behind those numbers are real people building independence, expanding opportunity and creating measurable impact. We’re proud to be a part of that.\nLearn more about us on our YouTube Channel or Blog Posts\n\nRole Summary:\nWe’re hiring a Senior Full Stack Engineer to design, build, and scale the backend systems and frontend interfaces that power the Threads & Composer experience inside HighLevel Conversations. You’ll spend most of your time on backend and API design, data flows, and performance — while still owning the Vue 3 UI layer end-to-end. Your work will touch critical paths that process billions of messages per month, demanding reliability, throughput, and correctness at scale.\n\nTeam & System Overview:\nThe Conversations organization powers multi-channel communication across SMS, Email, WhatsApp, and DMs — handling over 2B messages each month. The Threads & Composer team owns the inbox and composer surfaces, and the backend services that deliver and store those interactions.You’ll work across Node.js microservices, GCP-based infra (GKE, Pub/Sub, Cloud Tasks), and MongoDB/Firestore storage layers, ensuring every message and UI state stays consistent, fast, and recoverable.\nResponsibilities:\nBackend ownership: Design and maintain Node.js/NestJS services for message storage, retrieval, and state sync\n\nAPI design: Build well-typed REST contracts for Threads and Composer operations\n\nData layer work: Model and optimize MongoDB/Firestore schemas for high read/write volumes and atomic updates\n\nScalability & resilience: Implement queues, caching, and rate limiting to handle burst traffic gracefully\n\nFrontend integration: Ship modular Vue 3 UIs that consume your APIs efficiently and handle realtime state updates\n\nObservability: Instrument logs, metrics, and traces to monitor latency, error rates, and throughput\n\nTesting discipline: Maintain high coverage across unit, integration, and contract tests\n\nProduction ownership: Participate in on-call, debug incidents, and drive post-mortem action items to closure\n\nCollaboration & mentorship: Work closely with Product and Frontend leads while reviewing code and supporting junior engineers\nRequirements:\n4+ years of professional engineering experience, preferably backend-heavy full-stack work\n\nExpert in Node.js and TypeScript; comfortable with NestJS or Express microservices\n\nProficient in Vue 3 or similar modern frontend frameworks\n\nStrong understanding of API design, data modeling, and distributed system patterns\n\nExperience with GCP (or AWS), containerization, and CI/CD automation\n\nHands-on with observability and production monitoring\n\nBonus: Pub/Sub or message queue experience; event-driven or domain-driven design background\nTechnical Environment:\nBackend: Node.js, TypeScript, NestJS / Express, REST APIs\n\nFrontend: Vue 3, TypeScript, Pinia, Vite / Webpack, Tailwind\n\nStorage: MongoDB, Firestore, Redis\n\nInfra: GCP (GKE, Pub/Sub, Cloud Tasks, Stackdriver)\n\nCI/CD: GitHub Actions, Docker, Kubernetes\n\nTesting: Jest, Vitest\n#LI-Remote #LI-HB1\n\nEEO Statement:\nThe company is an Equal Opportunity Employer. As an employer subject to affirmative action regulations, we invite you to voluntarily provide the following demographic information. This information is used solely for compliance with government recordkeeping, reporting, and other legal requirements. Providing this information is voluntary and refusal to do so will not affect your application status. This data will be kept separate from your application and will not be used in the hiring decision.\n\nWe encourage you to review our Privacy Policy before submitting your application",
@@ -20,11 +30,11 @@
    }
   ],
   "published": "2025-12-18T12:52:01.526000+00:00",
-  "title": "Software Development Engineer III - Conversations",
+  "title": "Sr.SDE - Conversations",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-10-27T20:29:45.949737+00:00",
- "content_hash": "ae46fcf119220b1e26e60db7c3befc4e697238d1041be932b37c61f35877c632",
+ "content_changed_at": "2026-11-10T16:01:54.121691+00:00",
+ "content_hash": "b52fa9a496348c11e000eed1edc8fc6efff931bb5c31568dcdef51d36cffcce8",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "India",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/4ec92bca-2593-4081-85fb-c8288147939d"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:Requirements:",
       "quote": "4+ years of professional engineering experience, preferably backend-heavy full-stack work\nExpert in Node.js and TypeScript; comfortable with NestJS or Express microservices\nProficient in Vue 3 or similar modern frontend frameworks\nStrong understanding of API design, data modeling, and distributed system patterns\nExperience with GCP (or AWS), containerization, and CI/CD automation\nHands-on with observability and production monitoring\nBonus: Pub/Sub or message queue experience; event-driven or domain-driven design background\nTechnical Environment:\nBackend: Node.js, TypeScript, NestJS / Express, REST APIs\nFrontend: Vue 3, TypeScript, Pinia, Vite / Webpack, Tailwind\nStorage: MongoDB, Firestore, Redis\nInfra: GCP (GKE, Pub/Sub, Cloud Tasks, Stackdriver)\nCI/CD: GitHub Actions, Docker, Kubernetes\nTesting: Jest, Vitest\n#LI-Remote #LI-HB1",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/4ec92bca-2593-4081-85fb-c8288147939d"
      }
@@ -73,7 +83,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-10-27T20:29:45.949737+00:00",
+      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/4ec92bca-2593-4081-85fb-c8288147939d"
      }
