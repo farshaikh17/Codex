@@ -314,6 +314,17 @@ test('foreignLocation knows every country, not only a short list (Colombia, Arge
   assert.equal(mk('Remote (Colombia)').eligibility, 'UNKNOWN', 'still reviewable, not hidden');
 });
 
+test('owner rules 10 Nov: Sana\'s role pattern drops generic field-service roles; electrical-only titles rank below mechanical/reliability/energy ones', () => {
+  const at = (title) => evaluate(sana, post({ title, location: 'India', remote: false, description: 'x' }));
+  assert.equal(at('Field Service Engineer').lane, 'UNASSIGNED', 'a field service engineer with no energy word is not a role match');
+  for (const title of ['Field Service Engineer-HVDC', 'Wind Turbine Field Service Engineer', 'Field Service Engineer, Power Plant']) assert.equal(at(title).lane, 'STRONGEST_FIT', title);
+  const elec = at('Electrical Engineer'), rel = at('Reliability Engineer'), emaint = at('Electrical Maintenance Engineer');
+  assert.ok(elec.score < rel.score, 'electrical-only ranks below reliability');
+  assert.ok(emaint.score > elec.score, 'an electrical title that also names maintenance is not reduced');
+  assert.match(elec.qualification_reason, /Electrical-only title/);
+  assert.equal(elec.eligibility, evaluate(sana, post({ title: 'Reliability Engineer', location: 'India', remote: false, description: 'x' })).eligibility, 'eligibility is not touched');
+});
+
 // QA 2026-11-09 (segment 8): overlapping cron ticks. The 2-minute tick takes a lease; a second tick that starts while the lease is held does no work,
 // an expired lease (a tick that died) can be taken over, and a paused scheduler does nothing.
 import { runDiscovery } from '../worker/discovery.ts';

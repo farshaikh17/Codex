@@ -71,7 +71,7 @@ const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integrations?
 // Builder roles (owner rule 2026-11-07): implementation, automation, technical/revenue operations, GTM engineering, Founder's Office
 // and Chief of Staff, in any industry.
 export const FARHAN_ROLE=/operations|implementation|integration|automation|business systems|crm|revops|sales ops|marketing ops|systems architect|onboarding|solutions|technical delivery|chief of staff|founder'?s? (?:office|associate)|founding (?:operations|ops|generalist)|gtm engineer|go[- ]to[- ]market engineer|ai (?:ops|operations|workflow|implementation)/i;
-export const SANA_ROLE=/electrical|power|energy|turbine|boiler|field service engineer|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro|betriebsingenieur|zuverl.ssigkeit|anlagen|ing.nieur|centrale|onderhoud|elektrotechnisch|energiebesparing|energieeffizienz|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
+export const SANA_ROLE=/electrical|power|energy|turbine|boiler|(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)\W+(?:\w+\W+){0,3}field service|field service engineer\W+(?:\w+\W+){0,3}(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro|betriebsingenieur|zuverl.ssigkeit|anlagen|ing.nieur|centrale|onderhoud|elektrotechnisch|energiebesparing|energieeffizienz|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult/i;
 // Employers the owner asked to skip (2026-11-07).
 const FARHAN_SKIP_EMPLOYER=/^\s*ajaia\b/i;
 // A location that names only the United States (owner rule 2026-11-07: US-only remote roles are rejected for Farhan).
@@ -160,6 +160,9 @@ export function skillFound(skill:string,lower:string){
 export type EvalContext = { globalHirers?: Set<string>; rejected?: Map<string, string | null>; yc?: Map<string, string>; ukSponsors?: Set<string> };
 // ---- Signals added 2026-11-07 (owner-approved "10 ideas") ------------------------------------------------------------------
 export const TIMEZONE_PENALTY = 10, AGENCY_PENALTY = 5, LANGUAGE_PENALTY = 10;
+// Owner rule 2026-11-10 (Sana): a title that is electrical only ranks below mechanical, reliability, maintenance and energy roles.
+export const ELECTRICAL_ONLY_PENALTY = 12;
+const ELECTRICAL_TITLE = /\b(?:electrical|elektro\w*)\b/i, NON_ELECTRICAL_FIT = /mechanical|reliab|maintenance|rotating|turbine|boiler|plant|energy|efficiency|commission|operations?|process/i;
 const EU_ONLY = /\b(must (?:be |reside |live )?(?:based |located |resident )?in (?:the )?(?:eu|eea|european union|europe)|(?:eu|eea|european union)[- ]?(?:only|based only|residents? only|work (?:permit|authori[sz]ation) required)|right to work in the (?:eu|uk|eea|netherlands|germany) (?:is )?required|(?:eu|eea) citizens? only)\b/i;
 const TZ_RESTRICTED = /\b(?:(?:us|u\.s\.|north american?|eastern|pacific|central|est|pst|cst|cet|uk|european?) (?:time ?zones?|business hours|working hours|hours)|overlap with (?:us|u\.s\.|pacific|eastern|north american?|cet|european?) (?:time|hours|time ?zones?)|work(?:ing)? (?:us|u\.s\.|pst|est) hours|(?:between|within|at least) \d+ ?(?:hours?|hrs?) (?:of )?overlap)\b/i;
 /** Where a remote posting really allows the person to be. Read from its own words only. */
@@ -308,6 +311,8 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Gulf or when the posting offers sponsorship or relocation, so other foreign on-site roles lose points. Eligibility is unchanged.
  const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!remote&&!sponsorship&&!ukSponsor&&foreignLocation(p.location)&&!GULF_PLACE.test(p.location||'');
  if(visaUnlikely)score=Math.max(0,score-VISA_UNLIKELY_PENALTY);
+ const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'');
+ if(electricalOnly)score=Math.max(0,score-ELECTRICAL_ONLY_PENALTY);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // New discoveries are never auto-promoted to READY using a simplified scorer.
@@ -320,6 +325,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(agency?' Posted by a staffing agency or recruiter (score reduced).':'')
   +(lang?` Requires ${lang} (score reduced).`:'')
   +(ukSponsor?' Employer holds a UK Skilled Worker sponsor licence.':'')
+  +(electricalOnly?' Electrical-only title, ranked below mechanical, reliability and energy roles (score reduced).':'')
   +(reposted?' Reposted: an earlier listing of this role closed.':'')
   +(locClass==='worldwide'?' Posting says: work from anywhere.':locClass==='india_ok'?' Posting names India as a remote location.':'')
   +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
@@ -394,7 +400,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v5: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v6: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

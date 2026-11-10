@@ -160,10 +160,10 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
     insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
     insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
-    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v5":true}' : '{"preliminary":true}');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v6":true}' : '{"preliminary":true}');
     if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
     // an application by the OTHER candidate on the same job must not protect this row's score
-    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v5":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v6":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
   }
   const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
     jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
@@ -183,7 +183,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
     if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
     if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
-    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v5, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v6, true, `re-scored row carries the marker: ${k}`); changedScores++; }
     if (JSON.stringify(q1) !== JSON.stringify(q0)) {
       changedQuals++;
       assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
