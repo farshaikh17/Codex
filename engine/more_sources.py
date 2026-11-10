@@ -50,6 +50,8 @@ SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower
 WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi')]
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
 SMARTRECRUITERS = [('Masdar', 'Masdar'), ('Vattenfall', 'Vattenfall'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1')]
+# Oracle Recruiting Cloud public candidate-experience REST (no key). (display name, host, site number); answered on a live read.
+ORACLE = [('Wood', 'ehif.fa.em2.oraclecloud.com', 'CX_1')]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
 GETRO = [628, 1198]
 EURES_TERMS = {'sana_ansari': ['maintenance engineer', 'power plant', 'reliability engineer', 'electrical engineer', 'energy efficiency', 'Instandhaltungsingenieur',
@@ -206,6 +208,36 @@ def smartrecruiters(pages=10):
             print(f'smartrecruiters {company}: {type(e).__name__}', file=sys.stderr)
 
 
+def oracle_hcm(pages=3):
+    """Open postings of Oracle Recruiting Cloud career sites (Wood), searched with the same energy terms as SuccessFactors/Workday.
+    The list answer carries no job text, so the description is the location text and the workplace type."""
+    for company, host, site in ORACLE:
+        seen = set()
+        try:
+            for term in SF_TERMS:
+                for page in range(pages):
+                    finder = f'findReqs;siteNumber={site},limit=25,offset={page * 25},keyword={urllib.parse.quote(term)},sortBy=POSTING_DATES_DESC'
+                    d = json.loads(http(f'https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder={finder}',
+                                        headers={'Accept': 'application/json'}))
+                    rows = ((d.get('items') or [{}])[0].get('requisitionList')) or []
+                    for r in rows:
+                        rid = str(r.get('Id') or '')
+                        if not rid or rid in seen:
+                            continue
+                        seen.add(rid)
+                        place = text(r.get('PrimaryLocation')) or 'See posting'
+                        kind = text(r.get('WorkplaceType'))
+                        remote = kind.lower() == 'remote'
+                        j = job('oracle_hcm', f'https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{rid}', text(r.get('Title')), company,
+                                f'Remote ({place})' if remote else place, f'{place} {kind}'.strip(), when(r.get('PostedDate')))
+                        j['is_remote'] = remote
+                        yield j
+                    if len(rows) < 25:
+                        break
+        except Exception as e:   # one employer down never loses the others
+            print(f'oracle_hcm {company}: {type(e).__name__}', file=sys.stderr)
+
+
 def arbeitnow(pages=3):
     for page in range(1, pages + 1):
         d = json.loads(http(f'https://www.arbeitnow.com/api/job-board-api?page={page}&visa_sponsorship=true'))
@@ -304,13 +336,13 @@ def main():
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday,
+    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm,
                'arbeitnow': arbeitnow, 'getro': getro, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
-        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday')}
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
-    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday'}   # employer sites: the date is the original posting date; the still-open check guards staleness
+    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}

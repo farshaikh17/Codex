@@ -111,5 +111,21 @@ class MoreSources(unittest.TestCase):
         self.assertIn('Statkraft1', [c[1] for c in ms.SMARTRECRUITERS])
 
 
+    def test_oracle_hcm_reads_public_requisitions(self):
+        calls = []
+        def fake(url, data=None, headers=None, timeout=40):
+            calls.append(url)
+            return json.dumps({'items': [{'requisitionList': [
+                {'Id': '30930', 'Title': 'Mechanical Technician', 'PostedDate': '2026-11-10', 'PrimaryLocation': 'Malabo, Equatorial Guinea', 'WorkplaceType': 'On-site'},
+                {'Id': '555', 'Title': 'Planner', 'PostedDate': '2026-11-09', 'PrimaryLocation': 'London, United Kingdom', 'WorkplaceType': 'Remote'}]}]}).encode()
+        with mock.patch.object(ms, 'http', fake):
+            got = list(ms.oracle_hcm(pages=1))
+        self.assertEqual([j['title'] for j in got], ['Mechanical Technician', 'Planner'], 'a requisition repeated across search terms is read once')
+        self.assertEqual(got[0]['url'], 'https://ehif.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/30930')
+        self.assertEqual(got[0]['company'], 'Wood'); self.assertEqual(got[0]['location'], 'Malabo, Equatorial Guinea')
+        self.assertFalse(got[0]['is_remote']); self.assertTrue(got[1]['is_remote']); self.assertTrue(got[1]['location'].startswith('Remote'))
+        self.assertIn('keyword=maintenance', calls[0]); self.assertIn('siteNumber=CX_1', calls[0])
+
+
 if __name__ == '__main__':
     unittest.main()
