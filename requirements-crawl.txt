@@ -1,3 +1,3 @@
 # Browser fallback only; the feed collector stays standard-library only.
 # Exact versions recorded in OPERATIONS.md after the trial install.
-crawl4ai==0.9.4
+crawl4ai==0.9.5
