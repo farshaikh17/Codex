@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isQuickScreen } from '../quickScreen';
+import { peopleSearchLinks, skillGaps } from '../jobHelpers';
 import { sourceWord } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
 import { submitJobFeedback, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
@@ -38,13 +39,15 @@ interface JobDetailModalProps {
     rejection_notes?: string;
   }) => Promise<void>;
   onJobUpdated?: (updatedJob: Job) => void;
+  profileSkills?: string[];   // the candidate's listed skills, for the "what the posting asks that the profile does not list" note
 }
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   job: initialJob,
   onClose,
   onUpdateApplication,
-  onJobUpdated
+  onJobUpdated,
+  profileSkills
 }) => {
   const [job, setJob] = useState<Job>(initialJob);
   const [status, setStatus] = useState<ApplicationStatus>(job.application?.status || 'SAVED');
@@ -190,6 +193,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   // ("no skills", "0% primary", "no explicit minimum") contradicted the list, so those parts are replaced by what the screen really knows.
   const quickScreen = isQuickScreen(breakdown);
   const quickSkills = breakdown?.matched_skills || [];
+  const gaps = skillGaps(job.description || '', profileSkills);
+  const people = peopleSearchLinks(job.company || '');
 
   return (
     <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Job inspection" className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -572,6 +577,43 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Skill gap: what the posting names (from a fixed list of skills) against what the profile lists. A note to think about, not a verdict. */}
+          {gaps.asked.length > 0 && (
+            <div data-testid="skill-gaps">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Skills the posting names</h4>
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2 text-xs">
+                {gaps.have.length > 0 && (
+                  <div>
+                    <span className="text-slate-700 block mb-1">Already on the profile:</span>
+                    <div className="flex flex-wrap gap-1.5">{gaps.have.map((k) => <span key={k} className="px-2 py-0.5 rounded font-mono text-[11px] bg-emerald-100 text-emerald-900">✓ {k}</span>)}</div>
+                  </div>
+                )}
+                {gaps.missing.length > 0 && (
+                  <div>
+                    <span className="text-slate-700 block mb-1">Not on the profile (worth a look before applying):</span>
+                    <div className="flex flex-wrap gap-1.5">{gaps.missing.map((k) => <span key={k} className="px-2 py-0.5 rounded font-mono text-[11px] bg-amber-100 text-amber-900">{k}</span>)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* People: ready-made searches the candidate opens and uses personally; nothing is sent from here. */}
+          {people.length > 0 && (
+            <div data-testid="people-links">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Find people at {job.company}</h4>
+              <div className="flex flex-wrap gap-2">
+                {people.map((l) => (
+                  <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" title={l.hint}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg inline-flex items-center gap-1.5">
+                    {l.label}<ExternalLink className="w-3 h-3" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+              <p className="text-xs text-slate-600 mt-1.5">Opens a LinkedIn search in a new tab. Reaching out is up to you.</p>
+            </div>
+          )}
 
           {/* Section 4: Full Job Description */}
           <div>
