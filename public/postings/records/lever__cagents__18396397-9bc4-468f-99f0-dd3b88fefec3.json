@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-10T21:02:09.794162+00:00",
-  "reason": "source retrieval failed: The read operation timed out",
-  "state": "inaccessible"
+  "at": "2026-11-10T22:08:03.177032+00:00",
+  "reason": "listed again after inaccessible",
+  "state": "listed"
  },
  "board": "cagents",
  "changes": [],
