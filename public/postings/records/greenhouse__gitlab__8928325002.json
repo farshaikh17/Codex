@@ -1,0 +1,204 @@
+{
+ "availability": {
+  "at": "2026-11-10T18:30:58.654641+00:00",
+  "reason": "first listed",
+  "state": "listed"
+ },
+ "board": "gitlab",
+ "changes": [],
+ "content": {
+  "compensation_raw": "[{\"min_cents\": 11520000, \"max_cents\": 19440000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
+  "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs Manager, SOX PMO - Business Process, you'll lead Sarbanes-Oxley (SOX) compliance for assigned business processes as part of GitLab's second line. This is advisory work, not repeatable testing: you'll deeply understand how processes work, evaluate risks as the business changes, and help control owners design and remediate controls that hold up to audit. Judgment matters more than procedure. You'll form well-supported conclusions, align with control owners and Internal Audit, and defend positions to external auditors. GitLab already uses AI extensively, and the next phase brings AI agents into our SOX processes. You'll help teams adopt them with confidence, finding creative ways to enable new ways of working while maintaining compliance. You'll also partner with the information technology (IT) SOX PMO on readiness for new systems and applications. This role reports to the Senior Director, SOX PMO, within the Chief Accounting Officer's organization.\n\nWhat You’ll Do\n\nLead SOX compliance for assigned business processes as the second-line subject matter expert, advising control owners who own and operate the controls. Deeply understand each process, its systems and data flows, and resolve open questions and assumptions early.\n\nMonitor risks from new and changing processes, products, and systems. Help control owners design, strengthen, or right-size controls, and contribute to the annual SOX risk assessment and scoping.\n\nEvaluate control deficiencies individually and in aggregate, identify root causes, and prepare well-supported severity assessments. Work with management to develop, implement, and monitor remediation plans.\n\nPrepare auditor-ready technical memos on sampling methodology, scoping, and control rationalization, using independent analysis and sound conclusions. Prepare reports and presentations on SOX compliance status for leadership.\n\nLead business walkthroughs and stakeholder meetings, and coordinate with Internal Audit and external auditors throughout the audit. Anticipate questions, support positions with data and judgment, and escalate risks and auditor comments promptly with a recommended path forward.\n\nAdvise on controls for AI-enabled processes and processes that use AI agents. Find opportunities to automate SOX work using AI tools, and validate their output.\n\nPartner with the IT SOX PMO to assess new systems and controls, including application controls and key reports.\n\nDevelop and maintain accurate process narratives, flowcharts, and risk and control matrices as processes change. Collaborate with Finance, Operations, Legal, Human Resources, Sales, Engineering, and IT leaders to help them design and maintain effective business controls.\n\nWhat You’ll Bring\n\nHands-on SOX and internal controls experience in control design, remediation, and deficiency evaluation, beyond testing alone. Experience in the software or technology industry is required; SOX PMO, Big Four risk advisory, or assurance experience is a strong plus.\n\nA bachelor's degree in Accounting, Finance, or a related field; an active Certified Public Accountant (CPA) credential (strongly preferred) or Certified Internal Auditor (CIA) credential.\n\nA strong understanding of SOX requirements and internal control frameworks, such as the Committee of Sponsoring Organizations of the Treadway Commission (COSO) framework.\n\nProfessional judgment and skepticism: verifying facts against source documents, testing the reasonableness of data and conclusions, and recognizing missing information.\n\nA track record of independently solving ambiguous, novel problems, from defining an approach through overcoming obstacles and driving resolution. Curiosity to understand how processes actually work and keep learning as the business changes.\n\nClear written and verbal communication, including concise, accurate, auditor-ready memos and actionable recommendations. Confidence partnering with senior stakeholders and external auditors, including working through pushback.\n\nA practical, innovative approach to helping the business adopt new technologies, products, and ways of working while maintaining compliance. Experience using AI tools to improve efficiency and validating their output.\n\nExperience with usage-based billing or AuditBoard is a plus.\n\nAbout the team\n\nThe SOX PMO is part of the Chief Accounting Officer's organization. In this role, you'll advise business control owners and partner with the IT SOX PMO, Internal Audit, and external auditors to keep GitLab compliant as processes, systems, and AI use evolve. GitLab is an all-remote company, with flexibility to work from home or wherever you're most productive. You'll need to be available to collaborate with teammates during core US Pacific (PT) and Eastern (ET) business hours.\n\nHow GitLab will support you\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental leave\n\nHome office support\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nThe base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.\n\nUnited States Salary Range\n\n$115,200—$194,400 USD\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
+  "locations": [
+   {
+    "source": "location.name",
+    "text": "Remote, Canada"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "North America"
+   }
+  ],
+  "published": "2026-11-10T13:28:54-05:00",
+  "title": "Manager, SOX PMO - Business Process",
+  "workplace_type": null
+ },
+ "content_changed_at": "2026-11-10T18:30:58.654641+00:00",
+ "content_hash": "40b9ad86f0d6cf7dbce003c271263493e3ee8d4a173e31acf6d695356caae506",
+ "content_hash_version": 1,
+ "extraction": {
+  "extractor_version": 5,
+  "fields": {
+   "compensation": {
+    "items": [
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "base",
+       "equity_mentioned": true,
+       "estimated": false,
+       "label": "United States Salary Range The base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity . Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.",
+       "multiple_ranges": false,
+       "period": null,
+       "ranges": [
+        {
+         "currency": "USD",
+         "currency_symbol": null,
+         "max": 194400.0,
+         "min": 115200.0,
+         "text": null
+        }
+       ],
+       "variable_mentioned": true
+      },
+      "method": "ats_field:pay_input_ranges",
+      "quote": "{\"min_cents\": 11520000, \"max_cents\": 19440000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "unspecified",
+       "equity_mentioned": false,
+       "estimated": false,
+       "multiple_ranges": false,
+       "period": null,
+       "ranges": [
+        {
+         "currency": "USD",
+         "currency_symbol": "$",
+         "max": 194400.0,
+         "min": 115200.0,
+         "text": "$115,200—$194,400 USD"
+        }
+       ],
+       "variable_mentioned": false
+      },
+      "method": "description_section:United States Salary Range",
+      "quote": "$115,200—$194,400 USD",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     }
+    ],
+    "state": "stated"
+   },
+   "employment_type": {
+    "items": [],
+    "state": "not_stated"
+   },
+   "location": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Canada",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, United States",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "North America",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_mandatory": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:What You’ll Bring",
+      "quote": "Hands-on SOX and internal controls experience in control design, remediation, and deficiency evaluation, beyond testing alone. Experience in the software or technology industry is required; SOX PMO, Big Four risk advisory, or assurance experience is a strong plus.",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": null,
+      "method": "description_section:What You’ll Bring",
+      "quote": "A strong understanding of SOX requirements and internal control frameworks, such as the Committee of Sponsoring Organizations of the Treadway Commission (COSO) framework.\nProfessional judgment and skepticism: verifying facts against source documents, testing the reasonableness of data and conclusions, and recognizing missing information.\nA track record of independently solving ambiguous, novel problems, from defining an approach through overcoming obstacles and driving resolution. Curiosity to understand how processes actually work and keep learning as the business changes.\nClear written and verbal communication, including concise, accurate, auditor-ready memos and actionable recommendations. Confidence partnering with senior stakeholders and external auditors, including working through pushback.\nA practical, innovative approach to helping the business adopt new technologies, products, and ways of working while maintaining compliance. Experience using AI tools to improve efficiency and validating their output.",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     }
+    ],
+    "state": "stated"
+   },
+   "requirements_preferred": {
+    "items": [
+     {
+      "interpretation": null,
+      "method": "inline_marker_in:What You’ll Bring",
+      "quote": "A bachelor's degree in Accounting, Finance, or a related field; an active Certified Public Accountant (CPA) credential (strongly preferred) or Certified Internal Auditor (CIA) credential.",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": null,
+      "method": "inline_marker_in:What You’ll Bring",
+      "quote": "Experience with usage-based billing or AuditBoard is a plus.",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     }
+    ],
+    "state": "stated"
+   },
+   "workplace": {
+    "items": [
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Canada",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, United States",
+      "retrieved_at": "2026-11-10T18:30:58.654641+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+     }
+    ],
+    "state": "stated"
+   }
+  },
+  "state": "ok",
+  "warnings": []
+ },
+ "first_seen_at": "2026-11-10T18:30:58.654641+00:00",
+ "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
+ "posting_id": "greenhouse:gitlab:8928325002",
+ "provider": "greenhouse",
+ "req_id": "8928325002",
+ "schema": "posting-record-1",
+ "source_id": "gitlab-greenhouse",
+ "urls": {
+  "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002",
+  "canonical_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002",
+  "url": "https://job-boards.greenhouse.io/gitlab/jobs/8928325002"
+ }
+}
