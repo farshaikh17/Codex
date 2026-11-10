@@ -2918,7 +2918,7 @@ router.delete('/api/clients/:id', async (request, env, params) => {
   if (BUILTIN_IDS.includes(id)) return jsonResponse({ error: 'The two built-in candidates cannot be deleted here.' }, 400, corsHeaders(request, env));
   const out = await env.DB.batch([
     ...CLIENT_DATA_TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE candidate_id = ?`).bind(id)),
-    env.DB.prepare('DELETE FROM response_cache WHERE key LIKE ?').bind('%' + id + '%'),
+    env.DB.prepare("DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\'").bind('%' + id.replace(/[\\%_]/g, '\\$&') + '%'),
     env.DB.prepare('DELETE FROM candidates WHERE id = ?').bind(id),
   ]);
   forgetRegistry(env.DB); await syncRegistry(env, true);
@@ -3119,6 +3119,7 @@ function backupEligible(request: Request): boolean {
   // A request that carries a share link (X-View-Token) is "public" level but its answer can include the link's private client (the candidate list, the overview),
   // and the backup copy is keyed by URL alone: storing it would hand that client to the next anonymous visitor during an outage. Only answers produced for a
   // plain anonymous visitor are kept.
+  if (request.method === 'GET') { const cid = new URL(request.url).searchParams.get('candidate_id'); if (cid && !BUILTIN_IDS.includes(cid)) return false; } // a client's answers are never kept in the outage backup, so deleting a client leaves no stored copy
   return request.method === 'GET' && accessLevel.get(request) === 'public' && !viewerOf.has(request) && !BACKUP_SKIP.has(new URL(request.url).pathname);
 }
 async function backupStore(request: Request, body: string): Promise<void> {

@@ -446,6 +446,7 @@ test('a visitor-origin CORS preflight is answered and no public route sets crede
   const res = await worker.fetch(new Request('https://test.invalid/api/jobs', { method: 'OPTIONS', headers: { Origin: 'https://example.org' } }), env, { waitUntil() {} });
   assert.equal(res.status, 204);
   assert.ok(!res.headers.get('Access-Control-Allow-Credentials'));
+  assert.ok(!res.headers.get('Access-Control-Allow-Origin'), 'a foreign origin is not granted access');
 });
 
 test('weekly target: 100 for Farhan counts only distinct jobs that became READY in the current NY week; older READY and STRETCH_READY are separate', async () => {
