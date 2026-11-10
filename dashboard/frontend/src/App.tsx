@@ -268,6 +268,8 @@ export const App: React.FC = () => {
   };
 
   const savedCount = trackedJobs.length;
+  // Same definition as the Dashboard cards (worker: APPLIED, SUBMITTED, INTERVIEWING, OFFER)
+  const appliedStageCount = trackedJobs.filter((j) => ['APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER'].includes(String(j.application?.status || ''))).length;
   const readyCount = weeklyMetrics?.ready_inventory ?? jobs.filter((j) => j.farhan_fit === 'READY' || j.qualification_status === 'READY').length;
   const indiaRemoteCount = indiaRemoteSummary?.total_confirmed ?? 0;
 
@@ -416,9 +418,9 @@ export const App: React.FC = () => {
                     onClick={() => setActiveTab('tracker')}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-purple-400 hover:shadow-md cursor-pointer transition-all"
                   >
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Applications</div>
-                    <div className="text-2xl font-black text-purple-700 font-mono mt-0.5">{savedCount}</div>
-                    <div className="text-[11px] text-purple-600 font-semibold mt-0.5">Track them →</div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Applied</div>
+                    <div className="text-2xl font-black text-purple-700 font-mono mt-0.5">{appliedStageCount}</div>
+                    <div className="text-[11px] text-purple-600 font-semibold mt-0.5">{savedCount} in tracker →</div>
                   </div>
                 </div>
 
