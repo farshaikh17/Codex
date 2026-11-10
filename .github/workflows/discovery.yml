@@ -30,7 +30,7 @@ jobs:
     outputs:
       skip: ${{ steps.g.outputs.skip == 'true' || steps.r.outputs.skip == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Budget guard (account rows read today, from Cloudflare analytics; reads nothing from D1)
         id: g
         env:
@@ -57,7 +57,7 @@ jobs:
     # Cloudflare credentials are given only to the steps that use the database; the job-site step (third-party scraping
     # library) runs without them.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
