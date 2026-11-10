@@ -120,5 +120,5 @@ No AI review (9 Nov). Keep "Switchgear & Transformers" and "Generators & Motors"
 4. D1 writes per day after the full re-score are unmeasured; the guard stops runs at 80% of the daily write allowance.
 5. Weekend job counts (8-9 Nov) were not collected.
 6. Doosan's Enerbility itself had no open posting on 10 Nov; only other Doosan-group (non-Bobcat) roles flow through.
-7. Employer research for Sana beyond the three added feeds (Workday: KBR, GE Vernova, Hitachi, Wood; SmartRecruiters: Masdar, Vattenfall, Statkraft, AFRY) is unbuilt.
-8. Un-saving marks WITHDRAWN (lists treat it as applied) was carried over from an older note and not re-verified; #68 changed the un-save path, so re-check.
+7. Employer research for Sana: SmartRecruiters (Masdar, Vattenfall, AFRY, Statkraft1) added on 10 Nov (title list only, no job text); Workday employers (KBR, GE Vernova, Hitachi) and Wood (Oracle) are still unbuilt.
+8. Un-save: KNOWN_ISSUES.md records that the old WITHDRAWN behaviour was fixed on 6 Nov (a record that is still only SAVED is removed and an UNSAVED history row is written); the worker code no longer sets WITHDRAWN on un-save. #68 additionally closed a race in that path. Checked by reading code; not exercised against production.
