@@ -29,7 +29,10 @@ if (EXPECT) {
 const PRIVATE_KEYS = /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;
 const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
-const v = await (await get('/api/version')).json().catch(() => ({}));
+// During a rollout a few requests are still answered by the previous version (seen on 10 Nov: the gate above passed, the very next request got the old
+// commit and the release was marked failed although the deploy had succeeded). Ask again a few times before calling it a mismatch.
+let v = await (await get('/api/version')).json().catch(() => ({}));
+for (let i = 0; EXPECT && v.commit !== EXPECT && i < 5; i++) { await sleep(4000); v = await (await get('/api/version')).json().catch(() => ({})); }
 check('health is public', (await get('/api/health')).status === 200);
 check('version is public', !!v.version, JSON.stringify(v));
 if (process.env.SMOKE_EXPECT_COMMIT) check(`the live Worker reports the commit being released (${process.env.SMOKE_EXPECT_COMMIT.slice(0, 10)})`, v.commit === process.env.SMOKE_EXPECT_COMMIT, `live commit ${v.commit}`);
