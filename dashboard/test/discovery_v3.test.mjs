@@ -324,3 +324,24 @@ test('owner rules 10 Nov: Sana\'s role pattern drops generic field-service roles
   assert.match(elec.qualification_reason, /Electrical-only title/);
   assert.equal(elec.eligibility, evaluate(sana, post({ title: 'Reliability Engineer', location: 'India', remote: false, description: 'x' })).eligibility, 'eligibility is not touched');
 });
+
+// QA 2026-11-09 (segment 8): overlapping cron ticks. The 2-minute tick takes a lease; a second tick that starts while the lease is held does no work,
+// an expired lease (a tick that died) can be taken over, and a paused scheduler does nothing.
+import { runDiscovery } from '../worker/discovery.ts';
+test('lease: a second tick while one holds the lease is skipped; an expired lease is taken over; paused does nothing', async () => {
+  const { sqlite, d1 } = createDb();
+  sqlite.exec(`INSERT OR IGNORE INTO cloud_automation(id, enabled, lease_until) VALUES (1, 1, 0)`);
+  const noNet = async () => { throw new Error('no network in this test'); };
+  const future = Math.floor(Date.now() / 1000) + 600;
+  sqlite.exec(`UPDATE cloud_automation SET enabled = 1, lease_token = 'other-tick', lease_until = ${future} WHERE id = 1`);
+  const blocked = await runDiscovery({ DB: d1 }, 'CRON', noNet);
+  assert.equal(blocked.status, 'SKIPPED', JSON.stringify(blocked));
+  assert.equal(sqlite.prepare('SELECT lease_token t FROM cloud_automation WHERE id = 1').get().t, 'other-tick', 'the running tick keeps its lease');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM cloud_discovery_runs').get().n, 0, 'the skipped tick did no work and wrote no run');
+  sqlite.exec(`UPDATE cloud_automation SET lease_until = ${Math.floor(Date.now() / 1000) - 5} WHERE id = 1`);
+  const taken = await runDiscovery({ DB: d1 }, 'CRON', noNet);
+  assert.notEqual(taken.status, 'SKIPPED', 'a tick that died leaves an expired lease that the next tick takes over: ' + JSON.stringify(taken));
+  assert.equal(sqlite.prepare('SELECT lease_until u FROM cloud_automation WHERE id = 1').get().u, 0, 'and releases it when done');
+  sqlite.exec(`UPDATE cloud_automation SET enabled = 0, lease_until = 0 WHERE id = 1`);
+  assert.equal((await runDiscovery({ DB: d1 }, 'CRON', noNet)).status, 'SKIPPED', 'paused scheduler does nothing');
+});

@@ -1,0 +1,220 @@
+From 70ee9ebb935b420439da51f0f992b86174b8baa4 Mon Sep 17 00:00:00 2001
+From: Claude QA <qa@example.com>
+Date: Mon, 9 Nov 2026 23:03:35 +0000
+Subject: [PATCH] Client onboarding: the backfill walks jobs by rowid with a
+ cursor instead of re-reading every active job on every call
+
+POST /api/clients/:id/backfill selected jobs ORDER BY discovered_at with NOT EXISTS filters. The planner read the is_active index and sorted EVERY active job on every call,
+so a call cost the whole catalogue however far onboarding had got. Measured locally (counting job rows that reach the WHERE clause, 21,120 active jobs): 11,151,360 job rows
+scanned across 528 calls (21,120 per call); at about 4 rows read per scanned job (index entry, table row, two NOT EXISTS probes) that is about 44.6 million rows read against the
+5 million daily free allowance. The walk is now by rowid, newest first, from a cursor (next_cursor, returned by the previous call): 21,647 job rows scanned in total, 515 times
+fewer. Callers without a cursor still work (they skip screened jobs from the top). The dashboard's 'screen all' passes the cursor along.
+Tests: cursor walk screens each active job once; cursor and no-cursor end identically; newest first; COST (the real function with the job-row loop instrumented: <= 81 per call,
+about N in total; the old code visits 1,000 per call and fails the bound 23x); query plan has no sort and no scan; route accepts and sanitises the cursor.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XXgLH6WFtkYDkV2ANeWeZ8
+---
+ dashboard/frontend/src/api.ts                 |  5 +-
+ .../frontend/src/components/ClientsView.tsx   |  5 +-
+ dashboard/test/backfill_cost.test.mjs         | 95 +++++++++++++++++++
+ dashboard/worker/discovery.ts                 | 20 ++--
+ dashboard/worker/index.ts                     |  5 +-
+ 5 files changed, 118 insertions(+), 12 deletions(-)
+ create mode 100644 dashboard/test/backfill_cost.test.mjs
+
+diff --git a/dashboard/frontend/src/api.ts b/dashboard/frontend/src/api.ts
+index 4699f72..405084b 100644
+--- a/dashboard/frontend/src/api.ts
++++ b/dashboard/frontend/src/api.ts
+@@ -778,8 +778,9 @@ export async function createClient(body: any): Promise<ClientRecord> {
+ export async function updateClient(id: string, body: any): Promise<ClientRecord> {
+   return (await jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), 'Saving the client')).client;
+ }
+-export async function backfillClient(id: string): Promise<{ inserted: number; more: boolean }> {
+-  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/backfill?limit=40`, { method: 'POST' }), 'Screening jobs');
++export async function backfillClient(id: string, cursor: number | null = null): Promise<{ inserted: number; more: boolean; next_cursor?: number | null }> {
++  const after = cursor ? `&cursor=${encodeURIComponent(String(cursor))}` : '';
++  return jsonOrThrow(await authedFetch(`${API_BASE}/clients/${encodeURIComponent(id)}/backfill?limit=40${after}`, { method: 'POST' }), 'Screening jobs');
+ }
+ export type ShareLink = { link_id: string; label: string | null; created_at: string; revoked_at: string | null };
+ export async function fetchShareLinks(id: string): Promise<ShareLink[]> {
+diff --git a/dashboard/frontend/src/components/ClientsView.tsx b/dashboard/frontend/src/components/ClientsView.tsx
+index 5181490..53718ce 100644
+--- a/dashboard/frontend/src/components/ClientsView.tsx
++++ b/dashboard/frontend/src/components/ClientsView.tsx
+@@ -46,11 +46,12 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
+     try { await fn(); } catch (e: any) { setError(e.message); } finally { setBusy(null); }
+   };
+   const screenAll = async (id: string) => {
+-    let total = 0;
++    let total = 0, cursor: number | null = null;       // each call continues where the previous one stopped, so it reads about 40 jobs, not the whole catalogue
+     for (let i = 0; i < 150; i++) {                      // batches of 40 (CPU limit per request), at most 6,000 jobs per click
+-      const r = await backfillClient(id);
++      const r = await backfillClient(id, cursor);
+       total += r.inserted;
+       if (!r.more) break;
++      cursor = r.next_cursor ?? null;
+     }
+     return total;
+   };
+diff --git a/dashboard/test/backfill_cost.test.mjs b/dashboard/test/backfill_cost.test.mjs
+new file mode 100644
+index 0000000..7dfad98
+--- /dev/null
++++ b/dashboard/test/backfill_cost.test.mjs
+@@ -0,0 +1,95 @@
++// Onboarding a client screens every active job for them (POST /api/clients/:id/backfill, 40 per call). Found in review: each call read, probed and sorted EVERY active job
++// (the planner used the is_active index and a temp b-tree), so onboarding cost about N*N/10 rows read for N active jobs (measured locally: 11.2 million job rows scanned for 21,120
++// jobs). The walk is now by rowid with a cursor: a call reads about 40 jobs. These tests pin the behaviour AND the cost, by counting the job rows the real function visits.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { createDb, loadWorker, makeEnv, call } from './harness.mjs';
++import { backfillClient, BACKFILL_SELECT } from '../worker/discovery.ts';
++
++const SK = JSON.stringify(['CRM Configuration', 'Workflow Automation']);
++function world(active = 205, inactive = 5) {
++  const { sqlite, d1 } = createDb();
++  sqlite.prepare(`INSERT INTO candidates(id, full_name, primary_skills) VALUES ('new_client', 'New Client', ?)`).run(SK);
++  const ins = sqlite.prepare(`INSERT INTO jobs(id, title, company, source_adapter, is_active, discovered_at, description, location_restrictions, workplace_type) VALUES (?,?,?,?,?,?,?,?,?)`);
++  for (let i = 0; i < active + inactive; i++)   // many jobs share a timestamp, as a daily import gives them
++    ins.run(`ds:${i}`, `Implementation Manager ${i}`, `Co ${i % 40}`, 'greenhouse', i < active ? 1 : 0, `2026-11-0${1 + (i % 3)}T00:00:00Z`, 'Fully remote role. CRM configuration and workflow automation.', 'Remote - India', 'REMOTE_RESTRICTED');
++  let scanned = 0;
++  sqlite.function('tick', (_id) => { scanned++; return 1; });   // one argument: the job id
++  // the real function, with the job-row loop instrumented: every job row that reaches the WHERE clause is counted
++  const counting = { ...d1, prepare: (sql) => d1.prepare(sql.includes('WHERE j.rowid < ?') ? sql.replace('WHERE j.rowid < ?', 'WHERE j.rowid < ? AND tick(j.id)') : sql) };
++  return { sqlite, d1, counting, scannedNow: () => scanned, resetScanned: () => { scanned = 0; } };
++}
++async function walk(w, { useCursor }) {
++  let cursor = null, calls = 0, inserted = 0; const perCall = [];
++  for (;;) {
++    w.resetScanned();
++    const r = await backfillClient(w.counting, 'new_client', 40, undefined, useCursor ? cursor : null);
++    calls++; inserted += r.inserted; perCall.push(w.scannedNow());
++    if (!r.more) { assert.equal(r.next_cursor, null, 'no cursor once finished'); break; }
++    assert.ok(Number.isInteger(r.next_cursor) && r.next_cursor > 0, 'a cursor while more remains');
++    cursor = r.next_cursor;
++    assert.ok(calls < 100, 'the walk must end');
++  }
++  return { calls, inserted, perCall };
++}
++const screenedIds = (w) => w.sqlite.prepare(`SELECT job_id FROM candidate_qualifications WHERE candidate_id='new_client' ORDER BY job_id`).all().map((r) => r.job_id);
++
++test('cursor walk screens every active job exactly once, and never an inactive one', async () => {
++  const w = world(205, 5);
++  const { inserted, calls } = await walk(w, { useCursor: true });
++  assert.equal(inserted, 205); assert.equal(calls, 6, '205 jobs in batches of 40');
++  assert.equal(screenedIds(w).length, 205);
++  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_qualifications q JOIN jobs j ON j.id=q.job_id WHERE q.candidate_id='new_client' AND j.is_active=0`).get().n, 0);
++  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_job_scores WHERE candidate_id='new_client'`).get().n, 205, 'a score row for each');
++  const again = await backfillClient(w.d1, 'new_client', 40, undefined, null);
++  assert.equal(again.inserted, 0); assert.equal(again.more, false, 'a second full pass has nothing left to do');
++});
++
++test('cursor and no-cursor walks end with the same screened jobs (older callers keep working)', async () => {
++  const a = world(205, 5), b = world(205, 5);
++  await walk(a, { useCursor: true }); const old = await walk(b, { useCursor: false });
++  assert.deepEqual(screenedIds(a), screenedIds(b)); assert.equal(old.inserted, 205);
++});
++
++test('newest jobs are screened first (highest rowid first)', async () => {
++  const w = world(205, 5);
++  const r = await backfillClient(w.d1, 'new_client', 40);
++  assert.equal(r.inserted, 40);
++  const got = new Set(screenedIds(w));
++  const newest = w.sqlite.prepare(`SELECT id FROM jobs WHERE is_active = 1 ORDER BY rowid DESC LIMIT 40`).all().map((x) => x.id);
++  assert.deepEqual([...got].sort(), newest.sort());
++});
++
++test('COST: with the cursor a call visits about one batch of job rows, not the catalogue', async () => {
++  const w = world(1000, 40);
++  const { calls, inserted, perCall } = await walk(w, { useCursor: true });
++  assert.equal(inserted, 1000);
++  assert.ok(Math.max(...perCall) <= 41 + 40, `no call may visit more than a batch plus look-ahead of job rows (saw ${Math.max(...perCall)})`);   // inactive rows are skipped inside a batch
++  const total = perCall.reduce((s, x) => s + x, 0);
++  assert.ok(total <= 1040 + calls, `the whole onboarding visits about N job rows in total (saw ${total} for 1,040 jobs); the previous query visited ${calls} x 1,000 = ${calls * 1000}`);
++});
++
++test('the query plan walks by rowid with no sort and no full scan', () => {
++  const { sqlite } = createDb();
++  const plan = sqlite.prepare('EXPLAIN QUERY PLAN ' + BACKFILL_SELECT).all(2 ** 52, 'c', 'c', 41).map((r) => r.detail).join(' | ');
++  assert.match(plan, /SEARCH j USING INDEX idx_jobs_is_active \(is_active=\? AND rowid<\?\)/, plan);
++  assert.doesNotMatch(plan, /TEMP B-TREE/, 'ordering by rowid needs no sort: ' + plan);
++  assert.doesNotMatch(plan, /SCAN j/, plan);
++});
++
++test('the route accepts a cursor, ignores a malformed one, and returns next_cursor', async () => {
++  const worker = await loadWorker();
++  const w = world(120, 0); const env = makeEnv(w.d1);
++  const post = (q) => call(worker, env, 'POST', '/api/clients/new_client/backfill' + q);
++  // new_client is not a registered client: register it the way the product does so the route knows the id
++  const created = await call(worker, env, 'POST', '/api/clients', { body: { full_name: 'Route Client', role_keywords: ['analyst'], location_mode: 'REMOTE_FROM_HOME', home_country: 'India', visibility: 'private',
++    search_profile: { role_keywords: ['analyst'], avoid_keywords: [], location_mode: 'REMOTE_FROM_HOME', home_country: 'India' } } });
++  const id = created.json.client.id;
++  const first = await call(worker, env, 'POST', `/api/clients/${id}/backfill`);
++  assert.equal(first.status, 200); assert.equal(first.json.inserted, 40); assert.equal(first.json.more, true); assert.ok(first.json.next_cursor > 0);
++  const second = await call(worker, env, 'POST', `/api/clients/${id}/backfill?cursor=${first.json.next_cursor}`);
++  assert.equal(second.status, 200); assert.equal(second.json.inserted, 40); assert.ok(second.json.next_cursor < first.json.next_cursor, 'it moves down the catalogue');
++  const junk = await call(worker, env, 'POST', `/api/clients/${id}/backfill?cursor=abc;drop`);
++  assert.equal(junk.status, 200, 'a malformed cursor is ignored, not an error');
++  void post;
++});
+diff --git a/dashboard/worker/discovery.ts b/dashboard/worker/discovery.ts
+index 2f31f0b..a9a7196 100644
+--- a/dashboard/worker/discovery.ts
++++ b/dashboard/worker/discovery.ts
+@@ -409,14 +409,19 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
+ // nothing becomes READY. Job-board postings get the same "unverified" treatment as in discovery.
+ // 40 per call, like the assessment batch: evaluate() over long descriptions costs CPU, and Workers Free allows about 10 ms per request.
+ export const BACKFILL_MAX = 40;
+-export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso()) {
++// The job rows a call looks at. Walks `jobs` by rowid, newest first (rowid grows with insertion), starting below `cursor` (the rowid of the last job the previous call looked at), so a call
++// reads about n rows however large the catalogue is. The previous version ordered by discovered_at and skipped screened jobs with NOT EXISTS, which made the planner read, probe and sort
++// EVERY active job on EVERY call (measured on 21,120 active jobs: 11.2 million job rows scanned to onboard one client, against 21,647 with the cursor).
++export const BACKFILL_SELECT = `SELECT j.rowid AS rid, j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
++  FROM jobs j WHERE j.rowid < ? AND j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
++   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ? AND a.job_id = j.id)
++  ORDER BY j.rowid DESC LIMIT ?`;
++export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso(), cursor:number|null=null) {
+  const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
+- if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number> };
++ if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number>, next_cursor: null as number | null };
+  const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
+- const {results} = await db.prepare(`SELECT j.id, j.title, j.location_restrictions AS location, j.description, j.workplace_type, j.provenance, j.source_adapter
+-  FROM jobs j WHERE j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = ? AND q.job_id = j.id)
+-   AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ? AND a.job_id = j.id)
+-  ORDER BY j.discovered_at DESC, j.id LIMIT ?`).bind(candidateId, candidateId, n + 1).all<any>();
++ const before = cursor !== null && Number.isSafeInteger(cursor) && cursor > 0 ? cursor : Number.MAX_SAFE_INTEGER;   // no cursor: start from the newest job
++ const {results} = await db.prepare(BACKFILL_SELECT).bind(before, candidateId, candidateId, n + 1).all<any>();
+  const rows = (results || []).slice(0, n);
+  const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
+  for (const r of rows) {
+@@ -433,7 +438,8 @@ export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_M
+  const done = statements.length ? await db.batch(statements) : [];
+  // counted from what was actually written (every second statement is a qualification insert)
+  const inserted = done.filter((_: any, i: number) => i % 2 === 0).reduce((k: number, r: any) => k + Number(r?.meta?.changes || 0), 0);
+- return { inserted, more: (results || []).length > n, by_status: byStatus };
++ const more = (results || []).length > n;
++ return { inserted, more, by_status: byStatus, next_cursor: more ? Number(rows[rows.length - 1].rid) : null as number | null };
+ }
+ 
+ export async function runDiscovery(env:{DB:DB}, trigger='CRON', transport:typeof fetch=fetch, preferredSource?:string) {
+diff --git a/dashboard/worker/index.ts b/dashboard/worker/index.ts
+index c41c134..0f57100 100644
+--- a/dashboard/worker/index.ts
++++ b/dashboard/worker/index.ts
+@@ -2839,7 +2839,10 @@ router.post('/api/clients/:id/backfill', async (request, env, params, url) => {
+   const id = knownCandidate(params.id);
+   if (!id) return badCandidate(request, env, params.id);
+   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '40', 10) || 40, 1), 40);
+-  const res = await backfillClient(env.DB, id, limit);
++  // `cursor` (returned as next_cursor by the previous call) lets a call start where the last stopped; without it the walk starts from the newest job.
++  const rawCursor = url.searchParams.get('cursor');
++  const cursor = rawCursor && /^\d{1,15}$/.test(rawCursor) ? Number(rawCursor) : null;
++  const res = await backfillClient(env.DB, id, limit, undefined, cursor);
+   return jsonResponse({ candidate_id: id, ...res }, 200, corsHeaders(request, env));
+ });
+ 
+-- 
+2.43.0
+

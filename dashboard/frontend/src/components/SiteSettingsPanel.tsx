@@ -44,7 +44,7 @@ export const SiteSettingsPanel: React.FC = () => {
       ))}
       {error && <div role="alert" className="p-3 rounded-lg border border-rose-300 bg-rose-50 text-rose-900 text-sm">{error}</div>}
       {saved && <div role="status" className="p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm">{saved}</div>}
-      <button type="submit" disabled={busy} className="px-4 py-2 rounded-full bg-coral-500 hover:bg-coral-600 text-white text-sm font-semibold disabled:opacity-50">{busy ? 'Saving…' : 'Save site settings'}</button>
+      <button type="submit" disabled={busy} className="px-4 py-2 rounded-full bg-coral-600 hover:bg-coral-700 text-white text-sm font-semibold disabled:opacity-50">{busy ? 'Saving…' : 'Save site settings'}</button>
     </form>
   );
 };

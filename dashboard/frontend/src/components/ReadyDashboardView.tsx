@@ -263,9 +263,9 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleReverify}
-            disabled={isReverifying}
+            disabled={true}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow transition-colors"
-            title="Re-check the READY jobs to see whether they are still open"
+            title="Bulk re-verification is unavailable; discovery re-reads the official posting details itself."
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isReverifying ? 'animate-spin' : ''}`} />
             {isReverifying ? 'Reverifying...' : 'Reverify READY Jobs'}

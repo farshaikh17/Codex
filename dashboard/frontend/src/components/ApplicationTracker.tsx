@@ -145,6 +145,7 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-slate-400" />
           <select
+            aria-label="Filter by stage"
             value={filterStage}
             onChange={(e) => setFilterStage(e.target.value)}
             className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
