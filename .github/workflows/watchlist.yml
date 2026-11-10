@@ -45,7 +45,7 @@ jobs:
     needs: guard
     if: ${{ needs.guard.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -63,7 +63,7 @@ jobs:
         run: python engine/dataset_discovery.py --profiles-only --out work
       - name: Priority employer sites (no credentials)
         continue-on-error: true
-        timeout-minutes: 8
+        timeout-minutes: 16
         run: python engine/more_sources.py --fast --profiles work/profiles.json --out work --days 7
       - name: Remote job boards (no credentials)
         continue-on-error: true
