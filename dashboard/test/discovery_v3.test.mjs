@@ -158,7 +158,7 @@ test('developer roles of any kind are on Farhan\'s avoid list', () => {
   assert.ok(evaluate(farhan, post({ title: 'Implementation Manager' })).score > 40);
 });
 
-test('one role posted in 3+ places by one employer is written once (best copy); two copies are both kept; stored copies are closed', () => {
+test('same-title jobs with distinct URLs or locations remain available', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cp-'));
   const F = 'farhan_shaikh';
   fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
@@ -175,10 +175,10 @@ test('one role posted in 3+ places by one employer is written once (best copy); 
   execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
   sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
   const active = sqlite.prepare(`SELECT id FROM jobs WHERE is_active = 1 ORDER BY id`).all().map((r) => r.id);
-  assert.deepEqual(active.filter((x) => x.startsWith('ds:a')), ['ds:a:2'], 'the India copy scores best and is the one kept');
+  assert.deepEqual(active.filter((x) => x.startsWith('ds:a')), ['ds:a:1', 'ds:a:2', 'ds:a:3'], 'distinct listings are preserved');
   assert.deepEqual(active.filter((x) => x.startsWith('ds:b')), ['ds:b:1', 'ds:b:2']);
-  assert.deepEqual(active.filter((x) => x.startsWith('old')), ['old:1', 'old:3'], 'one stored copy stays, and one with an application is never closed');
-  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 2);
+  assert.deepEqual(active.filter((x) => x.startsWith('old')), ['old:1', 'old:2', 'old:3'], 'stored same-title jobs are not closed');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'a.report.json'), 'utf8')).collapsed_copies, 0);
 });
 
 test('location class, time-zone restriction and EU-only rules read the posting\'s own words', async () => {
