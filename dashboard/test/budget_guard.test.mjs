@@ -19,3 +19,12 @@ test('each job has its own ceiling', () => {
   assert.equal(decide(usage, opt('schedule', 2500000)).skip, true);
   assert.equal(decide(usage, opt('schedule', 4000000)).skip, false);
 });
+
+test('the guard line reports rows written as well as rows read, so a write-heavy day is visible in the log', () => {
+  const go = decide({ rows_read: 1000, rows_written: 42000 }, { maxReads: 2500000, event: 'schedule' });
+  assert.equal(go.skip, false);
+  assert.match(go.reason, /rows written today 42,000 of 100,000/);
+  const stop = decide({ rows_read: 3000000, rows_written: 5 }, { maxReads: 2500000, event: 'schedule' });
+  assert.equal(stop.skip, true);
+  assert.match(stop.reason, /rows written today 5 of 100,000/);
+});

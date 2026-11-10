@@ -13,9 +13,9 @@ export function decide(usage, { maxReads, event }) {
     // an unattended schedule stays out of the database rather than risk the quota.
     return event === 'schedule' ? { skip: true, reason: 'usage unknown; scheduled run skipped to protect the quota' } : { skip: false, reason: 'usage unknown; manual run allowed' };
   }
-  if (usage.rows_read >= maxReads) return { skip: true, reason: `rows read today ${usage.rows_read.toLocaleString('en')} >= allowed ${maxReads.toLocaleString('en')}` };
+  if (usage.rows_read >= maxReads) return { skip: true, reason: `rows read today ${usage.rows_read.toLocaleString('en')} >= allowed ${maxReads.toLocaleString('en')}; rows written today ${usage.rows_written.toLocaleString('en')} of ${WRITE_LIMIT.toLocaleString('en')}` };
   if (usage.rows_written >= WRITE_LIMIT * 0.8) return { skip: true, reason: `rows written today ${usage.rows_written.toLocaleString('en')} is near the ${WRITE_LIMIT.toLocaleString('en')} limit` };
-  return { skip: false, reason: `rows read today ${usage.rows_read.toLocaleString('en')} < allowed ${maxReads.toLocaleString('en')}` };
+  return { skip: false, reason: `rows read today ${usage.rows_read.toLocaleString('en')} < allowed ${maxReads.toLocaleString('en')}; rows written today ${usage.rows_written.toLocaleString('en')} of ${WRITE_LIMIT.toLocaleString('en')}` };
 }
 
 export function usageFromAnalytics(body) {
