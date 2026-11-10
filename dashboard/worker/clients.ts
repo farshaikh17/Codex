@@ -35,14 +35,18 @@ export async function loadRegistry(db: D1Database, force = false, now = Date.now
 }
 export function forgetRegistry(db: D1Database) { registries.delete(db as unknown as object); }
 
-/** The candidate a request is about, if any (query parameter or /api/candidates/:id/...). */
-export function referencedCandidate(url: URL): string | null {
+/** Every candidate a request names: the query parameter AND the /api/candidates/:id/... path segment. A request that names two must be allowed for both:
+ *  the /api/candidates/:id/... handlers answer for the path id and ignore the query, so checking only one would let `?candidate_id=<visible>` unlock a private path id. */
+export function referencedCandidates(url: URL): string[] {
+  const ids: string[] = [];
   const q = url.searchParams.get('candidate_id');
-  if (q) return q;
+  if (q) ids.push(q);
   const m = url.pathname.match(/^\/api\/candidates\/([^/]+)(\/|$)/);
-  if (!m) return null;
-  try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+  if (m) { let id = m[1]; try { id = decodeURIComponent(m[1]); } catch { /* keep the raw segment */ } if (!ids.includes(id)) ids.push(id); }
+  return ids;
 }
+/** The first candidate a request names (kept for callers that need one). */
+export function referencedCandidate(url: URL): string | null { return referencedCandidates(url)[0] ?? null; }
 
 // ---- Share links ---------------------------------------------------------------------------------------------------------
 export async function sha256Hex(text: string): Promise<string> {

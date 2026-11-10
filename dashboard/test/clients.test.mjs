@@ -318,3 +318,27 @@ test('un-save removes a SAVED-only record, leaves the job in "not applied" lists
   assert.equal((await req(w.env, 'DELETE', `/api/applications/k9?candidate_id=${F}`)).status, 404);
   assert.equal((await req(w.env, 'DELETE', `/api/applications/k3?candidate_id=${F}`, { key: null })).status, 401, 'visitors cannot un-save');
 });
+
+test('a visitor cannot reach a private client by naming a visible candidate in the query and the private one in the path', async () => {
+  const w = world();
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: analyst })).status, 201);
+  await req(w.env, 'POST', '/api/clients/priya_analyst/backfill');
+  const statuses = 'status=NEEDS_REVIEW,HOLD,INELIGIBLE,READY,STRETCH_READY';
+  for (const p of [
+    `/api/candidates/priya_analyst/jobs?${statuses}&candidate_id=${F}`,
+    `/api/candidates/priya_analyst/dashboard?candidate_id=${F}`,
+    `/api/candidates/priya_analyst/applications?candidate_id=${F}`,
+    `/api/candidates/priya_analyst/strategy?candidate_id=${F}`,
+    `/api/candidates/priya_analyst/jobs?candidate_id=${S}`,
+    `/api/candidates/priya%5Fanalyst/jobs?candidate_id=${F}`,
+  ]) {
+    const r = await req(w.env, 'GET', p, { key: null });
+    assert.equal(r.status, 400, `${p} must answer like an unknown id`);
+    assert.ok(!r.text.includes('Priya'), `${p} must not carry the private client's name`);
+  }
+  // the reverse (private id in the query, visible id in the path) was already refused; keep it so
+  assert.equal((await req(w.env, 'GET', `/api/candidates/${F}/jobs?candidate_id=priya_analyst`, { key: null })).status, 400);
+  // the operator still sees it, and a visible candidate's own paths still work for visitors
+  assert.equal((await req(w.env, 'GET', `/api/candidates/priya_analyst/jobs?${statuses}`)).status, 200);
+  assert.equal((await req(w.env, 'GET', `/api/candidates/${F}/jobs?candidate_id=${F}`, { key: null })).status, 200);
+});

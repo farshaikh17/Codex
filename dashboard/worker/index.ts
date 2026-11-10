@@ -5,7 +5,7 @@
 
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
 import * as site from './site';
-import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidate, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
+import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
 export interface Env {
@@ -592,8 +592,9 @@ class WorkerRouter {
       if (accessLevel.get(request) === 'public') {
         const viewer = await viewTokenCandidate(env.DB, request.headers.get('X-View-Token'));
         if (viewer) viewerOf.set(request, viewer);
-        const cid = referencedCandidate(url);
-        if (cid && CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) hiddenFrom.set(request, cid);
+        for (const cid of referencedCandidates(url)) {
+          if (CANDIDATE_IDS.has(cid) && !visibleTo(request, cid)) { hiddenFrom.set(request, cid); break; }
+        }
       }
     }
 
