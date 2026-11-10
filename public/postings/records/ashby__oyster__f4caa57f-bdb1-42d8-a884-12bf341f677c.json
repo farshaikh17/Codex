@@ -24,6 +24,15 @@
    "from_hash": "7835a30e65058cd3af0cec788ee4b105cda4cf9e5d455a938693c489384e7d4b",
    "kind": "content_changed",
    "to_hash": "5ca9d19af912237f8c3920ca7fa9b53d6efc5003352bf6bdf3eedccdcee14a5f"
+  },
+  {
+   "changed_at": "2026-11-10T15:12:00.146687+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "5ca9d19af912237f8c3920ca7fa9b53d6efc5003352bf6bdf3eedccdcee14a5f",
+   "kind": "content_changed",
+   "to_hash": "652f30f9832f91fdc69e02018a8ab4e910a27c3ea83f7368d24820a81025c15a"
   }
  ],
  "content": {
@@ -72,11 +81,11 @@
    }
   ],
   "published": "2026-09-18T16:08:55.847000+00:00",
-  "title": "Senior Go-to-Market Architect",
+  "title": "Senior Revenue Systems Architect",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-05T14:55:47.355329+00:00",
- "content_hash": "5ca9d19af912237f8c3920ca7fa9b53d6efc5003352bf6bdf3eedccdcee14a5f",
+ "content_changed_at": "2026-11-10T15:12:00.146687+00:00",
+ "content_hash": "652f30f9832f91fdc69e02018a8ab4e910a27c3ea83f7368d24820a81025c15a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -95,7 +104,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Spain",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Romania",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -111,7 +120,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Hungary",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -119,7 +128,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Portugal",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -127,7 +136,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Slovakia",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -135,7 +144,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Brazil",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -143,7 +152,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Poland",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -151,7 +160,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Colombia",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -159,7 +168,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Mexico",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      }
@@ -172,7 +181,7 @@
       "interpretation": null,
       "method": "description_section:MINIMUM REQUIREMENTS",
       "quote": "- 5+ years in a GTM engineering, Revenue operations, growth engineering, or marketing/sales engineering role, or a software engineering background you've deliberately pointed at revenue problems.\n- Clear, proven examples of solutions you've implemented that drove measurable pipeline impact. We'll ask you to walk us through them: what you built, why, and what moved as a result. Specifics matter more than scale\n- Deep, hands-on knowledge of the modern GTM stack. You've architected a CRM rather than just administered one: navigating existing processes to own the re-configuration of objects and fields, lifecycle stages, routing and territory logic, and the sync patterns that keep multiple systems consistent. Salesforce or HubSpot, plus enrichment providers, outbound and sequencing tools, marketing automation, and platforms such as Clay.\n- You build custom integrations, and can wire up a tool nobody at the company has used before from the docs alone.\n- Experience owning production workflows: error handling, retries, idempotency, monitoring, and alerting.\n- Working experience using AI/LLMs in a GTM or automation context - prompt and context engineering, and strong judgement to know where a model beats a rule and where it doesn't\n- Commercial instinct. You understand funnel mechanics, conversion rates, and unit economics well enough to spot which automation is worth building and which is a distraction\n- A bias toward shipping. You prototype quickly, put things in front of real users, and iterate rather than designing in the abstract.",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      }
@@ -189,7 +198,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      },
@@ -197,7 +206,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: Fully remote. To create the best experience for you and to meet our business needs, this role requires you to be based either within EMEA or Americas.",
-      "retrieved_at": "2026-11-05T14:55:47.355329+00:00",
+      "retrieved_at": "2026-11-10T15:12:00.146687+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/f4caa57f-bdb1-42d8-a884-12bf341f677c"
      }
