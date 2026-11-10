@@ -106,7 +106,7 @@ jobs:
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
       - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna when its free keys are set)
         continue-on-error: true
-        timeout-minutes: 14
+        timeout-minutes: 22
         env:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
