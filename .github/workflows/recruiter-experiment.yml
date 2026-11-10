@@ -34,7 +34,7 @@ jobs:
       - name: Run offline trial
         run: python experiments/weekend_trial.py --candidate "${{ inputs.candidate }}" --limit "${{ inputs.sample_limit }}"
       - name: Save trial report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: recruiter-trial-${{ inputs.candidate }}
           path: trial-output/

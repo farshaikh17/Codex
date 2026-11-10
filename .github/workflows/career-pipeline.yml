@@ -43,7 +43,7 @@ jobs:
           key: career-state-${{ github.run_id }}
       - name: Upload encrypted dashboards and CSVs
         if: hashFiles('state-cache/state.sqlite.enc') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: career-results-${{ github.run_id }}
           path: |
