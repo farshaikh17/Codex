@@ -140,6 +140,7 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
   /^\/api\/sources$/,
   /^\/api\/automation\/status$/,
   /^\/api\/export$/,
+  /^\/api\/discovery\/daily$/,
 ];
 function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
@@ -202,7 +203,7 @@ const qualList = (v: string) => { const parts = v.split(','); return parts.lengt
 const CACHE_SCHEMA = 'c2';
 const CORE_PATHS = new Set(['/api/candidates', '/api/dashboard/overview', '/api/sources', '/api/automation/status', '/api/applications', '/api/jobs',
   '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics', '/api/cohorts/metrics', '/api/profile',
-  '/api/india-remote/summary']);
+  '/api/india-remote/summary', '/api/discovery/daily']);
 // Percent-encoding aliases of one path (j1, %6a1, %6A1, farhan%5Fshaikh) collapse to a single canonical form.
 function canonicalPath(pathname: string): string | null {
   try { return pathname.split('/').map((seg) => encodeURIComponent(decodeURIComponent(seg))).join('/'); } catch { return null; }
@@ -2115,6 +2116,29 @@ router.get('/api/analytics', async (request, env, _params, url) => {
 });
 
 const pct1 = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1000) / 10 : 0);
+
+// What the discovery and watchlist runs recorded (migration-free: rows "run:<time>" in discovery_state, written by scripts/run_log.mjs). Counts only, summed per
+// UTC day, newest first, at most 14 days. A missing table or an unreadable row simply gives fewer days.
+router.get('/api/discovery/daily', async (request, env) => {
+  const days = new Map<string, any>();
+  try {
+    const { results } = await env.DB.prepare("SELECT key, value FROM discovery_state WHERE key LIKE 'run:%' ORDER BY key DESC LIMIT 80").all<any>();
+    for (const r of results || []) {
+      let v: any; try { v = JSON.parse(r.value); } catch { continue; }
+      const day = String(r.key).slice(4, 14);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !v || typeof v !== 'object') continue;
+      const d = days.get(day) || { day, runs: 0, new_jobs: 0, rescored: 0, closed: 0, reopened: 0, alive: 0, dead: 0, sources: {} as Record<string, { read: number; kept: number; full_text: number }> };
+      d.runs++;
+      for (const k of ['new_jobs', 'rescored', 'closed', 'reopened', 'alive', 'dead'] as const) d[k] += Number(v[k]) || 0;
+      for (const [name, s] of Object.entries(v.sources || {}) as [string, any][]) {
+        const t = d.sources[name] || (d.sources[name] = { read: 0, kept: 0, full_text: 0 });
+        t.read += Number(s?.read) || 0; t.kept += Number(s?.kept) || 0; t.full_text += Number(s?.full_text) || 0;
+      }
+      days.set(day, d);
+    }
+  } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; /* no table yet: no days */ }
+  return jsonResponse({ days: [...days.values()].slice(0, 14) }, 200, corsHeaders(request, env));
+});
 
 router.get('/api/analytics/discovery', async (request, env, _params, url) => {
   const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
