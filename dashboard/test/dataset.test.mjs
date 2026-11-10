@@ -140,3 +140,57 @@ test('reopen, two-run closures, job-site expiry and storage clean-up; hostile fi
   assert.ok(h.d.length <= 6000 && h.st.length <= 300 && h.sp === 0, 'every field bounded; infinite pay is not "published"');
   assert.equal(job('ds:greenhouse:10'), undefined, 'an absurd URL is skipped, not written');
 });
+
+// QA 2026-11-09 (segment 4): the re-score SQL on a randomized mix of row states. Whatever the mix, protected rows must not change, only the
+// two score tables may change, every changed row carries the marker, and running the same SQL again changes nothing.
+test('re-score property: 400 random rows; applied, overridden, non-review and already-tagged rows never change; second run is a no-op', () => {
+  let seed = 20261109; const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const w = world();
+  const STATUS = ['NEEDS_REVIEW', 'NEEDS_REVIEW', 'HOLD', 'READY', 'READY_HIGH', 'STRETCH_READY', 'INELIGIBLE'];
+  const DESC = ['Configure the CRM and automation of workflows. Fully remote.', 'Active secret clearance required. Remote.', 'Electrical maintenance and reliability for the plant.',
+    'On-site role. Not remote.', 'We offer visa sponsorship. Reliability programs.', 'US residents only. CRM automation.'];
+  const insJob = w.sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,description,location_restrictions,workplace_type) VALUES (?,?,?,?,?,?,?,?,?)`);
+  const insQ = w.sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status,eligibility_status,eligibility_reason,qualification_reason) VALUES (?,?,?,?,?,?,?)`);
+  const insS = w.sqlite.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,?,?)`);
+  const insA = w.sqlite.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)`);
+  const rows = [];
+  for (let i = 0; i < 400; i++) {
+    const cid = i % 2 ? F : S, job = `p${i}`, title = cid === F ? 'Implementation Manager' : 'Maintenance Engineer', loc = pick(['Remote - India', 'Pune, India', 'Remote', 'Houston, TX']);
+    const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
+    insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
+    insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v5":true}' : '{"preliminary":true}');
+    if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
+    // an application by the OTHER candidate on the same job must not protect this row's score
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v5":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+  }
+  const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
+    jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
+  const key = (r) => r.candidate_id + '|' + r.job_id;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));   // re-score only: no new jobs
+  const before = snap();
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify(rows.map(({ _st, _ov, _tagged, _app, ...r }) => r)));
+  const sql = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]).sql;
+  w.sqlite.exec(sql);
+  const after = snap();
+  assert.equal(after.jobs, before.jobs, 'jobs table untouched by the re-score');
+  assert.equal(after.apps, before.apps, 'applications untouched');
+  const bq = new Map(before.q.map((r) => [key(r), r])), bs = new Map(before.s.map((r) => [key(r), r]));
+  let changedScores = 0, changedQuals = 0;
+  for (const r of rows) {
+    const k = key(r), q0 = bq.get(k), s0 = bs.get(k), q1 = after.q.find((x) => key(x) === k), s1 = after.s.find((x) => key(x) === k);
+    const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
+    if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
+    if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v5, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    if (JSON.stringify(q1) !== JSON.stringify(q0)) {
+      changedQuals++;
+      assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
+      assert.ok(q1.qualification_status === q0.qualification_status || q1.qualification_status === 'INELIGIBLE', `status may only move to INELIGIBLE: ${k}`);
+    }
+  }
+  assert.ok(changedScores > 20 && changedQuals > 5, `the mix exercised the update paths (scores ${changedScores}, quals ${changedQuals})`);
+  w.sqlite.exec(sql);
+  assert.deepEqual(snap(), after, 'running the same SQL again changes nothing');
+});

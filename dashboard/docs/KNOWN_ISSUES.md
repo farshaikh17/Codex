@@ -100,3 +100,18 @@ Nothing below blocks the release. Each item says who decides or what would close
 - **Tab numbers on the READY dashboard count the whole queue; the list under a search or review sub-filter is narrower and says so.**
 - **Skill matching (changed 2026-11-06).** A skill used to count only when its exact phrase appeared in a posting, which phrases such as "CRM Configuration" almost never do. A skill now also counts when every one of its key words appears as a whole word; a multi-word skill needs at least two key words, so a lone generic word ("workflows") is not enough. This only ever adds matches. Rows already stored keep their scores until the owner-approved re-score (run by the daily discovery pipeline) updates the screen's own rows.
 - **Daily discovery pipeline.** See DISCOVERY_PIPELINE.md. The dataset is a third-party open dataset (MIT); if it disappears, the pipeline finds nothing new and closes nothing (closures need a full-size snapshot), and the Worker's own discovery keeps running.
+
+* **Outage backup needs a custom domain.** The edge-cache copy of public answers (`backupStore`/`backupServe`, `X-Cache: STALE-OUTAGE`)
+  relies on the Workers Cache API, which Cloudflare documents as not active on `*.workers.dev` hostnames. On the current
+  `workers.dev` address it most likely stores nothing, so visitors still see the 503 during a D1 outage. It starts working once the
+  Worker is served from a custom domain; a KV namespace would work on any hostname. Not yet verified live.
+
+* **Deleting a client (data removal on request).** `DELETE /api/clients/<client_id>` with the operator key removes the client, their screening results, application
+  and history rows, share links, their application record (name, e-mail, phone) and cached answers that mention them, in one atomic step. Shared job postings stay.
+  It refuses the two built-in candidates and an unknown id, and the answer lists how many rows were removed per table. There is no button for it in the dashboard yet.
+  Example: `curl -X DELETE -H "Authorization: Bearer $KEY" https://<site>/api/clients/<client_id>`.
+* **Cost of onboarding a client (corrected 2026-11-09, see COST_MODEL_2026-11-09.md).** Screening the existing jobs for a new client writes ABOUT NINE rows per active job, not two: Cloudflare counts
+  every index entry as a written row, and a qualification row carries 5 index entries and a score row 2 (6 + 3 = 9). 9 x 3,000 active jobs is 27,000 writes, 9 x 5,000 is 45,000, and about 11,100 jobs
+  would use the whole 100,000-a-day free allowance; the daily import already wrote 69,000 on 8 Nov and 70,316 by 21:36 UTC on 9 Nov. Nothing in the Worker counts writes per day, so onboarding on a busy day
+  can push the account over the limit. The READ cost of onboarding was far worse and is fixed on the QA branch: each backfill call used to scan every active job (about N x N / 40 job rows for a whole
+  onboarding, tens of millions of rows read for a large catalogue); it now continues from a cursor and reads about N. Spread onboarding over days, or screen only jobs matching the client's role keywords.

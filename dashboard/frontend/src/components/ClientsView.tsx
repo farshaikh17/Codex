@@ -46,11 +46,12 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
     try { await fn(); } catch (e: any) { setError(e.message); } finally { setBusy(null); }
   };
   const screenAll = async (id: string) => {
-    let total = 0;
+    let total = 0, cursor: number | null = null;       // each call continues where the previous one stopped, so it reads about 40 jobs, not the whole catalogue
     for (let i = 0; i < 150; i++) {                      // batches of 40 (CPU limit per request), at most 6,000 jobs per click
-      const r = await backfillClient(id);
+      const r = await backfillClient(id, cursor);
       total += r.inserted;
       if (!r.more) break;
+      cursor = r.next_cursor ?? null;
     }
     return total;
   };
@@ -105,11 +106,11 @@ export const ClientsView: React.FC<{ onOpenClient: (id: string) => void; onClien
                     <div className="text-sm text-slate-700 mt-1"><a className="text-coral-600 hover:underline" href={`mailto:${r.email}`}>{r.email}</a>{r.phone ? ` · ${r.phone}` : ''} · {r.current_location}</div>
                     <div className="text-sm mt-1"><span className="text-slate-500">Looking for:</span> {r.target_roles}</div>
                     <div className="text-xs text-slate-500 mt-1">{[r.work_preference, r.years_experience && `${r.years_experience} yrs`, r.plan && `plan ${r.plan}`].filter(Boolean).join(' · ')}
-                      {r.linkedin_url && <> · <a className="text-coral-600 hover:underline" href={r.linkedin_url} target="_blank" rel="noreferrer noopener">profile</a></>}</div>
+                      {r.linkedin_url && /^https:\/\//i.test(r.linkedin_url) && <> · <a className="text-coral-600 hover:underline" href={r.linkedin_url} target="_blank" rel="noreferrer noopener">profile</a></>}</div>
                     {r.message && <p className="text-sm text-slate-600 mt-2 whitespace-pre-wrap">{r.message}</p>}
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs shrink-0">
-                    <button onClick={() => useRequest(r)} className="px-3 py-1.5 rounded-full bg-coral-500 text-white font-semibold hover:bg-coral-600">Create client from this</button>
+                    <button onClick={() => useRequest(r)} className="px-3 py-1.5 rounded-full bg-coral-600 text-white font-semibold hover:bg-coral-600">Create client from this</button>
                     {r.status === 'NEW' && <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'CONTACTED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Mark contacted</button>}
                     <button onClick={() => run('req-' + r.id, async () => { await updateClientRequest(r.id, 'DECLINED'); await loadRequests(); })} className="px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50">Decline</button>
                     <button onClick={() => { if (window.confirm(`Delete ${r.full_name}'s application permanently? Use this when someone asks for their data to be removed.`)) run('del-' + r.id, async () => { await deleteClientRequest(r.id); await loadRequests(); }); }} className="px-3 py-1.5 rounded-full border border-rose-300 text-rose-700 hover:bg-rose-50">Delete</button>

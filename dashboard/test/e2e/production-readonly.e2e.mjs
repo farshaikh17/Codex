@@ -100,6 +100,12 @@ for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']])
   r = await sameAsApi(rd.jobs.map((j) => j.id));
   check(`${btn}: READY dashboard shows exactly the server's READY jobs and its tab count is their total`, r.ok && rd.jobs.every((j) => j.farhan_fit === 'READY') && new RegExp(`READY to Apply \\(${rd.status_counts.READY}\\)`, 'i').test(await text()), `screen [${r.got}] api [${rd.jobs.map((j) => j.id)}]`);
 }
+// The navbar refresh button only re-reads data: no write is attempted and no unlock window opens for a visitor.
+{
+  const before = blocked.length;
+  await page.locator('button[title="Sync / Refresh"]').first().click(); await page.waitForTimeout(1500);
+  check('navbar refresh re-reads data: no write attempted, no unlock window', blocked.length === before && !(await modalOpen()), blocked.slice(before).join(', '));
+}
 check('across the whole visit no request was refused and no key was used', apiLog.filter((r) => r.status >= 400).length === 0 && apiLog.every((r) => !r.auth), JSON.stringify(apiLog.filter((r) => r.status >= 400).slice(0, 3)));
 check('no write request was attempted by the UI during this run', blocked.length === 0, blocked.join(', '));
 check('no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));

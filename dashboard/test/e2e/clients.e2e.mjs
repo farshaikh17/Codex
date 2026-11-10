@@ -36,7 +36,7 @@ const watch = (page, label) => {
   page.on('pageerror', (e) => errs.push(`${label}: ${e.message}`));
   return errs;
 };
-const tableIds = (page) => page.$$eval('tr[data-job-id]', (rows) => rows.map((r) => r.getAttribute('data-job-id')));
+const tableIds = (page) => page.$$eval('[data-job-id]', (rows) => rows.map((r) => r.getAttribute('data-job-id')));
 
 // ---- operator onboards a client in the UI -------------------------------------------------------------------------------
 const opCtx = await browser.newContext({ ...ctxOpts, acceptDownloads: true });
@@ -63,7 +63,7 @@ check('C3 nothing was marked READY or STRETCH automatically', rec?.apply_worthy 
 
 // the client's workspace in the operator view lists exactly what the API returns for it
 await op.selectOption('[data-testid="client-select"]', ID);
-await op.waitForSelector('tr[data-job-id]', { timeout: 15000 });
+await op.waitForSelector('[data-job-id]', { timeout: 15000 });
 const apiFirst = (await api(`/api/jobs?candidate_id=${ID}&limit=50&exclude_applied=true&exclude_dismissed=true&sort_by=score_desc`)).json.jobs.map((j) => j.id);
 const opRows = await tableIds(op);
 check('C4 the workspace table shows the client’s jobs (same identities as the API)', opRows.length > 0 && JSON.stringify(sorted(opRows)) === JSON.stringify(sorted(apiFirst)), `${opRows} vs ${apiFirst}`);
@@ -96,7 +96,7 @@ const viewer = await viewCtx.newPage();
 const viewErrs = watch(viewer, 'viewer');
 await viewer.goto(shareUrl);
 await viewer.waitForSelector('[data-testid="share-banner"]', { timeout: 15000 });
-await viewer.waitForSelector('tr[data-job-id]', { timeout: 15000 });
+await viewer.waitForSelector('[data-job-id]', { timeout: 15000 });
 const banner = await viewer.textContent('[data-testid="share-banner"]');
 check('C9 the viewer lands in the client’s workspace with a read-only banner naming the client', banner.includes(NAME) && /read-only/i.test(banner), banner);
 check('C9b the viewer\u2019s menu offers only their own dashboard: no other candidates, no client picker, no operator pages',
