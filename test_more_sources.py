@@ -58,6 +58,7 @@ class MoreSources(unittest.TestCase):
     def test_doosan_group_feed_skips_bobcat_postings(self):
         rss = (b'<rss><channel>'
                b'<item><title>Forklift Operator (Statesville, NC, US, 28625)</title><link>https://jobs.doosan.com/bobcat/job/Statesville-Forklift/1/</link><description>x</description></item>'
+               b'<item><title>No jobs currently available - Check out our other sites</title><link>https://jobs.doosan.com/go/x/1/</link><description>x</description></item>'
                b'<item><title>Turbine Maintenance Engineer (Changwon, KR, 51392)</title><link>https://jobs.doosan.com/job/Changwon-Turbine-Maintenance/2/</link><description>x</description></item>'
                b'</channel></rss>')
         def only_doosan(url, data=None, headers=None, timeout=40):

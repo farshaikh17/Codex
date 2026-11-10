@@ -145,6 +145,8 @@ def successfactors():
                 if any(x in (it.findtext('link') or '') for x in skip):
                     continue
                 title = text(it.findtext('title'))
+                if title.lower().startswith('no jobs currently available'):   # the portal's empty-result placeholder
+                    continue
                 m = re.match(r'^(.*?)\s*\(([^()]*)\)\s*$', title)   # "Role (City, CC, zip)"
                 j = job('successfactors', (it.findtext('link') or '').strip(), m.group(1) if m else title, company, m.group(2) if m else '',
                         text(it.findtext('description')), when(it.findtext('pubDate')))
