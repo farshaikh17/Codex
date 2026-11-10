@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
 
 UA = 'career-job-engine/1.0 (+private job search)'
-WWR = ['remote-management-and-finance-jobs', 'remote-product-jobs', 'remote-sales-and-marketing-jobs', 'all-other-remote-jobs']
+WWR = ['remote-management-and-finance-jobs', 'remote-product-jobs', 'remote-sales-and-marketing-jobs', 'all-other-remote-jobs', 'remote-devops-sysadmin-jobs']
 HIMALAYAS_PAGES = 10   # 20 newest jobs a page
 TAG = re.compile(r'<[^>]+>')
 
@@ -85,6 +85,20 @@ def wwr():
                       text(it.findtext('region')) or 'Remote', text(it.findtext('description')), when(it.findtext('pubDate')))
 
 
+def jobspresso():
+    """Jobspresso's public RSS (curated remote jobs). The creator field reads "Company<br>⚲ Location"."""
+    root = ET.fromstring(get('https://jobspresso.co/feed/?post_type=job_listing'))
+    for it in root.iter('item'):
+        creator = ''
+        for c in it:
+            if c.tag.endswith('}creator') or c.tag == 'creator':
+                creator = c.text or ''
+        company, _, place = re.sub(r'(?i)<br\s*/?>', '\n', html.unescape(creator)).partition('\n')
+        place = re.sub(r'^[^\w]+', '', place.replace('\xa0', ' ')).strip()
+        yield job('jobspresso', (it.findtext('link') or '').strip(), text(it.findtext('title')), text(company), place or 'Remote',
+                  text(it.findtext('description')), when(it.findtext('pubDate')))
+
+
 def himalayas():
     for page in range(HIMALAYAS_PAGES):
         d = json.loads(get(f'https://himalayas.app/jobs/api?limit=20&offset={page * 20}'))
@@ -131,7 +145,7 @@ def hn():
             yield j
 
 
-SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn}
+SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn, 'jobspresso': jobspresso}
 MAX_DAYS = {'hnhiring': 35}   # the thread is monthly: its posts stay current all month
 
 

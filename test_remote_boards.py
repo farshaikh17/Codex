@@ -62,5 +62,18 @@ class RemoteBoards(unittest.TestCase):
             self.assertIn('error', report['himalayas'])
 
 
+    def test_jobspresso_rss_company_and_location_from_the_creator_field(self):
+        rss = (b'<?xml version="1.0"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/"><channel>'
+               b'<item><title>Implementation Manager</title><link>https://jobspresso.co/job/im/</link>'
+               b'<dc:creator>Acme Co&lt;br&gt;\xe2\x9a\xb2&amp;nbsp;United Kingdom</dc:creator>'
+               b'<pubDate>Tue, 10 Nov 2026 17:40:12 +0000</pubDate><description>&lt;p&gt;Run onboarding.&lt;/p&gt;</description></item></channel></rss>')
+        with mock.patch.object(rb, 'get', lambda url, timeout=30: rss):
+            got = list(rb.jobspresso())
+        self.assertEqual(len(got), 1)
+        self.assertEqual((got[0]['title'], got[0]['company'], got[0]['location']), ('Implementation Manager', 'Acme Co', 'United Kingdom'))
+        self.assertEqual(got[0]['url'], 'https://jobspresso.co/job/im/'); self.assertIn('Run onboarding', got[0]['description'])
+        self.assertIn('jobspresso', rb.SOURCES); self.assertIn('remote-devops-sysadmin-jobs', rb.WWR)
+
+
 if __name__ == '__main__':
     unittest.main()

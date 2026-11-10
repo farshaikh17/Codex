@@ -508,6 +508,7 @@ export const App: React.FC = () => {
         job={{ ...selectedJob, candidate_id: candidateId }}
         onClose={() => setSelectedJob(null)}
         onUpdateApplication={handleUpdateApplication}
+        profileSkills={profile && profile.id === candidateId ? profile.primary_skills : undefined}
         onJobUpdated={async (updatedJob) => {
           setSelectedJob(prev => (prev ? { ...updatedJob, candidate_id: candidateId } : null));
           await loadData();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Job, ApplicationStatus, CohortMetrics, ApplicationHistoryRecord } from '../types';
-import { fetchCohortMetrics, fetchApplicationHistory } from '../api';
+import { fetchCohortMetrics, fetchApplicationHistory, fetchFollowUps, setFollowUp, isOperatorAuthenticated } from '../api';
+import { followUpState } from '../jobHelpers';
 import { 
   BookmarkCheck, 
   Building, 
@@ -30,6 +31,26 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
   const [historyRecords, setHistoryRecords] = useState<ApplicationHistoryRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+  const [followUps, setFollowUps] = useState<Record<string, string>>({});
+  const [followUpError, setFollowUpError] = useState<string>('');
+  const operator = isOperatorAuthenticated();
+  const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    let current = true;
+    setFollowUps({});
+    if (operator) fetchFollowUps(candidateId).then((items) => { if (current) setFollowUps(Object.fromEntries(items.map((f) => [f.job_id, f.follow_up_at]))); });
+    return () => { current = false; };
+  }, [candidateId, operator]);
+
+  const changeFollowUp = async (jobId: string, value: string) => {
+    setFollowUpError('');
+    try {
+      await setFollowUp(jobId, candidateId, value || null);
+      setFollowUps((prev) => { const next = { ...prev }; if (value) next[jobId] = value; else delete next[jobId]; return next; });
+    } catch (e: any) { setFollowUpError(e?.message || 'Could not save the follow-up date'); }
+  };
+  const overdueCount = Object.values(followUps).filter((d) => followUpState(d, today).key === 'overdue').length;
 
   useEffect(() => {
     let current = true;
@@ -163,6 +184,13 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
         </div>
       </div>
 
+      {operator && overdueCount > 0 && (
+        <div role="status" className="p-3 bg-rose-50 border border-rose-200 text-rose-900 text-xs rounded-xl font-medium">
+          {overdueCount} follow-up{overdueCount === 1 ? ' is' : 's are'} overdue. Contact those employers yourself, then set a new date or clear it.
+        </div>
+      )}
+      {followUpError && <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-900 text-xs rounded-xl">{followUpError}</div>}
+
       {/* Tracked List */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
         {filteredTracked.length === 0 ? (
@@ -221,6 +249,20 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
                     Applied: {new Date(job.application.applied_at).toLocaleDateString()}
                   </div>
                 )}
+                {operator && (() => {
+                  const st = followUpState(followUps[job.id], today);
+                  const tone = st.key === 'overdue' ? 'bg-rose-100 text-rose-900' : st.key === 'today' ? 'bg-amber-100 text-amber-900' : st.key === 'soon' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-800';
+                  return (
+                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <label className="text-[11px] text-slate-700 flex items-center gap-1">
+                        <span>Follow up</span>
+                        <input type="date" value={followUps[job.id] || ''} onChange={(e) => changeFollowUp(job.id, e.target.value)}
+                          className="border border-slate-300 rounded px-1.5 py-1 text-xs text-slate-800 bg-white" aria-label={`Follow-up date for ${job.title} at ${job.company}`} />
+                      </label>
+                      {st.key !== 'none' && <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${tone}`}>{st.label}</span>}
+                    </div>
+                  );
+                })()}
                 <button
                   type="button"
                   onClick={(e) => openHistoryModal(job, e)}

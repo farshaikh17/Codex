@@ -862,3 +862,23 @@ export async function fetchDiscoveryDaily(): Promise<{ days: DiscoveryDay[] }> {
   if (!res.ok) throw new Error('Failed to fetch the discovery log');
   return res.json();
 }
+
+export interface FollowUp { job_id: string; follow_up_at: string; note: string | null; status: string; title: string; company: string }
+
+/** Operator-only. Anyone else (or a database without the table yet) gets an empty list. */
+export async function fetchFollowUps(candidateId: string): Promise<FollowUp[]> {
+  try {
+    const res = await authedFetch(`${API_BASE}/follow-ups?candidate_id=${encodeURIComponent(candidateId)}`);
+    if (!res.ok) return [];
+    return (await res.json()).items || [];
+  } catch { return []; }
+}
+
+/** Sets (YYYY-MM-DD) or clears (null) the follow-up date of a tracked application. */
+export async function setFollowUp(jobId: string, candidateId: string, date: string | null, note?: string): Promise<void> {
+  const res = await authedFetch(`${API_BASE}/applications/${encodeURIComponent(jobId)}/follow-up`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify({ candidate_id: candidateId, follow_up_at: date, ...(note !== undefined ? { note } : {}) }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Could not save the follow-up date');
+}

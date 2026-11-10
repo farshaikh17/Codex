@@ -1906,6 +1906,45 @@ router.post('/api/applications', async (request, env) => {
   return handleApplicationSave(request, env);
 });
 
+// Follow-up dates (operator only, never in a public answer): one optional date and short note per tracked application, so the tracker can flag what is overdue.
+// Stored in application_followups (migration 0018); a missing table behaves as "no follow-ups" until the migration is applied.
+router.put('/api/applications/:id/follow-up', async (request, env, params) => {
+  let body: any;
+  try { body = await request.json(); } catch { return jsonResponse({ error: 'A JSON body is required.' }, 400, corsHeaders(request, env)); }
+  const candidateId = knownCandidate(body?.candidate_id);
+  if (!candidateId) return badCandidate(request, env, body?.candidate_id);
+  const jobId = params.id;
+  const app = await env.DB.prepare('SELECT id FROM applications WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).first<any>();
+  if (!app) return jsonResponse({ error: 'Save this job to the tracker first; a follow-up belongs to a tracked application.' }, 404, corsHeaders(request, env));
+  const raw = body?.follow_up_at;
+  if (raw === null || raw === '' || raw === undefined) {
+    await env.DB.prepare('DELETE FROM application_followups WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).run();
+    return jsonResponse({ job_id: jobId, candidate_id: candidateId, follow_up_at: null, cleared: true }, 200, corsHeaders(request, env));
+  }
+  if (typeof raw !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || Number.isNaN(Date.parse(raw + 'T00:00:00Z')) || new Date(raw + 'T00:00:00Z').toISOString().slice(0, 10) !== raw)
+    return jsonResponse({ error: 'follow_up_at must be a real date written YYYY-MM-DD, or null to clear it.' }, 400, corsHeaders(request, env));
+  const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 300) || null : null;
+  await env.DB.prepare(`INSERT INTO application_followups(candidate_id, job_id, follow_up_at, note, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(candidate_id, job_id) DO UPDATE SET follow_up_at = excluded.follow_up_at, note = excluded.note, updated_at = excluded.updated_at`).bind(candidateId, jobId, raw, note).run();
+  return jsonResponse({ job_id: jobId, candidate_id: candidateId, follow_up_at: raw, note }, 200, corsHeaders(request, env));
+});
+
+router.get('/api/follow-ups', async (request, env, _params, url) => {
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
+  try {
+    const { results } = await env.DB.prepare(`SELECT f.job_id, f.follow_up_at, f.note, a.status, j.title, j.company
+      FROM application_followups f
+      JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
+      JOIN jobs j ON j.id = f.job_id
+      WHERE f.candidate_id = ? ORDER BY f.follow_up_at, f.job_id LIMIT 200`).bind(candidateId).all<any>();
+    return jsonResponse({ candidate_id: candidateId, items: results || [] }, 200, corsHeaders(request, env));
+  } catch (e: any) {
+    if (isDatabaseFailure(e?.message)) throw e;
+    return jsonResponse({ candidate_id: candidateId, items: [] }, 200, corsHeaders(request, env));   // table not there yet
+  }
+});
+
 // Un-save: removes a tracker record that is still only SAVED (never one that has moved on, has notes, or carries a
 // decision), and writes a history row so the action is on record. Before this, un-saving set WITHDRAWN, which every
 // list counted as applied.
@@ -2934,7 +2973,7 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
 // Removes a client and everything held about them, in one atomic batch (the privacy notice promises deletion on request). Operator only. The two built-in
 // candidates cannot be removed. Shared job postings stay; what is removed is every row tied to this client, their application record (name, e-mail, phone)
 // and any cached answers that mention the client.
-const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'applications', 'past_applications',
+const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'application_followups', 'applications', 'past_applications',
   'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests'] as const;
 router.delete('/api/clients/:id', async (request, env, params) => {
   const id = knownCandidate(params.id);
