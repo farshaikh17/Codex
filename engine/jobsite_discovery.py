@@ -48,7 +48,7 @@ class BlockWatch(logging.Handler):
         self.messages = []
 
     def emit(self, record):
-        if record.name.startswith('JobSpy'):
+        if re.match(r'^jobspy(?:[.:]|$)', record.name, re.I):
             text = record.getMessage()
             if BLOCK_WORDS.search(text):
                 self.messages.append(text[:120])
@@ -132,3 +132,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
