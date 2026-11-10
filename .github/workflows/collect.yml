@@ -27,7 +27,7 @@ jobs:
         run: |
           git fetch origin "$GITHUB_REF_NAME"
           git merge --ff-only "origin/$GITHUB_REF_NAME" || git reset --hard "origin/$GITHUB_REF_NAME"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Test incremental publishing, adapters and the source registry
