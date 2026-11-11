@@ -58,6 +58,8 @@ jobs:
     # library) runs without them.
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false   # the job-site and feed steps run third-party code; no GitHub token is left in .git/config for them
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

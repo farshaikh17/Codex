@@ -97,7 +97,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Stretch</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <div className="text-xl font-bold text-amber-700 font-mono">{farhan.review_count}</div>
+                <div className="text-xl font-bold text-amber-700 font-mono">{Math.max(0, farhan.review_count - (farhan.unscreened_count || 0))}</div>
                 <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">To review</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
@@ -152,7 +152,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Stretch</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <div className="text-xl font-bold text-amber-700 font-mono">{sana.review_count}</div>
+                <div className="text-xl font-bold text-amber-700 font-mono">{Math.max(0, sana.review_count - (sana.unscreened_count || 0))}</div>
                 <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">To review</div>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
@@ -185,7 +185,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <div className="grid grid-cols-4 gap-2 mt-4 text-center">
                 <div><div className="text-lg font-bold text-emerald-700 font-mono">{c.ready_count}</div><div className="text-[10px] text-slate-500 uppercase">Ready</div></div>
                 <div><div className="text-lg font-bold text-emerald-600 font-mono">{c.stretch_count}</div><div className="text-[10px] text-slate-500 uppercase">Stretch</div></div>
-                <div><div className="text-lg font-bold text-amber-700 font-mono">{c.review_count}</div><div className="text-[10px] text-slate-500 uppercase">Review</div></div>
+                <div><div className="text-lg font-bold text-amber-700 font-mono">{Math.max(0, c.review_count - (c.unscreened_count || 0))}</div><div className="text-[10px] text-slate-500 uppercase">Review</div></div>
                 <div><div className="text-lg font-bold text-blue-700 font-mono">{c.applied_count}</div><div className="text-[10px] text-slate-500 uppercase">Applied</div></div>
               </div>
               <div className="mt-4 text-xs font-semibold text-emerald-700 flex items-center gap-1">Open workspace <ArrowRight className="w-3.5 h-3.5" /></div>

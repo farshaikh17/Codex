@@ -54,7 +54,7 @@ export const App: React.FC = () => {
   const setActiveTab = (tab: NavTab, clientId?: string) => {
     if (tab === 'farhan' || tab === 'sana' || (tab === 'client' && clientId)) {
       const nextCandidate = tab === 'client' ? clientId! : tab === 'sana' ? 'sana_ansari' : 'farhan_shaikh';
-      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); setWeeklyMetrics(null); setIndiaRemoteSummary(null); setTotalJobsCount(0); setStatusCounts({ READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 }); setProfile(null); }
+      if(nextCandidate !== candidateId) { setJobs([]); setTrackedJobs([]); setSelectedJob(null); setAnalytics(null); setWeeklyMetrics(null); setIndiaRemoteSummary(null); setTotalJobsCount(0); setStatusCounts({ READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 }); setUnscreened(0); setProfile(null); }
       setCandidateId(nextCandidate);
     }
     changeActiveTab(tab);
@@ -78,6 +78,7 @@ export const App: React.FC = () => {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [unscreened, setUnscreened] = useState(0);   // rows inside NEEDS_REVIEW the screen has not judged yet (shown apart from "to review")
   // The job panel gets the same object until the selection really changes: a new object on every render reset the notes being typed and pulled focus out of the field.
   const closeJob = useCallback(() => setSelectedJob(null), []);
   // Which list the Ready screen opens on, and a counter that rebuilds it only when asked (a card click, or a job whose status changed): opening a job must not reset the tab, page or search.
@@ -169,6 +170,7 @@ export const App: React.FC = () => {
       setTotalJobsCount(paginatedResult.total);
       if (paginatedResult.status_counts) {
         setStatusCounts(paginatedResult.status_counts);
+        setUnscreened(paginatedResult.unscreened_count || 0);
       }
       
       setTrackedJobs(trackerData);
@@ -427,8 +429,8 @@ export const App: React.FC = () => {
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-amber-400 hover:shadow-md cursor-pointer transition-all"
                   >
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">To review</div>
-                    <div className="text-2xl font-black text-amber-700 font-mono mt-0.5">{statusCounts.NEEDS_REVIEW}</div>
-                    <div className="text-[11px] text-amber-600 font-semibold mt-0.5">In the list below ↓</div>
+                    <div className="text-2xl font-black text-amber-700 font-mono mt-0.5" data-testid="to-review-count">{Math.max(0, statusCounts.NEEDS_REVIEW - unscreened)}</div>
+                    <div className="text-[11px] text-amber-600 font-semibold mt-0.5">{unscreened > 0 ? `+ ${unscreened} not screened yet` : 'In the list below ↓'}</div>
                   </div>
 
                   <div
