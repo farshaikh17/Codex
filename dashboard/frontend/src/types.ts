@@ -213,6 +213,7 @@ export interface CandidateDashboardCard {
   ready_count: number;
   stretch_count: number;
   review_count: number;
+  unscreened_count?: number;   // part of review_count: imported rows the screen has not judged yet
   applied_count: number;
   application_records?: number;
   display_title?: string;
@@ -644,5 +645,6 @@ export interface PaginatedJobsResult {
     INELIGIBLE: number;
     HOLD: number;
   };
+  unscreened_count?: number;   // part of NEEDS_REVIEW: imported rows the screen has not judged yet
   jobs: Job[];
 }

@@ -95,10 +95,12 @@ E2E_KEY=any-local-test-value node test/e2e/browser.e2e.mjs desktop      # and: m
 E2E_BASE=http://localhost:8787 node test/e2e/production-readonly.e2e.mjs desktop   # rehearsal of the release browser check
 SMOKE_BASE=http://localhost:8787 node scripts/post_deploy_smoke.mjs                # rehearsal of the public smoke test
 # people links, skill list, follow-up dates / overdue flag, Applied card, daily card. Needs descriptions naming skills and a cleared cache:
-npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "DELETE FROM response_cache; DELETE FROM auth_failures; DELETE FROM application_followups; UPDATE jobs SET description = 'We need Salesforce, SQL, Python and Zapier experience for workflow automation.'; UPDATE candidates SET primary_skills = '[\"Salesforce\",\"Python\"]' WHERE id = 'farhan_shaikh'"
+npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "DELETE FROM response_cache; DELETE FROM auth_failures; DELETE FROM application_followups; UPDATE jobs SET description = 'We need Salesforce, SQL, Python and Zapier experience for workflow automation.'; UPDATE candidates SET primary_skills = '[\"Salesforce\",\"Python\"]' WHERE id = 'farhan_shaikh'; UPDATE candidate_qualifications SET qualification_reason = '[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.' WHERE candidate_id = 'farhan_shaikh' AND job_id IN ('job_001','job_002','job_008')"
 E2E_KEY=any-local-test-value node test/e2e/features.e2e.mjs desktop    # and: mobile
 ```
 (Other suites: `a11y`, `faults`, `site` use the same seed; `listing` and `clients` need a separate database seeded with `node test/e2e/listing-seed.mjs`.)
+The `site` suite submits the public application form, which allows only a few submissions a day per network: after several runs on one database it
+answers 429 and the suite times out. Clear it with `--command "DELETE FROM client_requests"` on the disposable database.
 (`E2E_CHROMIUM=/path/to/chrome` selects a browser if Playwright's own is not installed; `.tmp-*` is git-ignored. The first
 script ends by deliberately locking the local limiter, so clear it before running again:
 `npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "DELETE FROM auth_failures"`.)

@@ -3,7 +3,7 @@
 // MIN_GAP_HOURS makes the new trigger a quick no-op, while a dropped trigger is caught up by the next one.
 // "Real work" means the named job finished with success: a run whose job was skipped (budget guard) does not count.
 //   env: GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_RUN_ID, WORKFLOW_FILE, REAL_JOB, MIN_GAP_HOURS, EVENT
-//   writes skip=true|false to $GITHUB_OUTPUT. Unknown (API refused) -> do not skip.
+//   writes skip=true|false to $GITHUB_OUTPUT. Unknown (API refused) -> a scheduled trigger skips, a manual run goes ahead.
 import fs from 'node:fs';
 
 /** Pure decision. runs = newest first: [{ id, run_started_at, jobs: [{ name, conclusion }] }] (the current run excluded). */
@@ -30,16 +30,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const minGapHours = Number(process.env.MIN_GAP_HOURS || 20);
   let d;
   try {
-    const list = await gh(`/repos/${repo}/actions/workflows/${wf}/runs?status=success&per_page=6`, token);
+    const list = await gh(`/repos/${repo}/actions/workflows/${wf}/runs?status=success&per_page=20`, token);
     const runs = [];
     for (const r of (list.workflow_runs || []).filter((x) => String(x.id) !== String(runId))) {
       const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=10`, token);
       runs.push({ id: r.id, run_started_at: r.run_started_at, jobs: jobs.jobs.map((j) => ({ name: j.name, conclusion: j.conclusion })) });
-      if (runs.length >= 4) break;
+      if (runs.length >= 12) break;   // far enough back that a real run is not hidden behind a row of guard-skipped ones
     }
     d = decide(runs, { minGapHours, realJob, event });
   } catch (e) {
-    d = { skip: false, reason: `could not read earlier runs (${String(e.message).slice(0, 80)}); going ahead` };
+    // A scheduled trigger that cannot tell whether the work already ran does not run it (the next trigger tries again); a person's manual run still goes ahead.
+    d = event === 'schedule' ? { skip: true, reason: `could not read earlier runs (${String(e.message).slice(0, 80)}); skipping this scheduled trigger` }
+      : { skip: false, reason: `could not read earlier runs (${String(e.message).slice(0, 80)}); manual run goes ahead` };
   }
   console.log(`Recent-run guard: ${d.skip ? 'SKIP' : 'go'} - ${d.reason}`);
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `skip=${d.skip}\n`);

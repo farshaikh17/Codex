@@ -258,6 +258,7 @@ export async function fetchJobs(params?: {
     limit: data.limit || limit,
     offset: data.offset || offset,
     status_counts: data.status_counts,
+    unscreened_count: Number(data.unscreened_count || 0),
     jobs: data.jobs || []
   };
 }

@@ -35,7 +35,7 @@ for (const p of ['/applications/x/history?candidate_id=farhan_shaikh', '/jobs/x/
   const r = await fetch(BASE + '/api' + p);
   check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, 'status ' + r.status);
 }
-for (const [m, p, b] of [['POST', '/applications', { candidate_id: 'farhan_shaikh', job_id: 'x', status: 'APPLIED' }], ['PUT', '/profile?candidate_id=farhan_shaikh', { full_name: 'x' }], ['POST', '/automation/trigger', {}], ['POST', '/jobs/x/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'x' }]]) {
+for (const [m, p, b] of [['POST', '/applications', { candidate_id: 'farhan_shaikh', job_id: 'x', status: 'APPLIED' }], ['PUT', '/profile?candidate_id=smoke-nonexistent', {}], ['POST', '/automation/smoke-nonexistent', {}], ['POST', '/jobs/x/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'x' }]]) {
   const r = await fetch(BASE + '/api' + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
   check(`anonymous ${m} ${p.split('?')[0]} is refused (no record can be changed)`, r.status === 401, 'status ' + r.status);
 }

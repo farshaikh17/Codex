@@ -193,7 +193,8 @@ def existing(jobs, local=None):
         for r in d1(f"SELECT source_url u FROM jobs WHERE source_url IN (SELECT value FROM json_each({sql_str(url_list)})) "
                     f"UNION SELECT original_posting_url FROM jobs WHERE original_posting_url IN (SELECT value FROM json_each({sql_str(url_list)}))", local):
             urls.add(r['u'])
-    pairs = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 1", local)}
+    # Employer, title AND stated location: the same role in another city is a different opening (owner rule: only exact duplicates collapse).
+    pairs = {(norm(r['c']), norm(r['t']), norm(r['l'])) for r in d1("SELECT company c, title t, location_restrictions l FROM jobs WHERE is_active = 1", local)}
     closed = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
     return ids, urls, pairs, closed
 
@@ -207,7 +208,7 @@ def split_new(jobs, local=None):
             seen.add(k); unique.append(j)
     ids, urls, pairs, closed = existing(unique, local) if unique else ({}, set(), set(), set())
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
-    fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title'])) not in pairs]
+    fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
     for j in fresh:   # the same role closed within the last 180 days and is back under a new id
         if (norm(j['company']), norm(j['title'])) in closed:
             j['repost'] = True

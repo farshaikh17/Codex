@@ -102,3 +102,54 @@ test('migration 0020 moves only the two Drivetrain marketing roles out of Stretc
   assert.deepEqual(st, { m1: 'HOLD/HOLD', m2: 'HOLD/HOLD', m3: 'STRETCH_READY/null', m4: 'STRETCH_READY/null', m5: 'STRETCH_READY/null' });
   assert.equal(w.sqlite.prepare("SELECT COUNT(*) c FROM qualification_history WHERE actor='Owner'").get().c, 2, 'one history row each, not repeated');
 });
+
+test('unscreened collector rows are counted apart from To review, in the job list and the overview', async () => {
+  const w = world();
+  for (const [id, reason] of [['u1', '[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.'], ['u2', '[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.'], ['s1', 'Cloud discovery match.']]) {
+    w.job(id, 'Implementation Manager ' + id);
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason) VALUES (?,?,?,?)`, F, id, 'NEEDS_REVIEW', reason);
+  }
+  const list = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}`, { key: null });
+  assert.equal(list.json.status_counts.NEEDS_REVIEW, 3, 'the status count itself is unchanged');
+  assert.equal(list.json.unscreened_count, 2);
+  const ov = await req(w.env, 'GET', '/api/dashboard/overview', { key: null });
+  const row = (ov.json.candidates || ov.json).find((c) => (c.candidate_id || c.id) === F);
+  assert.equal(row.review_count, 3); assert.equal(row.unscreened_count, 2);
+});
+
+test('"applied" means the same thing on every screen: applied stages only', async () => {
+  const w = world();
+  const stages = ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED', 'WITHDRAWN', 'REVIEWING'];
+  stages.forEach((st, i) => {
+    w.job('a' + i, 'Implementation Manager ' + i);
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status) VALUES (?,?,?,?)`, F, 'a' + i, 'NEEDS_REVIEW', 'ELIGIBLE');
+    w.run(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,?)`, 'ap' + i, F, 'a' + i, st);
+  });
+  const dash = (await req(w.env, 'GET', `/api/candidates/${F}/dashboard`)).json;
+  const strat = (await req(w.env, 'GET', `/api/candidates/${F}/strategy`)).json;
+  const ov = (await req(w.env, 'GET', '/api/dashboard/overview')).json;
+  const ovRow = (ov.candidates || ov).find((c) => (c.candidate_id || c.id) === F);
+  const ir = (await req(w.env, 'GET', `/api/india-remote/summary?candidate_id=${F}`)).json;
+  assert.deepEqual([dash.applied_count, strat.applied_count, ovRow.applied_count, ir.applied_count], [3, 3, 3, 3], 'APPLIED + INTERVIEWING + OFFER');
+  assert.deepEqual([dash.application_records, strat.application_records, ovRow.application_records], [7, 7, 7], 'every tracker record');
+});
+
+test('% and _ typed in the job search are literal characters', async () => {
+  const w = world();
+  w.job('p1', '100% Remote Implementation Lead'); w.job('p2', 'Implementation Lead'); w.job('p3', 'CRM_Admin Lead'); w.job('p4', 'CRMXAdmin Lead');
+  for (const id of ['p1', 'p2', 'p3', 'p4']) w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status) VALUES (?,?,?)`, F, id, 'NEEDS_REVIEW');
+  const ids = async (q) => ((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&search=${encodeURIComponent(q)}`)).json.jobs || []).map((j) => j.id).sort();
+  assert.deepEqual(await ids('%'), ['p1'], 'a bare % matches only the title that contains one');
+  assert.deepEqual(await ids('CRM_Admin'), ['p3'], '_ is not "any character"');
+  assert.deepEqual(await ids('Implementation'), ['p1', 'p2']);
+});
+
+test('un-saving a job removes its follow-up date', async () => {
+  const w = world(); w.job('k1', 'Implementation Manager');
+  await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k1', status: 'SAVED' } });
+  assert.equal((await req(w.env, 'PUT', '/api/applications/k1/follow-up', { body: { candidate_id: F, follow_up_at: '2026-12-01' } })).status, 200);
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) c FROM application_followups').get().c, 1);
+  assert.equal((await req(w.env, 'DELETE', `/api/applications/k1?candidate_id=${F}`)).status, 200);
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) c FROM application_followups').get().c, 0, 'no orphan left to come back when the job is saved again');
+  assert.equal(w.sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, 0);
+});

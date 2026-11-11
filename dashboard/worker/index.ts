@@ -741,11 +741,12 @@ function getNyWeekBounds(d: Date = new Date()) {
   if (tempDate.getUTCDay() !== 4) {
     tempDate.setUTCMonth(0, 1 + ((4 - tempDate.getUTCDay()) + 7) % 7);
   }
+  const weekYear = new Date(firstThursday).getUTCFullYear();   // the year the week NUMBER belongs to (a week starting 3 Jan 2027 is week 53 of 2026, not of 2027)
   const weekNum = 1 + Math.ceil((firstThursday - tempDate.getTime()) / 604800000);
   
   return {
-    cohort_id: `cohort-${sunCalDate.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`,
-    label: `Week ${weekNum}, ${sunCalDate.getUTCFullYear()}`,
+    cohort_id: `cohort-${weekYear}-W${String(weekNum).padStart(2, '0')}`,
+    label: `Week ${weekNum}, ${weekYear}`,
     week_start_ny: sundayStr,
     week_end_ny: saturdayStr,
     week_start_iso: `${sundayStr}T00:00:00${sunOffStr}`,
@@ -955,8 +956,8 @@ router.get('/api/candidates/:id/strategy', async (request, env, params) => {
     statusRows.forEach((r: any) => { statusMap[r.qualification_status] = r.cnt; });
 
     const appCount = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM applications WHERE candidate_id = ?
-    `).bind(candidateId).first<{ cnt: number }>();
+      SELECT COUNT(*) as records, SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as cnt FROM applications WHERE candidate_id = ?
+    `).bind(candidateId).first<{ cnt: number; records: number }>();
 
     return jsonResponse({
       candidate_id: candidateId,
@@ -966,7 +967,8 @@ router.get('/api/candidates/:id/strategy', async (request, env, params) => {
       ready_count: statusMap['READY'] || 0,
       stretch_count: statusMap['STRETCH_READY'] || 0,
       review_count: statusMap['NEEDS_REVIEW'] || 0,
-      applied_count: appCount?.cnt || 0,
+      applied_count: appCount?.cnt || 0,            // applied stages only, the same definition as every other screen
+      application_records: appCount?.records || 0,  // every tracker record
       total_inventory: Object.values(statusMap).reduce((a, b) => a + b, 0),
     }, 200, corsHeaders(request, env));
   } catch (err: any) {
@@ -1051,7 +1053,8 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
       ready_count: counts['READY'] || 0,
       stretch_count: counts['STRETCH_READY'] || 0,
       review_count: counts['NEEDS_REVIEW'] || 0,
-      applied_count: (applications['SAVED'] || 0) + (applications['SUBMITTED'] || 0) + (applications['APPLIED'] || 0) + (applications['REJECTED'] || 0),
+      applied_count: (applications['APPLIED'] || 0) + (applications['SUBMITTED'] || 0) + (applications['INTERVIEWING'] || 0) + (applications['OFFER'] || 0),   // applied stages only
+      application_records: Object.values(applications).reduce((n, v) => n + Number(v || 0), 0),
       strategy_allocation: {
         strongest_fit_target_pct: candidate.strongest_fit_target_pct ?? (candidateId === 'sana_ansari' ? 20.0 : 70.0),
         bridge_target_pct: candidate.bridge_target_pct ?? (candidateId === 'sana_ansari' ? 30.0 : 20.0),
@@ -1079,7 +1082,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
     const idsJson = JSON.stringify(visible);
     const { results: candRows } = await env.DB.prepare(`SELECT c.*, s.strongest_fit_target_pct, s.bridge_target_pct, s.dream_target_pct
       FROM candidates c LEFT JOIN candidate_strategy s ON c.id = s.candidate_id WHERE c.id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>();
-    const { results: allQ } = await env.DB.prepare(`SELECT q.candidate_id, q.qualification_status, q.strategy_lane, COUNT(*) as cnt
+    const { results: allQ } = await env.DB.prepare(`SELECT q.candidate_id, q.qualification_status, q.strategy_lane, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened
       FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
       WHERE q.candidate_id IN (SELECT value FROM json_each(?)) AND j.is_active = 1
       GROUP BY q.candidate_id, q.qualification_status, q.strategy_lane`).bind(idsJson).all<any>();
@@ -1099,8 +1102,10 @@ router.get('/api/dashboard/overview', async (request, env) => {
       const discLaneMap: Record<string, number> = {};
       const readyLaneMap: Record<string, number> = {};
 
+      let unscreened = 0;
       qRows.forEach((r: any) => {
         statusMap[r.qualification_status] = (statusMap[r.qualification_status] || 0) + r.cnt;
+        if (r.qualification_status === 'NEEDS_REVIEW') unscreened += Number(r.unscreened || 0);
         discLaneMap[r.strategy_lane] = (discLaneMap[r.strategy_lane] || 0) + r.cnt;
         if (['READY', 'READY_HIGH', 'STRETCH_READY'].includes(r.qualification_status)) {
           readyLaneMap[r.strategy_lane] = (readyLaneMap[r.strategy_lane] || 0) + r.cnt;
@@ -1150,6 +1155,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
         stretch_count: statusMap['STRETCH_READY'] || 0,
         review: statusMap['NEEDS_REVIEW'] || 0,
         review_count: statusMap['NEEDS_REVIEW'] || 0,
+        unscreened_count: unscreened,   // part of review_count: collector imports the screen has not judged yet
         // applied = records in an applied stage; application_records = every tracker record (saved, rejected, ...)
         applied: appCnt?.applied || 0,
         applied_count: appCnt?.applied || 0,
@@ -1402,8 +1408,9 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       baseWhere += ` AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')`;
     }
     if (search) {
-      baseWhere += ` AND (j.title LIKE ? OR j.company LIKE ? OR j.description LIKE ?)`;
-      const term = `%${search}%`;
+      // % and _ in what was typed are literal characters, not wildcards (as in the India Remote search)
+      baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
+      const term = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
       baseParams.push(term, term, term);
     }
     if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
@@ -1424,9 +1431,12 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (excludeApplied) baseWhere += ` AND ${NOT_APPLIED}`;
 
     // 1. Status counts over the base predicate (one query; the total below is derived from it)
-    const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
+    const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
     const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
+    // Collector imports the screen has not judged yet sit in NEEDS_REVIEW with score 0. They are counted separately so "to review" can be shown honestly.
+    let unscreened_count = 0;
     (rawStatusCounts || []).forEach((r: any) => {
+      if (r.qualification_status === 'NEEDS_REVIEW') unscreened_count = Number(r.unscreened || 0);
       if (r.qualification_status === 'READY_HIGH') status_counts['READY'] = (status_counts['READY'] || 0) + r.cnt;
       else if (status_counts[r.qualification_status] !== undefined) status_counts[r.qualification_status] = r.cnt;
     });
@@ -1479,6 +1489,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       limit,
       offset,
       status_counts,
+      unscreened_count,
       jobs
     }, 200, corsHeaders(request, env));
   } catch (err: any) {
@@ -1780,6 +1791,10 @@ router.get('/api/applications', async (request, env, _params, url) => {
   }
 });
 
+// One definition of "applied" for every count: the stages in which an application has actually gone out. Saved, in review, rejected and withdrawn
+// records are tracker records, not applied ones.
+const APPLIED_STAGES = ['APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER'];
+
 // Unified Application Save/Update Mutation
 const APPLICATION_STATUSES = ['SAVED', 'REVIEWING', 'APPLIED', 'SUBMITTED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'REJECTED', 'WITHDRAWN'];
 async function handleApplicationSave(request: Request, env: Env, explicitCandidateId?: string) {
@@ -1858,7 +1873,7 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
     const histRow = (previous: string | null, next: string, reason: string) => env.DB.prepare(
       `INSERT INTO qualification_history (candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?, ?, ?, ?, ?, 'Candidate')`
     ).bind(candidateId, job_id, previous, next, reason);
-    if (['SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER'].includes(status)) {
+    if (APPLIED_STAGES.includes(status)) {
       if (qual && qual.qualification_status !== 'APPLIED') batchStatements.push(histRow(qual.qualification_status, 'APPLIED', `Application recorded (${status})`));
       batchStatements.push(
         env.DB.prepare(`
@@ -2010,9 +2025,11 @@ router.delete('/api/applications/:id', async (request, env, params, url) => {
     env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
       SELECT ?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?
       WHERE EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, now, existing.id, candidateId, jobId),
+    // the follow-up date goes with the record (it used to come back if the job was saved again); same condition, and before the record itself is removed
+    env.DB.prepare(`DELETE FROM application_followups WHERE candidate_id = ? AND job_id = ? AND EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, candidateId, jobId),
     env.DB.prepare(`DELETE FROM applications WHERE ${STILL_PLAIN_SAVED}`).bind(existing.id, candidateId, jobId),
   ]);
-  if (Number(done[1]?.meta?.changes || 0) !== 1)
+  if (Number(done[2]?.meta?.changes || 0) !== 1)
     return jsonResponse({ error: 'This record changed while it was being un-saved (a note was added or its status moved on), so nothing was removed. Check it in the tracker.' }, 409, corsHeaders(request, env));
   return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
 });
@@ -2060,7 +2077,7 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
         SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) as stretch_count,
         SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) as review_count,
         SUM(CASE WHEN q.qualification_status IN ('INELIGIBLE', 'HOLD') THEN 1 ELSE 0 END) as not_fit_count,
-        SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status != 'SAVED') THEN 1 ELSE 0 END) as applied_count
+        SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER')) THEN 1 ELSE 0 END) as applied_count
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1
@@ -3227,7 +3244,7 @@ function backupEligible(request: Request): boolean {
   // A request that carries a share link (X-View-Token) is "public" level but its answer can include the link's private client (the candidate list, the overview),
   // and the backup copy is keyed by URL alone: storing it would hand that client to the next anonymous visitor during an outage. Only answers produced for a
   // plain anonymous visitor are kept.
-  if (request.method === 'GET') { const cid = new URL(request.url).searchParams.get('candidate_id'); if (cid && !BUILTIN_IDS.includes(cid)) return false; } // a client's answers are never kept in the outage backup, so deleting a client leaves no stored copy
+  if (request.method === 'GET' && referencedCandidates(new URL(request.url)).some((cid) => !BUILTIN_IDS.includes(cid))) return false; // a client's answers are never kept in the outage backup, so deleting a client leaves no stored copy
   return request.method === 'GET' && accessLevel.get(request) === 'public' && !viewerOf.has(request) && !BACKUP_SKIP.has(new URL(request.url).pathname);
 }
 async function backupStore(request: Request, body: string): Promise<void> {

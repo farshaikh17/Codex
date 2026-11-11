@@ -39,6 +39,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Budget guard (account rows read and written today; a scheduled run skips when the free allowance is nearly used)
+        id: g
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MAX_READS: '2500000'
+          EVENT: ${{ github.event_name }}
+        run: node dashboard/scripts/budget_guard.mjs
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -53,6 +62,7 @@ jobs:
         run: npm install -g wrangler@4.156.1
 
       - name: Ingest Collector Snapshots into Cloudflare D1
+        if: ${{ steps.g.outputs.skip != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

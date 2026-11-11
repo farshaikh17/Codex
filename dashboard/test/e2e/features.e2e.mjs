@@ -8,6 +8,8 @@
 //   DELETE FROM response_cache;  (the public list is cached for a short time)
 //   UPDATE jobs SET description = 'We need Salesforce, SQL, Python and Zapier experience for workflow automation.';
 //   UPDATE candidates SET primary_skills = '["Salesforce","Python"]' WHERE id = 'farhan_shaikh';
+//   UPDATE candidate_qualifications SET qualification_reason = '[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.'
+//     WHERE candidate_id = 'farhan_shaikh' AND job_id IN ('job_001','job_002','job_008');   (three rows the screen "has not judged yet")
 //   E2E_BASE=http://localhost:8787 E2E_KEY=<local test key> node test/e2e/features.e2e.mjs [desktop|mobile]
 import { createRequire } from 'node:module';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
@@ -27,6 +29,8 @@ const page = await ctx.newPage();
 const consoleErrors = []; const followUpRequests = [];
 page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 160)); });
 page.on('pageerror', (e) => consoleErrors.push('pageerror ' + e.message.slice(0, 160)));
+let lastJobs = null;   // the job list answer the page itself received (its request carries the page's own filters)
+page.on('response', async (r) => { if (/\/api\/jobs\?/.test(r.url()) && r.url().includes('farhan_shaikh') && r.status() === 200) { try { lastJobs = await r.json(); } catch { /* not JSON */ } } });
 page.on('request', (r) => { if (r.url().includes('/api/follow-ups') || /\/follow-up(\?|$)/.test(r.url())) followUpRequests.push(r.method() + ' ' + new URL(r.url()).pathname); });
 const body = async () => (await page.innerText('body')).replace(/\s+/g, ' ');
 const goto = async () => { await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
@@ -46,6 +50,9 @@ await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitFor
 await tab('FARHAN');
 const text = await body();
 check('F2 Farhan workspace: the card reads Applied with the tracker size underneath', new RegExp(`APPLIED\\s*${APPLIED}\\s*${TRACKED} in tracker`, 'i').test(text), text.match(/APPLIED[^]{0,60}/i)?.[0]);
+const counts = lastJobs || {};
+const shownReview = Number((await page.locator('[data-testid="to-review-count"]').innerText()).replace(/\D/g, ''));
+check('F2b To review shows screened jobs only, with the unscreened ones named apart', counts.unscreened_count > 0 && shownReview === counts.status_counts.NEEDS_REVIEW - counts.unscreened_count && text.includes(`+ ${counts.unscreened_count} not screened yet`), `shown ${shownReview}, api ${JSON.stringify([counts.status_counts?.NEEDS_REVIEW, counts.unscreened_count])}`);
 const row = page.locator('[data-job-id]').first();
 check('F3 job rows are listed', (await row.count()) > 0);
 await row.click(); await page.waitForTimeout(1500);

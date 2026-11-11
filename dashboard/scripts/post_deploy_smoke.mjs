@@ -65,8 +65,8 @@ check('source scorecard has no placeholder feeds', !sc.includes('example.com'));
 for (const p of ['/api/applications/none/history?candidate_id=farhan_shaikh', '/api/jobs/none/qualification-audit?candidate_id=farhan_shaikh', '/api/automation/runs', '/api/meta', '/api/backups', '/api/sync/activity-logs']) {
   const r = await get(p); check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
 }
-for (const [m, p, b] of [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'smoke-nonexistent', status: 'SAVED' }], ['PUT', '/api/profile?candidate_id=farhan_shaikh', { public_view: true }],
-  ['POST', '/api/automation/trigger', {}], ['POST', '/api/automation/pause', {}], ['POST', '/api/jobs/smoke-nonexistent/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'smoke' }],
+for (const [m, p, b] of [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'smoke-nonexistent', status: 'SAVED' }], ['PUT', '/api/profile?candidate_id=smoke-nonexistent', {}],
+  ['POST', '/api/automation/smoke-nonexistent', {}], ['POST', '/api/jobs/smoke-nonexistent/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'smoke' }],
   ['POST', '/api/jobs/smoke-nonexistent/feedback?candidate_id=farhan_shaikh', { rating: 'CLEAR' }], ['POST', '/api/profile/import-resume', { text: 'x' }]]) {
   const r = await fetch(BASE + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
   check(`anonymous ${m} ${p.split('?')[0]} is refused (401)`, r.status === 401, `status ${r.status}`);

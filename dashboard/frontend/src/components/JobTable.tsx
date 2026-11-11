@@ -158,7 +158,9 @@ export const JobTable: React.FC<JobTableProps> = ({
             {jobs.map((job) => {
               const app = job.application?.status;
               const isSaved = app === 'SAVED';
-              const st = STATUS_WORDS[String(job.qualification_status || 'NEEDS_REVIEW')] || STATUS_WORDS.NEEDS_REVIEW;
+              // A collector import the screen has not judged yet is not "to review": say so.
+              const notScreened = job.qualification_status === 'NEEDS_REVIEW' && String(job.qualification_reason || '').startsWith('[GITHUB_COLLECTOR] Unassessed');
+              const st = notScreened ? { label: 'Not screened yet', cls: 'bg-slate-100 text-slate-600 border-slate-300' } : (STATUS_WORDS[String(job.qualification_status || 'NEEDS_REVIEW')] || STATUS_WORDS.NEEDS_REVIEW);
               const score = Number(job.score?.overall_score) || 0;
               const pay = payText(job);
               const elig = job.eligibility?.classification;

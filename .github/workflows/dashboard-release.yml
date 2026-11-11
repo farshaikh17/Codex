@@ -194,6 +194,8 @@ jobs:
             echo "- Worker secret ADMIN_API_KEY present (value never read): yes. Protected actions work." >> "$GITHUB_STEP_SUMMARY"
           elif [ "$ROTATE" = "true" ]; then
             echo "- Worker secret ADMIN_API_KEY present: no (rotation will create it)" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${MODE:-}" = "release" ]; then
+            echo "::error::ADMIN_API_KEY is not set on the Worker. A release would deploy and then fail its own checks (protected actions answer 503, not 401). Re-run with rotate_key ticked and NEW_ADMIN_API_KEY set."; exit 1
           else
             echo "::warning::ADMIN_API_KEY is not set on the Worker: public viewing works, but protected actions answer 503 until it is set (re-run with rotate_key)."
             echo "- Worker secret ADMIN_API_KEY present: **no** (public viewing is unaffected; protected actions are unavailable)" >> "$GITHUB_STEP_SUMMARY"
