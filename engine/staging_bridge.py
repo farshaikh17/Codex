@@ -430,10 +430,13 @@ class D1StagingBridge:
                     ELSE excluded.qualification_reason
                 END,
                 last_reverified_at = excluded.last_reverified_at
-            WHERE candidate_qualifications.qualification_status IS NOT excluded.qualification_status
+            WHERE candidate_qualifications.manual_override_status IS NULL
+              AND candidate_qualifications.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'
+              AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = candidate_qualifications.candidate_id AND job_id = candidate_qualifications.job_id)
+              AND (candidate_qualifications.qualification_status IS NOT excluded.qualification_status
                OR candidate_qualifications.strategy_lane IS NOT excluded.strategy_lane
                OR candidate_qualifications.eligibility_status IS NOT excluded.eligibility_status
-               OR candidate_qualifications.qualification_reason IS NOT excluded.qualification_reason;"""
+               OR candidate_qualifications.qualification_reason IS NOT excluded.qualification_reason);"""
             statements.append(q_sql)
 
             score_sql = f"""INSERT INTO candidate_job_scores (
@@ -449,9 +452,12 @@ class D1StagingBridge:
                 strategy_lane = excluded.strategy_lane,
                 score_breakdown = excluded.score_breakdown,
                 calculated_at = excluded.calculated_at
-            WHERE candidate_job_scores.overall_score IS NOT excluded.overall_score
+            WHERE EXISTS (SELECT 1 FROM candidate_qualifications q WHERE q.candidate_id = candidate_job_scores.candidate_id AND q.job_id = candidate_job_scores.job_id
+                          AND q.manual_override_status IS NULL AND q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
+              AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)
+              AND (candidate_job_scores.overall_score IS NOT excluded.overall_score
                OR candidate_job_scores.strategy_lane IS NOT excluded.strategy_lane
-               OR candidate_job_scores.score_breakdown IS NOT excluded.score_breakdown;"""
+               OR candidate_job_scores.score_breakdown IS NOT excluded.score_breakdown);"""
             statements.append(score_sql)
 
             jobs_imported += 1
