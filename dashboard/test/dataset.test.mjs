@@ -194,3 +194,40 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
   w.sqlite.exec(sql);
   assert.deepEqual(snap(), after, 'running the same SQL again changes nothing');
 });
+
+test('first-import rows the current screen never scored are screened fully; decided, applied and Ready rows are never touched', () => {
+  const w = world();
+  const db = w.sqlite;
+  const job = (id, title, loc, desc) => db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+    .run(id, title, 'Acme', 'ashby', 'https://jobs.example/' + id, 1, loc, desc, 'REMOTE', '2026-10-26T00:00:00Z', 'LIVE_PUBLIC');
+  const qual = (id, status, o = {}) => db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?,?,?)`)
+    .run(F, id, status, 'NOT_FIT', o.elig || 'UNKNOWN', o.eligReason || null, 'Preserved verified Farhan status with strategy lane mapping', o.override || null);
+  const REMOTE = 'Fully remote role, open to candidates in India. You will configure our CRM and own workflow automation.';
+  job('L1', 'Senior Brand Designer', 'Remote - India', 'Design our brand.');                 qual('L1', 'NEEDS_REVIEW');                         // wrong role, no score row
+  job('L2', 'Implementation Manager', 'Remote - India', REMOTE);                             qual('L2', 'NEEDS_REVIEW');                         // right role, empty score row
+  db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,0,'{}')`).run(F, 'L2');
+  job('L3', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L3', 'NEEDS_REVIEW', { override: 'NEEDS_REVIEW' });   // a person decided
+  job('L4', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L4', 'NEEDS_REVIEW');                         // has an application
+  db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('ap4',?,?,'SAVED')`).run(F, 'L4');
+  job('L5', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L5', 'READY');                                // preserved Ready
+  job('L6', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L6', 'NEEDS_REVIEW', { elig: 'ELIGIBLE', eligReason: 'India affirmative verified' });
+  const before = (id) => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications WHERE job_id=?').get(id), db.prepare('SELECT * FROM candidate_job_scores WHERE job_id=?').get(id) || null]);
+  const keep = Object.fromEntries(['L3', 'L4', 'L5'].map((id) => [id, before(id)]));
+  const row = (id, title, desc) => ({ candidate_id: F, job_id: id, cur_score: 0, title, company: 'Acme', location: 'Remote - India', description: desc, workplace_type: 'REMOTE', score_breakdown: null, provenance: 'LIVE_PUBLIC', source_adapter: 'ashby', legacy: 1 });
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify([row('L1', 'Senior Brand Designer', 'Design our brand.'), row('L2', 'Implementation Manager', REMOTE),
+    row('L3', 'Senior Brand Designer', 'Design.'), row('L4', 'Senior Brand Designer', 'Design.'), row('L5', 'Senior Brand Designer', 'Design.'), row('L6', 'Senior Brand Designer', 'Design.')]));
+  const { sql, report } = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]);
+  assert.equal(report.rescreened_legacy, 6, 'all six were planned; the SQL guards decide what is written');
+  db.exec(sql); db.exec(sql);   // twice: idempotent
+  const q1 = db.prepare('SELECT qualification_status s, strategy_lane l FROM candidate_qualifications WHERE job_id=?');
+  const s1 = db.prepare('SELECT overall_score o, score_breakdown b FROM candidate_job_scores WHERE job_id=?');
+  assert.equal(q1.get('L1').s, 'HOLD', 'a role outside the target leaves To review');
+  assert.match(s1.get('L1').b, /legacy_rescreen/, 'and gets a score row from the current screen');
+  assert.equal(q1.get('L2').s, 'NEEDS_REVIEW'); assert.equal(q1.get('L2').l, 'STRONGEST_FIT');
+  assert.ok(s1.get('L2').o > 0, `a fitting role stays in To review with a real score (${s1.get('L2').o})`);
+  for (const id of ['L3', 'L4', 'L5']) assert.equal(before(id), keep[id], `${id} (override / application / Ready) is byte-identical`);
+  const l6 = db.prepare('SELECT qualification_status s, eligibility_status e, eligibility_reason r FROM candidate_qualifications WHERE job_id=?').get('L6');
+  assert.deepEqual([l6.s, l6.e, l6.r], ['HOLD', 'ELIGIBLE', 'India affirmative verified'], 'a verified eligibility is kept; the role still decides the bucket');
+  const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' ORDER BY job_id`).all();
+  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L6:NEEDS_REVIEW>HOLD'], 'one history row per moved job, not repeated');
+});
