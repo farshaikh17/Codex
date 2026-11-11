@@ -49,8 +49,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthCha
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-label={authenticated ? 'Operator session' : 'Unlock operator actions'} className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className={`p-2 rounded-lg ${authenticated ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>

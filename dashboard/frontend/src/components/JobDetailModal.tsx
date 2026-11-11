@@ -127,11 +127,13 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => { setJob(initialJob); }, [initialJob]);
+  // The draft stage and notes reset only when the job changes or its SAVED values change, not on every fresh copy of the job (a thumbs click, a list refresh):
+  // typed notes were wiped by those.
   useEffect(() => {
-    setJob(initialJob);
     setStatus(initialJob.application?.status || 'SAVED');
     setNotes(initialJob.application?.notes || '');
-  }, [initialJob]);
+  }, [initialJob.id, initialJob.application?.status, initialJob.application?.notes]);
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;

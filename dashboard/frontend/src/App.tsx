@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Job, CandidateProfile, AnalyticsData, ApplicationStatus, WeeklyMetrics, IndiaRemoteSummary } from './types';
 import { 
   fetchJobs, fetchApplications, 
@@ -78,6 +78,11 @@ export const App: React.FC = () => {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  // The job panel gets the same object until the selection really changes: a new object on every render reset the notes being typed and pulled focus out of the field.
+  const closeJob = useCallback(() => setSelectedJob(null), []);
+  // Which list the Ready screen opens on, and a counter that rebuilds it only when asked (a card click, or a job whose status changed): opening a job must not reset the tab, page or search.
+  const [readyView, setReadyView] = useState<{ tab: 'READY' | 'STRETCH'; n: number }>({ tab: 'READY', n: 0 });
+  const [actionError, setActionError] = useState<string | null>(null);   // a failed Save/Dismiss: shown above the list, the list stays
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -222,7 +227,7 @@ export const App: React.FC = () => {
       if (job.application?.status === 'SAVED') await unsaveJob(jobId, candidateId);
       else await updateApplication({ job_id: jobId, status: 'SAVED', candidate_id: candidateId });
       await loadData();
-    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to save this job. Please retry."); }
+    } catch (e: any) { if (!/Operator sign-in/.test(e?.message || '')) setActionError("Unable to save this job. Please retry."); }
   };
 
   const handleDismissJob = async (jobId: string, e: React.MouseEvent) => {
@@ -234,7 +239,7 @@ export const App: React.FC = () => {
       setJobs((prev) => prev.filter((j) => j.id !== jobId));
       await loadData();
     } catch (e: any) {
-      if (!/Operator sign-in/.test(e?.message || '')) setError("Unable to dismiss job. Please retry.");
+      if (!/Operator sign-in/.test(e?.message || '')) setActionError("Unable to dismiss job. Please retry.");
     }
   };
 
@@ -267,6 +272,8 @@ export const App: React.FC = () => {
     try { await loadData(); } catch { setError('Unable to refresh. Please retry.'); }
   };
 
+  const modalJob = useMemo(() => (selectedJob ? { ...selectedJob, candidate_id: candidateId } : null), [selectedJob, candidateId]);
+  const onActivate = (fn: () => void) => (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
   const savedCount = trackedJobs.length;
   // Same definition as the Dashboard cards (worker: APPLIED, SUBMITTED, INTERVIEWING, OFFER)
   const appliedStageCount = trackedJobs.filter((j) => ['APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER'].includes(String(j.application?.status || ''))).length;
@@ -326,6 +333,12 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <>
+            {actionError && (
+              <div role="alert" className="mb-3 p-3 bg-rose-50 border border-rose-200 text-rose-900 text-sm rounded-xl flex items-center justify-between gap-3">
+                <span>{actionError}</span>
+                <button className="underline text-xs shrink-0" onClick={() => setActionError(null)}>Dismiss</button>
+              </div>
+            )}
             {activeTab === 'dashboard' && (
               <DashboardOverview
                 isOperator={isOperator}
@@ -379,6 +392,7 @@ export const App: React.FC = () => {
                 {/* Executive Funnel Summary Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div
+                    role="button" tabIndex={0} onKeyDown={onActivate(() => setActiveTab('india-remote'))}
                     onClick={() => setActiveTab('india-remote')}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-teal-400 hover:shadow-md cursor-pointer transition-all"
                   >
@@ -388,7 +402,8 @@ export const App: React.FC = () => {
                   </div>
 
                   <div
-                    onClick={() => setActiveTab('ready')}
+                    role="button" tabIndex={0} onKeyDown={onActivate(() => { setReadyView((v) => ({ tab: 'READY', n: v.n + 1 })); setActiveTab('ready'); })}
+                    onClick={() => { setReadyView((v) => ({ tab: 'READY', n: v.n + 1 })); setActiveTab('ready'); }}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md cursor-pointer transition-all"
                   >
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Ready to Apply</div>
@@ -397,7 +412,8 @@ export const App: React.FC = () => {
                   </div>
 
                   <div
-                    onClick={() => setActiveTab('ready')}
+                    role="button" tabIndex={0} onKeyDown={onActivate(() => { setReadyView((v) => ({ tab: 'STRETCH', n: v.n + 1 })); setActiveTab('ready'); })}
+                    onClick={() => { setReadyView((v) => ({ tab: 'STRETCH', n: v.n + 1 })); setActiveTab('ready'); }}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-md cursor-pointer transition-all"
                   >
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stretch Matches</div>
@@ -406,6 +422,7 @@ export const App: React.FC = () => {
                   </div>
 
                   <div
+                    role="button" tabIndex={0} onKeyDown={onActivate(() => document.querySelector('[data-testid="job-filters"]')?.scrollIntoView({ behavior: 'smooth' }))}
                     onClick={() => document.querySelector('[data-testid="job-filters"]')?.scrollIntoView({ behavior: 'smooth' })}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-amber-400 hover:shadow-md cursor-pointer transition-all"
                   >
@@ -415,6 +432,7 @@ export const App: React.FC = () => {
                   </div>
 
                   <div
+                    role="button" tabIndex={0} onKeyDown={onActivate(() => setActiveTab('tracker'))}
                     onClick={() => setActiveTab('tracker')}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-purple-400 hover:shadow-md cursor-pointer transition-all"
                   >
@@ -461,7 +479,8 @@ export const App: React.FC = () => {
 
             {activeTab === 'ready' && (
               <ReadyDashboardView
-                key={`${candidateId}-${selectedJob?.qualification_status || ''}`}
+                key={`${candidateId}-${readyView.n}`}
+                initialTab={readyView.tab}
                 candidateId={candidateId}
                 onSelectJob={(j) => setSelectedJob(j)}
                 onViewTracker={() => setActiveTab('tracker')}
@@ -505,14 +524,16 @@ export const App: React.FC = () => {
       </main>
 
       {/* Detail Inspection Modal Drawer */}
-      {selectedJob && <JobDetailModal
+      {selectedJob && modalJob && <JobDetailModal
         key={`${candidateId}-${selectedJob.id}`}
-        job={{ ...selectedJob, candidate_id: candidateId }}
-        onClose={() => setSelectedJob(null)}
+        job={modalJob}
+        onClose={closeJob}
         onUpdateApplication={handleUpdateApplication}
         profileSkills={profile && profile.id === candidateId ? profile.primary_skills : undefined}
         onJobUpdated={async (updatedJob) => {
+          const statusChanged = (selectedJob?.qualification_status || '') !== (updatedJob.qualification_status || '');
           setSelectedJob(prev => (prev ? { ...updatedJob, candidate_id: candidateId } : null));
+          if (statusChanged) setReadyView((v) => ({ ...v, n: v.n + 1 }));
           await loadData();
         }}
       />}

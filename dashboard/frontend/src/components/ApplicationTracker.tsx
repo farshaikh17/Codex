@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Job, ApplicationStatus, CohortMetrics, ApplicationHistoryRecord } from '../types';
 import { fetchCohortMetrics, fetchApplicationHistory, fetchFollowUps, setFollowUp, isOperatorAuthenticated } from '../api';
-import { followUpState } from '../jobHelpers';
+import { followUpState, localDay } from '../jobHelpers';
 import { 
   BookmarkCheck, 
   Building, 
@@ -34,7 +34,7 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
   const [followUps, setFollowUps] = useState<Record<string, string>>({});
   const [followUpError, setFollowUpError] = useState<string>('');
   const operator = isOperatorAuthenticated();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDay();   // the candidates' own calendar date, not UTC (UTC is still yesterday until 05:30 in India)
 
   useEffect(() => {
     let current = true;
@@ -288,8 +288,8 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
 
       {/* Application History Modal */}
       {historyJob && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onKeyDown={(e) => { if (e.key === 'Escape') setHistoryJob(null); }}>
+          <div role="dialog" aria-modal="true" aria-label="Application stage history" className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
@@ -300,6 +300,7 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
               </div>
               <button
                 onClick={() => setHistoryJob(null)}
+                aria-label="Close history" autoFocus
                 className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />

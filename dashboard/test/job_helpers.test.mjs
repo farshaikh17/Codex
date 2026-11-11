@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { peopleSearchLinks, skillGaps, followUpState, SKILL_VOCABULARY } from '../frontend/src/jobHelpers.ts';
+import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY } from '../frontend/src/jobHelpers.ts';
 
 test('people search links are built from the employer name, encoded, and empty for no name', () => {
   const links = peopleSearchLinks('  Black & Veatch ');
@@ -39,4 +39,10 @@ test('follow-up state: overdue, today, soon, later, and nothing for no or bad da
   assert.equal(followUpState('2026-12-01', '2026-11-30').days, 1, 'across a month end');
   for (const bad of [null, undefined, '', 'tomorrow', '2026-13-40x']) assert.equal(followUpState(bad, today).key, 'none');
   assert.equal(followUpState('2026-11-10', 'bad').key, 'none');
+});
+
+test('localDay is the viewer\'s own calendar date, zero-padded', () => {
+  assert.equal(localDay(new Date(2026, 0, 5, 3, 0)), '2026-01-05');
+  assert.equal(localDay(new Date(2026, 10, 11, 0, 30)), '2026-11-11');
+  assert.equal(localDay(new Date(2026, 11, 31, 23, 59)), '2026-12-31');
 });

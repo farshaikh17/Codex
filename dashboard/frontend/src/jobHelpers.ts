@@ -41,7 +41,13 @@ export function skillGaps(description: string, profileSkills: string[] | null | 
   return { asked, have: asked.filter(listed), missing: asked.filter((t) => !listed(t)) };
 }
 
-/** How a follow-up date (YYYY-MM-DD) stands against today (UTC date, also YYYY-MM-DD). */
+/** Today's calendar date on the viewer's own clock, as YYYY-MM-DD (not the UTC date, which is still yesterday for part of an Indian morning). */
+export function localDay(now: Date = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+}
+
+/** How a follow-up date (YYYY-MM-DD) stands against today (both plain calendar dates, YYYY-MM-DD). */
 export function followUpState(date: string | null | undefined, today: string): { key: 'none' | 'overdue' | 'today' | 'soon' | 'later'; label: string; days: number } {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{4}-\d{2}-\d{2}$/.test(today)) return { key: 'none', label: '', days: 0 };
   const days = Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 86400000);

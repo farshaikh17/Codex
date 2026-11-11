@@ -127,7 +127,7 @@ export const GoogleSyncView: React.FC = () => {
     try {
       const res = await getOAuthAuthorizeUrl();
       if (res.auth_url) {
-        window.open(res.auth_url, '_blank');
+        window.open(res.auth_url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to generate authorization URL');
