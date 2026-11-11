@@ -343,6 +343,32 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
             if len(part) < min(page, per_candidate - taken + len(part)):
                 break
             last = (part[-1]['cur_score'], part[-1]['job_id'])
+    return rows + legacy_rows(cands, local)
+
+
+def legacy_rows(cands, local=None, page=300, per_candidate=1000):
+    """Undecided rows the CURRENT screen never scored: still NEEDS_REVIEW, score 0 (or no score row), no 'preliminary' breakdown, not a collector
+    import waiting for the Worker. They came from the first import (reason 'Preserved verified ... status') and neither the Worker's
+    assessment (which looks for the collector reason) nor the re-score above (which looks for a preliminary breakdown) ever selects them, so
+    they sat in "to review" with no score. Exported with legacy = 1 so dataset_apply.mjs screens them fully (status, lane, score).
+    Paged by job id through the primary key, a bounded number per person per run. Never a row with an override or an application."""
+    rows = []
+    for cid in cands:
+        taken, last = 0, ''
+        while taken < per_candidate:
+            part = d1(f"""SELECT q.candidate_id, q.job_id, 0 AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location,
+                j.description, j.workplace_type, s.score_breakdown, j.provenance, j.source_adapter, 1 AS legacy
+              FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+              WHERE q.candidate_id = {sql_str(cid)} AND q.job_id > {sql_str(last)} AND j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status = 'NEEDS_REVIEW'
+                AND COALESCE(s.overall_score, 0) = 0 AND (s.score_breakdown IS NULL OR s.score_breakdown NOT LIKE '%preliminary%')
+                AND q.qualification_reason NOT LIKE '[GITHUB_COLLECTOR] Unassessed%'
+                AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
+              ORDER BY q.job_id LIMIT {int(min(page, per_candidate - taken))}""", local)
+            rows += part
+            taken += len(part)
+            if len(part) < min(page, per_candidate - taken + len(part)):
+                break
+            last = part[-1]['job_id']
     return rows
 
 
