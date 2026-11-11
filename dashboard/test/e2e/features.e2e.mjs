@@ -31,7 +31,7 @@ page.on('request', (r) => { if (r.url().includes('/api/follow-ups') || /\/follow
 const body = async () => (await page.innerText('body')).replace(/\s+/g, ' ');
 const goto = async () => { await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
 const tab = async (name) => { await page.getByRole('button', { name: new RegExp('^' + name, 'i') }).first().click(); await page.waitForTimeout(1500); };
-const isoDay = (offset) => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+const isoDay = (offset) => { const d = new Date(Date.now() + offset * 86400000); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };   // the viewer's own calendar day
 
 // ===== Part A: a visitor (no key) =================================================================================
 // The expected numbers come from the API, so records added by earlier suites on the same database do not matter.
@@ -89,7 +89,40 @@ await tab('APPLICATIONS');
 check('F17 the dates are still there after a reload', (await page.locator(`input[aria-label="${label}"]`).inputValue()) === isoDay(-3));
 await page.locator(`input[aria-label="${label}"]`).fill(''); await page.waitForTimeout(1000);
 check('F18 clearing a date removes its flag and the banner', !/follow-ups? (is|are) overdue/i.test(await body()) && !/Overdue by 3 days/.test(await body()));
-check('F19 no unexpected console errors', consoleErrors.filter((e) => !/429/.test(e)).length === 0, consoleErrors.join(' | '));
+// ===== Part C: fixes from the 10 Nov code review (operator signed in) ==========================================================
+const selectedTab = async (re) => /shadow-sm/.test((await page.getByRole('button', { name: re }).first().getAttribute('class')) || '');
+await tab('FARHAN');
+await page.getByText('Stretch Matches').first().click(); await page.waitForTimeout(1800);
+check('G1 the Stretch card opens the Stretch list', await selectedTab(/^Stretch \(/));
+await tab('FARHAN');
+const readyCard = page.locator('div[role="button"]').filter({ hasText: 'Ready to Apply' }).first();
+await readyCard.focus(); await page.keyboard.press('Enter'); await page.waitForTimeout(1800);
+check('G2 a summary card works from the keyboard (Enter on the Ready card opens the Ready list)', await selectedTab(/^READY to Apply/));
+await page.getByRole('button', { name: /^Stretch \(/ }).first().click(); await page.waitForTimeout(1500);
+const jobRow = page.locator('[data-job-id]').first();
+if (await jobRow.count()) {
+  await page.getByRole('button', { name: /Inspect Explanations/ }).first().click(); await page.waitForTimeout(1500);   // the Ready cards open a job from the title or this button
+  const notes = page.locator('input[aria-label="Private candidate notes"]');
+  await notes.fill('draft-note-kept');
+  await page.locator('button[title^="Thumbs Up"]').first().click(); await page.waitForTimeout(2000);
+  check('G3 notes typed in the job panel survive a refresh of the screen behind it', (await notes.inputValue()) === 'draft-note-kept', await notes.inputValue());
+  await page.keyboard.press('Escape'); await page.waitForTimeout(800);
+  check('G4 opening and closing a job does not reset the list (the Stretch tab is still selected)', await selectedTab(/^Stretch \(/));
+} else { check('G3 notes survive a refresh (no stretch row in this data)', false, 'no row'); check('G4 list not reset', false, 'no row'); }
+await tab('FARHAN');
+await page.route('**/api/applications', (route) => (route.request().method() === 'POST' ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"forced"}' }) : route.continue()));
+const saveBtn = page.locator('button[aria-label^="Save this job"]').first();
+if (await saveBtn.count()) {
+  await saveBtn.click(); await page.waitForTimeout(1500);
+  check('G5 a failed Save shows a message and keeps the list on screen', /Unable to save this job/.test(await body()) && (await page.locator('[data-job-id]').count()) > 0 && !/The dashboard could not load/.test(await body()), (await body()).slice(0, 200));
+} else check('G5 a failed Save keeps the list', false, 'no Save button');
+await page.unroute('**/api/applications');
+await tab('APPLICATIONS');
+await page.locator('button[title="View complete application audit timeline"]').first().click(); await page.waitForTimeout(1000);
+check('G6 the history window is a dialog with a labelled close button', (await page.locator('[role="dialog"][aria-label="Application stage history"]').count()) === 1 && (await page.locator('button[aria-label="Close history"]').count()) === 1);
+await page.keyboard.press('Escape'); await page.waitForTimeout(600);
+check('G7 Escape closes the history window', (await page.locator('[role="dialog"][aria-label="Application stage history"]').count()) === 0);
+check('F19 no unexpected console errors', consoleErrors.filter((e) => !/429/.test(e) && !/status of 500/.test(e)).length === 0, consoleErrors.join(' | '));
 const status = await page.evaluate(async (k) => (await fetch('/api/follow-ups?candidate_id=sana_ansari', { headers: { Authorization: 'Bearer ' + k } })).status, KEY);
 const anon = await page.evaluate(async () => (await fetch('/api/follow-ups?candidate_id=farhan_shaikh')).status);
 check('F20 the follow-up list is protected: 401 without a key, 200 with it', anon === 401 && status === 200, `${anon}/${status}`);

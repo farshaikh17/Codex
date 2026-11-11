@@ -29,11 +29,12 @@ interface ReadyDashboardViewProps {
   candidateId: string;
   onSelectJob: (job: Job) => void;
   onViewTracker?: () => void;
+  initialTab?: 'READY' | 'STRETCH';
 }
 
 const PAGE_SIZE = 25;
 
-export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidateId, onSelectJob, onViewTracker }) => {
+export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidateId, onSelectJob, onViewTracker, initialTab }) => {
   const [metrics, setMetrics] = useState<WeeklyMetrics | null>(null);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -42,7 +43,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   const [counts, setCounts] = useState<{ READY: number; STRETCH_READY: number; NEEDS_REVIEW: number; ALL: number } | null>(null);
   const [possibleRemoteTotal, setPossibleRemoteTotal] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'READY' | 'STRETCH' | 'APPLY_WORTHY' | 'NEEDS_REVIEW' | 'POSSIBLE_REMOTE' | 'ALL'>('READY');
+  const [activeTab, setActiveTab] = useState<'READY' | 'STRETCH' | 'APPLY_WORTHY' | 'NEEDS_REVIEW' | 'POSSIBLE_REMOTE' | 'ALL'>(initialTab || 'READY');
   const [reviewSubFilter, setReviewSubFilter] = useState<'ALL' | 'FIT' | 'INDIA_SCOPE' | 'PAY'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [thresholdInput, setThresholdInput] = useState<number>(70);
