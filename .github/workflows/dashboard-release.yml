@@ -231,8 +231,10 @@ jobs:
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0016_past_applications.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0017_sana_profile_cv.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0018_followups.sql
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0019_job_feedback.sql
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0020_farhan_drop_marketing_stretch.sql
           # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
-          npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0; SELECT candidate_id, visibility, search_profile FROM client_profiles LIMIT 0; SELECT token_hash, revoked_at FROM client_view_tokens LIMIT 0; SELECT id, status, source_hash FROM client_requests LIMIT 0; SELECT key, value FROM site_settings LIMIT 0; SELECT id, candidate_id, company, outcome, decided_on FROM past_applications LIMIT 0; SELECT candidate_id, job_id, follow_up_at, note FROM application_followups LIMIT 0" > /dev/null
+          npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0; SELECT candidate_id, visibility, search_profile FROM client_profiles LIMIT 0; SELECT token_hash, revoked_at FROM client_view_tokens LIMIT 0; SELECT id, status, source_hash FROM client_requests LIMIT 0; SELECT key, value FROM site_settings LIMIT 0; SELECT id, candidate_id, company, outcome, decided_on FROM past_applications LIMIT 0; SELECT candidate_id, job_id, follow_up_at, note FROM application_followups LIMIT 0; SELECT candidate_id, job_id, rating, notes FROM job_feedback LIMIT 0" > /dev/null
 
       - name: Rotate operator key (only when requested)
         if: ${{ inputs.mode == 'release' && inputs.rotate_key }}

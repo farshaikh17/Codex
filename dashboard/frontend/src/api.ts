@@ -318,6 +318,14 @@ export async function fetchJobExplanation(jobId: string, candidateId?: string): 
   return res.json();
 }
 
+/** The stored thumbs rating for one job (operator only; null when none). */
+export async function fetchJobFeedback(jobId: string, candidateId?: string): Promise<{ rating: string; notes: string | null } | null> {
+  const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/feedback?candidate_id=${encodeURIComponent(candidateId || '')}`, { headers: getAuthHeaders() });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.feedback || null;
+}
+
 export async function submitJobFeedback(
   jobId: string,
   payload: { rating: 'UP' | 'DOWN' | 'CLEAR' | 'RESET'; notes?: string; tags?: string[] },

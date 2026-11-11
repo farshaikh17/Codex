@@ -106,6 +106,13 @@ if (await jobRow.count()) {
   await notes.fill('draft-note-kept');
   await page.locator('button[title^="Thumbs Up"]').first().click(); await page.waitForTimeout(2000);
   check('G3 notes typed in the job panel survive a refresh of the screen behind it', (await notes.inputValue()) === 'draft-note-kept', await notes.inputValue());
+  check('G3b the thumbs choice is shown as selected', /bg-emerald-100/.test((await page.locator('button[title^="Thumbs Up"]').first().getAttribute('class')) || ''));
+  await page.reload({ waitUntil: 'networkidle' }); await page.waitForTimeout(1200);
+  await tab('FARHAN'); await page.getByText('Stretch Matches').first().click(); await page.waitForTimeout(1800);
+  await page.getByRole('button', { name: /^Stretch \(/ }).first().click(); await page.waitForTimeout(1500);
+  await page.getByRole('button', { name: /Inspect Explanations/ }).first().click(); await page.waitForTimeout(2000);
+  check('G3c the stored thumbs choice is still there after a reload', /bg-emerald-100/.test((await page.locator('button[title^="Thumbs Up"]').first().getAttribute('class')) || ''));
+  await page.locator('button[title^="Thumbs Up"]').first().click(); await page.waitForTimeout(1200);   // clear it again
   await page.keyboard.press('Escape'); await page.waitForTimeout(800);
   check('G4 opening and closing a job does not reset the list (the Stretch tab is still selected)', await selectedTab(/^Stretch \(/));
 } else { check('G3 notes survive a refresh (no stretch row in this data)', false, 'no row'); check('G4 list not reset', false, 'no row'); }
