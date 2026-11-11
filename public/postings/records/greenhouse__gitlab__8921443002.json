@@ -14,6 +14,15 @@
    "from_hash": "96f95e0b4ac7303b0ddd6b54c979ed7647351072a7b9638a22d4d53fefa4697e",
    "kind": "content_changed",
    "to_hash": "89db82742ad1cdfdb5479f38c75ac20aa0a413755ed66326cca7fac7c7bef963"
+  },
+  {
+   "changed_at": "2026-11-11T18:51:09.370745+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "89db82742ad1cdfdb5479f38c75ac20aa0a413755ed66326cca7fac7c7bef963",
+   "kind": "content_changed",
+   "to_hash": "f115d9b7432554a60b9b6dcb9098ed1b2ccb91c49f797fd7fe9c4f4185d50ccd"
   }
  ],
  "content": {
@@ -22,7 +31,7 @@
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote"
+    "text": "Remote, Netherlands"
    },
    {
     "source": "offices.name",
@@ -33,8 +42,8 @@
   "title": "Commercial Account Executive, Netherlands",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
- "content_hash": "89db82742ad1cdfdb5479f38c75ac20aa0a413755ed66326cca7fac7c7bef963",
+ "content_changed_at": "2026-11-11T18:51:09.370745+00:00",
+ "content_hash": "f115d9b7432554a60b9b6dcb9098ed1b2ccb91c49f797fd7fe9c4f4185d50ccd",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -52,8 +61,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "quote": "Remote, Netherlands",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      },
@@ -61,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Netherlands",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      }
@@ -74,7 +83,7 @@
       "interpretation": null,
       "method": "description_section:Requirements",
       "quote": "A true desire to see customers benefit from the investment they make with GitLab\nDemonstrated progressive experience with Software sales through pitching on value\nInterest in GitLab, and open source software\nAbility to leverage established relationships and proven sales techniques for success\nEffective communicator, strong interpersonal skills\nMotivated, driven and results oriented\nExcellent negotiation, presentation and closing skills",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      },
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "description_section:Requirements",
       "quote": "You share our values, and work in accordance with those values.\nAbility to travel regularly to meet with customers in person and comply with the company’s travel policy",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      }
@@ -95,7 +104,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Requirements",
       "quote": "Preferred experience with Git, Software Development Tools, Application Lifecycle Management",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      }
@@ -107,8 +116,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "quote": "Remote, Netherlands",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8921443002"
      }

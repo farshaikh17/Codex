@@ -52,6 +52,15 @@
    "from_hash": "d63d9857734bbc72b2a7987e67a7a9ccd6b2c4b175aa3606f378dea6dc9e858e",
    "kind": "content_changed",
    "to_hash": "edd0be1c1ce14a439a53ad94d44139fd28635594116e8b39d9ba6430fd0c4501"
+  },
+  {
+   "changed_at": "2026-11-11T18:51:09.370745+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "edd0be1c1ce14a439a53ad94d44139fd28635594116e8b39d9ba6430fd0c4501",
+   "kind": "content_changed",
+   "to_hash": "e8b6ffcdfc561c4ff662e04def5c3c1be52732ddf90f2e27b07f210f60f989c8"
   }
  ],
  "content": {
@@ -60,63 +69,7 @@
   "locations": [
    {
     "source": "location",
-    "text": "United States"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Austin"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Tampa"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "San Diego"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Chicago"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Seattle (WA)"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Miami"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Charlotte"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Portland"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Nashville"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Denver"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Atlanta"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Boston"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Philadelphia"
-   },
-   {
-    "source": "secondaryLocations",
-    "text": "Pittsburgh"
+    "text": "North America"
    },
    {
     "source": "address.addressCountry",
@@ -127,8 +80,8 @@
   "title": "Business Development Representative (Americas)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-06T18:22:30.804221+00:00",
- "content_hash": "edd0be1c1ce14a439a53ad94d44139fd28635594116e8b39d9ba6430fd0c4501",
+ "content_changed_at": "2026-11-11T18:51:09.370745+00:00",
+ "content_hash": "e8b6ffcdfc561c4ff662e04def5c3c1be52732ddf90f2e27b07f210f60f989c8",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -146,120 +99,16 @@
      {
       "interpretation": null,
       "method": "ats_field:location",
+      "quote": "North America",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Austin",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Tampa",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "San Diego",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Chicago",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Seattle (WA)",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Miami",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Charlotte",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Portland",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Nashville",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Denver",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Atlanta",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Boston",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Philadelphia",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:secondaryLocations",
-      "quote": "Pittsburgh",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -267,7 +116,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire (you?!), this role requires that you are based in the AMER region.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -280,7 +129,7 @@
       "interpretation": null,
       "method": "description_section:What we’re looking for",
       "quote": "- 6+ months as an SDR/BDR in B2B SaaS, with outbound prospecting as the core of your role (not primarily inbound)\n- A track record of meeting or exceeding quota (meetings, SQLs, or SAOs), and you can walk us through your numbers\n- Comfort with high-volume outreach across cold calling, email, and LinkedIn, and confidence on live calls with senior leaders\n- Experience prospecting into accounts with multiple stakeholders, including the C-suite\n- Hands-on experience with Salesforce and at least one sales engagement platform or dialer (e.g. Salesloft, Outreach, Nooks)\n- A genuine interest in remote work and the trends shaping the global workplace\nYou’ll thrive here if you are...\n- Driven by a clear “why”: You’re motivated by more than money, whether it’s purpose, product, or your own growth, and it shows in how you show up every day.\n- An owner: You take initiative, own your pipeline and your results, learn from mistakes, and find solutions instead of waiting for them.\n- Always improving: You actively ask for feedback and put it into practice quickly. Here, that pays off: our Enablement team and BD leaders invest real time in coaching you.\n- Resilient and persistent: You push through rejection, adapt your approach when something isn’t working, and keep the pipeline moving, and you’ll be surrounded by a team that does the same.\n- A curious researcher: You dig into accounts, connect information from different sources, and use it to make your outreach sharper and more relevant.\n- A team player with high standards: You lift your teammates up, celebrate team wins, and still hold yourself to a high bar on accuracy, organization, and results.\nIf you’re ambitious, curious, and ready to take the next step in your sales career in a global, high-performing team, we’d love to hear from you.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
@@ -297,7 +146,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      },
@@ -305,7 +154,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire (you?!), this role requires that you are based in the AMER region.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-11T18:51:09.370745+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/256fc3fc-f1ac-4e88-8ca1-a07f49a620fb"
      }
