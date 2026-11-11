@@ -3,7 +3,7 @@ import { isQuickScreen } from '../quickScreen';
 import { peopleSearchLinks, skillGaps } from '../jobHelpers';
 import { sourceWord } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
-import { submitJobFeedback, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
+import { submitJobFeedback, fetchJobFeedback, isOperatorAuthenticated, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
 import { 
   X, 
@@ -128,6 +128,13 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setJob(initialJob); }, [initialJob]);
+  // The thumbs rating is stored per job (private, operator only): load it when the panel opens so a reload shows what was chosen.
+  useEffect(() => {
+    if (!isOperatorAuthenticated()) return;
+    let current = true;
+    fetchJobFeedback(initialJob.id, initialJob.candidate_id).then((f) => { if (current && f) setJob((j) => ({ ...j, feedback: f as any })); }).catch(() => {});
+    return () => { current = false; };
+  }, [initialJob.id, initialJob.candidate_id]);
   // The draft stage and notes reset only when the job changes or its SAVED values change, not on every fresh copy of the job (a thumbs click, a list refresh):
   // typed notes were wiped by those.
   useEffect(() => {
@@ -361,7 +368,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <button
                     onClick={() => handleFeedback(job.feedback?.rating === 'THUMBS_UP' || job.feedback?.rating === 'UP' ? 'CLEAR' : 'UP')}
                     disabled={feedbackLoading}
-                    title="Thumbs Up (+15 Bonus: Boost this job in rankings)"
+                    title="Thumbs Up: mark this as a good match. Saved for you; it does not change the ranking."
                     className={`px-2.5 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
                       job.feedback?.rating === 'THUMBS_UP' || job.feedback?.rating === 'UP'
                         ? 'bg-emerald-100 text-emerald-800 font-bold'
@@ -369,12 +376,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     }`}
                   >
                     <ThumbsUp className="w-3.5 h-3.5" />
-                    <span>Boost</span>
+                    <span>Good match</span>
                   </button>
                   <button
                     onClick={() => handleFeedback(job.feedback?.rating === 'THUMBS_DOWN' || job.feedback?.rating === 'DOWN' ? 'CLEAR' : 'DOWN')}
                     disabled={feedbackLoading}
-                    title="Thumbs Down (-40 Penalty: Downrank this job)"
+                    title="Thumbs Down: mark this as not for you. Saved for you; it does not change the ranking."
                     className={`px-2.5 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
                       job.feedback?.rating === 'THUMBS_DOWN' || job.feedback?.rating === 'DOWN'
                         ? 'bg-rose-100 text-rose-800 font-bold'
@@ -382,7 +389,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     }`}
                   >
                     <ThumbsDown className="w-3.5 h-3.5" />
-                    <span>Downrank</span>
+                    <span>Not for me</span>
                   </button>
                   {job.feedback && (
                     <button

@@ -21,6 +21,8 @@ migrations = [
     '0016_past_applications.sql',
     '0017_sana_profile_cv.sql',
     '0018_followups.sql',
+    '0019_job_feedback.sql',
+    '0020_farhan_drop_marketing_stretch.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:

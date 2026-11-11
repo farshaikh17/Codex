@@ -1595,8 +1595,18 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
     const body = await request.json<any>();
     const candidateId = knownCandidate(body?.candidate_id ?? url.searchParams.get('candidate_id'));
     if (!candidateId) return badCandidate(request, env, body?.candidate_id ?? url.searchParams.get('candidate_id'));
-    const rating = body?.rating || 'UP';
-    const notes = body?.notes || null;
+    const rawRating = String(body?.rating || 'UP').toUpperCase();
+    const clearing = rawRating === 'CLEAR' || rawRating === 'RESET';
+    const stored = ({ UP: 'UP', THUMBS_UP: 'UP', DOWN: 'DOWN', THUMBS_DOWN: 'DOWN' } as Record<string, string>)[rawRating] || null;
+    if (!clearing && !stored) return jsonResponse({ error: 'rating must be UP, DOWN or CLEAR' }, 400, corsHeaders(request, env));
+    const rating = clearing ? 'CLEAR' : stored!;
+    const notes = body?.notes ? String(body.notes).slice(0, 500) : null;
+    const known = await env.DB.prepare('SELECT 1 AS ok FROM jobs WHERE id = ?').bind(jobId).first<any>();
+    if (!known) return jsonResponse({ error: 'Unknown job' }, 404, corsHeaders(request, env));
+    // Stored per candidate and job (migration 0019). It is a private note for the candidate; it does not change a score or a ranking.
+    if (clearing) await env.DB.prepare('DELETE FROM job_feedback WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).run();
+    else await env.DB.prepare(`INSERT INTO job_feedback(candidate_id, job_id, rating, notes, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(candidate_id, job_id) DO UPDATE SET rating = excluded.rating, notes = excluded.notes, updated_at = excluded.updated_at`).bind(candidateId, jobId, rating, notes).run();
 
     // Fetch updated job details for the candidate
     const job = await env.DB.prepare(`
@@ -1651,6 +1661,18 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
       notes,
       job: formattedJob
     }, 200, corsHeaders(request, env));
+  } catch (err: any) {
+    return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
+  }
+});
+
+// The stored thumbs rating for one job (operator only: it is a private note, so it is not in the public read list).
+router.get('/api/jobs/:id/feedback', async (request, env, params, url) => {
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
+  try {
+    const row = await env.DB.prepare('SELECT rating, notes FROM job_feedback WHERE candidate_id = ? AND job_id = ?').bind(candidateId, params.id).first<any>();
+    return jsonResponse({ job_id: params.id, candidate_id: candidateId, feedback: row ? { rating: row.rating, notes: row.notes } : null }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
@@ -1759,6 +1781,7 @@ router.get('/api/applications', async (request, env, _params, url) => {
 });
 
 // Unified Application Save/Update Mutation
+const APPLICATION_STATUSES = ['SAVED', 'REVIEWING', 'APPLIED', 'SUBMITTED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'REJECTED', 'WITHDRAWN'];
 async function handleApplicationSave(request: Request, env: Env, explicitCandidateId?: string) {
   try {
     const body = await request.json<any>();
@@ -1779,6 +1802,11 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
     if (!job_id || !status) {
       return jsonResponse({ error: 'job_id and status are required' }, 400, corsHeaders(request, env));
     }
+    if (!APPLICATION_STATUSES.includes(String(status))) {
+      return jsonResponse({ error: `status must be one of ${APPLICATION_STATUSES.join(', ')}` }, 400, corsHeaders(request, env));
+    }
+    const jobKnown = await env.DB.prepare('SELECT 1 AS ok FROM jobs WHERE id = ?').bind(job_id).first<any>();
+    if (!jobKnown) return jsonResponse({ error: 'Unknown job' }, 404, corsHeaders(request, env));
 
     const now = new Date().toISOString();
 
@@ -1824,13 +1852,29 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
       )
     ];
 
+    // The job's qualification bucket follows the application: an applied stage takes it out of the READY/STRETCH lists (status APPLIED); moving the
+    // application back to Saved / In review / Withdrawn puts it back where it was. The earlier status is kept in qualification_history so it can be restored.
+    const qual = await env.DB.prepare('SELECT qualification_status FROM candidate_qualifications WHERE candidate_id = ? AND job_id = ?').bind(candidateId, job_id).first<any>();
+    const histRow = (previous: string | null, next: string, reason: string) => env.DB.prepare(
+      `INSERT INTO qualification_history (candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?, ?, ?, ?, ?, 'Candidate')`
+    ).bind(candidateId, job_id, previous, next, reason);
     if (['SUBMITTED', 'APPLIED', 'INTERVIEWING', 'OFFER'].includes(status)) {
+      if (qual && qual.qualification_status !== 'APPLIED') batchStatements.push(histRow(qual.qualification_status, 'APPLIED', `Application recorded (${status})`));
       batchStatements.push(
         env.DB.prepare(`
           UPDATE candidate_qualifications
           SET qualification_status = 'APPLIED'
           WHERE candidate_id = ? AND job_id = ?
         `).bind(candidateId, job_id)
+      );
+    } else if (['SAVED', 'REVIEWING', 'WITHDRAWN'].includes(status) && qual?.qualification_status === 'APPLIED') {
+      const earlier = await env.DB.prepare(
+        `SELECT previous_status FROM qualification_history WHERE candidate_id = ? AND job_id = ? AND new_status = 'APPLIED' AND previous_status IS NOT NULL AND previous_status <> 'APPLIED' ORDER BY id DESC LIMIT 1`
+      ).bind(candidateId, job_id).first<any>();
+      const restoreTo = earlier?.previous_status || 'NEEDS_REVIEW';
+      batchStatements.push(
+        env.DB.prepare(`UPDATE candidate_qualifications SET qualification_status = ? WHERE candidate_id = ? AND job_id = ? AND qualification_status = 'APPLIED'`).bind(restoreTo, candidateId, job_id),
+        histRow('APPLIED', restoreTo, `Application moved back to ${status}`)
       );
     }
 
@@ -2974,7 +3018,7 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
 // Removes a client and everything held about them, in one atomic batch (the privacy notice promises deletion on request). Operator only. The two built-in
 // candidates cannot be removed. Shared job postings stay; what is removed is every row tied to this client, their application record (name, e-mail, phone)
 // and any cached answers that mention the client.
-const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'application_followups', 'applications', 'past_applications',
+const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'application_followups', 'job_feedback', 'applications', 'past_applications',
   'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests'] as const;
 router.delete('/api/clients/:id', async (request, env, params) => {
   const id = knownCandidate(params.id);
