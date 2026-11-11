@@ -97,6 +97,8 @@ for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']])
   await tab(btn);
   await page.getByText('View READY').first().click(); await page.waitForTimeout(1500);
   const rd = await api(`/jobs?candidate_id=${cid}&farhan_fit=READY&sort_by=score_desc&exclude_applied=true&exclude_dismissed=true&limit=25&offset=0`);
+  // The tab count loads a moment after the list; right after a deploy (cold cache) the first read raced it and failed a release once. Wait for it, up to 10 s.
+  await page.waitForFunction((n) => new RegExp(`READY to Apply \\(${n}\\)`, 'i').test(document.body.innerText), rd.status_counts.READY, { timeout: 10000 }).catch(() => {});
   r = await sameAsApi(rd.jobs.map((j) => j.id));
   check(`${btn}: READY dashboard shows exactly the server's READY jobs and its tab count is their total`, r.ok && rd.jobs.every((j) => j.farhan_fit === 'READY') && new RegExp(`READY to Apply \\(${rd.status_counts.READY}\\)`, 'i').test(await text()), `screen [${r.got}] api [${rd.jobs.map((j) => j.id)}]`);
 }
