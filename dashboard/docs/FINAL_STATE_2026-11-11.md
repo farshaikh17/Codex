@@ -19,11 +19,13 @@ no AI review; no automated applications; a person's decisions and applications a
 | #99 | Typed notes survive a refresh; the Ready list keeps its tab and search; a failed Save no longer blanks the screen; Stretch card opens Stretch; local-date follow-ups; keyboard and dialog fixes |
 | #100 | Collector sync no longer resets rows the Worker assessed or zeroes scores of overridden / applied rows; its push trigger runs on `main` only |
 | #102 | Owner decisions: thumbs rating is stored (private); moving an application back to Saved restores the job's bucket; Farhan's two Drivetrain marketing roles left Stretch |
-| #103 | To review shows screened jobs only ("+ N not screened yet" apart); one definition of "applied" everywhere; search wildcards, orphan follow-ups, cohort label, outage backup; exact-duplicate rule includes location; watchlist scoring; guards and workflow safety |
+| #103 | To review shows collector imports the screen has not judged yet apart ("+ N not screened yet"); one definition of "applied" everywhere; search wildcards, orphan follow-ups, cohort label, outage backup; exact-duplicate rule includes location; watchlist scoring; guards and workflow safety |
+
+| #105 | The daily run screens first-import rows the current screen never scored (see section 3). No release needed: it runs from the workflow |
 
 ## 2. How it was checked
 
-* **Unit and integration:** `cd dashboard && npm test` (243 tests, plus DST, authed-fetch and the migration chain 0001-0020); `python3 -m unittest discover -s engine/tests` (190 tests).
+* **Unit and integration:** `cd dashboard && npm test` (244 tests, plus DST, authed-fetch and the migration chain 0001-0020); `python3 -m unittest discover -s engine/tests` (191 tests).
 * **Builds:** `npm run build:frontend`, `npm run build:worker` (dry run), `npx tsc --noEmit -p frontend`.
 * **Real browser, local Worker, desktop and mobile** (commands in `RELEASE.md`): main 31, accessibility 33, faults 14, site 20, listing 48, clients 18, features 31.
 * **Live, read-only, desktop and mobile:** `production-readonly.e2e.mjs` 33/33 after each release, and a click-through of every public screen, card, tab and job panel with no console error, failed request or sideways scroll.
@@ -34,20 +36,27 @@ no AI review; no automated applications; a person's decisions and applications a
 
 * **D1 use at 21:57 UTC**, before the daily run's own writes: 1,666,354 rows read (free allowance 5,000,000; the guard's ceiling is 2,500,000) and 15,506 rows written (allowance 100,000).
 * **Daily run** (started 21:57 UTC after GitHub dropped the earlier triggers; the guard caught it up): 296 new jobs, old rows re-scored, 10 closed, 10 reopened.
-* **Buckets at 22:35 UTC:** Farhan READY 1, Stretch 0, To review 1,561 of which about 705 not screened yet; Sana READY 2, Stretch 0, To review 2,186 of which about 661 not screened yet.
-* **Unscreened rows** are drained by the Worker (40 every 10 minutes at most). Net progress on 11 Nov was about 1,050 rows in 21 hours, slower than the ceiling because new collector imports keep arriving. Not confirmed to reach zero.
+* **Buckets at 22:35 UTC:** Farhan READY 1, Stretch 0, To review 1,561 (856 with a score); Sana READY 2, Stretch 0, To review 2,186 (1,525 with a score).
+* **Collector imports waiting to be screened: 0 for both** (live overview, 23:17 UTC, commit `b564312`). The Worker drained that backlog.
+* **The score-0 rows that remain in To review** (about 705 for Farhan, 661 for Sana) are a different kind. A sample of Farhan's taken on 10 Nov shows rows from the
+  first import on 26 Oct, reason "Preserved verified Farhan status with strategy lane mapping", lane NOT_FIT, no score breakdown. Nothing ever scored them.
+  #105 makes the daily run screen such rows (at most 1,000 per person per run). Sana's were not in that sample, so their kind is unconfirmed; the selection is by
+  state (undecided, never scored), not by reason, so it covers hers if they are the same. **Check after the next daily run** that both counts fell.
+* **Correction:** on 10-11 Nov these rows were reported to the owner as "not screened yet collector rows draining slowly". That was wrong for the ones that remain.
 
 ## 4. Knowingly left
 
 1. **Operator-only screens were never tried on the live site** (no key in this environment). They pass in the local browser suites. Checklist in section 5.
 2. **Thumbs rating does not change ranking.** It is stored and shown. Making it move a score needs a design, because every re-score overwrites stored scores.
-3. **Unscreened backlog** (section 3). If it does not shrink over a few days, screen those rows in the daily run as well as in the Worker.
+3. **Score-0 rows in To review** (section 3): fixed in code by #105 but not yet seen working on production data. Verify after the next daily run.
 4. **Dependencies.** Open and deferred: `actions/checkout` 7, `actions/setup-python` 7, `actions/upload-artifact` 7, `actions/cache` 6, `wrangler` 4.158. Their tests pass, but they change the actions used
    by the workflows that push commits and deploy, and that path cannot be tested from a PR. Merge one at a time and watch one scheduled run and one `preflight` release run.
    Closed: TypeScript 7, Vite 8, plugin-react 6 (they break the build; they need one planned migration).
-5. **Not measured:** the outage backup on a custom domain (the Cache API is probably inert on workers.dev); how many jobs arrive on a weekend.
-6. **Merged branches** were not deleted; branch deletion is blocked for the agent. Harmless.
-7. **Smaller items:** the Ready cards open a job from the title or "Inspect Explanations", not from the card body; the job title there is not keyboard-focusable (the button is).
+5. **One release a day.** Every release flushes the response cache, and the release's own browser check plus any live click-through then run on cold
+   misses. Three releases on 11 Nov used up the public daily read budget (2.5M rows) twice; visitors without the key saw "capacity used up" until 00:00 UTC.
+6. **Not measured:** the outage backup on a custom domain (the Cache API is probably inert on workers.dev); how many jobs arrive on a weekend.
+7. **Merged branches** were not deleted; branch deletion is blocked for the agent. Harmless.
+8. **Smaller items:** the Ready cards open a job from the title or "Inspect Explanations", not from the card body; the job title there is not keyboard-focusable (the button is).
 
 ## 5. Owner checklist (about 5 minutes, on the live site, with the operator key)
 
