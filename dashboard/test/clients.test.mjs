@@ -342,3 +342,36 @@ test('a visitor cannot reach a private client by naming a visible candidate in t
   assert.equal((await req(w.env, 'GET', `/api/candidates/priya_analyst/jobs?${statuses}`)).status, 200);
   assert.equal((await req(w.env, 'GET', `/api/candidates/${F}/jobs?candidate_id=${F}`, { key: null })).status, 200);
 });
+
+test('open tracker (owner decision 2026-11-12): tracker actions work without a key for the built-in candidates only; everything else still needs it', async () => {
+  const w = world({ OPEN_TRACKER: 'on' });
+  assert.equal((await req(w.env, 'POST', '/api/clients', { body: analyst })).status, 201);   // a private client exists
+  const open = (method, path, body) => req(w.env, method, path, { body, key: null });
+  // version tells the page
+  assert.equal((await open('GET', '/api/version')).json.open_tracker, true);
+  // save, status, notes, follow-up, feedback, history, override: all without a key for Farhan
+  const saved = await open('POST', '/api/applications', { candidate_id: F, job_id: 'k3', status: 'SAVED' });
+  assert.ok(saved.status === 200 || saved.status === 201, saved.text);
+  assert.equal((await open('POST', '/api/applications', { candidate_id: F, job_id: 'k3', status: 'APPLIED', notes: 'Sent CV on portal' })).status < 300, true);
+  assert.equal(w.sqlite.prepare(`SELECT status, notes FROM applications WHERE candidate_id = ? AND job_id = 'k3'`).get(F).notes, 'Sent CV on portal');
+  assert.equal((await open('PUT', '/api/applications/k3/follow-up', { candidate_id: F, follow_up_on: '2030-01-01' })).status, 200);
+  assert.equal((await open('POST', '/api/jobs/k3/feedback', { candidate_id: F, rating: 'UP' })).status, 200);
+  assert.equal((await open('GET', `/api/jobs/k3/feedback?candidate_id=${F}`)).json.feedback.rating, 'UP');
+  assert.equal((await open('GET', `/api/applications/k3/history?candidate_id=${F}`)).status, 200);
+  assert.equal((await open('POST', '/api/jobs/k2/qualification-override', { candidate_id: F, status: 'NEEDS_REVIEW', reason: 'Worth a look after all' })).status, 200);
+  // the visitor's own job list now carries the tracker notes (that is the point), but never contact or pay details
+  const list = await open('GET', `/api/applications?candidate_id=${F}`);
+  assert.ok(list.text.includes('Sent CV on portal'), 'notes are visible in open-tracker mode');
+  const prof = await open('GET', `/api/candidates`);
+  assert.ok(!/cash_floor|"email"|"phone"/.test(prof.text), 'private profile fields stay private');
+  // not for a private client, not for a request naming two candidates, not for routes outside the tracker
+  { const r = await open('POST', '/api/applications', { candidate_id: 'priya_analyst', job_id: 'k1', status: 'SAVED' }); assert.equal(r.status, 401, 'private client: ' + r.text.slice(0, 160)); }
+  { const r = await open('POST', `/api/jobs/k1/feedback?candidate_id=${S}`, { candidate_id: F, rating: 'UP' }); assert.equal(r.status, 401, 'two candidates: ' + r.text.slice(0, 160)); }
+  for (const [m, p, b] of [['GET', '/api/clients'], ['PUT', '/api/profile?candidate_id=' + F, { full_name: 'x' }], ['GET', '/api/client-requests'], ['PUT', '/api/site-settings', {}], ['POST', '/api/clients', analyst]])
+    { const r = await open(m, p, b); assert.equal(r.status, 401, `${m} ${p} still needs the key: ${r.status} ${r.text.slice(0, 120)}`); }
+  // switched off: the key is needed again
+  const off = world();
+  assert.equal((await req(off.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k3', status: 'SAVED' }, key: null })).status, 401);
+  assert.equal((await req(off.env, 'GET', '/api/version', { key: null })).json.open_tracker, false);
+  assert.ok(!(await req(off.env, 'GET', `/api/applications?candidate_id=${F}`, { key: null })).text.includes('PRIVATE-NOTE-c1'), 'notes stay stripped when off');
+});

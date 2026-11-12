@@ -13,6 +13,7 @@ interface NavbarProps {
   isLoading: boolean;
   pilotActive?: boolean;
   isOperator?: boolean;
+  trackerOpen?: boolean;
   onOpenAuth?: () => void;
   /** resold clients this viewer may see (the built-in two have their own buttons) */
   clients?: { id: string; full_name: string }[];
@@ -29,12 +30,12 @@ const item = (on: boolean) =>
   `px-3 py-1.5 text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 ${on ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:text-coral-600 hover:bg-white'}`;
 
 export const Navbar: React.FC<NavbarProps> = ({
-  activeTab, setActiveTab, savedCount, onReloadFixtures, isLoading, isOperator = false, onOpenAuth, clients = [], activeClient = null, onSelectClient, brand = 'Career Job Engine', viewer = null,
+  activeTab, setActiveTab, savedCount, onReloadFixtures, isLoading, isOperator = false, trackerOpen = false, onOpenAuth, clients = [], activeClient = null, onSelectClient, brand = 'Career Job Engine', viewer = null,
 }) => {
   return (
     <header className="sticky top-0 z-40">
       <div className="bg-gradient-to-r from-[#173a4f] to-slate-900 text-white text-xs font-semibold px-4 py-2 flex items-center justify-between gap-3">
-        <span>Daily-screened job dashboards · <span className="text-[#F5C451]">{isOperator ? 'Operator mode: changes enabled' : 'Read-only view'}</span></span>
+        <span>Daily-screened job dashboards · <span className="text-[#F5C451]">{isOperator ? 'Operator mode: changes enabled' : trackerOpen ? 'Tracker open: save, track and rate jobs without signing in' : 'Read-only view'}</span></span>
         <a href="/" className="hidden sm:inline text-white/80 hover:text-white">← Website</a>
       </div>
       <div className="bg-slate-50 border-b border-slate-200">

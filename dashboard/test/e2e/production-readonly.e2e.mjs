@@ -30,20 +30,27 @@ const modalOpen = async () => (await page.locator('#operator-key-input, #operato
 const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|\bnotice period\b|cash floor/i;          // employers and pay: nowhere in public output
 const PRIVATE_CITY = /\bKota\b|Bengaluru|Hyderabad|Chennai|Pune|Mumbai/i;            // candidate-side only (job postings legitimately name cities)
 
+// Open tracker (owner decision 2026-11-12): /api/version says open_tracker. Then the tracker routes answer without a key (a nonexistent job
+// gives 404 and changes nothing) and the tracker's own notes may appear publicly; every other protected route must still refuse with 401.
+const TRACKER = [/^\/api\/jobs\/[^/?]+\/feedback/, /^\/api\/candidates\/[^/]+\/applications$/, /^\/api\/applications(\?|$)/, /^\/api\/applications\/[^/?]+\/follow-up/, /^\/api\/applications\/[^/?]+\/history/, /^\/api\/jobs\/[^/?]+\/qualification-(override|audit)/];
+const isTracker = (p) => TRACKER.some((re) => re.test(p.startsWith('/api') ? p : '/api' + p));
+const OPEN = (await (await fetch(BASE + '/api/version')).json().catch(() => ({}))).open_tracker === true;
 // Anonymous API: the protected surface refuses, the public surface answers.
 for (const p of ['/applications/x/history?candidate_id=farhan_shaikh', '/jobs/x/qualification-audit?candidate_id=farhan_shaikh', '/automation/runs', '/meta', '/backups']) {
   const r = await fetch(BASE + '/api' + p);
-  check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, 'status ' + r.status);
+  if (OPEN && isTracker(p)) check(`open tracker GET ${p.split('?')[0]} answers without a key`, r.status === 200 || r.status === 404, 'status ' + r.status);
+  else check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, 'status ' + r.status);
 }
 for (const [m, p, b] of [['POST', '/applications', { candidate_id: 'farhan_shaikh', job_id: 'x', status: 'APPLIED' }], ['PUT', '/profile?candidate_id=smoke-nonexistent', {}], ['POST', '/automation/smoke-nonexistent', {}], ['POST', '/jobs/x/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'x' }]]) {
   const r = await fetch(BASE + '/api' + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-  check(`anonymous ${m} ${p.split('?')[0]} is refused (no record can be changed)`, r.status === 401, 'status ' + r.status);
+  if (OPEN && isTracker(p)) check(`open tracker ${m} ${p.split('?')[0]} on a nonexistent job changes nothing (400/404)`, r.status === 404 || r.status === 400, 'status ' + r.status);
+  else check(`anonymous ${m} ${p.split('?')[0]} is refused (no record can be changed)`, r.status === 401, 'status ' + r.status);
 }
 const leaks = [];
 for (const p of ['/candidates', '/profile?candidate_id=farhan_shaikh', '/profile?candidate_id=sana_ansari', '/applications?candidate_id=farhan_shaikh', '/applications?candidate_id=sana_ansari', '/dashboard/overview', '/jobs?candidate_id=farhan_shaikh&limit=50', '/sources']) {
   const r = await fetch(BASE + '/api' + p); const t = await r.text();
   if (r.status !== 200) leaks.push(`${p} -> ${r.status}`);
-  if ((/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_TEXT.test(t)) || (/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_CITY.test(t)) || /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|actor|cash_floor_inr_monthly|pay_line|employment_history|location_preferences)"/.test(t) || (/^\/(candidates|profile|dashboard)/.test(p) && /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t))) leaks.push(`${p} private field/value`);
+  if ((/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_TEXT.test(t)) || (/^\/(candidates|profile|dashboard)/.test(p) && PRIVATE_CITY.test(t)) || (OPEN ? /"(error_message|cover_letter_path|actor|cash_floor_inr_monthly|pay_line|employment_history|location_preferences)"/ : /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|actor|cash_floor_inr_monthly|pay_line|employment_history|location_preferences)"/).test(t) || (/^\/(candidates|profile|dashboard)/.test(p) && /[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(t))) leaks.push(`${p} private field/value`);
 }
 check('public endpoints answer 200 and expose no private field, employer, pay, city, note or email', leaks.length === 0, leaks.join('; '));
 
@@ -79,7 +86,7 @@ for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.far
   const st = await text();
   check(`${btn}: profile summary names this candidate and holds no private detail`, (names.includes(label) || st.includes(label)) && !names.includes(other) && !PRIVATE_TEXT.test(st + names.join(' ')) && !PRIVATE_CITY.test(names.join(' ')), names.slice(0, 4).join('|'));
   await tab('APPLICATIONS');
-  check(`${btn}: tracker shows no private notes`, !/PRIVATE-|Playwright verified rejection test/i.test(await text()));
+  if (!OPEN) check(`${btn}: tracker shows no private notes`, !/PRIVATE-|Playwright verified rejection test/i.test(await text()));   // open tracker: the tracker's notes are visible by design
 }
 // India Remote and READY lists: the jobs on screen are exactly the server's filtered first page (same query the screen sends; reads are cache hits after the visit).
 const onScreen = () => page.$$eval('[data-job-id]', (els) => els.map((e) => e.getAttribute('data-job-id')));

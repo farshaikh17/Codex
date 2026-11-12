@@ -10,6 +10,7 @@ import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf
 
 export interface Env {
   DB: D1Database;
+  OPEN_TRACKER?: string;   // 'on': tracker actions work without the operator key (owner decision 2026-11-12, see TRACKER_ROUTES)
   ENVIRONMENT?: string;
   ALLOWED_ORIGINS?: string;
   ADMIN_API_KEY?: string;
@@ -142,6 +143,31 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
   /^\/api\/export$/,
   /^\/api\/discovery\/daily$/,
 ];
+// Open tracker (owner decision 2026-11-12: "make it work for Farhan and Sana first, security later"). With OPEN_TRACKER = 'on', these
+// tracker actions work without the operator key, only for a candidate that is not a private client, and public answers keep the
+// tracker's own notes. Everything else (clients, settings, profiles, the inbox, exports, automation) still needs the key.
+export const TRACKER_ROUTES: [string, RegExp][] = [
+  ['POST', /^\/api\/jobs\/[^/]+\/feedback$/], ['GET', /^\/api\/jobs\/[^/]+\/feedback$/],
+  ['POST', /^\/api\/candidates\/[^/]+\/applications$/], ['POST', /^\/api\/applications$/],
+  ['PUT', /^\/api\/applications\/[^/]+\/follow-up$/], ['GET', /^\/api\/follow-ups$/],
+  ['DELETE', /^\/api\/applications\/[^/]+$/], ['GET', /^\/api\/applications\/[^/]+\/history$/],
+  ['POST', /^\/api\/jobs\/[^/]+\/qualification-override$/], ['GET', /^\/api\/jobs\/[^/]+\/qualification-audit$/],
+];
+const TRACKER_KEYS = new Set(['notes', 'application_notes', 'app_notes', 'rejection_notes', 'manual_override_reason', 'feedback', 'rejection_stage', 'rejection_reason_category', 'application_channel', 'resume_version']);
+const openTracker = (env: Env) => String(env.OPEN_TRACKER || '').toLowerCase() === 'on';
+const isTrackerRoute = (method: string, pathname: string) => TRACKER_ROUTES.some(([m, re]) => m === method && re.test(pathname));
+/** The candidate an open-tracker request acts for: every id it names (query, path, JSON body) must be one known, non-private candidate. */
+async function openTrackerCandidate(request: Request, url: URL): Promise<string | null> {
+  const ids = new Set(referencedCandidates(url));
+  if (request.method !== 'GET' && request.method !== 'DELETE') {
+    const body = await request.clone().json<any>().catch(() => null);
+    if (body && typeof body.candidate_id === 'string') ids.add(body.candidate_id);
+  }
+  if (ids.size !== 1) return null;
+  const [id] = [...ids];
+  return CANDIDATE_IDS.has(id) && !PRIVATE_IDS.has(id) ? id : null;
+}
+
 function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
 }
@@ -339,11 +365,11 @@ const PRIVATE_KEYS = new Set([
   'disqualifying_keywords', 'token', 'secret', 'api_key', 'password', 'authorization', 'cursor_token', 'last_error',
   'error_message', 'error', 'message', 'rejection_stage', 'rejection_reason_category',
 ]);
-function stripPrivate(value: any): any {
-  if (Array.isArray(value)) return value.map(stripPrivate);
+function stripPrivate(value: any, keep?: Set<string>): any {
+  if (Array.isArray(value)) return value.map((v) => stripPrivate(v, keep));
   if (value && typeof value === 'object') {
     const out: Record<string, any> = {};
-    for (const [k, v] of Object.entries(value)) if (!PRIVATE_KEYS.has(k.toLowerCase())) out[k] = stripPrivate(v);
+    for (const [k, v] of Object.entries(value)) { const key = k.toLowerCase(); if (!PRIVATE_KEYS.has(key) || keep?.has(key)) out[k] = stripPrivate(v, keep); }
     return out;
   }
   return value;
@@ -539,7 +565,7 @@ class WorkerRouter {
 
   // Last step for every API response: a 500 never echoes internal error text, and a public response is stripped of
   // private fields before it leaves.
-  private async finish(request: Request, res: Response): Promise<Response> {
+  private async finish(request: Request, res: Response, env?: Env): Promise<Response> {
     const isApi = new URL(request.url).pathname.startsWith('/api/');
     const isPublic = accessLevel.get(request) === 'public';
     if (!isApi || (res.status !== 500 && !isPublic)) return res;
@@ -558,7 +584,7 @@ class WorkerRouter {
       return new Response(JSON.stringify({ error: 'Internal error. The request was not completed.' }), { status: 500, headers });
     }
     const data = await res.json<any>();
-    return new Response(JSON.stringify(stripPrivate(data)), { status: res.status, headers });
+    return new Response(JSON.stringify(stripPrivate(data, env && openTracker(env) ? TRACKER_KEYS : undefined)), { status: res.status, headers });
   }
 
   async handle(request: Request, env: Env): Promise<Response> {
@@ -576,8 +602,11 @@ class WorkerRouter {
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
     const isApi = pathname.startsWith('/api/');
     if (isApi && !PUBLIC_API_PATHS.has(pathname)) {
-      if (isPublicRead(request.method, pathname) && !/^Bearer\s+\S/i.test(request.headers.get('Authorization') || '')) {
+      const keyless = !/^Bearer\s+\S/i.test(request.headers.get('Authorization') || '');
+      if (isPublicRead(request.method, pathname) && keyless) {
         accessLevel.set(request, 'public');
+      } else if (keyless && openTracker(env) && isTrackerRoute(request.method, pathname) && (await syncRegistry(env), await openTrackerCandidate(request, url))) {
+        accessLevel.set(request, 'operator');
       } else {
         const denied = await checkOperatorAuth(request, env);
         if (denied) return denied;
@@ -637,7 +666,7 @@ class WorkerRouter {
         try {
           res = await this.finish(request, hiddenFrom.has(request)
             ? badCandidate(request, env, hiddenFrom.get(request))
-            : await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url));
+            : await route.handler(request, meter ? { ...env, DB: meter.db } : env, params, url), env);
         } finally {
           if (meter) {
             const rows = meter.rows();
@@ -807,7 +836,8 @@ router.get('/api/version', async (request, env) => {
     deployed_at: env.DEPLOYED_AT || null,
     status: 'operational',
     architecture: 'cloudflare_workers_d1',
-    access: 'public read-only; changes require the operator key',
+    access: openTracker(env) ? 'public read; tracker actions open (no key); other changes require the operator key' : 'public read-only; changes require the operator key',
+    open_tracker: openTracker(env),
   }, 200, corsHeaders(request, env));
 });
 

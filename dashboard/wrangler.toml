@@ -6,6 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+# Owner decision 2026-11-12: tracker actions (save, status, notes, follow-ups, Good match / Not for me, bucket override) work without
+# the operator key for the non-private candidates. Set to "off" to require the key again. See TRACKER_ROUTES in worker/index.ts.
+OPEN_TRACKER = "on"
 
 [[d1_databases]]
 binding = "DB"

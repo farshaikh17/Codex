@@ -16,6 +16,7 @@ const require = createRequire(new URL('../../frontend/package.json', import.meta
 const { chromium } = require('playwright');
 const BASE = process.env.E2E_BASE || 'http://localhost:8787';
 const KEY = process.env.E2E_KEY;
+const OPEN = (await (await fetch(BASE + '/api/version')).json().catch(() => ({}))).open_tracker === true;   // open tracker (owner decision 2026-11-12)
 const mode = process.argv[2] || 'desktop';
 if (!KEY) throw new Error('E2E_KEY is required');
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error('features e2e only runs against a local server');
@@ -71,7 +72,8 @@ await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 await page.evaluate(() => document.querySelector('[aria-label="Close"]')?.click());
 await page.waitForTimeout(500);
 await tab('APPLICATIONS');
-check('F11 visitor tracker: no follow-up date input and no follow-up request', (await page.locator('input[type="date"]').count()) === 0 && followUpRequests.length === 0, followUpRequests.join());
+if (OPEN) check('F11 open tracker: a visitor gets the follow-up dates', followUpRequests.length > 0, 'no follow-up request');
+else check('F11 visitor tracker: no follow-up date input and no follow-up request', (await page.locator('input[type="date"]').count()) === 0 && followUpRequests.length === 0, followUpRequests.join());
 
 // ===== Part B: operator ===========================================================================================
 await goto();
@@ -139,7 +141,7 @@ check('G7 Escape closes the history window', (await page.locator('[role="dialog"
 check('F19 no unexpected console errors', consoleErrors.filter((e) => !/429/.test(e) && !/status of 500/.test(e)).length === 0, consoleErrors.join(' | '));
 const status = await page.evaluate(async (k) => (await fetch('/api/follow-ups?candidate_id=sana_ansari', { headers: { Authorization: 'Bearer ' + k } })).status, KEY);
 const anon = await page.evaluate(async () => (await fetch('/api/follow-ups?candidate_id=farhan_shaikh')).status);
-check('F20 the follow-up list is protected: 401 without a key, 200 with it', anon === 401 && status === 200, `${anon}/${status}`);
+check(OPEN ? 'F20 open tracker: the follow-up list answers with or without a key' : 'F20 the follow-up list is protected: 401 without a key, 200 with it', (OPEN ? anon === 200 : anon === 401) && status === 200, `${anon}/${status}`);
 const bad = await page.evaluate(async (k) => (await fetch('/api/applications/x/follow-up?candidate_id=farhan_shaikh', { method: 'PUT', headers: { Authorization: 'Bearer ' + k, 'Content-Type': 'application/json' }, body: JSON.stringify({ follow_up_at: 'not-a-date' }) })).status, KEY);
 check('F21 a malformed date is refused', bad >= 400 && bad < 500, bad);
 await browser.close();
