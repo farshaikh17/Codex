@@ -104,7 +104,7 @@ export function platformGap(title:string,skills:unknown){
 }
 // Sana's "reliability" means plant and asset reliability. Software reliability (SRE, DevOps, cloud) and product hardware testing match the
 // word but not the work (owner review 2026-11-12: "Senior Site Reliability Engineer" and "Hardware Test and Reliability Engineer" in her top 100).
-const SANA_AVOID=/\b(?:ai|cyber|information|it|network|cloud|application|data)\s+security\b|\bcybersecurity\b|\bsoftware\b|\bsite reliability\b|\bSRE\b|\bsoftware reliability\b|\breliability (?:software|data|platform)\b|\bhardware test|\btest (?:and|&) reliability\b|\bdevops\b|\bcloud\b|\bnetwork reliability\b/i;
+const SANA_AVOID=/\bhardware\b|\b(?:ai|cyber|information|it|network|cloud|application|data)\s+security\b|\bcybersecurity\b|\bsoftware\b|\bsite reliability\b|\bSRE\b|\bsoftware reliability\b|\breliability (?:software|data|platform)\b|\bhardware test|\btest (?:and|&) reliability\b|\bdevops\b|\bcloud\b|\bnetwork reliability\b/i;
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId==='sana_ansari')return SANA_AVOID.test(title||'');
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
@@ -258,6 +258,20 @@ export function monthlyInr(salary: any): { lo: number; hi: number } | null {
 const lakhMonth = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}/month`;
 
 // This is a conservative discovery screen, not a substitute for full employer/candidate review.
+// Ranking v3 (owner review 2026-11-12: seven of Farhan's top jobs tied at 71). Two small, explainable bonuses separate the role-matched jobs:
+// the title names one of the candidate's own target roles (whole phrase +TARGET_EXACT_BONUS, a distinctive word of one +TARGET_WORD_BONUS),
+// and an experienced candidate (7+ years) sees a title pitched at their level (+SENIORITY_BONUS). Nothing here changes eligibility or status.
+export const TARGET_EXACT_BONUS=8, TARGET_WORD_BONUS=4, SENIORITY_BONUS=3;
+const GENERIC_TITLE_WORDS=new Set(['senior','sr','lead','manager','engineer','specialist','consultant','the','and','of','for','in','a','an','with','to','head','principal','staff','associate','director','officer','executive','analyst','coordinator','technical','industrial']);
+const words=(s:string)=>String(s||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9]+/g,' ').trim();
+export function targetFit(title:string,targets:unknown):'exact'|'word'|null{
+ const t=' '+words(title)+' ';let partial=false;
+ for(const raw of list(targets)){const g=words(String(raw));if(!g)continue;
+  if(t.includes(' '+g+' '))return 'exact';
+  for(const w of g.split(' '))if(w.length>2&&!GENERIC_TITLE_WORDS.has(w)&&t.includes(' '+w+' '))partial=true;}
+ return partial?'word':null;
+}
+const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
  const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|unable|never|cannot|can't|won't|isn't|aren't|doesn't|don't|no longer)\b[^.!?]*$/.test(before)||/^\s+(?:(?:is |are |will be )?(?:not|no longer|never|unavailable|unsupported)|isn't|aren't|won't be|will not be)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
@@ -322,6 +336,10 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const tooJunior=role&&(underLevel(p.title||'',p.description||'',have)||(candidate.id==='sana_ansari'&&!prof&&have>=5&&/\btechnicians?\b/i.test(p.title||'')));
  const overReach=role&&have>0&&need>have+2, meets=role&&!tooJunior&&have>0&&need>0&&need<=have;
  if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(95,score+EXPERIENCE_MATCH_BONUS);
+ const fit=role&&!prof?targetFit(p.title||'',candidate.target_roles):null;
+ if(fit)score=Math.min(95,score+(fit==='exact'?TARGET_EXACT_BONUS:TARGET_WORD_BONUS));
+ const atLevel=role&&!tooJunior&&have>=7&&SENIOR_TITLE.test(p.title||'');
+ if(atLevel)score=Math.min(95,score+SENIORITY_BONUS);
  const platform=role?platformGap(p.title||'',candidate.primary_skills):null;
  // Pay floor (owner rule 2026-11-07): only a published range is compared. Below the candidate's floor loses points; reaching the
  // preferred level gains a little. A candidate with no floor on record is never compared.
@@ -348,7 +366,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
  // posting whose only stated location is outside India loses a fixed amount unless it affirmatively supports remote work from India.
  // Both only lower the preliminary score. Eligibility, status and READY rules are not touched, and a human override still wins.
- const avoided=prof?!!phraseRegex(prof.avoid_keywords)?.test(p.title||''):avoidedTitle(candidate.id,p.title);
+ // Sana: a "Reliability Engineer" whose posting is about product or hardware reliability (Cisco) and names no plant, maintenance or equipment work.
+ const productReliability=candidate.id==='sana_ansari'&&!prof&&/reliability/i.test(p.title||'')&&!/\b(plant|maintenance|equipment|asset|rotating|pump|compressor|turbine|boiler)\b/i.test(p.description||'')&&/\b(hardware|product|silicon|semiconductor|software)\b/i.test(p.description||'');
+ const avoided=prof?!!phraseRegex(prof.avoid_keywords)?.test(p.title||''):avoidedTitle(candidate.id,p.title)||productReliability;
  const foreignOnly=(prof?prof.foreign_penalty:candidate.id==='farhan_shaikh')&&eligibility!=='ELIGIBLE'&&!globalHirer&&foreignLocation(p.location);
  // Sana (owner rule 2026-11-07: anywhere that could be her dream job). From India, an on-site role abroad is realistic only in the
  // Gulf or when the posting offers sponsorship or relocation, so other foreign on-site roles lose points. Eligibility is unchanged.
@@ -363,7 +383,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(tooJunior)score=Math.min(score,UNDER_LEVEL_CAP);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score reduced).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score reduced).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
@@ -447,7 +467,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v10: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v11: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

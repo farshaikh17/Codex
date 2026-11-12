@@ -166,10 +166,10 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
     insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
     insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
-    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v10":true}' : '{"preliminary":true}');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v11":true}' : '{"preliminary":true}');
     if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
     // an application by the OTHER candidate on the same job must not protect this row's score
-    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v10":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v11":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
   }
   const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
     jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
@@ -177,7 +177,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));   // re-score only: no new jobs
   const before = snap();
   fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify(rows.map(({ _st, _ov, _tagged, _app, ...r }) => r)));
-  const sql = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]).sql;
+  const sql = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json'), '--no-shortlist']).sql;   // the re-score alone; the shortlist and low-match steps have their own tests
   w.sqlite.exec(sql);
   const after = snap();
   assert.equal(after.jobs, before.jobs, 'jobs table untouched by the re-score');
@@ -189,7 +189,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
     if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
     if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
-    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v10, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v11, true, `re-scored row carries the marker: ${k}`); changedScores++; }
     if (JSON.stringify(q1) !== JSON.stringify(q0)) {
       changedQuals++;
       assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
@@ -275,7 +275,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V8 = '{"preliminary":true,"profile_v10":true}';
+  const V8 = '{"preliminary":true,"profile_v11":true}';
   const add = (id, score, elig, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? NOW);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', elig, o.reason ?? 'Cloud discovery match.', o.override || null);
@@ -305,16 +305,17 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   assert.deepEqual([a.r1, a.r2, a.x2], ['READY', 'READY', 'READY']);
   assert.deepEqual([a.t1, a.t2, a.t3], ['READY', 'NEEDS_REVIEW', 'NEEDS_REVIEW'], 'one place per employer and title: the best-scored twin');
   assert.deepEqual([a.s1, a.s2], ['STRETCH_READY', 'STRETCH_READY']);
-  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2', 'x1']) assert.equal(a[id], 'NEEDS_REVIEW', id);
+  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2']) assert.equal(a[id], 'NEEDS_REVIEW', id);
+  assert.equal(a.x1, 'HOLD', 'shortlisted earlier, score fell to 20: back off the shortlist, then held as a low match');
   assert.equal(a.n7, 'HOLD'); assert.equal(a.d3, 'READY'); assert.equal(a.d4, 'READY');
   assert.equal(Object.values(a).filter((s) => s === 'STRETCH_READY').length, 25, 'at most 25 Stretch per person, best first');
   assert.equal(a.s1, 'STRETCH_READY', 'the best score is inside the cap');
   const reason = (id) => db.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id=?`).get(id).r;
   assert.equal(reason('r1'), 'Shortlisted automatically. Cloud discovery match.');
-  assert.equal(reason('x1'), 'Cloud discovery match.', 'the mark is removed when a row leaves the shortlist');
+  assert.equal(reason('x1'), 'Held automatically (low match). Cloud discovery match.', 'the shortlist mark is removed, the low-match mark added');
   assert.equal(reason('x2'), 'Shortlisted automatically. Cloud discovery match.', 'moved up a tier: marked once, not twice');
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' AND job_id IN ('r1','x1','x2') ORDER BY id`).all().map((h) => `${h.j}:${h.p}>${h.n}`);
-  assert.deepEqual(hist.sort(), ['r1:NEEDS_REVIEW>READY', 'x1:READY>NEEDS_REVIEW', 'x2:NEEDS_REVIEW>READY', 'x2:STRETCH_READY>NEEDS_REVIEW']);
+  assert.deepEqual(hist.sort(), ['r1:NEEDS_REVIEW>READY', 'x1:NEEDS_REVIEW>HOLD', 'x1:READY>NEEDS_REVIEW', 'x2:NEEDS_REVIEW>READY', 'x2:STRETCH_READY>NEEDS_REVIEW']);
   // the same SQL again, and a fresh run on the result, change nothing
   const snap = () => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), db.prepare('SELECT COUNT(*) n FROM qualification_history').get()]);
   const before = snap();
@@ -330,4 +331,28 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   assert.match(fs.readFileSync(split, 'utf8'), /Shortlisted automatically[\s\S]*generation = generation \+ 1/, 'and goes to its own file, which refreshes the public cache');
   db.exec(run(w.dir).sql);
   assert.equal(st().r1, 'NEEDS_REVIEW');
+});
+
+test('low matches leave To review with a mark and come back when the score rises; decided and applied rows stay', () => {
+  const w = world();
+  const db = w.sqlite;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  const V = '{"preliminary":true,"profile_v11":true}';
+  const add = (id, score, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at) VALUES (?,?,?,?,?,1,'2026-11-01')`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', 'UNKNOWN', o.reason ?? 'Cloud discovery match.', o.override || null);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`).run(F, id, score, 0, o.bd || V);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, F, id);
+  };
+  add('lo', 40); add('mid', 46); add('old', 30, { bd: '{"preliminary":true}' }); add('dec', 30, { override: 'NEEDS_REVIEW' }); add('app', 30, { app: true });
+  add('up', 70, { status: 'HOLD', reason: 'Held automatically (low match). Cloud discovery match.' }); add('family', 70, { status: 'HOLD', reason: 'Outside candidate target role family; retained for review.' });
+  db.exec(run(w.dir).sql);
+  const st = (id) => db.prepare(`SELECT qualification_status s, qualification_reason r FROM candidate_qualifications WHERE job_id = ?`).get(id);
+  assert.deepEqual([st('lo').s, st('mid').s, st('old').s, st('dec').s, st('app').s], ['HOLD', 'NEEDS_REVIEW', 'NEEDS_REVIEW', 'NEEDS_REVIEW', 'NEEDS_REVIEW']);
+  assert.equal(st('lo').r, 'Held automatically (low match). Cloud discovery match.');
+  assert.deepEqual([st('up').s, st('up').r], ['NEEDS_REVIEW', 'Cloud discovery match.'], 'a held row whose score rose comes back, mark removed');
+  assert.equal(st('family').s, 'HOLD', 'Hold for another reason is not touched');
+  const n = db.prepare(`SELECT COUNT(*) n FROM qualification_history`).get().n;
+  db.exec(run(w.dir).sql);
+  assert.equal(db.prepare(`SELECT COUNT(*) n FROM qualification_history`).get().n, n, 'a second run changes nothing');
 });
