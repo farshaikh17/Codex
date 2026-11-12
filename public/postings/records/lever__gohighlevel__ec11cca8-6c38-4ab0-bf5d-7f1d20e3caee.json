@@ -15,6 +15,15 @@
    "from_hash": "da64d51fc046d08a5478a5b248932117835f23ae640a90d07eafa2ce9181d164",
    "kind": "content_changed",
    "to_hash": "e90b960a72148c585b5b6303eeb98542aa705d1c942dd811928d1db817888680"
+  },
+  {
+   "changed_at": "2026-11-11T23:48:12.961686+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "e90b960a72148c585b5b6303eeb98542aa705d1c942dd811928d1db817888680",
+   "kind": "content_changed",
+   "to_hash": "c406d1b144a7927d8158a6840ca2136b37b75416f5786f4fa6c4a338c2b524d2"
   }
  ],
  "content": {
@@ -31,11 +40,11 @@
    }
   ],
   "published": "2026-11-03T05:35:06.315000+00:00",
-  "title": "Lead Software Development Engineer in Test - Performance Testing",
+  "title": "Lead SDET - Performance Testing",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-11-10T16:01:54.121691+00:00",
- "content_hash": "e90b960a72148c585b5b6303eeb98542aa705d1c942dd811928d1db817888680",
+ "content_changed_at": "2026-11-11T23:48:12.961686+00:00",
+ "content_hash": "c406d1b144a7927d8158a6840ca2136b37b75416f5786f4fa6c4a338c2b524d2",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -54,7 +63,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "India",
-      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
+      "retrieved_at": "2026-11-11T23:48:12.961686+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -67,7 +76,7 @@
       "interpretation": null,
       "method": "description_section:Requirements:",
       "quote": "8+ years in performance, scalability or reliability engineering or testing, with examples of measurable impact on production-scale distributed systems\nDeep hands-on experience with k6, Gatling or Locust, including realistic workload modeling and distributed load generation, and strong programming skills in Python, JavaScript/TypeScript or Java\nExperience using observability tooling (for example New Relic, Prometheus/Grafana, OpenTelemetry) to isolate root cause across API, database and queue layers, with a solid grasp of REST service performance, concurrency and caching\nHands-on runtime profiling and thread or heap analysis on the JVM or Node.js (GC behavior, event-loop lag)\nHands-on frontend performance experience: Core Web Vitals, Lighthouse and real user monitoring\nExperience designing performance gates in CI/CD that teams trust: stable baselines, controlled noise and clear pass/fail thresholds\nWorking knowledge of Kubernetes and at least one major cloud (GCP, AWS or Azure) to deploy and debug test environments\nExperience leading performance work across multiple teams: setting direction, mentoring engineers and influencing without direct authority",
-      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
+      "retrieved_at": "2026-11-11T23:48:12.961686+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -80,7 +89,7 @@
       "interpretation": null,
       "method": "description_section:Nice to Have:",
       "quote": "Experience applying AI-assisted tooling to test design or result analysis\nExperience with NoSQL or search datastores and message brokers at scale\nChaos or resilience testing, and safe testing in production (canaries, shadow traffic",
-      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
+      "retrieved_at": "2026-11-11T23:48:12.961686+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }
@@ -93,7 +102,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-11-10T16:01:54.121691+00:00",
+      "retrieved_at": "2026-11-11T23:48:12.961686+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/gohighlevel/ec11cca8-6c38-4ab0-bf5d-7f1d20e3caee"
      }

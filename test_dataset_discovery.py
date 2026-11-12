@@ -84,6 +84,8 @@ class RescorePaging(unittest.TestCase):
                 db.execute("INSERT INTO candidate_job_scores VALUES (?,?,?,?)", (c, f'j{i:02d}', (i * 7) % 11, bd))
         db.execute("INSERT INTO applications VALUES ('farhan','j01')")
         db.execute("UPDATE candidate_qualifications SET manual_override_status='READY' WHERE candidate_id='sana' AND job_id='j02'")
+        # columns the legacy-row export reads (rescore_rows also returns never-scored first-import rows; this fixture has none: every row is 'preliminary')
+        db.executescript("ALTER TABLE jobs ADD COLUMN provenance TEXT; ALTER TABLE jobs ADD COLUMN source_adapter TEXT; ALTER TABLE candidate_qualifications ADD COLUMN qualification_reason TEXT;")
         return db
 
     def _run(self, db, **kw):
