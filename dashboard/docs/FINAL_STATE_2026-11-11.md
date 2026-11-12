@@ -49,7 +49,7 @@ no AI review; no automated applications; a person's decisions and applications a
   | Farhan | 1,561 | 957 | 705 | 0 | 464 / 688 | 736 / 1,190 |
   | Sana | 2,186 | 1,567 | 661 | 30 | 1,340 / 1,968 | 5 / 5 |
 
-  Farhan's rows went mostly to Not eligible (his rules reject US-only and non-remote roles) and Hold. Ready and Stretch did not change (Farhan 1 / 0, Sana 2 / 0).
+  Farhan's rows went mostly to Not eligible and Hold (which eligibility rule moved each row was not sampled). Ready and Stretch did not change (Farhan 1 / 0, Sana 2 / 0).
 * **Sana's last 30** are a different case: already screened, reason "Outside candidate target role family", score 0 (field-service roles her tightened rule now rules out).
   The re-score never moved a row to Hold. #106 adds that step; it applies at the next discovery run. **Check then** that Sana's To review has no score-0 rows.
 * **Correction:** on 10-11 Nov these rows were reported to the owner as "not screened yet collector rows draining slowly". That was wrong for the ones that remained.
