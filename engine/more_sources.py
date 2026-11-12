@@ -92,9 +92,11 @@ def workable(queries):
                 loc = r.get('location') or {}
                 place = ', '.join(x for x in (loc.get('city'), loc.get('countryName')) if x) or 'See posting'
                 remote = r.get('workplace') == 'remote'
-                yield job('workable', r.get('url') or '', text(r.get('title')), text((r.get('company') or {}).get('title')),
-                          f'Remote ({place})' if remote else place, text((r.get('description') or '') + ' ' + (r.get('requirementsSection') or '')),
-                          when(r.get('created')))
+                j = job('workable', r.get('url') or '', text(r.get('title')), text((r.get('company') or {}).get('title')),
+                        f'Remote ({place})' if remote else place, text((r.get('description') or '') + ' ' + (r.get('requirementsSection') or '')),
+                        when(r.get('created')))
+                j['is_remote'] = remote   # job() defaults to remote (it was written for the remote boards): an on-site Workable job was stored as remote
+                yield j
             token = d.get('nextPageToken')
             if not token:
                 break

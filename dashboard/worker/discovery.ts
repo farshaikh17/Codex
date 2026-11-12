@@ -63,7 +63,7 @@ export const AVOID_TITLE_CAP=40, FOREIGN_LOCATION_PENALTY=15, RANKING_TAG='ranki
 // Hard avoid: software, ML, security and test-automation role families are always capped.
 // Owner rules 2026-11-07 added: business analyst, deal desk, sales, admin, junior/intern, data engineering, and roles that need
 // hands-on Salesforce, HubSpot or Zoho administration or development.
-const FARHAN_HARD_AVOID=/\b((?:[a-z0-9+#.]+ )?developer|(?:salesforce|hubspot|zoho|netsuite|dynamics 365) crm (?:admin|administrator|developer|engineer)|business (?:systems )?analyst|sales engineer|pre-?sales|treasury|strategic solutions engineer|commercial operations specialist|cyber[a-z]*|(?:payments?|compensation|pricing|tax|audit|legal|procurement) (?:operations|analyst|specialist)|deal desk|account executive|sales (?:development|representative|executive|associate)|business development (?:representative|executive|associate)|inside sales|administrative assistant|office (?:administrator|assistant)|receptionist|data engineer|intern|internship|junior|apprentice(?:ship)?|trainee|sde|(?:salesforce|hubspot|zoho|netsuite|dynamics 365) (?:admin|administrator|developer|engineer)|software (?:engineer|developer|architect)|software development engineer|(?:back|front)[- ]?end|full[- ]?stack|devops|sre|site reliability|machine learning|ml (?:engineer|scientist)|data scientist|ai engineer|(?:cyber)?security (?:engineer|analyst|architect|specialist)|cyber ?security|infosec|sdet|qa engineer|test automation)\b/i;
+const FARHAN_HARD_AVOID=/\b((?:[a-z0-9+#.]+ )?developer|(?:salesforce|hubspot|zoho|netsuite|dynamics 365) crm (?:admin|administrator|developer|engineer)|business (?:systems )?analyst|sales engineer|pre-?sales|treasury|strategic solutions engineer|commercial operations specialist|cyber[a-z]*|(?:payments?|compensation|pricing|tax|audit|legal|procurement) (?:operations|analyst|specialist)|deal desk|account executive|sales (?:development|representative|executive|associate)|business development (?:representative|executive|associate)|inside sales|administrative assistant|office (?:administrator|assistant)|receptionist|data engineer|intern|internship|junior|apprentice(?:ship)?|trainee|sde|(?:salesforce|hubspot|zoho|netsuite|dynamics 365) (?:admin|administrator|developer|engineer)|software (?:engineer|developer|architect)|software development engineer|(?:back|front)[- ]?end|full[- ]?stack|devops|sre|site reliability|machine learning|ml (?:engineer|scientist)|data scientist|ai engineer|(?:cyber)?security (?:engineer|analyst|architect|specialist)|cyber ?security|infosec|sdet|qa engineer|test automation|qa automation|qa analyst|qa lead|quality assurance|test engineer|tester)\b/i;
 // Soft avoid: finance, support and engineering-management families, capped unless the title also names one of his own target areas
 // (implementation, solutions, onboarding, integration, automation, CRM, RevOps, operations, business systems, technical delivery).
 const FARHAN_SOFT_AVOID=/\b(accountant|accounting (?:manager|analyst)|financial (?:analyst|controller)|finance (?:manager|analyst|controller|director)|controller,? finance|payroll (?:specialist|manager|analyst|administrator|accountant)|customer support|(?:technical |product )?support (?:engineer|specialist|representative|agent)|help ?desk|(?:software )?engineering manager|director of engineering|vp of engineering|head of engineering)\b/i;
@@ -81,6 +81,27 @@ export function usOnlyLocation(location:string){const l=(location||'').replace(E
 /** The largest 'N+ years' of experience a posting asks for (0 when it does not say). */
 export function yearsRequired(text:string){let best=0;const re=/\b(\d{1,2})\s*(?:\+|plus)?\s*(?:-|to|–)?\s*(?:\d{1,2}\s*)?\+?\s*years?(?:'|’)?\s+(?:of\s+)?(?:[a-z/&-]+\s+){0,4}?experience/gi;let m:RegExpExecArray|null;while((m=re.exec(text||''))){const n=Number(m[1]);if(n>=1&&n<=25&&n>best)best=n;}return best;}
 export const EXPERIENCE_OVER_PENALTY=15, EXPERIENCE_MATCH_BONUS=5;
+// Roles pitched well below the candidate (spot check 2026-11-12: a diploma-trainee role was "Ready" for someone with 9 years; a 1-3 year junior
+// role scored 79). Either the title says so, or the posting's own experience RANGE tops out at half the candidate's experience or less.
+// Only applied to a candidate with at least 5 years. The score is capped like an avoid-list title; eligibility and status are unchanged.
+export const UNDER_LEVEL_CAP=40, PLATFORM_GAP_PENALTY=20;
+const JUNIOR_TITLE=/\b(trainee|intern|internship|apprentice|apprenticeship|fresher|freshers|junior|jr|entry[- ]level|graduate engineer|graduate trainee|diploma trainee|werkstudent|praktikant|stagiaire)\b/i;
+/** The top of the largest stated experience range ("2 to 4 years", "1-3 years"); 0 when the posting gives no range. */
+export function yearsCeiling(text:string){let best=0;const re=/\b(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})\s*\+?\s*years?\b/gi;let m:RegExpExecArray|null;while((m=re.exec(text||''))){const lo=Number(m[1]),hi=Number(m[2]);if(lo>=0&&hi>lo&&hi<=25&&hi>best)best=hi;}return best;}
+export function underLevel(title:string,description:string,have:number){
+ if(!(have>=5))return false;
+ if(JUNIOR_TITLE.test(title||''))return true;
+ const top=yearsCeiling(description||'');
+ return top>0&&top<=have/2;
+}
+// A role built around one enterprise platform (title names it) that the candidate's skills do not list: "Workday Time & Absence Implementation Lead"
+// matched Farhan's "implementation" and scored 80. Marked down, not excluded: a person may still want it.
+const PLATFORMS=['workday','sap','servicenow','netsuite','peoplesoft','successfactors','dynamics 365','d365','salesforce','hubspot','zoho','oracle','guidewire','veeva','coupa','kronos','ukg','adp','snowflake','databricks','pega','appian','mulesoft','boomi','sharepoint','jira','zendesk','marketo','shopify','magento','odoo'];
+export function platformGap(title:string,skills:unknown){
+ const t=' '+String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ')+' ';
+ const mine=' '+list(skills).join(' ').toLowerCase().replace(/[^a-z0-9]+/g,' ')+' ';
+ return PLATFORMS.find((p)=>t.includes(' '+p+' ')&&!mine.includes(' '+p+' '))||null;
+}
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
  return FARHAN_HARD_AVOID.test(t)||(FARHAN_SOFT_AVOID.test(t)&&!FARHAN_TARGET_WORDS.test(t));
@@ -278,8 +299,10 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Fit to experience (owner goal 2026-11-07: put first the roles where the candidate is an easy yes). A posting asking for more than
  // two years beyond the candidate's own experience loses points; one whose stated requirement the candidate meets gains a little.
  const have=Number(candidate.total_years_experience)||0, need=yearsRequired(p.description||'');
- const overReach=role&&have>0&&need>have+2, meets=role&&have>0&&need>0&&need<=have;
+ const tooJunior=role&&underLevel(p.title||'',p.description||'',have);
+ const overReach=role&&have>0&&need>have+2, meets=role&&!tooJunior&&have>0&&need>0&&need<=have;
  if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(95,score+EXPERIENCE_MATCH_BONUS);
+ const platform=role?platformGap(p.title||'',candidate.primary_skills):null;
  // Pay floor (owner rule 2026-11-07): only a published range is compared. Below the candidate's floor loses points; reaching the
  // preferred level gains a little. A candidate with no floor on record is never compared.
  const floor=Number(candidate.cash_floor_inr_monthly)||(candidate.id==='farhan_shaikh'?120000:0), preferred=candidate.id==='farhan_shaikh'?2500000/12:0;
@@ -314,9 +337,11 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'');
  if(electricalOnly)score=Math.max(0,score-ELECTRICAL_ONLY_PENALTY);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
+ if(platform)score=Math.max(0,score-PLATFORM_GAP_PENALTY);
+ if(tooJunior)score=Math.min(score,UNDER_LEVEL_CAP);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // New discoveries are never auto-promoted to READY using a simplified scorer.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa sponsorship or relocation offer stated (score reduced).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score reduced).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa sponsorship or relocation offer stated (score reduced).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
@@ -400,7 +425,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v7: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v8: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

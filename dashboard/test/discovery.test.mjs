@@ -363,3 +363,48 @@ test('skills count when their key words appear, not only the exact phrase; a lon
   const p = { id: 'x', title: 'Implementation Manager', url: '', location: 'Remote - India', description: 'Fully remote. You will configure our CRM and own automation of sales workflows.', remote: true };
   assert.equal(evaluate({ id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) }, p).score, 50 + 16, 'two skills found by key words');
 });
+
+// ---- Spot check of 12 Nov 2026: roles far below the candidate, platform-specific roles, QA roles ----------------------------------
+import { underLevel, yearsCeiling, platformGap, UNDER_LEVEL_CAP, PLATFORM_GAP_PENALTY } from '../worker/discovery.ts';
+
+test('a role pitched well below the candidate is capped: by title, or by an experience range that tops out at half their experience', () => {
+  const sana9 = { ...sana, total_years_experience: 9.2 };
+  const REL = 'Reliability and Plant Engineering for the site.';
+  const normal = evaluate(sana9, post('Maintenance Engineer', 'Pune, India', REL + ' 5 to 10 years of experience.'));
+  const trainee = evaluate(sana9, post('DET Electrical – Trainee, Pune', 'Pune, India', REL));
+  const range = evaluate(sana9, post('Electrical Maintenance Engineer', 'Pune, India', REL + ' Degree with 2 to 4 years of industrial experience.'));
+  assert.ok(normal.score > UNDER_LEVEL_CAP, `a role at her level is not capped (${normal.score})`);
+  assert.ok(trainee.score <= UNDER_LEVEL_CAP, `trainee title capped (${trainee.score})`);
+  assert.ok(range.score <= UNDER_LEVEL_CAP, `a 2-4 year role capped for 9 years (${range.score})`);
+  assert.match(trainee.qualification_reason, /below the candidate's experience/);
+  assert.equal(trainee.status, normal.status, 'the bucket rule is unchanged; only the score is capped');
+  assert.equal(yearsCeiling('1-3 years of experience in software testing'), 3);
+  assert.equal(yearsCeiling('Experience 3-8 years of experience in facilities'), 8);
+  assert.equal(yearsCeiling("Minimum 2 years' experience"), 0, 'a floor alone is not a range');
+  for (const t of ['Jr. QA Automation (API)', 'Junior Engineer', 'Graduate Engineer Trainee', 'Maintenance Intern', 'Apprentice Electrician'])
+    assert.ok(underLevel(t, '', 9), t);
+  for (const t of ['Maintenance Engineer', 'Internal Systems Lead', 'Senior Reliability Engineer', 'Assistant Manager - Utilities'])
+    assert.ok(!underLevel(t, '', 9), t);
+  assert.ok(!underLevel('Junior Engineer', '', 3), 'not applied to someone early in their career');
+  assert.ok(!underLevel('Shift Technician', '3-8 years of experience', 9.2), 'an 8-year ceiling is not below 9 years');
+});
+
+test('a role built around a platform the profile does not list is marked down; one it lists is not', () => {
+  const f9 = { ...farhan, total_years_experience: 9.4, primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']) };
+  const DESC = 'Fully remote role, open to candidates in India. CRM Configuration and Workflow Automation.';
+  const plain = evaluate(f9, post('Implementation Lead', 'Remote - India', DESC));
+  const workday = evaluate(f9, post('Sr. Systems Analyst – Workday Time & Absence Implementation Lead', 'Remote - India', DESC));
+  const ghl = evaluate(f9, post('GoHighLevel Implementation Lead', 'Remote - India', DESC));
+  assert.equal(plain.score - workday.score, PLATFORM_GAP_PENALTY, `${plain.score} vs ${workday.score}`);
+  assert.ok(ghl.score >= plain.score, `a platform on the profile costs nothing (${ghl.score} vs ${plain.score})`);
+  assert.match(workday.qualification_reason, /Built around workday/);
+  assert.equal(platformGap('SAP PM Maintenance Planner', ['Maintenance Planning']), 'sap');
+  assert.equal(platformGap('Maintenance Planner', ['Maintenance Planning']), null);
+  assert.equal(platformGap('Sapphire Operations Lead', []), null, 'whole words only');
+});
+
+test('QA and test roles are on Farhan\'s avoid list', () => {
+  for (const t of ['Jr. QA Automation (API) - Bangalore, India', 'QA Analyst', 'Senior Test Engineer', 'Quality Assurance Lead'])
+    assert.ok(avoidedTitle('farhan_shaikh', t), t);
+  assert.ok(!avoidedTitle('farhan_shaikh', 'Implementation Manager'));
+});
