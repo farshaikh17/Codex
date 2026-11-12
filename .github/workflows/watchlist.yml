@@ -16,6 +16,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Restarts a missed daily discovery run (GitHub dropped every scheduled discovery trigger on 12 Nov 2026 while this workflow ran).
+  # Runs on every trigger of this workflow, whatever its own guards decide; starts discovery.yml only when it is overdue (see the script).
+  discovery-watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write   # to read discovery runs and start one (workflow_dispatch)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start the daily discovery run if it is overdue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node dashboard/scripts/discovery_watchdog.mjs
+
   guard:
     runs-on: ubuntu-latest
     timeout-minutes: 3
