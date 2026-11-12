@@ -22,10 +22,11 @@ no AI review; no automated applications; a person's decisions and applications a
 | #103 | To review shows collector imports the screen has not judged yet apart ("+ N not screened yet"); one definition of "applied" everywhere; search wildcards, orphan follow-ups, cohort label, outage backup; exact-duplicate rule includes location; watchlist scoring; guards and workflow safety |
 
 | #105 | The daily run screens first-import rows the current screen never scored (see section 3). No release needed: it runs from the workflow |
+| #106 | The daily run moves rows the screen rules out of the role family to Hold (Sana's last 30 score-0 rows) |
 
 ## 2. How it was checked
 
-* **Unit and integration:** `cd dashboard && npm test` (244 tests, plus DST, authed-fetch and the migration chain 0001-0020); `python3 -m unittest discover -s engine/tests` (191 tests).
+* **Unit and integration:** `cd dashboard && npm test` (245 tests, plus DST, authed-fetch and the migration chain 0001-0020); the Python suite as CI runs it, from the repo root with pattern `test*.py` (367 tests; `engine/tests` alone misses the root-level files).
 * **Builds:** `npm run build:frontend`, `npm run build:worker` (dry run), `npx tsc --noEmit -p frontend`.
 * **Real browser, local Worker, desktop and mobile** (commands in `RELEASE.md`): main 31, accessibility 33, faults 14, site 20, listing 48, clients 18, features 31.
 * **Live, read-only, desktop and mobile:** `production-readonly.e2e.mjs` 33/33 after each release, and a click-through of every public screen, card, tab and job panel with no console error, failed request or sideways scroll.
@@ -38,17 +39,26 @@ no AI review; no automated applications; a person's decisions and applications a
 * **Daily run** (started 21:57 UTC after GitHub dropped the earlier triggers; the guard caught it up): 296 new jobs, old rows re-scored, 10 closed, 10 reopened.
 * **Buckets at 22:35 UTC:** Farhan READY 1, Stretch 0, To review 1,561 (856 with a score); Sana READY 2, Stretch 0, To review 2,186 (1,525 with a score).
 * **Collector imports waiting to be screened: 0 for both** (live overview, 23:17 UTC, commit `b564312`). The Worker drained that backlog.
-* **The score-0 rows that remain in To review** (about 705 for Farhan, 661 for Sana) are a different kind. A sample of Farhan's taken on 10 Nov shows rows from the
-  first import on 26 Oct, reason "Preserved verified Farhan status with strategy lane mapping", lane NOT_FIT, no score breakdown. Nothing ever scored them.
-  #105 makes the daily run screen such rows (at most 1,000 per person per run). Sana's were not in that sample, so their kind is unconfirmed; the selection is by
-  state (undecided, never scored), not by reason, so it covers hers if they are the same. **Check after the next daily run** that both counts fell.
-* **Correction:** on 10-11 Nov these rows were reported to the owner as "not screened yet collector rows draining slowly". That was wrong for the ones that remain.
+* **The score-0 rows in To review were first-import rows nothing ever scored.** Sampled at 00:08 UTC 12 Nov: Farhan's 705 had the reason
+  "Preserved verified Farhan status with strategy lane mapping" (GitLab and Canonical engineering roles); Sana's 661 had "Ambiguous scope or location requiring review"
+  (marketing managers, software engineers; lane NOT_FIT). #105 makes the daily run screen such rows.
+* **Measured effect of #105** (manual discovery run dispatched 00:09 UTC 12 Nov, `max_new=200`, no job-site search; it also brought 122 new jobs):
+
+  | | To review before | To review after | Score 0 before | Score 0 after | Hold before / after | Not eligible before / after |
+  |---|---|---|---|---|---|---|
+  | Farhan | 1,561 | 957 | 705 | 0 | 464 / 688 | 736 / 1,190 |
+  | Sana | 2,186 | 1,567 | 661 | 30 | 1,340 / 1,968 | 5 / 5 |
+
+  Farhan's rows went mostly to Not eligible (his rules reject US-only and non-remote roles) and Hold. Ready and Stretch did not change (Farhan 1 / 0, Sana 2 / 0).
+* **Sana's last 30** are a different case: already screened, reason "Outside candidate target role family", score 0 (field-service roles her tightened rule now rules out).
+  The re-score never moved a row to Hold. #106 adds that step; it applies at the next discovery run. **Check then** that Sana's To review has no score-0 rows.
+* **Correction:** on 10-11 Nov these rows were reported to the owner as "not screened yet collector rows draining slowly". That was wrong for the ones that remained.
 
 ## 4. Knowingly left
 
 1. **Operator-only screens were never tried on the live site** (no key in this environment). They pass in the local browser suites. Checklist in section 5.
 2. **Thumbs rating does not change ranking.** It is stored and shown. Making it move a score needs a design, because every re-score overwrites stored scores.
-3. **Score-0 rows in To review** (section 3): fixed in code by #105 but not yet seen working on production data. Verify after the next daily run.
+3. **Sana's last 30 score-0 rows** (section 3): fixed by #106, which has not yet run on production data. Verify after the next discovery run.
 4. **Dependencies.** Open and deferred: `actions/checkout` 7, `actions/setup-python` 7, `actions/upload-artifact` 7, `actions/cache` 6, `wrangler` 4.158. Their tests pass, but they change the actions used
    by the workflows that push commits and deploy, and that path cannot be tested from a PR. Merge one at a time and watch one scheduled run and one `preflight` release run.
    Closed: TypeScript 7, Vite 8, plugin-react 6 (they break the build; they need one planned migration).
