@@ -349,3 +349,36 @@ test('lease: a second tick while one holds the lease is skipped; an expired leas
   sqlite.exec(`UPDATE cloud_automation SET enabled = 0, lease_until = 0 WHERE id = 1`);
   assert.equal((await runDiscovery({ DB: d1 }, 'CRON', noNet)).status, 'SKIPPED', 'paused scheduler does nothing');
 });
+
+test('taste pass: Good match / Not for me move the rows a person sees, every run, by at most 5 points and never twice', async () => {
+  const { createDb } = await import('./harness.mjs');
+  const { sqlite } = createDb();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'taste-'));
+  sqlite.exec(`INSERT INTO candidates(id,full_name,primary_skills) VALUES ('farhan_shaikh','F','["CRM"]')`);
+  const add = (id, title, score, bd = '{"preliminary":true,"profile_v11":true}', o = {}) => {
+    sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES (?,?,?,?,1,'2026-11-01')`).run(id, title, o.company || 'Acme', 'lever');
+    sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('farhan_shaikh',?,?,?)`).run(id, 'NEEDS_REVIEW', o.override || null);
+    sqlite.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES ('farhan_shaikh',?,?,?)`).run(id, score, bd);
+  };
+  add('t1', 'RevOps Lead', 60); add('t2', 'Support Agent', 60); add('t3', 'RevOps Manager', 60, undefined, { override: 'NEEDS_REVIEW' });
+  const model = { active: true, n: 12, weights: { revops: 3, support: -3 } };
+  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { farhan_shaikh: model } }));
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: 'farhan_shaikh', primary_skills: '["CRM"]' }]));
+  fs.writeFileSync(path.join(dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  const targets = () => sqlite.prepare(`SELECT s.candidate_id, s.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id`).all();
+  const runApply = () => {
+    fs.writeFileSync(path.join(dir, 'targets.json'), JSON.stringify(targets()));
+    execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'matches.json'),
+      '--signals', path.join(dir, 'signals.json'), '--taste-targets', path.join(dir, 'targets.json'), '--out', path.join(dir, 'apply.sql'), '--no-shortlist'], { cwd: root, stdio: 'pipe' });
+    sqlite.exec(fs.readFileSync(path.join(dir, 'apply.sql'), 'utf8'));
+  };
+  const sc = (id) => sqlite.prepare(`SELECT overall_score s FROM candidate_job_scores WHERE job_id = ?`).get(id).s;
+  runApply();
+  assert.deepEqual([sc('t1'), sc('t2'), sc('t3')], [65, 55, 60], 'liked titles up 5, disliked down 5, a decided row untouched');
+  runApply();
+  assert.deepEqual([sc('t1'), sc('t2')], [65, 55], 'a second run does not add it again');
+  model.weights = { revops: 0.6, support: -3 };   // taste weakened for RevOps
+  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { farhan_shaikh: model } }));
+  runApply();
+  assert.equal(sc('t1'), 61, 'a changed taste replaces the old adjustment (60 + round(0.2 x 5))');
+});

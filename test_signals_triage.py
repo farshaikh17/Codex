@@ -27,6 +27,14 @@ class Signals(unittest.TestCase):
         self.assertGreater(signals.taste_score(m['f'], 'RevOps Lead', 'Z'), 0); self.assertLess(signals.taste_score(m['f'], 'Zoho Developer', 'Z'), 0)
         self.assertEqual(signals.taste_score(m['s'], 'x', 'y'), 0.0)
 
+    def test_good_match_and_not_for_me_are_labels(self):
+        rows = [{'candidate_id': 'f', 'title': 'Implementation Manager', 'company': 'A', 'label': 'GOOD_MATCH'}] * 6 + \
+               [{'candidate_id': 'f', 'title': 'Support Agent', 'company': 'B', 'label': 'NOT_FOR_ME'}] * 6
+        m = signals.train(rows)
+        self.assertTrue(m['f']['active'])
+        self.assertGreater(signals.taste_score(m['f'], 'Implementation Lead', 'Z'), 0)
+        self.assertLess(signals.taste_score(m['f'], 'Support Specialist', 'Z'), 0)
+
 
 class Triage(unittest.TestCase):
     def test_parse_and_sql(self):

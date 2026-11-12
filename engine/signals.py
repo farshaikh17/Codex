@@ -23,8 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.global_hirers import company_key  # noqa: E402
 
 MIN_LABELS = 10
-POSITIVE = {'SAVED', 'APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER', 'READY', 'STRETCH_READY', 'READY_HIGH'}
-NEGATIVE = {'INELIGIBLE', 'HOLD', 'CLOSED', 'DISMISSED'}
+POSITIVE = {'SAVED', 'APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER', 'READY', 'STRETCH_READY', 'READY_HIGH', 'GOOD_MATCH'}
+NEGATIVE = {'INELIGIBLE', 'HOLD', 'CLOSED', 'DISMISSED', 'NOT_FOR_ME'}
 STOP = {'and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an', 'at', 'or', 'by', 'ltd', 'inc', 'llc', 'remote', 'senior', 'junior', 'ii', 'iii'}
 
 

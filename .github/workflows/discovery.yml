@@ -142,7 +142,7 @@ jobs:
           [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
           [ -f ../work/signals.json ] && IN="$IN --signals ../work/signals.json"
           node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN \
-            --rescore ../work/rescore.json --out ../work/apply.sql --shortlist-out ../work/shortlist.sql --max-new "$MAX_NEW"
+            --rescore ../work/rescore.json --taste-targets ../work/taste_targets.json --out ../work/apply.sql --shortlist-out ../work/shortlist.sql --max-new "$MAX_NEW"
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql
           ls -la ../work/apply.sql
       - name: Write to D1 (one import; all or nothing)

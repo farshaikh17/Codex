@@ -249,7 +249,10 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     const r = evaluate(cand, posting, ctxFor.get(row.candidate_id));
     if (row.legacy) { rescreenLegacy(row, r); continue; }
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
-    const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v3: true, profile_v11: true, matched_skills: r.skills, rescored_at: now });
+    // The re-scored base plus the current taste (stored as taste_adj, so the taste pass below never adds it twice).
+    const tasteAdj = r.status === 'INELIGIBLE' ? 0 : Math.round(tasteScore((signals.taste || {})[row.candidate_id], row.title, row.company) * TASTE_MAX);
+    r.score = Math.max(0, Math.min(100, r.score + tasteAdj));
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v3: true, profile_v11: true, matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"profile_v11":true%' ${undecided('candidate_job_scores')}
@@ -355,6 +358,27 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
       sl.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)}, qualification_reason = ${q(MARK)} || COALESCE(qualification_reason, ''), qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
         WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
     }
+  }
+}
+
+// ---- Taste pass (owner plan 2026-11-12: "learns from their choices") ---------------------------------------------------------------
+// The taste model (engine/signals.py; trained on saves, applications, Good match / Not for me and a person's own bucket moves) was applied
+// only to new jobs. Here it is re-applied every run to the rows a person looks at: the adjustment is stored in the score breakdown as
+// taste_adj, so a changed taste replaces the old adjustment instead of adding to it. At most TASTE_MAX points either way.
+const tasteFile = opt('--taste-targets');
+if (tasteFile && fs.existsSync(tasteFile)) {
+  report.taste_adjusted = 0;
+  for (const row of JSON.parse(fs.readFileSync(tasteFile, 'utf8'))) {
+    const model = (signals.taste || {})[row.candidate_id];
+    let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
+    const old = Number(bd.taste_adj) || 0;
+    const adj = Math.round(tasteScore(model, row.title, row.company) * TASTE_MAX);
+    if (adj === old) continue;
+    out.push(`UPDATE candidate_job_scores SET overall_score = MAX(0, MIN(100, overall_score - ${old} + ${adj})), score_breakdown = json_set(COALESCE(score_breakdown, '{}'), '$.taste_adj', ${adj})
+      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND COALESCE(json_extract(score_breakdown, '$.taste_adj'), 0) = ${old} AND json_valid(COALESCE(score_breakdown, '{}'))
+      AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)
+      AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND x.manual_override_status IS NOT NULL);`);
+    report.taste_adjusted++;
   }
 }
 

@@ -291,6 +291,7 @@ def main():
     if a.rescore_export:
         (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local, per_candidate=a.rescore_per_candidate)))
     (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
+    (out / 'taste_targets.json').write_text(json.dumps(taste_targets(a.d1_local)))
     found = {}
     for cid, p in profs.items():
         for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota):
@@ -318,7 +319,23 @@ def taste_rows(local=None):
     return d1("""SELECT a.candidate_id, j.title, j.company, a.status AS label FROM applications a JOIN jobs j ON j.id = a.job_id
       WHERE a.status IN ('SAVED','APPLIED','SUBMITTED','INTERVIEWING','OFFER')
       UNION ALL SELECT q.candidate_id, j.title, j.company, q.manual_override_status FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED') LIMIT 4000""", local)
+      WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED')
+      UNION ALL SELECT f.candidate_id, j.title, j.company, CASE f.rating WHEN 'UP' THEN 'GOOD_MATCH' ELSE 'NOT_FOR_ME' END FROM job_feedback f JOIN jobs j ON j.id = f.job_id
+      LIMIT 4000""", local)
+
+
+def taste_targets(local=None, per_candidate=400):
+    """The rows a person actually looks at (best-ranked undecided To review / Hold rows and the automatic shortlist), for the daily taste pass
+    in dataset_apply.mjs: the learned taste is re-applied to them every run, not only to new jobs."""
+    rows = []
+    for c in d1("SELECT id FROM candidates ORDER BY id", local):
+        rows += d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown
+          FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+          WHERE q.candidate_id = {sql_str(c['id'])} AND j.is_active = 1 AND q.manual_override_status IS NULL
+            AND (q.qualification_status IN ('NEEDS_REVIEW','HOLD') OR q.qualification_reason LIKE 'Shortlisted automatically.%')
+            AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
+          ORDER BY s.overall_score DESC, q.job_id LIMIT {int(per_candidate)}""", local)
+    return rows
 
 
 def rescore_rows(local=None, page=400, per_candidate=1500):
