@@ -57,6 +57,22 @@ export function isOperatorAuthenticated(): boolean {
   return Boolean(getSessionAuthKey());
 }
 
+// ---- Open tracker (owner decision 2026-11-12) -------------------------------------------------------------------------
+// When the Worker says open_tracker (GET /api/version), the tracker actions below work without the operator key: save a job,
+// change its stage, notes, follow-up dates, Good match / Not for me, moving a job between lists. Everything else still asks for the key.
+let openTrackerMode = false;
+export const isTrackerOpen = () => openTrackerMode;
+/** True when this visitor may use the tracker: an unlocked operator, or the open-tracker mode. */
+export const canUseTracker = () => isOperatorAuthenticated() || openTrackerMode;
+export async function loadAccessMode(): Promise<boolean> {
+  try { const r = await fetch(`${API_BASE}/version`); if (r.ok) openTrackerMode = (await r.json())?.open_tracker === true; } catch { /* stays closed */ }
+  return openTrackerMode;
+}
+const TRACKER_WRITES = [/\/jobs\/[^/]+\/feedback$/, /\/candidates\/[^/]+\/applications$/, /\/applications$/, /\/applications\/[^/]+\/follow-up$/, /\/applications\/[^/]+$/, /\/jobs\/[^/]+\/qualification-override$/];
+const isTrackerWrite = (input: RequestInfo | URL) => {
+  try { const u = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, window.location.origin); return TRACKER_WRITES.some((re) => re.test(u.pathname)); } catch { return false; }
+};
+
 
 export const OPERATOR_AUTH_EVENT = 'operator-auth-required';
 
@@ -95,7 +111,7 @@ export async function authedFetch(input: RequestInfo | URL, init?: RequestInit):
   const view = getShareView();
   if (view && !token && (method === 'GET' || method === 'HEAD')) headers.set('X-View-Token', view.token);
   const isWrite = method !== 'GET' && method !== 'HEAD';
-  if (isWrite && !token && !headers.has('Authorization')) {
+  if (isWrite && !token && !headers.has('Authorization') && !(openTrackerMode && isTrackerWrite(input))) {
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('operator-auth-required', { detail: { status: 401, write: true, hadKey: false, url: typeof input === 'string' ? input : input.toString() } }));
     throw new Error('Operator sign-in is required to change records.');
   }
@@ -486,7 +502,7 @@ export async function fetchQualificationAudit(jobId: string, candidateId: string
   count: number;
   audit_trail: QualificationAuditRecord[];
 }> {
-  if (!isOperatorAuthenticated()) return restricted({ job_id: '', count: 0, audit_trail: [] }) as any;
+  if (!canUseTracker()) return restricted({ job_id: '', count: 0, audit_trail: [] }) as any;
   const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/qualification-audit?candidate_id=${encodeURIComponent(candidateId)}`);
   if (!res.ok) throw new Error('Failed to fetch qualification audit history');
   return res.json();
@@ -498,7 +514,7 @@ export async function fetchApplicationHistory(jobId: string, candidateId?: strin
   history: ApplicationHistoryRecord[];
 }> {
   const url = candidateId ? `${API_BASE}/applications/${encodeURIComponent(jobId)}/history?candidate_id=${encodeURIComponent(candidateId)}` : `${API_BASE}/applications/${encodeURIComponent(jobId)}/history`;
-  if (!isOperatorAuthenticated()) return restricted({ job_id: '', count: 0, history: [] }) as any;
+  if (!canUseTracker()) return restricted({ job_id: '', count: 0, history: [] }) as any;
   const res = await authedFetch(url);
   if (!res.ok) throw new Error('Failed to fetch application history');
   return res.json();

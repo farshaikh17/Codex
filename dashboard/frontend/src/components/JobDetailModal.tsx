@@ -3,7 +3,7 @@ import { isQuickScreen } from '../quickScreen';
 import { peopleSearchLinks, skillGaps, isAutoShortlisted, withoutAutoMark } from '../jobHelpers';
 import { sourceWord, whyText } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
-import { submitJobFeedback, fetchJobFeedback, isOperatorAuthenticated, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
+import { submitJobFeedback, fetchJobFeedback, canUseTracker, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
 import { 
   X, 
@@ -130,7 +130,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   useEffect(() => { setJob(initialJob); }, [initialJob]);
   // The thumbs rating is stored per job (private, operator only): load it when the panel opens so a reload shows what was chosen.
   useEffect(() => {
-    if (!isOperatorAuthenticated()) return;
+    if (!canUseTracker()) return;
     let current = true;
     fetchJobFeedback(initialJob.id, initialJob.candidate_id).then((f) => { if (current && f) setJob((j) => ({ ...j, feedback: f as any })); }).catch(() => {});
     return () => { current = false; };

@@ -10,6 +10,7 @@ import {
   fetchIndiaRemoteSummary,
   overrideJobQualification,
   isOperatorAuthenticated,
+  loadAccessMode,
   OPERATOR_AUTH_EVENT,
   logoutOperator,
   checkStoredOperatorKey,
@@ -94,7 +95,10 @@ export const App: React.FC = () => {
   const [authOpen, setAuthOpen] = useState<boolean>(false);
   const [isOperator, setIsOperator] = useState<boolean>(isOperatorAuthenticated());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [authEpoch, setAuthEpoch] = useState(0);   // bumped when the operator session ends, so operator data is dropped and reloaded publicly
+  const [authEpoch, setAuthEpoch] = useState(0);
+  // Open tracker (owner decision 2026-11-12): asked once; when on, tracker buttons work without the key and the page re-renders to show them.
+  const [trackerOpen, setTrackerOpen] = useState(false);
+  useEffect(() => { loadAccessMode().then((open) => { if (open) { setTrackerOpen(true); setAuthEpoch((n) => n + 1); } }); }, []);   // bumped when the operator session ends, so operator data is dropped and reloaded publicly
   useEffect(() => {
     const handleAuthRequired = (e: Event) => {
       const d = (e as CustomEvent).detail || {};
@@ -294,6 +298,7 @@ export const App: React.FC = () => {
         isLoading={isLoading}
         pilotActive={activeTab === 'pilot'}
         isOperator={isOperator}
+        trackerOpen={trackerOpen}
         onOpenAuth={() => setAuthOpen(true)}
         clients={clientTabs}
         activeClient={activeTab === 'client' ? candidateId : null}

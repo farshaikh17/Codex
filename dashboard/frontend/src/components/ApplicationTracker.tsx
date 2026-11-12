@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Job, ApplicationStatus, CohortMetrics, ApplicationHistoryRecord } from '../types';
-import { fetchCohortMetrics, fetchApplicationHistory, fetchFollowUps, setFollowUp, isOperatorAuthenticated } from '../api';
+import { fetchCohortMetrics, fetchApplicationHistory, fetchFollowUps, setFollowUp, canUseTracker } from '../api';
 import { followUpState, localDay } from '../jobHelpers';
 import { 
   BookmarkCheck, 
@@ -33,7 +33,7 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [followUps, setFollowUps] = useState<Record<string, string>>({});
   const [followUpError, setFollowUpError] = useState<string>('');
-  const operator = isOperatorAuthenticated();
+  const operator = canUseTracker();
   const today = localDay();   // the candidates' own calendar date, not UTC (UTC is still yesterday until 05:30 in India)
 
   useEffect(() => {

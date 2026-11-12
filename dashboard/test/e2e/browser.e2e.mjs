@@ -8,6 +8,8 @@ const require = createRequire(new URL('../../frontend/package.json', import.meta
 const { chromium } = require('playwright');
 const BASE = process.env.E2E_BASE || 'http://localhost:8787';
 const KEY = process.env.E2E_KEY;
+// Open tracker (owner decision 2026-11-12): when the Worker says open_tracker, a visitor may use the tracker; every other change still needs the key.
+const OPEN = (await (await fetch(BASE + '/api/version')).json().catch(() => ({}))).open_tracker === true;
 const mode = process.argv[2] || 'desktop';
 if (!KEY) throw new Error('E2E_KEY is required');
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error('E2E only runs against a local server');
@@ -59,7 +61,7 @@ const checkCandidate = async (btn, cid, label, other) => {
   check(`A8 ${btn}: profile summary shows this candidate only and no private detail`, (inputs.includes(label) || st.includes(label)) && !inputs.includes(other) && !PRIVATE.test(st + inputs.join(' ')), inputs.slice(0, 4).join('|'));
   await tab('APPLICATIONS');
   const at = await bodyText();
-  check(`A9 ${btn}: tracker loads without notes`, !/PRIVATE-/.test(at));
+  if (!OPEN) check(`A9 ${btn}: tracker loads without notes`, !/PRIVATE-/.test(at));   // open tracker: notes are visible by design
 };
 await checkCandidate('FARHAN', 'farhan_shaikh', overview.farhan.full_name, overview.sana.full_name);
 await checkCandidate('SANA', 'sana_ansari', overview.sana.full_name, overview.farhan.full_name);
@@ -90,13 +92,18 @@ if (await row.count()) {
   await row.click(); await page.waitForTimeout(800);
   const upd = page.getByRole('button', { name: /Update Pipeline Status/i }).first();
   if (await upd.count()) { await upd.click(); await page.waitForTimeout(800); }
-  check('A14 a visitor trying to change a record gets the sign-in window and no write is sent', (await modalOpen()) && apiLog.every((r) => r.method === 'GET'), JSON.stringify(apiLog.filter((r) => r.method !== 'GET')));
-  check('A15 the job detail shows no private application notes or history', !PRIVATE.test(await bodyText()));
+  if (OPEN) {
+    const writes = apiLog.filter((r) => r.method !== 'GET');
+    check('A14 open tracker: a visitor\'s status change is saved without a sign-in window', !(await modalOpen()) && writes.length > 0 && writes.every((r) => r.status < 300), JSON.stringify(writes));
+  } else {
+    check('A14 a visitor trying to change a record gets the sign-in window and no write is sent', (await modalOpen()) && apiLog.every((r) => r.method === 'GET'), JSON.stringify(apiLog.filter((r) => r.method !== 'GET')));
+    check('A15 the job detail shows no private application notes or history', !PRIVATE.test(await bodyText()));
+  }
 }
 // anonymous writes straight at the API are refused and change nothing
 const before = JSON.stringify(await (await fetch(BASE + '/api/applications?candidate_id=farhan_shaikh')).json());
-const attempts = [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'APPLIED' }], ['PUT', '/api/profile?candidate_id=farhan_shaikh', { full_name: 'Hijack' }],
-  ['POST', '/api/automation/trigger', {}], ['POST', '/api/jobs/j1/qualification-override', { status: 'INELIGIBLE', reason: 'x', candidate_id: 'farhan_shaikh' }]];
+const attempts = [['PUT', '/api/profile?candidate_id=farhan_shaikh', { full_name: 'Hijack' }], ['POST', '/api/automation/trigger', {}], ['PUT', '/api/site-settings', { brand_name: 'Hijack' }]]
+  .concat(OPEN ? [] : [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'APPLIED' }], ['POST', '/api/jobs/j1/qualification-override', { status: 'INELIGIBLE', reason: 'x', candidate_id: 'farhan_shaikh' }]]);
 const statuses = [];
 for (const [m, u, b] of attempts) statuses.push((await fetch(BASE + u, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })).status);
 check('A16 anonymous writes are refused with 401', statuses.every((s) => s === 401), statuses.join());
@@ -126,7 +133,7 @@ await page.keyboard.press('Escape'); await page.evaluate(() => document.querySel
 await tab('SETTINGS');
 const opInputs = await page.locator('input').evaluateAll((els) => els.map((e) => e.value));
 check('B3b public -> operator on Settings: the full editable record replaces the public summary', opInputs.some((v) => /PRIVATECITY-7f3/.test(v)), opInputs.slice(0, 5).join('|'));
-check('B4 the operator sees stored records; a visitor still sees none of the notes', after.count >= 2 && !JSON.stringify(await apiPublic('/applications?candidate_id=farhan_shaikh')).includes('PRIVATE-'));
+check(OPEN ? 'B4 the operator sees stored records (open tracker: a visitor sees the notes too)' : 'B4 the operator sees stored records; a visitor still sees none of the notes', after.count >= 2 && (OPEN || !JSON.stringify(await apiPublic('/applications?candidate_id=farhan_shaikh')).includes('PRIVATE-')));
 await page.keyboard.press('Escape');
 await goto();
 check('B5 reload keeps the operator session with no sign-in window', !(await modalOpen()) && (await storedKey()) === KEY);

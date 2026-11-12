@@ -26,7 +26,12 @@ if (EXPECT) {
   for (let i = 0; i < 30 && live !== EXPECT; i++) { try { live = (await (await fetch(BASE + '/api/version', { signal: AbortSignal.timeout(10000) })).json()).commit; } catch {} if (live !== EXPECT) await sleep(3000); }
   if (live !== EXPECT) { console.log(`FAIL  the live Worker never reported commit ${EXPECT.slice(0, 10)} (last seen ${live}); no further checks run`); process.exit(1); }
 }
-const PRIVATE_KEYS = /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;
+let PRIVATE_KEYS = /"(error_message|rejection_stage|rejection_reason_category|notes|application_notes|rejection_notes|resume_version|cover_letter_path|application_channel|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences|manual_override_reason)"/;
+// Open tracker (owner decision 2026-11-12): /api/version says open_tracker. Then the tracker routes answer without a key (a nonexistent job
+// gives 404 and changes nothing) and the tracker's own notes may appear publicly; every other protected route must still refuse with 401.
+const TRACKER = [/^\/api\/jobs\/[^/?]+\/feedback/, /^\/api\/candidates\/[^/]+\/applications$/, /^\/api\/applications(\?|$)/, /^\/api\/applications\/[^/?]+\/follow-up/, /^\/api\/applications\/[^/?]+\/history/, /^\/api\/jobs\/[^/?]+\/qualification-(override|audit)/];
+const isTracker = (p) => TRACKER.some((re) => re.test(p.startsWith('/api') ? p : '/api' + p));
+
 const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
 // During a rollout a few requests are still answered by the previous version (seen on 10 Nov: the gate above passed, the very next request got the old
@@ -35,6 +40,8 @@ let v = await (await get('/api/version')).json().catch(() => ({}));
 for (let i = 0; EXPECT && v.commit !== EXPECT && i < 5; i++) { await sleep(4000); v = await (await get('/api/version')).json().catch(() => ({})); }
 check('health is public', (await get('/api/health')).status === 200);
 check('version is public', !!v.version, JSON.stringify(v));
+const OPEN = v.open_tracker === true;
+if (OPEN) { console.log('INFO  open tracker: tracker actions answer without a key'); PRIVATE_KEYS = /"(error_message|cover_letter_path|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences)"/; }
 if (process.env.SMOKE_EXPECT_COMMIT) check(`the live Worker reports the commit being released (${process.env.SMOKE_EXPECT_COMMIT.slice(0, 10)})`, v.commit === process.env.SMOKE_EXPECT_COMMIT, `live commit ${v.commit}`);
 console.log(`INFO  live version ${v.version} commit ${v.commit} deployed_at ${v.deployed_at}`);
 
@@ -63,13 +70,16 @@ check('source scorecard has no placeholder feeds', !sc.includes('example.com'));
 
 // protected surface
 for (const p of ['/api/applications/none/history?candidate_id=farhan_shaikh', '/api/jobs/none/qualification-audit?candidate_id=farhan_shaikh', '/api/automation/runs', '/api/meta', '/api/backups', '/api/sync/activity-logs']) {
-  const r = await get(p); check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
+  const r = await get(p);
+  if (OPEN && isTracker(p)) check(`open tracker GET ${p.split('?')[0]} answers without a key`, r.status === 200 || r.status === 404, `status ${r.status}`);
+  else check(`anonymous GET ${p.split('?')[0]} is refused`, r.status === 401, `status ${r.status}`);
 }
 for (const [m, p, b] of [['POST', '/api/applications', { candidate_id: 'farhan_shaikh', job_id: 'smoke-nonexistent', status: 'SAVED' }], ['PUT', '/api/profile?candidate_id=smoke-nonexistent', {}],
   ['POST', '/api/automation/smoke-nonexistent', {}], ['POST', '/api/jobs/smoke-nonexistent/qualification-override', { candidate_id: 'farhan_shaikh', status: 'READY', reason: 'smoke' }],
   ['POST', '/api/jobs/smoke-nonexistent/feedback?candidate_id=farhan_shaikh', { rating: 'CLEAR' }], ['POST', '/api/profile/import-resume', { text: 'x' }]]) {
   const r = await fetch(BASE + p, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-  check(`anonymous ${m} ${p.split('?')[0]} is refused (401)`, r.status === 401, `status ${r.status}`);
+  if (OPEN && isTracker(p)) check(`open tracker ${m} ${p.split('?')[0]} on a nonexistent job changes nothing (400/404)`, r.status === 404 || r.status === 400, `status ${r.status}`);
+  else check(`anonymous ${m} ${p.split('?')[0]} is refused (401)`, r.status === 401, `status ${r.status}`);
 }
 check('every checked response came from the expected commit', wrongVersion.length === 0, wrongVersion.join(', '));
 console.log(failed ? `\n${failed} check(s) failed: roll back (see dashboard/docs/RELEASE.md)` : '\nAll smoke checks passed');
