@@ -442,6 +442,9 @@ test('top-100 review (12 Nov): US relocation is not a visa route, Gulf nationals
   assert.equal(bv.eligibility, 'UNKNOWN'); assert.ok(bv.score <= VISA_UNLIKELY_CAP);
   assert.ok(mk(sa, 'Power Systems Engineer (Energy) - Bicester', 'Oxford, GB, OX27 7LT').score <= VISA_UNLIKELY_CAP, 'GB is abroad');
   assert.ok(mk(sa, 'Senior Technical Consultant - AI Security', 'Remote (India)', D, true).score <= 40, 'not her field');
+  assert.ok(mk(sa, 'Reliability Engineer', 'Bangalore, India', 'Own reliability of our hardware products from design through manufacturing.').score <= 40, 'product reliability, no plant work');
+  assert.ok(mk(sa, 'Hardware Reliability Engineer', 'Bangalore, India').score <= 40);
+  assert.ok(mk(sa, 'Reliability Engineer', 'Bangalore, India', 'Plant equipment reliability and maintenance; product quality support.').score > 40, 'plant reliability stays');
   // technician posts are below a 9-year engineer
   assert.ok(mk(sa, 'Electrical Shift Technician – Facilities Operations', 'Sanand, India').score <= 40);
   assert.ok(mk(sa, 'Maintenance Manager', 'Hosur, Tamil Nadu, India').score > 40);
@@ -451,4 +454,23 @@ test('top-100 review (12 Nov): US relocation is not a visa route, Gulf nationals
   assert.ok(mk(fa, 'Business Operations Associate', 'Remote - India', R, true).score <= 40);
   assert.ok(mk(fa, 'Associate Director, Business Operations', 'Remote - India', R, true).score > 40);
   assert.ok(mk(fa, 'Implementation Manager', 'Remote - India', R, true).score > 40);
+});
+
+test('ranking v3: a title naming a target role and a title at the candidate\'s level rank above an otherwise equal job; caps still win', async () => {
+  const { TARGET_EXACT_BONUS, TARGET_WORD_BONUS, SENIORITY_BONUS, targetFit } = await import('../worker/discovery.ts');
+  const fa = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['Workflow Automation', 'Process Design']), total_years_experience: 9,
+    target_roles: JSON.stringify(['Implementation Manager', 'Automation Specialist', 'Revenue Operations Specialist']) };
+  const D = 'Fully remote, India. Workflow automation and process design.';
+  const mk = (title, who = fa) => evaluate(who, { id: 'x', title, company: 'Acme', url: 'https://e.com/x', location: 'Remote - India', description: D, remote: true });
+  assert.equal(targetFit('Implementation Manager, EMEA', fa.target_roles), 'exact');
+  assert.equal(targetFit('Implementation Consultant', fa.target_roles), 'word');
+  assert.equal(targetFit('Solutions Engineer', fa.target_roles), null, 'generic words do not count');
+  const base = mk('Solutions Engineer').score;
+  assert.equal(mk('Automation Specialist').score, Math.min(95, base + TARGET_EXACT_BONUS));
+  assert.equal(mk('Implementation Consultant').score, Math.min(95, base + TARGET_WORD_BONUS));
+  assert.equal(mk('Senior Solutions Engineer').score, Math.min(95, base + SENIORITY_BONUS));
+  assert.match(mk('Automation Specialist').qualification_reason, /target roles/);
+  assert.ok(mk('Junior Automation Specialist').score <= 40, 'the under-level cap still wins over the bonus');
+  const noTargets = { ...fa, target_roles: null };
+  assert.equal(mk('Automation Specialist', noTargets).score, mk('Solutions Engineer', noTargets).score, 'no stored targets: no bonus');
 });

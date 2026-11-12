@@ -128,7 +128,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
     const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
     out.push(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at) SELECT ${[cid, j.id, r.status, r.lane, r.eligibility, r.reason, r.qualification_reason, now].map(q).join(',')} ${guard};`);
     out.push(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) SELECT ${[cid, j.id, r.score, Math.min(100, r.skills.length * 20), r.lane === 'STRONGEST_FIT' ? 70 : 0, r.lane,
-      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v10: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
+      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v11: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
     report.rows++; report.by_status[r.status] = (report.by_status[r.status] || 0) + 1;
   }
 }
@@ -211,7 +211,7 @@ function rescreenLegacy(row, r) {
   const roleMatched = r.lane === 'STRONGEST_FIT';
   const fallback = roleMatched ? 'NEEDS_REVIEW' : 'HOLD';   // when the stored eligibility is kept, the screen's own INELIGIBLE does not apply
   const noApp = (t) => `NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
-  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, profile_v3: true, profile_v10: true, assessed_from: 'legacy_rescreen',
+  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, profile_v3: true, profile_v11: true, assessed_from: 'legacy_rescreen',
     matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.', rescored_at: now });
   // 1. the score, only while the row is still undecided and unscored
   out.push(`INSERT INTO candidate_job_scores(candidate_id, job_id, overall_score, skill_score, role_score, strategy_lane, score_breakdown, calculated_at)
@@ -249,10 +249,10 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     const r = evaluate(cand, posting, ctxFor.get(row.candidate_id));
     if (row.legacy) { rescreenLegacy(row, r); continue; }
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
-    const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v3: true, profile_v10: true, matched_skills: r.skills, rescored_at: now });
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, profile_v3: true, profile_v11: true, matched_skills: r.skills, rescored_at: now });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
-      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"profile_v10":true%' ${undecided('candidate_job_scores')}
+      WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE '%"profile_v11":true%' ${undecided('candidate_job_scores')}
       AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')));`);
     out.push(`UPDATE candidate_qualifications SET qualification_reason = ${q(r.qualification_reason)} WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)}
       AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
@@ -292,7 +292,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
 // The screen now shortlists by itself, on what is stored after this run's writes:
 //   READY          score >= the person's threshold, eligibility confirmed (ELIGIBLE)
 //   STRETCH_READY  score >= threshold with eligibility still to confirm (UNKNOWN), or ELIGIBLE and up to 10 points below the threshold
-// and in both cases: scored under the current rules (profile_v10), one posting per employer and title, at least one profile skill named in the posting (a title match alone is not enough),
+// and in both cases: scored under the current rules (profile_v11), one posting per employer and title, at least one profile skill named in the posting (a title match alone is not enough),
 // the posting active and verified open in the last 4 days.
 // At most 25 of each per person, best score first. A shortlisted row is marked by its reason ("Shortlisted automatically. ...") so that it can be told
 // from a person's decision; it goes back to "to review" when it stops qualifying. Never touched: an override, an application, a row a person set.
@@ -304,7 +304,7 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
   const free = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
   const base = `FROM candidate_qualifications q JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id
-    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND j.last_verified_at >= ${q(since)} AND s.score_breakdown LIKE '%"profile_v10":true%' AND s.skill_score > 0`;
+    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND j.last_verified_at >= ${q(since)} AND s.score_breakdown LIKE '%"profile_v11":true%' AND s.skill_score > 0`;
   const fitsReady = `s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'ELIGIBLE'`;
   const fitsStretch = `((s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'UNKNOWN') OR (q.eligibility_status = 'ELIGIBLE' AND s.overall_score >= c.qualification_threshold - 10 AND s.overall_score < c.qualification_threshold))`;
   const auto = (alias) => `${alias}.qualification_reason LIKE ${q(MARK + '%')}`;
@@ -322,6 +322,19 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
         SELECT candidate_id, job_id, ${q(tier)}, 'NEEDS_REVIEW', 'No longer meets the automatic shortlist rule', 'discovery' FROM candidate_qualifications WHERE ${gone};`);
       sl.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${gone};`);
     }
+    // 1b. Low matches leave To review (owner review 2026-11-12: about 1,000 rows per person was too many to read). A row the current rules
+    //     score at or below LOW_MATCH (avoid-list, under-level and unworkable-abroad caps) moves to Hold with a mark, and comes back when it rises.
+    const LOW = 45, HOLD_MARK = 'Held automatically (low match). ';
+    const undecidedQ = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
+    const scored = (cmp) => `EXISTS (SELECT 1 FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id AND s.score_breakdown LIKE '%"profile_v11":true%' AND s.overall_score ${cmp})`;
+    const low = `(candidate_id, job_id) IN (SELECT q.candidate_id, q.job_id FROM candidate_qualifications q WHERE q.candidate_id IN (${ids}) AND q.qualification_status = 'NEEDS_REVIEW' AND ${undecidedQ} AND ${scored('<= ' + LOW)})`;
+    const back = `(candidate_id, job_id) IN (SELECT q.candidate_id, q.job_id FROM candidate_qualifications q WHERE q.candidate_id IN (${ids}) AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE ${q(HOLD_MARK + '%')} AND ${undecidedQ} AND ${scored('> ' + LOW)})`;
+    sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+      SELECT candidate_id, job_id, 'NEEDS_REVIEW', 'HOLD', 'Low match under the current rules', 'discovery' FROM candidate_qualifications WHERE ${low};`);
+    sl.push(`UPDATE candidate_qualifications SET qualification_status = 'HOLD', qualification_reason = ${q(HOLD_MARK)} || COALESCE(qualification_reason, ''), last_reverified_at = ${q(now)} WHERE ${low};`);
+    sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+      SELECT candidate_id, job_id, 'HOLD', 'NEEDS_REVIEW', 'Match improved under the current rules', 'discovery' FROM candidate_qualifications WHERE ${back};`);
+    sl.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${HOLD_MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${back};`);
     // 2. The best qualifying rows of each tier are shortlisted, counting those already on it towards the 25.
     for (const [tier, fits] of tiers) {
       // One posting per employer and title: the same job listed in several cities fills one place, not five (owner review 2026-11-12).
@@ -330,8 +343,8 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
           AND y.qualification_status IN ('READY','READY_HIGH','STRETCH_READY') AND NOT (y.qualification_status = ${q(tier)} AND ${auto('y')})
           AND lower(trim(k.company)) = lower(trim(j.company)) AND lower(trim(k.title)) = lower(trim(j.title)))`;
       const pick = `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
-          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc DESC, job_id) AS rk FROM (
-            SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc,
+          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc DESC, sk DESC, seen DESC, job_id) AS rk FROM (
+            SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc, COALESCE(s.skill_score, 0) AS sk, COALESCE(j.discovered_at, '') AS seen,
               ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
             ${base} AND ${fits} AND (q.qualification_status = 'NEEDS_REVIEW' OR (q.qualification_status = ${q(tier)} AND ${auto('q')})) AND ${twin}
           ) WHERE dk = 1

@@ -124,7 +124,7 @@ def profiles(local=None):
 
 # What dataset_apply.mjs scores with: skills, years, pay floor, and employers that rejected the candidate before (applications
 # marked REJECTED in the dashboard and past applications entered by hand, migration 0016).
-CANDIDATES_SQL = """SELECT c.id, c.primary_skills, c.total_years_experience, c.cash_floor_inr_monthly, p.search_profile,
+CANDIDATES_SQL = """SELECT c.id, c.primary_skills, c.target_roles, c.total_years_experience, c.cash_floor_inr_monthly, p.search_profile,
   (SELECT json_group_array(json_object('company', x.company, 'on', x.decided_on)) FROM (
      SELECT company, decided_on FROM past_applications WHERE candidate_id = c.id AND outcome = 'REJECTED'
      UNION SELECT j.company, substr(coalesce(a.updated_at, a.created_at), 1, 10) FROM applications a JOIN jobs j ON j.id = a.job_id
@@ -322,7 +322,7 @@ def taste_rows(local=None):
 
 
 def rescore_rows(local=None, page=400, per_candidate=1500):
-    """Preliminary rows that no person has decided on and that were not yet scored with the CURRENT profile and rules (marker profile_v10),
+    """Preliminary rows that no person has decided on and that were not yet scored with the CURRENT profile and rules (marker profile_v11),
     for candidates that have skills to score with. At most `per_candidate` rows each, best-ranked first, so one run writes a bounded
     number of rows (writes are the tight free-tier limit) and the queue a person actually reads is corrected first; the rest follow on
     the next runs. Paged by the last (score, job) seen, never by OFFSET (OFFSET re-reads every earlier page)."""
@@ -335,7 +335,7 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
             part = d1(f"""SELECT q.candidate_id, q.job_id, s.overall_score AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, j.source_adapter, j.provenance, s.score_breakdown
               FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
               WHERE q.candidate_id = {sql_str(cid)} AND j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW','HOLD')
-                AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v10":true%'
+                AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"profile_v11":true%'
                 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) {after}
               ORDER BY s.overall_score DESC, q.job_id LIMIT {int(min(page, per_candidate - taken))}""", local)
             rows += part
