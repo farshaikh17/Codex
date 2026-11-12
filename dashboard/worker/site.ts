@@ -191,7 +191,7 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
   const contact = s.contact_email ? `<a href="mailto:${esc(s.contact_email)}">${esc(s.contact_email)}</a>` : '';
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(opts.title)}</title><meta name="description" content="${esc(opts.description)}">
-<link rel="canonical" href="${esc(opts.origin + opts.path)}">${opts.noindex ? '<meta name="robots" content="noindex">' : ''}
+<link rel="canonical" href="${esc(opts.origin + opts.path)}"><meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="${esc(opts.title)}"><meta property="og:description" content="${esc(opts.description)}"><meta property="og:type" content="website"><meta property="og:url" content="${esc(opts.origin + opts.path)}">
 <meta name="theme-color" content="#12263F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23E4572E'/%3E%3C/svg%3E">

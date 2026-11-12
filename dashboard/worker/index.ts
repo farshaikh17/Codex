@@ -3095,7 +3095,13 @@ async function readCapped(request: Request, max: number): Promise<string | null>
   const all = new Uint8Array(n); let o = 0; for (const c of chunks) { all.set(c, o); o += c.byteLength; }
   return new TextDecoder().decode(all);
 }
-const SITE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
+// Owner decision 2026-11-12: keep every crawler, AI scraper and link-preview bot out while the product serves Farhan and Sana only.
+// robots.txt says so to polite bots; every Worker answer carries X-Robots-Tag; a request whose User-Agent names a crawler gets 403.
+// Browsers, the release's own headless-browser check and plain HTTP clients (curl, node) are not matched.
+const NO_INDEX = { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet, noimageindex' };
+export const BOT_UA = /(?:bot|crawler|spider)[\/;\s)]|slackbot|facebookexternalhit|facebookcatalog|whatsapp|telegrambot|linkedinbot|discordbot|pinterest|slurp|ia_archiver|archive\.org|gptbot|chatgpt|oai-searchbot|claudebot|claude-web|anthropic-ai|ccbot|perplexity|bytespider|amazonbot|applebot|google-extended|googleother|google-inspectiontool|yandex|baiduspider|duckduckbot|semrush|ahrefs|mj12bot|dotbot|petalbot|scrapy|headlesschrome.*\bbot\b/i;
+const isBot = (request: Request) => BOT_UA.test(request.headers.get('User-Agent') || '');
+const SITE_HEADERS = { ...NO_INDEX, 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
 async function handleSite(request: Request, env: Env, url: URL): Promise<Response | null> {
   const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
   if (!SITE_PATHS.has(path)) {
@@ -3105,7 +3111,9 @@ async function handleSite(request: Request, env: Env, url: URL): Promise<Respons
     return new Response(site.layout(s404, { title: `Not found · ${s404.brand_name}`, description: '', path, body: site.notFoundPage(), origin: url.origin, noindex: true }), { status: 404, headers: { ...SITE_HEADERS, 'Cache-Control': 'no-store' } });
   }
   const origin = url.origin;
-  if (path === '/robots.txt') return new Response(`User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`, { headers: { 'Content-Type': 'text/plain' } });
+  // Owner decision 2026-11-12: no crawlers or bots anywhere while the product is for Farhan and Sana only (no sitemap either).
+  if (path === '/robots.txt') return new Response(`User-agent: *\nDisallow: /\n`, { headers: { 'Content-Type': 'text/plain', ...NO_INDEX } });
+  if (path === '/sitemap.xml') return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain', ...NO_INDEX } });
   if (path === '/sitemap.xml') return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/how-it-works', '/pricing', '/faq', '/about', '/apply', '/privacy', '/terms'].map((p) => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`, { headers: { 'Content-Type': 'application/xml' } });
   const s = await site.loadSettings(env.DB);
   const page = (title: string, description: string, body: string, opts: { status?: number; noindex?: boolean; stats?: any; cache?: boolean } = {}) =>
@@ -3269,6 +3277,19 @@ async function backupServe(request: Request, env: Env): Promise<Response | null>
 // Main export for Cloudflare Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const res = await handleRequest(request, env, ctx);
+    if (res.status === 101) return res;
+    const out = new Response(res.body, res);
+    for (const [k, v] of Object.entries(NO_INDEX)) out.headers.set(k, v);
+    return out;
+  },
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    return scheduledRun(controller, env, ctx);
+  },
+};
+
+async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (isBot(request) && new URL(request.url).pathname !== '/robots.txt') return new Response('Not available', { status: 403, headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' } });
     try {
       const u = new URL(request.url);
       if (!u.pathname.startsWith('/api/')) {
@@ -3295,8 +3316,9 @@ export default {
       return jsonResponse(isDatabaseFailure(err?.message) ? UNAVAILABLE : { error: 'Internal error. The request was not completed.' },
         isDatabaseFailure(err?.message) ? 503 : 500, { ...corsHeaders(request, env), 'Retry-After': '300', 'X-Worker-Commit': env.GIT_COMMIT || 'unknown' });
     }
-  },
-  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+}
+
+async function scheduledRun(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     let result: any;
     try { result = await runDiscovery(env, 'CRON'); }
     catch (e: any) {
@@ -3320,5 +3342,4 @@ export default {
     }
     if(result.status==='ERROR') throw new Error('Cloud discovery work unit failed; see durable run history.');
     if (assessError) throw new Error('Collector assessment batch failed; see the Worker log.');
-  },
-};
+}
