@@ -101,9 +101,11 @@ class CommittedSnapshotExtractionTests(unittest.TestCase):
             again=extract_pending(conn)
             s=summary(conn)
             evidence=conn.execute('select count(*) from evidence').fetchone()[0]
+            # a posting published with no description is honestly 'failed'; the live snapshot has one now and then. Nothing else may fail.
+            empty=conn.execute("select count(*) from extractions where state='failed' and warnings='[\"empty_description\"]'").fetchone()[0]
             conn.close()
         self.assertEqual(first['extracted'],s['versions'])
-        self.assertEqual(first['failed'],0)
+        self.assertEqual(first['failed'],empty,'only empty-description postings may fail extraction')
         self.assertEqual(again['extracted'],0)
         self.assertNotIn('pending',s['current_extraction'])
         self.assertGreater(evidence,s['versions'])

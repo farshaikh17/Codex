@@ -7,6 +7,7 @@ python -m engine.acceptance [--out DIR]      # writes acceptance.json and accept
 Scope, stated in the report: this proves the engine's behaviour offline. It does not prove live collection,
 scheduled execution, live Google Sheets, ChatGPT access to the repository or real candidates' outcomes.
 """
+import sqlite3
 import argparse,copy,json,re,shutil,sys,tempfile
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
@@ -171,7 +172,10 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         # 2/3. extraction ---------------------------------------------------------------------------------
         ex=extract_pending(store)
         versions=store.execute('select count(*) from posting_versions').fetchone()[0]
-        r.check('3 extraction','every stored version is extracted once',ex['extracted']==versions and ex['failed']==0,ex)
+        # A posting an employer published with no description at all is recorded as failed ("empty_description"): that is the truth about the posting,
+        # not an extractor fault, and the live snapshot contains one now and then. Any OTHER failure still fails the check.
+        empty=store.execute("select count(*) from extractions where state='failed' and warnings='[\"empty_description\"]'").fetchone()[0]
+        r.check('3 extraction','every stored version is extracted once',ex['extracted']==versions and ex['failed']==empty,{**ex,'empty_description':empty})
         r.check('3 extraction','every evidence quote is verbatim posting text',_quotes_verbatim(store)==0,
                 {'evidence_items':store.execute('select count(*) from evidence').fetchone()[0],'not_verbatim':_quotes_verbatim(store)})
         r.check('2 efficiency','a second extraction run does no work',extract_pending(store)['extracted']==0,'0 versions re-extracted')
@@ -360,13 +364,17 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         # 'partial' for a reason that has nothing to do with the code under test, and used to fail every pull request's CI until the next collection.
         # When the snapshot itself reports a non-ok source, this one check says so and is not run; every other check still runs on that snapshot.
         degraded=[x['source'] for x in status1['sources'] if x['status']!='ok']
+        # The other thing the live snapshot does now and then: a posting published with no description. The run then reports "N extraction(s) failed" and is
+        # 'partial'. That is accurate reporting of the posting, so it is tolerated here when it is the ONLY reason and every failure is an empty description.
+        _c=sqlite3.connect(rdb); empty_run=_c.execute("select count(*) from extractions where state='failed' and warnings='[\"empty_description\"]'").fetchone()[0]; _c.close()
+        tolerated=run1['outcome']=='partial' and empty_run>0 and run1['reasons']==['%d extraction(s) failed'%empty_run]
         if degraded:
             r.not_run('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
                       'the latest collector snapshot has %d non-ok source(s) (%s); this check needs a fully healthy snapshot and runs again on the next collection (run outcome: %s)'%(len(degraded),', '.join(degraded[:5]),run1['outcome']))
         else:
             r.check('8 reliability','a pipeline run on the real snapshot is ok, with every source fresh',
-                    run1['outcome']=='ok' and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
-                    {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected']})
+                    (run1['outcome']=='ok' or tolerated) and set(run1['freshness']['counts'])=={'fresh'} and run1['counts']['extraction_pending']==0,
+                    {'outcome':run1['outcome'],'reasons':run1['reasons'],'collected':run1['counts']['collected'],'empty_description_postings':empty_run})
         with RunLock(rdb,'acceptance: a run already in progress'):
             try: er.run(rdb,snap2,snapshot_sources,pages_root=root,now=hour_after(snap2));busy=False
             except LockBusy: busy=True
@@ -379,7 +387,7 @@ def run(out,root=ROOT,fixtures=FIXTURES):
         rconn=connect(rdb)
         runs=[x[0] for x in rconn.execute('select outcome from engine_runs order by run_id')]
         rconn.close()
-        r.check('8 reliability','every run is recorded with its outcome',runs==(['ok','partial'] if not degraded else [run1['outcome'],'partial']),runs)
+        r.check('8 reliability','every run is recorded with its outcome',runs==(['ok','partial'] if not degraded and not tolerated else [run1['outcome'],'partial']),runs)
         store.close();queue.close()
     except Exception as e:  # an unexpected failure is a failed acceptance, reported with its cause
         r.check('run','acceptance completed without an unexpected error',False,'%s: %s'%(type(e).__name__,e))
