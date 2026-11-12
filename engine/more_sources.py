@@ -45,11 +45,16 @@ EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom
 SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com'),
                   ('Emirates Global Aluminium', 'careers.ega.ae'), ('Black & Veatch', 'careers.bv.com'),
                   # jobs.doosan.com serves the whole Doosan group; Bobcat (vehicles) postings are skipped, Enerbility / Skoda Power / Fuel Cell are kept
-                  ('Doosan', 'jobs.doosan.com', '/bobcat/')]
+                  ('Doosan', 'jobs.doosan.com', '/bobcat/'),
+                  ('Tata Motors', 'careers.tatamotors.com')]   # added 2026-11-12, live that day (India plants)
 # Workday public career-site JSON (no key). (display name, tenant, data-centre prefix, site id); all three answered on a live read.
-WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi')]
+WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi'),
+           # Added 2026-11-12 (Sana: plant, utilities and energy employers with large India and Gulf operations); each answered a live read that day.
+           ('Johnson Controls', 'jci', 'wd5', 'JCI'), ('Baker Hughes', 'bakerhughes', 'wd5', 'BakerHughes'), ('Shell', 'shell', 'wd3', 'ShellCareers'),
+           ('Unilever', 'unilever', 'wd3', 'Unilever_Experienced_Professionals'), ('Dow', 'dow', 'wd1', 'ExternalCareers'), ('3M', '3m', 'wd1', 'Search')]
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
-SMARTRECRUITERS = [('Masdar', 'Masdar'), ('Vattenfall', 'Vattenfall'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1')]
+SMARTRECRUITERS = [('Masdar', 'Masdar'), ('Vattenfall', 'Vattenfall'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1'),
+                   ('Bosch', 'BoschGroup'), ('Continental', 'Continental')]   # added 2026-11-12, live that day (large India plants)
 # Oracle Recruiting Cloud public candidate-experience REST (no key). (display name, host, site number); answered on a live read.
 ORACLE = [('Wood', 'ehif.fa.em2.oraclecloud.com', 'CX_1')]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
