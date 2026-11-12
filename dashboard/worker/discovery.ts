@@ -132,6 +132,7 @@ export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+
 export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return /\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(l)||/(?:^|, )in$/i.test(l);}
 export function indianPlace(location:string|null|undefined){return INDIA_PLACE.test(location||'');}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
+export const SANA_INDIA_ONSITE_REASON='On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
 // ---- Client search profiles (resold clients) ---------------------------------------------------------------------------
 // The two original candidates keep their built-in rules below (search_profile NULL). Every other client carries a stored profile:
@@ -304,10 +305,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site|not remote|no remote)\b/i.test(p.location+' '+p.description)){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
   else if(globalRemote){eligibility='ELIGIBLE';reason='Posting explicitly advertises worldwide remote work.';}
  }else if(india){
-  // A fixed city list cannot establish that a commercial airport is within about 2 hours of the candidate, so an on-site or
-  // hybrid role in an Indian city is UNKNOWN until that is verified. Only a role that is remote in India is affirmative.
+  // Owner decision 2026-11-12: on-site and hybrid roles in India are workable for Sana (was UNKNOWN until airport access was verified).
   if(remote){eligibility='ELIGIBLE';reason='Remote role in India.';}
-  else reason=SANA_UNKNOWN_ACCESS_REASON;
+  else{eligibility='ELIGIBLE';reason=SANA_INDIA_ONSITE_REASON;}
  }
  else if(!blocked&&(((visaRoute||(sponsorship&&gulf))&&!noVisaRoute)||globalRemote)){eligibility='ELIGIBLE';reason=(visaRoute||sponsorship)&&!noVisaRoute?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  else if(!blocked&&sponsorship&&!noVisaRoute)reason='Offers relocation, but no visa route from India is stated. '+reason;
@@ -447,7 +447,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v9: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v10: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

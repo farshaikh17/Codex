@@ -46,7 +46,7 @@ test('new jobs are scored by the screen, written once, shortlisted only by the r
   assert.equal(q(F, 'ds:greenhouse:1').es, 'ELIGIBLE');
   assert.ok(q(F, 'ds:greenhouse:1').sc >= 60, 'role match with two skills found by key words, remote from India');
   assert.equal(JSON.parse(q(F, 'ds:greenhouse:1').bd).skills_v1, true);
-  assert.equal(q(S, 'ds:greenhouse:2').es, 'UNKNOWN', 'on-site in an Indian city: accessibility unverified (owner rule)');
+  assert.equal(q(S, 'ds:greenhouse:2').es, 'ELIGIBLE', 'on-site in an Indian city: workable (owner decision 2026-11-12)');
   assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM jobs WHERE id='ds:greenhouse:3'`).get().n, 0, 'an ineligible posting is not stored');
   assert.equal(q(F, 'js:naukri:5').es, 'UNKNOWN', 'a job-board report never claims eligibility');
   assert.equal(w.sqlite.prepare(`SELECT provenance p, source_channel c FROM jobs WHERE id='js:naukri:5'`).get().p, 'PUBLIC_FEED_UNVERIFIED');
@@ -166,10 +166,10 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
     insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
     insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
-    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v9":true}' : '{"preliminary":true}');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v10":true}' : '{"preliminary":true}');
     if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
     // an application by the OTHER candidate on the same job must not protect this row's score
-    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v9":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v10":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
   }
   const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
     jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
@@ -189,7 +189,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
     if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
     if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
-    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v9, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v10, true, `re-scored row carries the marker: ${k}`); changedScores++; }
     if (JSON.stringify(q1) !== JSON.stringify(q0)) {
       changedQuals++;
       assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
@@ -239,7 +239,7 @@ test('first-import rows the current screen never scored are screened fully, firs
   const l6 = db.prepare('SELECT qualification_status s, eligibility_status e, eligibility_reason r FROM candidate_qualifications WHERE job_id=?').get('L6');
   assert.deepEqual([l6.s, l6.e, l6.r], ['HOLD', 'ELIGIBLE', 'India affirmative verified'], 'a verified eligibility is kept; the role still decides the bucket');
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' ORDER BY job_id`).all();
-  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L5:READY>HOLD', 'L6:NEEDS_REVIEW>HOLD', 'ds:greenhouse:1:NEEDS_REVIEW>READY'], 'one history row per moved job, not repeated');
+  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L5:READY>HOLD', 'L6:NEEDS_REVIEW>HOLD', 'ds:greenhouse:1:NEEDS_REVIEW>READY', 'ds:greenhouse:2:NEEDS_REVIEW>READY'], 'one history row per moved job, not repeated');
 });
 
 test('a row whose stored reason says it is outside the role family moves to Hold; decided and applied rows stay', () => {
@@ -275,7 +275,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V8 = '{"preliminary":true,"profile_v9":true}';
+  const V8 = '{"preliminary":true,"profile_v10":true}';
   const add = (id, score, elig, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? NOW);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', elig, o.reason ?? 'Cloud discovery match.', o.override || null);
