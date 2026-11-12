@@ -22,18 +22,21 @@ from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-PER_CANDIDATE = 50
+PER_CANDIDATE = 75
+# A Ready / Stretch row the screen shortlisted by itself (dataset_apply.mjs marks its reason) is not a person's decision: it is checked like an
+# undecided row and its posting may be closed. A Ready / Stretch row without the mark was set by a person or the first import and stays protected.
+AUTO = "x.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(x.qualification_reason,'') LIKE 'Shortlisted automatically.%'"
+DECIDED = f"(x.manual_override_status IS NOT NULL OR (x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD') AND NOT ({AUTO})))"
 UA = 'Mozilla/5.0 (compatible; career-job-engine/1.0; private job search)'
 EXPORT_SQL = f"""SELECT id, url FROM (
   SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
-         ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY s.overall_score DESC, j.discovered_at DESC) AS rk
+         ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY q.qualification_status IN ('READY','STRETCH_READY') DESC, s.overall_score DESC, j.discovered_at DESC) AS rk
   FROM candidate_job_scores s
   JOIN jobs j ON j.id = s.job_id
   JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-  WHERE j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status IN ('NEEDS_REVIEW', 'HOLD')
+  WHERE j.is_active = 1
     AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
-    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id
-                    AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')))
+    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id AND {DECIDED})
     AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
 ) WHERE rk <= {PER_CANDIDATE}"""
 
@@ -86,8 +89,7 @@ def q(v):
 def to_sql(result, now=None):
     now = now or datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     guard = ("AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) "
-             "AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id "
-             "AND (x.manual_override_status IS NOT NULL OR x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD')))")
+             f"AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND {DECIDED})")
     lines = []
     for i in range(0, len(result['dead']), 100):
         ids = json.dumps(result['dead'][i:i + 100])

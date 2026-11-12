@@ -1,7 +1,7 @@
 name: Daily discovery (open ATS dataset + light job-site search)
 # Once a day: selects matching postings for every candidate from an open dataset of about 5 million live ATS jobs, runs a
 # handful of job-site searches, scores everything with the Worker's own screen and writes it to D1 (bounded per run).
-# Nothing is ever marked READY; human decisions and applications are never written. See dashboard/docs/DISCOVERY_PIPELINE.md.
+# Ready / Stretch are filled only by the automatic shortlist rule (dataset_apply.mjs); human decisions and applications are never written. See dashboard/docs/DISCOVERY_PIPELINE.md.
 on:
   workflow_dispatch:
     inputs:

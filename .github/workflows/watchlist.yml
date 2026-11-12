@@ -100,7 +100,7 @@ jobs:
           IN="--in ../work/jobsite_matches.json"
           [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
           [ -f ../work/signals.json ] && IN="$IN --signals ../work/signals.json"
-          node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN --out ../work/apply.sql --max-new 300
+          node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN --out ../work/apply.sql --max-new 300 --no-shortlist
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql
       - name: Write to D1
         if: ${{ hashFiles('work/apply.sql') != '' }}

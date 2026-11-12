@@ -38,7 +38,7 @@ function world() {
   return { dir, sqlite };
 }
 
-test('new jobs are scored by the screen, written once, never READY, and board reports never claim eligibility', () => {
+test('new jobs are scored by the screen, written once, shortlisted only by the rule, and board reports never claim eligibility', () => {
   const w = world();
   const { sql, report } = run(w.dir);
   w.sqlite.exec(sql);
@@ -50,7 +50,13 @@ test('new jobs are scored by the screen, written once, never READY, and board re
   assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM jobs WHERE id='ds:greenhouse:3'`).get().n, 0, 'an ineligible posting is not stored');
   assert.equal(q(F, 'js:naukri:5').es, 'UNKNOWN', 'a job-board report never claims eligibility');
   assert.equal(w.sqlite.prepare(`SELECT provenance p, source_channel c FROM jobs WHERE id='js:naukri:5'`).get().p, 'PUBLIC_FEED_UNVERIFIED');
-  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_qualifications WHERE qualification_status IN ('READY','READY_HIGH','STRETCH_READY')`).get().n, 0);
+  // Ready / Stretch only through the automatic shortlist rule: confirmed eligibility and a score at the threshold is Ready, unconfirmed is Stretch.
+  const short = w.sqlite.prepare(`SELECT q.candidate_id c, q.job_id j, q.qualification_status st, q.eligibility_status es, s.overall_score sc, q.qualification_reason r FROM candidate_qualifications q JOIN candidate_job_scores s USING(candidate_id, job_id) WHERE q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')`).all();
+  assert.ok(short.length >= 1 && short.some((x) => x.j === 'ds:greenhouse:1' && x.st === 'READY'), JSON.stringify(short));
+  for (const x of short) {
+    assert.match(x.r, /^Shortlisted automatically\. /, 'marked, so it can be told from a person\'s decision');
+    assert.ok(x.st === 'READY' ? x.es === 'ELIGIBLE' && x.sc >= 60 : x.st === 'STRETCH_READY' && (x.es === 'UNKNOWN' ? x.sc >= 60 : x.sc >= 50 && x.sc < 60), JSON.stringify(x));
+  }
   assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM candidate_qualifications WHERE candidate_id=? AND job_id='ds:greenhouse:1'`).get(S).n, 0, 'only the candidates the job was selected for');
   assert.ok(report.new_jobs >= 3 && report.skipped_ineligible === 1, JSON.stringify(report));
   // the same SQL again changes nothing
@@ -195,7 +201,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
   assert.deepEqual(snap(), after, 'running the same SQL again changes nothing');
 });
 
-test('first-import rows the current screen never scored are screened fully; decided, applied and Ready rows are never touched', () => {
+test('first-import rows the current screen never scored are screened fully, first-import Ready included; decided and applied rows are never touched', () => {
   const w = world();
   const db = w.sqlite;
   const job = (id, title, loc, desc) => db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
@@ -209,15 +215,17 @@ test('first-import rows the current screen never scored are screened fully; deci
   job('L3', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L3', 'NEEDS_REVIEW', { override: 'NEEDS_REVIEW' });   // a person decided
   job('L4', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L4', 'NEEDS_REVIEW');                         // has an application
   db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('ap4',?,?,'SAVED')`).run(F, 'L4');
-  job('L5', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L5', 'READY');                                // preserved Ready
+  job('L5', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L5', 'READY');                                // first-import Ready, wrong role
+  db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,61,'{"rule":"old-engine"}')`).run(F, 'L5');
+  job('L7', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L7', 'READY', { override: 'READY' });         // a person's Ready
   job('L6', 'Senior Brand Designer', 'Remote - India', 'Design.');                           qual('L6', 'NEEDS_REVIEW', { elig: 'ELIGIBLE', eligReason: 'India affirmative verified' });
   const before = (id) => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications WHERE job_id=?').get(id), db.prepare('SELECT * FROM candidate_job_scores WHERE job_id=?').get(id) || null]);
-  const keep = Object.fromEntries(['L3', 'L4', 'L5'].map((id) => [id, before(id)]));
+  const keep = Object.fromEntries(['L3', 'L4', 'L7'].map((id) => [id, before(id)]));
   const row = (id, title, desc) => ({ candidate_id: F, job_id: id, cur_score: 0, title, company: 'Acme', location: 'Remote - India', description: desc, workplace_type: 'REMOTE', score_breakdown: null, provenance: 'LIVE_PUBLIC', source_adapter: 'ashby', legacy: 1 });
   fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify([row('L1', 'Senior Brand Designer', 'Design our brand.'), row('L2', 'Implementation Manager', REMOTE),
-    row('L3', 'Senior Brand Designer', 'Design.'), row('L4', 'Senior Brand Designer', 'Design.'), row('L5', 'Senior Brand Designer', 'Design.'), row('L6', 'Senior Brand Designer', 'Design.')]));
+    row('L3', 'Senior Brand Designer', 'Design.'), row('L4', 'Senior Brand Designer', 'Design.'), row('L5', 'Senior Brand Designer', 'Design.'), row('L6', 'Senior Brand Designer', 'Design.'), row('L7', 'Senior Brand Designer', 'Design.')]));
   const { sql, report } = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]);
-  assert.equal(report.rescreened_legacy, 6, 'all six were planned; the SQL guards decide what is written');
+  assert.equal(report.rescreened_legacy, 7, 'all seven were planned; the SQL guards decide what is written');
   db.exec(sql); db.exec(sql);   // twice: idempotent
   const q1 = db.prepare('SELECT qualification_status s, strategy_lane l FROM candidate_qualifications WHERE job_id=?');
   const s1 = db.prepare('SELECT overall_score o, score_breakdown b FROM candidate_job_scores WHERE job_id=?');
@@ -225,11 +233,13 @@ test('first-import rows the current screen never scored are screened fully; deci
   assert.match(s1.get('L1').b, /legacy_rescreen/, 'and gets a score row from the current screen');
   assert.equal(q1.get('L2').s, 'NEEDS_REVIEW'); assert.equal(q1.get('L2').l, 'STRONGEST_FIT');
   assert.ok(s1.get('L2').o > 0, `a fitting role stays in To review with a real score (${s1.get('L2').o})`);
-  for (const id of ['L3', 'L4', 'L5']) assert.equal(before(id), keep[id], `${id} (override / application / Ready) is byte-identical`);
+  for (const id of ['L3', 'L4', 'L7']) assert.equal(before(id), keep[id], `${id} (override / application / a person's Ready) is byte-identical`);
+  assert.equal(q1.get('L5').s, 'HOLD', 'a Ready row from the first import that the screen rules out leaves Ready');
+  assert.equal(s1.get('L5').o, 0); assert.match(s1.get('L5').b, /legacy_rescreen/);
   const l6 = db.prepare('SELECT qualification_status s, eligibility_status e, eligibility_reason r FROM candidate_qualifications WHERE job_id=?').get('L6');
   assert.deepEqual([l6.s, l6.e, l6.r], ['HOLD', 'ELIGIBLE', 'India affirmative verified'], 'a verified eligibility is kept; the role still decides the bucket');
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' ORDER BY job_id`).all();
-  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L6:NEEDS_REVIEW>HOLD'], 'one history row per moved job, not repeated');
+  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L5:READY>HOLD', 'L6:NEEDS_REVIEW>HOLD', 'ds:greenhouse:1:NEEDS_REVIEW>READY'], 'one history row per moved job, not repeated');
 });
 
 test('a row whose stored reason says it is outside the role family moves to Hold; decided and applied rows stay', () => {
@@ -258,4 +268,59 @@ test('stored Workable jobs wrongly marked remote are corrected; genuinely remote
   const { sql } = run(w.dir); db.exec(sql); db.exec(sql);
   const wt = Object.fromEntries(db.prepare(`SELECT id, workplace_type t FROM jobs WHERE id LIKE 'w_'`).all().map((r) => [r.id, r.t]));
   assert.deepEqual(wt, { w1: 'UNKNOWN', w2: 'REMOTE_RESTRICTED', w3: 'REMOTE_RESTRICTED' });
+});
+
+test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay out, a row that stops qualifying returns, decisions are never touched', () => {
+  const w = world();
+  const db = w.sqlite;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
+  const V8 = '{"preliminary":true,"profile_v8":true}';
+  const add = (id, score, elig, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? NOW);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', elig, o.reason ?? 'Cloud discovery match.', o.override || null);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`).run(F, id, score, o.skill ?? 40, o.bd || V8);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, F, id);
+  };
+  add('r1', 80, 'ELIGIBLE'); add('r2', 60, 'ELIGIBLE');                       // Ready
+  add('s1', 75, 'UNKNOWN'); add('s2', 55, 'ELIGIBLE');                        // Stretch: eligibility to confirm / just under the threshold
+  add('n1', 59, 'UNKNOWN'); add('n2', 49, 'ELIGIBLE');                        // below both rules
+  add('n3', 90, 'ELIGIBLE', { verified: OLD });                               // not verified open recently
+  add('n4', 90, 'ELIGIBLE', { bd: '{"preliminary":true}' });                  // not screened under the current rules
+  add('n5', 90, 'ELIGIBLE', { skill: 0 });                                    // title match only, no profile skill named
+  add('n6', 90, 'ELIGIBLE', { active: 0 });                                   // closed
+  add('n7', 90, 'ELIGIBLE', { status: 'HOLD' });                              // Hold is not promoted
+  add('d1', 90, 'ELIGIBLE', { override: 'NEEDS_REVIEW' }); add('d2', 90, 'ELIGIBLE', { app: true });   // a person's decision / an application
+  add('d3', 10, 'UNKNOWN', { status: 'READY', override: 'READY', reason: 'Shortlisted automatically. Cloud discovery match.' });   // confirmed by a person
+  add('d4', 10, 'UNKNOWN', { status: 'READY', reason: 'Strongest Fit verified match (61%)' });         // Ready without the mark: not ours to demote
+  add('x1', 20, 'ELIGIBLE', { status: 'READY', reason: 'Shortlisted automatically. Cloud discovery match.' });   // shortlisted earlier, score since fell
+  add('x2', 70, 'ELIGIBLE', { status: 'STRETCH_READY', reason: 'Shortlisted automatically. Cloud discovery match.' });   // eligibility since confirmed: moves up
+  for (let i = 0; i < 30; i++) add('b' + String(i).padStart(2, '0'), 51 + i % 3, 'ELIGIBLE');           // 30 more Stretch candidates: only the cap fits
+  const st = () => Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE candidate_id=?`).all(F).map((r) => [r.j, r.s]));
+  const { sql } = run(w.dir);
+  db.exec(sql);
+  const a = st();
+  assert.deepEqual([a.r1, a.r2, a.x2], ['READY', 'READY', 'READY']);
+  assert.deepEqual([a.s1, a.s2], ['STRETCH_READY', 'STRETCH_READY']);
+  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2', 'x1']) assert.equal(a[id], 'NEEDS_REVIEW', id);
+  assert.equal(a.n7, 'HOLD'); assert.equal(a.d3, 'READY'); assert.equal(a.d4, 'READY');
+  assert.equal(Object.values(a).filter((s) => s === 'STRETCH_READY').length, 25, 'at most 25 Stretch per person, best first');
+  assert.equal(a.s1, 'STRETCH_READY', 'the best score is inside the cap');
+  const reason = (id) => db.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id=?`).get(id).r;
+  assert.equal(reason('r1'), 'Shortlisted automatically. Cloud discovery match.');
+  assert.equal(reason('x1'), 'Cloud discovery match.', 'the mark is removed when a row leaves the shortlist');
+  assert.equal(reason('x2'), 'Shortlisted automatically. Cloud discovery match.', 'moved up a tier: marked once, not twice');
+  const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' AND job_id IN ('r1','x1','x2') ORDER BY id`).all().map((h) => `${h.j}:${h.p}>${h.n}`);
+  assert.deepEqual(hist.sort(), ['r1:NEEDS_REVIEW>READY', 'x1:READY>NEEDS_REVIEW', 'x2:NEEDS_REVIEW>READY', 'x2:STRETCH_READY>NEEDS_REVIEW']);
+  // the same SQL again, and a fresh run on the result, change nothing
+  const snap = () => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), db.prepare('SELECT COUNT(*) n FROM qualification_history').get()]);
+  const before = snap();
+  db.exec(sql); db.exec(run(w.dir).sql);
+  const strip = (x) => x.replace(/"last_reverified_at":"[^"]*"/g, '');
+  assert.equal(strip(snap()), strip(before));
+  // a shortlisted posting that is no longer verified open drops back to review
+  db.prepare(`UPDATE jobs SET last_verified_at = ? WHERE id = 'r1'`).run(OLD);
+  assert.doesNotMatch(run(w.dir, ['--no-shortlist']).sql, /Shortlisted automatically/, 'the watchlist run skips the step');
+  db.exec(run(w.dir).sql);
+  assert.equal(st().r1, 'NEEDS_REVIEW');
 });

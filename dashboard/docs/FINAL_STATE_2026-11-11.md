@@ -86,3 +86,19 @@ If any step does not behave as written, that is a bug: note the step and the job
 * A "quiet for N days" nudge for applied jobs with no follow-up date.
 * A summary of the skills named most often across the best jobs that the profile does not list.
 * Closing-date flags.
+
+## 7. Addendum, 12 Nov 2026: automatic shortlist
+
+Until now only a person holding the operator key could mark a job Ready, and nobody holds the key. Ready was three rows left by the first import
+(spot check: one posting gone, two under-level roles). Owner decision: the screen shortlists by itself.
+
+* **Ready:** score at or above the person's threshold (60) and eligibility confirmed. **Stretch:** the same score with eligibility still to confirm,
+  or confirmed eligibility and a score up to 10 points lower. Both need: screened under the current rules, at least one profile skill named in the
+  posting, the posting verified open in the last 4 days. At most 25 of each per person, best first.
+* The step runs at the end of `scripts/dataset_apply.mjs` (daily and watchlist runs). A shortlisted row's reason starts with
+  "Shortlisted automatically."; it returns to To review when it stops qualifying. Rows with a person's decision or an application are never touched.
+* First-import Ready / Stretch rows are re-screened once like other first-import rows. The liveness check now covers automatically shortlisted rows
+  (first in the queue, 75 per person) and may close their dead postings; Ready rows set by a person stay protected.
+* **Not yet measured on production.** It takes effect at the first discovery run after merge; the first run can only shortlist rows already
+  re-scored under `profile_v8` and verified open, so the lists fill over one to two days. Re-do the spot check then.
+* Section 4 item 1 and section 5 still need the operator key: add the repository secret `NEW_ADMIN_API_KEY`, then release with `rotate_key=true`.

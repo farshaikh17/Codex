@@ -33,7 +33,8 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
    - Owner decision 2026-11-06: light daily use only.
 4. **Scoring and writing** (`dashboard/scripts/dataset_apply.mjs`).
    - Every (job, person) pair is scored by the Worker's own `evaluate()`, so stored rows and the live screen cannot disagree.
-   - Nothing becomes READY or STRETCH. A person decides that.
+   - The screen itself never returns READY or STRETCH. Since 12 Nov 2026 a shortlist step at the end of the write (owner decision) promotes the best screened rows:
+     READY = score at the threshold and eligibility confirmed; STRETCH = the same score with eligibility to confirm, or confirmed and up to 10 points lower. Both need the current rules' mark, one matched profile skill and a posting verified open in the last 4 days; 25 of each per person. The reason starts "Shortlisted automatically." and the row returns to review when it stops qualifying. A person's decision or an application is never touched.
    - Ineligible jobs and jobs scoring below 30 are not stored.
    - **Never touched:** a job someone applied to, a row with a human decision, or an existing row (inserts never overwrite).
    - **Field safety:** every field is bounded, control characters are removed, and a job with an unusable URL is skipped.
