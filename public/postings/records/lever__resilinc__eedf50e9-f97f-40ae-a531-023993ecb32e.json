@@ -14,6 +14,15 @@
    "from_hash": "e106b409e5b4b5e73bb3dde8ea117206bb644791eda5224f5528afd8d4c82c21",
    "kind": "content_changed",
    "to_hash": "4da12e5570af6d1f06751846d03e91583a4cbd3f4765fe541f3290a98857bf1e"
+  },
+  {
+   "changed_at": "2026-11-12T15:33:41.918357+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "4da12e5570af6d1f06751846d03e91583a4cbd3f4765fe541f3290a98857bf1e",
+   "kind": "content_changed",
+   "to_hash": "b4ddce09cb3a2941b2307368b486be85063b714b334b1694a931d209a40e767c"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-10-12T12:19:49.257000+00:00",
-  "title": "Senior Software Engineer DFI",
+  "title": "Senior Software Engineer EW",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
- "content_hash": "4da12e5570af6d1f06751846d03e91583a4cbd3f4765fe541f3290a98857bf1e",
+ "content_changed_at": "2026-11-12T15:33:41.918357+00:00",
+ "content_hash": "b4ddce09cb3a2941b2307368b486be85063b714b334b1694a931d209a40e767c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "India",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      }
@@ -66,7 +75,7 @@
       "interpretation": null,
       "method": "description_section:What You Will Bring",
       "quote": "4–6 years of experience in backend engineering or data engineering, preferably in a scalable B2B SaaS product environment.\nStrong programming skills in Python, with experience building scalable backend applications.\nHands-on experience building distributed data processing pipelines using PySpark.\nStrong SQL skills, including complex query development, query optimization, and relational database design.\nStrong experience developing REST APIs and Python web services using FastAPI, Flask, or Quart.\nExperience building scalable ETL/ELT pipelines and enterprise data ingestion frameworks.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      },
@@ -74,7 +83,7 @@
       "interpretation": null,
       "method": "description_section:What You Will Bring",
       "quote": "Hands-on experience with Git, CI/CD, and modern software engineering practices.\nStrong debugging, performance tuning, and problem-solving skills.\nProven experience independently delivering features, modules, or projects from requirements through production.\nAbility to estimate work, identify technical risks, and drive timely delivery.\nStrong ownership mindset with excellent collaboration and communication skills.\nComfortable leveraging AI-assisted development tools such as GitHub Copilot, Cursor, ChatGPT, and Claude to improve engineering productivity, code quality, debugging, and problem-solving.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      }
@@ -87,7 +96,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What You Will Bring",
       "quote": "Experience working with cloud platforms such as Microsoft Azure (preferred) or AWS.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      },
@@ -95,7 +104,7 @@
       "interpretation": null,
       "method": "description_section:What Will Make You Stand Out",
       "quote": "Experience working in a B2B SaaS, supply chain, compliance, or other data-intensive product company, preferably in a high-growth environment.\nExposure to supply chain operations, compliance, or risk management domains.\nExperience working with modern cloud data platforms such as Databricks (preferred), Snowflake, and Lakehouse technologies, including Delta Lake.\nExperience designing scalable backend architectures and distributed systems.\nExposure to one or more of the following technologies: Java, Kafka, Redis, Apache Airflow, or Kubernetes.\nExperience mentoring engineers and contributing to technical design discussions.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      }
@@ -108,7 +117,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      },
@@ -116,7 +125,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "But the real power behind Resilinc? Our people. We’re a fully remote, mission-led team making sure life-saving products and critical goods get where they’re needed, fast. We offer the chance to do meaningful work in a collaborative, empowering culture—where you can be an agent of change. Join us to tackle critical global challenges through high-impact work that matters.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      },
@@ -124,7 +133,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "But the real power behind Resilinc? Our people. We’re a fully remote, mission-led team",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      },
@@ -132,7 +141,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "At Resilinc, we’re fully remote, with plenty of opportunities to connect in person. We provide a culture where ownership, purpose, technical growth and a voice in shaping impactful technology are at our core. Oh, and the perks? Full-stack benefits for health, wealth and wellbeing to keep you thriving. Check in with your talent acquisition contact for a location-specific FAQ.",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/resilinc/eedf50e9-f97f-40ae-a531-023993ecb32e"
      }
