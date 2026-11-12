@@ -4,6 +4,10 @@ name: Delete merged branches
 # "preview" lists what would be deleted without deleting anything. The run summary lists every deleted branch with its last
 # commit, so any of them can be restored.
 on:
+  # Also runs by itself when a pull request is merged, and deletes that pull request's branch (same rules: never main, improvements,
+  # build/crawl4ai, or a branch from a fork), so merged branches no longer pile up.
+  pull_request:
+    types: [closed]
   workflow_dispatch:
     inputs:
       mode:
@@ -17,7 +21,25 @@ permissions:
   pull-requests: read    # find merged and open pull requests
 
 jobs:
+  delete-merged-pr-branch:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository && !contains(fromJSON('["main","improvements","build/crawl4ai"]'), github.event.pull_request.head.ref)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Delete the merged branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ github.event.pull_request.head.ref }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # only when the branch still points at the merged commit (nothing pushed after the merge)
+          now=$(curl -fsS -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/heads/$REF" | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])' || true)
+          if [ "$now" != "$SHA" ]; then echo "Branch $REF moved after the merge (or is gone); left alone."; exit 0; fi
+          curl -fsS -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/git/refs/heads/$REF"
+          echo "Deleted merged branch $REF (last commit $SHA)." | tee -a "$GITHUB_STEP_SUMMARY"
+
   cleanup:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -30,5 +52,5 @@ jobs:
       - name: Delete branches already merged into main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MODE: ${{ inputs.mode }}
+          MODE: ${{ inputs.mode || 'preview' }}
         run: node dashboard/scripts/cleanup_branches.mjs
