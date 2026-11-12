@@ -321,6 +321,10 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   // a shortlisted posting that is no longer verified open drops back to review
   db.prepare(`UPDATE jobs SET last_verified_at = ? WHERE id = 'r1'`).run(OLD);
   assert.doesNotMatch(run(w.dir, ['--no-shortlist']).sql, /Shortlisted automatically/, 'the watchlist run skips the step');
+  const split = path.join(w.dir, 'shortlist.sql');
+  const sp = run(w.dir, ['--shortlist-out', split]);
+  assert.doesNotMatch(sp.sql, /Shortlisted automatically/, 'with --shortlist-out the step leaves the main file');
+  assert.match(fs.readFileSync(split, 'utf8'), /Shortlisted automatically[\s\S]*generation = generation \+ 1/, 'and goes to its own file, which refreshes the public cache');
   db.exec(run(w.dir).sql);
   assert.equal(st().r1, 'NEEDS_REVIEW');
 });
