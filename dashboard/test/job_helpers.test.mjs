@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY } from '../frontend/src/jobHelpers.ts';
+import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark } from '../frontend/src/jobHelpers.ts';
 
 test('people search links are built from the employer name, encoded, and empty for no name', () => {
   const links = peopleSearchLinks('  Black & Veatch ');
@@ -45,4 +45,13 @@ test('localDay is the viewer\'s own calendar date, zero-padded', () => {
   assert.equal(localDay(new Date(2026, 0, 5, 3, 0)), '2026-01-05');
   assert.equal(localDay(new Date(2026, 10, 11, 0, 30)), '2026-11-11');
   assert.equal(localDay(new Date(2026, 11, 31, 23, 59)), '2026-12-31');
+});
+
+test('the automatic shortlist mark is recognised only at the start of the reason and removed for display', () => {
+  assert.equal(isAutoShortlisted('Shortlisted automatically. Cloud discovery match.'), true);
+  assert.equal(isAutoShortlisted('Manual override by operator: Shortlisted automatically. x'), false);
+  assert.equal(isAutoShortlisted(null), false);
+  assert.equal(withoutAutoMark('Shortlisted automatically. Meets the stated 5+ years.'), 'Meets the stated 5+ years.');
+  assert.equal(withoutAutoMark('Strongest Fit verified match (61%)'), 'Strongest Fit verified match (61%)');
+  assert.equal(withoutAutoMark(undefined), '');
 });
