@@ -375,3 +375,20 @@ test('open tracker (owner decision 2026-11-12): tracker actions work without a k
   assert.equal((await req(off.env, 'GET', '/api/version', { key: null })).json.open_tracker, false);
   assert.ok(!(await req(off.env, 'GET', `/api/applications?candidate_id=${F}`, { key: null })).text.includes('PRIVATE-NOTE-c1'), 'notes stay stripped when off');
 });
+
+test('new today: only jobs found or put on the list in the last day; the total and status counts follow the filter', async () => {
+  const w = world();
+  const now = new Date().toISOString();
+  w.run(`UPDATE candidate_qualifications SET qualified_at = '2026-11-03T00:00:00Z' WHERE job_id = 'k1'`);
+  w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES ('n1','Fresh Role','Acme','lever','https://jobs.lever.co/acme/n1',1,'Remote - India','x','REMOTE',?, 'LIVE_PUBLIC')`, now);
+  w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status) VALUES (?,?,?,?)`, F, 'n1', 'READY', 'ELIGIBLE');
+  // an old posting shortlisted just now (sqlite datetime format) also counts as new on the list
+  w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualified_at) VALUES (?,?,?,?,datetime('now'))`, F, 'k6', 'STRETCH_READY', 'UNKNOWN');
+  const r = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&qualification_status=APPLY_WORTHY&new_within=1`, { key: null });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(ids(r), ['k6', 'n1'], 'k1 (READY since 3 Nov) is not new');
+  assert.equal(r.json.total, 2);
+  const all = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&qualification_status=APPLY_WORTHY`, { key: null });
+  assert.ok(ids(all).includes('k1') && all.json.total === 3);
+  assert.equal((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&new_within=3`, { key: null })).status, 200, 'an unsupported value is ignored, not an error');
+});

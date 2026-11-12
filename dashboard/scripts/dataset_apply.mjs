@@ -343,7 +343,7 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
           AND y.qualification_status IN ('READY','READY_HIGH','STRETCH_READY') AND NOT (y.qualification_status = ${q(tier)} AND ${auto('y')})
           AND lower(trim(k.company)) = lower(trim(j.company)) AND lower(trim(k.title)) = lower(trim(j.title)))`;
       const pick = `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
-          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc DESC, sk DESC, seen DESC, job_id) AS rk FROM (
+          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, seen DESC, job_id) AS rk FROM (
             SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc, COALESCE(s.skill_score, 0) AS sk, COALESCE(j.discovered_at, '') AS seen,
               ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
             ${base} AND ${fits} AND (q.qualification_status = 'NEEDS_REVIEW' OR (q.qualification_status = ${q(tier)} AND ${auto('q')})) AND ${twin}

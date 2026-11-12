@@ -44,8 +44,9 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   const [page, setPage] = useState(0);
   const [counts, setCounts] = useState<{ READY: number; STRETCH_READY: number; NEEDS_REVIEW: number; ALL: number } | null>(null);
   const [possibleRemoteTotal, setPossibleRemoteTotal] = useState<number | null>(null);
+  const [newTotal, setNewTotal] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'READY' | 'STRETCH' | 'APPLY_WORTHY' | 'NEEDS_REVIEW' | 'POSSIBLE_REMOTE' | 'ALL'>(initialTab || 'READY');
+  const [activeTab, setActiveTab] = useState<'NEW' | 'READY' | 'STRETCH' | 'APPLY_WORTHY' | 'NEEDS_REVIEW' | 'POSSIBLE_REMOTE' | 'ALL'>(initialTab || 'READY');
   const [reviewSubFilter, setReviewSubFilter] = useState<'ALL' | 'FIT' | 'INDIA_SCOPE' | 'PAY'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [thresholdInput, setThresholdInput] = useState<number>(70);
@@ -65,7 +66,8 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   // The selected tab, review sub-filter, search and page are all answered by the server. The browser never filters a partial collection.
   const tabQuery = (tab: typeof activeTab, sub: typeof reviewSubFilter) => {
     const q: Record<string, any> = { candidate_id: candidateId, sort_by: 'score_desc', exclude_applied: true, exclude_dismissed: true };
-    if (tab === 'READY') q.farhan_fit = 'READY';
+    if (tab === 'NEW') { q.qualification_status = 'APPLY_WORTHY'; q.new_within = 1; }   // Ready or Stretch, found or shortlisted in the last 24 hours
+    else if (tab === 'READY') q.farhan_fit = 'READY';
     else if (tab === 'STRETCH') q.farhan_fit = 'STRETCH';
     else if (tab === 'APPLY_WORTHY') q.qualification_status = 'APPLY_WORTHY';
     else if (tab === 'NEEDS_REVIEW') {
@@ -99,11 +101,12 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
     const seq = ++countSeq.current;
     try {
       const base = { candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, limit: 1 };
-      const [all, remote] = await Promise.all([fetchJobs(base), fetchJobs({ ...base, eligibility: 'UNKNOWN', min_score: 60 })]);
+      const [all, remote, fresh] = await Promise.all([fetchJobs(base), fetchJobs({ ...base, eligibility: 'UNKNOWN', min_score: 60 }), fetchJobs({ ...base, qualification_status: 'APPLY_WORTHY', new_within: 1 })]);
       if (seq !== countSeq.current) return;
       const sc: Record<string, number> = all.status_counts || {};
       setCounts({ READY: sc.READY || 0, STRETCH_READY: sc.STRETCH_READY || 0, NEEDS_REVIEW: sc.NEEDS_REVIEW || 0, ALL: all.total });
       setPossibleRemoteTotal(remote.total);
+      setNewTotal(fresh.total);
     } catch { /* the tab labels simply stay without a number */ }
   };
 
@@ -122,7 +125,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
   const loadData = async () => { loadChrome(); loadCounts(); await loadList(); };
 
   useEffect(() => {
-    setMetrics(null); setProfile(null); setJobs([]); setCounts(null); setPossibleRemoteTotal(null); setPage(0); setSearchInput(''); setSearchQuery('');
+    setMetrics(null); setProfile(null); setJobs([]); setCounts(null); setPossibleRemoteTotal(null); setNewTotal(null); setPage(0); setSearchInput(''); setSearchQuery('');
     loadChrome(); loadCounts();
   }, [candidateId]);
 
@@ -383,6 +386,19 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           {/* View Mode Tabs */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto">
+            <button
+              onClick={() => chooseTab('NEW')}
+              data-testid="tab-new-today"
+              title="Ready or Stretch jobs found, or put on this list, in the last 24 hours"
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                activeTab === 'NEW'
+                  ? 'bg-white text-rose-800 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+              New today ({num(newTotal)})
+            </button>
             <button
               onClick={() => chooseTab('READY')}
               className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
