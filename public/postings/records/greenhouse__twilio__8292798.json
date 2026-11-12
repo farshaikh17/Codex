@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-12T17:50:54.117167+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "7871d86bed5625ecde7f38d51ddf14a65062971f06e36c96252972d3cce05ddd",
+   "kind": "content_changed",
+   "to_hash": "fa7e5b8e62bca732745b22dd8d8d206b58d31b5d450d59fd4f2be34de9fa5e26"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Fraud Specialist, Supplier Operations & Governance (P4).\n\nAbout the job\n\nWe are actively recruiting for this role to fill an existing vacancy. This position will be responsible for working constructively with our customers and partners to resolve billing issues and fraudulent misuse of services.\n\nWe are seeking a sharp, highly data-oriented, and tenacious Fraud Specialist to join our team. Unlike a traditional billing or collections role focused on routine outreach or simple invoice review, this position is a hybrid of financial investigation, root cause analysis, and strategic dispute negotiation. In this role, you will look for billing discrepancies, investigate Artificially Inflated Traffic (AIT) or IRSF (International Revenue Share Fraud), dig deep into messaging and call data, project manage high-value customer and vendor disputes, and build data-backed cases to resolve discrepancies. You will build dashboards to communicate key metrics and drive action. If you love solving complex data puzzles, negotiating with external parties, and finding win-win outcomes, this is the role for you.\n\nYou will be part of a company that is the category leader in Communications Platform as a Service (CPaaS), an organization working with the largest customers and partners, and a team of operators and former consultants that have delivered exceptional impact. If you have an extreme owner / founder mindset and a desire to solve big challenges, you’ll find yourself at home.\n\nResponsibilities\n\nIn this role, you’ll:\n\nAdvise account managers, accounting, and management on best practices to handle billing disputes\n\nNegotiate with customers and carriers with an understanding of resolution levers available as per contractual terms and industry norms\n\nIdentify, analyze, and handle fraudulent misuse (such as Artificially Inflated Traffic) and billing errors (such as rate differences) with both vendors and customers\n\nOwn the end-to-end lifecycle of customer and vendor disputes from intake of disputes to initiating disputes, tracking progress, and ensuring timely, documented resolution\n\nUncover and resolve discrepancies, overcharges, and unpaid balances with carriers and customers due to quantities, rates, currency, and other root causes\n\nDig into call and messaging data to identify why bills don’t match or find evidence of fraud\n\nBuild dashboards that communicate key metrics related to the lifecycle of disputes\n\nRead contracts and interpret what should be the invoice versus what it is\n\nAct as the primary point of contact to negotiate dispute resolutions, settlements, and payment terms in accordance with company practices\n\nPartner closely with data analytics, engineering, and accounting to reconcile accounts\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n8+ years of professional experience in telecom operations, fraud operations, customer success, vendor management, procurement, collections, or consulting.\n\nSharp written and verbal communication skills.\n\nExperience negotiating disputes constructively with customers or vendors.\n\nExperience in collections, dispute resolution, or billing analysis.\n\nExperience in project management.\n\nExperience wrangling data with Excel / Google Sheets, Looker or SQL.\n\nDesired:\n\nUnderstanding of the A2P SMS ecosystem, international traffic routing, international revenue share fraud (IRSF), artificially inflated traffic (AIT) and the ecosystem profit chains.\n\nUnderstanding of industry standards with respect to AIT and fraud handling such as frameworks from i3forum, GSMA, MEF or ITW Global Leaders’ Forum.\n\nUnderstanding of Call Detail Records (CDRs) and ability to build strong dispute case files.\n\nExperience working with workflow platforms like Airtable or building dashboards.\n\nExperience in telecom, technology, or consulting industries.\n\nExperience with advanced data analysis like Python or scripting\n\nExperience with AI and automation tools to accelerate productivity.\n\nLocation\n\nThis role will be remote and based in Ontario, British Columbia or Alberta, Canada.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location. Based on role, employees may also be eligible for additional compensation and benefits, including but not limited to incentive programs, commissions, equity grants, health and wellness benefits, retirement contributions, and paid time off.\n\nThe estimated pay ranges for this role are as follows:\n\n90,800.00 - CAD 113,500.00\n\nTarget Bonus Percentage 15%\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
@@ -16,15 +26,15 @@
    },
    {
     "source": "offices.name",
-    "text": "Remote - Ontario, Canada"
+    "text": "Remote - US"
    }
   ],
   "published": "2026-10-19T13:41:58-04:00",
   "title": "Fraud Specialist, Supplier Operations & Governance",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "7871d86bed5625ecde7f38d51ddf14a65062971f06e36c96252972d3cce05ddd",
+ "content_changed_at": "2026-11-12T17:50:54.117167+00:00",
+ "content_hash": "fa7e5b8e62bca732745b22dd8d8d206b58d31b5d450d59fd4f2be34de9fa5e26",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,15 +53,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "Remote - US",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      },
@@ -59,7 +69,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in Ontario, British Columbia or Alberta, Canada.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      }
@@ -72,7 +82,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      },
@@ -80,7 +90,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "8+ years of professional experience in telecom operations, fraud operations, customer success, vendor management, procurement, collections, or consulting.\nSharp written and verbal communication skills.\nExperience negotiating disputes constructively with customers or vendors.\nExperience in collections, dispute resolution, or billing analysis.\nExperience in project management.\nExperience wrangling data with Excel / Google Sheets, Looker or SQL.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      }
@@ -93,7 +103,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Understanding of the A2P SMS ecosystem, international traffic routing, international revenue share fraud (IRSF), artificially inflated traffic (AIT) and the ecosystem profit chains.\nUnderstanding of industry standards with respect to AIT and fraud handling such as frameworks from i3forum, GSMA, MEF or ITW Global Leaders’ Forum.\nUnderstanding of Call Detail Records (CDRs) and ability to build strong dispute case files.\nExperience working with workflow platforms like Airtable or building dashboards.\nExperience in telecom, technology, or consulting industries.\nExperience with advanced data analysis like Python or scripting\nExperience with AI and automation tools to accelerate productivity.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      }
@@ -106,15 +116,15 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      },
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "Remote - US",
+      "retrieved_at": "2026-11-12T17:50:54.117167+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8292798"
      }
