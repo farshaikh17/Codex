@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, roleScore, sanaIndiaCity, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { evaluate, avoidedTitle, foreignLocation, remoteFromStored, roleScore, sanaIndiaCity, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, RANKING_TAG, SANA_OLD_ACCESS_REASON, SANA_INDIA_ONSITE_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 
 const q = (v) => (v === null || v === undefined ? 'NULL' : "'" + String(v).replace(/'/g, "''") + "'");
 export const SELECT_ROWS = `SELECT s.candidate_id AS c, s.job_id AS j, s.overall_score AS score, s.strategy_lane AS lane, s.score_breakdown AS bd,
@@ -54,7 +54,13 @@ export function plan(rows) {
       // Two stored shapes carry the old bonus: (a) ELIGIBLE with the old city-list reason; (b) job-board rows, whose eligibility the Worker forces to
       // UNKNOWN ("Reported by ...") after the score was computed with the city-based bonus. Remote-in-India is affirmative and is left alone.
       const cityOnly = !remoteFromStored(r.wt, r.loc);
-      const oldReason = r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && cityOnly;
+      // Owner decision 2026-11-12: on-site roles in India are workable for Sana. A row with the old city-list reason keeps ELIGIBLE and its score;
+      // only the reason text is brought in line with what the Worker now writes.
+      if (r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && cityOnly) {
+        out.statements.push(`UPDATE candidate_qualifications SET eligibility_reason = ${q(SANA_INDIA_ONSITE_REASON)} WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);
+        out.counts.qualification_rows++; continue;
+      }
+      const oldReason = false;
       if (r.es === 'ELIGIBLE' && r.er === SANA_OLD_ACCESS_REASON && !cityOnly) {
         // Remote in India stays ELIGIBLE with the same score; only the stored reason text is brought in line with what the Worker now writes.
         out.statements.push(`UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE candidate_id = ${q(r.c)} AND job_id = ${q(r.j)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND eligibility_status = 'ELIGIBLE' AND eligibility_reason = ${q(SANA_OLD_ACCESS_REASON)};`);

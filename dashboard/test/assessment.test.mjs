@@ -55,7 +55,7 @@ test('assessment writes exactly what evaluate() decides for each unassessed coll
   assert.deepEqual([row(w, F, 'a1').st, row(w, F, 'a1').es, row(w, F, 'a1').lane], ['NEEDS_REVIEW', 'ELIGIBLE', 'STRONGEST_FIT']);
   assert.ok(row(w, F, 'a1').score >= 60, 'three matched skills, remote from India: a real score instead of 0');
   assert.deepEqual([row(w, S, 'a1').st, row(w, S, 'a1').es], ['HOLD', 'ELIGIBLE']);                          // outside Sana's role family
-  assert.deepEqual([row(w, S, 'a2').st, row(w, S, 'a2').es], ['NEEDS_REVIEW', 'UNKNOWN']);                   // on-site in an Indian city: accessibility unverified
+  assert.deepEqual([row(w, S, 'a2').st, row(w, S, 'a2').es], ['NEEDS_REVIEW', 'ELIGIBLE']);                  // on-site in an Indian city: workable (owner decision 2026-11-12)
   assert.deepEqual([row(w, F, 'a2').st], ['INELIGIBLE']);                                                  // not remote: Farhan is remote only (owner rule 2026-11-07)
   for (const c of [F, S]) assert.equal(row(w, c, 'a3').st, 'INELIGIBLE');                                    // clearance requirement
   assert.equal(w.sqlite.prepare("SELECT COUNT(*) n FROM candidate_qualifications WHERE qualification_status IN ('READY','READY_HIGH','STRETCH_READY') AND manual_override_status IS NULL").get().n, 0, 'the screen never promotes anything to READY');
