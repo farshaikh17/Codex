@@ -41,8 +41,36 @@ test('every site page renders, with real figures and escaped content', async () 
   assert.ok(!home.text.includes('Closed role'), 'only active postings are shown');
   const pricing = await get(w.env, '/pricing');
   assert.equal((pricing.text.match(/Ask for a quote/g) || []).length, 3, 'no invented prices');
-  assert.equal((await get(w.env, '/robots.txt')).status, 200);
-  assert.match((await get(w.env, '/sitemap.xml')).text, /<loc>https:\/\/site\.test\/pricing<\/loc>/);
+  const robots = await get(w.env, '/robots.txt');
+  assert.equal(robots.status, 200);
+  assert.equal(robots.text, 'User-agent: *\nDisallow: /\n', 'owner decision: no crawlers anywhere');
+  assert.equal((await get(w.env, '/sitemap.xml')).status, 404, 'no sitemap');
+  assert.ok(home.text.includes('<meta name="robots" content="noindex, nofollow">'));
+});
+
+test('bots: crawler, AI and link-preview user agents get 403 everywhere but robots.txt; browsers and plain clients are served, never indexed', async () => {
+  const w = world();
+  const BOTS = ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', 'Mozilla/5.0 (compatible; bingbot/2.0)', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.1; +https://openai.com/gptbot)',
+    'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)', 'CCBot/2.0 (https://commoncrawl.org/faq/)', 'facebookexternalhit/1.1', 'WhatsApp/2.23.20.0 A', 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+    'TelegramBot (like TwitterBot)', 'Mozilla/5.0 (compatible; AhrefsBot/7.0)', 'Mozilla/5.0 (compatible; PerplexityBot/1.0)', 'Mozilla/5.0 (Linux; Android 5.0) (compatible; Bytespider; spider-feedback@bytedance.com)'];
+  for (const ua of BOTS) {
+    for (const path of ['/', '/pricing', '/api/jobs?candidate_id=farhan_shaikh', '/api/candidates']) {
+      const r = await get(w.env, path, { headers: { 'User-Agent': ua } });
+      assert.equal(r.status, 403, `${ua} on ${path}`);
+      assert.match(r.headers.get('X-Robots-Tag') || '', /noindex/);
+    }
+    assert.equal((await get(w.env, '/robots.txt', { headers: { 'User-Agent': ua } })).status, 200, 'robots.txt stays readable, so polite bots learn to stay away');
+  }
+  const PEOPLE = ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 13; CUBOT_X30 Build/TP1A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.0.0 Safari/537.36', 'curl/8.5.0', 'node', ''];
+  for (const ua of PEOPLE) {
+    for (const path of ['/', '/api/candidates']) {
+      const r = await get(w.env, path, { headers: ua ? { 'User-Agent': ua } : {} });
+      assert.equal(r.status, 200, `${ua || '(none)'} on ${path}`);
+      assert.match(r.headers.get('X-Robots-Tag') || '', /noindex, nofollow/, 'never indexed even when served');
+    }
+  }
 });
 
 test('apply: a valid application is stored once, then redirects; invalid input is refused with the reason and nothing stored', async () => {
