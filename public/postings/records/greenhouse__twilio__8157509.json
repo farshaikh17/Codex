@@ -1,18 +1,29 @@
 {
  "availability": {
-  "at": "2026-11-12T15:33:41.918357+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-12T20:24:03.675870+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-12T20:24:03.675870+00:00",
+   "fields": [
+    "description",
+    "locations"
+   ],
+   "from_hash": "ae4a8da98fa4e28d638fb47f0ff3c3eef0aac2f25697042cffbc5d30dbd6a680",
+   "kind": "content_changed",
+   "to_hash": "4670bd1f65c66dd3cde7fb39dacbc45aa0a4d85e4af5dfe672fcd7028b1c6bda"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Presales Engineer, DACH region.\n\nAbout the job\n\nThis position is needed to enable our customers to build the future of communications. The Presales Engineer is a critical part of the sales team focused on our both New Business and Strategic segments.\n\nTwilio’s Presales Engineers are responsible for delivering the Technical Win and best Product Fit to our customers. They lead the technical pre-sales relationship, drive technical discovery, propose technical architectures, demonstrate the product, anticipate concerns and offer creative solutions. They build customer trust in Twilio’s solutions.\n\nPresales Engineers should be comfortable engaging a CEO or sketching out an API flow on a whiteboard with customer software engineers.\n\nResponsibilities\n\nIn this role, you’ll:\n\nPartner with Account Executives to execute pre-sales activities including opportunity qualification, demonstrations, Proof-of-Concept, RFP, design documentation, technical presentations and enablement sessions.\n\nHelp customers achieve success by leading the technical and product sale, recommending best-practice solutions, and guiding them on how to use Twilio’s APIs.\n\nEstablish yourself as a trusted advisor to our customers, by taking the lead on understanding customer technical pains through discovery in order to design, demonstrate, and present innovative solutions that solve business challenges.\n\nBuild and present highly interactive, complex and engaging customer product demonstrations to help showcase the capabilities of Twilio’s Communications Products, while effectively forming strong customer relationships with both technical and nontechnical stakeholders\n\nBe Hands-on, high-energy, passionate, and a creative problem solver, equipped with the knowledge of how to get things done and ability to lead others to success.\n\nTake the initiative to identify and solve problems - both for the customer and within the organization as we grow\n\nContribute to the broader Twilio Presales Engineering community through knowledge sharing, constructing demonstration materials, and creating reusable presentations\n\nMentor less experienced Presales Engineers\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n8+ years pre-sales experience selling complex, technical products or 10+ years of professional experience supporting technical products coupled with customer facing experience, particularly in delivery or consulting\n\nExcellent communicator and presenter able to gain audience confidence\n\nAn engaging storyteller - you can gain audience confidence and communicate complex topics to multiple levels of audience.\n\nAbility to build a deep understanding of a customer’s communications needs and guide them to a technical solution\n\nPrevious software development experience or working knowledge in one or more of the following areas:\n\nBackend (Java, C#, Node.js, Python, PHP)\n\nWeb development (JavaScript, HTML/CSS, frontend frameworks - React, Vue.js, Angular)\n\nExperience building with REST APIs\n\nPrevious experience in Telecom, SIP, Contact Center, or Security .\n\nExperience with sales methodologies\n\nBachelor’s and/or Master’s degree in a technical discipline (Engineering, Mathematics, Computer Science) or equivalent practical experience\n\nDesired:\n\nFamiliarity with cloud platforms (Amazon Web Services, Google Cloud, Microsoft Azure) and cloud application architecture.\n\nExperience working with customers in the DACH region\n\nProficient German speaker\n\nLocation\n\nThis role will be remote and based in the UK, Ireland or Spain\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 35% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Presales Engineer for our EMEA team.\n\nAbout the job\n\nThis position is needed to deliver the technical win and product fit to our customers across Central Europe. A Twilio Presales Engineer is an experienced engineer who builds customer trust in Twilio’s Customer Engagement Platform, resulting in customer success at our largest, most strategic accounts. The Presales Engineer leads the technical pre-sales relationship, proposes technical architectures, demonstrates the business value of the Twilio platform, anticipates concerns, and provides creative solutions to our customers' most complex communications and customer engagement challenges and needs.\n\nThe Twilio Presales Engineer is both highly technical and a skilled executive relationship builder. They are comfortable showing an engaging communications experience to a CEO or sketching out a flow on a whiteboard with technical decision makers.\n\nResponsibilities\n\nIn this role, you’ll:\n\nWork alongside Twilio Strategic and New business Account Executives, other Twilio Presales Engineers, Professional Services and Twilio Partners as needed through the sales process, to strategise and plan for deal success.\n\nTake part alongside Account Executives in qualification, discovery, demonstrations, Proof-of-Concept, RFP response, design documentation, technical presentations and enablement sessions during the sales cycle.\n\nDevelop subject matter expertise on the customer needs and requirements, and Twilio’s best in class communications technology.\n\nLead technical discovery sessions with our customers to uncover their needs and challenges to articulate Twilio’s ability to enable their success and solve their challenges.\n\nBuild and present powerful and complex presentations and product demos to help showcase the capabilities of Twilio Communications Products\n\nSupport Key strategic Pilot and Proof-of-Concept implementations in our largest, most strategic Enterprise accounts across the EMEA region\n\nForm an understanding of a customers business and help solve problems they’ve identified as well as uncover areas of opportunity\n\nBuild trusted advisor relationships at the highest levels of our customers and present creative new solutions and architectures that enable and inspire innovation\n\nContribute to the wider Twilio Presales Engineer community by sharing knowledge, building demo assets and reusable presentations\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n5+ years pre-sales experience selling complex, technical products or 6+ years of professional experience supporting technical products coupled with customer facing experience, particularly in delivery or consulting\n\nExcellent communicator and presenter able to gain audience confidence\n\nAn engaging storyteller - you can gain audience confidence and communicate complex topics to multiple levels of audience.\n\nAbility to build a deep understanding of a customer’s communications needs and guide them to a technical solution\n\nPrevious software development experience or working knowledge in one or more of the following areas:\n\nBackend (Java, C#, Node.js, Python, PHP)\n\nWeb development (JavaScript, HTML/CSS, frontend frameworks - React, Vue.js, Angular)\n\nExperience building with REST APIs\n\nExperience with sales methodologies\n\nBachelor’s and/or Master’s degree in a technical discipline (Engineering, Mathematics, Computer Science) or equivalent practical experience\n\nDesired:\n\nProficiency in a Central European language (such as German, Dutch, or Polish) is a strong plus\n\nPrevious experience in Telecom, SIP, Contact Center, or Security is a plus\n\nFamiliarity with cloud platforms (Amazon Web Services, Google Cloud, Microsoft Azure) and cloud application architecture.\n\nExperience working with customers in Central Europe\n\nLocation\n\nThis role will be remote and based in the UK, Ireland or Spain\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 35% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote - Ireland"
+    "text": "Remote - United Kingdom"
    },
    {
     "source": "offices.name",
@@ -23,8 +34,8 @@
   "title": "Presales Engineer",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "ae4a8da98fa4e28d638fb47f0ff3c3eef0aac2f25697042cffbc5d30dbd6a680",
+ "content_changed_at": "2026-11-12T20:24:03.675870+00:00",
+ "content_hash": "4670bd1f65c66dd3cde7fb39dacbc45aa0a4d85e4af5dfe672fcd7028b1c6bda",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -42,16 +53,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote - Ireland",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.name",
       "quote": "Remote - United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      },
@@ -59,7 +62,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in the UK, Ireland or Spain",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      }
@@ -72,15 +75,15 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      },
      {
       "interpretation": null,
       "method": "description_section:*Required:",
-      "quote": "8+ years pre-sales experience selling complex, technical products or 10+ years of professional experience supporting technical products coupled with customer facing experience, particularly in delivery or consulting\nExcellent communicator and presenter able to gain audience confidence\nAn engaging storyteller - you can gain audience confidence and communicate complex topics to multiple levels of audience.\nAbility to build a deep understanding of a customer’s communications needs and guide them to a technical solution\nPrevious software development experience or working knowledge in one or more of the following areas:\nBackend (Java, C#, Node.js, Python, PHP)\nWeb development (JavaScript, HTML/CSS, frontend frameworks - React, Vue.js, Angular)\nExperience building with REST APIs\nPrevious experience in Telecom, SIP, Contact Center, or Security .\nExperience with sales methodologies\nBachelor’s and/or Master’s degree in a technical discipline (Engineering, Mathematics, Computer Science) or equivalent practical experience",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "5+ years pre-sales experience selling complex, technical products or 6+ years of professional experience supporting technical products coupled with customer facing experience, particularly in delivery or consulting\nExcellent communicator and presenter able to gain audience confidence\nAn engaging storyteller - you can gain audience confidence and communicate complex topics to multiple levels of audience.\nAbility to build a deep understanding of a customer’s communications needs and guide them to a technical solution\nPrevious software development experience or working knowledge in one or more of the following areas:\nBackend (Java, C#, Node.js, Python, PHP)\nWeb development (JavaScript, HTML/CSS, frontend frameworks - React, Vue.js, Angular)\nExperience building with REST APIs\nExperience with sales methodologies\nBachelor’s and/or Master’s degree in a technical discipline (Engineering, Mathematics, Computer Science) or equivalent practical experience",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      }
@@ -92,8 +95,8 @@
      {
       "interpretation": null,
       "method": "description_section:Desired:",
-      "quote": "Familiarity with cloud platforms (Amazon Web Services, Google Cloud, Microsoft Azure) and cloud application architecture.\nExperience working with customers in the DACH region\nProficient German speaker",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "quote": "Proficiency in a Central European language (such as German, Dutch, or Polish) is a strong plus\nPrevious experience in Telecom, SIP, Contact Center, or Security is a plus\nFamiliarity with cloud platforms (Amazon Web Services, Google Cloud, Microsoft Azure) and cloud application architecture.\nExperience working with customers in Central Europe",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      }
@@ -105,16 +108,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote - Ireland",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
       "quote": "Remote - United Kingdom",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8157509"
      }

@@ -5,15 +5,22 @@
   "state": "listed"
  },
  "board": "avathon",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-12T20:24:03.675870+00:00",
+   "fields": [
+    "locations",
+    "title"
+   ],
+   "from_hash": "cef72174bfaaf7fee3edcdea80e675d517e4eb7b9ec389f6b88c1f1b31eda935",
+   "kind": "content_changed",
+   "to_hash": "790527797209390eca0dec1d8194846a0c6e996643b7fbe882833c27c2c6aa01"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "Who We Are & Why Join Us\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries -- energy, mining, manufacturing, aerospace, defense, and logistics -- accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management. With capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nCutting-Edge AI Innovation -- Join a team at the forefront of AI, developing groundbreaking solutions that shape the future. High-Growth Environment -- Thrive in a fast-scaling startup where agility, collaboration, and rapid professional growth are the norm. Meaningful Impact -- Work on AI-driven projects that drive real change across industries and improve lives.\n\nLearn more at: avathon.com\n\nAbout Avathon\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries — energy, mining, manufacturing, aerospace, defense, and logistics — accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management.\n\nWith capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nAbout the Role\n\nThe Forward Deployed Design Lead — PLM is embedded directly at customer sites as the primary experience and implementation owner for Avathon's Product Lifecycle Management deployments. You live at the intersection of PLM domain knowledge and experience design, responsible for configuring, implementing, and continuously improving how engineering teams, manufacturing planners, and quality engineers interact with Avathon's AI layer across their PLM environment.\n\nYou will spend Monday through Thursday working alongside CAD engineers, PLM administrators, and manufacturing process owners — mapping BOM workflows, configuring integrations with PLM and ERP systems, designing the screens and workflows users will rely on daily, and driving adoption from go-live through steady-state operations. Fridays are typically remote for synthesis, documentation, and cross-team collaboration.\n\nKey Responsibilities\n\nPLM Implementation & Configuration\n\nOwn end-to-end implementation of Avathon's AI platform within customer PLM environments — configuring product structure hierarchies, BOM variants, change workflow rules, and AI-enriched analytics views to match each customer's engineering and manufacturing context\n\nLead functional configuration of PLM-adjacent modules: engineering change order (ECO) tracking, eBOM/mBOM/sBOM linkage, part master data enrichment, effectivity management, and configuration control workflows aligned to customer standards\n\nSet up and validate integrations between Avathon's platform and customer PLM systems (Siemens Teamcenter, PTC Windchill, Dassault 3DEXPERIENCE, SAP PLM, Oracle Agile PLM) — ensuring BOM data, change notifications, and lifecycle state transitions flow accurately and traceably\n\nConfigure data pipelines from CAD/PDM sources and ERP systems — validating part metadata extraction, revision mapping, and BOM hand-off logic in live engineering environments\n\nConduct go-live readiness checks — verifying integration health, data completeness, user access, and workflow configuration before each deployment milestone\n\nExperience Design & Workflow Mapping\n\nLead onsite discovery and process mapping sessions — working directly with PLM administrators, CAD engineers, manufacturing engineers, and IT architects to document current-state workflows and define the future-state experience on Avathon's platform\n\nProduce implementation-grade design artifacts: annotated screen flows, configured BOM view layouts, change workflow diagrams, alert routing specs, and role-based dashboard definitions — directly actionable by the engineering team without further interpretation\n\nDesign and validate end-user interfaces within Avathon's PLM-adjacent surfaces: BOM comparison views, engineering change dashboards, digital thread navigation, and AI-driven part similarity and anomaly detection screens\n\nFacilitate working sessions with engineering and manufacturing stakeholders to validate designs against real workflow scenarios — iterating in real time based on user feedback before configuration is locked\n\nEnsure designs reflect the operational realities of PLM users: structured review cycles, multi-discipline concurrency, cross-site data sharing, and the precision demands of engineering documentation and compliance\n\nUser Adoption & Change Management\n\nDesign and execute role-specific onboarding programs — building training plans, hands-on exercises, quick-reference guides, and SOPs tailored to how each PLM user group (PLM administrator, design engineer, manufacturing planner, quality engineer, change board member) will use Avathon daily\n\nConduct live training sessions and hands-on working sessions at client sites — coaching engineering teams through new AI-augmented change management and BOM analytics capabilities with the domain credibility to earn their trust\n\nIdentify adoption barriers early — distrust of AI-generated insights, workflow disruption, data quality concerns — and develop targeted interventions in partnership with client PLM leads and process owners\n\nTrack adoption metrics post-go-live (active users, change workflow utilization, BOM accuracy rates, AI recommendation acceptance) and use data to drive continuous improvement sprints with the client\n\nServe as the primary point of contact for end-user questions, configuration requests, and workflow adjustments during hypercare — escalating to engineering only when platform-level changes are required\n\nClient Engagement & Delivery\n\nAct as the day-to-day client contact for all design, configuration, and adoption activities — building trusted working relationships with engineering leads, PLM system owners, and IT integration teams\n\nFacilitate weekly client working sessions, design reviews, and sprint demos that keep stakeholders aligned, engaged, and confident in the deployment's progress\n\nMaintain implementation documentation — configuration logs, integration specs, training materials, and acceptance test records — that serve as the client's operational handbook post go-live\n\nCapture PLM workflow patterns, integration approaches, and configuration best practices from each engagement and contribute them to Avathon's delivery playbooks, accelerating future PLM implementations\n\nIdentify opportunities to expand Avathon's footprint within accounts — additional PLM modules, new user populations such as supply chain or service engineering, or adjacent use cases in quality and manufacturing — and surface them to the engagement director\n\nPLM Platform Proficiency\n\nCandidates should have hands-on implementation or configuration experience with one or more enterprise PLM platforms — such as Siemens Teamcenter, PTC Windchill, Dassault Systèmes 3DEXPERIENCE/ENOVIA, SAP PLM, or Oracle Agile PLM — as well as familiarity with mid-market and cloud-native solutions including Aras Innovator, Arena PLM, Autodesk Vault, or Propel PLM.\n\nExperience integrating PLM environments with adjacent systems — ERP platforms (SAP S/4HANA, Oracle ERP Cloud, Microsoft Dynamics 365), CAD tools (Siemens NX, PTC Creo, CATIA, SolidWorks), MES execution systems, and quality management workflows (FMEA, APQP, PPAP, CAPA) — is strongly valued.\n\nPreferred Qualifications\n\n6+ years of experience in PLM implementation, industrial systems delivery, or a UX/design role embedded in client-facing delivery — with hands-on configuration and deployment ownership across one or more major PLM platforms\n\nDeep functional knowledge of PLM processes: BOM management (eBOM/mBOM/sBOM), engineering change management (ECR/ECO/ECN), product configuration, effectivity management, and revision control\n\nProven ability to map as-is PLM workflows, facilitate cross-functional design sessions with engineering and manufacturing stakeholders, and produce implementation-ready specifications\n\nStrong UX and design execution skills — able to produce annotated wireframes, workflow diagrams, and dashboard layouts that engineering teams can build directly from (Figma preferred)\n\nExperience designing and delivering role-based training and onboarding programs for PLM users in manufacturing, aerospace, automotive, or defense environments — including hands-on working sessions\n\nFamiliarity with digital thread concepts — understanding how product data flows from engineering design through manufacturing, quality, maintenance, and end-of-life\n\nExperience with MBSE methodologies (SysML, Cameo, Rhapsody) is a plus, particularly for aerospace and defense engagements\n\nComfort with agile delivery rhythms: sprint planning, backlog grooming, and iterating rapidly based on user feedback in live client environments\n\nExcellent written communication — able to produce configuration documentation, integration specs, and training guides that engineering teams with varying technical backgrounds can follow independently\n\nQualifications\n\nBachelor's degree in Engineering, Computer Science, Industrial Design, or a related technical field\n\nExperience working in or closely with industrial engineering environments — manufacturing, aerospace, automotive, energy, or defense — is highly valued\n\nWillingness and ability to travel up to 80%; based in Pleasanton, CA or Austin, TX\n\nMust be authorized to work in the United States without current or future company sponsorship\n\nCompensation & Benefits\n\nCalifornia Base Salary: $170,000 - $200,000\n\nEquity in the form of stock options\n\nComprehensive health, dental, and vision coverage\n\n401(k) participation\n\nGenerous PTO and company holidays\n\nAll travel expenses covered per Avathon policy\n\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\n\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
   "locations": [
-   {
-    "source": "location.name",
-    "text": "Austin, Texas, United States"
-   },
    {
     "source": "location.name",
     "text": "Pleasanton, California, United States"
@@ -28,11 +35,11 @@
    }
   ],
   "published": "2026-09-23T11:47:59-04:00",
-  "title": "Forward Deployed Design Lead — Product Lifecycle Management",
+  "title": "Forward Deployed Design Lead — Product Lifecycle Management (PLM)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-31T00:48:39.757986+00:00",
- "content_hash": "cef72174bfaaf7fee3edcdea80e675d517e4eb7b9ec389f6b88c1f1b31eda935",
+ "content_changed_at": "2026-11-12T20:24:03.675870+00:00",
+ "content_hash": "790527797209390eca0dec1d8194846a0c6e996643b7fbe882833c27c2c6aa01",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -60,7 +67,7 @@
       },
       "method": "description_section:Compensation & Benefits",
       "quote": "California Base Salary: $170,000 - $200,000\nEquity in the form of stock options\nComprehensive health, dental, and vision coverage\n401(k) participation\nGenerous PTO and company holidays\nAll travel expenses covered per Avathon policy\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -76,16 +83,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Austin, Texas, United States",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
       "quote": "Pleasanton, California, United States",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      },
@@ -93,7 +92,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Pleasanton, CA (HQ)",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -106,7 +105,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Bachelor's degree in Engineering, Computer Science, Industrial Design, or a related technical field\nExperience working in or closely with industrial engineering environments — manufacturing, aerospace, automotive, energy, or defense — is highly valued\nWillingness and ability to travel up to 80%; based in Pleasanton, CA or Austin, TX\nMust be authorized to work in the United States without current or future company sponsorship",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -119,7 +118,7 @@
       "interpretation": null,
       "method": "description_section:Preferred Qualifications",
       "quote": "6+ years of experience in PLM implementation, industrial systems delivery, or a UX/design role embedded in client-facing delivery — with hands-on configuration and deployment ownership across one or more major PLM platforms\nDeep functional knowledge of PLM processes: BOM management (eBOM/mBOM/sBOM), engineering change management (ECR/ECO/ECN), product configuration, effectivity management, and revision control\nProven ability to map as-is PLM workflows, facilitate cross-functional design sessions with engineering and manufacturing stakeholders, and produce implementation-ready specifications\nStrong UX and design execution skills — able to produce annotated wireframes, workflow diagrams, and dashboard layouts that engineering teams can build directly from (Figma preferred)\nExperience designing and delivering role-based training and onboarding programs for PLM users in manufacturing, aerospace, automotive, or defense environments — including hands-on working sessions\nFamiliarity with digital thread concepts — understanding how product data flows from engineering design through manufacturing, quality, maintenance, and end-of-life\nExperience with MBSE methodologies (SysML, Cameo, Rhapsody) is a plus, particularly for aerospace and defense engagements\nComfort with agile delivery rhythms: sprint planning, backlog grooming, and iterating rapidly based on user feedback in live client environments\nExcellent written communication — able to produce configuration documentation, integration specs, and training guides that engineering teams with varying technical backgrounds can follow independently",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
