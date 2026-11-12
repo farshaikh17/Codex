@@ -359,8 +359,10 @@ def legacy_rows(cands, local=None, page=300, per_candidate=1000):
             part = d1(f"""SELECT q.candidate_id, q.job_id, 0 AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location,
                 j.description, j.workplace_type, s.score_breakdown, j.provenance, j.source_adapter, 1 AS legacy
               FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
-              WHERE q.candidate_id = {sql_str(cid)} AND q.job_id > {sql_str(last)} AND j.is_active = 1 AND q.manual_override_status IS NULL AND q.qualification_status = 'NEEDS_REVIEW'
-                AND COALESCE(s.overall_score, 0) = 0 AND (s.score_breakdown IS NULL OR s.score_breakdown NOT LIKE '%preliminary%')
+              WHERE q.candidate_id = {sql_str(cid)} AND q.job_id > {sql_str(last)} AND j.is_active = 1 AND q.manual_override_status IS NULL
+                AND (s.score_breakdown IS NULL OR s.score_breakdown NOT LIKE '%preliminary%')
+                AND ((q.qualification_status = 'NEEDS_REVIEW' AND COALESCE(s.overall_score, 0) = 0)
+                     OR q.qualification_status IN ('READY', 'READY_HIGH', 'STRETCH_READY'))   -- first-import shortlist rows: set by the old engine, never re-checked
                 AND COALESCE(q.qualification_reason, '') NOT LIKE '[GITHUB_COLLECTOR] Unassessed%'
                 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
               ORDER BY q.job_id LIMIT {int(min(page, per_candidate - taken))}""", local)

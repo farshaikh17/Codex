@@ -52,7 +52,7 @@ class Liveness(unittest.TestCase):
         self.assertEqual(sorted(res['dead']), ['b', 'd']); self.assertEqual(res['alive'], ['a']); self.assertEqual(res['unknown'], 1)
         db = sqlite3.connect(':memory:')
         db.executescript("""CREATE TABLE jobs(id TEXT PRIMARY KEY, is_active INT, expired_at TEXT, last_verified_at TEXT);
-          CREATE TABLE applications(job_id TEXT); CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
+          CREATE TABLE applications(job_id TEXT); CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
           CREATE TABLE cache_state(id INT, generation INT); INSERT INTO cache_state VALUES (1, 5);
           INSERT INTO jobs(id, is_active) VALUES ('a',1),('b',1),('c',1),('d',1);
           INSERT INTO applications VALUES ('d');""")
@@ -68,30 +68,50 @@ class Liveness(unittest.TestCase):
         db.executescript("""
           CREATE TABLE jobs(id TEXT PRIMARY KEY, is_active INT, expired_at TEXT, last_verified_at TEXT);
           CREATE TABLE applications(job_id TEXT);
-          CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
+          CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
           CREATE TABLE cache_state(id INT, generation INT);
           INSERT INTO cache_state VALUES (1, 0);
-          INSERT INTO jobs(id,is_active) VALUES ('ready',1),('stretch',1),('manual',1),('undecided',1);
-          INSERT INTO candidate_qualifications VALUES
-            ('ready',NULL,'NEEDS_REVIEW'), ('ready',NULL,'READY'),
-            ('stretch',NULL,'STRETCH_READY'), ('manual','HOLD','NEEDS_REVIEW'),
-            ('undecided',NULL,'NEEDS_REVIEW');
+          INSERT INTO jobs(id,is_active) VALUES ('ready',1),('stretch',1),('manual',1),('undecided',1),('auto',1),('auto_manual',1);
+          INSERT INTO candidate_qualifications(job_id, manual_override_status, qualification_status, qualification_reason) VALUES
+            ('ready',NULL,'NEEDS_REVIEW',NULL), ('ready',NULL,'READY','Strongest Fit verified match (61%)'),
+            ('stretch',NULL,'STRETCH_READY',NULL), ('manual','HOLD','NEEDS_REVIEW',NULL),
+            ('undecided',NULL,'NEEDS_REVIEW',NULL),
+            ('auto',NULL,'READY','Shortlisted automatically. Cloud discovery match.'), ('auto',NULL,'STRETCH_READY','Shortlisted automatically. x'),
+            ('auto_manual','READY','READY','Shortlisted automatically. x');
         """)
-        db.executescript(liveness.to_sql({'dead':['ready','stretch','manual','undecided'], 'alive':[], 'unknown':0}))
-        self.assertEqual(dict(db.execute('SELECT id,is_active FROM jobs')), {'ready':1,'stretch':1,'manual':1,'undecided':0})
+        db.executescript(liveness.to_sql({'dead':['ready','stretch','manual','undecided','auto','auto_manual'], 'alive':[], 'unknown':0}))
+        # a row the screen shortlisted by itself is not a decision: its dead posting closes. One a person then confirmed stays.
+        self.assertEqual(dict(db.execute('SELECT id,is_active FROM jobs')), {'ready':1,'stretch':1,'manual':1,'undecided':0,'auto':0,'auto_manual':1})
 
     def test_export_uses_source_when_application_url_is_placeholder(self):
         db = sqlite3.connect(':memory:')
         db.executescript("""
           CREATE TABLE jobs(id TEXT PRIMARY KEY, original_posting_url TEXT, source_url TEXT, is_active INT, discovered_at TEXT);
           CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, overall_score INT);
-          CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT);
+          CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
           CREATE TABLE applications(job_id TEXT);
           INSERT INTO jobs VALUES ('j','nan','https://example.com/job',1,'2026-11-09');
           INSERT INTO candidate_job_scores VALUES ('farhan','j',80);
-          INSERT INTO candidate_qualifications VALUES ('farhan','j',NULL,'NEEDS_REVIEW');
+          INSERT INTO candidate_qualifications VALUES ('farhan','j',NULL,'NEEDS_REVIEW',NULL);
         """)
         self.assertEqual(db.execute(liveness.EXPORT_SQL).fetchall(), [('j','https://example.com/job')])
+
+    def test_export_checks_automatic_shortlist_first_and_never_a_decided_row(self):
+        db = sqlite3.connect(':memory:')
+        db.executescript("""
+          CREATE TABLE jobs(id TEXT PRIMARY KEY, original_posting_url TEXT, source_url TEXT, is_active INT, discovered_at TEXT);
+          CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, overall_score INT);
+          CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
+          CREATE TABLE applications(job_id TEXT);
+          INSERT INTO jobs VALUES ('review',NULL,'https://example.com/1',1,'2026-11-09'),('auto',NULL,'https://example.com/2',1,'2026-11-09'),
+            ('import',NULL,'https://example.com/3',1,'2026-11-09'),('person',NULL,'https://example.com/4',1,'2026-11-09');
+          INSERT INTO candidate_job_scores VALUES ('farhan','review',95),('farhan','auto',70),('farhan','import',61),('farhan','person',80);
+          INSERT INTO candidate_qualifications VALUES ('farhan','review',NULL,'NEEDS_REVIEW',NULL),
+            ('farhan','auto',NULL,'READY','Shortlisted automatically. Cloud discovery match.'),
+            ('farhan','import',NULL,'READY','Strongest Fit verified match (61%)'),
+            ('farhan','person','READY','READY','Shortlisted automatically. x');
+        """)
+        self.assertEqual([r[0] for r in db.execute(liveness.EXPORT_SQL).fetchall()], ['auto', 'review'])
 
 
 if __name__ == '__main__':

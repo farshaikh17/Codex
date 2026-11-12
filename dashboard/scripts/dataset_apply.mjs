@@ -199,6 +199,9 @@ out.push(`UPDATE jobs SET workplace_type = 'UNKNOWN' WHERE source_adapter = 'wor
 // A legacy row: undecided, score 0, never scored by the current screen (see legacy_rows in engine/dataset_discovery.py). It gets what a new row gets: the
 // screen's status, lane and score. Guards, repeated in every statement: no override, still NEEDS_REVIEW, no application, and still unscored.
 // A stored eligibility other than UNKNOWN was verified by an earlier review and is kept; only an UNKNOWN one is replaced.
+// From which buckets a first-import row may be re-screened: undecided ones, and first-import Ready / Stretch rows (set by the old engine, not by a person:
+// a person's decision carries a manual override and is excluded by every guard).
+const LEGACY_FROM = `'NEEDS_REVIEW','READY','READY_HIGH','STRETCH_READY'`;
 function rescreenLegacy(row, r) {
   const c = q(row.candidate_id), j = q(row.job_id);
   if (row.provenance === 'PUBLIC_FEED_UNVERIFIED') {   // same treatment as a job-board posting in discovery
@@ -213,19 +216,19 @@ function rescreenLegacy(row, r) {
   // 1. the score, only while the row is still undecided and unscored
   out.push(`INSERT INTO candidate_job_scores(candidate_id, job_id, overall_score, skill_score, role_score, strategy_lane, score_breakdown, calculated_at)
     SELECT ${c}, ${j}, ${q(r.score)}, ${q(Math.min(100, r.skills.length * 20))}, ${roleMatched ? 70 : 0}, ${q(r.lane)}, ${q(bd)}, ${q(now)}
-    WHERE EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = ${c} AND x.job_id = ${j} AND x.manual_override_status IS NULL AND x.qualification_status = 'NEEDS_REVIEW')
+    WHERE EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = ${c} AND x.job_id = ${j} AND x.manual_override_status IS NULL AND x.qualification_status IN (${LEGACY_FROM}))
       AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${c} AND a.job_id = ${j})
     ON CONFLICT(candidate_id, job_id) DO UPDATE SET overall_score = excluded.overall_score, skill_score = excluded.skill_score, role_score = excluded.role_score,
       strategy_lane = excluded.strategy_lane, score_breakdown = excluded.score_breakdown, calculated_at = excluded.calculated_at
-    WHERE candidate_job_scores.overall_score = 0 AND (candidate_job_scores.score_breakdown IS NULL OR candidate_job_scores.score_breakdown NOT LIKE '%preliminary%');`);
+    WHERE candidate_job_scores.score_breakdown IS NULL OR candidate_job_scores.score_breakdown NOT LIKE '%preliminary%';`);
   // 2. the qualification, only if statement 1 really wrote this row's score just now
   const wrote = `EXISTS (SELECT 1 FROM candidate_job_scores s WHERE s.candidate_id = candidate_qualifications.candidate_id AND s.job_id = candidate_qualifications.job_id
       AND s.calculated_at = ${q(now)} AND s.score_breakdown LIKE '%legacy_rescreen%')`;
-  const guard = `candidate_id = ${c} AND job_id = ${j} AND manual_override_status IS NULL AND qualification_status = 'NEEDS_REVIEW' AND ${noApp('candidate_qualifications')} AND ${wrote}`;
+  const guard = `candidate_id = ${c} AND job_id = ${j} AND manual_override_status IS NULL AND qualification_status IN (${LEGACY_FROM}) AND ${noApp('candidate_qualifications')} AND ${wrote}`;
   if (r.status !== 'NEEDS_REVIEW' || fallback !== 'NEEDS_REVIEW') out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
-    SELECT candidate_id, job_id, 'NEEDS_REVIEW', CASE WHEN eligibility_status = 'UNKNOWN' THEN ${q(r.status)} ELSE ${q(r.status === 'INELIGIBLE' ? fallback : r.status)} END,
+    SELECT candidate_id, job_id, qualification_status, CASE WHEN eligibility_status = 'UNKNOWN' THEN ${q(r.status)} ELSE ${q(r.status === 'INELIGIBLE' ? fallback : r.status)} END,
       'First-import row screened with the current rules', 'discovery' FROM candidate_qualifications
-    WHERE ${guard} AND CASE WHEN eligibility_status = 'UNKNOWN' THEN ${q(r.status)} ELSE ${q(r.status === 'INELIGIBLE' ? fallback : r.status)} END <> 'NEEDS_REVIEW';`);
+    WHERE ${guard} AND CASE WHEN eligibility_status = 'UNKNOWN' THEN ${q(r.status)} ELSE ${q(r.status === 'INELIGIBLE' ? fallback : r.status)} END <> qualification_status;`);
   out.push(`UPDATE candidate_qualifications SET
       qualification_status = CASE WHEN eligibility_status = 'UNKNOWN' THEN ${q(r.status)} ELSE ${q(r.status === 'INELIGIBLE' ? fallback : r.status)} END,
       strategy_lane = ${q(r.lane)}, qualification_reason = ${q(r.qualification_reason)}, last_reverified_at = ${q(now)},
@@ -274,6 +277,53 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
       SELECT candidate_id, job_id, 'NEEDS_REVIEW', 'HOLD', 'Outside the target role family under the current rules', 'discovery' FROM candidate_qualifications WHERE ${where};`);
     out.push(`UPDATE candidate_qualifications SET qualification_status = 'HOLD', last_reverified_at = ${q(now)} WHERE ${where};`);
+  }
+}
+
+// ---- Automatic shortlist (owner decision 2026-11-12) -----------------------------------------------------------------------------------
+// Until now only a person with the operator key could mark a job Ready, and nobody had the key, so Ready was three rows from the first import.
+// The screen now shortlists by itself, on what is stored after this run's writes:
+//   READY          score >= the person's threshold, eligibility confirmed (ELIGIBLE)
+//   STRETCH_READY  score >= threshold with eligibility still to confirm (UNKNOWN), or ELIGIBLE and up to 10 points below the threshold
+// and in both cases: scored under the current rules (profile_v8), at least one profile skill named in the posting (a title match alone is not enough),
+// the posting active and verified open in the last 4 days.
+// At most 25 of each per person, best score first. A shortlisted row is marked by its reason ("Shortlisted automatically. ...") so that it can be told
+// from a person's decision; it goes back to "to review" when it stops qualifying. Never touched: an override, an application, a row a person set.
+{
+  const ids = [...byId.keys()].map(q).join(',');
+  const MARK = 'Shortlisted automatically. ';
+  const since = new Date(Date.parse(now) - 4 * 86400000).toISOString();
+  const free = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
+  const base = `FROM candidate_qualifications q JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
+      JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id
+    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND j.last_verified_at >= ${q(since)} AND s.score_breakdown LIKE '%"profile_v8":true%' AND s.skill_score > 0`;
+  const fitsReady = `s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'ELIGIBLE'`;
+  const fitsStretch = `((s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'UNKNOWN') OR (q.eligibility_status = 'ELIGIBLE' AND s.overall_score >= c.qualification_threshold - 10 AND s.overall_score < c.qualification_threshold))`;
+  const auto = (alias) => `${alias}.qualification_reason LIKE ${q(MARK + '%')}`;
+  const tiers = [['READY', fitsReady], ['STRETCH_READY', fitsStretch]];
+  // --no-shortlist: the two-hourly watchlist run skips this step (it reads every undecided row; once a day is enough and keeps D1 reads low).
+  if (ids && !args.includes('--no-shortlist')) {
+    // 1. A shortlisted row that no longer qualifies for its tier goes back to "to review" (its original reason is restored).
+    for (const [tier, fits] of tiers) {
+      const gone = `candidate_id IN (${ids}) AND qualification_status = ${q(tier)} AND ${auto('candidate_qualifications')} AND manual_override_status IS NULL
+        AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id)
+        AND NOT EXISTS (SELECT 1 ${base} AND q.candidate_id = candidate_qualifications.candidate_id AND q.job_id = candidate_qualifications.job_id AND ${fits})`;
+      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+        SELECT candidate_id, job_id, ${q(tier)}, 'NEEDS_REVIEW', 'No longer meets the automatic shortlist rule', 'discovery' FROM candidate_qualifications WHERE ${gone};`);
+      out.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${gone};`);
+    }
+    // 2. The best qualifying rows of each tier are shortlisted, counting those already on it towards the 25.
+    for (const [tier, fits] of tiers) {
+      const pick = `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
+          SELECT q.candidate_id, q.job_id, q.qualification_status AS st, ROW_NUMBER() OVER (PARTITION BY q.candidate_id ORDER BY s.overall_score DESC, q.job_id) AS rk
+          ${base} AND ${fits} AND (q.qualification_status = 'NEEDS_REVIEW' OR (q.qualification_status = ${q(tier)} AND ${auto('q')}))
+        ) WHERE rk <= 25 AND st = 'NEEDS_REVIEW')`;
+      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+        SELECT candidate_id, job_id, 'NEEDS_REVIEW', ${q(tier)}, 'Shortlisted automatically by the screen', 'discovery' FROM candidate_qualifications
+        WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
+      out.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)}, qualification_reason = ${q(MARK)} || COALESCE(qualification_reason, ''), qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
+        WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
+    }
   }
 }
 

@@ -35,7 +35,9 @@ class LegacyRows(unittest.TestCase):
         self.add('d_scored', score=61, breakdown='{"old":1}')             # an earlier engine's real score: left alone
         self.add('e_override', override='NEEDS_REVIEW')
         self.add('f_applied', app=True)
-        self.add('g_ready', status='READY')
+        self.add('g_ready', status='READY', score=61, breakdown='{"old":1}')   # first-import Ready, never re-checked: exported
+        self.add('g2_auto', status='READY', score=70, breakdown='{"preliminary":true,"profile_v8":true}')   # shortlisted by the current screen: not legacy
+        self.add('g3_decided', status='READY', score=61, breakdown='{"old":1}', override='READY')            # a person's Ready: never
         self.add('h_collector', reason='[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.', score=0, breakdown='{"state":"UNASSESSED"}')
         self.add('i_closed', active=0)
         self.add('j_noreason', reason=None)                               # no stored reason: still a never-scored row, exported
@@ -45,7 +47,7 @@ class LegacyRows(unittest.TestCase):
             return [dict(r) for r in self.db.execute(sql).fetchall()]
         with mock.patch.object(dd, 'd1', d1):
             rows = dd.legacy_rows([C], page=1)        # page of 1: the paging by job id must still return every row once
-        self.assertEqual([r['job_id'] for r in rows], ['a_noscore', 'b_empty', 'j_noreason'])
+        self.assertEqual([r['job_id'] for r in rows], ['a_noscore', 'b_empty', 'g_ready', 'j_noreason'])
         self.assertTrue(all(r['legacy'] == 1 and r['description'] == 'text' and r['provenance'] == 'LIVE_PUBLIC' for r in rows))
         with mock.patch.object(dd, 'd1', d1):
             self.assertEqual(len(dd.legacy_rows([C], per_candidate=1)), 1, 'bounded per person per run')
