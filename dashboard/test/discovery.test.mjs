@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { seed } from './fixtures.mjs';
-import { VISA_UNLIKELY_PENALTY, evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
+import { VISA_UNLIKELY_CAP, evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 import { plan, SELECT_ROWS } from '../scripts/rescore_ranking_v2.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,7 +25,8 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
     assert.ok(avoidedTitle('farhan_shaikh', t), t);
   for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Support Operations Lead', 'Revenue Operations Analyst', 'Marketing Operations Manager'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), t);
-  assert.ok(!avoidedTitle('sana_ansari', 'Software Engineer'), "the avoid list is Farhan's only");
+  assert.ok(avoidedTitle('sana_ansari', 'Software Engineer') && !avoidedTitle('sana_ansari', 'Reliability Engineer'), "Sana's own list: software and IT-reliability titles only (owner review 2026-11-12)");
+  assert.ok(!avoidedTitle('sana_ansari', 'Implementation Manager'), 'Farhan\'s list is not applied to Sana');
 });
 
 test('ranking: a posting whose only stated location is outside India loses points for Farhan unless it supports remote work from India', () => {
@@ -38,12 +39,12 @@ test('ranking: a posting whose only stated location is outside India loses point
   assert.equal(india.eligibility, 'ELIGIBLE'); assert.ok(india.score >= us.score);
   assert.equal(us.eligibility, 'UNKNOWN', 'eligibility rules are not changed by the penalty');
   // Sana relocates anywhere: no foreign-location penalty, but an on-site role abroad needs a realistic route from India
-  // (the Gulf, or a sponsorship/relocation offer); otherwise it loses VISA_UNLIKELY_PENALTY (owner rule 2026-11-07)
+  // (the Gulf, or a visa sponsorship offer); otherwise its score is capped at VISA_UNLIKELY_CAP (owner rule 2026-11-07, cap since 2026-11-12)
   const sb = evaluate(sana, post('Reliability Engineer', 'Remote', 'Reliability and Plant Engineering role.'));
   const london = evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability and Plant Engineering role.'));
   const sponsored = evaluate(sana, post('Reliability Engineer', 'London, United Kingdom', 'Reliability and Plant Engineering role. Visa sponsorship available.'));
   const dubai = evaluate(sana, post('Reliability Engineer', 'Dubai, United Arab Emirates', 'Reliability and Plant Engineering role.'));
-  assert.equal(london.score, Math.max(0, sb.score - VISA_UNLIKELY_PENALTY)); assert.match(london.qualification_reason, /no visa sponsorship/);
+  assert.equal(london.score, Math.min(sb.score, VISA_UNLIKELY_CAP)); assert.match(london.qualification_reason, /no visa route from India/);
   assert.ok(sponsored.score >= sb.score, 'a sponsorship offer removes the penalty');
   assert.equal(dubai.score, sb.score, 'the Gulf is a normal route from India');
 });
@@ -56,7 +57,7 @@ test('avoid list: software/ML/security/test families always; finance/support/man
   for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Finance Systems Analyst',
     'Solutions Engineering Manager', 'Implementation Support Specialist', 'Payroll Implementation Specialist', 'Customer Support Operations Manager', 'Air Traffic Controller', 'Implementation Manager, Software Onboarding', 'Presre Lead'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), `${t} should not be capped`);
-  assert.ok(!avoidedTitle('sana_ansari', 'Software Engineer'));
+  assert.ok(!avoidedTitle('sana_ansari', 'Customer Support Manager'), 'Farhan\'s families are not applied to Sana');
 });
 test('foreign location: US/EU/other named places, U.S., bare US, state codes; never a place that also names India', () => {
   for (const l of ['Austin, TX', 'Plano, TX', 'Palo Alto, CA', 'London, United Kingdom', 'Remote - U.S.', 'U.S.', 'U.S. Remote', 'Remote - US', 'US Remote', 'Remote (US)', 'Remote, North America', 'Remote, Americas', 'Dubai, UAE', 'Singapore', 'Berlin, Germany'])
@@ -407,4 +408,45 @@ test('QA and test roles are on Farhan\'s avoid list', () => {
   for (const t of ['Jr. QA Automation (API) - Bangalore, India', 'QA Analyst', 'Senior Test Engineer', 'Quality Assurance Lead'])
     assert.ok(avoidedTitle('farhan_shaikh', t), t);
   assert.ok(!avoidedTitle('farhan_shaikh', 'Implementation Manager'));
+});
+
+test('top-100 review (12 Nov): US relocation is not a visa route, Gulf nationals-only roles are excluded, software reliability and technician posts rank low', () => {
+  const sa = { id: 'sana_ansari', primary_skills: JSON.stringify(['Breakdown Maintenance', 'Preventive Maintenance', 'Reliability', 'Root Cause Analysis']), total_years_experience: 9.2 };
+  const fa = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['Workflow Automation', 'Process Design', 'Technical Delivery']), total_years_experience: 9 };
+  const D = 'Lead breakdown maintenance and preventive maintenance; reliability and root cause analysis for the plant. 5+ years.';
+  const mk = (who, title, location, description = D, remote = false) => evaluate(who, { id: 'x', title, company: 'Acme', url: 'https://e.com/x', location, description, remote });
+  // a US on-site job that offers only relocation: not eligible-by-evidence, capped below the shortlist
+  const us = mk(sa, 'Maintenance Supervisor', 'Montgomery, AL, United States', D + ' Relocation assistance available.');
+  assert.equal(us.eligibility, 'UNKNOWN'); assert.ok(us.score <= VISA_UNLIKELY_CAP, String(us.score));
+  // the same with a real visa route stays a candidate
+  const visa = mk(sa, 'Maintenance Supervisor', 'Montgomery, AL, United States', D + ' Visa sponsorship available.');
+  assert.equal(visa.eligibility, 'ELIGIBLE'); assert.ok(visa.score > VISA_UNLIKELY_CAP);
+  // the Gulf keeps relocation as a route
+  assert.equal(mk(sa, 'Maintenance Engineer', 'Jubail, Saudi Arabia', D + ' Relocation provided.').eligibility, 'ELIGIBLE');
+  assert.ok(mk(sa, 'Maintenance Engineer', 'Al-Jubail, Saudi Arabia').score > VISA_UNLIKELY_CAP, 'the Gulf is not capped');
+  // reserved for nationals
+  assert.equal(mk(sa, 'Electrical Technician I(Saudi Nationals)', 'Jubail, Saudi Arabia').eligibility, 'INELIGIBLE');
+  assert.equal(mk(sa, 'Maintenance Engineer', 'Doha, Qatar', D + ' This role is open to Qatari nationals only.').eligibility, 'INELIGIBLE');
+  assert.notEqual(mk(sa, 'Maintenance Engineer', 'Doha, Qatar', D + ' We welcome Qatari nationals and expatriates.').eligibility, 'INELIGIBLE');
+  // plant reliability vs software / hardware-test reliability
+  const plant = mk(sa, 'Reliability Engineer', 'Pune, India');
+  for (const t of ['Senior Site Reliability Engineer (Night Shift)', 'Senior Hardware Test and Reliability Engineer', 'SRE Lead', 'DevOps Reliability Engineer'])
+    assert.ok(mk(sa, t, 'Pune, India').score < plant.score && mk(sa, t, 'Pune, India').score <= 40, t);
+  // remote only inside another region, form-style "Sponsorship Available: No", and IT security consultants
+  assert.ok(mk(sa, 'Reliability Engineer', 'Lakeville, MA', D, true).score <= VISA_UNLIKELY_CAP, 'remote within the US is not remote from India');
+  assert.ok(mk(sa, 'Technical Consultant - Water Treatment', 'Remote (Albania, Austria, Belgium, Germany)', D, true).score <= VISA_UNLIKELY_CAP);
+  assert.ok(mk(sa, 'Reliability Engineer', 'Remote - Worldwide', D + ' Worldwide remote work.', true).score > VISA_UNLIKELY_CAP, 'worldwide remote is fine');
+  const bv = mk(sa, 'Mechanical Commissioning Engineer', 'Lathrop, MO, US', D + ' Relocation eligible : No Full time/Part time : Full-Time Visa Sponsorship Available: No Why Black & Veatch?');
+  assert.equal(bv.eligibility, 'UNKNOWN'); assert.ok(bv.score <= VISA_UNLIKELY_CAP);
+  assert.ok(mk(sa, 'Power Systems Engineer (Energy) - Bicester', 'Oxford, GB, OX27 7LT').score <= VISA_UNLIKELY_CAP, 'GB is abroad');
+  assert.ok(mk(sa, 'Senior Technical Consultant - AI Security', 'Remote (India)', D, true).score <= 40, 'not her field');
+  // technician posts are below a 9-year engineer
+  assert.ok(mk(sa, 'Electrical Shift Technician – Facilities Operations', 'Sanand, India').score <= 40);
+  assert.ok(mk(sa, 'Maintenance Manager', 'Hosur, Tamil Nadu, India').score > 40);
+  // support tiers and plain associate titles are below a 9-year operator; associate director/manager are not
+  const R = 'Fully remote, India. Workflow automation, process design and technical delivery.';
+  assert.ok(mk(fa, 'L2 Cloud Operations Engineer (Azure & AWS)', 'Remote - India', R, true).score <= 40);
+  assert.ok(mk(fa, 'Business Operations Associate', 'Remote - India', R, true).score <= 40);
+  assert.ok(mk(fa, 'Associate Director, Business Operations', 'Remote - India', R, true).score > 40);
+  assert.ok(mk(fa, 'Implementation Manager', 'Remote - India', R, true).score > 40);
 });

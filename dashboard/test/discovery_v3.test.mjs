@@ -215,11 +215,11 @@ test('agency postings and language requirements lower the score and say so', asy
 });
 
 test('a UK employer on the sponsor register removes Sana\'s visa penalty; a repost is noted', async () => {
-  const { VISA_UNLIKELY_PENALTY } = await import('../worker/discovery.ts');
+  const { VISA_UNLIKELY_CAP } = await import('../worker/discovery.ts');
   const ctx = { ukSponsors: new Set([companyKey('Drax Group plc')]) };
   const plain = evaluate(sana, post({ title: 'Reliability Engineer', company: 'Other Co', location: 'Selby, United Kingdom', description: 'Plant reliability role.', remote: false }), ctx);
   const sponsor = evaluate(sana, post({ title: 'Reliability Engineer', company: 'Drax Group', location: 'Selby, United Kingdom', description: 'Plant reliability role.', remote: false }), ctx);
-  assert.equal(sponsor.score, plain.score + VISA_UNLIKELY_PENALTY); assert.match(sponsor.qualification_reason, /UK Skilled Worker sponsor licence/);
+  assert.ok(plain.score <= VISA_UNLIKELY_CAP && sponsor.score > plain.score, `${plain.score} / ${sponsor.score}`); assert.match(sponsor.qualification_reason, /UK Skilled Worker sponsor licence/);
   assert.match(evaluate(farhan, post({ repost: true })).qualification_reason, /Reposted/);
 });
 
@@ -281,7 +281,10 @@ test('"unable to provide visa sponsorship" is a denial, not a sponsorship offer 
   }
   // genuine offers still count
   assert.equal(mk('Visa sponsorship available for the right candidate.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
-  assert.equal(mk('Relocation assistance provided.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
+  // relocation alone is a visa route only in the Gulf (owner review 2026-11-12); elsewhere it is usually a move inside that country
+  assert.equal(mk('Relocation assistance provided.', 'Dubai, UAE').eligibility, 'ELIGIBLE');
+  assert.equal(mk('Relocation assistance provided.', 'Berlin, Germany').eligibility, 'UNKNOWN');
+  assert.match(mk('Relocation assistance provided.', 'Berlin, Germany').reason, /no visa route from India/);
   // a denial in one sentence does not hide an offer of a different kind in the next? it does not: ANY denial wins (documented rule)
   assert.notEqual(mk('We are unable to provide visa sponsorship. Relocation assistance provided.', 'Berlin, Germany').eligibility, 'ELIGIBLE');
 });
