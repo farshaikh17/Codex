@@ -474,3 +474,15 @@ test('ranking v3: a title naming a target role and a title at the candidate\'s l
   const noTargets = { ...fa, target_roles: null };
   assert.equal(mk('Automation Specialist', noTargets).score, mk('Solutions Engineer', noTargets).score, 'no stored targets: no bonus');
 });
+
+test('live shortlist review (12 Nov 22:00): HR-pay and travel operations are not Farhan\'s; trading-systems reliability is not Sana\'s', () => {
+  const fa = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['Workflow Automation', 'Process Design']), total_years_experience: 9 };
+  const sa = { id: 'sana_ansari', primary_skills: JSON.stringify(['Reliability', 'Root Cause Analysis']), total_years_experience: 9.2 };
+  const mk = (who, title, loc, d) => evaluate(who, { id: 'x', title, company: 'Acme', url: 'https://e.com/x', location: loc, description: d, remote: /remote/i.test(loc) });
+  const R = 'Fully remote, India. Workflow automation and process design.';
+  for (const t of ['Senior Manager, Total Rewards Operations', 'Travel Operations Manager | Remote', 'Benefits Operations Specialist', 'Payroll Operations Analyst'])
+    assert.ok(mk(fa, t, 'Remote - India', R).score <= 40, t);
+  assert.ok(mk(fa, 'Revenue Operations Manager', 'Remote - India', R).score > 40, 'RevOps stays');
+  assert.ok(mk(sa, 'Reliability Engineer II', 'Gurgaon, Haryana, India', 'Keep our low-latency trading infrastructure and Linux production systems reliable; root cause analysis.').score <= 40);
+  assert.ok(mk(sa, 'Reliability Engineer', 'Pune, India', 'Plant equipment reliability, rotating equipment and maintenance; root cause analysis.').score > 40, 'plant reliability stays');
+});
