@@ -90,7 +90,7 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(got[0]['company'], 'KBR'); self.assertEqual(got[0]['location'], 'Saudi Arabia, Rabigh')
         self.assertFalse(got[0]['is_remote']); self.assertTrue(got[1]['is_remote'])
         self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
-        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi'})
+        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M'})
 
     def test_smartrecruiters_reads_public_postings(self):
         page = {'content': [{'id': '7', 'name': 'Reliability Engineer', 'releasedDate': '2026-11-10T10:00:00.000Z',
