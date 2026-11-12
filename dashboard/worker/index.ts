@@ -206,13 +206,13 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   found_on: enumOf('ALL', 'EMPLOYER', 'JOB_SITES', 'BOARDS'),
   source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
   sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
-  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'),
+  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'), new_within: enumOf('1', '7'),
   limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
   search: (v) => /^[a-z0-9][a-z0-9 .+#-]{0,28}[a-z0-9.+#]$/i.test(v),
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
-  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'limit', 'min_score', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
+  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'limit', 'min_score', 'new_within', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
   [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
@@ -1416,6 +1416,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   if (payParam === undefined) return jsonResponse({ error: 'Unsupported pay_filter value.', detail: 'Unsupported pay_filter value.', allowed: ['ALL', 'PUBLISHED', 'UNPUBLISHED'] }, 400, corsHeaders(request, env));
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
+  // "New today" (owner plan 2026-11-12): found, or put on this person's list, in the last 1 or 7 days.
+  const newWithin = ({ '1': 1, '7': 7 } as Record<string, number>)[url.searchParams.get('new_within') || ''] || 0;
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
   const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10) || 50), isOperatorRequest(request) ? 1000 : 100);
   const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10) || 0);
@@ -1459,6 +1461,11 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (payParam) baseWhere += ` AND ${PAY_SQL[payParam]}`;
     // Same meaning as before: the job's latest application record, if any, is SAVED (or there is none).
     if (excludeApplied) baseWhere += ` AND ${NOT_APPLIED}`;
+    if (newWithin) {
+      const since = new Date(Date.now() - newWithin * 86400000).toISOString();
+      baseWhere += ` AND (julianday(j.discovered_at) >= julianday(?) OR julianday(q.qualified_at) >= julianday(?))`;
+      baseParams.push(since, since);
+    }
 
     // 1. Status counts over the base predicate (one query; the total below is derived from it)
     const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();

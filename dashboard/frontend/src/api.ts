@@ -225,6 +225,7 @@ export async function fetchJobs(params?: {
   sort_by?: string;
   exclude_applied?: boolean;
   exclude_dismissed?: boolean;
+  new_within?: number;
   show_historical?: boolean;
   india_remote?: string;
   farhan_fit?: string;
@@ -248,6 +249,7 @@ export async function fetchJobs(params?: {
   if (params?.source_adapter && params.source_adapter !== 'ALL') query.append('source_adapter', params.source_adapter);
   if (params?.qualification_status && params.qualification_status !== 'ALL') query.append('qualification_status', params.qualification_status);
   if (params?.sort_by) query.append('sort_by', params.sort_by);
+  if (params?.new_within) query.append('new_within', String(params.new_within));
   if (params?.exclude_applied !== undefined) query.append('exclude_applied', String(params.exclude_applied));
   if (params?.exclude_dismissed !== undefined) query.append('exclude_dismissed', String(params.exclude_dismissed));
   if (params?.show_historical !== undefined) query.append('show_historical', String(params.show_historical));
