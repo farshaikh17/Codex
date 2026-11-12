@@ -289,6 +289,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
 // the posting active and verified open in the last 4 days.
 // At most 25 of each per person, best score first. A shortlisted row is marked by its reason ("Shortlisted automatically. ...") so that it can be told
 // from a person's decision; it goes back to "to review" when it stops qualifying. Never touched: an override, an application, a row a person set.
+const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
 {
   const ids = [...byId.keys()].map(q).join(',');
   const MARK = 'Shortlisted automatically. ';
@@ -302,15 +303,17 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
   const auto = (alias) => `${alias}.qualification_reason LIKE ${q(MARK + '%')}`;
   const tiers = [['READY', fitsReady], ['STRETCH_READY', fitsStretch]];
   // --no-shortlist: the two-hourly watchlist run skips this step (it reads every undecided row; once a day is enough and keeps D1 reads low).
+  // --shortlist-out <file>: write this step to its own file, so the daily run can apply it after the "still open?" check has refreshed
+  // last_verified_at (otherwise a posting checked today waits a day to be shortlisted, and a posting closed today stays shortlisted a day).
   if (ids && !args.includes('--no-shortlist')) {
     // 1. A shortlisted row that no longer qualifies for its tier goes back to "to review" (its original reason is restored).
     for (const [tier, fits] of tiers) {
       const gone = `candidate_id IN (${ids}) AND qualification_status = ${q(tier)} AND ${auto('candidate_qualifications')} AND manual_override_status IS NULL
         AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id)
         AND NOT EXISTS (SELECT 1 ${base} AND q.candidate_id = candidate_qualifications.candidate_id AND q.job_id = candidate_qualifications.job_id AND ${fits})`;
-      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+      sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
         SELECT candidate_id, job_id, ${q(tier)}, 'NEEDS_REVIEW', 'No longer meets the automatic shortlist rule', 'discovery' FROM candidate_qualifications WHERE ${gone};`);
-      out.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${gone};`);
+      sl.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${gone};`);
     }
     // 2. The best qualifying rows of each tier are shortlisted, counting those already on it towards the 25.
     for (const [tier, fits] of tiers) {
@@ -318,16 +321,17 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
           SELECT q.candidate_id, q.job_id, q.qualification_status AS st, ROW_NUMBER() OVER (PARTITION BY q.candidate_id ORDER BY s.overall_score DESC, q.job_id) AS rk
           ${base} AND ${fits} AND (q.qualification_status = 'NEEDS_REVIEW' OR (q.qualification_status = ${q(tier)} AND ${auto('q')}))
         ) WHERE rk <= 25 AND st = 'NEEDS_REVIEW')`;
-      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+      sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
         SELECT candidate_id, job_id, 'NEEDS_REVIEW', ${q(tier)}, 'Shortlisted automatically by the screen', 'discovery' FROM candidate_qualifications
         WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
-      out.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)}, qualification_reason = ${q(MARK)} || COALESCE(qualification_reason, ''), qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
+      sl.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)}, qualification_reason = ${q(MARK)} || COALESCE(qualification_reason, ''), qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
         WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
     }
   }
 }
 
 fs.writeFileSync(opt('--out'), out.join('\n') + '\n');
+if (opt('--shortlist-out')) fs.writeFileSync(opt('--shortlist-out'), sl.length ? sl.join('\n') + '\nUPDATE cache_state SET generation = generation + 1 WHERE id = 1;\n' : '');
 fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.report.json', JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report));
 
