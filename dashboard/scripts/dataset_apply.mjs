@@ -257,6 +257,21 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
   }
 }
 
+// Consistency: a row whose own stored reason says it is outside the role family belongs in HOLD. A new row gets that from the screen; a re-scored row only had its
+// score and reason updated, so it stayed in "to review" with score 0 (field-service roles after Sana's rule was tightened). Same guards as everywhere:
+// no override, still NEEDS_REVIEW, no application. History first, while the row still matches.
+{
+  const ids = [...byId.keys()].map(q).join(',');
+  const where = `candidate_id IN (${ids}) AND qualification_status = 'NEEDS_REVIEW' AND manual_override_status IS NULL
+    AND qualification_reason LIKE 'Outside candidate target role family%'
+    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id)`;
+  if (ids) {
+    out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+      SELECT candidate_id, job_id, 'NEEDS_REVIEW', 'HOLD', 'Outside the target role family under the current rules', 'discovery' FROM candidate_qualifications WHERE ${where};`);
+    out.push(`UPDATE candidate_qualifications SET qualification_status = 'HOLD', last_reverified_at = ${q(now)} WHERE ${where};`);
+  }
+}
+
 fs.writeFileSync(opt('--out'), out.join('\n') + '\n');
 fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.report.json', JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report));

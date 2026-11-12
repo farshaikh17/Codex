@@ -231,3 +231,21 @@ test('first-import rows the current screen never scored are screened fully; deci
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' ORDER BY job_id`).all();
   assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L6:NEEDS_REVIEW>HOLD'], 'one history row per moved job, not repeated');
 });
+
+test('a row whose stored reason says it is outside the role family moves to Hold; decided and applied rows stay', () => {
+  const w = world(); const db = w.sqlite;
+  const OUT = 'Outside candidate target role family; retained for review.';
+  const add = (id, status, reason, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at) VALUES (?,?,?,?,?,1,?)`).run(id, 'Field Service Engineer', 'Acme', 'lever', 'https://x.example/' + id, '2026-11-01T00:00:00Z');
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?)`).run(S, id, status, reason, o.override || null);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, S, id);
+  };
+  add('o1', 'NEEDS_REVIEW', OUT); add('o2', 'NEEDS_REVIEW', OUT + ' On-site abroad with no visa sponsorship.');
+  add('o3', 'NEEDS_REVIEW', OUT, { override: 'NEEDS_REVIEW' }); add('o4', 'NEEDS_REVIEW', OUT, { app: true });
+  add('o5', 'NEEDS_REVIEW', 'Cloud discovery match. Full requirements, pay and experience require review before READY.'); add('o6', 'READY', OUT);
+  const { sql } = run(w.dir);
+  db.exec(sql); db.exec(sql);
+  const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE job_id LIKE 'o%'`).all().map((r) => [r.j, r.s]));
+  assert.deepEqual(st, { o1: 'HOLD', o2: 'HOLD', o3: 'NEEDS_REVIEW', o4: 'NEEDS_REVIEW', o5: 'NEEDS_REVIEW', o6: 'READY' });
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE new_status='HOLD' AND actor='discovery' AND job_id LIKE 'o%'`).get().c, 2, 'one history row each, not repeated');
+});
