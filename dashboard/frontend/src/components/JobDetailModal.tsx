@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isQuickScreen } from '../quickScreen';
-import { peopleSearchLinks, skillGaps } from '../jobHelpers';
-import { sourceWord } from './JobTable';
+import { peopleSearchLinks, skillGaps, isAutoShortlisted, withoutAutoMark } from '../jobHelpers';
+import { sourceWord, whyText } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
 import { submitJobFeedback, fetchJobFeedback, isOperatorAuthenticated, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
@@ -289,7 +289,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             </div>
 
             <p className="text-xs text-slate-700 mb-2 leading-relaxed">
-              <strong className="text-slate-900">Reason:</strong> {job.qualification_reason || 'Under review against qualification criteria.'}
+              <strong className="text-slate-900">Reason:</strong> {job.qualification_reason ? whyText(withoutAutoMark(job.qualification_reason)) : 'Under review against qualification criteria.'}
             </p>
 
             {job.manual_override_status && (
@@ -306,7 +306,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               {job.last_reverified_at && (
                 <span>Last reverified: {new Date(job.last_reverified_at).toLocaleTimeString()}</span>
               )}
-              <span className="ml-auto text-emerald-800 font-medium">Recorded qualification status</span>
+              <span className="ml-auto text-emerald-800 font-medium" data-testid="status-source">{!job.manual_override_status && isAutoShortlisted(job.qualification_reason) ? 'Shortlisted by the daily screen (moves back to To review if it stops qualifying)' : 'Recorded qualification status'}</span>
             </div>
           </div>
 

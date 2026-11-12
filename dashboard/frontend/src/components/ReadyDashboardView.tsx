@@ -24,6 +24,8 @@ import {
   Sparkles, 
   Globe2
 } from 'lucide-react';
+import { whyText } from './JobTable';
+import { isAutoShortlisted, withoutAutoMark } from '../jobHelpers';
 
 interface ReadyDashboardViewProps {
   candidateId: string;
@@ -606,6 +608,14 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                         </span>
                       )}
 
+                      {/* Set by the daily screen's shortlist rule, not by a person */}
+                      {!job.manual_override_status && isAutoShortlisted(job.qualification_reason) && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" data-testid="auto-shortlisted"
+                          title="The daily screen put this here: score at the threshold, posting checked open in the last 4 days. It moves back to To review when that stops being true.">
+                          Shortlisted by the screen
+                        </span>
+                      )}
+
                       {/* Manual Override Indicator */}
                       {job.manual_override_status && (
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
@@ -615,11 +625,10 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                       )}
                     </div>
 
-                    <h2 
-                      onClick={() => onSelectJob(job)}
-                      className="text-lg font-bold text-slate-900 cursor-pointer hover:text-emerald-700 transition-colors"
-                    >
-                      {job.title}
+                    <h2 className="text-lg font-bold text-slate-900">
+                      <button type="button" onClick={() => onSelectJob(job)} className="text-left hover:text-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded transition-colors">
+                        {job.title}
+                      </button>
                     </h2>
 
                     <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 mt-1">
@@ -632,7 +641,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                       )}
                       {job.salary_published && job.salary_min && job.salary_max && (
                         <span className="text-emerald-700 font-mono font-medium">
-                          ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()} {job.salary_currency}
+                          {job.salary_min.toLocaleString()} - {job.salary_max.toLocaleString()} {job.salary_currency}
                         </span>
                       )}
                       <span className="text-slate-400">
@@ -644,7 +653,7 @@ export const ReadyDashboardView: React.FC<ReadyDashboardViewProps> = ({ candidat
                     <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
                       <div className="flex items-start gap-1.5">
                         <span className="font-bold text-slate-700 shrink-0">Qualification Reason:</span>
-                        <span className="text-slate-600">{job.qualification_reason || 'Evaluated against qualification criteria.'}</span>
+                        <span className="text-slate-600">{job.qualification_reason ? whyText(withoutAutoMark(job.qualification_reason)) : 'Evaluated against qualification criteria.'}</span>
                       </div>
                       {(job.eligibility?.reason || job.eligibility?.evidence_text) && (
                         <div className="flex items-start gap-1.5 text-[11px] text-slate-700 bg-white p-2 rounded border border-slate-200">

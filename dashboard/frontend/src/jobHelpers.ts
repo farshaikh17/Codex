@@ -56,3 +56,9 @@ export function followUpState(date: string | null | undefined, today: string): {
   if (days <= 3) return { key: 'soon', label: `In ${days} day${days === 1 ? '' : 's'}`, days };
   return { key: 'later', label: `In ${days} days`, days };
 }
+
+// The daily run's shortlist step (scripts/dataset_apply.mjs) starts the reason of each row it promoted with this mark. A person's
+// decision never carries it on its own (an override always shows as an override), so the mark says who put a job on Ready / Stretch.
+export const AUTO_MARK = 'Shortlisted automatically. ';
+export const isAutoShortlisted = (reason?: string | null) => String(reason || '').startsWith(AUTO_MARK);
+export const withoutAutoMark = (reason?: string | null) => (isAutoShortlisted(reason) ? String(reason).slice(AUTO_MARK.length) : String(reason || ''));
