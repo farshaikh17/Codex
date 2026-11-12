@@ -6,6 +6,8 @@ updates:
     directory: /
     schedule: { interval: weekly }
     open-pull-requests-limit: 3
+    groups:
+      actions: { patterns: ['*'] }   # one PR for all action bumps, so they are tested and decided together
   - package-ecosystem: npm
     directory: /dashboard
     schedule: { interval: weekly }
@@ -14,6 +16,12 @@ updates:
     directory: /dashboard/frontend
     schedule: { interval: weekly }
     open-pull-requests-limit: 3
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }   # majors (vite, typescript, plugin-react) stay separate: they need a planned migration
+    ignore:
+      - { dependency-name: vite, update-types: ['version-update:semver-major'] }
+      - { dependency-name: typescript, update-types: ['version-update:semver-major'] }
+      - { dependency-name: '@vitejs/plugin-react', update-types: ['version-update:semver-major'] }
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly }
