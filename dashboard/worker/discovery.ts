@@ -113,6 +113,33 @@ export function platformGap(title:string,skills:unknown){
 // Sana's "reliability" means plant and asset reliability. Software reliability (SRE, DevOps, cloud) and product hardware testing match the
 // word but not the work (owner review 2026-11-12: "Senior Site Reliability Engineer" and "Hardware Test and Reliability Engineer" in her top 100).
 const SANA_AVOID=/\bhardware\b|\b(?:ai|cyber|information|it|network|cloud|application|data)\s+security\b|\bcybersecurity\b|\bsoftware\b|\bsite reliability\b|\bSRE\b|\bsoftware reliability\b|\breliability (?:software|data|platform)\b|\bhardware test|\btest (?:and|&) reliability\b|\bdevops\b|\bcloud\b|\bnetwork reliability\b|\b(?:it|network|security|data|platform) operations\b|\bpower (?:bi|apps?|platform|automate|electronics)\b|\bdeveloper\b|\bsales\b|\bmarketing\b|\baircraft\b|\baviation\b|\bplant[- ]based\b|\b(?:business|data|financial|finance|bi|sales|market(?:ing)?|research|it|systems?|credit|risk|reporting|esg)\s+analyst\b/i;   // plan S4: one matching word (power, energy, plant, reliability) is not enough
+// Plan A5: role families for the shortlist's variety rules (scripts/shortlist_select.mjs). The first match in this order wins; no match is
+// 'unclassified'. Not used by evaluate() and not stored; the India Remote page filter keeps listing.ts ROLE_FAMILIES.
+const FAMILIES:Record<string,[string,RegExp][]>={
+ farhan_shaikh:[
+  ['revops_crm',/rev(enue)? ?ops|revenue operations|\bcrm\b|sales op|marketing (ops|operations|automation)|gtm (engineer|operations)/i],
+  ['implementation',/implement|onboarding|deployment (strategist|manager|lead|specialist)|professional services/i],
+  ['automation_ai',/automation|\bai\b|workflow|no-?code|low-?code|integration/i],
+  ['technical_delivery',/technical delivery|delivery (manager|lead)|program manager|project manager/i],
+  ['business_systems',/business systems|systems (analyst|architect|administrator)|internal tools/i],
+  ['solutions',/solutions?|technical account|customer engineer/i],
+  ['operations_general',/operations|chief of staff/i],
+ ],
+ sana_ansari:[
+  ['maintenance',/maintenance|o ?& ?m|breakdown|shutdown|turnaround|overhaul|rotating|static equipment/i],
+  ['reliability_asset',/reliability|asset (performance|management|integrity)|condition monitoring|vibration/i],
+  ['energy_decarb',/energy (efficiency|manager|management|audit|engineer)|decarboni[sz]|net[- ]?zero|carbon|emission|sustainability/i],
+  ['plant_operations',/power plant|plant (operations|engineer)|shift (in-?charge|engineer)|control room|boiler|turbine|thermal|hydro|operations engineer/i],
+  ['utilities',/utilit|hvac|water treatment|compressed air|facilit/i],
+  ['commissioning_projects',/commissioning|project engineer|projects? manager|construction|erection|site engineer/i],
+  ['electrical',/electrical|substation|switchgear|transmission|distribution|hvdc|protection/i],
+  ['field_consulting',/field service|consultant|advisor|specialist/i],
+ ],
+};
+export function familyOf(candidateId:string,title:string):string{
+ for(const [key,re] of FAMILIES[candidateId]||[])if(re.test(title||''))return key;
+ return 'unclassified';
+}
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId==='sana_ansari')return SANA_AVOID.test(title||'');
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';

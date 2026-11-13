@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { selectInto, exportPool } from './shortlist_helpers.mjs';
 import { selectShortlist, selectionSql, MARK } from '../scripts/shortlist_select.mjs';
-import { RULES_MARKER } from '../worker/discovery.ts';
+import { RULES_MARKER, familyOf } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOW = Date.parse('2026-11-13T12:00:00Z');
@@ -114,7 +114,7 @@ test('A4: one employer holding the 20 best scores keeps 2 per tier; the rest go 
   const big = (tier) => Object.entries(t).filter(([k, v]) => k.startsWith('big') && v === tier).length;
   assert.equal(big('READY'), 2); assert.equal(big('STRETCH_READY'), 2);
   assert.equal(res.report[C].READY.count, 25); assert.equal(res.report[C].READY.max_employer_share, 0.08);
-  assert.ok(res.report[C].READY.swaps >= 1 && res.report[C].READY.relaxed.length === 0, JSON.stringify(res.report[C].READY));
+  assert.ok(res.report[C].READY.swaps >= 1 && !res.report[C].READY.relaxed.includes('employer_per_tier'), JSON.stringify(res.report[C].READY));
   // the employer named in the person's skills may hold 5 per tier
   const gh = [];
   for (let i = 0; i < 8; i++) gh.push(row({ job_id: 'gh' + i, company: 'GoHighLevel', score: 95 }));
@@ -157,6 +157,66 @@ test('A4: a tenant-id employer is not shortlisted (B1 gives it a name first); kn
   const pool = [row({ job_id: 't1', company: 'fa espx saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
     row({ job_id: 'k1', company: 'abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' })];
   assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY' });
+});
+
+test('A5: role families, five sample titles each, first match wins, including the misfiles found', () => {
+  const F = 'farhan_shaikh', S = 'sana_ansari';
+  const cases = {
+    [F]: {
+      revops_crm: ['RevOps Manager', 'Revenue Operations Lead', 'CRM Specialist', 'Sales Operations Manager', 'Marketing Automation Manager'],
+      implementation: ['Implementation Manager', 'Customer Onboarding Lead', 'Deployment Strategist', 'Professional Services Consultant', 'Technical Project Manager, Implementations'],
+      automation_ai: ['Automation Engineer', 'AI Specialist', 'Workflow Architect', 'No-code Builder', 'Integration Engineer'],
+      technical_delivery: ['Technical Delivery Lead', 'Delivery Manager (Remote - India)', 'Technical Program Manager', 'Senior Project Manager', 'Delivery Lead, APAC'],
+      business_systems: ['Business Systems Manager', 'Systems Analyst', 'Systems Architect', 'Salesforce Systems Administrator', 'Internal Tools Lead'],
+      solutions: ['Solutions Engineer', 'Solution Consultant', 'Technical Account Manager', 'Customer Engineer', 'Senior Solutions Architect'],
+      operations_general: ['Operations Manager', 'Chief of Staff', 'Business Operations Lead', 'Tech Operations Manager', 'Head of Operations'],
+    },
+    [S]: {
+      maintenance: ['Maintenance Engineer', 'Electrical Maintenance Engineer', 'O&M Engineer – Solar', 'Shutdown Planner', 'Lead Engineer – Rotating Equipment'],
+      reliability_asset: ['Reliability Engineer', 'Asset Performance Engineer', 'Asset Integrity Specialist', 'Condition Monitoring Engineer', 'Vibration Analyst'],
+      energy_decarb: ['Energy Efficiency Engineer', 'Energy Manager', 'Decarbonisation Consultant', 'Net Zero Lead', 'Emissions Specialist'],
+      plant_operations: ['Power Plant Operations Engineer', 'Plant Engineer', 'Shift In-charge', 'Boiler Engineer', 'Control Room Operator'],
+      utilities: ['Utilities Engineer', 'HVAC Engineer', 'Water Treatment Engineer', 'Compressed Air Specialist', 'Facilities Engineer'],
+      commissioning_projects: ['Commissioning Engineer', 'Project Engineer – Power', 'Projects Manager', 'Construction Manager', 'Site Engineer'],
+      electrical: ['Electrical Engineer', 'Substation Engineer', 'Switchgear Engineer', 'Transmission Lines Engineer', 'Protection Engineer'],
+      field_consulting: ['Field Service Engineer', 'Technical Consultant', 'Advisor, Power Systems', 'Product Specialist', 'Senior Consultant'],
+    },
+  };
+  for (const [cid, fams] of Object.entries(cases)) for (const [fam, titles] of Object.entries(fams)) for (const t of titles) assert.equal(familyOf(cid, t), fam, `${cid}: ${t}`);
+  assert.equal(familyOf(F, 'Brand Designer'), 'unclassified');
+  assert.equal(familyOf('someone_else', 'Implementation Manager'), 'unclassified');
+});
+
+test('A5: no family above 40% of a tier (allowance at least 4), relaxed when nothing else qualifies; unclassified is not capped', () => {
+  const pool = [];
+  for (let i = 0; i < 30; i++) pool.push(row({ job_id: 'im' + String(i).padStart(2, '0'), title: 'Implementation Manager ' + i, score: 90 }));
+  const others = ['RevOps Manager', 'Automation Engineer', 'Technical Program Manager', 'Systems Analyst', 'Solutions Engineer', 'Operations Manager'];
+  for (let i = 0; i < 40; i++) pool.push(row({ job_id: 'ot' + String(i).padStart(2, '0'), title: others[i % 6] + ' ' + i, score: 85 }));
+  const res = sel(pool);
+  assert.equal(res.report[C].READY.families.implementation, 10, 'at most 40% of 25');
+  assert.ok(Object.keys(res.report[C].READY.families).length >= 4, JSON.stringify(res.report[C].READY.families));
+  // the same pool with nothing else within the floor: the cap is relaxed, the tier still fills
+  const only = pool.slice(0, 30);
+  const r2 = sel(only);
+  assert.ok(r2.report[C].READY.relaxed.includes('family_share'));
+  assert.equal(r2.report[C].READY.count, 25);
+  const un = []; for (let i = 0; i < 30; i++) un.push(row({ title: 'Brand Designer ' + i, score: 90 })); for (let i = 0; i < 30; i++) un.push(row({ title: 'Operations Manager ' + i, score: 80 }));
+  assert.equal(sel(un).report[C].READY.families.unclassified, 25, 'unclassified is not a family: not capped');
+});
+
+test('A5: "something different" takes up to 2 places at the end of Stretch for a family on neither tier, never unclassified, within the floor', () => {
+  const pool = [];
+  for (let i = 0; i < 60; i++) pool.push(row({ title: ['Implementation Manager', 'RevOps Manager', 'Automation Engineer', 'Operations Manager'][i % 4] + ' ' + i, score: 90 - (i % 5) }));
+  pool.push(row({ job_id: 'brand', title: 'Brand Designer', score: 84 }));                 // unclassified: never
+  pool.push(row({ job_id: 'sol', title: 'Solutions Engineer', score: 80 }));               // a new family, within 10 of the last Stretch row
+  pool.push(row({ job_id: 'sys', title: 'Systems Analyst', score: 79 }));                  // a second new family
+  pool.push(row({ job_id: 'tpm', title: 'Technical Program Manager', score: 64 }));       // a third, under threshold + 5
+  const res = sel(pool);
+  const t = tiers(res);
+  assert.deepEqual([t.sol, t.sys, t.brand, t.tpm], ['STRETCH_READY', 'STRETCH_READY', undefined, undefined]);
+  assert.equal(res.report[C].STRETCH_READY.different, 2);
+  assert.equal(res.report[C].STRETCH_READY.count, 25);
+  assert.equal(sel(pool, { different: false }).changes.some((c) => c.job_id === 'sol'), false);
 });
 
 test('deterministic: the same pool in any order gives the same changes', () => {
