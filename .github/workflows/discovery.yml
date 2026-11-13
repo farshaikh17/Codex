@@ -86,9 +86,13 @@ jobs:
     outputs:
       healthy: ${{ steps.health.outputs.healthy }}
       reasons: ${{ steps.health.outputs.reasons }}
+      audit: ${{ steps.audit.outcome }}
     # Cloudflare credentials are given only to the steps that use the database; the job-site step (third-party scraping
     # library) runs without them.
     steps:
+      - name: Run start (the shortlist audit checks what this run wrote since then)
+        id: start
+        run: echo "at=$(date -u '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false   # the job-site and feed steps run third-party code; no GitHub token is left in .git/config for them
@@ -262,6 +266,7 @@ jobs:
             [ -f ../work/liveness_result.json ] && SEL="$SEL --liveness ../work/liveness_result.json"
           fi
           if [ "$RELAX" = "yes" ]; then SEL="$SEL --relaxed"; echo "The still-open check verified too few rows today: rows already shortlisted keep their place without a recent verification"; fi
+          echo "relaxed=$RELAX" >> "$GITHUB_OUTPUT"
           if [ -s ../work/shortlist_pool.json ]; then
             node --import ./test/register.mjs scripts/shortlist_select.mjs $SEL
             if [ -s ../work/shortlist_select.sql ]; then npx wrangler d1 execute career-job-engine --remote --file=../work/shortlist_select.sql > /dev/null; else echo "no shortlist changes"; fi
@@ -270,6 +275,22 @@ jobs:
           fi
           # then low matches leave To review (a row demoted above that now scores low is held the same day)
           if [ -s ../work/shortlist.sql ]; then npx wrangler d1 execute career-job-engine --remote --file=../work/shortlist.sql > /dev/null; fi
+      - name: Shortlist audit (plan A8; the hard rules on what is stored; a failure here turns the run red through the health job)
+        id: audit
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SINCE: ${{ steps.start.outputs.at }}
+          RELAXED: ${{ steps.shortlist.outputs.relaxed }}
+        run: |
+          node --import ./test/register.mjs scripts/shortlist_audit.mjs --print-sql --since "$SINCE" > ../work/audit.sql
+          npx wrangler d1 execute career-job-engine --remote --json --command "$(cat ../work/audit.sql)" > ../work/audit_rows.json
+          A="--rows ../work/audit_rows.json --candidates ../work/candidates.json --report ../work/shortlist.report.json --out ../work/shortlist_audit.json"
+          [ "$RELAXED" = "no" ] || A="$A --relaxed"   # the still-open check verified too few rows today (or the shortlist step did not say): skip the 4-day check
+          node --import ./test/register.mjs scripts/shortlist_audit.mjs $A
       - name: Record this run (one counts-only row in discovery_state; shown on the dashboard)
         if: always()
         continue-on-error: true
@@ -298,7 +319,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # A run that went through but did nothing useful (still-open check verified 0 of its targets, every source failed, nothing written from a
-  # fresh dataset, or a stale dataset) is shown red here. It is a separate job so the "discover" job stays successful: the recent-run guard and
+  # fresh dataset, or a stale dataset), or whose shortlist audit (plan A8) found a broken hard rule, is shown red here. It is a separate job so the "discover" job stays successful: the recent-run guard and
   # the watchdog count it as the day's run and do not start the whole run again every two hours on a problem a re-run would not fix.
   health:
     needs: discover
@@ -310,7 +331,9 @@ jobs:
         env:
           HEALTHY: ${{ needs.discover.outputs.healthy }}
           REASONS: ${{ needs.discover.outputs.reasons }}
+          AUDIT: ${{ needs.discover.outputs.audit }}
         run: |
-          if [ "$HEALTHY" = "true" ]; then echo "Run health: ok"; exit 0; fi
-          echo "::error title=Daily run health::${REASONS:-the health check did not run}"
+          if [ "$AUDIT" != "success" ]; then echo "::error title=Shortlist audit::the shortlist audit ${AUDIT:-did not run}: see its step in the discover job"; fi
+          if [ "$HEALTHY" = "true" ] && [ "$AUDIT" = "success" ]; then echo "Run health: ok"; exit 0; fi
+          [ "$HEALTHY" = "true" ] || echo "::error title=Daily run health::${REASONS:-the health check did not run}"
           exit 1
