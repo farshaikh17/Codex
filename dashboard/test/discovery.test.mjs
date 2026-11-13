@@ -370,7 +370,7 @@ test('skills count when their key words appear, not only the exact phrase; a lon
 });
 
 // ---- Spot check of 12 Nov 2026: roles far below the candidate, platform-specific roles, QA roles ----------------------------------
-import { underLevel, yearsCeiling, platformGap, UNDER_LEVEL_CAP, PLATFORM_GAP_PENALTY } from '../worker/discovery.ts';
+import { underLevel, yearsCeiling, platformGap, UNDER_LEVEL_CAP, PLATFORM_GAP_CAP } from '../worker/discovery.ts';
 
 test('a role pitched well below the candidate is capped: by title, or by an experience range that tops out at half their experience', () => {
   const sana9 = { ...sana, total_years_experience: 9.2 };
@@ -400,7 +400,7 @@ test('a role built around a platform the profile does not list is marked down; o
   const plain = evaluate(f9, post('Implementation Lead', 'Remote - India', DESC));
   const workday = evaluate(f9, post('Sr. Systems Analyst – Workday Time & Absence Implementation Lead', 'Remote - India', DESC));
   const ghl = evaluate(f9, post('GoHighLevel Implementation Lead', 'Remote - India', DESC));
-  assert.equal(plain.score - workday.score, PLATFORM_GAP_PENALTY, `${plain.score} vs ${workday.score}`);
+  assert.equal(workday.score, Math.min(plain.score, PLATFORM_GAP_CAP), `${plain.score} vs ${workday.score}`);   // a cap since phase 2 (S7)
   assert.ok(ghl.score >= plain.score, `a platform on the profile costs nothing (${ghl.score} vs ${plain.score})`);
   assert.match(workday.qualification_reason, /Built around workday/);
   assert.equal(platformGap('SAP PM Maintenance Planner', ['Maintenance Planning']), 'sap');
@@ -619,4 +619,13 @@ test('S6: too senior is capped just below the threshold (never Ready); Chief of 
   assert.ok(lvl(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL.replace('5+ years', '11+ years')).score >= 70, 'years + 2 is still fine');
   const headTarget = { ...P2_FARHAN, target_roles: JSON.stringify(['Head of Implementation']) };
   assert.ok(lvl(headTarget, 'Head of Implementation', 'Remote - India', P2_IMPL).score >= 70, 'a target role naming the title is not capped');
+});
+
+test('S7: a role built around a platform the profile does not list is capped at 60, never Ready', () => {
+  const { PLATFORM_GAP_CAP } = DISCOVERY;
+  for (const t of ['Workday Implementation Lead', 'Salesforce Implementation Consultant']) {
+    const r = p2eval(P2_FARHAN, t, 'Remote - India', P2_IMPL + ' Fully remote, India.');
+    assert.equal(r.score, PLATFORM_GAP_CAP, t); assert.notEqual(p2tier(P2_FARHAN, r), 'READY', t);
+  }
+  assert.ok(p2eval(P2_FARHAN, 'GoHighLevel Implementation Lead', 'Remote - India', P2_IMPL).score > PLATFORM_GAP_CAP, 'a platform the profile lists is not capped');
 });
