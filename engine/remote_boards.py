@@ -20,7 +20,9 @@ import hashlib
 import html
 import json
 import re
+import os
 import sys
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -146,6 +148,24 @@ def hn():
             yield j
 
 
+def write_json(path, obj, indent=None):
+    """Write through a temporary file, so a step killed mid-write leaves the previous complete file, never half a file."""
+    tmp = Path(str(path) + '.tmp')
+    tmp.write_text(json.dumps(obj, default=str, indent=indent))
+    os.replace(tmp, path)
+
+
+def over_budget(started, budget_seconds, share=0.8):
+    """True once `share` of the step's time budget (seconds, from the workflow) has passed: no new source is started after that."""
+    return bool(budget_seconds) and time.monotonic() - started >= share * budget_seconds
+
+
+def all_errored(report):
+    """Every source that ran failed (sources skipped for time do not count). Then the script exits non-zero."""
+    ran = [r for r in report.values() if not r.get('skipped')]
+    return bool(ran) and all(r.get('error') for r in ran)
+
+
 SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn, 'jobspresso': jobspresso}
 MAX_DAYS = {'hnhiring': 35}   # the thread is monthly: its posts stay current all month
 
@@ -155,7 +175,9 @@ def main():
     ap.add_argument('--profiles', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--days', type=int, default=7)
+    ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it")
     a = ap.parse_args()
+    started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
@@ -165,6 +187,9 @@ def main():
     have = {j['id'] for j in merged['jobs']}
     report = {}
     for name, fn in SOURCES.items():
+        if over_budget(started, a.budget_seconds):
+            report[name] = {'skipped': 'time budget', 'read': 0, 'kept': 0}
+            continue
         seen = kept = 0
         try:
             for j in fn():
@@ -186,9 +211,15 @@ def main():
             report[name] = {'read': seen, 'kept': kept}
         except Exception as e:   # one failing feed is skipped
             report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept}
-    raw_path.write_text(json.dumps(merged, default=str))
-    (out / 'boards_report.json').write_text(json.dumps(report, indent=1))
+        write_json(raw_path, merged)   # after every source: a step stopped at its time limit keeps what it fetched
+        write_json(out / 'boards_report.json', report, indent=1)
+    write_json(raw_path, merged)
+    write_json(out / 'boards_report.json', report, indent=1)
     print(json.dumps(report))
+    if all_errored(report):
+        print('every board failed', file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
