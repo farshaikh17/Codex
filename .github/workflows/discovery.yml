@@ -142,7 +142,7 @@ jobs:
           [ -f ../work/global_hirers.json ] && IN="$IN --global-hirers ../work/global_hirers.json"
           [ -f ../work/signals.json ] && IN="$IN --signals ../work/signals.json"
           node --import ./test/register.mjs scripts/dataset_apply.mjs --candidates ../work/candidates.json $IN \
-            --rescore ../work/rescore.json --taste-targets ../work/taste_targets.json --out ../work/apply.sql --shortlist-out ../work/shortlist.sql --max-new "$MAX_NEW"
+            --rescore ../work/rescore.json --taste-targets ../work/taste_targets.json --out ../work/apply.sql --shortlist-out ../work/shortlist.sql --shortlist-unverified-out ../work/shortlist_unverified.sql --max-new "$MAX_NEW"
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/apply.sql
           ls -la ../work/apply.sql
       - name: Write to D1 (one import; all or nothing)
@@ -185,6 +185,7 @@ jobs:
           python engine/liveness.py --check work/liveness_targets.json --out work/liveness_result.json | tee work/liveness_report.json
           python engine/liveness.py --sql work/liveness_result.json --out work/liveness.sql
       - name: Still open? Close dead postings, mark live ones verified
+        id: live_write
         if: ${{ hashFiles('work/liveness.sql') != '' }}
         continue-on-error: true
         working-directory: dashboard
@@ -199,8 +200,17 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          LIVE_WRITE: ${{ steps.live_write.outcome }}
+        # When the still-open check verified 0 rows today (it failed, ran out of time, or its write failed), the shortlist's demotion
+        # skips its "verified in 4 days" condition, so a fault of ours does not empty the lists (promotion still needs a recent check).
         run: |
-          [ -s ../work/shortlist.sql ] && npx wrangler d1 execute career-job-engine --remote --file=../work/shortlist.sql > /dev/null || echo "nothing to write"
+          VERIFIED=0
+          if [ "$LIVE_WRITE" = "success" ] && [ -f ../work/liveness_report.json ]; then
+            VERIFIED=$(python3 -c "import json,sys;print(int(json.load(open(sys.argv[1])).get('alive',0)))" ../work/liveness_report.json 2>/dev/null || echo 0)
+          fi
+          FILE=../work/shortlist.sql
+          if [ "$VERIFIED" = "0" ]; then FILE=../work/shortlist_unverified.sql; echo "The still-open check verified 0 rows today: shortlist demotion skips the 4-day verification condition"; fi
+          [ -s "$FILE" ] && npx wrangler d1 execute career-job-engine --remote --file="$FILE" > /dev/null || echo "nothing to write"
       - name: Record this run (one counts-only row in discovery_state; shown on the dashboard)
         if: always()
         continue-on-error: true

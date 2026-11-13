@@ -299,15 +299,21 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
 // the posting active and verified open in the last 4 days.
 // At most 25 of each per person, best score first. A shortlisted row is marked by its reason ("Shortlisted automatically. ...") so that it can be told
 // from a person's decision; it goes back to "to review" when it stops qualifying. Never touched: an override, an application, a row a person set.
-const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
-{
+// When the day's "still open?" check verified nothing (it failed, timed out or every site refused), demoting every row not verified in 4 days
+// would empty the shortlist for a fault of ours, not because the postings closed. So the daily run also gets a second version of this step
+// (--shortlist-unverified-out) whose demotion skips the "verified in 4 days" condition, and applies it when the check verified 0 rows.
+// Promotion still needs a recent verification in both versions.
+function shortlistSql(requireVerified) {
+  const sl = [];
   const ids = [...byId.keys()].map(q).join(',');
   const MARK = 'Shortlisted automatically. ';
   const since = new Date(Date.parse(now) - 4 * 86400000).toISOString();
   const free = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
   const base = `FROM candidate_qualifications q JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id
-    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND j.last_verified_at >= ${q(since)} AND s.score_breakdown LIKE '%"profile_v12":true%' AND s.skill_score > 0`;
+    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND s.score_breakdown LIKE '%"profile_v12":true%' AND s.skill_score > 0`;
+  const verified = `j.last_verified_at >= ${q(since)}`;
+  const keepIf = requireVerified ? ` AND ${verified}` : '';   // the demotion's verification condition (skipped when the day's check verified nothing)
   const fitsReady = `s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'ELIGIBLE'`;
   const fitsStretch = `((s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'UNKNOWN') OR (q.eligibility_status = 'ELIGIBLE' AND s.overall_score >= c.qualification_threshold - 10 AND s.overall_score < c.qualification_threshold))`;
   const auto = (alias) => `${alias}.qualification_reason LIKE ${q(MARK + '%')}`;
@@ -315,12 +321,12 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
   // --no-shortlist: the two-hourly watchlist run skips this step (it reads every undecided row; once a day is enough and keeps D1 reads low).
   // --shortlist-out <file>: write this step to its own file, so the daily run can apply it after the "still open?" check has refreshed
   // last_verified_at (otherwise a posting checked today waits a day to be shortlisted, and a posting closed today stays shortlisted a day).
-  if (ids && !args.includes('--no-shortlist')) {
+  if (ids) {
     // 1. A shortlisted row that no longer qualifies for its tier goes back to "to review" (its original reason is restored).
     for (const [tier, fits] of tiers) {
       const gone = `candidate_id IN (${ids}) AND qualification_status = ${q(tier)} AND ${auto('candidate_qualifications')} AND manual_override_status IS NULL
         AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id)
-        AND NOT EXISTS (SELECT 1 ${base} AND q.candidate_id = candidate_qualifications.candidate_id AND q.job_id = candidate_qualifications.job_id AND ${fits})`;
+        AND NOT EXISTS (SELECT 1 ${base}${keepIf} AND q.candidate_id = candidate_qualifications.candidate_id AND q.job_id = candidate_qualifications.job_id AND ${fits})`;
       sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
         SELECT candidate_id, job_id, ${q(tier)}, 'NEEDS_REVIEW', 'No longer meets the automatic shortlist rule', 'discovery' FROM candidate_qualifications WHERE ${gone};`);
       sl.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)} WHERE ${gone};`);
@@ -349,7 +355,7 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
           SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, seen DESC, job_id) AS rk FROM (
             SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc, COALESCE(s.skill_score, 0) AS sk, COALESCE(j.discovered_at, '') AS seen,
               ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
-            ${base} AND ${fits} AND (q.qualification_status = 'NEEDS_REVIEW' OR (q.qualification_status = ${q(tier)} AND ${auto('q')})) AND ${twin}
+            ${base} AND ${fits} AND ((q.qualification_status = 'NEEDS_REVIEW' AND ${verified}) OR (q.qualification_status = ${q(tier)} AND ${auto('q')}${keepIf})) AND ${twin}
           ) WHERE dk = 1
         ) WHERE rk <= 25 AND st = 'NEEDS_REVIEW')`;
       sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
@@ -359,7 +365,11 @@ const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
         WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
     }
   }
+  return sl;
 }
+const shortlistOn = !args.includes('--no-shortlist');
+const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
+if (shortlistOn) sl.push(...shortlistSql(true));
 
 // ---- Taste pass (owner plan 2026-11-12: "learns from their choices") ---------------------------------------------------------------
 // The taste model (engine/signals.py; trained on saves, applications, Good match / Not for me and a person's own bucket moves) was applied
@@ -383,7 +393,9 @@ if (tasteFile && fs.existsSync(tasteFile)) {
 }
 
 fs.writeFileSync(opt('--out'), out.join('\n') + '\n');
-if (opt('--shortlist-out')) fs.writeFileSync(opt('--shortlist-out'), sl.length ? sl.join('\n') + '\nUPDATE cache_state SET generation = generation + 1 WHERE id = 1;\n' : '');
+const slFile = (lines) => (lines.length ? lines.join('\n') + '\nUPDATE cache_state SET generation = generation + 1 WHERE id = 1;\n' : '');
+if (opt('--shortlist-out')) fs.writeFileSync(opt('--shortlist-out'), slFile(sl));
+if (opt('--shortlist-unverified-out')) fs.writeFileSync(opt('--shortlist-unverified-out'), slFile(shortlistOn ? shortlistSql(false) : []));
 fs.writeFileSync(opt('--out').replace(/\.sql$/, '') + '.report.json', JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report));
 

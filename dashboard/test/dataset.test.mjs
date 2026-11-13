@@ -375,3 +375,44 @@ test('re-score covers the automatic shortlist: a shortlisted row gets the new ru
   assert.notEqual(s('a1').st, 'READY', 'and leaves the shortlist in the same run');
   assert.deepEqual([s('a2').o, s('a2').st], [70, 'READY'], 'a person\'s Ready row is untouched');
 });
+
+test('a day whose still-open check verified nothing does not empty the shortlist: the unverified version keeps stale-verified rows, still promotes only verified ones, and never touches decisions', () => {
+  const w = world();
+  const db = w.sqlite;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
+  const V = '{"preliminary":true,"profile_v12":true}';
+  const MARK = 'Shortlisted automatically. Cloud discovery match.';
+  const add = (id, score, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? OLD);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', 'ELIGIBLE', o.reason ?? 'Cloud discovery match.', o.override || null);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`).run(F, id, score, 40, V);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, F, id);
+  };
+  for (let i = 0; i < 25; i++) add('k' + String(i).padStart(2, '0'), 80, { status: 'READY', reason: MARK });   // a full shortlist, last verified 6 days ago
+  add('closed', 80, { status: 'READY', reason: MARK, active: 0 });   // closed: leaves the shortlist on any day
+  add('fell', 20, { status: 'READY', reason: MARK });                // score fell: leaves on any day
+  add('fresh', 70, { verified: NOW });                               // verified today, ranks below the kept rows: no room
+  add('stale', 95);                                                  // never promoted without a recent verification
+  add('dec', 10, { status: 'READY', reason: MARK, override: 'READY' }); add('app', 10, { status: 'READY', reason: MARK, app: true });
+  const strict = path.join(w.dir, 'shortlist.sql'), relaxed = path.join(w.dir, 'shortlist_unverified.sql');
+  run(w.dir, ['--shortlist-out', strict, '--shortlist-unverified-out', relaxed]);
+  const before = db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all();
+  db.exec(fs.readFileSync(relaxed, 'utf8'));
+  const st = () => Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE candidate_id=?`).all(F).map((r) => [r.j, r.s]));
+  const a = st();
+  for (let i = 0; i < 25; i++) assert.equal(a['k' + String(i).padStart(2, '0')], 'READY', 'kept: not verified recently only because the check failed today');
+  assert.equal(a.closed, 'NEEDS_REVIEW'); assert.equal(a.fell, 'HOLD');
+  assert.equal(a.fresh, 'NEEDS_REVIEW', 'the kept rows still count towards the cap of 25');
+  assert.equal(a.stale, 'NEEDS_REVIEW');
+  assert.deepEqual(db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all(), before, 'decided and applied rows stay byte-identical');
+  // a normal day (the check verified rows) demotes what was not verified in 4 days
+  db.exec(fs.readFileSync(strict, 'utf8'));
+  const b = st();
+  assert.equal(b.k00, 'NEEDS_REVIEW');
+  assert.equal(b.fresh, 'READY');
+  assert.deepEqual(db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all(), before);
+  // the watchlist run (no shortlist) writes an empty second file
+  run(w.dir, ['--no-shortlist', '--shortlist-unverified-out', relaxed]);
+  assert.equal(fs.readFileSync(relaxed, 'utf8'), '');
+});
