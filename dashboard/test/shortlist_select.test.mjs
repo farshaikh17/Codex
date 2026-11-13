@@ -28,7 +28,9 @@ const sel = (pool, o = {}) => selectShortlist(pool, { now: NOW, ...o });
 test('tier rule: Ready needs the threshold and confirmed eligibility; Stretch takes unconfirmed at the threshold or confirmed up to 10 below', () => {
   const pool = [row({ job_id: 'r', score: 60 }), row({ job_id: 'su', score: 75, eligibility: 'UNKNOWN' }), row({ job_id: 'sb', score: 50 }),
     row({ job_id: 'low', score: 49 }), row({ job_id: 'ul', score: 59, eligibility: 'UNKNOWN' }), row({ job_id: 'one', score: 90, skill_score: 20 }),
-    row({ job_id: 'exact', score: 90, skill_score: 20, target_exact: 1 }), row({ job_id: 'old', score: 90, marked: 0 }), row({ job_id: 'shut', score: 90, active: 0 })];
+    row({ job_id: 'exact', score: 90, skill_score: 20, target_exact: 1, description: 'Plant maintenance and reliability work. '.repeat(10) }), row({ job_id: 'old', score: 90, marked: 0 }), row({ job_id: 'shut', score: 90, active: 0 }),
+    row({ job_id: 'bare', score: 90, skill_score: 20, target_exact: 1, description: '' }), row({ job_id: 'short', score: 90, skill_score: 20, target_exact: 1, description: 'Reliability Engineer. '.repeat(13) })];
+  // jobs QA 13 Nov: the exact title stands in for the two skills only with 300+ characters of description ('Reliability Engineer II' at a trading firm had none)
   assert.deepEqual(tiers(sel(pool)), { r: 'READY', su: 'STRETCH_READY', sb: 'STRETCH_READY', exact: 'READY' });
 });
 

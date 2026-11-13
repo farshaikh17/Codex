@@ -661,6 +661,27 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     chooses (repository secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`, 12-64 characters; compared in constant time); a name, a
     candidate id, another case or a prefix links nobody, and one code given for two people links neither. With no code set it links nobody and
     leaves the waiting messages unread. `/stop` still unlinks the sender's own chat. Owner steps in `RELEASE.md`, "Daily phone message".
+- jobs QA fixes (13 Nov, night; a hand QA of 100 jobs per person on saved samples; `profile_v16`, the one rules-marker bump for them; `qa-fixes/*`):
+  - Farhan: a remote posting limited to another country or region ('Remote (United Kingdom)', 'Remote (Mexico)', 'Germany') is ineligible, like
+    US-only, unless the place or text names India, Asia or APAC, the place says worldwide / anywhere / global, or the text says worldwide. The hard
+    avoid list adds solutions / systems architect, engineering manager, staff / principal engineer, infrastructure, cloud / platform operations, product
+    manager, clinical, territory operations, ATQC and automation frameworks; 'Commercial Operations Specialist' is capped unless the title also says
+    RevOps. For him 'operations', 'solutions' and 'architect' no longer earn the +4 "close to a target role" alone (Sana keeps them).
+  - Both: the posting's text wins over the source's remote flag ('The position is based in ...', '#LI-Onsite' / '#LI-Hybrid', 'N days a week in /
+    from / at our ... office'); a bare 'hybrid working' is still not read (phase 2 tenth-man rule). The import stores such a posting as ONSITE.
+    `yearsRequired` reads '12+ years in software engineering' and decimals; `yearsCeiling` reads '1-1.5 years'.
+  - Sana: segment manager, IT-stack words (java, angular, databricks, snowflake, sfmc, grc, tenant migration), business / digital / enterprise
+    architect titles and marine / yacht titles are on her avoid list; a design or study title loses 8 (ranked below maintenance and O&M); a
+    technical / engineering consultant title needs a word of her field; operator and field officer posts are below her level; 'AR - Little Rock', and
+    'nationwide', a dollar salary or 'City, ST' in the text of a posting with no place, are abroad; a bare two-letter location is a country abroad
+    unless it is IN or an Indian state code (so BR, NL, CH, TR, which are also Indian codes, stay unread), and a bare 'SA' / 'AE' / 'QA' / 'OM' /
+    'KW' / 'BH' is the Gulf. A posting with no description, or one of 600 characters or less, counts the phrases of her field in its title (O&M,
+    power plant, energy audit, ...) as skills, at most two. The shortlist lets an exact target title stand in for the two skills only with 300+
+    characters of description.
+  - measured on the QA's saved samples, re-scored with `evaluate()` and the shortlist selector (every row assumed verified, as in the QA; main →
+    this change, using the QA's verdicts): Farhan Best matches 7 of 9 fit → 7 of 8, Worth a try 2 of 10 → 3 of 4; Sana Best matches 23 of 25 →
+    25 of 25, Worth a try 17 of 25 → 20 of 20. No job the QA judged a good fit left the shortlist; one moved from Best matches to Worth a try (a
+    'Sales & Marketing Operations Manager' lost the +4 for 'operations').
 
 ---
 

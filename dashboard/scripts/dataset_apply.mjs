@@ -9,7 +9,7 @@
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION, RULES_MARKER, companyKey } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, onsiteByText } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
 import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
 
@@ -70,8 +70,11 @@ for (const file of many('--in')) {
     const board = !!j.board;
     const description = plain(j.description).slice(0, 6000);
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
-    const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
-    const onsite = j.is_remote === false;
+    // Jobs QA 13 Nov: the source's remote flag is wrong for some postings whose own text places the job in an office ('The position is based in
+    // Bengaluru', '#LI-Onsite', 'two days a week from our London office'); the text wins (evaluate() reads it the same way).
+    const textOnsite = j.is_remote === true && onsiteByText(description);
+    const remote = (j.is_remote === true && !textOnsite) || /\bremote\b/i.test(j.location || '');
+    const onsite = j.is_remote === false || (textOnsite && !remote);
     const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, repost: !!j.repost, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
     const rows = [];
     for (const cid of j.candidates || []) {

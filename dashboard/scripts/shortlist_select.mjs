@@ -31,7 +31,10 @@ export function when(s) {
   return Date.parse(t);
 }
 
-const skillsOk = (r) => Number(r.skill_score) >= 40 || !!Number(r.target_exact);   // plan S4
+// Plan S4: two matched skills, or a title that is exactly one of the person's target roles. Jobs QA 13 Nov: the title alone stands in for the two
+// skills only when the posting has a description to check it against (300+ characters; 'Reliability Engineer II' at a trading firm had none).
+export const EXACT_TITLE_MIN_TEXT = 300;
+const skillsOk = (r) => Number(r.skill_score) >= 40 || (!!Number(r.target_exact) && String(r.description || '').trim().length >= EXACT_TITLE_MIN_TEXT);
 const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !r.dead;
 /** Ready: score at the person's threshold and eligibility confirmed. */
 export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold) && r.eligibility === 'ELIGIBLE';

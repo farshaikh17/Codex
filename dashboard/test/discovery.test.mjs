@@ -23,9 +23,10 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
   assert.equal(avoided.eligibility, good.eligibility, 'eligibility is computed the same way');
   assert.equal(avoided.status, good.status, 'status rules unchanged (still review, never READY)');
   assert.match(avoided.qualification_reason, /avoid list/);
-  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET', 'Business Systems Analyst', 'Senior Business Systems Analyst', 'Sales Engineer', 'Pre-Sales Consultant', 'Treasury Consultant', 'Senior Consultant – Ripple Treasury (GTreasury)', 'Strategic Solutions Engineer', 'Commercial Operations Specialist (RevOps)', 'Cyber Operations Lead, Critical Harm Operations', 'Compensation Operations Analyst', 'Pricing Operations Lead', 'Senior Specialist, T2 / Target2 Payment Operations'])
+  for (const t of ['Software Engineer', 'DevOps Engineer', 'Site Reliability Engineer', 'Machine Learning Engineer', 'Security Engineer', 'Finance Manager', 'Customer Support Specialist', 'Engineering Manager', 'SDET', 'Business Systems Analyst', 'Senior Business Systems Analyst', 'Sales Engineer', 'Pre-Sales Consultant', 'Treasury Consultant', 'Senior Consultant – Ripple Treasury (GTreasury)', 'Strategic Solutions Engineer', 'Commercial Operations Specialist', 'Cyber Operations Lead, Critical Harm Operations', 'Compensation Operations Analyst', 'Pricing Operations Lead', 'Senior Specialist, T2 / Target2 Payment Operations'])
     assert.ok(avoidedTitle('farhan_shaikh', t), t);
-  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Support Operations Lead', 'Revenue Operations Analyst', 'Marketing Operations Manager'])
+  for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Support Operations Lead', 'Revenue Operations Analyst', 'Marketing Operations Manager',
+    'Commercial Operations Specialist (RevOps)', 'Revenue Operations - Commercial Operations Specialist'])   // jobs QA 13 Nov: RevOps in the title lets it through
     assert.ok(!avoidedTitle('farhan_shaikh', t), t);
   assert.ok(avoidedTitle('sana_ansari', 'Software Engineer') && !avoidedTitle('sana_ansari', 'Reliability Engineer'), "Sana's own list: software and IT-reliability titles only (owner review 2026-11-12)");
   assert.ok(!avoidedTitle('sana_ansari', 'Implementation Manager'), 'Farhan\'s list is not applied to Sana');
@@ -33,8 +34,10 @@ test('ranking: avoid-list titles are capped at 40, other titles are not, and the
 
 test('ranking: a posting whose only stated location is outside India loses points for Farhan unless it supports remote work from India', () => {
   const india = evaluate(farhan, post('Implementation Manager', 'Remote - India'));
-  const us = evaluate(farhan, post('Implementation Manager', 'Remote, London, United Kingdom', 'CRM Configuration and Workflow Automation.'));
-  const usSame = evaluate({ ...farhan }, post('Implementation Manager', 'Remote', 'CRM Configuration and Workflow Automation.'));
+  // a remote role limited to another country is ruled out (jobs QA 13 Nov); one whose text also names Asia or India keeps the penalty instead
+  const us = evaluate(farhan, post('Implementation Manager', 'Remote, London, United Kingdom', 'CRM Configuration and Workflow Automation. Clients across Asia.'));
+  const usSame = evaluate({ ...farhan }, post('Implementation Manager', 'Remote', 'CRM Configuration and Workflow Automation. Clients across Asia.'));
+  assert.equal(evaluate(farhan, post('Implementation Manager', 'Remote, London, United Kingdom', 'CRM Configuration and Workflow Automation.')).eligibility, 'INELIGIBLE');
   assert.equal(foreignLocation('Austin, TX'), true); assert.equal(foreignLocation('London, United Kingdom'), true);
   assert.equal(foreignLocation('Remote'), false); assert.equal(foreignLocation('Bengaluru, India'), false); assert.equal(foreignLocation(''), false);
   assert.equal(us.score, Math.max(0, usSame.score - FOREIGN_LOCATION_PENALTY), `${us.score} vs ${usSame.score}`);
@@ -54,10 +57,14 @@ test('ranking: a posting whose only stated location is outside India loses point
 
 // ---- title and location rules (shared by the Worker and the correction script) -------------------------------------
 test('avoid list: software/ML/security/test families always; finance/support/management families unless the title names his own target areas', () => {
-  for (const t of ['Software Engineer', 'Senior Backend Engineer', 'Backend|Engineer', 'Software Engineer–Platform', 'Implementation Engineer - Backend/API', 'DevOps Engineer', 'Site Reliability Engineer', 'SRE', 'Machine Learning Engineer', 'Data Scientist', 'Security Engineer', 'SDET', 'QA Engineer', 'Test Automation Lead', 'Finance Manager', 'Financial Controller', 'Payroll Specialist', 'Customer Support Specialist', 'Support Engineer', 'Engineering Manager', 'Director of Engineering', 'Accountant'])
+  for (const t of ['Software Engineer', 'Senior Backend Engineer', 'Backend|Engineer', 'Software Engineer–Platform', 'Implementation Engineer - Backend/API', 'DevOps Engineer', 'Site Reliability Engineer', 'SRE', 'Machine Learning Engineer', 'Data Scientist', 'Security Engineer', 'SDET', 'QA Engineer', 'Test Automation Lead', 'Finance Manager', 'Financial Controller', 'Payroll Specialist', 'Customer Support Specialist', 'Support Engineer', 'Engineering Manager', 'Director of Engineering', 'Accountant',
+    // jobs QA 13 Nov: other fields that came in through 'operations', 'solutions' or 'architect'
+    'Solutions Engineering Manager', 'Engineering Manager - Solutions Engineering', 'Senior Solutions Architect', 'Systems Architect / Engineering Architecture Lead', 'Staff Engineer - CRM & Automation',
+    'Principal Engineer, Solutions Architecture', 'Infrastructure Operations Engineer', 'L2 Cloud Operations Engineer', 'Platform Operations Manager', 'Sr. Product Manager - Custom Objects & CRM Data Platform',
+    'Central Monitoring Operations Manager - Clinical', 'Territory Operations Manager - India & Subcontinent', 'Senior ATQC - Automation Frameworks', 'Test Automation Framework Lead'])
     assert.ok(avoidedTitle('farhan_shaikh', t), `${t} should be capped`);
   for (const t of ['Implementation Manager', 'Technical Operations Lead', 'Solutions Implementation Specialist', 'CRM Administrator', 'Finance Systems Analyst',
-    'Solutions Engineering Manager', 'Implementation Support Specialist', 'Payroll Implementation Specialist', 'Customer Support Operations Manager', 'Air Traffic Controller', 'Implementation Manager, Software Onboarding', 'Presre Lead'])
+    'Solutions Consultant', 'Revenue Operations Manager', 'Implementation Support Specialist', 'Automation Specialist', 'Business Systems Lead', 'CRM Operations Specialist', 'Technical Delivery Manager', 'Payroll Implementation Specialist', 'Customer Support Operations Manager', 'Air Traffic Controller', 'Implementation Manager, Software Onboarding', 'Presre Lead'])
     assert.ok(!avoidedTitle('farhan_shaikh', t), `${t} should not be capped`);
   assert.ok(!avoidedTitle('sana_ansari', 'Customer Support Manager'), 'Farhan\'s families are not applied to Sana');
 });
