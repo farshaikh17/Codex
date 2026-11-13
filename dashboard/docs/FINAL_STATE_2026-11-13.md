@@ -75,7 +75,6 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
 - **Gulf jobs from job boards** are rarely verified (those sites refuse the still-open check), so Sana's "5 Gulf in Worth a try" is often
   reported as a shortfall.
-- **A US location with the full state name** ("Houston, Texas") is not foreign for Sana's visa-route cap.
 - **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
   except the open tracker's own actions).
 - **Out of scope:** private link per person, self sign-up, other professions, pricing, the operator key, the five held dependency updates.
@@ -90,3 +89,10 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 3. **Old branches:** run **Delete merged branches**; the rest are listed in the phase 6 hand-off report with a reason each, to delete by hand.
 4. **First week:** check that the page says "Updated" every day and that the daily run's summary shows the audit passing (definition of done,
    plan section 13).
+
+## 7. Gaps fixed after the hand-off (13 Nov, evening)
+
+Four gaps from section 5 were fixed afterwards, one pull request each (`gaps/*`):
+- **Full state names abroad:** "Houston, Texas", "Calgary, Alberta", "Perth, Western Australia" (a US state, Canadian province or Australian
+  state written in full after a comma, ending the place) now count as abroad for Sana's visa-route cap and Farhan's foreign-location penalty,
+  like "Houston, TX". Rules marker `profile_v15`: the stored lists are re-scored over the next daily runs (800 rows per person per run).
