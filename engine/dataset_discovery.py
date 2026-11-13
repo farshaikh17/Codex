@@ -276,10 +276,46 @@ def closures(con, src, manifest, local=None):
     return close, mark, clear, counts
 
 
-def load_manifest():
+MANIFEST_MAX_AGE_HOURS = 48
+
+
+def load_manifest(tries=3, wait=10, sleep=None):
+    """The dataset's manifest (snapshot time and size). Three tries; None when it cannot be read."""
+    import time
     import urllib.request
-    req = urllib.request.Request(MANIFEST, headers={'User-Agent': 'career-job-engine/1.0'})
-    return json.load(urllib.request.urlopen(req, timeout=60))
+    sleep = sleep or time.sleep
+    for n in range(tries):
+        try:
+            req = urllib.request.Request(MANIFEST, headers={'User-Agent': 'career-job-engine/1.0'})
+            return json.load(urllib.request.urlopen(req, timeout=60))
+        except Exception as e:   # network, HTTP or JSON error
+            print(f'manifest read failed ({type(e).__name__}); try {n + 1} of {tries}', file=sys.stderr)
+            if n + 1 < tries:
+                sleep(wait)
+    return None
+
+
+def manifest_age_hours(manifest, now=None):
+    """Hours since the snapshot was generated, or None when the manifest or its time is missing."""
+    try:
+        t = datetime.fromisoformat(str((manifest or {}).get('generated_at')).replace('Z', '+00:00'))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        return ((now or datetime.now(timezone.utc)) - t).total_seconds() / 3600
+    except (TypeError, ValueError):
+        return None
+
+
+def write_context(out, local, rescore_export, rescore_per_candidate):
+    """What the later steps need whatever happens to the dataset: candidates, search profiles, rows to re-score and taste rows."""
+    profs = profiles(local)
+    (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, local)))
+    (out / 'profiles.json').write_text(json.dumps(profs))
+    if rescore_export:
+        (out / 'rescore.json').write_text(json.dumps(rescore_rows(local, per_candidate=rescore_per_candidate)))
+    (out / 'taste_rows.json').write_text(json.dumps(taste_rows(local)))
+    (out / 'taste_targets.json').write_text(json.dumps(taste_targets(local)))
+    return profs
 
 
 def main():
@@ -295,6 +331,7 @@ def main():
     ap.add_argument('--rescore-per-candidate', type=int, default=1500, help='most rows re-scored per person per run (bounds the writes)')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
     ap.add_argument('--profiles-only', action='store_true', help='only write candidates.json, profiles.json and taste_rows.json (watchlist runs)')
+    ap.add_argument('--no-dataset', action='store_true', help='the dataset download failed: write everything the later steps need and an empty matches.json')
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     if a.profiles_only:
@@ -310,21 +347,31 @@ def main():
         (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': []}, default=str))
         print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh)}))
         return 0
+    if a.no_dataset:
+        # The 2.3 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
+        write_context(out, a.d1_local, a.rescore_export, a.rescore_per_candidate)
+        report = {'dataset': 'download_failed', 'new': 0, 'selected': 0, 'close': 0}
+        (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': None, 'jobs': [], 'closed': []}))
+        (out / 'report.json').write_text(json.dumps(report, indent=1))
+        print('::warning::The dataset download failed; continuing without it (boards, other sources, re-score, still-open check and shortlist still run).')
+        print(json.dumps(report))
+        return 0
     import duckdb
-    manifest = load_manifest()
+    manifest = load_manifest() or {}
     total = manifest.get('stats', {}).get('total_jobs', 0)
+    age = manifest_age_hours(manifest)
+    stale = age is not None and age > MANIFEST_MAX_AGE_HOURS
+    if stale:
+        # The same old snapshot read twice is not two observations, so nothing is closed or marked missing from it. The run goes on;
+        # the workflow's last step fails it, so the stale dataset is seen.
+        (out / 'dataset_stale.txt').write_text(f'{manifest.get("generated_at")} ({age:.0f} h old)\n')
+        print(f'::error::The dataset snapshot is {age:.0f} hours old (generated {manifest.get("generated_at")}); over {MANIFEST_MAX_AGE_HOURS} h. No closures from it.')
+    elif age is None:
+        print('::warning::The dataset manifest could not be read; no closures this run.')
     con = duckdb.connect()
     if a.dataset.startswith('http'):
         con.execute('INSTALL httpfs; LOAD httpfs;')
-    profs = profiles(a.d1_local)
-    # What the scoring step needs per candidate, and the search profiles for the job-site step (which runs without database
-    # credentials). Both stay in the run's work folder and are never committed.
-    (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
-    (out / 'profiles.json').write_text(json.dumps(profs))
-    if a.rescore_export:
-        (out / 'rescore.json').write_text(json.dumps(rescore_rows(a.d1_local, per_candidate=a.rescore_per_candidate)))
-    (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
-    (out / 'taste_targets.json').write_text(json.dumps(taste_targets(a.d1_local)))
+    profs = write_context(out, a.d1_local, a.rescore_export, a.rescore_per_candidate)
     found = {}
     for cid, p in profs.items():
         for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota):
@@ -336,8 +383,8 @@ def main():
     jobs = [j for j in found.values() if len(j['url']) < LIMITS['url']]
     fresh, reopen, dup = split_new(jobs, a.d1_local)
     # A partial snapshot must not close real jobs: no closures at all unless the snapshot has its usual size.
-    close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local) if total >= 1_000_000 else ([], [], [], {})
-    report = {'snapshot': manifest.get('generated_at'), 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
+    close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local) if total >= 1_000_000 and not stale else ([], [], [], {})
+    report = {'snapshot': manifest.get('generated_at'), 'snapshot_age_hours': None if age is None else round(age, 1), 'stale': stale, 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
               'duplicates_in_run': dup, 'already_stored': len(jobs) - dup - len(fresh), 'new': len(fresh), 'reopen': len(reopen),
               'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear)}
     (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': manifest.get('generated_at'), 'jobs': fresh, 'closed': close,

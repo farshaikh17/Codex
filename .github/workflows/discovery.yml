@@ -78,6 +78,8 @@ jobs:
           pip install duckdb==2.0.0
           npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
       - name: Download today's dataset once (about 2.3 GB; queried locally)
+        id: download
+        continue-on-error: true   # a failed download no longer stops the day: the next step runs without the dataset
         run: |
           mkdir -p work
           curl -fsSL --retry 3 -A 'career-job-engine/1.0' -o work/all.parquet https://storage.stapply.ai/jobhive/v1/all.parquet
@@ -94,7 +96,15 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export
+          DOWNLOAD: ${{ steps.download.outcome }}
+        run: |
+          if [ "$DOWNLOAD" = "success" ] && [ -s work/all.parquet ]; then
+            python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export
+          else
+            echo "::warning::The dataset download failed: continuing with an empty dataset result (boards, other sources, re-score, still-open check and shortlist still run)"
+            rm -f work/all.parquet
+            python engine/dataset_discovery.py --out work --no-dataset --rescore-export
+          fi
       - name: Light job-site search (no credentials; a blocked site is skipped)
         if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}
         continue-on-error: true
@@ -221,6 +231,13 @@ jobs:
         run: |
           node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" > ../work/runlog.sql
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
+      - name: Dataset freshness (fails the run, after everything else ran, when the snapshot is over 48 hours old)
+        if: always()
+        run: |
+          if [ -f work/dataset_stale.txt ]; then
+            echo "::error::The open dataset is stale: snapshot $(cat work/dataset_stale.txt). Today's dataset jobs are missing and no closures were made."
+            exit 1
+          fi
       - name: Summary (counts only)
         if: always()
         run: |
