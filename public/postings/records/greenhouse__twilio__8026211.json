@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-13T18:42:38.079148+00:00",
-  "reason": "listed again after missing",
-  "state": "listed"
+  "at": "2026-11-13T20:17:18.222011+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "twilio",
  "changes": [],
