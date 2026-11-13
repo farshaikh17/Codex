@@ -592,3 +592,16 @@ test('S4: one matching word is not enough: Power BI, sales, aviation, plant-base
   assert.equal(p2eval(P2_SANA, 'Reliability Engineer', 'Pune, India', P2_PLANT).target_fit, 'exact');
   assert.equal(p2eval(P2_SANA, 'Maintenance Planner', 'Pune, India', P2_PLANT).target_fit, 'word');
 });
+
+test('S5: plain worldwide-remote wording counts; Farhan also takes Remote - APAC / Asia; a named place or region still restricts', () => {
+  const V = 'Join our team. You will configure CRM workflows, build workflow automation, integrate API and webhooks, and manage stakeholders. 5+ years experience.';
+  for (const [loc, remote] of [['Remote (Global)', true], ['Anywhere', false], ['Remote, Worldwide', true], ['Global', true], ['Fully remote', true], ['Remote - APAC', true], ['Remote - Asia', true]]) {
+    const r = p2eval(P2_FARHAN, 'Implementation Manager', loc, V, remote);
+    assert.equal(r.eligibility, 'ELIGIBLE', loc); assert.equal(p2tier(P2_FARHAN, r), 'READY', loc);
+  }
+  for (const loc of ['Anywhere in the US', 'Global - EMEA', 'Remote - Southeast Asia', 'Remote - Philippines', 'Remote, Europe', 'Remote'])
+    assert.notEqual(p2eval(P2_FARHAN, 'Implementation Manager', loc, V, true).eligibility, 'ELIGIBLE', loc);
+  // the APAC reading is Farhan's only; plain worldwide wording counts for Sana too
+  assert.notEqual(p2eval(P2_SANA, 'Energy Efficiency Engineer', 'Remote - APAC', P2_PLANT, true).reason, 'Posting explicitly advertises worldwide remote work.');
+  assert.equal(p2eval(P2_SANA, 'Energy Efficiency Engineer', 'Remote (Global)', P2_PLANT, true).eligibility, 'ELIGIBLE');
+});

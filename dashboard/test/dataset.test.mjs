@@ -492,3 +492,15 @@ test('S4: the shortlist needs two matched skills unless the title is exactly a t
   const bd = db.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE job_id = 'ds:greenhouse:2'`).get();
   assert.ok(!bd || /"target_exact":(true|false)/.test(bd.b));
 });
+
+test('S5: a job-board report saying "Remote (Global)" still stores eligibility UNKNOWN; an employer posting saying it is ELIGIBLE', () => {
+  const w = world(); const db = w.sqlite;
+  const m = JSON.parse(fs.readFileSync(path.join(w.dir, 'matches.json'), 'utf8'));
+  const D = 'Configure our CRM, workflow automation of sales workflows, GoHighLevel. 5+ years experience.';
+  m.jobs = [{ id: 'js:remotive:g1', url: 'https://boards.example/g1', title: 'Implementation Manager', company: 'Acme', ats_type: 'remotive', location: 'Remote (Global)', is_remote: true, description: D, posted_at: '2026-11-05', candidates: [F], board: true },
+    { id: 'ds:greenhouse:g2', url: 'https://boards.example/g2', title: 'Implementation Manager', company: 'Beta', ats_type: 'greenhouse', location: 'Remote (Global)', is_remote: true, description: D, posted_at: '2026-11-05', candidates: [F] }];
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify(m));
+  db.exec(run(w.dir, ['--no-shortlist']).sql);
+  const e = Object.fromEntries(db.prepare(`SELECT job_id j, eligibility_status e FROM candidate_qualifications WHERE job_id LIKE '%:g%'`).all().map((r) => [r.j, r.e]));
+  assert.deepEqual(e, { 'js:remotive:g1': 'UNKNOWN', 'ds:greenhouse:g2': 'ELIGIBLE' });
+});
