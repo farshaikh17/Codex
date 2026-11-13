@@ -92,7 +92,7 @@ export const EXPERIENCE_OVER_PENALTY=15, EXPERIENCE_MATCH_BONUS=5;
 // Roles pitched well below the candidate (spot check 2026-11-12: a diploma-trainee role was "Ready" for someone with 9 years; a 1-3 year junior
 // role scored 79). Either the title says so, or the posting's own experience RANGE tops out at half the candidate's experience or less.
 // Only applied to a candidate with at least 5 years. The score is capped like an avoid-list title; eligibility and status are unchanged.
-export const UNDER_LEVEL_CAP=40, PLATFORM_GAP_PENALTY=20;
+export const UNDER_LEVEL_CAP=40, PLATFORM_GAP_CAP=60;   // plan S7: a role built around a platform the profile does not list is capped (was a 20-point deduction)
 const JUNIOR_TITLE=/\b(trainee|intern|internship|apprentice|apprenticeship|fresher|freshers|junior|jr|entry[- ]level|graduate engineer|graduate trainee|diploma trainee|werkstudent|praktikant|stagiaire|L1|L2)\b|\bassociate\b(?!\s+(?:director|vice|manager|principal|partner|general|head|lead))/i;
 /** The top of the largest stated experience range ("2 to 4 years", "1-3 years"); 0 when the posting gives no range. */
 export function yearsCeiling(text:string){let best=0;const re=/\b(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})\s*\+?\s*years?\b/gi;let m:RegExpExecArray|null;while((m=re.exec(text||''))){const lo=Number(m[1]),hi=Number(m[2]);if(lo>=0&&hi>lo&&hi<=25&&hi>best)best=hi;}return best;}
@@ -103,7 +103,7 @@ export function underLevel(title:string,description:string,have:number){
  return top>0&&top<=have/2;
 }
 // A role built around one enterprise platform (title names it) that the candidate's skills do not list: "Workday Time & Absence Implementation Lead"
-// matched Farhan's "implementation" and scored 80. Marked down, not excluded: a person may still want it.
+// matched Farhan's "implementation" and scored 80. Capped (plan S7), not excluded: a person may still want it.
 const PLATFORMS=['workday','sap','servicenow','netsuite','peoplesoft','successfactors','dynamics 365','d365','salesforce','hubspot','zoho','oracle','guidewire','veeva','coupa','kronos','ukg','adp','snowflake','databricks','pega','appian','mulesoft','boomi','sharepoint','jira','zendesk','marketo','shopify','magento','odoo'];
 export function platformGap(title:string,skills:unknown){
  const t=' '+String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ')+' ';
@@ -418,7 +418,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'');
  if(electricalOnly)score=Math.max(0,score-ELECTRICAL_ONLY_PENALTY);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
- if(platform)score=Math.max(0,score-PLATFORM_GAP_PENALTY);
+ if(platform)score=Math.min(score,PLATFORM_GAP_CAP);
  if(tooJunior)score=Math.min(score,UNDER_LEVEL_CAP);
  // Plan S6: too senior is capped just below the person's threshold, so it never reaches Ready: the posting asks for more than their years + 2, or the
  // title is an executive one (VP, chief, plant head, general manager, head of) that none of their target roles names.
@@ -428,7 +428,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(tooSenior)score=Math.min(score,threshold-1);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score reduced).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(tooSenior?' Pitched above the candidate\'s level (score capped below the shortlist).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
