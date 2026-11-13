@@ -53,14 +53,59 @@ export function ranked(rows, now) {
     || String(b.discovered_at || '').localeCompare(String(a.discovered_at || '')) || (String(a.job_id) < String(b.job_id) ? -1 : String(a.job_id) > String(b.job_id) ? 1 : 0));
 }
 
-/** The variety rules (plan A4). A soft rule counts how far the lists break it; a swap may fix it (A3.4). A hard rule is never broken. */
-export function softRules() { return []; }
+// ---- The rules (plan A4) ----------------------------------------------------------------------------------------------------------------
+// Sites that repost other employers' jobs (not agencyPosting(): an agency is still the employer's channel). At most 3 per tier (hard), and a repost
+// of a direct employer's row in the pool (same title, same place, same first 200 characters of description) is dropped (hard).
+export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peopleworth', 'pavago', 'paired', 'braintrust']);
+export const REPOSTER_CAP = 3;
+export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
+export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
+export const isReposter = (r) => REPOSTERS.has(companyKey(r.company));
+// An employer shown by its hiring-system tenant id ('fa espx saasfaprod1', or one short lower-case token from Workday or Oracle) is not shortlisted
+// until phase 4 (B1) gives it its real name; the audit (A8) treats one on the shortlist as a broken hard rule. Ids B1 already maps are known employers.
+const TENANT_KNOWN = new Set(['abb', 'mdlz']);
+export function tenantEmployer(company, source) {
+  const c = String(company || '').trim();
+  if (/^fa [a-z]{4} saasfaprod\d+$/.test(c)) return true;
+  return /^(workday|oracle|oraclehcm)$/.test(String(source || '').toLowerCase()) && /^[a-z]{1,5}$/.test(c) && !TENANT_KNOWN.has(c);
+}
+const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+/** Hard: a reposter row duplicating a direct employer's row. */
+export function repostDuplicates(rows) {
+  const direct = new Set(rows.filter((r) => !isReposter(r)).map((r) => [norm(r.title), norm(r.location), norm(r.description).slice(0, 200)].join('|')));
+  return new Set(rows.filter((r) => isReposter(r) && direct.has([norm(r.title), norm(r.location), norm(r.description).slice(0, 200)].join('|'))).map((r) => r.job_id));
+}
+/** Hard: at most 3 reposter rows per tier. */
+export const reposterCap = (r, tier, lists, without) => !isReposter(r) || lists[tier].filter((x) => x !== without && x !== r && isReposter(x)).length < REPOSTER_CAP;
+
+/** The employer is named in the person's skills (e.g. GoHighLevel for Farhan): up to 5 per tier. */
+export function skillEmployer(r, skillKeys) {
+  const k = employerKey(r);
+  return !!k && [...(skillKeys || [])].some((s) => s === k || (k.length >= 5 && s.includes(k)));
+}
+const tierCap = (r, ctx) => (skillEmployer(r, ctx.skillKeys) ? EMPLOYER_SKILL_CAP : EMPLOYER_TIER_CAP);
+const bothCap = (r, ctx) => (skillEmployer(r, ctx.skillKeys) ? 2 * EMPLOYER_SKILL_CAP : EMPLOYER_BOTH_CAP);
+const groups = (rows) => { const m = new Map(); for (const r of rows) if (!isReposter(r)) { const k = employerKey(r); m.set(k, [...(m.get(k) || []), r]); } return m; };
+/** Soft rule: employers over their per-tier cap (reposters have their own hard cap). */
+const employerTier = { name: 'employer_per_tier', tiers: TIERS,
+  count: (lists, ctx) => TIERS.reduce((n, t) => n + [...groups(lists[t]).values()].reduce((a, g) => a + Math.max(0, g.length - tierCap(g[0], ctx)), 0), 0),
+  breakers: (lists, tier, ctx) => [...groups(lists[tier]).values()].filter((g) => g.length > tierCap(g[0], ctx)).flat() };
+/** Soft rule, relaxed last: employers over 4 rows on both tiers together. */
+const employerBoth = { name: 'employer_both_tiers', tiers: TIERS,
+  count: (lists, ctx) => [...groups([...lists.READY, ...lists.STRETCH_READY]).values()].reduce((a, g) => a + Math.max(0, g.length - bothCap(g[0], ctx)), 0),
+  breakers: (lists, tier, ctx) => { const over = new Set([...groups([...lists.READY, ...lists.STRETCH_READY]).entries()].filter(([, g]) => g.length > bothCap(g[0], ctx)).map(([k]) => k));
+    return lists[tier].filter((r) => !isReposter(r) && over.has(employerKey(r))); } };
+
+/** The soft rules in the order they are tried (the both-tiers cap last). A soft rule counts how far the lists break it; a swap may fix it (A3.4). */
+export function softRules() { return [employerTier, employerBoth]; }
+export const HARD_RULES = [reposterCap];
 
 /** Plan A3.2-A3.4 for one person. Returns the tier lists and the report. `ctx` carries the person's threshold and what the rules need. */
 function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
-  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r))), now);
+  const dupes = repostDuplicates(rows);
+  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r)) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source)), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };
@@ -71,7 +116,7 @@ function pickFor(rows, held, ctx) {
     const k = twinKey(r);
     if (heldKeys.has(k)) return false;
     for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && twinKey(x) === k) return false;
-    return (ctx.hard || []).every((h) => h(r, tier, lists, without, ctx));
+    return (ctx.hard || HARD_RULES).every((h) => h(r, tier, lists, without, ctx));
   };
   const fill = (tier, candidates) => {
     for (const r of candidates) {
@@ -118,8 +163,21 @@ function pickFor(rows, held, ctx) {
   // Plan S10 / A3.3: Ready-quality rows that did not fit in Ready come first in Stretch, then Stretch's own rule.
   fill('STRETCH_READY', [...usable.filter((r) => fitsReady(r) && !tierOf.has(r.job_id)), ...usable.filter((r) => !fitsReady(r) && fitsStretchRule(r))]);
   swaps('STRETCH_READY');
-  for (const t of TIERS) lists[t].sort((a, b) => pos.get(a.job_id) - pos.get(b.job_id));
+  for (const t of TIERS) {
+    lists[t].sort((a, b) => pos.get(a.job_id) - pos.get(b.job_id));
+    const per = new Map(); for (const r of lists[t]) per.set(employerKey(r), (per.get(employerKey(r)) || 0) + 1);
+    report[t].employers = per.size;
+    report[t].max_employer_share = lists[t].length ? Math.round(100 * Math.max(...per.values()) / lists[t].length) / 100 : 0;
+    report[t].reposters = lists[t].filter(isReposter).length;
+  }
   return { lists, tierOf, report };
+}
+
+/** The person's skills from candidates.json (primary_skills is stored as JSON text). */
+export function skillsOf(candidates, cid) {
+  const c = (candidates || []).find((x) => x && x.id === cid);
+  let v = c?.primary_skills; try { if (typeof v === 'string') v = JSON.parse(v); } catch { v = []; }
+  return Array.isArray(v) ? v.map(String) : [];
 }
 
 /** Pure: pool rows (with kind auto | pool | held) -> the tier every auto or pool row should have, and what changes. Deterministic. */
@@ -144,7 +202,8 @@ export function selectShortlist(pool, opts = {}) {
   for (const cid of [...byCand.keys()].sort()) {
     const { rows, held } = byCand.get(cid);
     const threshold = Number(rows.find((r) => r.threshold !== undefined && r.threshold !== null)?.threshold ?? 60);
-    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, rules: opts.rules, hard: opts.hard });
+    const skillKeys = new Set(skillsOf(opts.candidates, cid).map(companyKey).filter(Boolean));
+    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, skillKeys, rules: opts.rules, hard: opts.hard });
     for (const r of [...rows].sort((a, b) => (String(a.job_id) < String(b.job_id) ? -1 : 1))) {
       const to = tierOf.get(r.job_id) || 'NEEDS_REVIEW';
       if (r.auto) {
@@ -197,7 +256,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
   const live = read(opt('--liveness')) || {};
-  const { changes, report } = selectShortlist(pool.rows, { alive: live.alive, dead: live.dead, relaxed: args.includes('--relaxed') });
+  const { changes, report } = selectShortlist(pool.rows, { alive: live.alive, dead: live.dead, relaxed: args.includes('--relaxed'), candidates: read(opt('--candidates')) || [] });
   fs.writeFileSync(opt('--out'), selectionSql(changes));
   if (opt('--report')) fs.writeFileSync(opt('--report'), JSON.stringify(report, null, 1));
   console.log(JSON.stringify({ changes: changes.length, report }));

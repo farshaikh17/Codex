@@ -105,6 +105,60 @@ test('a pool no larger than the tier: only hard rules apply (no swap)', () => {
   assert.equal(res.report[C].READY.swaps, 0);
 });
 
+test('A4: one employer holding the 20 best scores keeps 2 per tier; the rest go to the best other employers within the score floor', () => {
+  const pool = [];
+  for (let i = 0; i < 20; i++) pool.push(row({ job_id: 'big' + String(i).padStart(2, '0'), company: 'BigCo', score: 90 - (i % 4) }));
+  for (let i = 0; i < 60; i++) pool.push(row({ job_id: 'o' + String(i).padStart(2, '0'), score: 88 - (i % 6) }));
+  const res = sel(pool);
+  const t = tiers(res);
+  const big = (tier) => Object.entries(t).filter(([k, v]) => k.startsWith('big') && v === tier).length;
+  assert.equal(big('READY'), 2); assert.equal(big('STRETCH_READY'), 2);
+  assert.equal(res.report[C].READY.count, 25); assert.equal(res.report[C].READY.max_employer_share, 0.08);
+  assert.ok(res.report[C].READY.swaps >= 1 && res.report[C].READY.relaxed.length === 0, JSON.stringify(res.report[C].READY));
+  // the employer named in the person's skills may hold 5 per tier
+  const gh = [];
+  for (let i = 0; i < 8; i++) gh.push(row({ job_id: 'gh' + i, company: 'GoHighLevel', score: 95 }));
+  for (let i = 0; i < 40; i++) gh.push(row({ score: 85 }));
+  const cands = [{ id: C, primary_skills: JSON.stringify(['CRM Configuration', 'GoHighLevel']) }];
+  const t2 = tiers(sel(gh, { candidates: cands }));
+  assert.equal(Object.entries(t2).filter(([k, v]) => k.startsWith('gh') && v === 'READY').length, 5);
+  assert.equal(Object.entries(t2).filter(([k, v]) => k.startsWith('gh') && v === 'STRETCH_READY').length, 3, 'the rest of its rows, under its own both-tier cap');
+});
+
+test('A4: four per employer on both tiers, relaxed when nothing fits', () => {
+  const pool = [];
+  for (let i = 0; i < 6; i++) pool.push(row({ job_id: 'e' + i, company: 'Evergreen', score: 90 }));
+  for (let i = 0; i < 46; i++) pool.push(row({ score: 85 }));
+  const t = tiers(sel(pool));
+  assert.equal(Object.entries(t).filter(([k, v]) => k.startsWith('e') && v !== 'NEEDS_REVIEW').length, 4);
+  // nothing else qualifies within the floor: the cap is relaxed and reported, the tier still fills
+  const tight = [];
+  for (let i = 0; i < 6; i++) tight.push(row({ job_id: 'f' + i, company: 'Fixed', score: 90 }));
+  for (let i = 0; i < 3; i++) tight.push(row({ score: 62 }));
+  const r = sel(tight, { tierSize: 3 });
+  assert.deepEqual(r.report[C].READY.relaxed, ['employer_per_tier']);
+  assert.equal(r.report[C].READY.count, 3);
+});
+
+test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in the pool is dropped, a different posting is not', () => {
+  const D = 'Configure the CRM and own workflow automation for our customers. Remote within India. '.repeat(3);
+  const pool = [row({ job_id: 'direct', company: 'Acme', title: 'Implementation Lead', location: 'Remote - India', description: D, score: 80 }),
+    row({ job_id: 'dup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: D + ' Apply via Jobgether.', score: 90 }),
+    row({ job_id: 'notdup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: 'Another company entirely. ' + D, score: 90 })];
+  for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', 'Paired'][i], score: 95 }));
+  const t = tiers(sel(pool));
+  assert.equal(t.dup, undefined, 'the duplicate is dropped');
+  assert.ok(t.notdup, 'a different posting from the same reposter stays');
+  assert.equal(Object.entries(t).filter(([k, v]) => (k.startsWith('rp') || k === 'notdup') && v === 'READY').length, 3, 'three reposter rows in Ready');
+  assert.equal(Object.entries(t).filter(([k, v]) => (k.startsWith('rp') || k === 'notdup') && v === 'STRETCH_READY').length, 3, 'the rest overflow to Stretch, three there too');
+});
+
+test('A4: a tenant-id employer is not shortlisted (B1 gives it a name first); known ids and short real names from other sites are', () => {
+  const pool = [row({ job_id: 't1', company: 'fa espx saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
+    row({ job_id: 'k1', company: 'abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' })];
+  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY' });
+});
+
 test('deterministic: the same pool in any order gives the same changes', () => {
   const pool = [];
   for (let i = 0; i < 60; i++) pool.push(row({ score: 55 + (i * 7) % 40, eligibility: i % 3 ? 'ELIGIBLE' : 'UNKNOWN', discovered_at: iso(i % 40) }));
