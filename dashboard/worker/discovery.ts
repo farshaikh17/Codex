@@ -81,7 +81,7 @@ const FARHAN_SKIP_EMPLOYER=/^\s*ajaia\b/i;
 // A location that names only the United States (owner rule 2026-11-07: US-only remote roles are rejected for Farhan).
 const US_ONLY_PLACE=/\b(united states|usa|new york|nyc|bay area|silicon valley|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming)\b/i;   // US state names too ('Remote - Pennsylvania'); Georgia is left out because it is also a country
 const OPEN_PLACE=/\b(anywhere|worldwide|global|international|apac|asia|emea|europe|canada|uk|united kingdom|latam)\b/i;
-export function usOnlyLocation(location:string){const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l)||OPEN_PLACE.test(l))return false;return US_ONLY_PLACE.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);}
+export function usOnlyLocation(location:string){const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||indianPlace(l)||OPEN_PLACE.test(l))return false;return US_ONLY_PLACE.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);}
 /** The largest 'N+ years' of experience a posting asks for (0 when it does not say). */
 export function yearsRequired(text:string){let best=0;const re=/\b(\d{1,2})\s*(?:\+|plus)?\s*(?:-|to|–)?\s*(?:\d{1,2}\s*)?\+?\s*years?(?:'|’)?\s+(?:of\s+)?(?:[a-z/&-]+\s+){0,4}?experience/gi;let m:RegExpExecArray|null;while((m=re.exec(text||''))){const n=Number(m[1]);if(n>=1&&n<=25&&n>best)best=n;}return best;}
 export const EXPERIENCE_OVER_PENALTY=15, EXPERIENCE_MATCH_BONUS=5;
@@ -114,7 +114,29 @@ export function avoidedTitle(candidateId:string,title:string){
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
  return FARHAN_HARD_AVOID.test(t)||(FARHAN_SOFT_AVOID.test(t)&&!FARHAN_TARGET_WORDS.test(t));
 }
-const INDIA_PLACE=/\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram|gurgaon|kolkata|ahmedabad|kochi|jaipur|coimbatore|madurai|tiruchirappalli|trichy|tamil nadu|karnataka|maharashtra|telangana|kerala|gujarat)\b/i;
+// Indian places (plan S1): the country, every state and union territory, the main cities, and the plant and industrial towns where Sana's
+// employers post (Jamnagar, Mundra, Raigarh...). A name India shares with another country's place (INDIA_NAMESAKE: Punjab, Hyderabad, Kochi...) is
+// not Indian when the location names another country and not India ('Lahore, Punjab, Pakistan', 'Kochi, Japan'); 'Bangalore / London' still is.
+const INDIA_PLACE=new RegExp('\\b(?:'+[
+ 'india','bharat',
+ // states and union territories
+ 'andhra pradesh','arunachal pradesh','assam','bihar','chhattisgarh','goa','gujarat','haryana','himachal pradesh','jharkhand','karnataka','kerala',
+ 'madhya pradesh','maharashtra','manipur','meghalaya','mizoram','nagaland','odisha','orissa','punjab','rajasthan','sikkim','tamil nadu','telangana',
+ 'tripura','uttar pradesh','uttarakhand','uttaranchal','west bengal','andaman','nicobar','chandigarh','dadra','nagar haveli','daman and diu','delhi','ncr',
+ 'jammu','kashmir','ladakh','lakshadweep','puducherry','pondicherry',
+ // cities
+ 'bengaluru','bangalore','mumbai','bombay','pune','hyderabad','secunderabad','chennai','madras','noida','greater noida','gurugram','gurgaon','faridabad',
+ 'ghaziabad','kolkata','calcutta','ahmedabad','gandhinagar','kochi','cochin','jaipur','coimbatore','madurai','tiruchirappalli','trichy','thane','navi mumbai',
+ 'lucknow','kanpur','indore','bhopal','surat','rajkot','vijayawada','bhubaneswar','cuttack','patna','ranchi','raipur','guwahati','dehradun','ludhiana',
+ 'amritsar','mysuru','mysore','thiruvananthapuram','trivandrum','kozhikode','calicut','nellore','warangal','aurangabad','kolhapur','belagavi','belgaum',
+ 'hubli','dharwad','jodhpur','udaipur','ajmer','bikaner','varanasi','prayagraj','allahabad','agra','meerut','gwalior','jabalpur','durgapur','asansol','siliguri','haldia',
+ // plant and industrial towns
+ 'jamnagar','dahej','bharuch','hazira','mundra','kandla','vadodara','baroda','ankleshwar','sanand','halol','raigarh','korba','bhilai','angul','jharsuguda',
+ 'talcher','paradip','rourkela','jamshedpur','bokaro','dhanbad','singrauli','sasan','vindhyachal','anpara','obra','panipat','mathura','bathinda','ropar',
+ 'rupnagar','nashik','chakan','ranjangaon','raigad','ratnagiri','tarapur','chandrapur','nagpur','hosur','ennore','tuticorin','thoothukudi','neyveli','mettur',
+ 'kudankulam','kakinada','krishnapatnam','vizag','visakhapatnam','ramagundam','kothagudem','bellary','ballari','toranagallu','udupi','mangaluru','mangalore',
+ 'baddi','haridwar','pantnagar','sricity','sri city',
+].join('|')+')\\b','i');
 const FOREIGN_NAME=/\b(united states|usa|united kingdom|uk|japan|tokyo|stockholm|sweden|philippines|manila|london|germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|poland|warsaw|canada|toronto|vancouver|australia|sydney|melbourne|new york|san francisco|seattle|austin|boston|chicago|denver|atlanta|los angeles|dallas|miami|emea|europe|latam|north america|americas|mexico|brazil|singapore|dubai|uae|united arab emirates|afghanistan|albania|algeria|andorra|angola|argentina|armenia|austria|azerbaijan|bahrain|bangladesh|belarus|belgium|bolivia|bosnia|botswana|bulgaria|cambodia|cameroon|chile|china|colombia|costa rica|croatia|cuba|cyprus|czechia|czech republic|denmark|dominican republic|ecuador|egypt|el salvador|estonia|ethiopia|finland|georgia|ghana|greece|guatemala|honduras|hong kong|hungary|iceland|indonesia|iran|iraq|israel|italy|ivory coast|jamaica|jordan|kazakhstan|kenya|korea|kuwait|latvia|lebanon|lithuania|luxembourg|malaysia|malta|mauritius|moldova|morocco|nepal|new zealand|nigeria|norway|oman|pakistan|panama|paraguay|peru|portugal|puerto rico|qatar|romania|russia|rwanda|saudi arabia|senegal|serbia|slovakia|slovenia|south africa|sri lanka|switzerland|taiwan|tanzania|thailand|tunisia|turkey|turkiye|uganda|ukraine|uruguay|uzbekistan|venezuela|vietnam|zambia|zimbabwe|athens|lisbon|porto|prague|budapest|bucharest|vienna|zurich|geneva|brussels|copenhagen|oslo|helsinki|cairo|lagos|nairobi|cape town|johannesburg|tel aviv|istanbul|riyadh|doha|bogota|buenos aires|santiago|lima|sao paulo|mexico city|kyiv|sofia|belgrade|zagreb|tallinn|riga|vilnius|krakow|abu dhabi|shanghai|beijing|seoul|taipei|bangkok|jakarta|kuala lumpur|hanoi|ho chi minh|auckland|wellington|brisbane|perth|calgary|ottawa|montreal|cologne|hamburg|frankfurt|milan|rome|lyon|rotterdam|gothenburg|malmo|edinburgh|glasgow|manchester|birmingham|cardiff|belfast|bristol)\b/i;   // every country except India, and the main hiring cities: a posting whose only stated place is one of them is for that place
 const FOREIGN_US_DOTTED=/(?:^|[^A-Za-z0-9])u\.s\.(?![A-Za-z0-9])/i;
 const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU|GB)(?![A-Za-z0-9.])/;          // 'Remote - US', 'US Remote' (upper case only, so the word "us" is not matched)
@@ -123,7 +145,7 @@ const EXCLUSION_PLACE='(?:US|U\\.S\\.|USA|United States|UK|United Kingdom|EU|Eur
 const EXCLUSION_PHRASE=new RegExp('\\b(?:excl\\.|(?:excluding|excl|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)\\b)[\\s-]*(?:in\\s+)?(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,\\s*)?(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
- const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||INDIA_PLACE.test(l))return false;   // 'Remote, excluding the US' is not a US location
+ const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||indianPlace(l))return false;   // 'Remote, excluding the US' is not a US location
  return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);
 }
 /** The Worker's remote test, expressed on what is stored: workplace_type REMOTE* (the posting's own remote flag) or remote wording in its location. */
@@ -132,9 +154,11 @@ export function remoteFromStored(workplaceType:string|null|undefined,location:st
 }
 /** Skill-based preliminary score, exactly as evaluate() computes it for a role-matched posting. */
 export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+skills*8+(eligible?10:0));}
-/** The Worker's own test for an Indian location in evaluate(); narrower than indianPlace(), which is only used to decide that a location is NOT foreign. */
-export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return /\b(india|bengaluru|bangalore|mumbai|pune|hyderabad|chennai|delhi|noida|gurugram)\b/i.test(l)||/(?:^|, )in$/i.test(l);}
-export function indianPlace(location:string|null|undefined){return INDIA_PLACE.test(location||'');}
+/** The Worker's own test for an Indian location in evaluate(): an Indian place (plan S1: states, cities and plant towns) or the country code 'IN' at the end. */
+export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return indianPlace(l)||/(?:^|, )in$/i.test(l);}
+/** True when the location names a place in India (and not only a neighbour's place of the same name). Also decides that a location is NOT foreign. */
+const INDIA_NAMESAKE=/\b(?:punjab|hyderabad|kochi|surat|kashmir)\b/gi;   // also places in Pakistan, Japan and Thailand
+export function indianPlace(location:string|null|undefined){const l=location||'';if(!INDIA_PLACE.test(l))return false;if(/\b(?:india|bharat)\b/i.test(l)||!FOREIGN_NAME.test(l))return true;return INDIA_PLACE.test(l.replace(INDIA_NAMESAKE,' '));}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_INDIA_ONSITE_REASON='On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
