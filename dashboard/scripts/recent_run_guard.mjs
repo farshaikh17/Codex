@@ -1,7 +1,9 @@
 // "Did this workflow already do its real work recently?" GitHub schedules are best-effort: a run can start hours late or never.
 // So a workflow is triggered more often than needed, and each trigger asks this first; a run that already happened within
 // MIN_GAP_HOURS makes the new trigger a quick no-op, while a dropped trigger is caught up by the next one.
-// "Real work" means the named job finished with success: a run whose job was skipped (budget guard) does not count.
+// "Real work" means the named job finished with success: a run whose job was skipped (budget guard) does not count. Every COMPLETED run is
+// read, not only successful ones: a run whose later "health" job went red (discovery.yml) still did its real work and must not be re-run
+// on every trigger (tenth-man review of phase 1).
 //   env: GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_RUN_ID, WORKFLOW_FILE, REAL_JOB, MIN_GAP_HOURS, EVENT
 //   writes skip=true|false to $GITHUB_OUTPUT. Unknown (API refused) -> a scheduled trigger skips, a manual run goes ahead.
 import fs from 'node:fs';
@@ -30,7 +32,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const minGapHours = Number(process.env.MIN_GAP_HOURS || 20);
   let d;
   try {
-    const list = await gh(`/repos/${repo}/actions/workflows/${wf}/runs?status=success&per_page=20`, token);
+    const list = await gh(`/repos/${repo}/actions/workflows/${wf}/runs?status=completed&per_page=20`, token);
     const runs = [];
     for (const r of (list.workflow_runs || []).filter((x) => String(x.id) !== String(runId))) {
       const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=10`, token);

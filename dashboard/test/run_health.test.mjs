@@ -36,7 +36,7 @@ test('every source failed; sources skipped for time do not count; a missing pair
 test('0 rows written fails only when the dataset was fresh', () => {
   const none = { ...GOOD, apply: { new_jobs: 0, rows: 0, rescored: 0 } };
   assert.match(decideHealth(none).reasons.join(), /0 rows written/);
-  assert.equal(decideHealth({ ...none, dataset: { dataset: 'download_failed' } }).healthy, true, 'a failed download is a logged warning, not this failure (R3)');
+  assert.ok(!decideHealth({ ...none, dataset: { dataset: 'download_failed' } }).reasons.some((r) => /0 rows/.test(r)), 'a failed download is reported as such, not as 0 rows');
   assert.ok(!decideHealth({ ...none, stale: true }).reasons.some((r) => /0 rows/.test(r)), 'a stale dataset is reported as stale');
   assert.equal(decideHealth({ ...none, apply: { new_jobs: 0, rows: 0, rescored: 12 } }).healthy, true, 're-scored rows count as written');
 });
@@ -65,4 +65,21 @@ test('discovery.yml: the health job fails the run after everything ran, without 
   assert.match(job, /needs\.discover\.result == 'success'/);
   assert.match(job, /needs\.discover\.outputs\.healthy/);
   assert.doesNotMatch(wf, /Dataset freshness/, 'the stale-dataset check lives in the health decision now');
+});
+
+test('tenth-man fixes: a failed download or an unreadable manifest makes the run red (the guards still count the day, so it does not loop)', () => {
+  assert.match(decideHealth({ ...GOOD, dataset: { dataset: 'download_failed', new: 0 } }).reasons.join(), /download failed/);
+  assert.match(decideHealth({ ...GOOD, dataset: { ...GOOD.dataset, snapshot_age_hours: null } }).reasons.join(), /manifest could not be read/);
+  assert.equal(decideHealth({ ...GOOD, dataset: { ...GOOD.dataset, snapshot_age_hours: 5 } }).healthy, true);
+  assert.equal(decideHealth(GOOD).healthy, true, 'an older report without the field is not flagged');
+});
+
+test('tenth-man fixes: the guards read every completed run, so a red health job does not restart the whole run on every trigger', () => {
+  const guard = fs.readFileSync(path.join(here, '..', 'scripts', 'recent_run_guard.mjs'), 'utf8');
+  assert.match(guard, /runs\?status=completed&per_page=20/);
+  const dog = fs.readFileSync(path.join(here, '..', 'scripts', 'discovery_watchdog.mjs'), 'utf8');
+  assert.match(dog, /if \(r\.status === 'completed'\) \{/);
+  const wf = fs.readFileSync(path.join(here, '..', '..', '.github', 'workflows', 'discovery.yml'), 'utf8');
+  assert.match(wf, /a < max\(10, t \/\/ 5\)/, 'too few verified rows also use the relaxed demotion');
+  assert.match(wf, /run_log\.mjs --work \.\.\/work --kind discovery --event "\$\{\{ github\.event_name \}\}" --status "\$\{\{ job\.status \}\}"/);
 });

@@ -2309,7 +2309,7 @@ router.get('/api/discovery/daily', async (request, env) => {
       const d = days.get(day) || { day, runs: 0, skipped: 0, new_jobs: 0, rescored: 0, closed: 0, reopened: 0, alive: 0, dead: 0, sources: {} as Record<string, { read: number; kept: number; full_text: number }> };
       days.set(day, d);
       if (v.skipped) { d.skipped++; if (at && !lastSkippedAt && (v.kind || 'discovery') === 'discovery') lastSkippedAt = at; continue; }
-      if (at && !lastRunAt && (v.kind || 'discovery') === 'discovery') lastRunAt = at;
+      if (at && !lastRunAt && !v.failed && (v.kind || 'discovery') === 'discovery') lastRunAt = at;   // a run whose job had failed did not update the lists
       d.runs++;
       for (const k of ['new_jobs', 'rescored', 'closed', 'reopened', 'alive', 'dead'] as const) d[k] += Number(v[k]) || 0;
       for (const [name, s] of Object.entries(v.sources || {}) as [string, any][]) {

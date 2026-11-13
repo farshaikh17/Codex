@@ -33,7 +33,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const runs = [];
     for (const r of list.workflow_runs || []) {
       let discover = null;
-      if (r.status === 'completed' && r.conclusion === 'success') {
+      if (r.status === 'completed') {   // a run whose health job went red still did the day's work when its 'discover' job succeeded
         const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=10`, token);
         discover = (jobs.jobs.find((j) => j.name === 'discover') || {}).conclusion || null;
       }
