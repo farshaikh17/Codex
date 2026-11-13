@@ -524,3 +524,58 @@ test('S1: Indian plant towns, states and union territories count as India; a nam
   // Farhan: a remote role stated in an Indian state is remote from India
   assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - Gujarat', P2_IMPL).eligibility, 'ELIGIBLE');
 });
+
+test('S2: every title the daily searches fetch is recognised as the person\'s field', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const py = spawnSync('python3', ['-c', `
+import json, engine.dataset_discovery as d, engine.more_sources as m
+def split(r):
+    out, depth, cur = [], 0, ''
+    for ch in r:
+        depth += ch == '('
+        depth -= ch == ')'
+        if ch == '|' and depth == 0:
+            out.append(cur); cur = ''
+        else:
+            cur += ch
+    return out + [cur]
+print(json.dumps({'builtin': {c: split(p['role']) for c, p in d.BUILTIN.items()},
+  'terms': {'farhan_shaikh': m.QUERIES['farhan_shaikh'] + m.EURES_TERMS['farhan_shaikh'] + [t for _, t in m.ADZUNA['farhan_shaikh']],
+            'sana_ansari': m.QUERIES['sana_ansari'] + m.SF_TERMS + m.EURES_TERMS['sana_ansari'] + [t for _, t in m.ADZUNA['sana_ansari']]}}))`], { cwd: path.resolve(root, '..'), encoding: 'utf8' });
+  assert.equal(py.status, 0, py.stderr);
+  const { builtin, terms } = JSON.parse(py.stdout);
+  // One sample title per alternative of the dataset search's role rule (engine/dataset_discovery.py BUILTIN). A new alternative needs a sample here.
+  const SAMPLES = {
+    farhan_shaikh: ['Implementation Manager', 'Integration Specialist', 'Automation Specialist', 'Business Systems Lead', 'CRM Manager', 'RevOps Lead', 'Sales Ops Manager', 'Marketing Ops Lead',
+      'Systems Architect', 'Customer Onboarding Lead', 'Onboarding Manager', 'Business Operations Lead', 'Revenue Operations Manager', 'Sales Operations Manager', 'Marketing Operations Manager',
+      'GTM Operations Lead', 'Go-to-Market Operations Manager', 'GTM Engineer', 'Go-to-Market Engineer', 'Solutions Consultant', 'Technical Delivery Manager', 'Tech Ops Lead', 'Platform Operations Manager',
+      'Operations Manager', 'Chief of Staff', "Founder's Office Associate", 'Founding Operations Lead', 'AI Operations Lead'],
+    sana_ansari: ['Electrical Engineer', 'Power Plant Engineer', 'Power Generation Engineer', 'Turbine Engineer', 'Boiler Engineer', 'Field Service Engineer - Gas Turbines', 'Plant Operator', 'Control Room Engineer',
+      'Ingenieur Instandhaltung', 'Wartungsingenieur', 'Kraftwerksingenieur', 'Elektroingenieur', 'Betriebsingenieur', 'Ingenieur Zuverlässigkeit', 'Anlageningenieur', 'Ingénieur maintenance',
+      'Ingénieur centrale thermique', 'Onderhoudsingenieur', 'Elektrotechnisch Ingenieur', 'Adviseur energiebesparing', 'Ingenieur Energieeffizienz', 'Power Station Engineer', 'Substation Engineer',
+      'Switchgear Engineer', 'Transmission Line Engineer', 'O&M Engineer – Solar', 'Operations and Maintenance Engineer', 'Maintenance Engineer', 'Plant Engineer', 'Reliability Engineer',
+      'Commissioning Engineer', 'Asset Performance Specialist', 'Energy Engineer', 'Utilities Engineer', 'Renewables Engineer', 'Solar Site Engineer', 'Wind Turbine Technician Lead', 'Thermal Engineer',
+      'Hydro Power Engineer', 'Decarbonisation Consultant', 'Sustainability Engineer', 'Cleantech Engineer', 'Net Zero Engineer', 'Emissions Engineer', 'Efficiency Engineer', 'Technical Consultant'],
+  };
+  const who = { farhan_shaikh: P2_FARHAN, sana_ansari: P2_SANA };
+  const role = (cid, title) => p2eval(who[cid], title, 'Pune, India', 'x').lane === 'STRONGEST_FIT';
+  for (const cid of Object.keys(SAMPLES)) {
+    for (const alt of builtin[cid]) {
+      const sample = SAMPLES[cid].find((t) => new RegExp(alt, 'i').test(t));
+      assert.ok(sample, `${cid}: no sample title for the search alternative /${alt}/`);
+      assert.ok(role(cid, sample), `${cid}: "${sample}" (search /${alt}/) is not a role match`);
+    }
+    for (const term of terms[cid]) {
+      const title = `${term} ${cid === 'farhan_shaikh' ? 'Specialist' : 'Engineer'}`.replace(/\b(\w+) \1\b/i, '$1');
+      assert.ok(role(cid, title), `${cid}: search term "${term}" gives "${title}", not a role match`);
+    }
+  }
+  // the plan's postings
+  for (const t of ['O&M Engineer – Solar', 'Shift In-charge', 'Lead Engineer – Rotating Equipment', 'Mechanical Engineer - Static Equipment', 'Shift Engineer - Operations (Thermal)'])
+    assert.equal(p2tier(P2_SANA, p2eval(P2_SANA, t, 'Hyderabad, India', P2_PLANT)), 'READY', t);
+  for (const t of ['Delivery Manager', 'Technical Program Manager', 'Technical Account Manager', 'Professional Services Consultant', 'Customer Engineer'])
+    assert.notEqual(p2tier(P2_FARHAN, p2eval(P2_FARHAN, t, 'Remote - India', P2_IMPL)), 'HOLD', t);
+  assert.equal(p2eval(P2_FARHAN, 'Delivery Manager', 'Remote - India', P2_IMPL).lane, 'STRONGEST_FIT');
+  // IT operations is not plant operations
+  assert.ok(p2eval(P2_SANA, 'IT Operations Engineer', 'Pune, India', P2_PLANT).score <= 40);
+});
