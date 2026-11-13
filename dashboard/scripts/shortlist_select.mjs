@@ -40,14 +40,86 @@ export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.t
 export const twinKey = (r) => (companyKey(r.company) || String(r.company || '').trim().toLowerCase()) + '|' + String(r.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
 export const isAuto = (r) => TIERS.includes(r.status) && String(r.reason || '').startsWith(MARK);
 
-/** Rank: score, a row found more than 30 days ago 5 lower (the only place age is used), then matched skills, newest, id. */
+export const INCUMBENT_BONUS = 2;
+export const SWAP_FLOOR = 5, SWAP_WINDOW = 10;
+/** Plan A3.1: rank by score, 2 points for a row already on the automatic shortlist, 5 lower for a row found more than 30 days ago (the only place
+ *  age is used; nothing is stored), then matched skills, newest, and the job id (so the result never depends on the input order). */
 export function rankKey(r, now) {
   const age = (now - when(r.discovered_at)) / DAY;
-  return Number(r.score) - (age > OLD_DAYS ? OLD_PENALTY : 0);
+  return Number(r.score) + (r.auto ? INCUMBENT_BONUS : 0) - (age > OLD_DAYS ? OLD_PENALTY : 0);
 }
 export function ranked(rows, now) {
   return [...rows].sort((a, b) => rankKey(b, now) - rankKey(a, now) || Number(b.skill_score) - Number(a.skill_score)
-    || String(b.discovered_at || '').localeCompare(String(a.discovered_at || '')) || String(a.job_id).localeCompare(String(b.job_id)));
+    || String(b.discovered_at || '').localeCompare(String(a.discovered_at || '')) || (String(a.job_id) < String(b.job_id) ? -1 : String(a.job_id) > String(b.job_id) ? 1 : 0));
+}
+
+/** The variety rules (plan A4). A soft rule counts how far the lists break it; a swap may fix it (A3.4). A hard rule is never broken. */
+export function softRules() { return []; }
+
+/** Plan A3.2-A3.4 for one person. Returns the tier lists and the report. `ctx` carries the person's threshold and what the rules need. */
+function pickFor(rows, held, ctx) {
+  const { now, size } = ctx;
+  const rules = ctx.rules || softRules(ctx);
+  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r))), now);
+  const pos = new Map(usable.map((r, i) => [r.job_id, i]));
+  const heldKeys = new Set(held.map(twinKey));
+  const lists = { READY: [], STRETCH_READY: [] };
+  const tierOf = new Map();
+  const qualifies = (r, tier) => (tier === 'READY' ? fitsReady(r) : fitsReady(r) || fitsStretchRule(r));
+  // Hard rules: one posting per employer and title across both tiers and the rows a person holds; and those of ctx.hard (plan A4).
+  const hardOk = (r, tier, without = null) => {
+    const k = twinKey(r);
+    if (heldKeys.has(k)) return false;
+    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && twinKey(x) === k) return false;
+    return (ctx.hard || []).every((h) => h(r, tier, lists, without, ctx));
+  };
+  const fill = (tier, candidates) => {
+    for (const r of candidates) {
+      if (lists[tier].length >= size) break;
+      if (tierOf.has(r.job_id) || !hardOk(r, tier)) continue;
+      tierOf.set(r.job_id, tier); lists[tier].push(r);
+    }
+  };
+  const report = { READY: { swaps: 0, relaxed: [], pool_smaller_than_tier: false }, STRETCH_READY: { swaps: 0, relaxed: [], pool_smaller_than_tier: false } };
+  const violations = () => rules.map((rule) => rule.count(lists, ctx));
+  // A3.4: while a soft rule is broken and a swap candidate exists, the lowest-ranked row breaking it is replaced by the best row that fixes it.
+  // A swap candidate scores at least the threshold + 5 and within 10 of the row it replaces, keeps every hard rule, and makes no other rule worse.
+  const swaps = (tier) => {
+    const open = usable.filter((r) => !tierOf.has(r.job_id) && qualifies(r, tier));
+    if (lists[tier].length + open.length <= size) { report[tier].pool_smaller_than_tier = true; return; }   // only hard rules apply
+    rules.forEach((rule, i) => {
+      if (!rule.tiers.includes(tier)) return;
+      for (let guard = 0; guard < 4 * size; guard++) {
+        const before = violations();
+        if (before[i] === 0) return;
+        const victims = rule.breakers(lists, tier, ctx).sort((a, b) => pos.get(b.job_id) - pos.get(a.job_id));
+        let done = false;
+        for (const v of victims) {
+          for (const c of usable) {
+            if (tierOf.has(c.job_id) || !qualifies(c, tier)) continue;
+            if (Number(c.score) < Number(ctx.threshold) + SWAP_FLOOR || Number(c.score) < Number(v.score) - SWAP_WINDOW) continue;
+            if (!hardOk(c, tier, v)) continue;
+            const at = lists[tier].indexOf(v);
+            lists[tier][at] = c;
+            const after = violations();
+            if (after[i] < before[i] && after.every((x, j) => j === i || x <= before[j])) {
+              tierOf.delete(v.job_id); tierOf.set(c.job_id, tier); report[tier].swaps++; done = true; break;
+            }
+            lists[tier][at] = v;
+          }
+          if (done) break;
+        }
+        if (!done) { report[tier].relaxed.push(rule.name); return; }
+      }
+    });
+  };
+  fill('READY', usable.filter(fitsReady));
+  swaps('READY');
+  // Plan S10 / A3.3: Ready-quality rows that did not fit in Ready come first in Stretch, then Stretch's own rule.
+  fill('STRETCH_READY', [...usable.filter((r) => fitsReady(r) && !tierOf.has(r.job_id)), ...usable.filter((r) => !fitsReady(r) && fitsStretchRule(r))]);
+  swaps('STRETCH_READY');
+  for (const t of TIERS) lists[t].sort((a, b) => pos.get(a.job_id) - pos.get(b.job_id));
+  return { lists, tierOf, report };
 }
 
 /** Pure: pool rows (with kind auto | pool | held) -> the tier every auto or pool row should have, and what changes. Deterministic. */
@@ -71,31 +143,20 @@ export function selectShortlist(pool, opts = {}) {
   const changes = [], report = {};
   for (const cid of [...byCand.keys()].sort()) {
     const { rows, held } = byCand.get(cid);
-    const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r))), now);
-    const taken = new Set(held.map(twinKey));
-    const tierOf = new Map(), lists = { READY: [], STRETCH_READY: [] };
-    const fill = (tier, candidates) => {
-      for (const r of candidates) {
-        if (lists[tier].length >= size) break;
-        if (tierOf.has(r.job_id) || taken.has(twinKey(r))) continue;
-        tierOf.set(r.job_id, tier); taken.add(twinKey(r)); lists[tier].push(r);
-      }
-    };
-    fill('READY', usable.filter(fitsReady));
-    // Plan S10: Ready-quality rows that did not fit in Ready come first in Stretch, then Stretch's own rule.
-    fill('STRETCH_READY', [...usable.filter((r) => fitsReady(r) && !tierOf.has(r.job_id)), ...usable.filter((r) => !fitsReady(r) && fitsStretchRule(r))]);
-    for (const r of [...rows].sort((a, b) => String(a.job_id).localeCompare(String(b.job_id)))) {
+    const threshold = Number(rows.find((r) => r.threshold !== undefined && r.threshold !== null)?.threshold ?? 60);
+    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, rules: opts.rules, hard: opts.hard });
+    for (const r of [...rows].sort((a, b) => (String(a.job_id) < String(b.job_id) ? -1 : 1))) {
       const to = tierOf.get(r.job_id) || 'NEEDS_REVIEW';
       if (r.auto) {
         if (to === r.status) continue;
         const qualifies = r.verified && (fitsReady(r) || fitsStretchRule(r));
         changes.push({ candidate_id: cid, job_id: r.job_id, from: r.status, to,
-          why: to !== 'NEEDS_REVIEW' ? (to === 'READY' ? 'Moved up: qualifies for Ready' : 'Outranked: Ready keeps 25, moved to Stretch') : qualifies ? 'Outranked: the automatic shortlist keeps 25 per tier' : 'No longer meets the automatic shortlist rule' });
+          why: to !== 'NEEDS_REVIEW' ? (to === 'READY' ? 'Moved up: qualifies for Ready' : 'Outranked: Ready keeps 25, moved to Stretch') : qualifies ? 'Outranked: the automatic shortlist keeps 25 per tier, or swapped for variety' : 'No longer meets the automatic shortlist rule' });
       } else if (to !== 'NEEDS_REVIEW' && r.status === 'NEEDS_REVIEW') {
         changes.push({ candidate_id: cid, job_id: r.job_id, from: 'NEEDS_REVIEW', to, why: 'Shortlisted automatically by the screen' });
       }
     }
-    report[cid] = Object.fromEntries(TIERS.map((t) => [t, { count: lists[t].length }]));
+    report[cid] = Object.fromEntries(TIERS.map((t) => [t, { count: lists[t].length, ...rep[t] }]));
     report[cid].pool = rows.length;
   }
   return { changes, report };

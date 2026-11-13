@@ -52,13 +52,57 @@ test('at most 25 per tier, best first; Ready-quality overflow fills Stretch firs
   assert.equal(Object.keys(t).filter((k) => k.startsWith('s') && t[k] === 'STRETCH_READY').length, 20);
   const why = Object.fromEntries(res.changes.map((c) => [c.job_id, c.why]));
   assert.match(why.inc, /^Outranked/); assert.match(why.fell, /^No longer meets/);
-  assert.deepEqual(res.report[C].READY, { count: 25 }); assert.deepEqual(res.report[C].STRETCH_READY, { count: 25 });
+  assert.equal(res.report[C].READY.count, 25); assert.equal(res.report[C].STRETCH_READY.count, 25);
 });
 
 test('one posting per employer and title, also against rows a person holds', () => {
   const pool = [row({ job_id: 'a', company: 'Acme Inc', title: 'Implementation Lead', score: 80 }), row({ job_id: 'b', company: 'acme', title: 'implementation lead', score: 79 }),
     row({ job_id: 'c', company: 'Beta', title: 'Implementation Lead', score: 70 }), { kind: 'held', candidate_id: C, job_id: 'h', company: 'Beta', title: 'Implementation Lead', status: 'READY' }];
   assert.deepEqual(tiers(sel(pool)), { a: 'READY' });
+});
+
+test('incumbents keep their places only through the +2', () => {
+  const mk = (newScore) => {
+    const pool = [];
+    for (let i = 0; i < 24; i++) pool.push(row({ score: 90 }));
+    pool.push(auto('READY', { job_id: 'inc', score: 70 }), row({ job_id: 'chal', score: newScore }));
+    return tiers(sel(pool, { tierSize: 25 }));
+  };
+  assert.equal(mk(71).chal, 'STRETCH_READY', 'a new row 1 point better does not displace the incumbent (70 + 2)');
+  assert.equal(mk(71).inc, undefined, 'the incumbent stays where it is');
+  assert.equal(mk(73).chal, 'READY', 'a new row 3 points better does');
+  assert.equal(mk(73).inc, 'STRETCH_READY');
+});
+
+test('swaps: the lowest-ranked row breaking a soft rule is replaced by the best row that fixes it, within the score floor; otherwise the rule is relaxed', () => {
+  // an invented soft rule for the engine alone: at most 2 rows whose title says "Blue" per tier
+  const blue = (r) => /Blue/.test(r.title);
+  const rule = { name: 'blue', tiers: ['READY', 'STRETCH_READY'], count: (l) => ['READY', 'STRETCH_READY'].reduce((a, t) => a + Math.max(0, l[t].filter(blue).length - 2), 0),
+    breakers: (l, t) => (l[t].filter(blue).length > 2 ? l[t].filter(blue) : []) };
+  const pool = [row({ job_id: 'b1', title: 'Blue 1', score: 90 }), row({ job_id: 'b2', title: 'Blue 2', score: 89 }), row({ job_id: 'b3', title: 'Blue 3', score: 88 }),
+    row({ job_id: 'b4', title: 'Blue 4', score: 87 }), row({ job_id: 'g1', title: 'Green 1', score: 80 }), row({ job_id: 'g2', title: 'Green 2', score: 70 }),
+    row({ job_id: 'g3', title: 'Green 3', score: 64 }), row({ job_id: 'x', title: 'Other', score: 60, eligibility: 'UNKNOWN' })];
+  const res = sel(pool, { tierSize: 3, rules: [rule] });
+  const t = tiers(res);
+  assert.deepEqual(['b1', 'b2', 'g1'].map((k) => t[k]), ['READY', 'READY', 'READY'], 'b3 swapped for g1 (80, within 10 of 88)');
+  assert.equal(res.report[C].READY.swaps, 1);
+  // Stretch takes b3, b4 (Ready overflow) and g2: two Blue rows, nothing to fix
+  assert.deepEqual(['b3', 'b4', 'g2'].map((k) => t[k]), ['STRETCH_READY', 'STRETCH_READY', 'STRETCH_READY']);
+  assert.deepEqual(res.report[C].STRETCH_READY.relaxed, []);
+  // with a fifth Blue row Stretch is b3, b4, b5: the only fixes are g2 (70, more than 10 below b5's 86) and g3 (64, under threshold + 5): relaxed
+  const r2 = sel([...pool, row({ job_id: 'b5', title: 'Blue 5', score: 86 })], { tierSize: 3, rules: [rule] });
+  assert.equal(tiers(r2).b5, 'STRETCH_READY');
+  assert.deepEqual(r2.report[C].STRETCH_READY.relaxed, ['blue']);
+});
+
+test('a pool no larger than the tier: only hard rules apply (no swap)', () => {
+  const blue = (r) => /Blue/.test(r.title);
+  const rule = { name: 'blue', tiers: ['READY'], count: (l) => Math.max(0, l.READY.filter(blue).length - 1), breakers: (l) => l.READY.filter(blue) };
+  const pool = [row({ title: 'Blue 1', score: 90 }), row({ title: 'Blue 2', score: 90 }), row({ title: 'Green', score: 90 })];
+  const res = sel(pool, { tierSize: 3, rules: [rule] });
+  assert.equal(Object.values(tiers(res)).filter((x) => x === 'READY').length, 3);
+  assert.equal(res.report[C].READY.pool_smaller_than_tier, true);
+  assert.equal(res.report[C].READY.swaps, 0);
 });
 
 test('deterministic: the same pool in any order gives the same changes', () => {
