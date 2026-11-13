@@ -3335,20 +3335,28 @@ function backupEligible(request: Request): boolean {
   if (request.method === 'GET' && referencedCandidates(new URL(request.url)).some((cid) => !BUILTIN_IDS.includes(cid))) return false; // a client's answers are never kept in the outage backup, so deleting a client leaves no stored copy
   return request.method === 'GET' && accessLevel.get(request) === 'public' && !viewerOf.has(request) && !BACKUP_SKIP.has(new URL(request.url).pathname);
 }
-async function backupStore(request: Request, body: string): Promise<void> {
+// The copy is keyed by the URL AND the code that produced it (cache schema + deployed commit, as the D1 response cache): after a release the
+// old Worker's answers, whose shape the new page may not read, are never served to it; the new Worker keeps its own copies from its first answers.
+function backupKey(request: Request, env: Env): Request {
+  const u = new URL(request.url);
+  u.searchParams.set('__backup', `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`);
+  return new Request(u.toString(), { method: 'GET' });
+}
+async function backupStore(request: Request, env: Env, body: string): Promise<void> {
   try {
-    const c = backupCache(); if (!c || backupStamp.size > 2000 && !backupStamp.has(request.url)) return;
-    const last = backupStamp.get(request.url) || 0;
-    if (Date.now() - last < BACKUP_REFRESH_MS) return;       // at most one copy per URL per 5 minutes per isolate
-    backupStamp.set(request.url, Date.now());
-    await c.put(new Request(request.url, { method: 'GET' }), new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${BACKUP_TTL_SECONDS}` } }));
+    const key = backupKey(request, env);
+    const c = backupCache(); if (!c || backupStamp.size > 2000 && !backupStamp.has(key.url)) return;
+    const last = backupStamp.get(key.url) || 0;
+    if (Date.now() - last < BACKUP_REFRESH_MS) return;       // at most one copy per URL and commit per 5 minutes per isolate
+    backupStamp.set(key.url, Date.now());
+    await c.put(key, new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${BACKUP_TTL_SECONDS}` } }));
   } catch { /* best effort */ }
 }
 async function backupServe(request: Request, env: Env): Promise<Response | null> {
   try {
     if (!backupEligible(request)) return null;
     const c = backupCache(); if (!c) return null;
-    const hit = await c.match(new Request(request.url, { method: 'GET' }));
+    const hit = await c.match(backupKey(request, env));
     if (!hit) return null;
     return new Response(await hit.text(), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': 'STALE-OUTAGE', 'X-Worker-Commit': env.GIT_COMMIT || 'unknown' } });
   } catch { return null; }
@@ -3384,7 +3392,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
       headers.set('X-Content-Type-Options', 'nosniff'); headers.set('X-Frame-Options', 'DENY'); headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
       const out = new Response(res.body, { status: res.status, headers });
       if (backupEligible(request)) {
-        if (res.status === 200 && (headers.get('Content-Type') || '').includes('json')) ctx.waitUntil(out.clone().text().then((t) => backupStore(request, t)));
+        if (res.status === 200 && (headers.get('Content-Type') || '').includes('json')) ctx.waitUntil(out.clone().text().then((t) => backupStore(request, env, t)));
         else if (res.status === 503) { const stale = await backupServe(request, env); if (stale) return stale; }
       }
       return out;
