@@ -22,10 +22,11 @@ const Section: React.FC<{ title: string; count?: number; children: React.ReactNo
 
 const NEW_SHOWN = 5;   // the first Best match stays near the top of a phone screen even after a long absence
 
-export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt: string | null | undefined; actions: CardActions; go: (view: 'all' | 'applications' | 'hidden') => void }> = ({ data, baseline, lastRunAt, actions, go }) => {
+export type ListView = 'all' | 'applications' | 'hidden' | 'best' | 'worth' | 'good';
+export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt: string | null | undefined; actions: CardActions; go: (view: ListView) => void }> = ({ data, baseline, lastRunAt, actions, go }) => {
   const [openWorth, setOpenWorth] = useState(false);
   const [allNew, setAllNew] = useState(false);
-  const all = [...data.best, ...data.worth_a_try, ...data.recent];
+  const all = [...data.best, ...data.worth_a_try];   // "New" is drawn from the two lists only (tenth-man review)
   const newOnes = all.filter((j, i) => all.findIndex((x) => x.id === j.id) === i && listedAt(j) > baseline);
   const isNew = new Set(newOnes.map((j) => j.id));
   const best = data.best.filter((j) => !isNew.has(j.id));
@@ -38,7 +39,7 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
       <p className="text-sm text-slate-700" data-testid="status-line">
         <span>{todayLabel()}</span>
         <span> · {newOnes.length} new since your last visit</span>
-        <span> · {c.more_good} more good match{c.more_good === 1 ? '' : 'es'}</span>
+        <span> · </span><button type="button" onClick={() => go('good')} className="underline underline-offset-2 min-h-[44px] -my-3" data-testid="more-good">{c.more_good} more good match{c.more_good === 1 ? '' : 'es'}</button>
         {note && (note.stale
           ? <span> · <span role="status" className="rounded-full bg-amber-200 text-amber-950 px-2" data-testid="updated-note">{note.label}</span></span>
           : <span data-testid="updated-note"> · Updated {lastRunAt ? timeIST(lastRunAt) : ''}</span>)}
@@ -56,15 +57,17 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
       )}
       <Section title="Best matches" count={c.best} testid="section-best">
         {best.length ? best.map((j) => card(j)) : <p className="text-base text-slate-600">{c.best ? 'All of them are under "New" above.' : 'None today. Look through "Worth a try" below.'}</p>}
+        {c.best > data.best.length && <button type="button" className={btnPlain} onClick={() => go('best')}>Show all {c.best} best matches</button>}
       </Section>
       <section aria-label="Worth a try" data-testid="section-worth" className="space-y-3">
         <button type="button" aria-expanded={openWorth} onClick={() => setOpenWorth((o) => !o)} className="w-full min-h-[44px] flex items-center justify-between text-lg font-bold text-slate-900 text-left">
           <span>Worth a try ({c.worth_a_try})</span><span aria-hidden="true">{openWorth ? '▴' : '▾'}</span>
         </button>
         {openWorth && (worth.length ? worth.map((j) => card(j)) : <p className="text-base text-slate-600">Nothing else here today.</p>)}
+        {openWorth && c.worth_a_try > data.worth_a_try.length && <button type="button" className={btnPlain} onClick={() => go('worth')}>Show all {c.worth_a_try}</button>}
       </section>
       <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-200">
-        <button type="button" onClick={() => go('all')} className={btnPlain} data-testid="show-everything">Show everything else ({c.everything})</button>
+        <button type="button" onClick={() => go('all')} className={btnPlain} data-testid="show-everything">Show everything else ({c.everything - c.best - c.worth_a_try})</button>
         {c.hidden > 0 && <button type="button" onClick={() => go('hidden')} className={btnPlain}>Hidden jobs ({c.hidden})</button>}
       </div>
     </div>
@@ -73,7 +76,13 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
 
 const FILTERS: [string, string][] = [['ALL', 'All'], ['INDIA', 'Says it hires in India'], ['REMOTE', 'Remote']];
 
-export const AllView: React.FC<{ candidateId: string; total: number; actions: CardActions; refreshKey: number }> = ({ candidateId, total, actions, refreshKey }) => {
+// What each list screen shows: the rest of the list (To review), all Best matches, all Worth a try, or the good matches (60+) of the rest.
+const LIST_OF: Record<string, { title: string; status: string; min?: number }> = {
+  all: { title: 'Everything else', status: 'NEEDS_REVIEW' }, best: { title: 'Best matches', status: 'READY' },
+  worth: { title: 'Worth a try', status: 'STRETCH_READY' }, good: { title: 'More good matches', status: 'NEEDS_REVIEW', min: 60 },
+};
+export const AllView: React.FC<{ candidateId: string; which: string; total: number; actions: CardActions; refreshKey: number }> = ({ candidateId, which, total, actions, refreshKey }) => {
+  const list = LIST_OF[which] || LIST_OF.all;
   const [jobs, setJobs] = useState<Job[] | null>(null);
   const [count, setCount] = useState(total);
   const [page, setPage] = useState(1);
@@ -83,20 +92,21 @@ export const AllView: React.FC<{ candidateId: string; total: number; actions: Ca
   const [term, setTerm] = useState('');
   const [error, setError] = useState('');
   useEffect(() => { const t = setTimeout(() => setTerm(search.trim()), 400); return () => clearTimeout(t); }, [search]);
-  useEffect(() => { setPage(1); }, [filter, sort, term]);
+  useEffect(() => { setPage(1); }, [filter, sort, term, which]);
   useEffect(() => {
     let live = true;
     setError('');
     fetchJobs({ candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, sort_by: sort, search: term || undefined, page, limit: 25,
+      qualification_status: list.status, min_score: list.min,
       eligibility: filter === 'INDIA' ? 'ELIGIBLE' : undefined, workplace_type: filter === 'REMOTE' ? 'REMOTE_ANY' : undefined })
       .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); } })
       .catch(() => { if (live) setError('Could not load the list. Check the connection and try again.'); });
     return () => { live = false; };
-  }, [candidateId, filter, sort, term, page, refreshKey]);
+  }, [candidateId, filter, sort, term, page, refreshKey, which]);   // eslint-disable-line react-hooks/exhaustive-deps
   const pages = Math.max(1, Math.ceil(count / 25));
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-900">Everything else ({count})</h2>
+      <h2 className="text-lg font-bold text-slate-900">{list.title} ({count})</h2>
       <input type="search" aria-label="Search jobs" placeholder="Search a title, employer or place" value={search} onChange={(e) => setSearch(e.target.value)}
         className="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base" />
       <div className="flex flex-wrap gap-3" role="group" aria-label="Show">

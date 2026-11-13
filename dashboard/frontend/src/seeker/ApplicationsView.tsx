@@ -17,12 +17,18 @@ interface Props {
   onStage: (job: Job, status: ApplicationStatus, notes: string | undefined, clearNotes: boolean) => Promise<boolean>;
   onRemove: (job: Job) => Promise<boolean>;
   toast: (message: string) => void;
+  busy?: Record<string, boolean>;
 }
 
-const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: Job, date: string | null) => void }> = ({ job, followUp, onFollowUp, onOpen, onPosting, onStage, onRemove, todayIndia }) => {
+const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: Job, date: string | null) => void }> = ({ job, followUp, onFollowUp, onOpen, onPosting, onStage, onRemove, todayIndia, busy = {} }) => {
   const a = job.application!;
   const [note, setNote] = useState(a.notes || '');
-  useEffect(() => setNote(a.notes || ''), [a.notes]);
+  const [typed, setTyped] = useState(false);
+  // the stage shown at once (tenth-man review: it snapped back while the save was on its way, so people chose it again)
+  const [shown, setShown] = useState<string>(a.status);
+  useEffect(() => setShown(a.status), [a.status]);
+  useEffect(() => { if (!typed) setNote(a.notes || ''); }, [a.notes]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const wait = !!busy[job.id];
   const url = postingUrl(job);
   const waiting = WAITING_GROUP.includes(a.status);
   const due = followUpState(followUp?.follow_up_at, todayIndia);
@@ -36,10 +42,11 @@ const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: 
         <p className="text-sm text-slate-600 break-words">{job.company} · {placeText(job)}</p>
       </div>
       <label className="block text-sm text-slate-700">Where are you with this job?
-        <select aria-label={`Stage for ${job.title}`} value={a.status} onChange={(e) => onStage(job, e.target.value as ApplicationStatus, undefined, false)}
+        <select aria-label={`Stage for ${job.title}`} value={shown} disabled={wait}
+          onChange={async (e) => { const v = e.target.value; setShown(v); if (!(await onStage(job, v as ApplicationStatus, undefined, false))) setShown(a.status); }}
           className="mt-1 block w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base bg-white">
           {STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          {!STAGES.some(([k]) => k === a.status) && <option value={a.status}>{stageWord(a.status) || a.status}</option>}
+          {!STAGES.some(([k]) => k === shown) && <option value={shown}>{stageWord(shown) || shown}</option>}
         </select>
       </label>
       {waiting && (
@@ -50,10 +57,10 @@ const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: 
         </label>
       )}
       <label className="block text-sm text-slate-700">Your note
-        <textarea aria-label={`Note for ${job.title}`} rows={2} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-300 p-3 text-base" />
+        <textarea aria-label={`Note for ${job.title}`} rows={2} maxLength={2000} value={note} onChange={(e) => { setNote(e.target.value); setTyped(true); }} className="mt-1 block w-full rounded-xl border border-slate-300 p-3 text-base" />
       </label>
       <div className="flex flex-wrap gap-3">
-        {noteChanged && <button type="button" className={btnPrimary} onClick={() => onStage(job, a.status as ApplicationStatus, note, !note.trim() && !!(a.notes || '').trim())}>
+        {noteChanged && <button type="button" disabled={wait} className={btnPrimary} onClick={async () => { if (await onStage(job, a.status as ApplicationStatus, note, !note.trim() && !!(a.notes || '').trim())) setTyped(false); }}>
           {!note.trim() && (a.notes || '').trim() ? 'Clear note' : 'Save note'}</button>}
         {url && <a href={url} target="_blank" rel="noopener noreferrer" onClick={() => onPosting(job)} className={btnPlain}>Open posting</a>}
         {SAVED_GROUP.includes(a.status) && <button type="button" className={btnPlain} onClick={() => onRemove(job)}>Remove</button>}

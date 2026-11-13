@@ -47,9 +47,11 @@ export const SeekerApp: React.FC = () => {
 
   // Plan U13: ask /api/version first (open tracker or not), then load only the chosen person, once.
   const [ready, setReady] = useState(false);
-  const [canWrite, setCanWrite] = useState(false);
-  useEffect(() => { loadAccessMode().then((open) => { setCanWrite(open); setReady(true); }); }, []);
-  const [data, setData] = useState<TodayData | null>(null);
+  const [access, setAccess] = useState<boolean | null>(null);   // true open, false switched off by the server, null not known (no connection)
+  useEffect(() => { loadAccessMode().then((open) => { setAccess(open); setReady(true); }); }, []);
+  // the answer is kept with the person it is for, so a switch never shows (or keeps waiting on) the other person's list
+  const [loaded, setData] = useState<TodayData | null>(null);
+  const data = loaded && loaded.candidate_id === candidateId ? loaded : null;
   const [loadError, setLoadError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastRunAt, setLastRunAt] = useState<string | null | undefined>(undefined);
@@ -63,7 +65,6 @@ export const SeekerApp: React.FC = () => {
     fetchToday(candidateId).then((d) => { if (live) setData(d); }).catch((e) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
   }, [ready, candidateId, refreshKey]);
-  useEffect(() => { setData(null); }, [candidateId]);
   const reload = useCallback(() => setRefreshKey((k) => k + 1), []);
   useEffect(() => { if (person) document.title = `${NAME[person]}'s jobs`; }, [person]);
 
@@ -78,8 +79,8 @@ export const SeekerApp: React.FC = () => {
   const failed = useCallback((e: unknown) => {
     const w = e instanceof WriteError ? e : null;
     if (w && w.status === 409) say(w.message, { label: 'Reload', run: reload });
-    else say(w?.message || (canWrite ? 'Could not save. Check the connection and try again.' : 'Changes are switched off on this site.'));
-  }, [say, reload, canWrite]);
+    else say(w?.message || (access === false ? 'Changes are switched off on this site.' : 'Could not save. Check the connection and try again.'));
+  }, [say, reload, access]);
 
   // the profile's skills, for "Skills the posting names" in the panel (loaded once per person, only when a panel opens)
   const [skills, setSkills] = useState<Record<string, string[]>>({});
@@ -105,8 +106,8 @@ export const SeekerApp: React.FC = () => {
   const [asking, setAsking] = useState<Job | null>(null);
   const pending = useRef<Job | null>(null);
   const onPosting = useCallback((job: Job) => {
-    pending.current = { ...job, candidate_id: candidateId || job.candidate_id };
-    try { window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ id: job.id, title: job.title, company: job.company, candidate_id: candidateId, application: job.application })); } catch { /* fine */ }
+    pending.current = { ...job, candidate_id: candidateId || job.candidate_id, asked_at: Date.now() } as Job;
+    try { window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ id: job.id, title: job.title, company: job.company, candidate_id: candidateId, application: job.application, asked_at: Date.now() })); } catch { /* fine */ }
   }, [candidateId]);
   useEffect(() => {
     const back = () => {
@@ -116,36 +117,62 @@ export const SeekerApp: React.FC = () => {
       if (!job) return;
       pending.current = null;
       try { window.sessionStorage.removeItem(PENDING_KEY); } catch { /* fine */ }
+      if (Date.now() - Number((job as any).asked_at || 0) > 30 * 60000) return;   // a posting opened long ago: do not ask out of the blue
       if (job.application && !['SAVED', 'REVIEWING'].includes(job.application.status)) return;   // already applied
       setAsking(job);
     };
+    // the posting may open in another tab (visibilitychange / focus) or in this one (Back from an in-app browser: pageshow, or a fresh load)
     document.addEventListener('visibilitychange', back);
     window.addEventListener('focus', back);
-    return () => { document.removeEventListener('visibilitychange', back); window.removeEventListener('focus', back); };
+    window.addEventListener('pageshow', back);
+    back();
+    return () => { document.removeEventListener('visibilitychange', back); window.removeEventListener('focus', back); window.removeEventListener('pageshow', back); };
   }, []);
 
   // ---- actions ----
   const cid = (job: Job) => job.candidate_id && Object.values(CANDIDATE).includes(job.candidate_id) ? job.candidate_id : candidateId!;
+  // Tenth-man review: two quick changes (or a double tap) from one person must not trip the "changed elsewhere" check. Each write waits for the
+  // previous one on the same job, and sends the updated_at the server returned for the last write made here (not the one from the last reload).
+  const fresh = useRef<Record<string, string | null>>({});
+  const chain = useRef<Record<string, Promise<unknown>>>({});
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const queued = <T,>(jobId: string, work: () => Promise<T>): Promise<T> => {
+    const prev = chain.current[jobId] || Promise.resolve();
+    setBusy((b) => ({ ...b, [jobId]: true }));
+    const next = prev.catch(() => {}).then(work);
+    chain.current[jobId] = next;
+    next.finally(() => { if (chain.current[jobId] === next) { delete chain.current[jobId]; setBusy((b) => { const c = { ...b }; delete c[jobId]; return c; }); } }).catch(() => {});
+    return next;
+  };
   const setStage = useCallback(async (job: Job, status: ApplicationStatus, notes: string | undefined, clearNotes: boolean): Promise<boolean> => {
     try {
-      await saveApplication({ candidate_id: cid(job), job_id: job.id, status, ...(notes !== undefined ? { notes } : {}), ...(clearNotes ? { clear_notes: true } : {}),
-        ...(job.application ? (job.application.updated_at ? { expected_updated_at: job.application.updated_at } : {}) : { expected_updated_at: null }) });
+      await queued(job.id, async () => {
+        const known = job.id in fresh.current ? fresh.current[job.id] : (job.application ? (job.application.updated_at ?? undefined) : null);
+        const saved = await saveApplication({ candidate_id: cid(job), job_id: job.id, status, ...(notes !== undefined ? { notes } : {}), ...(clearNotes ? { clear_notes: true } : {}),
+          ...(known !== undefined ? { expected_updated_at: known } : {}) });
+        fresh.current[job.id] = saved?.application?.updated_at ?? null;
+      });
       say(status === 'SAVED' && !job.application ? 'Saved' : clearNotes ? 'Note cleared' : notes !== undefined && status === job.application?.status ? 'Note saved' : `Saved: ${STAGE_SAY[status] || 'updated'}`);
       reload();
       return true;
     } catch (e) { failed(e); return false; }
   }, [say, failed, reload]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const unsave = (job: Job) => queued(job.id, async () => { await unsaveJob(job.id, cid(job)); fresh.current[job.id] = null; });
   const toggleSave = useCallback(async (job: Job) => {
+    if (busy[job.id]) return;   // a double tap
     if (job.application && job.application.status === 'SAVED') {
-      try { await unsaveJob(job.id, cid(job)); say('Removed from your applications', { label: 'Undo', run: () => { setStage({ ...job, application: null }, 'SAVED', undefined, false); } }); reload(); }
-      catch (e: any) { say(/notes|moved on|changed/i.test(e?.message || '') ? 'This has a note or a later stage, so it stays. Change it in My applications.' : 'Could not save. Check the connection and try again.'); }
-    } else if (!job.application) await setStage(job, 'SAVED', undefined, false);
-  }, [say, reload, setStage]);   // eslint-disable-line react-hooks/exhaustive-deps
+      try { await unsave(job); say('Removed from your applications', { label: 'Undo', run: () => { setStage({ ...job, application: null }, 'SAVED', undefined, false); } }); reload(); }
+      catch (e: any) { say(/notes|moved on|changed/i.test(e?.message || '') ? 'This has a note, so it stays. Change it in My applications.' : 'Could not save. Check the connection and try again.'); }
+    } else if (job.application && job.application.status === 'REVIEWING') say('This is in Preparing. Change it in My applications.');
+    else if (!job.application) await setStage(job, 'SAVED', undefined, false);
+  }, [say, reload, setStage, busy]);   // eslint-disable-line react-hooks/exhaustive-deps
   const hide = useCallback(async (job: Job) => {
     try {
       await markJob(job.id, cid(job), 'DOWN');
+      const plainSaved = job.application?.status === 'SAVED' && !(job.application.notes || '').trim();
+      if (plainSaved) await unsave(job).catch(() => {});
       setData((d) => d && { ...d, best: d.best.filter((j) => j.id !== job.id), worth_a_try: d.worth_a_try.filter((j) => j.id !== job.id), recent: d.recent.filter((j) => j.id !== job.id) });
-      say('Hidden', { label: 'Undo', run: async () => { try { await markJob(job.id, cid(job), 'CLEAR'); say('Back on your list'); reload(); } catch (e) { failed(e); } } });
+      say('Hidden', { label: 'Undo', run: async () => { try { await markJob(job.id, cid(job), 'CLEAR'); if (plainSaved) await setStage({ ...job, application: null }, 'SAVED', undefined, false); say('Back on your list'); reload(); } catch (e) { failed(e); } } });
       if (route.jobId === job.id) closeJob();
       reload();
     } catch (e) { failed(e); }
@@ -173,16 +200,18 @@ export const SeekerApp: React.FC = () => {
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
         <div role="group" aria-label="Whose jobs" className="flex rounded-xl border border-slate-300 p-0.5 shrink-0">
           {PEOPLE.map((p) => (
-            <button key={p} type="button" aria-pressed={person === p} onClick={() => go({ person: p, view: 'today', jobId: null })}
-              className={`min-h-[40px] px-2.5 rounded-lg text-sm font-semibold ${person === p ? 'bg-slate-900 text-white' : 'text-slate-700'}`}>{NAME[p]}</button>
+            <button key={p} type="button" aria-pressed={person === p} onClick={() => go({ person: p, view: person && route.view !== 'home' ? route.view : 'today', jobId: null })}
+              className={`min-h-[44px] px-2.5 rounded-lg text-sm font-semibold ${person === p ? 'bg-slate-900 text-white' : 'text-slate-700'}`}>{NAME[p]}</button>
           ))}
         </div>
-        <button type="button" disabled={!person} onClick={() => person && go({ person, view: 'today', jobId: null })} aria-current={route.view === 'today' ? 'page' : undefined}
+        {person && <>
+        <button type="button" onClick={() => go({ person, view: 'today', jobId: null })} aria-current={route.view === 'today' ? 'page' : undefined}
           className={`min-h-[44px] px-2 text-sm font-semibold rounded-lg ${route.view === 'today' ? 'text-slate-900 underline underline-offset-4' : 'text-slate-600'}`}>Today</button>
-        <button type="button" disabled={!person} onClick={() => person && go({ person, view: 'applications', jobId: null })} aria-current={route.view === 'applications' ? 'page' : undefined}
+        <button type="button" onClick={() => go({ person, view: 'applications', jobId: null })} aria-current={route.view === 'applications' ? 'page' : undefined}
           data-testid="my-applications" className={`ml-auto min-h-[44px] px-2 text-sm font-semibold rounded-lg whitespace-nowrap ${route.view === 'applications' ? 'text-slate-900 underline underline-offset-4' : 'text-slate-600'}`}>
           <span className="min-[400px]:hidden">Applications</span><span className="hidden min-[400px]:inline">My applications</span>{counts ? ` (${counts.applications.total})` : ''}
         </button>
+        </>}
       </div>
     </header>
   );
@@ -202,9 +231,9 @@ export const SeekerApp: React.FC = () => {
     body = <div role="alert" className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-base space-y-3"><p>{loadError}</p><button type="button" className={btnPlain} onClick={reload}>Try again</button></div>;
   } else if (route.view === 'applications') {
     body = <ApplicationsView candidateId={candidateId!} name={NAME[person]} refreshKey={refreshKey} todayIndia={counts?.today_india || new Date().toISOString().slice(0, 10)}
-      onOpen={openJob} onPosting={onPosting} onStage={setStage} onRemove={remove} toast={say} />;
-  } else if (route.view === 'all') {
-    body = <AllView candidateId={candidateId!} total={counts?.everything ?? 0} actions={actions} refreshKey={refreshKey} />;
+      onOpen={openJob} onPosting={onPosting} onStage={setStage} onRemove={remove} toast={say} busy={busy} />;
+  } else if (['all', 'best', 'worth', 'good'].includes(route.view)) {
+    body = <AllView candidateId={candidateId!} which={route.view} total={0} actions={actions} refreshKey={refreshKey} />;
   } else if (route.view === 'hidden') {
     body = <HiddenView candidateId={candidateId!} actions={actions} onRestore={restore} refreshKey={refreshKey} />;
   } else {
@@ -217,12 +246,12 @@ export const SeekerApp: React.FC = () => {
       {topBar}
       <main className="max-w-3xl mx-auto px-4 py-4 pb-28">
         <h1 className="sr-only">{person ? `${NAME[person]}'s jobs` : 'Jobs'}</h1>
-        {ready && !canWrite && !isTrackerOpen() && person && <p className="mb-3 text-sm text-slate-600">Saving and tracking are switched off on this site just now.</p>}
+        {ready && access === false && !isTrackerOpen() && person && <p className="mb-3 text-sm text-slate-600">Saving and tracking are switched off on this site just now.</p>}
         {body}
       </main>
       {panelJob && person && (
         <JobPanel job={panelJob} profileSkills={skills[candidateId!]} onClose={closeJob} onPosting={onPosting} onHide={hide} onGoodMatch={goodMatch}
-          onStage={(job, status, notes, clear) => setStage(job, status, notes, clear)} />
+          onStage={(job, status, notes, clear) => setStage(job, status, notes, clear)} busy={!!busy[panelJob.id]} />
       )}
       {asking && (
         <div className="fixed inset-0 z-[60] bg-slate-900/40 flex items-end justify-center" onClick={() => setAsking(null)}>

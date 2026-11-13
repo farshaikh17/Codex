@@ -36,8 +36,8 @@ export function placeText(job: Pick<Job, 'location_restrictions' | 'workplace_ty
   return loc.length > 40 ? loc.slice(0, 39) + '…' : loc;
 }
 
-/** The time a job reached this person's list: found, or put on the list (whichever is later). */
-export const listedAt = (job: Job) => Math.max(Date.parse(job.discovered_at || '') || 0, Date.parse(job.qualified_at || '') || 0);
+/** When the job was found. "New" uses only this, so it agrees with the "Found <date>" on the card (a re-check of an old job is not new). */
+export const listedAt = (job: Job) => Date.parse(job.discovered_at || '') || 0;
 
 /** Stages in plain words ("Where are you with this job?"). */
 export const STAGES: [ApplicationStatus, string][] = [

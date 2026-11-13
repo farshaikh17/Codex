@@ -1,15 +1,16 @@
 // Plan U11: the address says where the person is, so Back, reload and a bookmark work.
 //   /app#sana/today            Sana's Today screen
 //   /app#sana/applications     Sana's applications
-//   /app#sana/all              everything else (the full list)
+//   /app#sana/all              everything else (To review: the rest of the list)
+//   /app#sana/best, /worth, /good   all of Best matches, Worth a try, or the good matches among everything else
 //   /app#sana/hidden           jobs she marked Not for me
 //   /app#sana/job/<id>         one job's panel, over the screen she came from (Back closes it)
 //   /app                       the remembered person's Today, or the two names on a first visit
 import { Person, PEOPLE } from './format';
 
-export type View = 'home' | 'today' | 'applications' | 'all' | 'hidden';
+export type View = 'home' | 'today' | 'applications' | 'all' | 'hidden' | 'best' | 'worth' | 'good';
 export interface Route { person: Person | null; view: View; jobId: string | null }
-const VIEWS: View[] = ['today', 'applications', 'all', 'hidden'];
+const VIEWS: View[] = ['today', 'applications', 'all', 'hidden', 'best', 'worth', 'good'];
 
 export function parseRoute(hash: string, underneath: View = 'today'): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -38,14 +39,16 @@ export function rememberPerson(p: Person): void { try { window.localStorage.setI
 
 /** "New since your last visit" (plan U5) counts per device, not the server's "new today": the time of the previous visit is kept in this browser.
  *  The baseline stays fixed for the whole visit (this tab), so a reload does not empty the list; the next visit compares with this one. */
+// A visit is one sitting: a tab kept open on a phone for days starts a new visit after VISIT_HOURS (tenth-man review: the "new" list kept growing).
+const VISIT_HOURS = 4;
 export function lastVisitBaseline(p: Person, now: number = Date.now()): number {
   const key = `seeker:last-visit:${p}`, tabKey = `seeker:baseline:${p}`;
   try {
-    const held = window.sessionStorage.getItem(tabKey);
-    if (held && Number.isFinite(Number(held))) return Number(held);
+    const held = JSON.parse(window.sessionStorage.getItem(tabKey) || 'null');
+    if (held && Number.isFinite(held.base) && Number.isFinite(held.at) && now - held.at < VISIT_HOURS * 3600000) return held.base;
     const prev = Number(window.localStorage.getItem(key));
     const base = Number.isFinite(prev) && prev > 0 ? prev : now - 86400000;   // a first visit shows what arrived in the last day
-    window.sessionStorage.setItem(tabKey, String(base));
+    window.sessionStorage.setItem(tabKey, JSON.stringify({ base, at: now }));
     window.localStorage.setItem(key, String(now));
     return base;
   } catch { return now - 86400000; }

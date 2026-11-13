@@ -549,6 +549,50 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement.
     - migration 0021 renames stored rows only at the next release (phase 5's release); until then new rows carry names and old ones ids, read as one
       employer by the fixes above.
+- phase 5 (the site a job seeker uses, 13 Nov; PRs #168 (U1), #170 (U2-U4), #173 (U12 server and the "why" line), #176 (the page) and the
+  tenth-man fixes in #176; no rules-marker bump; one new migration, `0022_history_client.sql`, applied by the release):
+  - readings and deviations:
+    - U1: the network hash is in a side table `history_client` (history table, row id, hash, what the change replaced), not a new column: the release
+      replays every migration file and SQLite has no "ADD COLUMN IF NOT EXISTS". `undo_since.mjs` restores, per job, the state before the network's
+      first change in the window, only while nobody changed that job afterwards, and writes an `owner-undo` history row. It is run by the owner on
+      purpose through `undo-changes.yml` (list, preview, apply) to reverse a stranger's tracker writes, so it may change a row with an application
+      or an override; it never touches a row the network did not change.
+    - U2: "Not for me" is the person's own click, so it also hides a row with an override; an applied job is never moved. The hidden reason is
+      prefixed to the old one ("You marked this Not for me. …"), so Restore brings both the status and the reason back. Good match on a hidden job
+      also restores it.
+    - U3: the word-level taste model no longer moves the score (signals.py still trains it for its report); the marks are passed on as
+      `taste_rows`. A plain Save teaches nothing; Good match and an application do.
+    - U4: the stale check runs when the page sends `expected_updated_at` (the page always does; scripts do not). An empty note is refused with a
+      message rather than ignored; "Clear note" deletes it on purpose.
+    - U5: "N more good matches" = To review scored 60 or more. "New since your last visit" shows five, then "Show all"; a first visit counts the
+      last 24 hours; a new job is not repeated under Best matches. On phones narrower than 400 px the top bar says "Applications (n)" (the full
+      "My applications (n)" does not fit next to the switch at 375 px).
+    - U6/U9: the panel has no Save at the top: its "Your progress on this job" section saves (one Save per screen). Extra routes `#sana/all`, `#sana/hidden`,
+      `#sana/best`, `#sana/worth` and `#sana/good`.
+    - U8/U9: the operator dashboard is unchanged behind `?operator=1` and keeps its operator wording; the rename table is applied to the job
+      seeker's page and its panel (and "Says it hires in India" on the operator tile). The website's "Operator sign-in" link goes to `?operator=1`;
+      a client's share link still opens the dashboard it was made for.
+    - U10: "Finished" holds Didn't work out, I withdrew and archived records.
+    - U12: "Show everything else (n)" lists the rest of the list (To review), so n = all − Best − Worth a try; Best matches, Worth a try and the
+      "N more good matches" each open their own full list (`#sana/best`, `#sana/worth`, `#sana/good`), with the same numbers as `/api/today`.
+  - tenth-man review (the person on a phone, 13 Nov), fixed in #176:
+    - choosing "I applied" in the job panel and closing it saved nothing (the panel's stage waited for a Save button) and an unsaved job already
+      read "Saved". The stage now saves when chosen, as in My applications, and an unsaved job reads "Not saved yet"; the button saves the note only.
+    - two quick changes by one person on a slow phone, or a double tap on Save, ended in "This changed elsewhere; reload": each write sent the
+      `updated_at` of the last reload. Writes for one job now wait for each other and send the `updated_at` the server returned for the last one;
+      the chosen stage shows at once and the controls wait while a write is on its way.
+    - "New since your last visit" filled the screen and grew in a tab kept open for days, and a re-checked old job came back as "New". It now uses
+      only the found date, only Best matches and Worth a try, and a visit ends after 4 hours.
+    - a posting opened in the same tab (an in-app browser) asked "Did you apply?" late, about the wrong job: the page now also asks on load and on
+      `pageshow`, and forgets a posting opened more than 30 minutes ago.
+    - no connection showed "Failed to fetch" and "switched off": it now says "No connection…", and "switched off" only when the server says so.
+    - a note being typed was replaced by a reload; Not for me on a plain saved job left it under "Saved, not applied" (it now leaves both, with
+      Undo); Best and Worth a try showed 25 with no way to the rest ("Show all"); "N more good matches" could not be tapped; Saved ✓ on a job in
+      Preparing did nothing (it now says where to change it); the switch was 40 px (now 44); switching person always went back to Today (it now keeps the screen); Good match was
+      explained only in a tooltip (now a line under the buttons); a first visit showed greyed Today / Applications buttons.
+  - tenth-man finding left, with the reason:
+    - `?operator=1` opens the operator page to anyone who types it: U8 hides the operator screens, it does not lock them. Changes there still need
+      the operator key (except the open tracker's own actions); a per-person lock is out of scope (section 11).
 
 ---
 

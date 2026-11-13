@@ -64,9 +64,11 @@ let openTrackerMode = false;
 export const isTrackerOpen = () => openTrackerMode;
 /** True when this visitor may use the tracker: an unlocked operator, or the open-tracker mode. */
 export const canUseTracker = () => isOperatorAuthenticated() || openTrackerMode;
-export async function loadAccessMode(): Promise<boolean> {
-  try { const r = await fetch(`${API_BASE}/version`); if (r.ok) openTrackerMode = (await r.json())?.open_tracker === true; } catch { /* stays closed */ }
-  return openTrackerMode;
+let accessKnown = false;
+/** True when the server says the tracker is open; false when it says closed; null when it could not be asked (no connection). */
+export async function loadAccessMode(): Promise<boolean | null> {
+  try { const r = await fetch(`${API_BASE}/version`); if (r.ok) { openTrackerMode = (await r.json())?.open_tracker === true; accessKnown = true; } } catch { /* stays closed */ }
+  return accessKnown ? openTrackerMode : null;
 }
 const TRACKER_WRITES = [/\/jobs\/[^/]+\/feedback$/, /\/candidates\/[^/]+\/applications$/, /\/applications$/, /\/applications\/[^/]+\/follow-up$/, /\/applications\/[^/]+$/, /\/jobs\/[^/]+\/qualification-override$/];
 const isTrackerWrite = (input: RequestInfo | URL) => {
@@ -918,7 +920,8 @@ export interface TodayCounts {
 export interface TodayData { candidate_id: string; counts: TodayCounts; best: Job[]; worth_a_try: Job[]; recent: Job[] }
 /** Everything the Today screen shows, with every count from one server function (plan U12). */
 export async function fetchToday(candidateId: string): Promise<TodayData> {
-  const res = await authedFetch(`${API_BASE}/today?candidate_id=${encodeURIComponent(candidateId)}`);
+  const NO_CONNECTION = 'No connection. Check the internet and try again.';
+  const res = await authedFetch(`${API_BASE}/today?candidate_id=${encodeURIComponent(candidateId)}`).catch(() => { throw new Error(NO_CONNECTION); });
   if (!res.ok) throw new Error('Could not load your jobs. Check the connection and try again.');
   return res.json();
 }
@@ -933,7 +936,8 @@ export class WriteError extends Error { status: number; constructor(message: str
 /** Save or move an application. expected_updated_at: the record's updated_at as this page last saw it (null = "there was none"); a stale write
  *  is refused (plan U4). clear_notes: deleting a written note on purpose. */
 export async function saveApplication(payload: { candidate_id: string; job_id: string; status: ApplicationStatus; notes?: string; expected_updated_at?: string | null; clear_notes?: boolean }): Promise<Job> {
-  const res = await authedFetch(`${API_BASE}/applications`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload) });
+  const res = await authedFetch(`${API_BASE}/applications`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload) })
+    .catch(() => { throw new WriteError('No connection. Nothing was saved; try again.', 0); });
   if (!res.ok) {
     const msg = (await res.json().catch(() => ({})))?.error;
     throw new WriteError(res.status === 409 || res.status === 429 ? String(msg || 'This changed elsewhere; reload.') : 'Could not save. Check the connection and try again.', res.status);
@@ -942,7 +946,8 @@ export async function saveApplication(payload: { candidate_id: string; job_id: s
 }
 /** A Good match / Not for me mark, or clearing it, with the server's words on failure. */
 export async function markJob(jobId: string, candidateId: string, rating: 'UP' | 'DOWN' | 'CLEAR'): Promise<Job | null> {
-  const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/feedback`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ rating, candidate_id: candidateId }) });
+  const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/feedback`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ rating, candidate_id: candidateId }) })
+    .catch(() => { throw new WriteError('No connection. Nothing was saved; try again.', 0); });
   if (!res.ok) throw new WriteError(res.status === 429 ? String((await res.json().catch(() => ({})))?.error || 'Too many changes; wait a while.') : 'Could not save. Check the connection and try again.', res.status);
   return (await res.json()).job || null;
 }

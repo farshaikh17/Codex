@@ -47,7 +47,7 @@ check('S3 load once: each request is made once, and only for the chosen person',
 const today = await api('/today?candidate_id=sana_ansari');
 const t = await body();
 check('S4 the counts on screen are the ones /api/today computes (one definition per number)',
-  t.includes(`Best matches (${today.counts.best})`) && t.includes(`Worth a try (${today.counts.worth_a_try})`) && t.includes(`Show everything else (${today.counts.everything})`)
+  t.includes(`Best matches (${today.counts.best})`) && t.includes(`Worth a try (${today.counts.worth_a_try})`) && t.includes(`Show everything else (${today.counts.everything - today.counts.best - today.counts.worth_a_try})`)
   && t.includes(`${today.counts.more_good} more good match`) && (await page.innerText('[data-testid="my-applications"]')).includes(`(${today.counts.applications.total})`), t.slice(0, 300));
 check('S5 the status line has the date, new since the last visit, more good matches and the update time', /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} [A-Z][a-z]{2}\b/.test(await page.innerText('[data-testid="status-line"]')) && /new since your last visit/.test(t) && /(Updated \d{2}:\d{2}|Not updated today)/.test(t), await page.innerText('[data-testid="status-line"]'));
 const firstCard = await page.locator('[data-testid="job-card"]').first().boundingBox();
@@ -123,6 +123,33 @@ check('S21 Not for me hides the job at once and offers Undo', /Hidden/.test(hid)
 await page.locator('[data-testid="toast"]').getByRole('button', { name: 'Undo' }).click();
 await page.waitForTimeout(1500);
 check('S22 Undo puts it back', (await page.locator(`[data-job-id="${vid}"]`).count()) === 1 || (await api('/jobs?candidate_id=sana_ansari&hidden=true')).jobs.every((j) => j.id !== vid));
+
+// ---- tenth-man fixes: a double tap is one save; the panel's stage saves when chosen; "more good matches" opens its list ---------------
+{
+  await page.goto(BASE + '/app#sana/today', { waitUntil: 'networkidle' }); await page.waitForSelector('[data-testid="job-card"]');
+  const c2 = page.locator('[data-testid="job-card"]').filter({ has: page.getByRole('button', { name: /^Save: / }) }).first();
+  const id2 = await c2.getAttribute('data-job-id');
+  await clearToast();
+  const save = c2.getByRole('button', { name: /^Save: / });
+  await save.dblclick();
+  await page.waitForTimeout(1500);
+  const t2 = await page.locator('[data-testid="toast"]').innerText().catch(() => '');
+  const rec = (await (await fetch(`${BASE}/api/applications?candidate_id=sana_ansari`)).json()).applications.find((j) => j.id === id2);
+  check('S32 a double tap on Save saves once and never says "changed elsewhere"', !/changed elsewhere/i.test(t2) && rec?.application?.status === 'SAVED', t2 + ' / ' + rec?.application?.status);
+  const c3 = page.locator('[data-testid="job-card"]').filter({ has: page.getByRole('button', { name: /^Save: / }) }).first();
+  const id3 = await c3.getAttribute('data-job-id');
+  await c3.locator('h3 a').click(); await page.waitForSelector('[role=dialog]');
+  const sel = page.locator('[role=dialog] select[aria-label="Where are you with this job?"]');
+  const first = await sel.locator('option').first().innerText();
+  await sel.selectOption('APPLIED'); await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Close' }).click(); await page.waitForTimeout(500);
+  const one = await (await fetch(`${BASE}/api/jobs/${encodeURIComponent(id3)}?candidate_id=sana_ansari`)).json();
+  check('S33 in the panel, an unsaved job says "Not saved yet", and choosing "I applied" saves it without another button', first === 'Not saved yet' && one.application?.status === 'APPLIED', first + ' / ' + JSON.stringify(one.application));
+  await page.locator('[data-testid="more-good"]').click(); await page.waitForTimeout(1200);
+  const good = (await api('/today?candidate_id=sana_ansari')).counts.more_good;
+  check('S34 "N more good matches" opens that list, with the same number', (await page.evaluate(() => location.hash)) === '#sana/good' && (await body()).includes(`More good matches (${good})`), (await body()).slice(0, 160));
+  await page.goto(BASE + '/app#sana/today', { waitUntil: 'networkidle' }); await page.waitForSelector('[data-testid="job-card"]');
+}
 
 // ---- the panel: the address follows it, Back closes it, reload keeps it ------------------------------------------------------------
 await page.locator('[data-testid="job-card"] h3 a').first().click();

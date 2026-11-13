@@ -15,7 +15,8 @@ interface Props {
   onPosting: (job: Job) => void;
   onHide: (job: Job) => void;
   onGoodMatch: (job: Job, on: boolean) => Promise<void>;
-  onStage: (job: Job, status: ApplicationStatus, notes: string, clearNotes: boolean) => Promise<boolean>;
+  onStage: (job: Job, status: ApplicationStatus, notes: string | undefined, clearNotes: boolean) => Promise<boolean>;
+  busy?: boolean;   // a write for this job is on its way: the controls wait
 }
 
 const payText = (job: Job) => {
@@ -35,13 +36,23 @@ const levelText = (job: Job) => {
   return a < b ? 'Level: a bit junior for you' : 'Level: a bit senior for you';
 };
 
-export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosting, onHide, onGoodMatch, onStage }) => {
+// Tenth-man review: the stage saves the moment it is chosen (as in My applications; choosing "I applied" and closing used to save nothing),
+// an unsaved job says "Not saved yet", and a note being typed is never replaced by a reload.
+export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosting, onHide, onGoodMatch, onStage, busy = false }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [good, setGood] = useState(false);
-  const [stage, setStage] = useState<ApplicationStatus>((job.application?.status as ApplicationStatus) || 'SAVED');
+  const saved = (job.application?.status as ApplicationStatus) || '';
+  const [stage, setStage] = useState<string>(saved);
   const [notes, setNotes] = useState(job.application?.notes || '');
-  const [busy, setBusy] = useState(false);
-  useEffect(() => { setStage((job.application?.status as ApplicationStatus) || 'SAVED'); setNotes(job.application?.notes || ''); }, [job.id, job.application?.status, job.application?.notes]);
+  const [typed, setTyped] = useState(false);
+  useEffect(() => { setStage(saved); }, [job.id, saved]);
+  useEffect(() => { if (!typed) setNotes(job.application?.notes || ''); }, [job.id, job.application?.notes]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const chooseStage = async (next: string) => {
+    if (!next || next === saved) return;
+    setStage(next);
+    const ok = await onStage(job, next as ApplicationStatus, typed ? notes : undefined, false);
+    if (ok) setTyped(false); else setStage(saved);
+  };
   useEffect(() => {
     let live = true;
     fetchJobFeedback(job.id, job.candidate_id).then((f) => { if (live) setGood(f?.rating === 'UP'); }).catch(() => {});
@@ -83,25 +94,28 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
                 className={good ? `${btn} bg-emerald-50 text-emerald-900 border border-emerald-300` : btnPlain}>Good match{good ? ' ✓' : ''}</button>
               {job.qualification_status !== 'APPLIED' && <button type="button" onClick={() => onHide(job)} className={btnPlain}>Not for me</button>}
             </div>
+            <p className="text-sm text-slate-600 mt-2">Good match moves similar jobs a little higher; Not for me hides this one (you can undo) and moves similar ones a little lower.</p>
           </section>
 
           <section className="rounded-2xl border border-slate-200 p-4 space-y-3" aria-label="Your progress on this job">
             <h3 className="text-base font-semibold text-slate-900">Your progress on this job</h3>
             <label className="block text-sm text-slate-700">Where are you with this job?
-              <select aria-label="Where are you with this job?" value={stage} onChange={(e) => setStage(e.target.value as ApplicationStatus)}
+              <select aria-label="Where are you with this job?" value={stage} disabled={busy} onChange={(e) => chooseStage(e.target.value)}
                 className="mt-1 block w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base bg-white">
+                {!saved && <option value="">Not saved yet</option>}
                 {STAGES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
               </select>
+              <span className="block mt-1 text-slate-600">Choosing a stage saves it.</span>
             </label>
             <label className="block text-sm text-slate-700">Your note
-              <textarea aria-label="Your note" value={notes} maxLength={2000} onChange={(e) => setNotes(e.target.value)} rows={3}
+              <textarea aria-label="Your note" value={notes} maxLength={2000} onChange={(e) => { setNotes(e.target.value); setTyped(true); }} rows={3}
                 placeholder="e.g. sent CV by email, call back Monday" className="mt-1 block w-full rounded-xl border border-slate-300 p-3 text-base" />
             </label>
             <div className="flex flex-wrap gap-3">
-              <button type="button" disabled={busy} className={btnPrimary}
-                onClick={async () => { setBusy(true); try { await onStage(job, stage, notes, false); } finally { setBusy(false); } }}>Save</button>
+              {typed && notes !== (job.application?.notes || '') && notes.trim() && <button type="button" disabled={busy} className={btnPrimary}
+                onClick={async () => { if (await onStage(job, (saved || 'SAVED') as ApplicationStatus, notes, false)) setTyped(false); }}>Save note</button>}
               {hadNote && <button type="button" disabled={busy} className={btnPlain}
-                onClick={async () => { setBusy(true); try { if (await onStage(job, stage, '', true)) setNotes(''); } finally { setBusy(false); } }}>Clear note</button>}
+                onClick={async () => { if (await onStage(job, (saved || 'SAVED') as ApplicationStatus, '', true)) { setNotes(''); setTyped(false); } }}>Clear note</button>}
             </div>
             <p className="text-sm text-slate-600">This is your own record; the employer isn't told.</p>
           </section>

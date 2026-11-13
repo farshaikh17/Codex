@@ -115,11 +115,12 @@ for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']])
 // starts near the top, nothing operator-only is on screen, and no write is attempted (every non-GET is aborted above).
 for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]) {
   await page.goto(BASE + '/app#' + slug + '/today', { waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-testid="section-best"]', { timeout: 20000 }).catch(() => {});
+  // the hash changes in the same page: wait for this person's list, not the previous person's still on screen
+  await page.waitForFunction((n) => document.title === n + "'s jobs" && !!document.querySelector('[data-testid="section-best"]') && !/Loading/.test(document.body.innerText), slug === 'sana' ? 'Sana' : 'Farhan', { timeout: 20000 }).catch(() => {});
   const t = await text();
   const today = await api(`/today?candidate_id=${cid}`);
   const c = today.counts || {};
-  check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything})`), t.slice(0, 200));
+  check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything - c.best - c.worth_a_try})`), t.slice(0, 200));
   const top = await page.locator('[data-testid="job-card"]').first().boundingBox().catch(() => null);
   check(`${slug}: the first job starts within 200 px of the top (or there is none)`, !top || top.y <= 200, JSON.stringify(top));
   check(`${slug}: nothing operator-only on the job seeker's page`, !/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i.test(t), (t.match(/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i) || [])[0]);
