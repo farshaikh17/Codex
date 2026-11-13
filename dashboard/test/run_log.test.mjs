@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDb, loadWorker, makeEnv, call } from './harness.mjs';
 import { seed } from './fixtures.mjs';
-import { buildRunRecord, runLogSql, skippedRecord } from '../scripts/run_log.mjs';
+import { buildRunRecord, runLogSql, skippedRecord, shortlistRecord } from '../scripts/run_log.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -79,6 +79,33 @@ test('GET /api/discovery/daily: a skipped run is counted apart and never becomes
   assert.equal(res.json.last_skipped_at, '2026-11-13T15:13:00Z');
   const d13 = res.json.days.find((d) => d.day === '2026-11-13');
   assert.equal(d13.runs, 1); assert.equal(d13.skipped, 1); assert.equal(d13.new_jobs, 3);
+});
+
+test('A7: the shortlist report is stored in the run row as counts, rule names and flags only, and /api/discovery/daily returns the latest', async () => {
+  const report = { sana_ansari: { pool: 300, READY: { count: 25, employers: 21, max_employer_share: 0.08, reposters: 0, older_than_30_days: 2, swaps: 3, relaxed: ['band_remote_min_2'],
+    pool_smaller_than_tier: false, families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, title: 'Secret Job Title' },
+    STRETCH_READY: { count: 25, different: 2, relaxed: ["x'); DROP TABLE jobs;--"] } } };
+  const rec = shortlistRecord(report);
+  assert.deepEqual(rec.sana_ansari.READY, { count: 25, employers: 21, max_employer_share: 0.08, reposters: 0, older_than_30_days: 2, swaps: 3, different: 0,
+    families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, relaxed: ['band_remote_min_2'], pool_smaller_than_tier: false });
+  assert.deepEqual(rec.sana_ansari.STRETCH_READY.relaxed, ['xDROPTABLEjobs']);
+  assert.ok(!JSON.stringify(rec).includes('Secret'), 'no job text');
+  assert.equal(shortlistRecord(null), null);
+  const full = buildRunRecord({ shortlist: report }, { kind: 'discovery' });
+  assert.equal(full.shortlist.sana_ansari.READY.count, 25);
+  assert.ok(!('shortlist' in buildRunRecord({}, {})), 'no report, no field');
+  const { sqlite, d1 } = createDb(); seed(sqlite);
+  const worker = await loadWorker();
+  const put = sqlite.prepare("INSERT INTO discovery_state(key, value) VALUES (?, ?)");
+  put.run('run:2026-11-12T21:47:00Z', JSON.stringify({ kind: 'discovery', new_jobs: 1, sources: {}, shortlist: { old: { pool: 1 } } }));
+  put.run('run:2026-11-13T21:47:00Z', JSON.stringify({ kind: 'discovery', new_jobs: 1, sources: {}, shortlist: rec }));
+  put.run('run:2026-11-13T23:07:00Z', JSON.stringify({ kind: 'watchlist', new_jobs: 3, sources: {} }));
+  const res = await call(worker, makeEnv(d1), 'GET', '/api/discovery/daily', { key: null });
+  assert.equal(res.status, 200);
+  assert.equal(res.json.shortlist.at, '2026-11-13T21:47:00Z');
+  assert.equal(res.json.shortlist.report.sana_ansari.READY.families.maintenance, 10);
+  const none = await call(worker, makeEnv(createDb().d1), 'GET', '/api/discovery/daily', { key: null });
+  assert.equal(none.json.shortlist, null);
 });
 
 test('GET /api/discovery/daily: no run recorded gives last_run_at null', async () => {

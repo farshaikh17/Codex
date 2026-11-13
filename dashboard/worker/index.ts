@@ -2299,6 +2299,7 @@ const pct1 = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1
 router.get('/api/discovery/daily', async (request, env) => {
   const days = new Map<string, any>();
   let lastRunAt: string | null = null, lastSkippedAt: string | null = null;
+  let shortlist: { at: string; report: any } | null = null;   // plan A7: the latest daily run's shortlist report (counts, rule names and flags only)
   try {
     const { results } = await env.DB.prepare("SELECT key, value FROM discovery_state WHERE key LIKE 'run:%' ORDER BY key DESC LIMIT 80").all<any>();
     for (const r of results || []) {
@@ -2310,6 +2311,7 @@ router.get('/api/discovery/daily', async (request, env) => {
       days.set(day, d);
       if (v.skipped) { d.skipped++; if (at && !lastSkippedAt && (v.kind || 'discovery') === 'discovery') lastSkippedAt = at; continue; }
       if (at && !lastRunAt && !v.failed && (v.kind || 'discovery') === 'discovery') lastRunAt = at;   // a run whose job had failed did not update the lists
+      if (at && !shortlist && v.shortlist && typeof v.shortlist === 'object' && (v.kind || 'discovery') === 'discovery') shortlist = { at, report: v.shortlist };
       d.runs++;
       for (const k of ['new_jobs', 'rescored', 'closed', 'reopened', 'alive', 'dead'] as const) d[k] += Number(v[k]) || 0;
       for (const [name, s] of Object.entries(v.sources || {}) as [string, any][]) {
@@ -2318,7 +2320,7 @@ router.get('/api/discovery/daily', async (request, env) => {
       }
     }
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; /* no table yet: no days */ }
-  return jsonResponse({ days: [...days.values()].slice(0, 14), last_run_at: lastRunAt, last_skipped_at: lastSkippedAt }, 200, corsHeaders(request, env));
+  return jsonResponse({ days: [...days.values()].slice(0, 14), last_run_at: lastRunAt, last_skipped_at: lastSkippedAt, shortlist }, 200, corsHeaders(request, env));
 });
 
 router.get('/api/analytics/discovery', async (request, env, _params, url) => {

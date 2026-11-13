@@ -222,6 +222,7 @@ function pickFor(rows, held, ctx) {
     report[t].employers = per.size;
     report[t].max_employer_share = lists[t].length ? Math.round(100 * Math.max(...per.values()) / lists[t].length) / 100 : 0;
     report[t].reposters = lists[t].filter(isReposter).length;
+    report[t].older_than_30_days = lists[t].filter((r) => (now - when(r.discovered_at)) / DAY > OLD_DAYS).length;
     report[t].families = {}; for (const r of lists[t]) report[t].families[r.family || 'unclassified'] = (report[t].families[r.family || 'unclassified'] || 0) + 1;
     report[t].bands = {}; for (const r of lists[t]) report[t].bands[r.band || 'other'] = (report[t].bands[r.band || 'other'] || 0) + 1;
     // band minimums not met: reported as "pool too small" (no swap candidate within the score floor)
