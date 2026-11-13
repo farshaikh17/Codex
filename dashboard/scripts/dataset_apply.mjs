@@ -283,10 +283,24 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
         WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND eligibility_status = 'UNKNOWN' AND COALESCE(eligibility_reason, '') NOT LIKE 'Reported by %'
         AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
     }
+    // Plan S8: the current rules may also take eligibility away (an office job whose "work from home" perk read as remote; hybrid or office days for a
+    // remote-only person). Only where the screen wrote what is stored: no override, a reason that is not a person's ("Manual override...", "You marked..."),
+    // no application, and the row undecided or on the automatic shortlist (the shortlist step then demotes it in the same run).
+    const screenOwned = `candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND manual_override_status IS NULL
+        AND COALESCE(eligibility_reason, '') NOT LIKE 'Manual override%' AND COALESCE(eligibility_reason, '') NOT LIKE 'You marked%' AND COALESCE(qualification_reason, '') NOT LIKE 'You marked%'
+        AND (qualification_status IN ('NEEDS_REVIEW','HOLD') OR (qualification_status IN ('READY','STRETCH_READY') AND qualification_reason LIKE 'Shortlisted automatically.%')) ${undecided('candidate_qualifications')}`;
     if (r.status === 'INELIGIBLE') {
-      out.push(`UPDATE candidate_qualifications SET qualification_status = 'INELIGIBLE', eligibility_status = 'INELIGIBLE', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)}
-        WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
+      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+        SELECT candidate_id, job_id, qualification_status, 'INELIGIBLE', ${q('Ineligible under the current rules: ' + r.reason)}, 'discovery' FROM candidate_qualifications WHERE ${screenOwned};`);
+      out.push(`UPDATE candidate_qualifications SET qualification_status = 'INELIGIBLE', eligibility_status = 'INELIGIBLE', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)},
+          qualification_reason = CASE WHEN qualification_reason LIKE 'Shortlisted automatically.%' THEN substr(qualification_reason, 28) ELSE qualification_reason END
+        WHERE ${screenOwned};`);
       report.rescored_ineligible++;
+    } else if (r.eligibility === 'UNKNOWN' && row.provenance !== 'PUBLIC_FEED_UNVERIFIED' && bd.assessed_from !== 'legacy_rescreen') {
+      // a first-import row's stored eligibility was verified by an earlier review and is kept (see rescreenLegacy)
+      out.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)}
+        WHERE ${screenOwned} AND eligibility_status = 'ELIGIBLE';`);
+      report.rescored_eligibility_unknown = (report.rescored_eligibility_unknown || 0) + 1;
     }
     report.rescored++;
   }
