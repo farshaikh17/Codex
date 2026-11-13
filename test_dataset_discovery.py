@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
 class RescorePaging(unittest.TestCase):
     """rescore_rows: per person, best-ranked first, capped, paged by (score, job) and never by OFFSET; rows already scored with the
-    current profile and rules (profile_v12) and rows with an application are left out."""
+    current profile and rules (profile_v13) and rows with an application are left out."""
 
     def _db(self):
         import sqlite3
@@ -80,7 +80,7 @@ class RescorePaging(unittest.TestCase):
             for i in range(23):
                 db.execute("INSERT OR IGNORE INTO jobs VALUES (?,?,?,NULL,NULL,NULL,NULL,'x','d','REMOTE',1)", (f'j{i:02d}', 't', 'c'))
                 db.execute("INSERT INTO candidate_qualifications VALUES (?,?, 'NEEDS_REVIEW', NULL)", (c, f'j{i:02d}'))
-                bd = '{"preliminary":true,"profile_v12":true}' if i % 5 == 0 else '{"preliminary":true,"profile_v3":true}'
+                bd = '{"preliminary":true,"profile_v13":true}' if i % 5 == 0 else '{"preliminary":true,"profile_v3":true}'
                 db.execute("INSERT INTO candidate_job_scores VALUES (?,?,?,?)", (c, f'j{i:02d}', (i * 7) % 11, bd))
         db.execute("INSERT INTO applications VALUES ('farhan','j01')")
         db.execute("UPDATE candidate_qualifications SET manual_override_status='READY' WHERE candidate_id='sana' AND job_id='j02'")
