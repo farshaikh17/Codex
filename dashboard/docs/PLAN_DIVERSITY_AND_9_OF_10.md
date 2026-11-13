@@ -456,6 +456,16 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
 - exact D1 write totals: measured in H1;
 - whether `wrangler d1 execute --file` is atomic: A2 sends one file per step and guards every statement so a partial file is harmless;
 - form-encoded cross-site writes: preflight blocks JSON; the 60-an-hour limit bounds the rest.
+- phase 1 tenth-man review (daily machinery, 13 Nov), low findings left:
+  - the 20-hour gap with the 01/03 UTC catch-up triggers can settle the daily run in the night slot, and if both night triggers are dropped the
+    next run is about 38 hours later (amber "Not updated today" shows it; the watchdog starts a run after 24 hours). Left: rare, and visible.
+  - R10 keys the outage copy by commit, so for the first minutes after a release there is no copy and a D1 outage then gives the honest 503.
+    Left by design: an old-shape answer is the failure R10 removes.
+  - a watchlist that keeps failing retries every two hours (red runs, about 10 minutes each) with no back-off. Left: it is cheap, it is visible,
+    and a retry is the right answer to most of its failures.
+  - fixed in the same phase: a red health job no longer makes the guards re-run the day (they read every completed run); a run whose job
+    failed no longer shows as "Updated"; a failed download or unreadable manifest turns the run red; too few verified rows (not only 0)
+    use the relaxed shortlist demotion.
 
 ---
 

@@ -95,3 +95,16 @@ test('discovery.yml: early-day triggers, a 20-hour gap, and the budget-skip row 
   assert.match(wf, /budget_skip: \$\{\{ steps\.g\.outputs\.skip == 'true' && steps\.r\.outputs\.skip != 'true' \}\}/);
   assert.match(wf, /if: \$\{\{ needs\.guard\.outputs\.budget_skip == 'true' \}\}[\s\S]*run_log\.mjs --skipped budget/);
 });
+
+test('tenth-man fix: a run whose job had already failed is recorded with failed: true and never becomes last_run_at', async () => {
+  const sql = execFileSync(process.execPath, ['scripts/run_log.mjs', '--work', '/nonexistent', '--kind', 'discovery', '--event', 'schedule', '--status', 'failure'], { cwd: path.join(here, '..'), encoding: 'utf8' });
+  assert.match(sql, /"failed":true/);
+  assert.doesNotMatch(execFileSync(process.execPath, ['scripts/run_log.mjs', '--work', '/nonexistent', '--status', 'success'], { cwd: path.join(here, '..'), encoding: 'utf8' }), /failed/);
+  const { sqlite, d1 } = createDb(); seed(sqlite);
+  const worker = await loadWorker();
+  const put = sqlite.prepare("INSERT INTO discovery_state(key, value) VALUES (?, ?)");
+  put.run('run:2026-11-12T15:20:00Z', JSON.stringify({ kind: 'discovery', new_jobs: 40, sources: {} }));
+  put.run('run:2026-11-13T15:20:00Z', JSON.stringify({ kind: 'discovery', new_jobs: 0, failed: true, sources: {} }));
+  const res = await call(worker, makeEnv(d1), 'GET', '/api/discovery/daily', { key: null });
+  assert.equal(res.json.last_run_at, '2026-11-12T15:20:00Z');
+});
