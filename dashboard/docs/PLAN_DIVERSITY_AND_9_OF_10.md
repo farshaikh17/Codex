@@ -546,7 +546,7 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       phase 4 rules (as at every bump). Rows scored under v13 can outrank re-scored ones for those days.
     - found while testing C3, not changed: a US location written with the full state name and no code ("Houston, Texas") is not "foreign" for Sana's
       visa-route cap (`foreignLocation()` reads state codes and countries, not state names). None of the saved samples has such a location.
-      Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement.
+      Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement. **Fixed after phase 6** (see "gaps fixed after phase 6" below).
     - migration 0021 renames stored rows only at the next release (phase 5's release); until then new rows carry names and old ones ids, read as one
       employer by the fixes above.
 - phase 5 (the site a job seeker uses, 13 Nov; PRs #168 (U1), #170 (U2-U4), #173 (U12 server and the "why" line), #176 (the page) and the
@@ -629,9 +629,15 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       person taps Start, the message holds nothing private, and `/stop` or the owner removing the row undoes it. **Fixed after phase 6** (below).
     - `d1_rows` is approximate (analytics lag, other traffic); it is labelled so and the budget guard uses the day totals, not it.
     - still open from phase 4: "Houston, Texas" (a US state name without a code) is not foreign for Sana's visa cap. D1 measured sources, not caps;
-      left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples.
+      left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples. **Fixed** (below).
 
 - gaps fixed after phase 6 (13 Nov, evening; one PR each, `gaps/*`):
+  - **full state names** (`profile_v15`, the one rules-marker bump for these gaps): `foreignLocation()` also reads a US state, Canadian province or
+    Australian state written in full after a comma when it ends the place (end of text, a separator, a ZIP / postcode or the country), so
+    "Houston, Texas" is capped for Sana like "Houston, TX" and "12 Washington Street" or "Building 3, Washington Square" are not places abroad.
+    Georgia was already foreign (the country); a location that also names an Indian place is never foreign, so Indore, Goa or "Washington Plaza,
+    Hyderabad" are unchanged. Measured on the saved samples (142 distinct locations from both people's top 100 and live lists): one changes,
+    "Moranbah, Queensland, au" (an Australian mine town), now abroad.
   - **Telegram link hijack:** `engine/daily_message.py --link` accepts only `/start <code>` where the code is a per-person secret the owner
     chooses (repository secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`, 12-64 characters; compared in constant time); a name, a
     candidate id, another case or a prefix links nobody, and one code given for two people links neither. With no code set it links nobody and

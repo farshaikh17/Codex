@@ -73,7 +73,6 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
 - **Gulf jobs from job boards** are rarely verified (those sites refuse the still-open check), so Sana's "5 Gulf in Worth a try" is often
   reported as a shortfall.
-- **A US location with the full state name** ("Houston, Texas") is not foreign for Sana's visa-route cap.
 - **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
   except the open tracker's own actions).
 - **Out of scope:** private link per person, self sign-up, other professions, pricing, the operator key, the five held dependency updates.
@@ -83,8 +82,9 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 1. **Release** (section 2) when CI is green on the head of `main`.
 2. **Daily phone message (optional, free):** create a Telegram bot with `@BotFather`, add its token as the repository secret
    `TELEGRAM_BOT_TOKEN`, choose a secret link code per person and add it as `TELEGRAM_LINK_CODE_SANA` / `TELEGRAM_LINK_CODE_FARHAN`,
-   send each person `https://t.me/<bot>?start=<their code>` privately, and run **Link Telegram chats** within 24 hours. Steps in `RELEASE.md`, "Daily phone message". Email instead: variable `DIGEST_PROVIDER=smtp` and secrets `DIGEST_SMTP_USER`,
-   `DIGEST_SMTP_PASSWORD`, `DIGEST_TO`.
+   send each person `https://t.me/<bot>?start=<their code>` privately, and run **Link Telegram chats** within 24 hours. Steps in
+   `RELEASE.md`, "Daily phone message". Email instead: variable `DIGEST_PROVIDER=smtp` and secrets `DIGEST_SMTP_USER`, `DIGEST_SMTP_PASSWORD`,
+   `DIGEST_TO`.
 3. **Old branches:** run **Delete merged branches**; the rest are listed in the phase 6 hand-off report with a reason each, to delete by hand.
 4. **First week:** check that the page says "Updated" every day and that the daily run's summary shows the audit passing (definition of done,
    plan section 13).
@@ -92,5 +92,8 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 ## 7. Gaps fixed after the hand-off (13 Nov, evening)
 
 Gaps from section 5 fixed afterwards, one pull request each (`gaps/*`); details in the plan, section 10, "gaps fixed after phase 6":
+- **Full state names abroad:** "Houston, Texas", "Calgary, Alberta", "Perth, Western Australia" (a US state, Canadian province or Australian
+  state written in full after a comma, ending the place) now count as abroad for Sana's visa-route cap and Farhan's foreign-location penalty,
+  like "Houston, TX". Rules marker `profile_v15`: the stored lists are re-scored over the next daily runs (800 rows per person per run).
 - **Telegram link:** the link workflow accepts only `/start <code>` where the code is a per-person secret the owner chooses (repository
   secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`); a name or id links nobody. New owner step in section 6.
