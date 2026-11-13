@@ -26,8 +26,18 @@ export function shortlistRecord(report) {
   return out;
 }
 
+/** Pure (plan H1): the account's D1 rows read and written while this run ran = Cloudflare's day totals at its end minus at its start
+ *  (scripts/usage_snapshot.mjs). Only when both snapshots are from the same UTC day; null otherwise. Other traffic in the same minutes
+ *  (the site, the Worker's cron) is included, and the analytics can lag a few minutes, so it is an approximate cost of the run. */
+export function usageDelta(start, end) {
+  const ok = (u) => u && typeof u === 'object' && typeof u.day === 'string' && Number.isSafeInteger(u.rows_read) && Number.isSafeInteger(u.rows_written);
+  if (!ok(start) || !ok(end) || start.day !== end.day) return null;
+  const read = end.rows_read - start.rows_read, written = end.rows_written - start.rows_written;
+  return read >= 0 && written >= 0 ? { read, written } : null;
+}
+
 /** Pure: reports (parsed JSON or null) -> the record stored for the run. */
-export function buildRunRecord({ apply, sources, boards, liveness, shortlist }, { kind = 'discovery', event = 'unknown' } = {}) {
+export function buildRunRecord({ apply, sources, boards, liveness, shortlist, usageStart, usageEnd }, { kind = 'discovery', event = 'unknown' } = {}) {
   const src = {};
   for (const [name, r] of Object.entries(sources || {})) {
     if (r && typeof r === 'object') src[name] = { read: num(r.read), kept: num(r.kept), ...(r.full_text ? { full_text: num(r.full_text) } : {}), ...(r.error ? { error: true } : {}) };
@@ -42,6 +52,7 @@ export function buildRunRecord({ apply, sources, boards, liveness, shortlist }, 
     alive: num(liveness?.alive), dead: num(liveness?.dead), unknown: num(liveness?.unknown),
     sources: src,
     ...(shortlistRecord(shortlist) ? { shortlist: shortlistRecord(shortlist) } : {}),
+    ...(usageDelta(usageStart, usageEnd) ? { d1_rows: usageDelta(usageStart, usageEnd) } : {}),
   };
 }
 
@@ -62,7 +73,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
   const dir = opt('--work', '../work');
   const failed = opt('--status') && opt('--status') !== 'success';   // the job had already failed (a database write or export): recorded, never shown as "Updated"
-  const rec = opt('--skipped') ? skippedRecord(opt('--skipped'), { kind: opt('--kind', 'discovery'), event: opt('--event', 'unknown') }) : buildRunRecord({ apply: read(dir, 'apply.report.json'), sources: read(dir, 'more_sources_report.json'), boards: read(dir, 'boards_report.json'), liveness: read(dir, 'liveness_report.json'), shortlist: read(dir, 'shortlist.report.json') },
+  const rec = opt('--skipped') ? skippedRecord(opt('--skipped'), { kind: opt('--kind', 'discovery'), event: opt('--event', 'unknown') }) : buildRunRecord({ apply: read(dir, 'apply.report.json'), sources: read(dir, 'more_sources_report.json'), boards: read(dir, 'boards_report.json'), liveness: read(dir, 'liveness_report.json'), shortlist: read(dir, 'shortlist.report.json'), usageStart: read(dir, 'usage_start.json'), usageEnd: read(dir, 'usage_end.json') },
     { kind: opt('--kind', 'discovery'), event: opt('--event', 'unknown') });
   if (failed && !rec.skipped) rec.failed = true;
   process.stdout.write(runLogSql(rec));

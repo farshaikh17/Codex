@@ -102,6 +102,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: D1 usage at the start (plan H1; Cloudflare analytics, reads nothing from D1; the run row stores what this run used)
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: mkdir -p work && node dashboard/scripts/usage_snapshot.mjs > work/usage_start.json
       - name: Validate inputs
         env:
           MAX_NEW: ${{ inputs.max_new || '1500' }}
@@ -135,11 +141,11 @@ jobs:
           DOWNLOAD: ${{ steps.download.outcome }}
         run: |
           if [ "$DOWNLOAD" = "success" ] && [ -s work/all.parquet ]; then
-            python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export
+            python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export --rescore-per-candidate 800
           else
             echo "::warning::The dataset download failed: continuing with an empty dataset result (boards, other sources, re-score, still-open check and shortlist still run)"
             rm -f work/all.parquet
-            python engine/dataset_discovery.py --out work --no-dataset --rescore-export
+            python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 800
           fi
       - name: Light job-site search (no credentials; a blocked site is skipped)
         if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}
@@ -299,6 +305,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          node scripts/usage_snapshot.mjs > ../work/usage_end.json || true
           node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" --status "${{ job.status }}" > ../work/runlog.sql
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/runlog.sql   # the page's "Updated" note sees this run at once
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null

@@ -33,7 +33,7 @@ export function usageFromAnalytics(body) {
   return { rows_read, rows_written };
 }
 
-async function todaysUsage(token, account) {
+export async function todaysUsage(token, account) {
   const day = new Date().toISOString().slice(0, 10);
   const query = `query($a:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){d1AnalyticsAdaptiveGroups(limit:1,filter:{date_geq:$d,date_leq:$d}){sum{rowsRead rowsWritten}}}}}`;
   const res = await fetch('https://api.cloudflare.com/client/v4/graphql', { method: 'POST', headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: JSON.stringify({ query, variables: { a: account, d: day } }) });
