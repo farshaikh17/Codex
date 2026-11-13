@@ -135,3 +135,21 @@ test('tenth-man fix: a run whose job had already failed is recorded with failed:
   const res = await call(worker, makeEnv(d1), 'GET', '/api/discovery/daily', { key: null });
   assert.equal(res.json.last_run_at, '2026-11-12T15:20:00Z');
 });
+
+test('plan H1: the run row carries the D1 rows read and written during the run, only from two same-day snapshots', async () => {
+  const { usageDelta } = await import('../scripts/run_log.mjs');
+  const start = { day: '2026-11-12', rows_read: 841669, rows_written: 19552 }, end = { day: '2026-11-12', rows_read: 3281301, rows_written: 42893 };
+  assert.deepEqual(usageDelta(start, end), { read: 2439632, written: 23341 });
+  assert.equal(usageDelta(start, { ...end, day: '2026-11-13' }), null, 'a run across midnight UTC has no figure');
+  assert.equal(usageDelta({}, end), null);
+  assert.equal(usageDelta(start, null), null);
+  assert.equal(usageDelta(end, start), null, 'never negative');
+  const rec = buildRunRecord({ usageStart: start, usageEnd: end }, { kind: 'watchlist' });
+  assert.deepEqual(rec.d1_rows, { read: 2439632, written: 23341 });
+  assert.ok(!('d1_rows' in buildRunRecord({ usageStart: start }, {})));
+});
+
+test('plan H1: usage_snapshot prints {} without credentials and never fails', () => {
+  const out = execFileSync(process.execPath, [path.join(here, '..', 'scripts', 'usage_snapshot.mjs')], { env: { PATH: process.env.PATH }, encoding: 'utf8' });
+  assert.equal(out.trim(), '{}');
+});

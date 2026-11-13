@@ -55,6 +55,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: D1 usage at the start (plan H1; Cloudflare analytics, reads nothing from D1; the run row stores what this run used)
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: mkdir -p work && node dashboard/scripts/usage_snapshot.mjs > work/usage_start.json
       - name: Install (pinned)
         run: npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
       - name: Profiles and decisions from the database
@@ -72,8 +78,13 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 2 --budget-seconds 300
+      # Plan H1: a run that fetched nothing new reads and writes nothing more in the database. Before, every run wrote its SQL file, whose
+      # housekeeping statements scan the whole jobs table, and bumped the cache generation, so every visitor's next list was recomputed.
+      - name: Fetched any postings?
+        id: fetched
+        run: python3 -c "import json,sys;d=json.load(open('work/jobsite_raw.json'));print('count=%d' % len(d.get('jobs') or []))" >> "$GITHUB_OUTPUT" 2>/dev/null || echo "count=0" >> "$GITHUB_OUTPUT"
       - name: Remove results already stored
-        if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
+        if: ${{ steps.fetched.outputs.count != '0' && hashFiles('work/jobsite_raw.json') != '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -94,8 +105,14 @@ jobs:
           CSV=$(curl -fsSL --retry 2 -A 'career-job-engine/1.0' https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers | grep -oE 'https://assets\.publishing\.service\.gov\.uk/[^"]+\.csv' | head -1 || true)
           [ -n "$CSV" ] && curl -fsSL --retry 2 -A 'career-job-engine/1.0' -o work/uk_register.csv "$CSV" || echo "UK register link not found today"
           python engine/signals.py --uk-register work/uk_register.csv --taste-rows work/taste_rows.json --out work
+      - name: Anything new? (new postings, or a stored posting gaining a city)
+        id: fresh
+        run: |
+          N=$(python3 -c "import json;d=json.load(open('work/jobsite_matches.json'));print(len(d.get('jobs') or []) + len(d.get('merge') or []))" 2>/dev/null || echo 0)
+          echo "count=$N" >> "$GITHUB_OUTPUT"
+          [ "$N" != "0" ] || echo "Nothing new in this run: no database write and the visitors' cached lists are kept"
       - name: Score and write SQL
-        if: ${{ hashFiles('work/jobsite_matches.json') != '' }}
+        if: ${{ steps.fresh.outputs.count != '0' && hashFiles('work/jobsite_matches.json') != '' }}
         working-directory: dashboard
         run: |
           IN="--in ../work/jobsite_matches.json"
@@ -118,6 +135,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          node scripts/usage_snapshot.mjs > ../work/usage_end.json || true
           node scripts/run_log.mjs --work ../work --kind watchlist --event "${{ github.event_name }}" --status "${{ job.status }}" > ../work/runlog.sql
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
       # A run that fetched nothing from any source must not count as done for 7 hours (the recent-run guard counts only a successful
