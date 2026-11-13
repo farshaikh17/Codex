@@ -420,6 +420,35 @@ export function dutyAdjust(duties:number|null,descriptionLength:number,exactTitl
  if(duties===0&&descriptionLength>DUTY_NONE_TEXT&&!exactTitle)return -DUTY_NONE_PENALTY;
  return 0;
 }
+// Plan C2 (phase 4): a title joining two unrelated functions ('Sales & Marketing Operations Manager', 'Finance and HR Operations Lead') loses a little,
+// unless one of the person's target roles is contained exactly. Functions in one group are related ('Maintenance & Reliability', 'Revenue Operations
+// & Sales Ops'); 'Operations & Maintenance' and 'O&M' are not mixed.
+const FUNCTION_GROUPS:[string,string][]=[
+ ['sales','sales|revenue|revops|business development|account management|commercial'],
+ ['marketing','marketing|growth|brand|communications|content|seo|demand generation'],
+ ['finance','finance|financial|accounting|accounts|treasury|tax|audit|payroll|billing'],
+ ['people','hr|human resources|people|talent|recruiting|recruitment'],
+ ['legal','legal|compliance|risk'],
+ ['it','it|information technology|security|infrastructure'],
+ ['data','data|analytics|insights|bi|business intelligence'],
+ ['product','product|design|ux'],
+ ['customer','customer success|customer support|customer service|support|service delivery'],
+ ['supply','supply chain|procurement|purchasing|logistics|warehouse|inventory|sourcing'],
+ ['quality','quality|qa|qc|hse|ehs|safety|health|environment'],
+ ['admin','admin|administration|office|facilities'],
+ ['plant','maintenance|o ?& ?m|reliability|production|manufacturing|projects?'],
+];
+// 'Operations', 'ops', 'engineering' and 'technical' go with any function (the operations of sales, the engineering of a product): never mixed.
+const FUNC_ALT=FUNCTION_GROUPS.map(([,a])=>a).join('|');
+const MIXED_TITLE=new RegExp(`\\b(${FUNC_ALT})(?:\\s+(?:operations|ops))?\\s*(?:&|\\band\\b|/|\\+)\\s*(${FUNC_ALT})\\b`,'gi');
+const functionGroup=(w:string)=>{const t=w.toLowerCase();for(const [g,a] of FUNCTION_GROUPS)if(new RegExp(`^(?:${a})$`,'i').test(t))return g;return null;};
+export const MIXED_TITLE_PENALTY=4;
+/** Plan C2: the two unrelated functions a title joins ('Sales & Marketing ...' -> ['sales','marketing']), or null. */
+export function mixedTitle(title:string|null|undefined):[string,string]|null{
+ const t=String(title||'');MIXED_TITLE.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=MIXED_TITLE.exec(t))){const a=functionGroup(m[1]),b=functionGroup(m[2]);if(a&&b&&a!==b)return [a,b];MIXED_TITLE.lastIndex=m.index+m[1].length;}
+ return null;
+}
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|(?<!assistant |deputy |asst\.? |dy\.? )general manager|head of)\b/i;   // AGM / DGM are mid-senior Indian grades   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
@@ -530,6 +559,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Plan C1: what the job involves, read from the description (role-matched titles of the two built-in profiles only).
  const descLen=String(p.description||'').length, duties=role&&!prof?dutyCount(candidate.id,p.description):null, dutyAdj=dutyAdjust(duties,descLen,fit==='exact');
  if(dutyAdj>0)score=Math.min(95,score+dutyAdj);else if(dutyAdj<0)score=Math.max(0,score+dutyAdj);
+ // Plan C2: a title joining two unrelated functions loses a little, unless a target role is contained exactly.
+ const mixed=role&&!prof&&fit!=='exact'?mixedTitle(p.title):null;
+ if(mixed)score=Math.max(0,score-MIXED_TITLE_PENALTY);
  const ukSponsor=candidate.id==='sana_ansari'&&!!key&&!!ctx.ukSponsors?.has(key)&&/\b(uk|united kingdom|england|scotland|wales|london|manchester|birmingham|leeds|glasgow|edinburgh)\b/i.test(p.location||'');
  const reposted=!!(p as any).repost;
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
@@ -572,6 +604,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(ukSponsor?' Employer holds a UK Skilled Worker sponsor licence.':'')
   +(electricalOnly?' Electrical-only title, ranked below mechanical, reliability and energy roles (score reduced).':'')
   +(dutyAdj>0?` Names ${duties} of the duties of your work (score raised).`:dutyAdj<0?' Names none of the duties of your work (score reduced).':'')
+  +(mixed?` Title mixes two functions (${mixed[0]} and ${mixed[1]}; score reduced).`:'')
   +(reposted?' Reposted: an earlier listing of this role closed.':'')
   +(locClass==='worldwide'?' Posting says: work from anywhere.':locClass==='india_ok'?' Posting names India as a remote location.':'')
   +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
