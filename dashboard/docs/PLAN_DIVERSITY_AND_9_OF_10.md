@@ -509,7 +509,7 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       a one-line "why" (U6, U9); changing the stored reasons now would be redone there.
     - Gulf jobs from job boards (Bayt, Indeed, LinkedIn) are rarely verified, because those sites refuse the still-open check, so Sana's
       "5 Gulf in Stretch" is often reported as a shortfall. The 4-day verification is a plan rule; the run now shows which hosts never verify, and D1
-      (phase 6) decides sources by measurement.
+      (phase 6) decides sources by measurement. **Fixed after phase 6** (see "gaps fixed after phase 6" below).
     - "relaxed" is decided across all sites, and many relaxed days in a row would skip the 4-day check every day. Each relaxed day is printed in the
       run; a streak counter is left for H1/H2.
     - "Braintrust" the AI company shares its name with the reposting site and stays capped as a reposter.
@@ -638,6 +638,16 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     Georgia was already foreign (the country); a location that also names an Indian place is never foreign, so Indore, Goa or "Washington Plaza,
     Hyderabad" are unchanged. Measured on the saved samples (142 distinct locations from both people's top 100 and live lists): one changes,
     "Moranbah, Queensland, au" (an Australian mine town), now abroad.
+  - **Gulf job-board rows** (no rules-marker bump: `evaluate()` is unchanged): measured on the 12 Nov daily run, the job-site search returned
+    Indeed 20, LinkedIn 79 and Bayt 0 rows, and 19 of the 150 still-open targets came back unknown (refused or timed out); job-board rows are
+    stored with no verification date, and a board posting found again is dropped as a duplicate without any write. The job-site search asks
+    only for postings listed in the last 48 hours, so "seen in the board's own listing within 2 days" is the same as "found in the last 2 days"
+    (`discovered_at`), with no new column or step. Rule (`listedOnlyGulf()` in `worker/discovery.ts`): a posting at a Gulf place whose posting
+    URL (the one the still-open check visits) is on bayt.com, indeed.com or linkedin.com (any country subdomain) and was found in the last 2 days counts as verified for
+    Stretch only; Ready still needs the still-open check (a Ready-quality such row goes to Stretch); a posting the check found closed is out.
+    Limited to Gulf places, where those boards are the main source and the "5 Gulf" shortfall is. The A8 audit accepts exactly these rows on
+    Stretch (same rule, one hour of grace); the card's why line adds "could not be confirmed still open (the job site blocks the check)"; the
+    shortlist report counts them (`listed_not_confirmed`). The why line reaches the page with the next release.
 
 ---
 

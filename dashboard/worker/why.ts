@@ -2,7 +2,7 @@
 //   "Maintenance · on-site Pune · 6 of your skills"
 //   "Implementation · remote · 3 of your skills · location not stated"
 // Built only from what is stored (title, place, matched skills, status, eligibility); nothing is sent anywhere. Not used for any score.
-import { familyOf } from './discovery';
+import { familyOf, listedOnlyGulf } from './discovery';
 
 const FAMILY_WORDS: Record<string, string> = {
   revops_crm: 'RevOps / CRM', implementation: 'Implementation', automation_ai: 'Automation', technical_delivery: 'Delivery and projects',
@@ -32,8 +32,21 @@ export function placeWords(workplace: string | null | undefined, location: strin
   return city || 'place not stated';
 }
 
+const DAY = 86400000;
+/** Gap fix (13 Nov): an automatic Stretch row that is a Gulf job-board posting not verified open in 4 days (the board refuses the check; the shortlist
+ *  took it because the board listed it in the last 2 days). */
+export function notConfirmedOpen(r: { qualification_status?: string | null; qualification_reason?: string | null; location_restrictions?: string | null;
+  original_posting_url?: string | null; source_url?: string | null; last_verified_at?: string | null }, now = Date.now()): boolean {
+  if (r.qualification_status !== 'STRETCH_READY' || !String(r.qualification_reason || '').startsWith('Shortlisted automatically.')) return false;
+  const url = String(r.original_posting_url || '').startsWith('https://') ? r.original_posting_url : r.source_url;   // the URL the still-open check and the shortlist read
+  if (!listedOnlyGulf(url, r.location_restrictions)) return false;
+  const t = Date.parse(String(r.last_verified_at || '').replace(' ', 'T') + (/[zZ]|[+-]\d{2}:?\d{2}$/.test(String(r.last_verified_at || '')) ? '' : 'Z'));
+  return !(now - t <= 4 * DAY);
+}
+
 export function whyLine(candidateId: string, r: { title?: string | null; workplace_type?: string | null; location_restrictions?: string | null; qualification_status?: string | null;
-  eligibility_status?: string | null; overall_score?: number | null }, matchedSkills: unknown, threshold: number | null): string {
+  eligibility_status?: string | null; overall_score?: number | null; qualification_reason?: string | null; original_posting_url?: string | null; source_url?: string | null;
+  last_verified_at?: string | null }, matchedSkills: unknown, threshold: number | null): string {
   const parts: string[] = [];
   const fam = familyOf(candidateId, String(r.title || ''));
   parts.push(FAMILY_WORDS[fam] || 'A different kind of role from your usual');
@@ -44,5 +57,6 @@ export function whyLine(candidateId: string, r: { title?: string | null; workpla
     if (r.eligibility_status !== 'ELIGIBLE') parts.push('location not stated');
     else if (threshold != null && Number(r.overall_score || 0) < threshold) parts.push('a little below your usual match');
   }
+  if (notConfirmedOpen(r)) parts.push('could not be confirmed still open (the job site blocks the check)');
   return parts.join(' · ');
 }

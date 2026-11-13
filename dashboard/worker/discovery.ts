@@ -356,6 +356,19 @@ const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|
 // "relocation assistance" were reaching Ready). Was a fixed 15-point deduction.
 /** A place in the Gulf states (used by the screen's visa-route rule and, later, the shortlist's place bands). */
 export function gulfPlace(location:string|null|undefined){return GULF_PLACE.test(location||'')||GULF_CODE.test(location||'');}
+// Gap fix (13 Nov): job boards that refuse the daily still-open check (403 / 999 / timeouts), so their postings are almost never "verified open in
+// 4 days" (plan section 10, phase 3). Their job-site search (engine/jobsite_discovery.py) asks only for postings listed in the last 48 hours, so a
+// row found in the last LISTED_DAYS was in the board's own listing then. For a Gulf place only, the shortlist (scripts/shortlist_select.mjs) counts
+// that as verified for Stretch ("Worth a try"), never for Ready, and the card's why line says it could not be confirmed still open.
+export const LISTED_ONLY_HOSTS=['bayt.com','indeed.com','linkedin.com'], LISTED_DAYS=2;
+export function listedOnlyHost(url:string|null|undefined){
+ let h='';try{h=new URL(String(url||'')).hostname.toLowerCase();}catch{return false;}
+ return LISTED_ONLY_HOSTS.some((d)=>h===d||h.endsWith('.'+d));
+}
+/** A Gulf posting whose posting URL (the one the still-open check visits) is on a board in LISTED_ONLY_HOSTS. */
+export function listedOnlyGulf(url:string|null|undefined,location:string|null|undefined){
+ return gulfPlace(location)&&listedOnlyHost(url);
+}
 export const VISA_UNLIKELY_CAP = 45;
 // Plan S9: a Gulf posting that gives preference to nationals (Saudization, Emiratization, Omanization) is capped like an unworkable route.
 export const NATIONALS_PREFERENCE_CAP = 45;

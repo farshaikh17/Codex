@@ -24,7 +24,7 @@ function world() {
   const add = (o = {}) => {
     const id = o.id || 'j' + (++n);
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at,location_restrictions,workplace_type) VALUES (?,?,?,?,?,?,?,?,?,?)`)
-      .run(id, o.title || 'Maintenance Engineer ' + id, o.company || 'Co ' + id, o.source || 'lever', o.url || 'https://x.example/' + id, o.active ?? 1, now, o.verified ?? now, 'Pune, India', 'ONSITE');
+      .run(id, o.title || 'Maintenance Engineer ' + id, o.company || 'Co ' + id, o.source || 'lever', o.url || 'https://x.example/' + id, o.active ?? 1, o.found ?? now, o.verified === undefined ? now : o.verified, o.location || 'Pune, India', 'ONSITE');
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`)
       .run(C, id, o.status || 'NEEDS_REVIEW', 'ELIGIBLE', o.reason ?? 'Cloud discovery match.', o.override || null);
     db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,40,?)`).run(C, id, o.score ?? 80, V);
@@ -121,4 +121,18 @@ test('discovery.yml: pool before the still-open check, selection after it, then 
   assert.match(wf, /audit: \$\{\{ steps\.audit\.outcome \}\}/);
   assert.match(wf, /AUDIT: \$\{\{ needs\.discover\.outputs\.audit \}\}/);
   assert.match(wf, /if \[ "\$HEALTHY" = "true" \] && \[ "\$AUDIT" = "success" \]; then echo "Run health: ok"; exit 0; fi/);
+});
+
+test('gap fix: a Gulf job-board row found in 2 days may sit on Stretch unverified; never on Ready, never older, never another site or place', () => {
+  const w = world();
+  const ago = (d) => new Date(Date.now() - d * 86400000).toISOString();
+  w.add(auto({ id: 'gulf', status: 'STRETCH_READY', url: 'https://ae.linkedin.com/jobs/view/1', location: 'Dubai, United Arab Emirates', verified: null, found: ago(1) }));
+  w.add(auto({ id: 'bayt', status: 'STRETCH_READY', url: 'https://www.bayt.com/en/uae/jobs/x', location: 'Ruwais, AE', verified: null, found: ago(2) }));
+  w.add(auto({ id: 'ready', status: 'READY', url: 'https://ae.indeed.com/viewjob?jk=1', location: 'Doha, Qatar', verified: null, found: ago(0) }));
+  w.add(auto({ id: 'old', status: 'STRETCH_READY', url: 'https://ae.linkedin.com/jobs/view/2', location: 'Dubai, UAE', verified: null, found: ago(3) }));
+  w.add(auto({ id: 'india', status: 'STRETCH_READY', url: 'https://in.linkedin.com/jobs/view/3', location: 'Pune, India', verified: null, found: ago(1) }));
+  w.add(auto({ id: 'ats', status: 'STRETCH_READY', url: 'https://boards.greenhouse.io/x/4', location: 'Dubai, UAE', verified: null, found: ago(1) }));
+  const text = audit(w.rows(), { report: {} }).problems.join('\n');
+  for (const id of ['ready', 'old', 'india', 'ats']) assert.match(text, new RegExp(`not verified open in 4 days \\(sana_ansari ${id}\\)`), id);
+  for (const id of ['gulf', 'bayt']) assert.doesNotMatch(text, new RegExp(`\\b${id}\\)`), id);
 });

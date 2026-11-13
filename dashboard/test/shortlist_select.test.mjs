@@ -354,3 +354,22 @@ test('plan D1: the report counts pool and tier rows per source', () => {
   assert.deepEqual(report[C].READY.sources, { workday: 2 });
   assert.deepEqual(report[C].STRETCH_READY.sources, { ats_dataset: 1 });
 });
+
+test('gap fix: a Gulf posting from a job board that refuses the check, found in 2 days, counts for Stretch only; the audit agrees', () => {
+  const S = 'sana_ansari';
+  const g = (o) => row({ candidate_id: S, title: 'Maintenance Engineer ' + o.job_id, company: 'Gulf Co ' + o.job_id, location: 'Dubai, United Arab Emirates', workplace: 'ONSITE',
+    source: 'linkedin', url: 'https://ae.linkedin.com/jobs/view/' + o.job_id, last_verified_at: null, discovered_at: iso(1), ...o });
+  const pool = [g({ job_id: 'ready_q', score: 85 }), g({ job_id: 'stretch_q', score: 70, eligibility: 'UNKNOWN' }),
+    g({ job_id: 'bayt', url: 'https://www.bayt.com/en/uae/jobs/x', score: 75 }), g({ job_id: 'old', discovered_at: iso(3), score: 90 }),
+    g({ job_id: 'india', location: 'Pune, India', url: 'https://in.linkedin.com/jobs/view/9', score: 90 }),
+    g({ job_id: 'ats', url: 'https://boards.greenhouse.io/x/1', score: 90 }), g({ job_id: 'dead', score: 90 }),
+    auto('READY', { candidate_id: S, job_id: 'inc', company: 'Inc Co', location: 'Doha, Qatar', url: 'https://qa.indeed.com/viewjob?jk=1', last_verified_at: null, discovered_at: iso(0), score: 88 })];
+  const res = sel(pool, { dead: ['dead'] });
+  assert.deepEqual(tiers(res), { ready_q: 'STRETCH_READY', stretch_q: 'STRETCH_READY', bayt: 'STRETCH_READY', inc: 'STRETCH_READY' },
+    'Ready-quality rows go to Stretch, never Ready; older than 2 days, India, another site and a closed posting stay out');
+  assert.equal(res.changes.find((c) => c.job_id === 'inc').why, 'Not confirmed still open: moved to Stretch');
+  assert.equal(res.report[S].STRETCH_READY.listed_not_confirmed, 4);
+  assert.equal(res.report[S].READY.count, 0);
+  // the same rows verified by the check go to Ready as before
+  assert.equal(tiers(sel(pool.map((r) => ({ ...r, last_verified_at: iso(0) })), { dead: ['dead'] })).ready_q, 'READY');
+});

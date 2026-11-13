@@ -7,11 +7,13 @@
 // check's result, passed only when its write to the database succeeded: a posting it found open counts as verified now, one it found closed is out.
 // --relaxed: the check verified too few rows today (our fault, not closures), so a row already on the automatic shortlist keeps its place without a
 // recent verification; a new row still needs one.
+// Gap fix (13 Nov): a Gulf posting from a job board that refuses the check (bayt.com, indeed.com, linkedin.com) and was in the board's own listing in
+// the last 2 days (found by the 48-hour job-site search since then) counts as verified for Stretch only ("listed"), never for Ready.
 // Writes ONE SQL file of demotions, tier moves and promotions, applied in one `wrangler d1 execute`. Every statement names the row's current state
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -36,6 +38,10 @@ export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold
 /** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. */
 export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN')
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
+/** Gap fix: verified for Ready only by the still-open check; a 'listed' row (a Gulf job-board posting seen in the board's listing in 2 days) may go
+ *  to Stretch. */
+const readyOk = (r) => r.verified && fitsReady(r);
+const shortlistable = (r) => (r.verified || r.listed) && (fitsReady(r) || fitsStretchRule(r));
 // Tenth-man review (phase 3): a title is compared without bracketed parts and trailing place or work-mode parts ("Solutions Engineer (Remote)",
 // "Maintenance Engineer - Jamnagar"), so the same job is not shown twice.
 const MODE_SEG = /^\s*(?:remote|hybrid|on-?site|onsite|wfh|work from home|anywhere|worldwide|global|apac|emea|asia|latam)\b/i;
@@ -151,12 +157,12 @@ function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
   const dupes = repostDuplicates(rows);
-  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r)) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source, r.url)), now);
+  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source, r.url)), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };
   const tierOf = new Map();
-  const qualifies = (r, tier) => (tier === 'READY' ? fitsReady(r) : fitsReady(r) || fitsStretchRule(r));
+  const qualifies = (r, tier) => (tier === 'READY' ? readyOk(r) : fitsReady(r) || fitsStretchRule(r));
   // Hard rules: one posting per employer and title across both tiers and the rows a person holds; and those of ctx.hard (plan A4).
   const hardOk = (r, tier, without = null) => {
     const k = twinKey(r);
@@ -204,7 +210,7 @@ function pickFor(rows, held, ctx) {
       }
     });
   };
-  fill('READY', usable.filter(fitsReady));
+  fill('READY', usable.filter(readyOk));
   swaps('READY');
   // Plan S10 / A3.3: Ready-quality rows that did not fit in Ready come first in Stretch, then Stretch's own rule.
   fill('STRETCH_READY', [...usable.filter((r) => fitsReady(r) && !tierOf.has(r.job_id)), ...usable.filter((r) => !fitsReady(r) && fitsStretchRule(r))]);
@@ -241,6 +247,7 @@ function pickFor(rows, held, ctx) {
     report[t].employers = per.size;
     report[t].max_employer_share = lists[t].length ? Math.round(100 * Math.max(...per.values()) / lists[t].length) / 100 : 0;
     report[t].reposters = lists[t].filter(isReposter).length;
+    report[t].listed_not_confirmed = lists[t].filter((r) => !r.verified && r.listed).length;   // gap fix: Gulf job-board rows not confirmed still open
     report[t].older_than_30_days = lists[t].filter((r) => (now - when(r.discovered_at)) / DAY > OLD_DAYS).length;
     report[t].families = {}; for (const r of lists[t]) report[t].families[r.family || 'unclassified'] = (report[t].families[r.family || 'unclassified'] || 0) + 1;
     report[t].bands = {}; for (const r of lists[t]) report[t].bands[r.band || 'other'] = (report[t].bands[r.band || 'other'] || 0) + 1;
@@ -283,6 +290,7 @@ export function selectShortlist(pool, opts = {}) {
     r.family = familyOf(r0.candidate_id, r0.title);
     r.band = placeBand(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
     r.verified = alive.has(r.job_id) || now - when(r.last_verified_at) <= VERIFIED_DAYS * DAY || (!!opts.relaxed && r.auto);
+    r.listed = listedOnlyGulf(r0.url, r0.location) && now - when(r0.discovered_at) <= LISTED_DAYS * DAY;
     c.rows.push(r);
   }
   const changes = [], report = {};
@@ -295,9 +303,9 @@ export function selectShortlist(pool, opts = {}) {
       const to = tierOf.get(r.job_id) || 'NEEDS_REVIEW';
       if (r.auto) {
         if (to === r.status) continue;
-        const qualifies = r.verified && (fitsReady(r) || fitsStretchRule(r));
+        const qualifies = shortlistable(r);
         changes.push({ candidate_id: cid, job_id: r.job_id, from: r.status, to,
-          why: to !== 'NEEDS_REVIEW' ? (to === 'READY' ? 'Moved up: qualifies for Ready' : 'Outranked: Ready keeps 25, moved to Stretch') : qualifies ? 'Outranked: the automatic shortlist keeps 25 per tier, or swapped for variety' : 'No longer meets the automatic shortlist rule' });
+          why: to !== 'NEEDS_REVIEW' ? (to === 'READY' ? 'Moved up: qualifies for Ready' : !r.verified ? 'Not confirmed still open: moved to Stretch' : 'Outranked: Ready keeps 25, moved to Stretch') : qualifies ? 'Outranked: the automatic shortlist keeps 25 per tier, or swapped for variety' : 'No longer meets the automatic shortlist rule' });
       } else if (to !== 'NEEDS_REVIEW' && r.status === 'NEEDS_REVIEW') {
         changes.push({ candidate_id: cid, job_id: r.job_id, from: 'NEEDS_REVIEW', to, why: 'Shortlisted automatically by the screen' });
       }
