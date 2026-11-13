@@ -30,11 +30,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 try:   # run as a script (engine/ on sys.path) or as part of the engine package (tests)
-    from company_names import http_fetch, name_jobs
-    from multi_place import from_count, merge_places
+    from company_names import display_company, http_fetch, name_jobs
+    from multi_place import from_count, merge_places, place_listed
 except ImportError:   # pragma: no cover
-    from engine.company_names import http_fetch, name_jobs
-    from engine.multi_place import from_count, merge_places
+    from engine.company_names import display_company, http_fetch, name_jobs
+    from engine.multi_place import from_count, merge_places, place_listed
 
 DATASET = 'https://storage.stapply.ai/jobhive/v1/all.parquet'
 MANIFEST = 'https://storage.stapply.ai/jobhive/v1/manifest.json'
@@ -249,11 +249,14 @@ def existing(jobs, local=None):
             urls.add(r['u'])
     # Employer, title AND stated location: the same role in another city is a different opening (owner rule: only exact duplicates collapse),
     # unless its text is the same but for the city (plan B3, split_new()).
+    # A stored employer is read through the known-names table (tenth-man review, phase 4): a row the rename left on its tenant id (applied to or
+    # decided, or stored before migration 0021 ran) is the same employer as a new row named at import.
     pairs, stored = set(), {}
     for r in d1("SELECT id, company c, title t, location_restrictions l, workplace_type w FROM jobs WHERE is_active = 1", local):
-        pairs.add((norm(r['c']), norm(r['t']), norm(r['l'])))
-        stored.setdefault((norm(r['c']), norm(r['t'])), []).append(r)
-    closed = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
+        c = norm(display_company(r['c']))
+        pairs.add((c, norm(r['t']), norm(r['l'])))
+        stored.setdefault((c, norm(r['t'])), []).append(r)
+    closed = {(norm(display_company(r['c'])), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
     return ids, urls, pairs, closed, stored
 
 
@@ -284,22 +287,66 @@ def _remote(loc, flag=None, workplace=None):
 
 def same_job_other_city(a_loc, a_desc, a_remote, b_loc, b_desc, b_remote):
     """Plan B3: two postings of one employer and title differ only by city when their places differ, both are remote or both are not, they
-    name no different country, and their texts (200 characters or more) are the same once each one's places are taken out."""
+    name the same country (or both name none), and their texts (200 characters or more) are the same once each one's places are taken out."""
     if norm(a_loc) == norm(b_loc) or a_remote != b_remote:
         return False
     ca, cb = _country(a_loc), _country(b_loc)
-    if ca and cb and ca != cb:
+    if ca != cb:   # both name the same country, or both are bare cities (tenth-man review: 'Berlin' and 'Austin, TX' are not one job)
         return False
     ta, tb = _text(a_desc, a_loc, b_loc), _text(b_desc, a_loc, b_loc)
     return len(ta) >= SAME_TEXT_MIN and ta == tb
 
 
 def _descriptions(ids, local=None):
+    """Text and guard of the stored rows a new posting may join (plan B3): {id: (text, guarded)}. A guarded row (someone applied to it, or a person
+    decided on it) is never changed, so a posting is never merged into one."""
     out = {}
     for part in chunks(sorted(ids), 150):
-        for r in d1(f"SELECT id, substr(description, 1, 6000) d FROM jobs WHERE id IN (SELECT value FROM json_each({sql_str(json.dumps(part))}))", local):
-            out[r['id']] = r['d'] or ''
+        for r in d1(f"SELECT id, substr(description, 1, 6000) d, (EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) "
+                    f"OR EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL)) g "
+                    f"FROM jobs WHERE id IN (SELECT value FROM json_each({sql_str(json.dumps(part))}))", local):
+            out[r['id']] = (r.get('d') or '', bool(r.get('g')))
     return out
+
+
+def merge_cities(fresh, stored, local=None, merges=None):
+    """Plan B3 on the new postings: returns those still to insert. A posting joins a stored, unguarded row (or an earlier posting in this run) that
+    is the same job in another city: its city is added (merge_places) and the posting is not inserted. A posting whose city is already listed there
+    is the one merged before (it comes back every day) and is dropped too. A posting that cannot be added (three places listed already, or the
+    stored row is guarded) is inserted as its own row, so no city is lost."""
+    want = {r.get('id') for j in fresh for r in stored.get((norm(j['company']), norm(j['title'])), []) if r.get('id')}
+    texts = _descriptions(want, local) if want else {}
+    changed, kept, merged, listed = {}, [], 0, 0
+    for j in fresh:
+        jr, loc = _remote(j.get('location'), j.get('is_remote')), j.get('location')
+        host = next((r for r in stored.get((norm(j['company']), norm(j['title'])), [])
+                     if r.get('id') and not texts.get(r['id'], ('', True))[1]
+                     and same_job_other_city(changed.get(r['id'], r['l']), texts[r['id']][0], _remote(r['l'], None, r.get('w')), loc, j.get('description'), jr)), None)
+        if host:
+            now = changed.get(host['id'], host['l'])
+            if place_listed(now, loc):
+                listed += 1
+                continue
+            after = merge_places(now, loc)
+            if after != now:
+                changed[host['id']] = after
+                merged += 1
+                continue
+        twin = next((k for k in kept if norm(k['company']) == norm(j['company']) and norm(k['title']) == norm(j['title'])
+                     and same_job_other_city(k.get('location'), k.get('description'), _remote(k.get('location'), k.get('is_remote')), loc, j.get('description'), jr)), None)
+        if twin:   # the same job twice in this run: one row, both cities
+            after = merge_places(twin.get('location'), loc)
+            if after != twin.get('location'):
+                twin['location'] = after
+                merged += 1
+                continue
+        kept.append(j)
+    if merges is not None:   # {'stored': [{id, old, new}], 'merged': n, 'already_listed': n}
+        old = {r.get('id'): r['l'] for rows in stored.values() for r in rows}
+        merges.setdefault('stored', []).extend({'id': i, 'old': old[i], 'new': loc} for i, loc in changed.items())
+        merges['merged'] = merges.get('merged', 0) + merged
+        merges['already_listed'] = merges.get('already_listed', 0) + listed
+    return kept
 
 
 def split_new(jobs, local=None, merges=None):
@@ -315,33 +362,15 @@ def split_new(jobs, local=None, merges=None):
     ids, urls, pairs, closed, stored = existing(unique, local) if unique else ({}, set(), set(), set(), {})
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
     fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
-    # Plan B3, against stored rows: read the text of only the stored rows that share an employer and title with a new posting.
-    want = {r.get('id') for j in fresh for r in stored.get((norm(j['company']), norm(j['title'])), []) if r.get('id')}
-    texts = _descriptions(want, local) if want else {}
-    changed, kept, merged = {}, [], 0
-    for j in fresh:
-        jr = _remote(j.get('location'), j.get('is_remote'))
-        host = next((r for r in stored.get((norm(j['company']), norm(j['title'])), [])
-                     if r.get('id') and same_job_other_city(changed.get(r['id'], r['l']), texts.get(r['id'], ''), _remote(r['l'], None, r.get('w')),
-                                            j.get('location'), j.get('description'), jr)), None)
-        if host:
-            now = changed.get(host['id'], host['l'])
-            changed[host['id']] = merge_places(now, j.get('location'))
-            merged += 1
-            continue
-        twin = next((k for k in kept if norm(k['company']) == norm(j['company']) and norm(k['title']) == norm(j['title'])
-                     and same_job_other_city(k.get('location'), k.get('description'), _remote(k.get('location'), k.get('is_remote')),
-                                             j.get('location'), j.get('description'), jr)), None)
-        if twin:   # the same job twice in this run: one row, both cities
-            twin['location'] = merge_places(twin.get('location'), j.get('location'))
-            merged += 1
-            continue
-        kept.append(j)
-    fresh = kept
-    if merges is not None:   # {'stored': [{id, old, new}], 'merged': n}
-        old = {r.get('id'): r['l'] for rows in stored.values() for r in rows}
-        merges.setdefault('stored', []).extend({'id': i, 'old': old[i], 'new': loc} for i, loc in changed.items() if (loc or '') != (old[i] or ''))
-        merges['merged'] = merges.get('merged', 0) + merged
+    # Plan B3. A failure here never stops the run (tenth-man review): every posting is then inserted as before.
+    try:
+        part = {}
+        fresh = merge_cities(fresh, stored, local, part)
+        if merges is not None:
+            for k, v in part.items():
+                merges[k] = merges.get(k, []) + v if isinstance(v, list) else merges.get(k, 0) + v
+    except Exception as e:   # noqa: BLE001
+        print(f'::warning::Same-job-other-city check skipped this run ({type(e).__name__}: {str(e)[:160]})', file=sys.stderr)
     for j in fresh:   # the same role closed within the last 180 days and is back under a new id
         if (norm(j['company']), norm(j['title'])) in closed:
             j['repost'] = True
@@ -409,7 +438,7 @@ def manifest_age_hours(manifest, now=None):
 def write_context(out, local, rescore_export, rescore_per_candidate):
     """What the later steps need whatever happens to the dataset: candidates, search profiles, rows to re-score and taste rows."""
     profs = profiles(local)
-    (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, local)))
+    (out / 'candidates.json').write_text(json.dumps(candidates_rows(local)))
     (out / 'profiles.json').write_text(json.dumps(profs))
     if rescore_export:
         (out / 'rescore.json').write_text(json.dumps(rescore_rows(local, per_candidate=rescore_per_candidate)))
@@ -442,7 +471,7 @@ def main():
         return 0
     if a.profiles_only:
         profs = profiles(a.d1_local)
-        (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
+        (out / 'candidates.json').write_text(json.dumps(candidates_rows(a.d1_local)))
         (out / 'profiles.json').write_text(json.dumps(profs))
         (out / 'taste_rows.json').write_text(json.dumps(taste_rows(a.d1_local)))
         print(json.dumps({'profiles': len(profs)}))
@@ -450,7 +479,7 @@ def main():
     if a.dedupe:
         raw = json.loads(Path(a.dedupe).read_text())
         jobs = [clean(j) for j in raw.get('jobs', [])]
-        names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())   # plan B1: employer names before the duplicate test
+        names = safe_names(jobs, not a.no_name_lookup)   # plan B1: employer names before the duplicate test
         merges = {}
         fresh, _, dup = split_new(jobs, a.d1_local, merges)
         (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': [], 'merge': merges.get('stored', [])}, default=str))
@@ -492,7 +521,7 @@ def main():
             j['public'] = j['public'] or bool(p.get('public'))
     jobs = [j for j in found.values() if len(j['url']) < LIMITS['url']]
     # Plan B1: the employer's name, not its hiring-system tenant id, before the duplicate test (so caps and dedupe see the display name).
-    names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())
+    names = safe_names(jobs, not a.no_name_lookup)
     merges = {}
     fresh, reopen, dup = split_new(jobs, a.d1_local, merges)
     # A partial snapshot must not close real jobs: no closures at all unless the snapshot has its usual size.
@@ -509,14 +538,50 @@ def main():
     return 0
 
 
+def safe_names(jobs, lookup=True):
+    """name_jobs() that never stops the run (tenth-man review, phase 4): on any failure the career-site lookups are skipped and the known-names
+    table alone is used."""
+    try:
+        return name_jobs(jobs, http_fetch() if lookup else None)
+    except Exception as e:   # noqa: BLE001
+        print(f'::warning::Employer-name lookups skipped this run ({type(e).__name__}: {str(e)[:160]})', file=sys.stderr)
+        try:
+            return {**name_jobs(jobs, None), 'lookup_failed': True}
+        except Exception:   # noqa: BLE001
+            return {'renamed': 0, 'looked_up': 0, 'lookup_failed': True}
+
+
+def with_names(rows):
+    """Rows whose 'company' is read through the known-names table (no fetch). A stored row the rename left on its tenant id (someone applied to it,
+    or decided on it) then keys the same as the employer's new rows: the rejected-before note, the taste model and the shortlist's twin test see one
+    employer (tenth-man review, phase 4)."""
+    for r in rows:
+        if r.get('company'):
+            r['company'] = display_company(r['company'])
+    return rows
+
+
+def candidates_rows(local=None):
+    """CANDIDATES_SQL, with each rejected employer read through the known-names table."""
+    rows = d1(CANDIDATES_SQL, local)
+    for r in rows:
+        try:
+            rej = json.loads(r.get('rejected_companies') or '[]')
+        except ValueError:
+            continue
+        if isinstance(rej, list):
+            r['rejected_companies'] = json.dumps(with_names([x for x in rej if isinstance(x, dict)]))
+    return rows
+
+
 def taste_rows(local=None):
     """The operator's own decisions, for the taste model (engine/signals.py): title and company only, with a label."""
-    return d1("""SELECT a.candidate_id, j.title, j.company, a.status AS label FROM applications a JOIN jobs j ON j.id = a.job_id
+    return with_names(d1("""SELECT a.candidate_id, j.title, j.company, a.status AS label FROM applications a JOIN jobs j ON j.id = a.job_id
       WHERE a.status IN ('SAVED','APPLIED','SUBMITTED','INTERVIEWING','OFFER')
       UNION ALL SELECT q.candidate_id, j.title, j.company, q.manual_override_status FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
       WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED')
       UNION ALL SELECT f.candidate_id, j.title, j.company, CASE f.rating WHEN 'UP' THEN 'GOOD_MATCH' ELSE 'NOT_FOR_ME' END FROM job_feedback f JOIN jobs j ON j.id = f.job_id
-      LIMIT 4000""", local)
+      LIMIT 4000""", local))
 
 
 def taste_targets(local=None, per_candidate=400):
@@ -614,7 +679,7 @@ def shortlist_pool(local=None, per_candidate=300):
 
 def write_pool(path, local=None, per_candidate=300):
     """Writes the pool atomically (a temporary file renamed into place), so a failed export never leaves a partial pool for the selector."""
-    rows = shortlist_pool(local, per_candidate)
+    rows = with_names(shortlist_pool(local, per_candidate))
     tmp = Path(str(path) + '.tmp')
     tmp.write_text(json.dumps({'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'rows': rows}))
     tmp.replace(path)

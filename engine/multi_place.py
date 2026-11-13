@@ -89,3 +89,11 @@ def merge_places(current, add):
     places.append(new)
     out = '; '.join(places) + (f'; +{extra} more' if extra else '') + suffix
     return out[:300]
+
+
+def place_listed(current, add):
+    """True when the place is already one of the places a location names (so adding it changes nothing and the posting is the one merged before)."""
+    key = lambda x: re.sub(r'[^a-z0-9]+', ' ', x.lower()).strip()   # noqa: E731
+    cur = re.sub(r'\s*\([^)]*\)\s*$', '', str(current or ''))
+    places = {key(p) for p in cur.split(';') if p.strip() and not MORE.match(p.strip())}
+    return bool(str(add or '').strip()) and (key(str(add)) in places or key(str(add)) == key(str(current or '')))

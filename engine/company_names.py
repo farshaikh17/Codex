@@ -138,20 +138,32 @@ def display_company(raw, source=None, url=None, fetch=None, cache=None):
     return cache[page] or name
 
 
-def http_fetch(timeout=8):
-    """A fetch for display_company(): one GET with a short timeout, at most 256 KB read."""
+def http_fetch(timeout=8, total=15, limit=262144):
+    """A fetch for display_company(): one GET, `timeout` seconds per socket wait and `total` seconds for the whole answer (a server that sends a
+    trickle of bytes is cut off), at most `limit` bytes read."""
+    import time
     import urllib.request
 
     def get(url):
+        end = time.monotonic() + total
         req = urllib.request.Request(url, headers={'User-Agent': 'career-job-engine/1.0 (employer name lookup)', 'Accept': 'text/html'})
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.read(262144).decode('utf-8', 'replace')
+            chunks, size = [], 0
+            while size < limit:
+                if time.monotonic() > end:
+                    raise TimeoutError('career page too slow')
+                b = r.read(min(16384, limit - size))
+                if not b:
+                    break
+                chunks.append(b); size += len(b)
+            return b''.join(chunks).decode('utf-8', 'replace')
     return get
 
 
-def name_jobs(jobs, fetch=None, max_lookups=40, workers=8):
+def name_jobs(jobs, fetch=None, max_lookups=40, workers=8, deadline=60):
     """Gives every job its display name in place (plan B1, at import). At most max_lookups career sites are opened per run, eight at a time
-    (each with its own short timeout), so a slow site costs seconds, not the step; the rest keep the table name or the raw one.
+    (each with its own short timeout), and the whole lookup stops after `deadline` seconds, so a slow site costs seconds, not the step; the rest
+    keep the table name or the raw one.
     Returns {'renamed': n, 'looked_up': n}."""
     cache = {}
     if fetch:
@@ -172,8 +184,12 @@ def name_jobs(jobs, fetch=None, max_lookups=40, workers=8):
                     return page, name_from_html(fetch(page))
                 except Exception:   # a career site that does not answer keeps the raw name
                     return page, None
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                cache.update(pool.map(one, pages))
+            from concurrent.futures import wait
+            pool = ThreadPoolExecutor(max_workers=workers)
+            futures = [pool.submit(one, p) for p in pages]
+            done, _ = wait(futures, timeout=deadline)   # the whole lookup has a deadline; whatever has not answered keeps its raw name
+            pool.shutdown(wait=False, cancel_futures=True)
+            cache.update(f.result() for f in done)
     renamed = 0
     for j in jobs:
         before = j.get('company') or ''
