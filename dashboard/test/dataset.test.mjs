@@ -8,6 +8,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb } from "./harness.mjs";
+import * as DS_DISCOVERY from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const F = 'farhan_shaikh', S = 'sana_ansari';
@@ -468,4 +469,26 @@ test('S3: a row held as outside the role family comes back to To review when the
   assert.deepEqual(db.prepare(`SELECT previous_status p, new_status n, actor a FROM qualification_history WHERE job_id LIKE 'h%'`).all().map((r) => ({ ...r })), [{ p: 'HOLD', n: 'NEEDS_REVIEW', a: 'discovery' }], 'one history row, not repeated');
   assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('h2','h3') ORDER BY job_id`).all(), before, 'decided and applied rows are byte-identical');
   assert.ok(report.held_role_rechecked >= 1);
+});
+
+test('S4: the shortlist needs two matched skills unless the title is exactly a target role; decided rows untouched', () => {
+  const w = world(); const db = w.sqlite;
+  const { RULES_MARKER: M } = DS_DISCOVERY;
+  db.prepare(`UPDATE candidates SET qualification_threshold = 60 WHERE id = ?`).run(S);
+  const now = new Date().toISOString();
+  const add = (id, skill, exact, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,1,?,?)`).run(id, 'Maintenance Engineer ' + id, 'Co' + id, 'lever', 'https://x.example/' + id, now, now);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,eligibility_status,manual_override_status) VALUES (?,?,?,?, 'ELIGIBLE', ?)`).run(S, id, o.status || 'NEEDS_REVIEW', 'Cloud discovery match.', o.override || null);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,80,?,?)`).run(S, id, skill, JSON.stringify({ preliminary: true, [M]: true, target_exact: exact }));
+  };
+  add('k1', 20, false); add('k2', 40, false); add('k3', 20, true); add('k4', 20, false, { status: 'READY', override: 'READY' });
+  const before = db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get();
+  const { sql } = run(w.dir);
+  db.exec(sql);
+  const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE job_id LIKE 'k%'`).all().map((r) => [r.j, r.s]));
+  assert.deepEqual(st, { k1: 'NEEDS_REVIEW', k2: 'READY', k3: 'READY', k4: 'READY' });
+  assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get(), before);
+  // the breakdown written for a new row says whether the title is exactly a target role
+  const bd = db.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE job_id = 'ds:greenhouse:2'`).get();
+  assert.ok(!bd || /"target_exact":(true|false)/.test(bd.b));
 });
