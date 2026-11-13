@@ -61,11 +61,15 @@ requests save, set a stage, write notes and follow-ups, mark Good match / Not fo
 * **Limits.** At most 60 keyless tracker writes an hour per network (a hash of the address, kept in `auth_failures`); notes and other free text
   at most 2,000 characters; a write carries the record's `updated_at` and a stale one is refused with 409 "This changed elsewhere; reload"; an
   empty note never silently replaces a written one. A tracker click clears only that person's cached lists.
-* **Every keyless change is tagged** in `qualification_history` / `application_history` with a hash of the network it came from (migration 0022),
-  never the address.
+* **Every keyless change is tagged** with a hash of the network it came from, never the address: side table `history_client` (migration
+  0022) next to the `qualification_history` / `application_history` row.
 * **Undo** (`undo-changes.yml`, run by hand from the Actions tab): `mode = list` with `since` (UTC) lists the networks that changed something;
   `mode = preview` with the person, `since` and a network hash shows the reverse statements and changes nothing; `mode = apply` runs them. Each
-  statement applies only if nobody changed that job afterwards. Code: `dashboard/scripts/undo_since.mjs`.
+  statement restores the job's state before that network's first change in the window, only if nobody changed that job afterwards, and writes
+  an `owner-undo` history row. Because the owner runs it on purpose, it may change a row with an application or an override, but never a row the
+  network did not change. Code: `dashboard/scripts/undo_since.mjs`.
+* **The operator screens** are at `/app?operator=1`. That address hides them from the job seeker's page; it does not lock them. Changes there still
+  need the operator key, except the open tracker's own actions.
 
 ## Daily phone message
 

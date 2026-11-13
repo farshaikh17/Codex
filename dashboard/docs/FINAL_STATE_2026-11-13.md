@@ -22,7 +22,7 @@ timing wait, which #129 fixed; the after-fingerprint step did not run. `GET /api
 | 2, sorting | #141-#152 | Scoring agrees with the profiles: Indian plant towns, every searched title, two-skill rule, worldwide remote, caps for too senior, wrong platform and office jobs, Gulf details (rules `profile_v13`) |
 | 3, variety | #153-#161 | Ready and Stretch chosen from a verified pool with employer, reposter, role-family and place rules; a daily audit |
 | 4, names and ranking | #162-#167, #171 | Employer names instead of tenant ids, "N Locations" places, one row for the same job in many cities, duties, mixed titles, spread (rules `profile_v14`) |
-| 5, the site | #168, #170, #173, #176 and its tenth-man PR | Phone-first Today screen, one card everywhere, "Did you apply?", Not for me with undo, per-person applications, plain words, counts that agree, back and reload; undo of keyless tracker changes by network |
+| 5, the site | #168, #170, #173, #176 (with its tenth-man fixes) | Phone-first Today screen, one card everywhere, "Did you apply?", Not for me with undo, per-person applications, plain words, counts that agree, back and reload; undo of keyless tracker changes by network |
 | 6, alerts and hand-off | #169, #172, #174, #175, this PR | Daily phone message (off until the owner adds a bot token); read budget measured and protected; sources decided by measurement; these docs |
 
 ## 2. What needs a production release
@@ -48,9 +48,14 @@ The daily run, the watchlist, the phone message, the undo workflow and the sourc
   the daily dataset. Most of Sana's India and Gulf employers that "failed" on 12 Nov are in the dataset through Oracle, Phenom, Cornerstone or
   Darwinbox (Adani 1,043 postings, Honeywell 1,344, Emerson 1,199, ABB 2,282, Linde 968). No fetcher was added. Six Workable search terms were.
   Details: `DISCOVERY_PIPELINE.md`, "Sources by measurement".
-- **GitHub schedules are sparse.** The repository's scheduled triggers fire far less often than written: on 13 Nov, up to 17:50 UTC, no
-  scheduled discovery run had started, the new watchdog had not run yet, and the last scheduled run of any workflow was at 11:15. The 20-hour
-  guard, the extra triggers and the watchdog exist for this; if the page says "Not updated today" in the evening, run **Daily discovery** by hand.
+- **GitHub schedules are sparse.** The repository's scheduled triggers fire far less often than written: on 13 Nov, up to 19:05 UTC, no
+  `discovery.yml` run had started that day and the new watchdog (`discovery-watchdog.yml`) had never run, while other workflows' schedules
+  fired a few times (watchlist 09:27 and 17:40, collector sync 08:46 and 18:46). The 20-hour guard, the catch-up triggers and the watchdog exist
+  for this; if the page says "Not updated today" in the evening, run **Daily discovery** by hand.
+- **Budget on 13 Nov:** 1,847,869 rows read by 17:40 UTC (the watchlist's guard). With the new 2.0M start limit, a daily run triggered later that
+  evening may be postponed to the 01:13 / 03:13 UTC triggers; the run row and the phone message say so.
+- **H1 changes ran in production:** the 17:40 watchlist run executed the new usage snapshot and "Fetched any postings?" / "Anything new?" steps
+  green (it found new postings, so it wrote).
 
 ## 4. Checks run for the last phases
 
@@ -71,11 +76,13 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 - **Gulf jobs from job boards** are rarely verified (those sites refuse the still-open check), so Sana's "5 Gulf in Worth a try" is often
   reported as a shortfall.
 - **A US location with the full state name** ("Houston, Texas") is not foreign for Sana's visa-route cap.
+- **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
+  except the open tracker's own actions).
 - **Out of scope:** private link per person, self sign-up, other professions, pricing, the operator key, the five held dependency updates.
 
 ## 6. Owner steps
 
-1. **Release** (section 2), once phase 5's last PR is merged and CI is green.
+1. **Release** (section 2) when CI is green on the head of `main`.
 2. **Daily phone message (optional, free):** create a Telegram bot with `@BotFather`, add its token as the repository secret
    `TELEGRAM_BOT_TOKEN`, send each person `https://t.me/<bot>?start=sana_ansari` / `?start=farhan_shaikh`, and run **Link Telegram chats** within
    24 hours. Steps in `RELEASE.md`, "Daily phone message". Email instead: variable `DIGEST_PROVIDER=smtp` and secrets `DIGEST_SMTP_USER`,
