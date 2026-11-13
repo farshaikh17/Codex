@@ -75,7 +75,7 @@ const op = await browser.newContext(ctxOpts);
 await op.addInitScript((k) => window.sessionStorage.setItem('admin_session_key', k), KEY);
 const opPage = await op.newPage();
 await opPage.route(/fonts\.(googleapis|gstatic)/, (r) => r.abort());
-await opPage.goto(BASE + '/app', { waitUntil: 'networkidle' });
+await opPage.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' });
 await opPage.getByRole('button', { name: 'Manage clients', exact: true }).click();
 await opPage.getByRole('button', { name: /^Applications/ }).last().click();
 await opPage.waitForSelector(`[data-request-id="${req.id}"]`);
