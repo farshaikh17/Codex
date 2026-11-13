@@ -1,6 +1,10 @@
 // Small durable work units. No application/history writes and no model/API fees.
 import { isBroad, broadURL, broadPage, normalizeBroad } from './broad-feeds.ts';
 export const RULE_VERSION = 'cloud-conservative-review-1';
+// The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
+// scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
+// or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
+export const RULES_MARKER = 'profile_v12';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -429,7 +433,7 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
    statements.push(db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at)
     VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(candidate_id,job_id) DO UPDATE SET overall_score=excluded.overall_score,skill_score=excluded.skill_score,role_score=excluded.role_score,strategy_lane=excluded.strategy_lane,score_breakdown=excluded.score_breakdown,calculated_at=excluded.calculated_at
     WHERE candidate_job_scores.score_breakdown LIKE '%cloud-conservative-review-%' AND NOT EXISTS(SELECT 1 FROM applications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id)
-    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,ranking_v2:true,profile_v3:true,skills_v1:list(candidate.primary_skills).length>0,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
+    AND NOT EXISTS(SELECT 1 FROM candidate_qualifications WHERE candidate_id=excluded.candidate_id AND job_id=excluded.job_id AND manual_override_status IS NOT NULL)`).bind(candidate.id,jobId,result.score,Math.min(100,result.skills.length*20),result.lane==='STRONGEST_FIT'?70:0,result.lane,JSON.stringify({rule_version:RULE_VERSION,preliminary:true,ranking_v2:true,skills_v1:list(candidate.primary_skills).length>0,matched_skills:result.skills,missing_skills:[],note:'Conservative discovery screen; full qualification review pending.'}),now));
   }
  }
  else if(!p.board)statements.push(db.prepare('UPDATE jobs SET last_verified_at=? WHERE id=?').bind(now,jobId));
@@ -467,7 +471,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, profile_v3: true, profile_v12: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));
