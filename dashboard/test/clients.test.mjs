@@ -392,3 +392,38 @@ test('new today: only jobs found or put on the list in the last day; the total a
   assert.ok(ids(all).includes('k1') && all.json.total === 3);
   assert.equal((await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&new_within=3`, { key: null })).status, 200, 'an unsupported value is ignored, not an error');
 });
+
+test('a tracker action clears only that person\'s stored answers: the other person\'s stay cached, the changed person sees the change at once', async () => {
+  const w = world({ OPEN_TRACKER: 'on', RESPONSE_CACHE: 'on' });
+  const keys = () => w.sqlite.prepare('SELECT key FROM response_cache ORDER BY key').all().map((r) => r.key);
+  const gen = () => w.sqlite.prepare('SELECT generation g FROM cache_state WHERE id = 1').get()?.g;
+  await req(w.env, 'GET', `/api/applications?candidate_id=${F}`, { key: null });
+  await req(w.env, 'GET', `/api/applications?candidate_id=${S}`, { key: null });
+  await req(w.env, 'GET', `/api/jobs?candidate_id=${S}`, { key: null });
+  const before = keys(), g0 = gen();
+  assert.ok(before.some((k) => k.includes(`candidate_id=${F}`)) && before.some((k) => k.includes(`candidate_id=${S}`)), JSON.stringify(before));
+  const saved = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k3', status: 'APPLIED', notes: 'Sent' }, key: null });
+  assert.ok(saved.status < 300, saved.text);
+  const after = keys();
+  assert.equal(gen(), g0, 'the global generation is not raised by a tracker action');
+  assert.ok(!after.some((k) => k.includes(`candidate_id=${F}`)), 'Farhan\'s stored answers are cleared');
+  assert.deepEqual(after.filter((k) => k.includes(`candidate_id=${S}`)), before.filter((k) => k.includes(`candidate_id=${S}`)), 'Sana\'s stay');
+  const fresh = await req(w.env, 'GET', `/api/applications?candidate_id=${F}`, { key: null });
+  assert.ok(fresh.text.includes('Sent'), 'Farhan sees his change straight away');
+  // a change that is not a tracker action still clears everything
+  await req(w.env, 'PUT', '/api/clients/' + S, { body: { display_title: 'x' } });
+  assert.ok(gen() > g0 || keys().length === 0, 'non-tracker changes keep the global clear');
+});
+
+test('open tracker limits: a script hitting the tracker is stopped after the hourly allowance; huge notes are refused; another network is unaffected', async () => {
+  const w = world({ OPEN_TRACKER: 'on' });
+  const send = (ip, body) => worker.fetch(new Request('https://test.invalid/api/jobs/k3/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip },
+    body: JSON.stringify(body) }), w.env, { waitUntil() {} });
+  const statuses = [];
+  for (let i = 0; i < 65; i++) statuses.push((await send('198.51.100.7', { candidate_id: F, rating: i % 2 ? 'UP' : 'DOWN' })).status);
+  assert.equal(statuses.filter((s) => s === 200).length, 60, 'the first 60 writes in an hour go through');
+  assert.ok(statuses.slice(60).every((s) => s === 429), 'then 429: ' + statuses.slice(60).join());
+  assert.equal((await send('198.51.100.8', { candidate_id: F, rating: 'UP' })).status, 200, 'another network is not affected');
+  const big = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k3', status: 'SAVED', notes: 'x'.repeat(2001) }, key: null });
+  assert.equal(big.status, 400); assert.match(big.text, /longer than 2000/);
+});

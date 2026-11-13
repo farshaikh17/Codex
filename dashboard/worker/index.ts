@@ -146,7 +146,7 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
 // Open tracker (owner decision 2026-11-12: "make it work for Farhan and Sana first, security later"). With OPEN_TRACKER = 'on', these
 // tracker actions work without the operator key, only for a candidate that is not a private client, and public answers keep the
 // tracker's own notes. Everything else (clients, settings, profiles, the inbox, exports, automation) still needs the key.
-export const TRACKER_ROUTES: [string, RegExp][] = [
+const TRACKER_ROUTES: [string, RegExp][] = [
   ['POST', /^\/api\/jobs\/[^/]+\/feedback$/], ['GET', /^\/api\/jobs\/[^/]+\/feedback$/],
   ['POST', /^\/api\/candidates\/[^/]+\/applications$/], ['POST', /^\/api\/applications$/],
   ['PUT', /^\/api\/applications\/[^/]+\/follow-up$/], ['GET', /^\/api\/follow-ups$/],
@@ -154,6 +154,20 @@ export const TRACKER_ROUTES: [string, RegExp][] = [
   ['POST', /^\/api\/jobs\/[^/]+\/qualification-override$/], ['GET', /^\/api\/jobs\/[^/]+\/qualification-audit$/],
 ];
 const TRACKER_KEYS = new Set(['notes', 'application_notes', 'app_notes', 'rejection_notes', 'manual_override_reason', 'feedback', 'rejection_stage', 'rejection_reason_category', 'application_channel', 'resume_version']);
+// Open-tracker abuse limits (12 Nov review: a stranger with the link sent 50 writes in 1.6 s). A keyless tracker write counts against its
+// network (hashed CF-Connecting-IP, in the existing auth_failures table under a 'tracker:' key): at most TRACKER_WRITES_PER_HOUR per hour.
+// A person triaging a list stays far below it; a script is stopped after a handful of seconds. A D1 error never blocks a write.
+const TRACKER_WRITES_PER_HOUR = 60, NOTE_MAX_CHARS = 2000;
+async function trackerWriteAllowed(request: Request, env: Env): Promise<boolean> {
+  const key = 'tracker:' + (await clientKey(request)), now = Math.floor(Date.now() / 1000);
+  try {
+    const row = await env.DB.prepare(`INSERT INTO auth_failures(ip_hash, failures, window_start, updated_at) VALUES (?, 1, ?, ?)
+      ON CONFLICT(ip_hash) DO UPDATE SET failures = CASE WHEN ? - auth_failures.window_start >= 3600 THEN 1 ELSE auth_failures.failures + 1 END,
+        window_start = CASE WHEN ? - auth_failures.window_start >= 3600 THEN ? ELSE auth_failures.window_start END, updated_at = ?
+      RETURNING failures`).bind(key, now, now, now, now, now, now).first<{ failures: number }>();
+    return !row || row.failures <= TRACKER_WRITES_PER_HOUR;
+  } catch { return true; }
+}
 const openTracker = (env: Env) => String(env.OPEN_TRACKER || '').toLowerCase() === 'on';
 const isTrackerRoute = (method: string, pathname: string) => TRACKER_ROUTES.some(([m, re]) => m === method && re.test(pathname));
 /** The candidate an open-tracker request acts for: every id it names (query, path, JSON body) must be one known, non-private candidate. */
@@ -273,6 +287,20 @@ async function writeResponseCache(env: Env, key: string, body: string, generatio
     // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
   } catch { /* D1 unavailable: serve uncached */ }
+}
+// A tracker action changes one person's records only. Clearing every stored answer for it (the generation bump below) made each
+// save / status / note / rating click cost a full recomputation of every list for everyone; on an active day that used up the free
+// read allowance (12 Nov review). Here only the answers that can show this person's data are removed: those keyed by their
+// candidate_id or path, and the cross-person summaries (overview, candidate list). Everything else stays cached.
+async function invalidateCandidateCache(env: Env, candidateId: string): Promise<void> {
+  const id = candidateId.replace(/[%_\\]/g, (c) => '\\' + c);
+  try {
+    await env.DB.prepare(`DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\' OR key LIKE ? ESCAPE '\\' OR key LIKE '%:/api/dashboard/overview?%' OR key LIKE '%:/api/candidates?%'`)
+      .bind(`%candidate_id=${id}%`, `%/api/candidates/${id}/%`).run();
+  } catch (e: any) {
+    if (/no such table/i.test(String(e?.message))) return;
+    await invalidateResponseCache(env);   // cannot clear selectively: fall back to clearing everything rather than serve stale data
+  }
 }
 async function invalidateResponseCache(env: Env, retried = false): Promise<void> {
   try { await env.DB.prepare('UPDATE cache_state SET generation = generation + 1 WHERE id = 1').run(); }
@@ -606,6 +634,8 @@ class WorkerRouter {
       if (isPublicRead(request.method, pathname) && keyless) {
         accessLevel.set(request, 'public');
       } else if (keyless && openTracker(env) && isTrackerRoute(request.method, pathname) && (await syncRegistry(env), await openTrackerCandidate(request, url))) {
+        if (request.method !== 'GET' && !(await trackerWriteAllowed(request, env)))
+          return jsonResponse({ error: 'Too many changes from this network in the last hour. Please wait a while and try again.' }, 429, { ...corsHeaders(request, env), 'Retry-After': '900' });
         accessLevel.set(request, 'operator');
       } else {
         const denied = await checkOperatorAuth(request, env);
@@ -661,7 +691,10 @@ class WorkerRouter {
           }
           meter = meteredDb(env.DB);
         }
-        if (operatorChange) await invalidateResponseCache(env);   // before: if this fails the change is refused
+        // A tracker action for one known person clears only that person's answers (see invalidateCandidateCache).
+        const trackerFor = operatorChange && isTrackerRoute(request.method, pathname) ? await openTrackerCandidate(request, url) : null;
+        const invalidate = () => (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env));
+        if (operatorChange) await invalidate();   // before: if this fails the change is refused
         let res: Response;
         try {
           res = await this.finish(request, hiddenFrom.has(request)
@@ -673,7 +706,7 @@ class WorkerRouter {
             if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
           }
           if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
-            try { await invalidateResponseCache(env); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
+            try { await invalidate(); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
           }
         }
         const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
@@ -1853,6 +1886,10 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
 
     if (!job_id || !status) {
       return jsonResponse({ error: 'job_id and status are required' }, 400, corsHeaders(request, env));
+    }
+    // Free-text fields are bounded (a 200,000-character note was accepted on 12 Nov): a note is for a person, not a store.
+    for (const [k, v] of Object.entries({ notes, rejection_notes, resume_version, application_channel, rejection_stage, rejection_reason_category })) {
+      if (v != null && String(v).length > NOTE_MAX_CHARS) return jsonResponse({ error: `${k} is longer than ${NOTE_MAX_CHARS} characters.` }, 400, corsHeaders(request, env));
     }
     if (!APPLICATION_STATUSES.includes(String(status))) {
       return jsonResponse({ error: `status must be one of ${APPLICATION_STATUSES.join(', ')}` }, 400, corsHeaders(request, env));
@@ -3136,7 +3173,7 @@ async function readCapped(request: Request, max: number): Promise<string | null>
 // robots.txt says so to polite bots; every Worker answer carries X-Robots-Tag; a request whose User-Agent names a crawler gets 403.
 // Browsers, the release's own headless-browser check and plain HTTP clients (curl, node) are not matched.
 const NO_INDEX = { 'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet, noimageindex' };
-export const BOT_UA = /(?:bot|crawler|spider)[\/;\s)]|slackbot|facebookexternalhit|facebookcatalog|whatsapp|telegrambot|linkedinbot|discordbot|pinterest|slurp|ia_archiver|archive\.org|gptbot|chatgpt|oai-searchbot|claudebot|claude-web|anthropic-ai|ccbot|perplexity|bytespider|amazonbot|applebot|google-extended|googleother|google-inspectiontool|yandex|baiduspider|duckduckbot|semrush|ahrefs|mj12bot|dotbot|petalbot|scrapy|headlesschrome.*\bbot\b/i;
+const BOT_UA = /(?:bot|crawler|spider)[\/;\s)]|slackbot|facebookexternalhit|facebookcatalog|whatsapp|telegrambot|linkedinbot|discordbot|pinterest|slurp|ia_archiver|archive\.org|gptbot|chatgpt|oai-searchbot|claudebot|claude-web|anthropic-ai|ccbot|perplexity|bytespider|amazonbot|applebot|google-extended|googleother|google-inspectiontool|yandex|baiduspider|duckduckbot|semrush|ahrefs|mj12bot|dotbot|petalbot|scrapy|headlesschrome.*\bbot\b/i;
 const isBot = (request: Request) => BOT_UA.test(request.headers.get('User-Agent') || '');
 const SITE_HEADERS = { ...NO_INDEX, 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
 async function handleSite(request: Request, env: Env, url: URL): Promise<Response | null> {
