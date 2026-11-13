@@ -34,7 +34,7 @@ let lastJobs = null;   // the job list answer the page itself received (its requ
 page.on('response', async (r) => { if (/\/api\/jobs\?/.test(r.url()) && r.url().includes('farhan_shaikh') && r.status() === 200) { try { lastJobs = await r.json(); } catch { /* not JSON */ } } });
 page.on('request', (r) => { if (r.url().includes('/api/follow-ups') || /\/follow-up(\?|$)/.test(r.url())) followUpRequests.push(r.method() + ' ' + new URL(r.url()).pathname); });
 const body = async () => (await page.innerText('body')).replace(/\s+/g, ' ');
-const goto = async () => { await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
+const goto = async () => { await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
 const tab = async (name) => { await page.getByRole('button', { name: new RegExp('^' + name, 'i') }).first().click(); await page.waitForTimeout(1500); };
 const isoDay = (offset) => { const d = new Date(Date.now() + offset * 86400000); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };   // the viewer's own calendar day
 
@@ -47,7 +47,7 @@ const APPLIED = appList.filter((j) => ['APPLIED', 'SUBMITTED', 'INTERVIEWING', '
 await goto();
 await page.locator('button[aria-label*="Analytics"]').first().click(); await page.waitForTimeout(1800);
 check('F1 Analytics shows the "What arrived each day" card', (await body()).includes('What arrived each day'));
-await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
+await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 await tab('FARHAN');
 const text = await body();
 check('F2 Farhan workspace: the card reads Applied with the tracker size underneath', new RegExp(`APPLIED\\s*${APPLIED}\\s*${TRACKED} in tracker`, 'i').test(text), text.match(/APPLIED[^]{0,60}/i)?.[0]);

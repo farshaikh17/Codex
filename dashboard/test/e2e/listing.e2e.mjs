@@ -37,7 +37,7 @@ const openIndiaRemote = async (btn) => { await tab(btn); await page.getByText('S
 const openReady = async (btn) => { await tab(btn); await page.getByText('View READY').first().click(); await settle(); };
 const reset = async () => { await page.getByRole('button', { name: /^Reset$/ }).first().click(); await settle(); };
 
-await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
+await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 
 // ===== India Remote, Farhan ======================================================================================================
 await openIndiaRemote('FARHAN');

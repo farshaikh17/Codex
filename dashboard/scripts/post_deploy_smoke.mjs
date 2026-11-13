@@ -49,7 +49,7 @@ console.log(`INFO  live version ${v.version} commit ${v.commit} deployed_at ${v.
 const counts = {};
 for (const c of ['farhan_shaikh', 'sana_ansari']) {
   for (const p of [`/api/jobs?candidate_id=${c}&limit=25`, `/api/profile?candidate_id=${c}`, `/api/applications?candidate_id=${c}`, `/api/analytics?candidate_id=${c}`,
-    `/api/analytics/discovery?candidate_id=${c}`, `/api/analytics/sources-effectiveness?candidate_id=${c}`, `/api/qualification/metrics?candidate_id=${c}`, `/api/cohorts/metrics?candidate_id=${c}`, `/api/india-remote/summary?candidate_id=${c}`]) {
+    `/api/analytics/discovery?candidate_id=${c}`, `/api/analytics/sources-effectiveness?candidate_id=${c}`, `/api/qualification/metrics?candidate_id=${c}`, `/api/cohorts/metrics?candidate_id=${c}`, `/api/india-remote/summary?candidate_id=${c}`, `/api/today?candidate_id=${c}`]) {
     const r = await get(p); const t = await r.text();
     check(`public ${p.split('?')[0]} (${c.split('_')[0]}) answers 200 without a key`, r.status === 200, `status ${r.status}`);
     // Job postings legitimately contain salaries and contact emails, so text patterns are applied only to candidate-side surfaces.

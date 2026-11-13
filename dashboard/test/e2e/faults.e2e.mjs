@@ -25,7 +25,7 @@ for (const [name, handler] of Object.entries(SCENARIOS)) {
   const ctx = await browser.newContext({ viewport });
   const page = await ctx.newPage();
   await page.route('**/api/**', handler);
-  await page.goto(BASE + '/app', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/app?operator=1', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
   const text = (await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').trim();
   check(`${name}: the page is not blank`, text.length > 40, `body text "${text.slice(0, 40)}"`);

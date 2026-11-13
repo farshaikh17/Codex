@@ -909,3 +909,40 @@ export async function setFollowUp(jobId: string, candidateId: string, date: stri
   });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Could not save the follow-up date');
 }
+
+// ---- The job seeker's page (plan phase 5) -------------------------------------------------------------------------------------------------
+export interface TodayCounts {
+  best: number; worth_a_try: number; more_to_look: number; more_good: number; everything: number; says_india: number; hidden: number;
+  applications: { saved: number; waiting: number; finished: number; total: number }; followups_due: number; today_india: string;
+}
+export interface TodayData { candidate_id: string; counts: TodayCounts; best: Job[]; worth_a_try: Job[]; recent: Job[] }
+/** Everything the Today screen shows, with every count from one server function (plan U12). */
+export async function fetchToday(candidateId: string): Promise<TodayData> {
+  const res = await authedFetch(`${API_BASE}/today?candidate_id=${encodeURIComponent(candidateId)}`);
+  if (!res.ok) throw new Error('Could not load your jobs. Check the connection and try again.');
+  return res.json();
+}
+/** Jobs this person marked Not for me (plan U2), so one can be restored. */
+export async function fetchHiddenJobs(candidateId: string): Promise<Job[]> {
+  const res = await authedFetch(`${API_BASE}/jobs?candidate_id=${encodeURIComponent(candidateId)}&hidden=true&limit=100`);
+  if (!res.ok) throw new Error('Could not load the hidden jobs.');
+  return (await res.json()).jobs || [];
+}
+/** A tracker write that failed, with the server's own words (409 "This changed elsewhere; reload", 429 too many changes, ...). */
+export class WriteError extends Error { status: number; constructor(message: string, status: number) { super(message); this.status = status; } }
+/** Save or move an application. expected_updated_at: the record's updated_at as this page last saw it (null = "there was none"); a stale write
+ *  is refused (plan U4). clear_notes: deleting a written note on purpose. */
+export async function saveApplication(payload: { candidate_id: string; job_id: string; status: ApplicationStatus; notes?: string; expected_updated_at?: string | null; clear_notes?: boolean }): Promise<Job> {
+  const res = await authedFetch(`${API_BASE}/applications`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload) });
+  if (!res.ok) {
+    const msg = (await res.json().catch(() => ({})))?.error;
+    throw new WriteError(res.status === 409 || res.status === 429 ? String(msg || 'This changed elsewhere; reload.') : 'Could not save. Check the connection and try again.', res.status);
+  }
+  return res.json();
+}
+/** A Good match / Not for me mark, or clearing it, with the server's words on failure. */
+export async function markJob(jobId: string, candidateId: string, rating: 'UP' | 'DOWN' | 'CLEAR'): Promise<Job | null> {
+  const res = await authedFetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/feedback`, { method: 'POST', headers: getAuthHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ rating, candidate_id: candidateId }) });
+  if (!res.ok) throw new WriteError(res.status === 429 ? String((await res.json().catch(() => ({})))?.error || 'Too many changes; wait a while.') : 'Could not save. Check the connection and try again.', res.status);
+  return (await res.json()).job || null;
+}
