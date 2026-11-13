@@ -648,7 +648,7 @@ test('S8: office jobs do not pass Farhan\'s remote-only rule; "work from home" a
 test('S9: Gulf details: nationals preference caps at 45, Gulf plant towns and country codes count, "for our clients" alone is not an agency', () => {
   const { gulfPlace, agencyPosting, NATIONALS_PREFERENCE_CAP } = DISCOVERY;
   const G = P2_PLANT + ' Tax-free salary, family status, accommodation.';
-  for (const extra of [' Saudization: preference to Saudi nationals.', ' Preference will be given to Omani nationals.', ' In line with Emiratisation goals.']) {
+  for (const extra of [' Saudization: preference to Saudi nationals.', ' Preference will be given to Omani nationals.', ' Emiratisation: UAE nationals preferred.']) {
     const r = p2eval(P2_SANA, 'Maintenance Engineer', 'Riyadh, KSA', G + extra);
     assert.ok(r.score <= NATIONALS_PREFERENCE_CAP, extra); assert.equal(p2tier(P2_SANA, r), 'HOLD', extra); assert.match(r.qualification_reason, /preference to the country's nationals/);
   }
@@ -676,4 +676,55 @@ test('S11: Sana\'s other target roles can score: their distinctive words count a
   assert.deepEqual(targetSkills(JSON.stringify(['Plant Engineer', 'Industrial Maintenance Engineer']), [], 'plant maintenance'), [], 'generic words do not count');
   // Farhan is unchanged
   assert.deepEqual(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', 'Implementation of technical operations.').skills, []);
+});
+
+// ---- Tenth-man review of phase 2 (sorting angle): the postings it found landing in the wrong place. ----
+test('tenth-man 1: hybrid wording about the company or its customers, and visits, do not rule out a remote role; wording about the job still does', () => {
+  for (const extra of [' About us: offices in London and Pune with a hybrid working model for office-based staff; this role is fully remote.',
+    ' We offer flexible hybrid working, home office budget and wellness allowance.', ' Perks: Hybrid work policy for those near a hub.',
+    ' You will help customers roll out a hybrid working model across their offices.', ' Customers adopt our platform to manage hybrid work schedules.',
+    ' Experience implementing for clients who are 3 days in the office is a plus.', ' You will be onsite 2 days per quarter for customer workshops.'])
+    assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL + extra).eligibility, 'ELIGIBLE', extra);
+  for (const extra of [' This is a hybrid role.', ' The role follows a hybrid model with our Pune team.', ' You will work 2 days a week in the office.',
+    ' Implementation Manager (Hybrid).', ' On-site 3 days at the client.', ' You will work hybrid from Bengaluru.'])
+    assert.match(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL + extra).reason, /Hybrid or set office days/, extra);
+});
+
+test('tenth-man 2 and 3: NCR in the Philippines is not India; ", SA" (South Australia, South Africa) is not the Gulf', () => {
+  const { sanaIndiaCity, gulfPlace } = DISCOVERY;
+  const r = p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - Makati, NCR, Philippines', P2_IMPL);
+  assert.notEqual(r.eligibility, 'ELIGIBLE'); assert.notEqual(p2tier(P2_FARHAN, r), 'READY');
+  assert.ok(!sanaIndiaCity('Makati, NCR, Philippines') && sanaIndiaCity('Delhi NCR') && sanaIndiaCity('Noida, NCR'));
+  for (const l of ['Adelaide, SA', 'Port Augusta, SA', 'Johannesburg, SA', 'Somewhere, ae']) assert.ok(!gulfPlace(l), l);
+  for (const l of ['Ruwais, AE', 'Riyadh, SA', 'Jubail, Saudi Arabia', 'Mesaieed, QA']) assert.ok(gulfPlace(l), l);
+  const au = p2eval(P2_SANA, 'Maintenance Engineer', 'Adelaide, SA', P2_PLANT + ' Relocation assistance available.', false);
+  assert.notEqual(au.eligibility, 'ELIGIBLE'); assert.notEqual(p2tier(P2_SANA, au), 'READY');
+  assert.ok(p2eval(P2_SANA, 'Maintenance Engineer', 'Johannesburg, SA', P2_PLANT, false).score <= 45, 'on-site abroad with no visa route: capped');
+  assert.notEqual(p2eval(P2_SANA, 'Senior Reliability Engineer', 'Port Augusta, SA', P2_PLANT + ' Relocation assistance available.', false).eligibility, 'ELIGIBLE');
+});
+
+test('tenth-man 5: plant analyst roles are Sana\'s field; office analyst roles stay on her avoid list', () => {
+  for (const t of ['Reliability Analyst', 'Condition Monitoring Analyst - Power Plant', 'Vibration Analyst'])
+    assert.ok(!DISCOVERY.avoidedTitle('sana_ansari', t), t);
+  assert.ok(p2eval(P2_SANA, 'Reliability Analyst', 'Vadodara, Gujarat', P2_PLANT).score >= 60);
+  for (const t of ['Data Analyst', 'Business Analyst - Energy', 'Sustainability Reporting Analyst', 'Power BI Developer', 'Financial Analyst, Power Sector'])
+    assert.ok(DISCOVERY.avoidedTitle('sana_ansari', t), t);
+});
+
+test('tenth-man 6: a bare Saudization or Omanisation mention does not cap; a stated preference for nationals does', () => {
+  for (const extra of [' We are committed to Saudization and developing local talent. Visa sponsorship provided.',
+    ' Omanisation policy applies to support functions only; this role is open to expatriates and includes visa sponsorship.'])
+    assert.ok(p2eval(P2_SANA, 'Maintenance Engineer', 'Jubail, Saudi Arabia', P2_PLANT + extra).score > 60, extra);
+  for (const extra of [' Saudization: preference to Saudi nationals.', ' Priority will be given under Omanisation to Omani candidates.', ' Emiratisation role - UAE nationals preferred.'])
+    assert.ok(p2eval(P2_SANA, 'Maintenance Engineer', 'Jubail, Saudi Arabia', P2_PLANT + extra).score <= 45, extra);
+});
+
+test('tenth-man 7: the one-skill exception needs the whole target role, qualifier included', () => {
+  const { targetExact } = DISCOVERY;
+  const T = JSON.stringify(['Maintenance Engineer (Power Plant)', 'Plant Engineer', 'Reliability Engineer']);
+  for (const t of ['Building Maintenance Engineer', 'Maintenance Engineer - Packaging Line', 'Turbine Maintenance Engineer']) assert.equal(targetExact(t, T), false, t);
+  for (const t of ['Maintenance Engineer - Power Plant', 'Maintenance Engineer (Power Plant)', 'Plant Engineer - Utilities', 'Senior Reliability Engineer']) assert.equal(targetExact(t, T), true, t);
+  const r = p2eval(P2_SANA, 'Building Maintenance Engineer', 'Mumbai', 'Hotel building maintenance: lifts, HVAC, plumbing; preventive maintenance schedule.');
+  assert.equal(r.target_fit, 'exact', 'the score bonus is unchanged'); assert.equal(r.target_exact, false, 'but it is not exact for the shortlist');
+  assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL).target_exact, true);
 });

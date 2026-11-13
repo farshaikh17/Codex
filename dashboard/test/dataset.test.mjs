@@ -559,3 +559,59 @@ test('S10: Stretch takes the overflow of Ready-quality rows first, ahead of the 
   assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 'p1'`).get().s, 'READY');
   assert.equal(db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE qualification_reason LIKE 'Shortlisted automatically. Shortlisted automatically.%'`).get().c, 0, 'the mark is never doubled');
 });
+
+test('tenth-man 1: a stored row ruled out only by office-days wording becomes unconfirmed, not ineligible, so a later rules change can still bring it back', () => {
+  const w = world(); const db = w.sqlite;
+  const add = (id, d, status, reason) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,1,'Remote - India',?,'REMOTE','2026-11-01','LIVE_PUBLIC')`).run(id, 'Implementation Manager', 'Acme', 'lever', 'https://x.example/' + id, d);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,eligibility_status,eligibility_reason) VALUES (?,?,?,?,'ELIGIBLE','Posting explicitly supports fully remote work from India.')`).run(F, id, status, reason);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,80,'{"preliminary":true}')`).run(F, id);
+    return { candidate_id: F, job_id: id, cur_score: 80, title: 'Implementation Manager', company: 'Acme', location: 'Remote - India', description: d, workplace_type: 'REMOTE', score_breakdown: '{"preliminary":true}', provenance: 'LIVE_PUBLIC', source_adapter: 'lever' };
+  };
+  const D = 'Configure our CRM and build workflow automation. ';
+  const rows = [add('h1', D + 'This is a hybrid role with 3 days a week in our Pune office.', 'READY', 'Shortlisted automatically. Cloud discovery match.'),
+    add('h2', D + 'About us: offices in London and Pune with a hybrid working model for office-based staff; this role is fully remote.', 'NEEDS_REVIEW', 'Cloud discovery match.')];
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify(rows));
+  const sql = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json'), '--no-shortlist']).sql;
+  db.exec(sql); db.exec(sql);
+  const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s, eligibility_status e, eligibility_reason r FROM candidate_qualifications`).all().map((r) => [r.j, r]));
+  assert.equal(`${st.h1.s}/${st.h1.e}`, 'READY/UNKNOWN', 'unconfirmed, not ineligible (the shortlist step then takes it off Ready)');
+  assert.equal(st.h1.r, DS_DISCOVERY.OFFICE_DAYS_UNKNOWN_REASON);
+  assert.equal(`${st.h2.s}/${st.h2.e}`, 'NEEDS_REVIEW/ELIGIBLE', 'hybrid wording about the company does not count');
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE new_status = 'INELIGIBLE'`).get().c, 0);
+});
+
+test('tenth-man 4: Ready and Stretch hold at most 25 automatic rows each, day after day; on a tie the rows already shown keep their place', () => {
+  const w = world(); const db = w.sqlite;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  db.prepare(`UPDATE candidates SET qualification_threshold = 60 WHERE id = ?`).run(S);
+  const NOW = new Date().toISOString(), V = JSON.stringify({ preliminary: true, [DS_DISCOVERY.RULES_MARKER]: true });
+  let n = 0;
+  const add = (status, score, elig, seen, reason = 'Shortlisted automatically. Cloud discovery match.') => {
+    const id = 'j' + String(n++).padStart(3, '0');
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,1,?,?)`).run(id, 'T ' + id, 'Co ' + id, 'lever', 'https://x.example/' + id, seen, NOW);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason) VALUES (?,?,?,?,?)`).run(S, id, status, elig, reason);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`).run(S, id, score, 60, V);
+    return id;
+  };
+  const shown = [];
+  for (let i = 0; i < 25; i++) shown.push(add('READY', 90, 'ELIGIBLE', '2026-11-10'));
+  for (let i = 0; i < 25; i++) add('STRETCH_READY', 55, 'ELIGIBLE', '2026-11-10');
+  for (let i = 0; i < 10; i++) add('STRETCH_READY', 70, 'UNKNOWN', '2026-11-10');   // already over the cap before this change
+  db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES ('p1','Mine','Mine Co','lever',1,'2026-11-01')`).run();
+  db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,manual_override_status) VALUES (?,?,'READY','ELIGIBLE','READY')`).run(S, 'p1');
+  const count = (st) => db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = ? AND manual_override_status IS NULL`).get(S, st).c;
+  for (let day = 1; day <= 3; day++) {
+    for (let i = 0; i < 20; i++) add('NEEDS_REVIEW', 90, 'ELIGIBLE', `2026-11-1${day + 1}`, 'Cloud discovery match.');   // newer, same score
+    db.exec(run(w.dir).sql);
+    assert.equal(count('READY'), 25, `day ${day}`); assert.equal(count('STRETCH_READY'), 25, `day ${day}`);
+  }
+  assert.deepEqual(shown.filter((id) => db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = ?`).get(id).s !== 'READY'), [], 'a tie never pushes out a row already on Ready');
+  assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 'p1'`).get().s, 'READY', 'a person\'s Ready row is untouched and not counted');
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE qualification_status = 'NEEDS_REVIEW' AND qualification_reason LIKE 'Shortlisted automatically.%'`).get().c, 0, 'the mark leaves with the row');
+  // a better row still takes a place: the lowest-ranked automatic row makes room
+  add('NEEDS_REVIEW', 95, 'ELIGIBLE', '2026-11-20', 'Cloud discovery match.');
+  db.exec(run(w.dir).sql);
+  assert.equal(count('READY'), 25); assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = ?`).get('j' + String(n - 1).padStart(3, '0')).s, 'READY');
+  assert.ok(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE reason = 'Ranked below the 25 shown on the automatic shortlist'`).get().c >= 1);
+});

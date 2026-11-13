@@ -112,7 +112,7 @@ export function platformGap(title:string,skills:unknown){
 }
 // Sana's "reliability" means plant and asset reliability. Software reliability (SRE, DevOps, cloud) and product hardware testing match the
 // word but not the work (owner review 2026-11-12: "Senior Site Reliability Engineer" and "Hardware Test and Reliability Engineer" in her top 100).
-const SANA_AVOID=/\bhardware\b|\b(?:ai|cyber|information|it|network|cloud|application|data)\s+security\b|\bcybersecurity\b|\bsoftware\b|\bsite reliability\b|\bSRE\b|\bsoftware reliability\b|\breliability (?:software|data|platform)\b|\bhardware test|\btest (?:and|&) reliability\b|\bdevops\b|\bcloud\b|\bnetwork reliability\b|\b(?:it|network|security|data|platform) operations\b|\bpower (?:bi|apps?|platform|automate|electronics)\b|\bdeveloper\b|\bsales\b|\bmarketing\b|\baircraft\b|\baviation\b|\bplant[- ]based\b|\banalyst\b/i;   // plan S4: one matching word (power, energy, plant, reliability) is not enough
+const SANA_AVOID=/\bhardware\b|\b(?:ai|cyber|information|it|network|cloud|application|data)\s+security\b|\bcybersecurity\b|\bsoftware\b|\bsite reliability\b|\bSRE\b|\bsoftware reliability\b|\breliability (?:software|data|platform)\b|\bhardware test|\btest (?:and|&) reliability\b|\bdevops\b|\bcloud\b|\bnetwork reliability\b|\b(?:it|network|security|data|platform) operations\b|\bpower (?:bi|apps?|platform|automate|electronics)\b|\bdeveloper\b|\bsales\b|\bmarketing\b|\baircraft\b|\baviation\b|\bplant[- ]based\b|\b(?:business|data|financial|finance|bi|sales|market(?:ing)?|research|it|systems?|credit|risk|investment|equity|policy|esg|reporting|hr|operations)\s+analyst\b/i;   // tenth-man review: 'Reliability Analyst', 'Condition Monitoring Analyst' and 'Vibration Analyst' are plant work   // plan S4: one matching word (power, energy, plant, reliability) is not enough
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId==='sana_ansari')return SANA_AVOID.test(title||'');
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';
@@ -161,8 +161,11 @@ export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+
 /** The Worker's own test for an Indian location in evaluate(): an Indian place (plan S1: states, cities and plant towns) or the country code 'IN' at the end. */
 export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return indianPlace(l)||/(?:^|, )in$/i.test(l);}
 /** True when the location names a place in India (and not only a neighbour's place of the same name). Also decides that a location is NOT foreign. */
-const INDIA_NAMESAKE=/\b(?:punjab|hyderabad|kochi|surat|kashmir)\b/gi;   // also places in Pakistan, Japan and Thailand
+const INDIA_NAMESAKE=/\b(?:punjab|hyderabad|kochi|surat|kashmir|ncr)\b/gi;   // also places in Pakistan, Japan and Thailand; NCR is also Metro Manila ('Makati, NCR, Philippines')
 export function indianPlace(location:string|null|undefined){const l=location||'';if(!INDIA_PLACE.test(l))return false;if(/\b(?:india|bharat)\b/i.test(l)||!FOREIGN_NAME.test(l))return true;return INDIA_PLACE.test(l.replace(INDIA_NAMESAKE,' '));}
+export const OFFICE_DAYS_REASON='Hybrid or set office days (candidate rule: remote only).';
+// A stored row the screen had found eligible, ruled out now only by office-days wording: kept as unconfirmed, not ineligible (an ineligible row is never re-checked).
+export const OFFICE_DAYS_UNKNOWN_REASON='The posting mentions hybrid work or office days; check whether that applies to this role (candidate rule: remote only).';
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_INDIA_ONSITE_REASON='On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
@@ -270,16 +273,20 @@ export function companyKey(name: string | null | undefined) {
 // Pay check. Rough conversion to rupees per month (reference rates, 2026-11); only a published pay range is ever compared.
 const INR_PER: Record<string, number> = { INR: 1, USD: 85, EUR: 92, GBP: 108, AED: 23, SAR: 22.6, QAR: 23.3, OMR: 220, KWD: 276, BHD: 225, SGD: 64, AUD: 56, CAD: 61, NZD: 51, CHF: 96, JPY: 0.56, PHP: 1.5, MYR: 18 };
 const perMonth = (period: string) => /year|annual|yr/.test(period) ? 1 / 12 : /month/.test(period) ? 1 : /week/.test(period) ? 4.33 : /day|daily/.test(period) ? 21.7 : /hour/.test(period) ? 173 : 0;
-const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|riyadh|jeddah|dammam|jubail|al[- ]jubail|yanbu|khobar|al[- ]khobar|ras tanura|qatar|doha|ras laffan|oman|muscat|sohar|kuwait|bahrain|manama|ruwais|mesaieed|duqm|salalah)\b|,\s*(?:AE|SA|QA|OM|KW|BH)\s*$/i;   // plan S9: plant towns and country codes ('Ruwais, AE')
+const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|riyadh|jeddah|dammam|jubail|al[- ]jubail|yanbu|khobar|al[- ]khobar|ras tanura|qatar|doha|ras laffan|oman|muscat|sohar|kuwait|bahrain|manama|ruwais|mesaieed|duqm|salalah)\b/i;   // plan S9: plant towns
+// Country codes ('Ruwais, AE'), upper case only and without SA, which is also South Australia ('Adelaide, SA') and South Africa (tenth-man review).
+const GULF_CODE=/,\s*(?:AE|QA|OM|KW|BH)\s*$/;
 // From India, an on-site role abroad (outside the Gulf) with no stated visa route is not a realistic application: it stays in To review,
 // ranked below every realistic role, and can never be shortlisted (owner review 2026-11-12: US maintenance jobs offering only
 // "relocation assistance" were reaching Ready). Was a fixed 15-point deduction.
 /** A place in the Gulf states (used by the screen's visa-route rule and, later, the shortlist's place bands). */
-export function gulfPlace(location:string|null|undefined){return GULF_PLACE.test(location||'');}
+export function gulfPlace(location:string|null|undefined){const l=location||'';return GULF_PLACE.test(l)||GULF_CODE.test(l);}
 export const VISA_UNLIKELY_CAP = 45;
 // Plan S9: a Gulf posting that gives preference to nationals (Saudization, Emiratization, Omanization) is capped like an unworkable route.
 export const NATIONALS_PREFERENCE_CAP = 45;
-const NATIONALS_PREFERENCE=/\bpreference (?:will be given |is given |shall be given )?to (?:\w+ )?nationals\b|\bsaudi[sz]ation\b|\bemirati[sz]ation\b|\bomani[sz]ation\b|\bqatari[sz]ation\b|\bkuwaiti[sz]ation\b|\bbahraini[sz]ation\b/i;
+// Tenth-man review: a bare 'Saudization' or 'Omanisation' is often company boilerplate ('we are committed to Saudization', 'Omanisation applies to support
+// functions only'). Only a stated preference or reservation for nationals caps: the explicit phrase, or an -isation word next to preference, priority or reserved.
+const NATIONALS_PREFERENCE=/\bpreference (?:will be given |is given |shall be given )?to (?:\w+ )?nationals\b|\b(?:preference|priority|preferred|reserved)\b[^.!?]{0,40}\b(?:saudi|emirati|omani|qatari|kuwaiti|bahraini)[sz]ation\b|\b(?:saudi|emirati|omani|qatari|kuwaiti|bahraini)[sz]ation\b[^.!?]{0,40}\b(?:preference|priority|preferred|reserved)\b/i;
 const NATIONALS_TITLE=/\b(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+nationals?\b/i;
 const NATIONALS_TEXT=/\b(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+nationals?\s+only\b|\b(?:only|exclusively)\s+(?:for\s+|open\s+to\s+)?(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+(?:nationals?|citizens)\b|\bopen\s+(?:only\s+)?to\s+(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+(?:nationals?|citizens)\s+only\b/i;
 export const PAY_BELOW_FLOOR_PENALTY = 20, PAY_PREFERRED_BONUS = 5, GLOBAL_HIRER_BONUS = 5, YC_BONUS = 3;
@@ -310,6 +317,15 @@ export function targetFit(title:string,targets:unknown):'exact'|'word'|null{
   for(const w of g.split(' '))if(w.length>2&&!GENERIC_TITLE_WORDS.has(w)&&t.includes(' '+w+' '))partial=true;}
  return partial?'word':null;
 }
+/** The title is one of the target roles in full, including its qualifier: 'Maintenance Engineer (Power Plant)' needs 'power' and 'plant' in the title too.
+ *  Used for the shortlist's one-skill exception (plan S4); targetFit() drops the qualifier, so 'Building Maintenance Engineer' was exact (tenth-man review). */
+export function targetExact(title:string,targets:unknown):boolean{
+ const t=' '+szWords(String(title||'').replace(/[()]/g,' '))+' ';   // a qualifier in the title's own brackets counts
+ for(const raw of list(targets)){const g=szWords(String(raw));if(!g||!t.includes(' '+g+' '))continue;
+  const qual=(String(raw).match(/\(([^)]*)\)/g)||[]).map((x)=>szWords(x.slice(1,-1))).join(' ').split(' ').filter((w)=>w.length>2);
+  if(qual.every((w)=>t.includes(' '+w+' ')))return true;}
+ return false;
+}
 export const TARGET_SKILL_MAX=2;
 const TARGET_SKILL_GENERIC=new Set(['maintenance','plant','operations','power','utilities','project','delivery','engineering','transition','energy']);
 const sz=(x:string)=>x.replace(/is(ation|ing|e|ed)\b/g,'iz$1');   // decarbonisation / decarbonization
@@ -339,7 +355,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // A visa route proper. "Relocation assistance" alone is usually a move within that country (a US posting), so for Sana it counts as a route
  // only in the Gulf, where her profile lists relocation and employers sponsor the work visa (owner review 2026-11-12, top-100 check).
  const visaRoute=/\b(visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit (?:support|sponsorship|provided)|international applicants welcome|employment visa (?:is |will be )?provided)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit|international applicants welcome|employment visa/);
- const gulf=GULF_PLACE.test(p.location||'');
+ const gulf=gulfPlace(p.location);
  // Roles reserved for nationals of a Gulf country ("Electrical Technician (Saudi Nationals)", "UAE nationals only").
  const nationalsOnly=NATIONALS_TITLE.test(p.title||'')||NATIONALS_TEXT.test(p.description||'');
  // The posting itself says it offers no visa route ("unable to provide visa sponsorship", "must be authorized to work in the US without current or future sponsorship").
@@ -357,7 +373,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const prof=parseProfile(candidate.search_profile);
  // Plan S8: "work from home" in the description is not a remote signal by itself (a perk of an office job), and a description that sets hybrid work or
  // office days rules a remote-only candidate out. A denied mention ("this is not a hybrid role") does not count; "hybrid cloud" is not a work pattern.
- const officeDays=(()=>{const re=/\bhybrid(?:[- ]remote)?\s+(?:role|position|work(?:ing)?|model|schedule|arrangement|set-?up|opportunity|job|policy)\b|\bwork(?:ing)?\s+(?:in\s+a\s+)?hybrid\b|\(hybrid\)|\bis\s+hybrid\b|\b\d\s*(?:-\s*\d\s*)?days?\s+(?:a|per)?\s*(?:week\s+)?(?:in|at|from)\s+(?:the|our)\s+(?:\w+\s+)?office|\bon-?site\s+\d\s*(?:-\s*\d\s*)?days\b/gi;const d=String(p.description||'').toLowerCase();let m:RegExpExecArray|null;while((m=re.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|isn't|without)\b[^.!?]*$/.test(before))return true;}return false;})();
+ // Tenth-man review: only wording about THIS job counts. A company's or its customers' hybrid set-up ("offices with a hybrid working model for office-based
+ // staff", "help customers roll out hybrid work", "clients who are 3 days in the office") and visits ("on-site 2 days per quarter") do not.
+ const officeDays=(()=>{const re=/\bhybrid(?:[- ]remote)?\s+(?:role|position|job|opportunity)\b|\b(?:this|the)\s+(?:role|position|job)\s+(?:is|follows|has|offers|requires)\s+(?:a\s+)?hybrid\b|\(hybrid\)|\b(?:you(?:'ll| will)?|we)\s+work(?:ing)?\s+(?:in\s+a\s+)?hybrid\b|\b\d\s*(?:-\s*\d\s*)?days?\s+(?:(?:a|per)\s+week\s+)?(?:in|at|from)\s+(?:the|our)\s+(?:\w+\s+)?office\b|\bon-?site\s+\d\s*(?:-\s*\d\s*)?days\b(?!\s+(?:a|per|each|every)\s+(?:quarter|year|month))/gi;const d=String(p.description||'').toLowerCase();let m:RegExpExecArray|null;while((m=re.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(/\b(?:no|not|never|isn't|without)\b[^.!?]*$/.test(before))continue;const sentence=d.slice(Math.max(0,d.lastIndexOf('.',m.index)+1),(d.indexOf('.',m.index)+1||d.length));if(/\b(?:customers'?|clients'?|their)(?![a-z])/.test(sentence))continue;return true;}return false;})();
  if(security){eligibility='INELIGIBLE';reason='Explicit citizenship, security clearance or licensing restriction requires exclusion.';}
  else if(nationalsOnly&&(!prof||String(prof.home_country||'').toLowerCase()==='india')){eligibility='INELIGIBLE';reason='Reserved for nationals of the employer\'s country.';}
  else if(prof){
@@ -378,7 +396,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   if(blocked){eligibility='INELIGIBLE';reason='Posting explicitly restricts work location outside India.';}
   else if(FARHAN_SKIP_EMPLOYER.test(p.company||'')){eligibility='INELIGIBLE';reason='Employer the candidate asked to skip.';}
   else if(!remoteSignal||/\b(hybrid|on[- ]?site|in[- ]office)\b/i.test(p.location||'')){eligibility='INELIGIBLE';reason='Not a remote role (candidate rule: remote only).';}
-  else if(officeDays){eligibility='INELIGIBLE';reason='Hybrid or set office days (candidate rule: remote only).';}
+  else if(officeDays){eligibility='INELIGIBLE';reason=OFFICE_DAYS_REASON;}
   else if(!explicitIndiaRemote&&!globalRemote&&usOnlyLocation(p.location)){eligibility='INELIGIBLE';reason='Remote within the United States only.';}
   else if(!explicitIndiaRemote&&!globalRemote&&locationClass(p.description||'',p.location||'')==='eu_only'){eligibility='INELIGIBLE';reason='Must be based in the EU or EEA (the posting says so).';}
   // (officeDays already ruled out hybrid and office days above; a passing 'on-site visit' or a denied 'not a hybrid role' no longer blocks, plan S8)
@@ -461,7 +479,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(tooSenior)score=Math.min(score,threshold-1);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(nationalsPreferred?' Gives preference to the country\'s nationals (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,target_exact:fit==='exact'&&targetExact(p.title||'',candidate.target_roles),qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(nationalsPreferred?' Gives preference to the country\'s nationals (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(tooSenior?' Pitched above the candidate\'s level (score capped below the shortlist).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
@@ -546,7 +564,7 @@ export async function assessBacklog(db:DB, limit=ASSESS_BATCH, now=iso()) {
     AND x.manual_override_status IS NULL AND x.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%')
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)`)
    .bind(result.score, Math.min(100, result.skills.length * 20), result.lane === 'STRONGEST_FIT' ? 70 : 0, result.lane,
-    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, target_exact: result.target_fit === 'exact', skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
+    JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, target_exact: !!result.target_exact, skills_v1: list(r.primary_skills).length > 0, assessed_from: 'github_collector', matched_skills: result.skills, missing_skills: [], note: 'Conservative screen of a collector-imported posting; full qualification review pending.' }),
     now, r.candidate_id, r.job_id));
   statements.push(db.prepare(`UPDATE candidate_qualifications SET qualification_status = ?, strategy_lane = ?, eligibility_status = ?, eligibility_reason = ?, qualification_reason = ?, last_reverified_at = ? WHERE ${guard}`)
    .bind(result.status, result.lane, result.eligibility, result.reason, result.qualification_reason, now, r.candidate_id, r.job_id));

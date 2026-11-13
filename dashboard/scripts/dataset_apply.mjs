@@ -9,7 +9,7 @@
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION, RULES_MARKER, companyKey } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, OFFICE_DAYS_REASON, OFFICE_DAYS_UNKNOWN_REASON } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
 
 const args = process.argv.slice(2);
@@ -134,7 +134,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
     const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
     out.push(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at) SELECT ${[cid, j.id, r.status, r.lane, r.eligibility, r.reason, r.qualification_reason, now].map(q).join(',')} ${guard};`);
     out.push(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) SELECT ${[cid, j.id, r.score, Math.min(100, r.skills.length * 20), r.lane === 'STRONGEST_FIT' ? 70 : 0, r.lane,
-      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
+      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, target_exact: !!r.target_exact, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
     report.rows++; report.by_status[r.status] = (report.by_status[r.status] || 0) + 1;
   }
 }
@@ -217,7 +217,7 @@ function rescreenLegacy(row, r) {
   const roleMatched = r.lane === 'STRONGEST_FIT';
   const fallback = roleMatched ? 'NEEDS_REVIEW' : 'HOLD';   // when the stored eligibility is kept, the screen's own INELIGIBLE does not apply
   const noApp = (t) => `NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
-  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', assessed_from: 'legacy_rescreen',
+  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, [RULES_MARKER]: true, target_exact: !!r.target_exact, assessed_from: 'legacy_rescreen',
     matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.', rescored_at: now });
   // 1. the score, only while the row is still undecided and unscored
   out.push(`INSERT INTO candidate_job_scores(candidate_id, job_id, overall_score, skill_score, role_score, strategy_lane, score_breakdown, calculated_at)
@@ -256,9 +256,10 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     if (row.legacy) { rescreenLegacy(row, r); continue; }
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
     // The re-scored base plus the current taste (stored as taste_adj, so the taste pass below never adds it twice).
-    const tasteAdj = r.status === 'INELIGIBLE' ? 0 : Math.round(tasteScore((signals.taste || {})[row.candidate_id], row.title, row.company) * TASTE_MAX);
+    const officeOnly = r.status === 'INELIGIBLE' && r.reason === OFFICE_DAYS_REASON;   // kept as unconfirmed below, so it keeps its taste too
+    const tasteAdj = r.status === 'INELIGIBLE' && !officeOnly ? 0 : Math.round(tasteScore((signals.taste || {})[row.candidate_id], row.title, row.company) * TASTE_MAX);
     r.score = Math.max(0, Math.min(100, r.score + tasteAdj));
-    const tagged = JSON.stringify({ ...bd, skills_v1: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, [RULES_MARKER]: true, target_exact: !!r.target_exact, matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE ${MARKED} ${undecided('candidate_job_scores')}
@@ -289,7 +290,14 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     const screenOwned = `candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND manual_override_status IS NULL
         AND COALESCE(eligibility_reason, '') NOT LIKE 'Manual override%' AND COALESCE(eligibility_reason, '') NOT LIKE 'You marked%' AND COALESCE(qualification_reason, '') NOT LIKE 'You marked%'
         AND (qualification_status IN ('NEEDS_REVIEW','HOLD') OR (qualification_status IN ('READY','STRETCH_READY') AND qualification_reason LIKE 'Shortlisted automatically.%')) ${undecided('candidate_qualifications')}`;
-    if (r.status === 'INELIGIBLE') {
+    // Tenth-man review: office-days wording is the one rule that reads a free-text sentence which may be about the company or its customers. A stored row
+    // it alone rules out becomes unconfirmed (UNKNOWN, status kept: off Ready, still re-checked by every later rules change) instead of INELIGIBLE, which
+    // no re-score ever selects again.
+    if (officeOnly) {
+      out.push(`UPDATE candidate_qualifications SET eligibility_status = 'UNKNOWN', eligibility_reason = ${q(OFFICE_DAYS_UNKNOWN_REASON)}, last_reverified_at = ${q(now)}
+        WHERE ${screenOwned} AND COALESCE(eligibility_status, 'UNKNOWN') <> 'INELIGIBLE' AND COALESCE(eligibility_reason, '') <> ${q(OFFICE_DAYS_UNKNOWN_REASON)};`);
+      report.rescored_office_days_unknown = (report.rescored_office_days_unknown || 0) + 1;
+    } else if (r.status === 'INELIGIBLE') {
       out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
         SELECT candidate_id, job_id, qualification_status, 'INELIGIBLE', ${q('Ineligible under the current rules: ' + r.reason)}, 'discovery' FROM candidate_qualifications WHERE ${screenOwned};`);
       out.push(`UPDATE candidate_qualifications SET qualification_status = 'INELIGIBLE', eligibility_status = 'INELIGIBLE', eligibility_reason = ${q(r.reason)}, last_reverified_at = ${q(now)},
@@ -389,14 +397,26 @@ function shortlistSql(requireVerified) {
       // From: an undecided row verified recently; for Ready also an automatic Stretch row (S10: it moves up when it qualifies and ranks in).
       const from = tier === 'READY' ? `'NEEDS_REVIEW','STRETCH_READY'` : `'NEEDS_REVIEW'`;
       const upFromStretch = tier === 'READY' ? ` OR (q.qualification_status = 'STRETCH_READY' AND ${auto('q')} AND ${verified})` : '';
-      const pick = `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
-          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY rq DESC, sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, seen DESC, job_id) AS rk FROM (
+      // Ranked candidates for this tier: undecided rows verified recently, this tier's automatic rows, and (Ready) automatic Stretch rows. On equal score
+      // and skills an automatic row already on the tier ranks before a newcomer, so the list does not turn over every day for a tie (tenth-man review).
+      const ranked = (keep) => `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
+          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY rq DESC, sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, st = ${q(tier)} DESC, seen DESC, job_id) AS rk FROM (
             SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc, COALESCE(s.skill_score, 0) AS sk, COALESCE(j.discovered_at, '') AS seen,
               CASE WHEN ${fitsReady} THEN 1 ELSE 0 END AS rq,
               ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status = ${q(tier)} DESC, q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
             ${base} AND ${fits} AND ((q.qualification_status = 'NEEDS_REVIEW' AND ${verified}) OR (q.qualification_status = ${q(tier)} AND ${auto('q')}${keepIf})${upFromStretch}) AND ${twin}
           ) WHERE dk = 1
-        ) WHERE rk <= 25 AND st IN (${from}))`;
+        ) WHERE ${keep})`;
+      const pick = ranked(`rk <= 25 AND st IN (${from})`);
+      // 2a. At most 25 per tier: an automatic row that now ranks below the 25th goes back to "to review" (mark removed), where the next tier (Stretch takes
+      //     Ready's overflow, S10) or a later run can pick it up. Without this, every day's better or newer rows were added and nothing left: Ready and
+      //     Stretch grew past 25 (tenth-man review: 25/35 -> 48/60 in three days on a test database).
+      const over = ranked(`rk > 25 AND st = ${q(tier)}`) + ` AND ${auto('candidate_qualifications')}`;
+      sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+        SELECT candidate_id, job_id, ${q(tier)}, 'NEEDS_REVIEW', 'Ranked below the 25 shown on the automatic shortlist', 'discovery' FROM candidate_qualifications
+        WHERE qualification_status = ${q(tier)} AND ${over};`);
+      sl.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', qualification_reason = substr(qualification_reason, ${MARK.length + 1}), last_reverified_at = ${q(now)}
+        WHERE qualification_status = ${q(tier)} AND ${over};`);
       sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
         SELECT candidate_id, job_id, qualification_status, ${q(tier)}, 'Shortlisted automatically by the screen', 'discovery' FROM candidate_qualifications
         WHERE qualification_status IN (${from}) AND ${pick};`);
