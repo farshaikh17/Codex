@@ -11,7 +11,7 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey } from '../worker/discovery.ts';
+import { companyKey, familyOf } from '../worker/discovery.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -96,8 +96,16 @@ const employerBoth = { name: 'employer_both_tiers', tiers: TIERS,
   breakers: (lists, tier, ctx) => { const over = new Set([...groups([...lists.READY, ...lists.STRETCH_READY]).entries()].filter(([, g]) => g.length > bothCap(g[0], ctx)).map(([k]) => k));
     return lists[tier].filter((r) => !isReposter(r) && over.has(employerKey(r))); } };
 
+// Plan A5: no role family above 40% of a tier's filled rows (an allowance of at least 4). 'unclassified' is not a family and is not capped.
+export const FAMILY_SHARE = 0.4, FAMILY_MIN_ALLOWANCE = 4, DIFFERENT_PLACES = 2;
+export const familyCap = (filled) => Math.max(FAMILY_MIN_ALLOWANCE, Math.floor(FAMILY_SHARE * filled));
+const famGroups = (rows) => { const m = new Map(); for (const r of rows) if (r.family && r.family !== 'unclassified') m.set(r.family, [...(m.get(r.family) || []), r]); return m; };
+const familyRule = { name: 'family_share', tiers: TIERS,
+  count: (lists) => TIERS.reduce((n, t) => n + [...famGroups(lists[t]).values()].reduce((a, g) => a + Math.max(0, g.length - familyCap(lists[t].length)), 0), 0),
+  breakers: (lists, tier) => [...famGroups(lists[tier]).values()].filter((g) => g.length > familyCap(lists[tier].length)).flat() };
+
 /** The soft rules in the order they are tried (the both-tiers cap last). A soft rule counts how far the lists break it; a swap may fix it (A3.4). */
-export function softRules() { return [employerTier, employerBoth]; }
+export function softRules() { return [employerTier, familyRule, employerBoth]; }
 export const HARD_RULES = [reposterCap];
 
 /** Plan A3.2-A3.4 for one person. Returns the tier lists and the report. `ctx` carries the person's threshold and what the rules need. */
@@ -163,12 +171,39 @@ function pickFor(rows, held, ctx) {
   // Plan S10 / A3.3: Ready-quality rows that did not fit in Ready come first in Stretch, then Stretch's own rule.
   fill('STRETCH_READY', [...usable.filter((r) => fitsReady(r) && !tierOf.has(r.job_id)), ...usable.filter((r) => !fitsReady(r) && fitsStretchRule(r))]);
   swaps('STRETCH_READY');
+  // Plan A4 "something different": up to 2 places at the end of Stretch for a row from a role family on neither tier (never 'unclassified'), with the
+  // same score floor, the hard rules, and no soft rule made worse. Takes a free place, or replaces the lowest-ranked Stretch row.
+  report.STRETCH_READY.different = 0;
+  if (ctx.different !== false) {
+    const picked = new Set();
+    for (let k = 0; k < DIFFERENT_PLACES; k++) {
+      const present = new Set([...lists.READY, ...lists.STRETCH_READY].map((r) => r.family));
+      const v = lists.STRETCH_READY.length >= size ? [...lists.STRETCH_READY].sort((a, b) => pos.get(b.job_id) - pos.get(a.job_id)).find((r) => !picked.has(r.job_id)) : null;
+      if (lists.STRETCH_READY.length >= size && !v) break;
+      const before = violations();
+      let done = false;
+      for (const c of usable) {
+        if (tierOf.has(c.job_id) || !qualifies(c, 'STRETCH_READY') || !c.family || c.family === 'unclassified' || present.has(c.family)) continue;
+        if (Number(c.score) < Number(ctx.threshold) + SWAP_FLOOR || (v && Number(c.score) < Number(v.score) - SWAP_WINDOW)) continue;
+        if (!hardOk(c, 'STRETCH_READY', v)) continue;
+        const at = v ? lists.STRETCH_READY.indexOf(v) : lists.STRETCH_READY.length;
+        lists.STRETCH_READY[at] = c;
+        if (violations().every((x, j) => x <= before[j])) {
+          if (v) tierOf.delete(v.job_id);
+          tierOf.set(c.job_id, 'STRETCH_READY'); picked.add(c.job_id); report.STRETCH_READY.different++; done = true; break;
+        }
+        if (v) lists.STRETCH_READY[at] = v; else lists.STRETCH_READY.pop();
+      }
+      if (!done) break;
+    }
+  }
   for (const t of TIERS) {
     lists[t].sort((a, b) => pos.get(a.job_id) - pos.get(b.job_id));
     const per = new Map(); for (const r of lists[t]) per.set(employerKey(r), (per.get(employerKey(r)) || 0) + 1);
     report[t].employers = per.size;
     report[t].max_employer_share = lists[t].length ? Math.round(100 * Math.max(...per.values()) / lists[t].length) / 100 : 0;
     report[t].reposters = lists[t].filter(isReposter).length;
+    report[t].families = {}; for (const r of lists[t]) report[t].families[r.family || 'unclassified'] = (report[t].families[r.family || 'unclassified'] || 0) + 1;
   }
   return { lists, tierOf, report };
 }
@@ -195,6 +230,7 @@ export function selectShortlist(pool, opts = {}) {
     if (c.rows.some((x) => x.job_id === r0.job_id)) continue;
     const r = { ...r0, dead: dead.has(r0.job_id) };
     r.auto = isAuto(r);
+    r.family = familyOf(r0.candidate_id, r0.title);
     r.verified = alive.has(r.job_id) || now - when(r.last_verified_at) <= VERIFIED_DAYS * DAY || (!!opts.relaxed && r.auto);
     c.rows.push(r);
   }
@@ -203,7 +239,7 @@ export function selectShortlist(pool, opts = {}) {
     const { rows, held } = byCand.get(cid);
     const threshold = Number(rows.find((r) => r.threshold !== undefined && r.threshold !== null)?.threshold ?? 60);
     const skillKeys = new Set(skillsOf(opts.candidates, cid).map(companyKey).filter(Boolean));
-    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, skillKeys, rules: opts.rules, hard: opts.hard });
+    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, skillKeys, rules: opts.rules, hard: opts.hard, different: opts.different });
     for (const r of [...rows].sort((a, b) => (String(a.job_id) < String(b.job_id) ? -1 : 1))) {
       const to = tierOf.get(r.job_id) || 'NEEDS_REVIEW';
       if (r.auto) {
