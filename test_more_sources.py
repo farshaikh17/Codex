@@ -60,6 +60,21 @@ class MoreSources(unittest.TestCase):
                 self.assertIs(jobs[name]['board'], True, name)
 
 
+    def test_workable_one_refused_term_keeps_the_others(self):
+        calls = []
+        def flaky(url, data=None, headers=None, timeout=40):
+            calls.append(url)
+            if 'query=bad' in url:
+                raise OSError('HTTP Error 429')
+            return fake_http(url)
+        with mock.patch.object(ms, 'http', flaky), mock.patch.object(ms.time, 'sleep'):
+            got = list(ms.workable([('bad', True), ('revops', True)]))
+        self.assertEqual([j['title'] for j in got], ['RevOps Manager'], 'a refused term is skipped, the next term is still read')
+        self.assertEqual(sum('query=bad' in u for u in calls), 2, 'the refused page is tried twice')
+        with mock.patch.object(ms, 'http', flaky), mock.patch.object(ms.time, 'sleep'):
+            with self.assertRaises(OSError):
+                list(ms.workable([('bad', True)]))   # every term failed: the source reports an error, as before
+
     def test_doosan_group_feed_skips_bobcat_postings(self):
         rss = (b'<rss><channel>'
                b'<item><title>Forklift Operator (Statesville, NC, US, 28625)</title><link>https://jobs.doosan.com/bobcat/job/Statesville-Forklift/1/</link><description>x</description></item>'
