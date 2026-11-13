@@ -27,7 +27,7 @@ page.on('response', (r) => { if (r.url().includes('/api/')) { const u = new URL(
 
 const modalOpen = async () => (await page.locator('#operator-key-input, #operator-logout-btn').count()) > 0;
 const storedKey = () => page.evaluate(() => window.sessionStorage.getItem('admin_session_key'));
-const goto = async () => { await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
+const goto = async () => { await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800); };
 const tab = async (name) => { await page.getByRole('button', { name: new RegExp('^' + name, 'i') }).first().click(); await page.waitForTimeout(1500); };
 const bodyText = async () => (await page.innerText('body')).replace(/\s+/g, ' ');
 const apiPublic = async (p) => (await fetch(BASE + '/api' + p)).json();

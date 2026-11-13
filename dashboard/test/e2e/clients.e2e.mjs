@@ -43,7 +43,7 @@ const opCtx = await browser.newContext({ ...ctxOpts, acceptDownloads: true });
 await opCtx.addInitScript((k) => window.sessionStorage.setItem('admin_session_key', k), KEY);
 const op = await opCtx.newPage();
 const opErrs = watch(op, 'operator');
-await op.goto(BASE + '/app');
+await op.goto(BASE + '/app?operator=1');
 await op.getByRole('button', { name: 'Manage clients' }).click();
 await op.waitForSelector('[data-testid="clients-view"]');
 await op.fill('input[name="full_name"]', NAME);
@@ -83,7 +83,7 @@ check('C6 a share link is shown once, carrying the token after #', !!token && sh
 const anonCtx = await browser.newContext(ctxOpts);
 const anon = await anonCtx.newPage();
 const anonErrs = watch(anon, 'visitor');
-await anon.goto(BASE + '/app');
+await anon.goto(BASE + '/app?operator=1');
 await anon.waitForSelector('text=Open Sana', { timeout: 15000 });
 check('C7 a visitor has no tab and no dashboard card for the private client',
   (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0 && (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 0);

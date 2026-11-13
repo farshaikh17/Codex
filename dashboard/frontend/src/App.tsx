@@ -403,7 +403,7 @@ export const App: React.FC = () => {
                     onClick={() => setActiveTab('india-remote')}
                     className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:border-teal-400 hover:shadow-md cursor-pointer transition-all"
                   >
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Can apply (confirmed)</div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Says it hires in India</div>
                     <div className="text-2xl font-black text-teal-700 font-mono mt-0.5">{indiaRemoteSummary?.total_confirmed ?? 0}</div>
                     <div className="text-[11px] text-teal-600 font-semibold mt-0.5">See these jobs →</div>
                   </div>

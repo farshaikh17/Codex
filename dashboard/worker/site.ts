@@ -211,7 +211,7 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
 <div><a class="logo" href="/"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a><p>${esc(s.tagline)} Postings are read straight from employers' own hiring systems and screened against your profile, with the evidence quoted.</p></div>
 <div><h3>Product</h3><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/app">Live dashboard</a><a href="/faq">FAQ</a></div>
 <div><h3>Clients</h3><a href="/apply">Apply</a><a href="/portal">Client login</a>${contact}</div>
-<div><h3>Company</h3><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/app">Operator sign-in</a></div>
+<div><h3>Company</h3><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/app?operator=1">Operator sign-in</a></div>
 </div><div class="base"><span>© ${new Date().getUTCFullYear()} ${brand}</span><span>Screening is automated and conservative; final decisions are always made by people.</span></div></div></footer>
 </body></html>`;
 }
