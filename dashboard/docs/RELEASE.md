@@ -53,6 +53,20 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
 D1 budget: Workers Free allows 5,000,000 rows read per UTC day. Every smoke pass and browser suite costs reads; the
 read cache makes repeats cheap, but avoid repeated full suites against production on the same day.
 
+## Open tracker, limits and undo
+
+Owner decision of 12 Nov: Farhan and Sana use their tracker without a key. `OPEN_TRACKER = "on"` in `dashboard/wrangler.toml` lets keyless
+requests save, set a stage, write notes and follow-ups, mark Good match / Not for me, for the two built-in (non-private) people only. Set it to
+`"off"` and release to require the operator key again.
+* **Limits.** At most 60 keyless tracker writes an hour per network (a hash of the address, kept in `auth_failures`); notes and other free text
+  at most 2,000 characters; a write carries the record's `updated_at` and a stale one is refused with 409 "This changed elsewhere; reload"; an
+  empty note never silently replaces a written one. A tracker click clears only that person's cached lists.
+* **Every keyless change is tagged** in `qualification_history` / `application_history` with a hash of the network it came from (migration 0022),
+  never the address.
+* **Undo** (`undo-changes.yml`, run by hand from the Actions tab): `mode = list` with `since` (UTC) lists the networks that changed something;
+  `mode = preview` with the person, `since` and a network hash shows the reverse statements and changes nothing; `mode = apply` runs them. Each
+  statement applies only if nobody changed that job afterwards. Code: `dashboard/scripts/undo_since.mjs`.
+
 ## Daily phone message
 
 After each daily discovery run the `message` job sends each linked person one line, for example
