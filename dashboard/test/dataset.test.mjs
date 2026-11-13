@@ -316,7 +316,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   assert.equal(reason('x1'), 'Held automatically (low match). Cloud discovery match.', 'the shortlist mark is removed, the low-match mark added');
   assert.equal(reason('x2'), 'Shortlisted automatically. Cloud discovery match.', 'moved up a tier: marked once, not twice');
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' AND job_id IN ('r1','x1','x2') ORDER BY id`).all().map((h) => `${h.j}:${h.p}>${h.n}`);
-  assert.deepEqual(hist.sort(), ['r1:NEEDS_REVIEW>READY', 'x1:NEEDS_REVIEW>HOLD', 'x1:READY>NEEDS_REVIEW', 'x2:NEEDS_REVIEW>READY', 'x2:STRETCH_READY>NEEDS_REVIEW']);
+  assert.deepEqual(hist.sort(), ['r1:NEEDS_REVIEW>READY', 'x1:NEEDS_REVIEW>HOLD', 'x1:READY>NEEDS_REVIEW', 'x2:STRETCH_READY>READY']);   // S10: a Stretch row that qualifies for Ready moves up directly
   // the same SQL again, and a fresh run on the result, change nothing
   const snap = () => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), db.prepare('SELECT COUNT(*) n FROM qualification_history').get()]);
   const before = snap();
@@ -404,7 +404,7 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   const a = st();
   for (let i = 0; i < 25; i++) assert.equal(a['k' + String(i).padStart(2, '0')], 'READY', 'kept: not verified recently only because the check failed today');
   assert.equal(a.closed, 'NEEDS_REVIEW'); assert.equal(a.fell, 'HOLD');
-  assert.equal(a.fresh, 'NEEDS_REVIEW', 'the kept rows still count towards the cap of 25');
+  assert.equal(a.fresh, 'STRETCH_READY', 'the kept rows still count towards the cap of 25, so this Ready-quality row is Stretch\'s overflow (S10)');
   assert.equal(a.stale, 'NEEDS_REVIEW');
   assert.deepEqual(db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all(), before, 'decided and applied rows stay byte-identical');
   // a normal day (the check verified rows) demotes what was not verified in 4 days
@@ -530,4 +530,32 @@ test('S8: the re-score takes eligibility away where the screen wrote it (ELIGIBL
   assert.doesNotMatch(db.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id = 'e2'`).get().r, /^Shortlisted automatically/);
   assert.equal(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE job_id IN ('e1','e2') AND new_status = 'INELIGIBLE' AND actor = 'discovery'`).get().c, 2);
   assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('e4','e5','e7') ORDER BY job_id`).all(), before, 'decided, applied and person-set rows are byte-identical');
+});
+
+test('S10: Stretch takes the overflow of Ready-quality rows first, ahead of the "within 10 below" rows; they move up when Ready has room', () => {
+  const w = world(); const db = w.sqlite;
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  db.prepare(`UPDATE candidates SET qualification_threshold = 60 WHERE id = ?`).run(S);
+  const NOW = new Date().toISOString();
+  const V = JSON.stringify({ preliminary: true, [DS_DISCOVERY.RULES_MARKER]: true });
+  const add = (id, score, elig = 'ELIGIBLE', o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,1,?,?)`).run(id, 'T ' + id, 'Co ' + id, 'lever', 'https://x.example/' + id, NOW, NOW);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(S, id, o.status || 'NEEDS_REVIEW', elig, o.reason || 'Cloud discovery match.', o.override || null);
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`).run(S, id, score, 60, V);
+  };
+  for (let i = 0; i < 30; i++) add('r' + String(i).padStart(2, '0'), 90 - (i % 5));   // 30 eligible rows at 86-90: 25 Ready, 5 overflow
+  for (let i = 0; i < 30; i++) add('s' + String(i).padStart(2, '0'), 55);              // 30 eligible "within 10 below" rows
+  add('p1', 80, 'ELIGIBLE', { status: 'READY', override: 'READY' });                      // a person's Ready row: untouched, not counted
+  const { sql } = run(w.dir);
+  db.exec(sql);
+  const n = (st, pre) => db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = ? AND job_id LIKE ?`).get(S, st, pre + '%').c;
+  assert.equal(n('READY', 'r'), 25); assert.equal(n('STRETCH_READY', 'r'), 5, 'the five Ready-quality rows that did not fit go to Stretch first');
+  assert.equal(n('STRETCH_READY', 's'), 20, 'then the best "within 10 below" rows fill Stretch');
+  // a Ready row closes: the best Stretch overflow row moves up the next run
+  db.prepare(`UPDATE jobs SET is_active = 0 WHERE id = (SELECT job_id FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = 'READY' AND job_id LIKE 'r%' ORDER BY job_id LIMIT 1)`).run(S);
+  db.exec(run(w.dir).sql);
+  assert.equal(n('READY', 'r'), 25); assert.equal(n('STRETCH_READY', 'r'), 4);
+  assert.ok(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE previous_status = 'STRETCH_READY' AND new_status = 'READY'`).get().c >= 1);
+  assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 'p1'`).get().s, 'READY');
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE qualification_reason LIKE 'Shortlisted automatically. Shortlisted automatically.%'`).get().c, 0, 'the mark is never doubled');
 });
