@@ -598,3 +598,20 @@ test('phase 2 tenth-man fixes: an office-days ineligible row comes back when the
   assert.equal(d2.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 't30'`).get().s, 'READY', 'a person\'s Ready row is untouched');
   assert.equal(d2.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE reason LIKE 'Outranked%'`).get().c, 5);
 });
+
+test('plan B3: a stored job gets the city of its twin, only while its location is unchanged and nobody applied to it or decided on it', () => {
+  const w = world();
+  const ins = (id, loc) => w.sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at,location_restrictions) VALUES (?,?,?,?,1,'2026-11-01',?)`)
+    .run(id, 'Maintenance Engineer', 'Acme', 'greenhouse', loc);
+  ins('m1', 'Pune, India'); ins('m2', 'Pune, India'); ins('m3', 'Pune, India'); ins('m4', 'Hosur, India');
+  w.sqlite.exec(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('a2','${S}','m2','APPLIED')`);
+  w.sqlite.exec(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('${S}','m3','HOLD','HOLD')`);
+  const m = JSON.parse(fs.readFileSync(path.join(w.dir, 'matches.json'), 'utf8'));
+  m.merge = ['m1', 'm2', 'm3'].map((id) => ({ id, old: 'Pune, India', new: 'Pune, India; Chennai, India' })).concat([{ id: 'm4', old: 'Hosur', new: 'Hosur; Chennai' }]);
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify(m));
+  const { sql, report } = run(w.dir);
+  w.sqlite.exec(sql); w.sqlite.exec(sql);
+  const loc = Object.fromEntries(w.sqlite.prepare(`SELECT id, location_restrictions l FROM jobs WHERE id LIKE 'm%'`).all().map((r) => [r.id, r.l]));
+  assert.deepEqual(loc, { m1: 'Pune, India; Chennai, India', m2: 'Pune, India', m3: 'Pune, India', m4: 'Hosur, India' });
+  assert.equal(report.same_job_other_city, 4);
+});
