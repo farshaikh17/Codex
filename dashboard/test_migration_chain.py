@@ -24,6 +24,7 @@ migrations = [
     '0019_job_feedback.sql',
     '0020_farhan_drop_marketing_stretch.sql',
     '0021_company_display_names.sql',
+    '0022_history_client.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -56,6 +57,7 @@ print('cloud_discovery_runs columns:', cols_runs)
 cols_evi = [r[1] for r in conn.execute("PRAGMA table_info(cloud_job_evidence)").fetchall()]
 print('cloud_job_evidence columns:', cols_evi)
 
+assert 'history_client' in tables, 'migration 0022 missing'
 assert 'auth_failures' in tables and 'candidate_qualifications' in tables, 'migration chain is incomplete'
 print('migration chain OK')
 

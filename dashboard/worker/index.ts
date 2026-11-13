@@ -379,6 +379,33 @@ function logPrivately(tag: string, pathname: string, message: unknown) {
 
 // Who is asking. Set by the router for every /api request; handlers use it to decide which fields to return.
 const accessLevel = new WeakMap<Request, 'public' | 'operator'>();
+// Plan U1: the network hash of a keyless open-tracker write. Every history row such a request writes is tagged with it (history_client,
+// migration 0022), so the owner can undo one network's changes with scripts/undo_since.mjs.
+const writerOf = new WeakMap<Request, string>();
+/** A statement that tags the history row just inserted (in the same batch) with the keyless writer's network hash; null for an operator request.
+ *  last_insert_rowid() is the row the previous statement inserted; the candidate and job guard stops it tagging an unrelated row when that insert
+ *  wrote nothing. A missing table (migration 0022 not applied) must not fail the write, so callers run it only after checking historyClientReady. */
+type HistTable = 'qualification_history' | 'application_history';
+type HistTag = [number, HistTable, unknown?];
+function tagHistory(env: Env, request: Request, table: HistTable, candidateId: string, jobId: string, before: unknown): D1PreparedStatement | null {
+  const hash = writerOf.get(request);
+  if (!hash) return null;
+  return env.DB.prepare(`INSERT OR IGNORE INTO history_client(history_table, history_id, client_hash, before_json)
+    SELECT '${table}', id, ?, ? FROM ${table} WHERE id = last_insert_rowid() AND candidate_id = ? AND job_id = ?`).bind(hash, before === undefined ? null : JSON.stringify(before), candidateId, jobId);
+}
+let historyClientKnown: boolean | null = null;
+async function historyClientReady(env: Env): Promise<boolean> {
+  if (historyClientKnown) return true;
+  try { await env.DB.prepare('SELECT before_json FROM history_client LIMIT 0').all(); historyClientKnown = true; } catch { historyClientKnown = false; }
+  return historyClientKnown;
+}
+/** Statements with the history tag inserted after each statement whose index is listed (indexes of history inserts). */
+async function withTags(env: Env, request: Request, stmts: D1PreparedStatement[], tags: HistTag[], candidateId: string, jobId: string) {
+  if (!writerOf.has(request) || !(await historyClientReady(env))) return stmts;
+  const out: D1PreparedStatement[] = [];
+  stmts.forEach((st, i) => { out.push(st); const t = tags.find(([k]) => k === i); if (t) out.push(tagHistory(env, request, t[1], candidateId, jobId, t[2])!); });
+  return out;
+}
 const isOperatorRequest = (request: Request) => accessLevel.get(request) === 'operator';
 
 // Fields that never leave the Worker in a public response, wherever they appear in the JSON (defence in depth on top
@@ -636,6 +663,7 @@ class WorkerRouter {
       } else if (keyless && openTracker(env) && isTrackerRoute(request.method, pathname) && (await syncRegistry(env), await openTrackerCandidate(request, url))) {
         if (request.method !== 'GET' && !(await trackerWriteAllowed(request, env)))
           return jsonResponse({ error: 'Too many changes from this network in the last hour. Please wait a while and try again.' }, 429, { ...corsHeaders(request, env), 'Retry-After': '900' });
+        if (request.method !== 'GET') writerOf.set(request, await clientKey(request));
         accessLevel.set(request, 'operator');
       } else {
         const denied = await checkOperatorAuth(request, env);
@@ -1947,8 +1975,11 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
     const histRow = (previous: string | null, next: string, reason: string) => env.DB.prepare(
       `INSERT INTO qualification_history (candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?, ?, ?, ?, ?, 'Candidate')`
     ).bind(candidateId, job_id, previous, next, reason);
+    // What the row looked like before this change, for an exact undo (plan U1); stored only for a keyless open-tracker write.
+    const qualBefore = qual ? { qualification_status: qual.qualification_status } : null;
+    const tags: HistTag[] = [[1, 'application_history', existing ? { status: existing.status, notes: existing.notes ?? null, applied_at: existing.applied_at ?? null } : null]];
     if (APPLIED_STAGES.includes(status)) {
-      if (qual && qual.qualification_status !== 'APPLIED') batchStatements.push(histRow(qual.qualification_status, 'APPLIED', `Application recorded (${status})`));
+      if (qual && qual.qualification_status !== 'APPLIED') { tags.push([batchStatements.length, 'qualification_history', qualBefore]); batchStatements.push(histRow(qual.qualification_status, 'APPLIED', `Application recorded (${status})`)); }
       batchStatements.push(
         env.DB.prepare(`
           UPDATE candidate_qualifications
@@ -1965,10 +1996,11 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
         env.DB.prepare(`UPDATE candidate_qualifications SET qualification_status = ? WHERE candidate_id = ? AND job_id = ? AND qualification_status = 'APPLIED'`).bind(restoreTo, candidateId, job_id),
         histRow('APPLIED', restoreTo, `Application moved back to ${status}`)
       );
+      tags.push([batchStatements.length - 1, 'qualification_history', qualBefore]);
     }
 
     // Execute applications, application_history, and candidate_qualifications atomically
-    await env.DB.batch(batchStatements);
+    await env.DB.batch(await withTags(env, request, batchStatements, tags, candidateId, job_id));
 
     // Retrieve and format the updated Job model expected by React frontend
     const jobRow = await env.DB.prepare(`
@@ -2095,15 +2127,15 @@ router.delete('/api/applications/:id', async (request, env, params, url) => {
   // Both statements therefore repeat the rule themselves, inside one atomic batch: the history row exists only if the same conditions still hold for the delete, and the
   // answer reports what the delete really did.
   const STILL_PLAIN_SAVED = `id = ? AND candidate_id = ? AND job_id = ? AND status = 'SAVED' AND (notes IS NULL OR trim(notes, ' ' || char(9) || char(10) || char(13)) = '')`;
-  const done = await env.DB.batch([
+  const done = await env.DB.batch(await withTags(env, request, [
     env.DB.prepare(`INSERT INTO application_history (candidate_id, job_id, application_id, previous_status, new_status, stage, actor, source, recorded_at)
       SELECT ?, ?, ?, 'SAVED', 'UNSAVED', 'UNSAVED', 'Candidate', 'cloud_worker', ?
       WHERE EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, now, existing.id, candidateId, jobId),
     // the follow-up date goes with the record (it used to come back if the job was saved again); same condition, and before the record itself is removed
     env.DB.prepare(`DELETE FROM application_followups WHERE candidate_id = ? AND job_id = ? AND EXISTS (SELECT 1 FROM applications WHERE ${STILL_PLAIN_SAVED})`).bind(candidateId, jobId, existing.id, candidateId, jobId),
     env.DB.prepare(`DELETE FROM applications WHERE ${STILL_PLAIN_SAVED}`).bind(existing.id, candidateId, jobId),
-  ]);
-  if (Number(done[2]?.meta?.changes || 0) !== 1)
+  ], [[0, 'application_history', { status: 'SAVED', notes: existing.notes ?? null, id: existing.id }]], candidateId, jobId));
+  if (Number(done[done.length - 1]?.meta?.changes || 0) !== 1)
     return jsonResponse({ error: 'This record changed while it was being un-saved (a note was added or its status moved on), so nothing was removed. Check it in the tracker.' }, 409, corsHeaders(request, env));
   return jsonResponse({ job_id: jobId, candidate_id: candidateId, unsaved: true }, 200, corsHeaders(request, env));
 });
@@ -2566,7 +2598,7 @@ router.post('/api/jobs/:id/qualification-override', async (request, env, params)
 
     // Fetch existing qualification to capture actual previous_status
     const existing = await env.DB.prepare(
-      'SELECT qualification_status, manual_override_status FROM candidate_qualifications WHERE job_id = ? AND candidate_id = ?'
+      'SELECT qualification_status, manual_override_status, manual_override_reason FROM candidate_qualifications WHERE job_id = ? AND candidate_id = ?'
     ).bind(jobId, candidateId).first<any>();
     if (!existing) {
       return jsonResponse({error:'Job qualification not found for this candidate.'},404,corsHeaders(request,env));
@@ -2575,7 +2607,7 @@ router.post('/api/jobs/:id/qualification-override', async (request, env, params)
 
     // Atomically execute UPDATE and INSERT in a single D1 batch
     const nowIso = new Date().toISOString();
-    await env.DB.batch([
+    await env.DB.batch(await withTags(env, request, [
       env.DB.prepare(`
         UPDATE candidate_qualifications
         SET manual_override_status = ?, manual_override_reason = ?, qualification_status = ?, last_reverified_at = ?
@@ -2586,7 +2618,7 @@ router.post('/api/jobs/:id/qualification-override', async (request, env, params)
           candidate_id, job_id, previous_status, new_status, reason, actor, changed_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `).bind(candidateId, jobId, previousStatus, newStatus, reason, reviewer, nowIso)
-    ]);
+    ], [[1, 'qualification_history', { qualification_status: existing.qualification_status, manual_override_status: existing.manual_override_status ?? null, manual_override_reason: existing.manual_override_reason ?? null }]], candidateId, jobId));
 
     return jsonResponse({
       status: 'success',
