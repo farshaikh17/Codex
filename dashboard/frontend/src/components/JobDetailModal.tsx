@@ -3,7 +3,7 @@ import { isQuickScreen } from '../quickScreen';
 import { peopleSearchLinks, skillGaps, isAutoShortlisted, withoutAutoMark } from '../jobHelpers';
 import { sourceWord, whyText } from './JobTable';
 import { Job, ApplicationStatus, QualificationStatus, QualificationAuditRecord } from '../types';
-import { submitJobFeedback, fetchJobFeedback, canUseTracker, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
+import { submitJobFeedback, fetchJobFeedback, canUseTracker, isTrackerOpen, overrideJobQualification, fetchQualificationAudit, fetchApplicationHistory } from '../api';
 import { ApplicationHistoryRecord } from '../types';
 import { 
   X, 
@@ -661,7 +661,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-700 block mb-1">Private Candidate Notes:</label>
+                <label className="text-xs font-medium text-slate-700 block mb-1">{isTrackerOpen() ? 'Notes (anyone with the link to this site can read these):' : 'Private Candidate Notes:'}</label>
                 <input
                   type="text"
                   aria-label="Private candidate notes" placeholder="e.g. Applied via email, tailored resume v2..."

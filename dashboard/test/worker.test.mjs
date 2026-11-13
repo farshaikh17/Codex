@@ -697,7 +697,7 @@ test('read cache: over budget, an old answer is never served across an operator 
 
 test('read cache: if the cache cannot be invalidated the operator change is refused, not applied', async () => {
   const { sqlite, env } = cached();
-  const failUpdate = (sql) => /UPDATE cache_state/.test(sql);
+  const failUpdate = (sql) => /UPDATE cache_state|DELETE FROM response_cache/.test(sql);   // the global clear, and the per-person clear a tracker action uses
   const db = { ...env.DB, prepare: (sql) => { if (failUpdate(sql)) throw new Error('D1_ERROR: internal error in D1'); return env.DB.prepare(sql); }, batch: (x) => env.DB.batch(x) };
   const before = sqlite.prepare('SELECT COUNT(*) n FROM applications').get().n;
   const res = await call(worker, { ...env, DB: db }, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
@@ -761,7 +761,7 @@ test('read cache: one transient failure to invalidate is retried and the operato
   let failed = false;
   const db = { ...env.DB, prepare: (sql) => {
     const st = env.DB.prepare(sql);
-    if (/UPDATE cache_state/.test(sql) && !failed) return { run: async () => { failed = true; throw new Error('D1_ERROR: internal error in D1'); } };
+    if (/UPDATE cache_state|DELETE FROM response_cache/.test(sql) && !failed) return { run: async () => { failed = true; throw new Error('D1_ERROR: internal error in D1'); } };
     return st; }, batch: (x) => env.DB.batch(x) };
   const res = await call(worker, { ...env, DB: db }, 'POST', '/api/applications', { body: { candidate_id: 'farhan_shaikh', job_id: 'j4', status: 'SAVED' } });
   assert.equal(res.status, 200); assert.ok(failed);
@@ -973,4 +973,10 @@ test('un-save: the ordinary cases still work (plain SAVED record is removed and 
   assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM application_history WHERE job_id=? AND new_status='UNSAVED'`).get(j1).n, 1);
   assert.equal((await call(worker, env, 'DELETE', `/api/applications/${j2}?candidate_id=farhan_shaikh`)).status, 409, 'a record with notes is refused');
   assert.equal((await call(worker, env, 'DELETE', `/api/applications/${j1}?candidate_id=farhan_shaikh`)).status, 404, 'already gone');
+});
+
+test('the Worker entry file exports only its default handler (workerd refuses to start when a named export is a plain value)', () => {
+  const src = fs.readFileSync(path.join(root, 'worker/index.ts'), 'utf8');
+  const named = src.split('\n').filter((l) => /^export\s+(const|let|var|function|class|async function)\b/.test(l));
+  assert.deepEqual(named, [], 'move shared values to another module (e.g. worker/discovery.ts) instead');
 });
