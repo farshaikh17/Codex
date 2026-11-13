@@ -34,6 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
+from engine.multi_place import from_count, places_text  # noqa: E402
 from engine.remote_boards import UA, all_errored, job, over_budget, text, when, write_json  # noqa: E402
 
 PAUSE = 0.6
@@ -200,9 +201,10 @@ def workday(pages=3):
                         if not path or path in seen:
                             continue
                         seen.add(path)
-                        place = text(r.get('locationsText')) or 'See posting'
+                        url = f'{base}/en-US/{site}{path}'
+                        place = from_count(text(r.get('locationsText')), url) or 'See posting'   # plan B2: '5 Locations' -> 'Assen; +4 more'
                         remote = 'remote' in place.lower()
-                        j = job('workday', f'{base}/en-US/{site}{path}', text(r.get('title')), company, place, place, None, board=False)
+                        j = job('workday', url, text(r.get('title')), company, place, place, None, board=False)
                         j['is_remote'] = remote
                         yield j
                     if len(rows) < 20:
@@ -373,12 +375,19 @@ def _detail_smartrecruiters(j):
     return ' '.join(text((sec.get(k) or {}).get('text')) for k in ('jobDescription', 'qualifications', 'additionalInformation'))
 
 
+MORE = re.compile(r'; \+\d+ more')
+
+
 def _detail_workday(j):
     m = re.match(r'^(https://([\w-]+)\.(wd\d+)\.myworkdayjobs\.com)/en-US/([^/]+)(/.+)$', j['url'])
     if not m:
         return None
     base, tenant, _dc, site, path = m.groups()
     info = (json.loads(http(f'{base}/wday/cxs/{tenant}/{site}{path}')).get('jobPostingInfo')) or {}
+    extra = [text(x) for x in (info.get('additionalLocations') or []) if text(x)]
+    if extra and MORE.search(j.get('location') or ''):   # plan B2: a posting listed as "N Locations" gets up to three of its places
+        country = text(((info.get('jobRequisitionLocation') or {}).get('country') or {}).get('descriptor') or (info.get('country') or {}).get('descriptor'))
+        j['location'] = places_text([text(info.get('location'))] + extra, None, country) or j['location']
     if info.get('startDate'):
         j['posted_at'] = when(info['startDate']).isoformat() if when(info['startDate']) else j['posted_at']
     return text(info.get('jobDescription'))

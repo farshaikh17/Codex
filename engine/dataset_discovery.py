@@ -31,8 +31,10 @@ from pathlib import Path
 
 try:   # run as a script (engine/ on sys.path) or as part of the engine package (tests)
     from company_names import http_fetch, name_jobs
+    from multi_place import from_count
 except ImportError:   # pragma: no cover
     from engine.company_names import http_fetch, name_jobs
+    from engine.multi_place import from_count
 
 DATASET = 'https://storage.stapply.ai/jobhive/v1/all.parquet'
 MANIFEST = 'https://storage.stapply.ai/jobhive/v1/manifest.json'
@@ -210,6 +212,7 @@ def select(con, src, p, home_quota, remote_quota, max_days, abroad_quota=300):
         cols = [d[0] for d in cur.description]
         rows += [dict(zip(cols, r)) for r in cur.fetchall()]
     for r in rows:   # true, false, or unknown (most postings do not say)
+        r['location'] = from_count(r.get('location'), r.get('url'))   # plan B2: 'Berlin; +7 more' instead of '8 Locations' (Workday)
         flag = r.pop('remote_flag')
         r['is_remote'] = True if flag == 'true' else False if flag == 'false' else None
     return rows

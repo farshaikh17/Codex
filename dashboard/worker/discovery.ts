@@ -207,6 +207,16 @@ export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||indianPlace(l))return false;   // 'Remote, excluding the US' is not a US location
  return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);
 }
+/** Plan B2: a location that gives no place ('3 Locations', or empty) and a description that names only places outside India and the Gulf is abroad
+ *  for Sana's visa-route cap ('Maintenance Engineer, 4 Locations' whose text is all about sites in Texas). A description that also names an Indian or
+ *  Gulf place is not, and neither is one that names no place at all. */
+export const COUNT_LOCATION=/^\s*(?:\d+\s+locations?)?\s*$/i;
+export function abroadByDescription(location:string|null|undefined,description:string|null|undefined){
+ if(!COUNT_LOCATION.test(location||''))return false;
+ const d=String(description||'').replace(EXCLUSION_PHRASE,' ');
+ if(!d.trim()||INDIA_PLACE.test(d)||GULF_PLACE.test(d))return false;
+ return FOREIGN_NAME.test(d)||FOREIGN_US_DOTTED.test(d)||US_ONLY_PLACE.test(d);
+}
 /** The Worker's remote test, expressed on what is stored: workplace_type REMOTE* (the posting's own remote flag) or remote wording in its location. */
 export function remoteFromStored(workplaceType:string|null|undefined,location:string|null|undefined){
  return /^REMOTE/i.test(workplaceType||'')||/\b(remote|work from home|telecommut)/i.test(location||'');
@@ -506,7 +516,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Gulf or when the posting offers sponsorship or relocation, so other foreign on-site roles lose points. Eligibility is unchanged.
  // A remote role whose only stated places are abroad ("Remote (Albania, Andorra, ...)", "Austin, Texas" stored as remote) is remote within that region,
  // not from India, unless it says worldwide or names India.
- const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&foreignLocation(p.location)&&!gulf&&(!remote||(!explicitIndiaRemote&&!globalRemote));
+ const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&(foreignLocation(p.location)||abroadByDescription(p.location,p.description))&&!gulf&&(!remote||(!explicitIndiaRemote&&!globalRemote));
  if(visaUnlikely)score=Math.min(score,VISA_UNLIKELY_CAP);
  const nationalsPreferred=(!prof||String(prof.home_country||'').toLowerCase()==='india')&&NATIONALS_PREFERENCE.test(text);
  if(nationalsPreferred)score=Math.min(score,NATIONALS_PREFERENCE_CAP);
