@@ -350,7 +350,9 @@ function shortlistSql(requireVerified) {
   const fitsReady = `s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'ELIGIBLE'`;
   const fitsStretch = `((s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'UNKNOWN') OR (q.eligibility_status = 'ELIGIBLE' AND s.overall_score >= c.qualification_threshold - 10 AND s.overall_score < c.qualification_threshold))`;
   const auto = (alias) => `${alias}.qualification_reason LIKE ${q(MARK + '%')}`;
-  const tiers = [['READY', fitsReady], ['STRETCH_READY', fitsStretch]];
+  // Plan S10: a row that qualifies for Ready but did not fit in Ready's 25 qualifies for Stretch, ahead of the "within 10 below" rows; and a Stretch row
+  // that qualifies for Ready moves up when Ready has room.
+  const tiers = [['READY', fitsReady], ['STRETCH_READY', `(${fitsStretch} OR ${fitsReady})`]];
   // --no-shortlist: the two-hourly watchlist run skips this step (it reads every undecided row; once a day is enough and keeps D1 reads low).
   // --shortlist-out <file>: write this step to its own file, so the daily run can apply it after the "still open?" check has refreshed
   // last_verified_at (otherwise a posting checked today waits a day to be shortlisted, and a posting closed today stays shortlisted a day).
@@ -384,18 +386,23 @@ function shortlistSql(requireVerified) {
       const twin = `NOT EXISTS (SELECT 1 FROM candidate_qualifications y JOIN jobs k ON k.id = y.job_id WHERE y.candidate_id = q.candidate_id AND y.job_id <> q.job_id
           AND y.qualification_status IN ('READY','READY_HIGH','STRETCH_READY') AND NOT (y.qualification_status = ${q(tier)} AND ${auto('y')})
           AND lower(trim(k.company)) = lower(trim(j.company)) AND lower(trim(k.title)) = lower(trim(j.title)))`;
+      // From: an undecided row verified recently; for Ready also an automatic Stretch row (S10: it moves up when it qualifies and ranks in).
+      const from = tier === 'READY' ? `'NEEDS_REVIEW','STRETCH_READY'` : `'NEEDS_REVIEW'`;
+      const upFromStretch = tier === 'READY' ? ` OR (q.qualification_status = 'STRETCH_READY' AND ${auto('q')} AND ${verified})` : '';
       const pick = `(candidate_id, job_id) IN (SELECT candidate_id, job_id FROM (
-          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, seen DESC, job_id) AS rk FROM (
+          SELECT candidate_id, job_id, st, ROW_NUMBER() OVER (PARTITION BY candidate_id ORDER BY rq DESC, sc - CASE WHEN julianday('now') - julianday(NULLIF(seen, '')) > 30 THEN 5 ELSE 0 END DESC, sk DESC, seen DESC, job_id) AS rk FROM (
             SELECT q.candidate_id, q.job_id, q.qualification_status AS st, s.overall_score AS sc, COALESCE(s.skill_score, 0) AS sk, COALESCE(j.discovered_at, '') AS seen,
-              ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
-            ${base} AND ${fits} AND ((q.qualification_status = 'NEEDS_REVIEW' AND ${verified}) OR (q.qualification_status = ${q(tier)} AND ${auto('q')}${keepIf})) AND ${twin}
+              CASE WHEN ${fitsReady} THEN 1 ELSE 0 END AS rq,
+              ROW_NUMBER() OVER (PARTITION BY q.candidate_id, lower(trim(j.company)), lower(trim(j.title)) ORDER BY q.qualification_status = ${q(tier)} DESC, q.qualification_status <> 'NEEDS_REVIEW' DESC, s.overall_score DESC, q.job_id) AS dk
+            ${base} AND ${fits} AND ((q.qualification_status = 'NEEDS_REVIEW' AND ${verified}) OR (q.qualification_status = ${q(tier)} AND ${auto('q')}${keepIf})${upFromStretch}) AND ${twin}
           ) WHERE dk = 1
-        ) WHERE rk <= 25 AND st = 'NEEDS_REVIEW')`;
+        ) WHERE rk <= 25 AND st IN (${from}))`;
       sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
-        SELECT candidate_id, job_id, 'NEEDS_REVIEW', ${q(tier)}, 'Shortlisted automatically by the screen', 'discovery' FROM candidate_qualifications
-        WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
-      sl.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)}, qualification_reason = ${q(MARK)} || COALESCE(qualification_reason, ''), qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
-        WHERE qualification_status = 'NEEDS_REVIEW' AND ${pick};`);
+        SELECT candidate_id, job_id, qualification_status, ${q(tier)}, 'Shortlisted automatically by the screen', 'discovery' FROM candidate_qualifications
+        WHERE qualification_status IN (${from}) AND ${pick};`);
+      sl.push(`UPDATE candidate_qualifications SET qualification_status = ${q(tier)},
+          qualification_reason = CASE WHEN qualification_status = 'NEEDS_REVIEW' THEN ${q(MARK)} || COALESCE(qualification_reason, '') ELSE qualification_reason END, qualified_at = ${q(now)}, last_reverified_at = ${q(now)}
+        WHERE qualification_status IN (${from}) AND ${pick};`);
     }
   }
   return sl;
