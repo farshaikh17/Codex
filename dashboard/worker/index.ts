@@ -5,6 +5,7 @@
 
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
 import * as site from './site';
+import { whyLine } from './why';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -142,6 +143,7 @@ const PUBLIC_READ_PATTERNS: RegExp[] = [
   /^\/api\/automation\/status$/,
   /^\/api\/export$/,
   /^\/api\/discovery\/daily$/,
+  /^\/api\/today$/,
 ];
 // Open tracker (owner decision 2026-11-12: "make it work for Farhan and Sana first, security later"). With OPEN_TRACKER = 'on', these
 // tracker actions work without the operator key, only for a candidate that is not a private client, and public answers keep the
@@ -230,7 +232,7 @@ const CACHE_PARAMS: [RegExp, string[]][] = [
   [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
-  [/^\/api\/(jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
+  [/^\/api\/(today|jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
 // Nothing is excluded from the cache by path any more: /api/india-remote/jobs has its own query and its own key (every filter it honours is in CACHE_PARAMS).
 const NOT_CACHED = /^\/api\/export$/;   // exports are metered but never stored in the cache
@@ -243,7 +245,7 @@ const qualList = (v: string) => { const parts = v.split(','); return parts.lengt
 const CACHE_SCHEMA = 'c2';
 const CORE_PATHS = new Set(['/api/candidates', '/api/dashboard/overview', '/api/sources', '/api/automation/status', '/api/applications', '/api/jobs',
   '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics', '/api/cohorts/metrics', '/api/profile',
-  '/api/india-remote/summary', '/api/discovery/daily']);
+  '/api/india-remote/summary', '/api/discovery/daily', '/api/today']);
 // Percent-encoding aliases of one path (j1, %6a1, %6A1, farhan%5Fshaikh) collapse to a single canonical form.
 function canonicalPath(pathname: string): string | null {
   try { return pathname.split('/').map((seg) => encodeURIComponent(decodeURIComponent(seg))).join('/'); } catch { return null; }
@@ -1418,6 +1420,7 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         assessment_conflict: conflict.conflict,
         assessment_conflict_reason: conflict.reason,
         role_family: family ? family.label : null,
+        why_line: whyLine(candidateId, r, scoreBreakdown?.matched_skills, threshold),   // plan U6: one plain line on why this job is on the list
         role_family_key: family ? family.key : UNCLASSIFIED,
         strategy_lane: r.strategy_lane,
         candidate_id: candidateId,
@@ -1598,6 +1601,91 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   }
 });
 
+
+// ---- Plan U5 / U12: the Today screen, and the one place every number on the job seeker's page comes from ----------------------------------
+// Every count the page shows (top bar, Today, the full list's tabs and badges) is defined here once; the list routes use the same predicates, and
+// test/clients.test.mjs compares each count with what the matching list returns.
+//   best           Best matches: READY / READY_HIGH, not applied
+//   worth_a_try    Worth a try: STRETCH_READY, not applied
+//   more_to_look   More to look through: NEEDS_REVIEW the screen has judged, not applied
+//   more_good      the part of more_to_look scored 60 or more ("good matches")
+//   everything     the full list: best + worth_a_try + every NEEDS_REVIEW row (judged or not), not applied
+//   says_india     Says it hires in India: the full list's rows whose posting says India is OK (eligibility ELIGIBLE)
+//   hidden         marked Not for me (Hold with that reason)
+//   applications   saved (Saved / Preparing), waiting (applied, first call, interviews, offer), finished (didn't work out, withdrawn)
+//   followups_due  follow-up dates on or before today (India time)
+const TODAY_LIST = 25;
+const UNSCREENED_SQL = `q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'`;
+async function todayCounts(env: Env, candidateId: string) {
+  const row = await env.DB.prepare(`SELECT
+      SUM(CASE WHEN q.qualification_status IN ('READY','READY_HIGH') THEN 1 ELSE 0 END) AS best,
+      SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) AS worth_a_try,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) THEN 1 ELSE 0 END) AS more_to_look,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0)
+               AND COALESCE((SELECT s.overall_score FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id), 0) >= 60 THEN 1 ELSE 0 END) AS more_good,
+      COUNT(*) AS everything,
+      SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS says_india
+    FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1
+      AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
+      AND ${NOT_APPLIED}`).bind(candidateId).first<any>();
+  const hidden = await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`).bind(candidateId).first<any>();
+  const apps = await env.DB.prepare(`SELECT
+      SUM(CASE WHEN a.status IN ('SAVED','REVIEWING') THEN 1 ELSE 0 END) AS saved,
+      SUM(CASE WHEN a.status IN ('APPLIED','SUBMITTED','SCREENING','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) AS waiting,
+      SUM(CASE WHEN a.status IN ('REJECTED','WITHDRAWN','ARCHIVED') THEN 1 ELSE 0 END) AS finished,
+      COUNT(*) AS total
+    FROM applications a JOIN jobs j ON j.id = a.job_id WHERE a.candidate_id = ?`).bind(candidateId).first<any>();
+  const today = new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);   // India time (UTC+5:30)
+  let followupsDue = 0;
+  try {
+    const f = await env.DB.prepare(`SELECT COUNT(*) AS n FROM application_followups f JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
+      WHERE f.candidate_id = ? AND f.follow_up_at <= ? AND a.status NOT IN ('REJECTED','WITHDRAWN','ARCHIVED')`).bind(candidateId, today).first<any>();
+    followupsDue = Number(f?.n || 0);
+  } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; }
+  const n = (v: any) => Number(v || 0);
+  return {
+    best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: n(row?.more_to_look), more_good: n(row?.more_good),
+    everything: n(row?.everything), says_india: n(row?.says_india), hidden: n(hidden?.n),
+    applications: { saved: n(apps?.saved), waiting: n(apps?.waiting), finished: n(apps?.finished), total: n(apps?.total) },
+    followups_due: followupsDue, today_india: today,
+  };
+}
+
+router.get('/api/today', async (request, env, _params, url) => {
+  const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
+  if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
+  try {
+    const counts = await todayCounts(env, candidateId);
+    const base = `FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+      LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id
+      WHERE q.candidate_id = ? AND j.is_active = 1 AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND ${NOT_APPLIED}`;
+    const order = `ORDER BY COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id LIMIT ${TODAY_LIST}`;
+    const ids = async (where: string, extra: any[] = []) => ((await env.DB.prepare(`SELECT q.job_id AS id ${base} AND ${where} ${order}`).bind(candidateId, ...extra).all<any>()).results || []).map((r: any) => r.id);
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const best = await ids(`q.qualification_status IN ('READY','READY_HIGH')`);
+    const worth = await ids(`q.qualification_status = 'STRETCH_READY'`);
+    // Good matches found in the last 7 days, for "New since your last visit" (the page compares the found time with its own last visit)
+    const recent = await ids(`q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) AND COALESCE(s2.overall_score, 0) >= 60
+      AND (julianday(j.discovered_at) >= julianday(?) OR julianday(q.qualified_at) >= julianday(?))`, [since, since]);
+    const all = [...new Set([...best, ...worth, ...recent])];
+    const byId = new Map<string, any>();
+    if (all.length) {
+      const { results: full } = await env.DB.prepare(`SELECT ${JOB_COLUMNS}
+        FROM candidate_qualifications q JOIN jobs j ON q.job_id = j.id
+        LEFT JOIN candidate_job_scores s ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
+        LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
+        WHERE q.candidate_id = ? AND j.id IN (SELECT value FROM json_each(?))`).bind(candidateId, JSON.stringify(all)).all<any>();
+      const threshold = await candidateThreshold(env, candidateId);
+      for (const r of full || []) byId.set(r.id, shapeJob(r, candidateId, threshold));
+    }
+    const pick = (list: string[]) => list.map((id) => byId.get(id)).filter(Boolean);
+    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: pick(recent) }, 200, corsHeaders(request, env));
+  } catch (err: any) {
+    return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
+  }
+});
 
 router.get('/api/jobs/:id', async (request, env, params, url) => {
   const jobId = params.id;

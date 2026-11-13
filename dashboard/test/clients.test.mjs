@@ -427,3 +427,45 @@ test('open tracker limits: a script hitting the tracker is stopped after the hou
   const big = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 'k3', status: 'SAVED', notes: 'x'.repeat(2001) }, key: null });
   assert.equal(big.status, 400); assert.match(big.text, /longer than 2000/);
 });
+
+// ---- Plan U12: one definition per number -----------------------------------------------------------------------------------------
+test('U12: every count on the Today screen equals what the matching list returns (one definition per number)', async () => {
+  const w = world();
+  const add = (id, title, status, o = {}) => {
+    w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      id, title, o.company || 'Beta', 'lever', 'https://jobs.lever.co/beta/' + id, 1, o.loc || 'Pune, India', 'Plant maintenance role.', o.workplace || 'ONSITE', o.at || new Date(Date.now() - 86400000).toISOString().slice(0, 10) + 'T00:00:00Z', 'LIVE_PUBLIC');
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason) VALUES (?,?,?,?,?)`, S, id, status, o.elig || 'ELIGIBLE', o.reason || 'Matches 3 skills.');
+    w.run(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`, S, id, o.score ?? 70, 40, JSON.stringify({ matched_skills: ['Maintenance', 'Boiler', 'SCADA'] }));
+  };
+  add('t1', 'Maintenance Engineer', 'READY'); add('t2', 'Reliability Engineer', 'READY', { elig: 'UNKNOWN' });
+  add('t3', 'Energy Manager', 'STRETCH_READY', { elig: 'UNKNOWN', workplace: 'REMOTE', loc: 'Remote - India' });
+  add('t4', 'Shift Engineer', 'NEEDS_REVIEW', { score: 65 }); add('t5', 'Plant Engineer', 'NEEDS_REVIEW', { score: 50, elig: 'UNKNOWN' });
+  add('t6', 'Boiler Engineer', 'NEEDS_REVIEW', { reason: '[GITHUB_COLLECTOR] Unassessed public ATS posting from x; review pending.', score: 0 });
+  add('t7', 'Turbine Engineer', 'HOLD', { reason: 'You marked this Not for me. Matches 3 skills.' });
+  add('t8', 'Utilities Engineer', 'READY'); add('t9', 'Electrical Engineer', 'STRETCH_READY');
+  w.run(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('s1',?,?,'SAVED'),('s2',?,?,'APPLIED'),('s3',?,?,'REJECTED')`, S, 't8', S, 't9', S, 't7');
+  w.run(`INSERT INTO application_followups(candidate_id,job_id,follow_up_at) VALUES (?,?,?)`, S, 't9', '2020-01-01');
+  const today = await req(w.env, 'GET', `/api/today?candidate_id=${S}`, { key: null });
+  assert.equal(today.status, 200, today.text);
+  const c = today.json.counts;
+  const total = async (q) => (await req(w.env, 'GET', `/api/jobs?candidate_id=${S}&exclude_applied=true&exclude_dismissed=true&limit=100${q}`, { key: null })).json;
+  const all = await total('');
+  assert.equal(c.everything, all.total, 'Show everything else = the full list');
+  assert.equal(c.best, all.status_counts.READY, 'Best matches');
+  assert.equal(c.worth_a_try, all.status_counts.STRETCH_READY, 'Worth a try');
+  assert.equal(c.more_to_look, all.status_counts.NEEDS_REVIEW - all.unscreened_count, 'More to look through');
+  assert.equal(c.says_india, (await total('&eligibility=ELIGIBLE')).total, 'Says it hires in India');
+  assert.equal(c.hidden, (await req(w.env, 'GET', `/api/jobs?candidate_id=${S}&hidden=true`, { key: null })).json.total, 'Hidden jobs');
+  const apps = (await req(w.env, 'GET', `/api/applications?candidate_id=${S}`, { key: null })).json;
+  assert.equal(c.applications.total, (Array.isArray(apps) ? apps : apps.applications || apps.jobs).length, 'My applications');
+  assert.deepEqual([c.best, c.worth_a_try, c.more_to_look, c.more_good, c.everything, c.says_india, c.hidden], [3, 1, 2, 1, 7, 4, 1], 'a saved job is still listed (not applied)');
+  assert.deepEqual(c.applications, { saved: 1, waiting: 1, finished: 1, total: 3 });
+  assert.equal(c.followups_due, 1);
+  // the lists on Today are the counted rows, best first, with the plain "why" line
+  assert.deepEqual(today.json.best.map((j) => j.id), ['t1', 't2', 't8']);
+  assert.deepEqual(today.json.worth_a_try.map((j) => j.id), ['t3']);
+  assert.deepEqual(today.json.recent.map((j) => j.id), ['t4']);
+  assert.equal(today.json.best[0].why_line, 'Maintenance · on-site Pune · 3 of your skills');
+  assert.equal(today.json.worth_a_try[0].why_line, 'Energy and decarbonisation · remote, India · 3 of your skills · location not stated');
+  assert.ok(!today.text.includes('PRIVATE-'), 'nothing private in the public answer');
+});

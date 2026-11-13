@@ -24,7 +24,7 @@ const PUBLIC_READ = [
   '/api/candidates', '/api/candidates/x/strategy', '/api/candidates/x/dashboard', '/api/candidates/x/jobs', '/api/candidates/x/applications',
   '/api/dashboard/overview', '/api/jobs', '/api/jobs/x', '/api/jobs/x/explanation', '/api/applications', '/api/india-remote/summary',
   '/api/india-remote/jobs', '/api/analytics', '/api/analytics/discovery', '/api/analytics/sources-effectiveness', '/api/qualification/metrics',
-  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status', '/api/export', '/api/discovery/daily',
+  '/api/cohorts/metrics', '/api/profile', '/api/sources', '/api/automation/status', '/api/export', '/api/discovery/daily', '/api/today',
 ];
 const isPublicRead = (r) => r.method === 'GET' && PUBLIC_READ.includes(r.path);
 
@@ -44,7 +44,7 @@ test('the public read list matches the registered routes (a new GET route is pro
   for (const p of PUBLIC_READ) assert.ok(have.has(p), `${p} is not a registered GET route`);
   const src = fs.readFileSync(path.join(root, 'worker', 'index.ts'), 'utf8');
   const listed = (src.match(/PUBLIC_READ_PATTERNS: RegExp\[\] = \[([\s\S]*?)\n\];/) || [])[1] || '';
-  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 17);
+  assert.equal(listed.split('\n').filter((l) => l.trim().startsWith('/')).length, 18);
   for (const bad of ['history', 'qualification-audit', 'runs', 'backups', 'sync', 'meta', 'pilot', 'canonical-sync', 'url-checks']) assert.ok(!listed.includes(bad), `${bad} must stay protected`);
 });
 
