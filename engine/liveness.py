@@ -2,7 +2,7 @@
 
 Three steps, so credentials never reach the step that visits third-party websites:
   --export OUT   (D1 credentials) the 50 best-scored undecided jobs per candidate, with their posting URL
-  --check  IN    (no credentials) one GET per URL; a job is dead only on HTTP 404/410 twice, or when a known hiring system
+  --check  IN    (no credentials) one GET per URL (8 at a time, 8 s each; after 8 minutes it stops and keeps what it has); a job is dead only on HTTP 404/410 twice, or when a known hiring system
                  says so (a Greenhouse redirect carrying error=true, a Lever 404); 403/429/5xx/timeouts prove nothing
   --sql    IN    writes SQL: dead jobs are closed (never one with an application or a human decision), live ones get
                  last_verified_at = now
@@ -14,6 +14,7 @@ import argparse
 import json
 import sys
 import time
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -41,7 +42,12 @@ EXPORT_SQL = f"""SELECT id, url FROM (
 ) WHERE rk <= {PER_CANDIDATE}"""
 
 
-def probe(url, timeout=20):
+WORKERS = 8           # parallel requests
+TIMEOUT = 8           # seconds per request
+DEADLINE = 8 * 60     # seconds: the workflow step stops at 10 minutes, so the check returns what it has well before that
+
+
+def probe(url, timeout=TIMEOUT):
     """('dead'|'alive'|'unknown', detail)."""
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.5'})
     try:
@@ -61,25 +67,61 @@ def probe(url, timeout=20):
         return 'unknown', type(e).__name__
 
 
-def check(targets, pause=0.3):
-    out = {'dead': [], 'alive': [], 'unknown': 0}
-    seen = set()
-    for t in targets:
-        if t['id'] in seen:
-            continue
-        seen.add(t['id'])
-        state, _ = probe(t['url'])
-        if state == 'dead':   # a second look before anything is closed
-            time.sleep(1)
-            state, _ = probe(t['url'])
-        if state == 'dead':
-            out['dead'].append(t['id'])
-        elif state == 'alive':
-            out['alive'].append(t['id'])
-        else:
-            out['unknown'] += 1
+def _one(url, pause):
+    state, _ = probe(url)
+    if state == 'dead':   # a second look before anything is closed
+        time.sleep(1)
+        state, _ = probe(url)
+    if pause:
         time.sleep(pause)
+    return state
+
+
+def check(targets, pause=0.3, workers=None, deadline=None):
+    """Probe each target (WORKERS at a time). After `deadline` seconds no new probe starts and the result so far is returned,
+    so a slow day still writes what it verified instead of nothing. Targets not reached are counted in 'unchecked'."""
+    workers = workers or WORKERS
+    deadline = DEADLINE if deadline is None else deadline
+    out = {'dead': [], 'alive': [], 'unknown': 0, 'unchecked': 0}
+    todo, seen = [], set()
+    for t in targets:
+        if t['id'] not in seen:
+            seen.add(t['id'])
+            todo.append(t)
+    stop_at = time.monotonic() + deadline
+    left = lambda: max(0.0, stop_at - time.monotonic())   # noqa: E731
+    pool = ThreadPoolExecutor(max_workers=max(1, workers))
+    futures = {}
+    try:
+        for n, t in enumerate(todo):
+            while len(futures) >= workers and left() > 0:   # at most `workers` in flight, so nothing new starts after the deadline
+                done, _ = wait(list(futures), timeout=left(), return_when=FIRST_COMPLETED)
+                for f in done:
+                    _record(out, futures.pop(f), f)
+            if left() <= 0:
+                out['unchecked'] += len(todo) - n
+                break
+            futures[pool.submit(_one, t['url'], pause)] = t['id']
+        done, not_done = wait(list(futures), timeout=left())
+        for f in done:
+            _record(out, futures.pop(f), f)
+        out['unchecked'] += len(not_done)
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
     return out
+
+
+def _record(out, job_id, fut):
+    try:
+        state = fut.result()
+    except Exception:   # noqa: BLE001 - a probe that raised proves nothing
+        state = 'unknown'
+    if state == 'dead':
+        out['dead'].append(job_id)
+    elif state == 'alive':
+        out['alive'].append(job_id)
+    else:
+        out['unknown'] += 1
 
 
 def q(v):
@@ -117,7 +159,8 @@ def main():
     elif a.check:
         res = check(json.loads(Path(a.check).read_text()))
         Path(a.out).write_text(json.dumps(res))
-        print(json.dumps({'dead': len(res['dead']), 'alive': len(res['alive']), 'unknown': res['unknown']}))
+        print(json.dumps({'targets': len(json.loads(Path(a.check).read_text())), 'dead': len(res['dead']), 'alive': len(res['alive']),
+                          'unknown': res['unknown'], 'unchecked': res['unchecked']}))
     elif a.sql:
         Path(a.out).write_text(to_sql(json.loads(Path(a.sql).read_text())))
     else:

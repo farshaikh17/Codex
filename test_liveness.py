@@ -1,7 +1,13 @@
 """engine/liveness.py: only 404/410 (twice) or a Greenhouse error redirect closes a job; blocked or failing sites prove
 nothing; the SQL never closes a job with an application or a human decision. Offline: urlopen is replaced."""
+import json
 import sqlite3
+import sys
+import tempfile
+import threading
+import time
 import unittest
+from pathlib import Path
 import urllib.error
 from unittest import mock
 
@@ -112,6 +118,55 @@ class Liveness(unittest.TestCase):
             ('farhan','person','READY','READY','Shortlisted automatically. x');
         """)
         self.assertEqual([r[0] for r in db.execute(liveness.EXPORT_SQL).fetchall()], ['auto', 'review'])
+
+
+class SlowServer(unittest.TestCase):
+    """A day when many employer sites hang: the check stops at its deadline and returns (and writes) what it has."""
+    def setUp(self):
+        self.release = threading.Event()
+        self.addCleanup(self.release.set)
+
+        def slow_urlopen(req, timeout=20):
+            if '/slow' in req.full_url:
+                self.release.wait(timeout)   # hangs until the per-request timeout (or the end of the test)
+                raise TimeoutError('timed out')
+            return fake_urlopen(req, timeout)
+        p = mock.patch.object(liveness.urllib.request, 'urlopen', slow_urlopen)
+        p.start(); self.addCleanup(p.stop)
+        s = mock.patch.object(liveness.time, 'sleep', lambda *_: None)
+        s.start(); self.addCleanup(s.stop)
+
+    def targets(self):
+        b = 'https://jobs.example'
+        return ([{'id': f'ok{i}', 'url': b + '/ok'} for i in range(6)] + [{'id': 'g', 'url': b + '/gone'}]
+                + [{'id': f's{i}', 'url': b + '/slow'} for i in range(12)])
+
+    def test_deadline_returns_partial_results(self):
+        t0 = time.monotonic()
+        res = liveness.check(self.targets(), pause=0, workers=4, deadline=0.5)
+        took = time.monotonic() - t0
+        self.assertLess(took, 3, 'returns at the deadline, not after every slow site')
+        self.assertEqual(sorted(res['alive']), [f'ok{i}' for i in range(6)])
+        self.assertEqual(res['dead'], ['g'])
+        self.assertEqual(res['unknown'] + res['unchecked'], 12, 'every slow site is unknown or not reached')
+        self.assertGreater(res['unchecked'], 0)
+
+    def test_defaults(self):
+        self.assertEqual((liveness.WORKERS, liveness.TIMEOUT, liveness.DEADLINE), (8, 8, 480))
+
+    def test_check_command_writes_partial_results(self):
+        with tempfile.TemporaryDirectory() as d:
+            src, dst = Path(d) / 'targets.json', Path(d) / 'result.json'
+            src.write_text(json.dumps(self.targets()))
+            with mock.patch.object(liveness, 'DEADLINE', 0.5), mock.patch.object(liveness, 'WORKERS', 4), \
+                    mock.patch.object(sys, 'argv', ['liveness.py', '--check', str(src), '--out', str(dst)]), \
+                    mock.patch('builtins.print'):
+                liveness.main()
+            res = json.loads(dst.read_text())
+            self.assertEqual(len(res['alive']), 6)
+            self.assertEqual(res['dead'], ['g'])
+            sql = liveness.to_sql(res, now='2026-11-13T00:00:00Z')
+            self.assertIn('last_verified_at', sql, 'the verified rows are written even though the check stopped early')
 
 
 if __name__ == '__main__':
