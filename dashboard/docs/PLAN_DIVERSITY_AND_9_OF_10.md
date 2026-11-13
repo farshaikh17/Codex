@@ -626,7 +626,7 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       site; `d1_rows` will show whether the cap can go back up.
     - anyone who knows the bot's name and sends `/start sana` within the 24 hours before the owner runs the link workflow would get Sana's message
       (her first name, two counts and the public site link) and could take one of her 3 places. Left: the workflow is run by hand right after the
-      person taps Start, the message holds nothing private, and `/stop` or the owner removing the row undoes it.
+      person taps Start, the message holds nothing private, and `/stop` or the owner removing the row undoes it. **Fixed after phase 6** (below).
     - `d1_rows` is approximate (analytics lag, other traffic); it is labelled so and the budget guard uses the day totals, not it.
     - still open from phase 4: "Houston, Texas" (a US state name without a code) is not foreign for Sana's visa cap. D1 measured sources, not caps;
       left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples. **Fixed** (below).
@@ -657,6 +657,10 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     `E2E_KEY` (local rehearsal); the smoke test is unchanged. The local suites that open the operator screens (`browser`, `features`, `faults`,
     `clients`, `listing`, `a11y`) sign in with their disposable key; `browser` part A now checks the lock and a made-up share link, and `clients`
     checks "public / private client" through the public API, since visitors no longer see the operator dashboard.
+  - **Telegram link hijack:** `engine/daily_message.py --link` accepts only `/start <code>` where the code is a per-person secret the owner
+    chooses (repository secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`, 12-64 characters; compared in constant time); a name, a
+    candidate id, another case or a prefix links nobody, and one code given for two people links neither. With no code set it links nobody and
+    leaves the waiting messages unread. `/stop` still unlinks the sender's own chat. Owner steps in `RELEASE.md`, "Daily phone message".
 
 ---
 

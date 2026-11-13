@@ -5,6 +5,7 @@
 Free channels only:
   * Telegram (bot API, free): repository secret TELEGRAM_BOT_TOKEN. Each person taps Start on the bot once and the owner runs the manual
     workflow telegram-link.yml, which stores that chat in discovery_state under "telegram:<candidate id>" (never in the repository).
+    The Start link carries a per-person secret code (repository secrets TELEGRAM_LINK_CODE_SANA / TELEGRAM_LINK_CODE_FARHAN), not the name.
   * Email (optional, instead or as well): repository variable DIGEST_PROVIDER = "smtp" (any SMTP account, e.g. Gmail with an app password)
     and the secrets DIGEST_SMTP_USER, DIGEST_SMTP_PASSWORD and DIGEST_TO ("farhan_shaikh=a@example.com; sana_ansari=b@example.com").
     DIGEST_SMTP_HOST / DIGEST_SMTP_PORT (variables) default to smtp.gmail.com / 465.
@@ -16,6 +17,7 @@ Reads: two small queries. Writes: one row ("message:last_sent"), so a second run
     python engine/daily_message.py --link            (telegram-link.yml: read the bot's updates, store each person's chat)
 """
 import argparse
+import hmac
 import json
 import os
 import re
@@ -141,11 +143,28 @@ def recently_sent(value, now, hours=RESEND_HOURS, run_ok=True):
     return timedelta(0) <= now - last < timedelta(hours=hours)
 
 
-def link_updates(updates, known, existing):
-    """The bot's updates -> (new chats per person, chats to remove). A person links with /start <candidate id or first name>
-    (the bot's deep link https://t.me/<bot>?start=sana_ansari sends exactly that) and unlinks with /stop.
-    Only private chats count; at most MAX_CHATS per person; nothing is replaced."""
-    by_first = {cid.split('_')[0]: cid for cid in known}
+MIN_CODE = 12
+
+
+def link_codes(env, known):
+    """Gap fix (13 Nov): the per-person link codes the owner chose, from repository secrets TELEGRAM_LINK_CODE_<FIRST NAME> (e.g.
+    TELEGRAM_LINK_CODE_SANA, TELEGRAM_LINK_CODE_FARHAN). A code is 12-64 letters, digits, '_' or '-' (what a Telegram start link carries);
+    anything else is ignored. Returns {code: candidate id}; a code given for two people links neither."""
+    out, dup = {}, set()
+    for cid in sorted(known):
+        code = str(env.get('TELEGRAM_LINK_CODE_' + cid.split('_')[0].upper(), '') or '').strip()
+        if not re.fullmatch(r'[A-Za-z0-9_-]{%d,64}' % MIN_CODE, code):
+            continue
+        if code in out:
+            dup.add(code)
+        out[code] = cid
+    return {c: cid for c, cid in out.items() if c not in dup}
+
+
+def link_updates(updates, codes, existing):
+    """The bot's updates -> (new chats per person, chats to remove). A person links with /start <their secret link code> (the owner sends them
+    https://t.me/<bot>?start=<code>, which sends exactly that) and unlinks with /stop. A name or candidate id no longer links anyone, so a stranger
+    who guesses the bot cannot take a person's message (gap fix, 13 Nov). Only private chats count; at most MAX_CHATS per person; nothing is replaced."""
     add, remove = {}, set()
     for u in updates or []:
         m = (u or {}).get('message') or {}
@@ -159,8 +178,8 @@ def link_updates(updates, known, existing):
         mt = re.fullmatch(r'/start(?:@\w+)?\s+([A-Za-z0-9_-]{1,64})', text)
         if not mt:
             continue
-        word = mt.group(1).lower()
-        cid = word if word in known else by_first.get(word)
+        word = mt.group(1)
+        cid = next((c for code, c in (codes or {}).items() if hmac.compare_digest(code.encode(), word.encode())), None)
         if not cid:
             continue
         add.setdefault(cid, [])
@@ -299,7 +318,12 @@ def run_link(env, now=None):
         return 1
     known = [r['id'] for r in d1_read('SELECT id FROM candidates') if CANDIDATE_ID.match(str(r.get('id') or ''))]
     existing = chats_from_state(d1_read("SELECT key, value FROM discovery_state WHERE key LIKE 'telegram:%'"))
-    changes = link_updates(updates, set(known), existing)
+    codes = link_codes(env, known)
+    if not codes:
+        print('Link Telegram chats: no link code is set - add repository secrets TELEGRAM_LINK_CODE_SANA / TELEGRAM_LINK_CODE_FARHAN '
+              f'({MIN_CODE}-64 letters, digits, _ or -), send each person https://t.me/<bot>?start=<their code>, then run this again')
+        return 0   # nothing is read or marked read, so a person's Start still counts once the codes are added
+    changes = link_updates(updates, codes, existing)
     if not updates:
         print('Link Telegram chats: the bot has no new messages (Telegram keeps them for 24 hours: ask the person to tap Start again)')
     if not changes:

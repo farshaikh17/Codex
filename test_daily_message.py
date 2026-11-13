@@ -78,20 +78,34 @@ class Linking(unittest.TestCase):
     def upd(uid, chat, text, kind='private'):
         return {'update_id': uid, 'message': {'chat': {'id': chat, 'type': kind}, 'text': text}}
 
-    def test_start_links(self):
-        ups = [self.upd(1, 11, '/start sana_ansari'), self.upd(2, 22, '/start farhan'), self.upd(3, 33, 'hello'),
-               self.upd(4, 44, '/start nobody'), self.upd(5, 55, '/start sana_ansari', kind='group'), self.upd(6, 11, '/start sana_ansari')]
-        self.assertEqual(dm.link_updates(ups, self.KNOWN, {}), {'sana_ansari': [11], 'farhan_shaikh': [22]})
+    CODES = {'sana-Link-code-1234': 'sana_ansari', 'farhan_link_code_5678': 'farhan_shaikh'}
+
+    def test_start_links_only_with_the_secret_code(self):
+        ups = [self.upd(1, 11, '/start sana-Link-code-1234'), self.upd(2, 22, '/start farhan_link_code_5678'), self.upd(3, 33, 'hello'),
+               self.upd(4, 44, '/start nobody'), self.upd(5, 55, '/start sana-Link-code-1234', kind='group'), self.upd(6, 11, '/start sana-Link-code-1234'),
+               self.upd(7, 66, '/start sana_ansari'), self.upd(8, 77, '/start sana'), self.upd(9, 88, '/start SANA-LINK-CODE-1234'),
+               self.upd(10, 99, '/start sana-Link-code-123')]
+        self.assertEqual(dm.link_updates(ups, self.CODES, {}), {'sana_ansari': [11], 'farhan_shaikh': [22]},
+                         'a name, a candidate id, a wrong case or a prefix of the code links nobody')
+        self.assertEqual(dm.link_updates([self.upd(1, 11, '/start sana_ansari')], {}, {}), {}, 'no codes set: nobody links')
+
+    def test_codes_from_secrets(self):
+        env = {'TELEGRAM_LINK_CODE_SANA': ' sana-Link-code-1234 ', 'TELEGRAM_LINK_CODE_FARHAN': 'short'}
+        self.assertEqual(dm.link_codes(env, self.KNOWN), {'sana-Link-code-1234': 'sana_ansari'}, 'too short or missing is ignored')
+        same = {'TELEGRAM_LINK_CODE_SANA': 'same-code-for-both', 'TELEGRAM_LINK_CODE_FARHAN': 'same-code-for-both'}
+        self.assertEqual(dm.link_codes(same, self.KNOWN), {}, 'one code for two people links neither')
+        self.assertEqual(dm.link_codes({'TELEGRAM_LINK_CODE_SANA': 'has space in it!!'}, self.KNOWN), {})
 
     def test_adds_never_replaces_and_caps(self):
         existing = {'sana_ansari': [1, 2]}
-        ups = [self.upd(1, 3, '/start sana'), self.upd(2, 4, '/start sana')]
-        self.assertEqual(dm.link_updates(ups, self.KNOWN, existing), {'sana_ansari': [1, 2, 3]})
-        self.assertEqual(dm.link_updates([self.upd(1, 2, '/start sana')], self.KNOWN, existing), {})
+        c = '/start sana-Link-code-1234'
+        ups = [self.upd(1, 3, c), self.upd(2, 4, c)]
+        self.assertEqual(dm.link_updates(ups, self.CODES, existing), {'sana_ansari': [1, 2, 3]})
+        self.assertEqual(dm.link_updates([self.upd(1, 2, c)], self.CODES, existing), {})
 
     def test_stop_unlinks(self):
-        self.assertEqual(dm.link_updates([self.upd(1, 2, '/stop')], self.KNOWN, {'sana_ansari': [1, 2]}), {'sana_ansari': [1]})
-        self.assertEqual(dm.link_updates([self.upd(1, 2, '/stop')], self.KNOWN, {'sana_ansari': [2]}), {'sana_ansari': []})
+        self.assertEqual(dm.link_updates([self.upd(1, 2, '/stop')], self.CODES, {'sana_ansari': [1, 2]}), {'sana_ansari': [1]})
+        self.assertEqual(dm.link_updates([self.upd(1, 2, '/stop')], self.CODES, {'sana_ansari': [2]}), {'sana_ansari': []})
 
     def test_state_rows(self):
         rows = [{'key': 'telegram:sana_ansari', 'value': '[11, "22", "x"]'}, {'key': 'telegram:bad id', 'value': '[1]'},
@@ -137,6 +151,18 @@ class Channels(unittest.TestCase):
         with redirect_stdout(out):
             self.assertEqual(dm.run_link({}), 0)
         self.assertIn('TELEGRAM_BOT_TOKEN is not set', out.getvalue())
+
+    def test_link_without_codes_links_nobody_and_leaves_messages_unread(self):
+        calls = []
+        ups = [{'update_id': 5, 'message': {'chat': {'id': 11, 'type': 'private'}, 'text': '/start sana_ansari'}}]
+        reads = iter([[{'id': 'sana_ansari'}, {'id': 'farhan_shaikh'}], []])
+        out = io.StringIO()
+        with mock.patch.object(dm, 'telegram', side_effect=lambda t, m, p=None, timeout=20: (calls.append((m, p)), (ups, None))[1]), \
+             mock.patch.object(dm, 'd1_read', side_effect=lambda sql: next(reads)), \
+             mock.patch.object(dm, 'd1_write', side_effect=AssertionError('no write')), redirect_stdout(out):
+            self.assertEqual(dm.run_link({'TELEGRAM_BOT_TOKEN': 'x'}), 0)
+        self.assertEqual([m for m, _ in calls], ['getUpdates'], 'one read, no offset (nothing marked read), no reply')
+        self.assertIn('no link code is set', out.getvalue())
 
     def test_sends_and_never_prints_secrets(self):
         state = [{'key': 'telegram:sana_ansari', 'value': '[987654321]'}]
