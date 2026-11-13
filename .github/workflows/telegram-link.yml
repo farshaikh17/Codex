@@ -1,6 +1,8 @@
 name: Link Telegram chats (daily phone message, one-off)
-# Plan G1. Run by hand once each person has tapped Start on the bot (the link https://t.me/<bot name>?start=sana_ansari, or
-# https://t.me/<bot name>?start=farhan_shaikh, sends "/start <id>"). Reads the bot's waiting messages (Telegram keeps them 24 hours),
+# Plan G1. Run by hand once each person has tapped Start on the bot through their own link https://t.me/<bot name>?start=<their code>, which
+# sends "/start <code>". The code is a per-person secret the owner chooses (repository secrets TELEGRAM_LINK_CODE_SANA and
+# TELEGRAM_LINK_CODE_FARHAN, 12-64 letters, digits, _ or -); "/start sana" or any other word links nobody, so a stranger who finds the bot
+# cannot take a person's message. Reads the bot's waiting messages (Telegram keeps them 24 hours),
 # stores each person's chat in the database (discovery_state "telegram:<candidate id>", never in the repository), and replies "Linked".
 # Up to 3 chats per person (e.g. the person and the owner); nothing is replaced; "/stop" sent to the bot unlinks that chat at the next run.
 # Prints only how many chats each person has: no chat id, name or phone number appears in the log.
@@ -33,6 +35,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_LINK_CODE_SANA: ${{ secrets.TELEGRAM_LINK_CODE_SANA }}
+          TELEGRAM_LINK_CODE_FARHAN: ${{ secrets.TELEGRAM_LINK_CODE_FARHAN }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Link Telegram chats: skipped - repository secret TELEGRAM_BOT_TOKEN is not set"; exit 0; fi
           npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund

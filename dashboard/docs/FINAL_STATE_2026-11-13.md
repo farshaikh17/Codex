@@ -69,8 +69,6 @@ The daily run, the watchlist, the phone message, the undo workflow and the sourc
 ## 5. Knowingly left
 
 The full list, with reasons, is in the plan's section 10 (per phase) and section 11 (next product stage). The ones the owner is most likely to meet:
-- **Telegram link:** anyone who knows the bot's name and sends `/start sana` in the 24 hours before the link workflow runs would get her daily
-  line (first name, two counts, the public link). Run the link workflow right after the person taps Start.
 - **Re-score speed:** after a rules bump the stored lists take about five daily runs to be fully re-scored (800 rows per person per run).
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
 - **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
@@ -81,9 +79,10 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 
 1. **Release** (section 2) when CI is green on the head of `main`.
 2. **Daily phone message (optional, free):** create a Telegram bot with `@BotFather`, add its token as the repository secret
-   `TELEGRAM_BOT_TOKEN`, send each person `https://t.me/<bot>?start=sana_ansari` / `?start=farhan_shaikh`, and run **Link Telegram chats** within
-   24 hours. Steps in `RELEASE.md`, "Daily phone message". Email instead: variable `DIGEST_PROVIDER=smtp` and secrets `DIGEST_SMTP_USER`,
-   `DIGEST_SMTP_PASSWORD`, `DIGEST_TO`.
+   `TELEGRAM_BOT_TOKEN`, choose a secret link code per person and add it as `TELEGRAM_LINK_CODE_SANA` / `TELEGRAM_LINK_CODE_FARHAN`,
+   send each person `https://t.me/<bot>?start=<their code>` privately, and run **Link Telegram chats** within 24 hours. Steps in
+   `RELEASE.md`, "Daily phone message". Email instead: variable `DIGEST_PROVIDER=smtp` and secrets `DIGEST_SMTP_USER`, `DIGEST_SMTP_PASSWORD`,
+   `DIGEST_TO`.
 3. **Old branches:** run **Delete merged branches**; the rest are listed in the phase 6 hand-off report with a reason each, to delete by hand.
 4. **First week:** check that the page says "Updated" every day and that the daily run's summary shows the audit passing (definition of done,
    plan section 13).
@@ -96,3 +95,5 @@ Gaps from section 5 fixed afterwards, one pull request each (`gaps/*`); details 
   like "Houston, TX". Rules marker `profile_v15`: the stored lists are re-scored over the next daily runs (800 rows per person per run).
 - **Gulf jobs from job boards:** a Gulf posting from Bayt, Indeed or LinkedIn (which refuse the still-open check) found in the last 2 days now
   counts for Worth a try (never Best matches), and its card says it could not be confirmed still open. The audit agrees.
+- **Telegram link:** the link workflow accepts only `/start <code>` where the code is a per-person secret the owner chooses (repository
+  secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`); a name or id links nobody. New owner step in section 6.

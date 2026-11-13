@@ -81,10 +81,17 @@ Telegram (free):
 1. In Telegram, open `@BotFather`, send `/newbot`, choose a name and a username ending in `bot`. BotFather replies with a token.
 2. GitHub -> the repository -> Settings -> Secrets and variables -> Actions -> New repository secret: name `TELEGRAM_BOT_TOKEN`,
    value the token. Never paste it anywhere else.
-3. Send each person the link `https://t.me/<bot username>?start=sana_ansari` (or `?start=farhan_shaikh`); they tap **Start**.
-   Anyone else who should get a person's message (e.g. the owner) can open the same link; up to 3 chats per person.
-4. Within 24 hours, Actions -> **Link Telegram chats** -> Run workflow. The bot answers "Linked". The chat is stored in the database
+3. Choose one secret link code per person: 12 to 64 letters, digits, `_` or `-`, different for each person and not guessable (for
+   example 20 random letters and digits). Add them as repository secrets `TELEGRAM_LINK_CODE_SANA` and `TELEGRAM_LINK_CODE_FARHAN`
+   (same place as step 2). Never put a code in the repository, an issue or a chat log.
+4. Send each person their own link privately, `https://t.me/<bot username>?start=<their code>`; they tap **Start**. Anyone else who
+   should get a person's message (e.g. the owner) can open the same link; up to 3 chats per person. `/start sana`, `/start sana_ansari`
+   or any other word links nobody, so someone who only knows the bot's name cannot get a person's message.
+5. Within 24 hours, Actions -> **Link Telegram chats** -> Run workflow. The bot answers "Linked". The chat is stored in the database
    (`discovery_state`, key `telegram:<candidate id>`), never in the repository or the log. Sending `/stop` to the bot unlinks a chat at the next link run.
+   If no code secret is set, the workflow says so and leaves the waiting messages unread, so they still count once the codes are added.
+   To change a code (for example if a link was shared by mistake), update the secret; chats already linked stay linked until `/stop` or
+   until the owner deletes the `telegram:<candidate id>` row.
 
 Email (optional, instead or as well; e.g. a Gmail account with an app password): repository variable `DIGEST_PROVIDER` = `smtp`;
 secrets `DIGEST_SMTP_USER`, `DIGEST_SMTP_PASSWORD` and `DIGEST_TO` (`farhan_shaikh=a@example.com; sana_ansari=b@example.com`);
