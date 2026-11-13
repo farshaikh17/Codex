@@ -504,3 +504,30 @@ test('S5: a job-board report saying "Remote (Global)" still stores eligibility U
   const e = Object.fromEntries(db.prepare(`SELECT job_id j, eligibility_status e FROM candidate_qualifications WHERE job_id LIKE '%:g%'`).all().map((r) => [r.j, r.e]));
   assert.deepEqual(e, { 'js:remotive:g1': 'UNKNOWN', 'ds:greenhouse:g2': 'ELIGIBLE' });
 });
+
+test('S8: the re-score takes eligibility away where the screen wrote it (ELIGIBLE -> INELIGIBLE or UNKNOWN), incl. the automatic shortlist; decided rows stay', () => {
+  const w = world(); const db = w.sqlite;
+  const OFFICE = 'Configure our CRM and build workflow automation. This is a hybrid role, 3 days in our Pune office.';
+  const WFH = 'Configure our CRM and build workflow automation. We offer a flexible work from home policy.';
+  const add = (id, d, status, reason, o = {}) => {
+    const loc = o.loc || 'Bengaluru, India', wt = /remote/i.test(loc) ? 'REMOTE' : 'ONSITE';
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,1,?,?,?,'2026-11-01','LIVE_PUBLIC')`).run(id, 'Implementation Manager', 'Acme', 'lever', 'https://x.example/' + id, loc, d, wt);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,manual_override_status,eligibility_status,eligibility_reason) VALUES (?,?,?,?,?, 'ELIGIBLE', ?)`).run(F, id, status, reason, o.override || null, o.er || 'Posting explicitly supports fully remote work from India.');
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,80,'{"preliminary":true}')`).run(F, id);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, F, id);
+    return { candidate_id: F, job_id: id, cur_score: 80, title: 'Implementation Manager', company: 'Acme', location: loc, description: d, workplace_type: wt, score_breakdown: '{"preliminary":true}', provenance: 'LIVE_PUBLIC', source_adapter: 'lever' };
+  };
+  const C = 'Cloud discovery match.';
+  const rows = [add('e1', OFFICE, 'NEEDS_REVIEW', C), add('e2', OFFICE, 'READY', 'Shortlisted automatically. ' + C), add('e3', WFH, 'NEEDS_REVIEW', C, { loc: 'Remote' }),   // remote, but nothing says from India: ELIGIBLE (an older rule) -> UNKNOWN
+    add('e4', OFFICE, 'NEEDS_REVIEW', C, { override: 'NEEDS_REVIEW' }), add('e5', OFFICE, 'NEEDS_REVIEW', C, { app: true }), add('e6', OFFICE, 'NEEDS_REVIEW', C, { er: 'Manual override: checked with the employer.' }),
+    add('e7', OFFICE, 'READY', C)];   // a Ready row a person set (no automatic mark): untouched
+  const before = db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('e4','e5','e7') ORDER BY job_id`).all();
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify(rows));
+  const sql = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json'), '--no-shortlist']).sql;
+  db.exec(sql); db.exec(sql);
+  const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s, eligibility_status e FROM candidate_qualifications WHERE job_id LIKE 'e%'`).all().map((r) => [r.j, `${r.s}/${r.e}`]));
+  assert.deepEqual(st, { e1: 'INELIGIBLE/INELIGIBLE', e2: 'INELIGIBLE/INELIGIBLE', e3: 'NEEDS_REVIEW/UNKNOWN', e4: 'NEEDS_REVIEW/ELIGIBLE', e5: 'NEEDS_REVIEW/ELIGIBLE', e6: 'NEEDS_REVIEW/ELIGIBLE', e7: 'READY/ELIGIBLE' });
+  assert.doesNotMatch(db.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id = 'e2'`).get().r, /^Shortlisted automatically/);
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE job_id IN ('e1','e2') AND new_status = 'INELIGIBLE' AND actor = 'discovery'`).get().c, 2);
+  assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('e4','e5','e7') ORDER BY job_id`).all(), before, 'decided, applied and person-set rows are byte-identical');
+});

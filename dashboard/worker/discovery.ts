@@ -310,7 +310,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|unable|never|cannot|can't|won't|isn't|aren't|doesn't|don't|no longer)\b[^.!?]*$/.test(before)||/^\s+(?:(?:is |are |will be )?(?:not|no longer|never|unavailable|unsupported)|isn't|aren't|won't be|will not be)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
  const india=sanaIndiaCity(p.location);
  const remote=p.remote||/\b(remote|work from home|telecommut)/i.test(p.location);
- const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
+ const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
@@ -333,11 +333,14 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const globalRemote=globalRemoteWords||worldLocation||asiaLocation;
  let eligibility='UNKNOWN',reason='No affirmative candidate-specific location evidence.';
  const prof=parseProfile(candidate.search_profile);
+ // Plan S8: "work from home" in the description is not a remote signal by itself (a perk of an office job), and a description that sets hybrid work or
+ // office days rules a remote-only candidate out. A denied mention ("this is not a hybrid role") does not count; "hybrid cloud" is not a work pattern.
+ const officeDays=(()=>{const re=/\bhybrid(?:[- ]remote)?\s+(?:role|position|work(?:ing)?|model|schedule|arrangement|set-?up|opportunity|job|policy)\b|\bwork(?:ing)?\s+(?:in\s+a\s+)?hybrid\b|\(hybrid\)|\bis\s+hybrid\b|\b\d\s*(?:-\s*\d\s*)?days?\s+(?:a|per)?\s*(?:week\s+)?(?:in|at|from)\s+(?:the|our)\s+(?:\w+\s+)?office|\bon-?site\s+\d\s*(?:-\s*\d\s*)?days\b/gi;const d=String(p.description||'').toLowerCase();let m:RegExpExecArray|null;while((m=re.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|isn't|without)\b[^.!?]*$/.test(before))return true;}return false;})();
  if(security){eligibility='INELIGIBLE';reason='Explicit citizenship, security clearance or licensing restriction requires exclusion.';}
  else if(nationalsOnly&&(!prof||String(prof.home_country||'').toLowerCase()==='india')){eligibility='INELIGIBLE';reason='Reserved for nationals of the employer\'s country.';}
  else if(prof){
   const home=inHomeCountry(prof.home_country,p.location), country=prof.home_country;
-  const homeRemote=home&&(remote||/\b(fully remote|100% remote|remote position|remote role|work from home)\b/i.test(p.description))||new RegExp(`\\b(remote (?:in|from|within|[-–]) ${escapeRe(country)}|${escapeRe(country)}[- ]remote)\\b`,'i').test(text);
+  const homeRemote=home&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||new RegExp(`\\b(remote (?:in|from|within|[-–]) ${escapeRe(country)}|${escapeRe(country)}[- ]remote)\\b`,'i').test(text);
   const blockedHome=prof.home_country.toLowerCase()==='india'&&blocked;
   if(prof.location_mode==='REMOTE_FROM_HOME'){
    if(blockedHome){eligibility='INELIGIBLE';reason=`Posting explicitly restricts work location outside ${country}.`;}
@@ -353,9 +356,11 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   if(blocked){eligibility='INELIGIBLE';reason='Posting explicitly restricts work location outside India.';}
   else if(FARHAN_SKIP_EMPLOYER.test(p.company||'')){eligibility='INELIGIBLE';reason='Employer the candidate asked to skip.';}
   else if(!remoteSignal||/\b(hybrid|on[- ]?site|in[- ]office)\b/i.test(p.location||'')){eligibility='INELIGIBLE';reason='Not a remote role (candidate rule: remote only).';}
+  else if(officeDays){eligibility='INELIGIBLE';reason='Hybrid or set office days (candidate rule: remote only).';}
   else if(!explicitIndiaRemote&&!globalRemote&&usOnlyLocation(p.location)){eligibility='INELIGIBLE';reason='Remote within the United States only.';}
   else if(!explicitIndiaRemote&&!globalRemote&&locationClass(p.description||'',p.location||'')==='eu_only'){eligibility='INELIGIBLE';reason='Must be based in the EU or EEA (the posting says so).';}
-  else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site|not remote|no remote)\b/i.test(p.location+' '+p.description)){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
+  // (officeDays already ruled out hybrid and office days above; a passing 'on-site visit' or a denied 'not a hybrid role' no longer blocks, plan S8)
+  else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site)\b/i.test(p.location||'')&&!/\b(not remote|no remote)\b/i.test(p.description||'')){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
   else if(globalRemote){eligibility='ELIGIBLE';reason='Posting explicitly advertises worldwide remote work.';}
  }else if(india){
   // Owner decision 2026-11-12: on-site and hybrid roles in India are workable for Sana (was UNKNOWN until airport access was verified).
