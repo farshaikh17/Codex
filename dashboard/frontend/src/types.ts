@@ -101,6 +101,7 @@ export interface JobFeedback {
 
 export interface ApplicationRecord {
   id: string;
+  updated_at?: string | null;   // plan U4: sent back with a change, so a write from an old copy is refused
   candidate_id?: string;
   status: ApplicationStatus;
   applied_at: string | null;
@@ -115,6 +116,7 @@ export interface ApplicationRecord {
 }
 
 export interface Job {
+  why_line?: string;   // plan U6: one plain line on why this job is on the list (server: worker/why.ts)
   assessment_conflict?: boolean;
   provenance?: string;
   id: string;

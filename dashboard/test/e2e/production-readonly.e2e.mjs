@@ -55,7 +55,7 @@ for (const p of ['/candidates', '/profile?candidate_id=farhan_shaikh', '/profile
 check('public endpoints answer 200 and expose no private field, employer, pay, city, note or email', leaks.length === 0, leaks.join('; '));
 
 // Browser: public view first, no credentials involved at any point.
-await page.goto(BASE + '/app', { waitUntil: 'networkidle' });
+await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 check('first visit: no unlock window, no key sent, no request refused', !(await modalOpen()) && apiLog.length > 3 && apiLog.every((r) => !r.auth && r.status === 200), JSON.stringify(apiLog.filter((r) => r.status !== 200).slice(0, 3)));
 const shell = await (await fetch(BASE + '/app')).text();   // the app shell (the site root is the public website)
@@ -111,6 +111,23 @@ for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']])
   r = await sameAsApi(rd.jobs.map((j) => j.id));
   check(`${btn}: READY dashboard shows exactly the server's READY jobs and its tab count is their total`, r.ok && rd.jobs.every((j) => j.farhan_fit === 'READY') && new RegExp(`READY to Apply \\(${rd.status_counts.READY}\\)`, 'i').test(await text()), `screen [${r.got}] api [${rd.jobs.map((j) => j.id)}]`);
 }
+// Plan phase 5: the job seeker's page (the default /app). Read-only here: it loads each person's Today screen, the counts equal /api/today, the first job
+// starts near the top, nothing operator-only is on screen, and no write is attempted (every non-GET is aborted above).
+for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]) {
+  await page.goto(BASE + '/app#' + slug + '/today', { waitUntil: 'networkidle' });
+  // the hash changes in the same page: wait for this person's list, not the previous person's still on screen
+  await page.waitForFunction((n) => document.title === n + "'s jobs" && !!document.querySelector('[data-testid="section-best"]') && !/Loading/.test(document.body.innerText), slug === 'sana' ? 'Sana' : 'Farhan', { timeout: 20000 }).catch(() => {});
+  const t = await text();
+  const today = await api(`/today?candidate_id=${cid}`);
+  const c = today.counts || {};
+  check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything - c.best - c.worth_a_try})`), t.slice(0, 200));
+  const top = await page.locator('[data-testid="job-card"]').first().boundingBox().catch(() => null);
+  check(`${slug}: the first job starts within 200 px of the top (or there is none)`, !top || top.y <= 200, JSON.stringify(top));
+  check(`${slug}: nothing operator-only on the job seeker's page`, !/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i.test(t), (t.match(/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i) || [])[0]);
+  check(`${slug}: no private text on the job seeker's page`, !PRIVATE_TEXT.test(t), (t.match(PRIVATE_TEXT) || [])[0]);
+  check(`${slug}: no sideways scrolling`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
+}
+await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 // The navbar refresh button only re-reads data: no write is attempted and no unlock window opens for a visitor.
 {
   const before = blocked.length;

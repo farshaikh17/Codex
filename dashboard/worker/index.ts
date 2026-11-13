@@ -1372,7 +1372,7 @@ const JOB_COLUMNS = `
         a.id as application_id, a.status as app_status, a.applied_at as app_applied_at,
         a.notes as app_notes, a.rejection_stage as app_rejection_stage,
         a.rejection_reason_category as app_rejection_reason_category,
-        a.rejection_notes as app_rejection_notes`;
+        a.rejection_notes as app_rejection_notes, a.updated_at as app_updated_at`;
 function shapeJob(r: any, candidateId: string, threshold: number | null) {
       let scoreBreakdown = null;
       try {
@@ -1456,6 +1456,7 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
           rejection_stage: r.app_rejection_stage,
           rejection_reason_category: r.app_rejection_reason_category,
           rejection_notes: r.app_rejection_notes,
+          updated_at: r.app_updated_at,
         } : null,
       };
 }
@@ -1700,7 +1701,7 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
         q.manual_override_reason, q.qualified_at,
         s.overall_score, s.skill_score, s.role_score, s.score_breakdown,
         a.id as application_id, a.status as app_status, a.applied_at as app_applied_at,
-        a.notes as app_notes
+        a.notes as app_notes, a.updated_at as app_updated_at
       FROM jobs j
       LEFT JOIN candidate_qualifications q ON j.id = q.job_id AND q.candidate_id = ?
       LEFT JOIN candidate_job_scores s ON j.id = s.job_id AND s.candidate_id = ?
@@ -1736,7 +1737,9 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
         status: job.app_status,
         applied_at: job.app_applied_at,
         notes: job.app_notes,
+        updated_at: job.app_updated_at,   // plan U4: the page sends it back, so a change from an old copy is refused
       } : null,
+      why_line: whyLine(candidateId, job, scoreBreakdown?.matched_skills, await candidateThreshold(env, candidateId)),
     };
 
     return jsonResponse(formatted, 200, corsHeaders(request, env));

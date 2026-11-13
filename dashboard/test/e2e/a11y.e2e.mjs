@@ -23,17 +23,40 @@ for (const [mode, viewport, mobile] of [['desktop', { width: 1440, height: 900 }
     await page.goto(BASE + path, { waitUntil: 'networkidle' });
     const bad = await scan(page); check(`[${mode}] ${path}: no serious or critical accessibility violation`, bad.length === 0, bad.join('; '));
   }
-  await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.waitForTimeout(700);
-  let bad = await scan(page); check(`[${mode}] /app dashboard`, bad.length === 0, bad.join('; '));
+  // the job seeker's page (plan phase 5): Today, the full list, applications, hidden jobs, and a job's panel
+  let bad;
+  for (const hash of ['#sana/today', '#farhan/today', '#sana/all', '#sana/applications', '#sana/hidden']) {
+    await page.goto(BASE + '/app' + hash, { waitUntil: 'networkidle' }); await page.waitForTimeout(700);
+    bad = await scan(page); check(`[${mode}] /app${hash}`, bad.length === 0, bad.join('; '));
+  }
+  await page.goto(BASE + '/app#sana/today', { waitUntil: 'networkidle' }); await page.waitForTimeout(700);
+  await page.locator('[data-testid="job-card"] h3 a').first().click(); await page.waitForSelector('[role=dialog]');
+  await page.locator('[data-testid="how-scored"] summary').click(); await page.waitForTimeout(300);
+  bad = await scan(page); check(`[${mode}] /app job panel (details open)`, bad.length === 0, bad.join('; '));
+  await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(700);
+  bad = await scan(page); check(`[${mode}] /app?operator=1 dashboard`, bad.length === 0, bad.join('; '));
   for (const name of ['FARHAN', 'SANA', 'Analytics', 'APPLICATIONS']) {
     await page.getByRole('button', { name: new RegExp('^' + name, 'i') }).first().click(); await page.waitForTimeout(1200);
     bad = await scan(page); check(`[${mode}] /app ${name}`, bad.length === 0, bad.join('; '));
   }
   await ctx.close();
 }
+// keyboard on the job seeker's page: the title link opens the panel, which is a labelled dialog holding focus; Escape closes it and focus returns
+{
+  const p2 = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  await p2.goto(BASE + '/app#sana/today', { waitUntil: 'networkidle' }); await p2.waitForTimeout(700);
+  await p2.locator('[data-testid="job-card"] h3 a').first().focus(); await p2.keyboard.press('Enter'); await p2.waitForTimeout(600);
+  const d2 = await p2.evaluate(() => { const d = document.querySelector('[role=dialog]'); return d && { labelled: !!d.getAttribute('aria-label'), focusInside: d.contains(document.activeElement) }; });
+  check('seeker: Enter on a job title opens a labelled dialog that holds focus', !!d2 && d2.labelled && d2.focusInside, JSON.stringify(d2));
+  await p2.keyboard.press('Escape'); await p2.waitForTimeout(600);
+  check('seeker: Escape closes it and focus returns to the card', (await p2.locator('[role=dialog]').count()) === 0 && await p2.evaluate(() => !!document.activeElement?.closest('[data-job-id]')));
+  const names = await p2.$$eval('[data-testid="job-card"] button[aria-label], [data-testid="job-card"] a[aria-label]', (els) => els.map((e) => e.getAttribute('aria-label')));
+  check('seeker: card buttons have names that tell the cards apart', names.length > 0 && names.every((n, i) => names.indexOf(n) === i), names.slice(0, 4).join(' | '));
+  await p2.context().close();
+}
 // keyboard: open a job from the list with Enter, the dialog is labelled and holds focus, Escape closes it and returns to the row
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
-await page.goto(BASE + '/app', { waitUntil: 'networkidle' }); await page.getByRole('button', { name: /^FARHAN/i }).first().click(); await page.waitForTimeout(1200);
+await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.getByRole('button', { name: /^FARHAN/i }).first().click(); await page.waitForTimeout(1200);
 await page.locator('[data-job-id]').first().focus();
 check('a job row can take keyboard focus', await page.evaluate(() => document.activeElement?.hasAttribute('data-job-id')));
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
