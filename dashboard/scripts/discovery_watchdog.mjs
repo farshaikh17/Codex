@@ -1,5 +1,6 @@
 // Watchdog for the daily discovery run (owner priority 2026-11-12: "a working product every day"). GitHub dropped every scheduled
-// discovery trigger on 12 Nov while the other scheduled workflows ran, so those other workflows now ask, each time they run:
+// discovery trigger on 12 Nov while the other scheduled workflows ran, so its own workflow (discovery-watchdog.yml, every two hours, no
+// concurrency group) asks, each time it runs:
 // "has the daily run done its real work in the last DUE_HOURS?" If not, and no discovery run is queued, running or was started in the
 // last RECENT_HOURS (a run that failed fast is not retried in a loop), it starts one (workflow_dispatch with this run's GITHUB_TOKEN).
 //   env: GITHUB_TOKEN, GITHUB_REPOSITORY, DUE_HOURS (default 24), RECENT_HOURS (default 3), DRY_RUN

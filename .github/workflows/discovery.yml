@@ -21,7 +21,9 @@ permissions:
   models: read   # the free AI review (engine/ai_triage.py) uses the workflow's own token
 
 concurrency:
-  group: d1-collector-sync   # never overlaps the collector sync's D1 writes
+  # Its own group (plan R6): sharing d1-collector-sync with the watchlist and collector sync meant a discovery run queued by the watchdog could be
+  # replaced by a newer queued run of another workflow (GitHub keeps one pending run per group). Its writes are guarded and idempotent.
+  group: daily-discovery
   cancel-in-progress: false
 
 jobs:

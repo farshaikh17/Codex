@@ -1,0 +1,28 @@
+name: Discovery watchdog (restarts a missed daily discovery run)
+# GitHub dropped every scheduled discovery trigger on 12 Nov 2026 while other workflows ran. Every two hours this asks: has the daily run
+# done its real work in the last 24 hours? If not, and no discovery run is queued, running or was started in the last 3 hours, it starts one
+# (see dashboard/scripts/discovery_watchdog.mjs). Its own workflow with no concurrency group (plan R6): it was a job of the watchlist and the
+# collector sync, whose shared group could hold it back or let a newer queued run replace the discovery run it started.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '27 */2 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  discovery-watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write   # to read discovery runs and start one (workflow_dispatch)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start the daily discovery run if it is overdue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node dashboard/scripts/discovery_watchdog.mjs
