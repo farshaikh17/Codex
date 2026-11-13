@@ -2,7 +2,9 @@
 
 Each source is read through a public endpoint its own site uses (no login, no key). The reads are polite: one run a day,
 a pause between requests, and bounded pages. Postings are kept only when the title matches a candidate's own role rule.
-Results merge into work/jobsite_raw.json as job-board reports (the screen never takes eligibility from them).
+Results merge into work/jobsite_raw.json. Aggregators (Workable, Arbeitnow, Getro, UN Careers, EURES, Adzuna) are job-board reports
+(the screen never takes eligibility from them). Employer career sites (EMPLOYER_SITES: Workday, Oracle, SuccessFactors, SmartRecruiters,
+Siemens Energy, Eightfold) carry board=False: stored verified, with normal eligibility and provenance LIVE_PUBLIC.
 
   * Workable job search      jobs.workable.com/api/v1/jobs: every Workable employer (not in the open dataset)
   * Eightfold career sites   Fluor, NEOM, TAQA (energy and Gulf employers not in the open dataset)
@@ -35,6 +37,8 @@ from engine.dataset_discovery import clean  # noqa: E402
 from engine.remote_boards import UA, job, text, when  # noqa: E402
 
 PAUSE = 0.6
+# Sources that read an employer's own career site (not a job board): their rows are stored as the employer's posting.
+EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold')
 QUERIES = {
     'farhan_shaikh': ['gohighlevel', 'revops', 'revenue operations', 'implementation manager', 'automation specialist', 'crm manager',
                       'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer'],
@@ -125,7 +129,7 @@ def eightfold_site(company, host, domain):
                 place = r.get('location') or ', '.join(r.get('locations') or [])
                 j = job('eightfold', r.get('canonicalPositionUrl') or f"https://{host}/careers/job/{r.get('id')}", text(r.get('name')), company,
                         f'Remote ({place})' if remote else place, text(r.get('job_description') or ', '.join(r.get('department') or [])),
-                        when(r.get('t_create')))
+                        when(r.get('t_create')), board=False)
                 j['is_remote'] = remote
                 yield j
             if len(rows) < 100:
@@ -143,7 +147,7 @@ def siemens_energy(pages=60):
         items = list(rss_items(raw))
         for it in items:
             j = job('avature', (it.findtext('link') or '').strip(), text(it.findtext('title')), 'Siemens Energy', text(it.findtext('description')),
-                    '', when(it.findtext('pubDate')))
+                    '', when(it.findtext('pubDate')), board=False)
             j['is_remote'] = False
             yield j
         if len(items) < 20:
@@ -162,7 +166,7 @@ def successfactors():
                     continue
                 m = re.match(r'^(.*?)\s*\(([^()]*)\)\s*$', title)   # "Role (City, CC, zip)"
                 j = job('successfactors', (it.findtext('link') or '').strip(), m.group(1) if m else title, company, m.group(2) if m else '',
-                        text(it.findtext('description')), when(it.findtext('pubDate')))
+                        text(it.findtext('description')), when(it.findtext('pubDate')), board=False)
                 j['is_remote'] = False
                 yield j
 
@@ -185,7 +189,7 @@ def workday(pages=3):
                         seen.add(path)
                         place = text(r.get('locationsText')) or 'See posting'
                         remote = 'remote' in place.lower()
-                        j = job('workday', f'{base}/en-US/{site}{path}', text(r.get('title')), company, place, place, None)
+                        j = job('workday', f'{base}/en-US/{site}{path}', text(r.get('title')), company, place, place, None, board=False)
                         j['is_remote'] = remote
                         yield j
                     if len(rows) < 20:
@@ -206,7 +210,7 @@ def smartrecruiters(pages=10):
                     remote = bool(loc.get('remote'))
                     labels = ' '.join(text((r.get(k) or {}).get('label')) for k in ('function', 'industry', 'typeOfEmployment', 'experienceLevel'))
                     j = job('smartrecruiters', f"https://jobs.smartrecruiters.com/{ident}/{r.get('id')}", text(r.get('name')), company,
-                            f'Remote ({place})' if remote else place, labels, when(r.get('releasedDate')))
+                            f'Remote ({place})' if remote else place, labels, when(r.get('releasedDate')), board=False)
                     j['is_remote'] = remote
                     yield j
                 if len(rows) < 100:
@@ -236,7 +240,7 @@ def oracle_hcm(pages=3):
                         kind = text(r.get('WorkplaceType'))
                         remote = kind.lower() == 'remote'
                         j = job('oracle_hcm', f'https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{rid}', text(r.get('Title')), company,
-                                f'Remote ({place})' if remote else place, f'{place} {kind}'.strip(), when(r.get('PostedDate')))
+                                f'Remote ({place})' if remote else place, f'{place} {kind}'.strip(), when(r.get('PostedDate')), board=False)
                         j['is_remote'] = remote
                         yield j
                     if len(rows) < 25:
@@ -431,6 +435,7 @@ def main():
                 if j['id'] in have:
                     continue
                 j['candidates'] = cands
+                j['board'] = name not in EMPLOYER_SITES   # an employer's own career site is not a job board
                 if enrich_full_text(j, name, used, spent):
                     enriched[name] = enriched.get(name, 0) + 1
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1

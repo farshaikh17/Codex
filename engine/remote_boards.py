@@ -61,10 +61,11 @@ def when(value):
         return None
 
 
-def job(source, url, title, company, location, description, posted, smin=None, smax=None, currency=None, period=None):
+def job(source, url, title, company, location, description, posted, smin=None, smax=None, currency=None, period=None, board=True):
+    """board=True: a job-board report (eligibility never taken from it). board=False: an employer's own career site (more_sources.py)."""
     return {'url': url, 'apply_url': None, 'title': title, 'company': company, 'ats_type': source, 'location': location or 'Remote',
             'country_iso': None, 'is_remote': True, 'description': description[:8000], 'posted_at': posted.isoformat() if posted else '',
-            'salary_min': smin, 'salary_max': smax, 'salary_currency': currency, 'salary_period': period, 'board': True}
+            'salary_min': smin, 'salary_max': smax, 'salary_currency': currency, 'salary_period': period, 'board': bool(board)}
 
 
 def remoteok():

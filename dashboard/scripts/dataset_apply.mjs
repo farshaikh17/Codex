@@ -115,6 +115,11 @@ planned.sort((a, b) => b.best - a.best || String(b.j.posted_at || '').localeComp
   planned.length = 0; planned.push(...kept);
 }
 report.capped = Math.max(0, planned.length - MAX_NEW);
+// source_id, source_channel, provenance. A job-site result (id "js:...") read from an employer's own career site (engine/more_sources.py: Workday, Oracle,
+// SuccessFactors, SmartRecruiters, Siemens Energy, Eightfold; board: false) is the employer's posting: verified now, provenance LIVE_PUBLIC. It keeps the
+// JOB_SITES channel, so it is never closed by the dataset snapshot rule and still expires after 30 days like every job-site result.
+const channel = (j, board) => (board ? [`jobsites:${adapter(j.ats_type)}`, 'JOB_SITES', 'PUBLIC_FEED_UNVERIFIED']
+  : /^js:/.test(String(j.id)) ? [`jobsites:${adapter(j.ats_type)}`, 'JOB_SITES', 'LIVE_PUBLIC'] : [`dataset:${adapter(j.ats_type)}`, 'ATS_DATASET', 'ATS_DATASET']);
 for (const { j, board, description, remote, onsite, rows } of planned.slice(0, MAX_NEW)) {
   const sha = crypto.createHash('sha256').update(JSON.stringify([j.title, j.location, description])).digest('hex');
   const salary = num(j.salary_min) !== null || num(j.salary_max) !== null;
@@ -122,7 +127,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
     j.id, cap(j.title, 300), cap(j.company, 200), adapter(j.ats_type), cap(j.url, 2000), safeApplicationUrl(j.apply_url, j.url), cap(j.employment_type || 'FULL_TIME', 40),
     remote ? 'REMOTE_RESTRICTED' : onsite && !board ? 'ONSITE' : 'UNKNOWN', cap(j.location || '', 300), description, '[]', salary ? 1 : 0,
     cap(j.salary_currency, 10), num(j.salary_min), num(j.salary_max), cap(j.salary_period, 20), cap(j.salary_summary, 300), now, board ? null : now, 1, sha,
-    `${board ? 'jobsites' : 'dataset'}:${adapter(j.ats_type)}`, board ? 'JOB_SITES' : 'ATS_DATASET', board ? 'PUBLIC_FEED_UNVERIFIED' : 'ATS_DATASET'].map(q).join(',')});`);
+    ...channel(j, board)].map(q).join(',')});`);
   report.new_jobs++;
   for (const { cid, r } of rows) {
     const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
