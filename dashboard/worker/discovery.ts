@@ -396,6 +396,30 @@ export function targetSkills(targets:unknown,have:string[],lower:string):string[
  }
  return out;
 }
+// Plan C1 (phase 4): what the job involves. Distinct duty phrases of the person's own work counted in the description; each entry counts once
+// however often it appears. 'api' and 'pipeline' are left out for Farhan as too generic.
+export const DUTY_PHRASES:Record<string,RegExp[]>={
+ farhan_shaikh:[/\bconfigur/i,/\bimplement/i,/\bonboard(?:ing)? (?:customers|clients)\b/i,/\bworkflows?\b/i,/\bautomat/i,/\bintegrat/i,/\bzapier\b/i,/\bmake\.com\b/i,/\bn8n\b/i,
+  /\bwebhooks?\b/i,/\bgo-?live\b/i,/\bsops?\b/i,/\bprocess (?:design|improvement)\b/i],
+ sana_ansari:[/\bpreventive maintenance\b/i,/\bbreakdowns?\b/i,/\bshutdowns?\b/i,/\boverhaul/i,/\brotating equipment\b/i,/\bboilers?\b/i,/\bturbines?\b/i,/\bdcs\b/i,/\bscada\b/i,
+  /\bswitchgear\b/i,/\btransformers?\b/i,/\broot cause\b/i,/\brca\b/i,/\breliability\b/i,/\benergy audits?\b/i,/\benergy efficiency\b/i,/\butilities\b/i,/\bcommissioning\b/i,
+  /\bpermit to work\b/i,/\bcondition monitoring\b/i,/\bcarbon\b/i,/\bnet[- ]?zero\b/i,/\bemissions?\b/i,/\biso 50001\b/i,/\bheat rate\b/i,/\benergy management\b/i,/\bperformance monitoring\b/i],
+};
+export const DUTY_MANY=6, DUTY_SOME=3, DUTY_MANY_BONUS=6, DUTY_SOME_BONUS=3, DUTY_NONE_PENALTY=8, DUTY_MIN_TEXT=300, DUTY_NONE_TEXT=600;
+/** Plan C1: how many distinct duty phrases of the person's work the description names (null when the person has no list). */
+export function dutyCount(candidateId:string,description:string|null|undefined):number|null{
+ const list=DUTY_PHRASES[candidateId];if(!list)return null;
+ const d=String(description||'');return list.filter((re)=>re.test(d)).length;
+}
+/** Plan C1: the score change for what the job involves. 6+ duty phrases +6, 3-5 +3; none at all -8, only for a description over 600 characters whose
+ *  title is not exactly one of the person's target roles. Nothing below 300 characters (too little text to judge). */
+export function dutyAdjust(duties:number|null,descriptionLength:number,exactTitle:boolean){
+ if(duties===null||descriptionLength<DUTY_MIN_TEXT)return 0;
+ if(duties>=DUTY_MANY)return DUTY_MANY_BONUS;
+ if(duties>=DUTY_SOME)return DUTY_SOME_BONUS;
+ if(duties===0&&descriptionLength>DUTY_NONE_TEXT&&!exactTitle)return -DUTY_NONE_PENALTY;
+ return 0;
+}
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|(?<!assistant |deputy |asst\.? |dy\.? )general manager|head of)\b/i;   // AGM / DGM are mid-senior Indian grades   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
@@ -503,6 +527,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(agency&&role)score=Math.max(0,score-AGENCY_PENALTY);
  const lang=languageRequired(p.title||'',p.description||'');
  if(lang&&role)score=Math.max(0,score-LANGUAGE_PENALTY);
+ // Plan C1: what the job involves, read from the description (role-matched titles of the two built-in profiles only).
+ const descLen=String(p.description||'').length, duties=role&&!prof?dutyCount(candidate.id,p.description):null, dutyAdj=dutyAdjust(duties,descLen,fit==='exact');
+ if(dutyAdj>0)score=Math.min(95,score+dutyAdj);else if(dutyAdj<0)score=Math.max(0,score+dutyAdj);
  const ukSponsor=candidate.id==='sana_ansari'&&!!key&&!!ctx.ukSponsors?.has(key)&&/\b(uk|united kingdom|england|scotland|wales|london|manchester|birmingham|leeds|glasgow|edinburgh)\b/i.test(p.location||'');
  const reposted=!!(p as any).repost;
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a
@@ -544,6 +571,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(lang?` Requires ${lang} (score reduced).`:'')
   +(ukSponsor?' Employer holds a UK Skilled Worker sponsor licence.':'')
   +(electricalOnly?' Electrical-only title, ranked below mechanical, reliability and energy roles (score reduced).':'')
+  +(dutyAdj>0?` Names ${duties} of the duties of your work (score raised).`:dutyAdj<0?' Names none of the duties of your work (score reduced).':'')
   +(reposted?' Reposted: an earlier listing of this role closed.':'')
   +(locClass==='worldwide'?' Posting says: work from anywhere.':locClass==='india_ok'?' Posting names India as a remote location.':'')
   +(role&&skills.length?` Easy-yes check: ${skills.length} of ${list(candidate.primary_skills).length} CV skills named (${skills.slice(0,4).join(', ')}${skills.length>4?', …':''})${meets?`, meets the ${need}+ years asked`:''}.`:'')};
