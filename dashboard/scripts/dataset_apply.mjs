@@ -181,13 +181,38 @@ out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE source_cha
 out.push(`UPDATE jobs SET description = NULL WHERE source_channel IN ('ATS_DATASET', 'JOB_SITES') AND is_active = 0 AND expired_at < ${q(monthAgo)} AND description IS NOT NULL ${guarded};`);
 // Plan B3: a new posting that is a stored active job in another city (same employer, title and text) was not inserted; its city is added to the
 // stored job's location. Only while the location is still what was read, the job is active, and no one applied to it or decided on it.
-const merges = [];
-for (const file of many('--in')) merges.push(...(JSON.parse(fs.readFileSync(file, 'utf8')).merge || []));
-for (const m of merges) {
-  if (!m || !m.id || typeof m.new !== 'string' || !m.new.trim()) continue;
-  out.push(`UPDATE jobs SET location_restrictions = ${q(cap(m.new, 300))} WHERE id = ${q(m.id)} AND is_active = 1 AND COALESCE(location_restrictions, '') = ${q(m.old || '')} ${guarded};`);
+// Tenth-man review (phase 4): the dataset and the job-site results are matched against D1 separately, so both can add a city to the same row with the
+// same `old`; their cities are combined here (one UPDATE per row) instead of the second UPDATE missing. The merged row's scores lose the rules marker
+// (same guards), so the next re-score judges it at its new places.
+const placeKey = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const placesOf = (loc) => String(loc || '').replace(/\s*\([^)]*\)\s*$/, '').split(';').map((x) => x.trim()).filter((x) => x && !/^\+\d+ more$/.test(x));
+function addPlace(current, add) {   // same rule as engine/multi_place.py merge_places(): at most three places, a '+N more' and a '(Country)' kept
+  const cur = String(current || '');
+  const suffix = /;/.test(cur) ? (cur.match(/\s*(\([^)]*\))\s*$/) || [])[1] || '' : '';
+  const base = suffix ? cur.slice(0, cur.lastIndexOf(suffix)).trim() : cur;
+  const parts = base.split(';').map((x) => x.trim()).filter(Boolean);
+  const places = parts.filter((x) => !/^\+\d+ more$/.test(x)), more = parts.filter((x) => /^\+\d+ more$/.test(x));
+  if (!add || places.some((p) => placeKey(p) === placeKey(add)) || places.length >= 3) return current;
+  return [...places, add, ...more].join('; ') + (suffix ? ' ' + suffix : '');
 }
-report.same_job_other_city = merges.length;
+const mergeById = new Map();
+for (const file of many('--in')) for (const m of JSON.parse(fs.readFileSync(file, 'utf8')).merge || []) {
+  if (!m || !m.id || typeof m.new !== 'string' || !m.new.trim()) continue;
+  const had = mergeById.get(m.id);
+  if (!had) { mergeById.set(m.id, { id: m.id, old: m.old || '', new: m.new }); continue; }
+  if ((m.old || '') !== had.old) continue;   // read at another time: left for the next run
+  const before = new Set(placesOf(m.old).map(placeKey));
+  for (const p of placesOf(m.new)) if (!before.has(placeKey(p))) had.new = addPlace(had.new, p);
+}
+for (const m of mergeById.values()) {
+  const loc = cap(m.new, 300);
+  out.push(`UPDATE jobs SET location_restrictions = ${q(loc)} WHERE id = ${q(m.id)} AND is_active = 1 AND COALESCE(location_restrictions, '') = ${q(m.old)} ${guarded};`);
+  out.push(`UPDATE candidate_job_scores SET score_breakdown = json_remove(score_breakdown, ${q('$.' + RULES_MARKER)}) WHERE job_id = ${q(m.id)} AND json_valid(score_breakdown)
+    AND EXISTS (SELECT 1 FROM jobs WHERE id = ${q(m.id)} AND location_restrictions = ${q(loc)})
+    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_job_scores.candidate_id AND a.job_id = candidate_job_scores.job_id)
+    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND x.manual_override_status IS NOT NULL);`);
+}
+report.same_job_other_city = mergeById.size;
 report.closed = toClose.length; report.reopened = reopen.length; report.missing_marked = missingMark.length; report.missing_cleared = missingClear.length;
 
 // ---- long-open listings: a note on undecided rows for jobs first seen more than 60 days ago (reposts are noted at insert time)

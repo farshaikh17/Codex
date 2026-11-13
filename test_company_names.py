@@ -81,6 +81,24 @@ class Lookup(unittest.TestCase):
         self.assertEqual(name_jobs(untouched, None), {'renamed': 0, 'looked_up': 0})
 
 
+class Deadline(unittest.TestCase):
+    def test_a_slow_site_never_holds_the_run(self):
+        import time
+        jobs = [{'company': 'Fa Eqid Saasfaprod1', 'ats_type': 'oracle', 'url': 'https://fa-eqid-saasfaprod1.fa.ocs.oraclecloud.com/?site_number=CX_1#1'}]
+        t0 = time.monotonic()
+        report = name_jobs(jobs, lambda u: time.sleep(2) or '<title>Late Employer</title>', deadline=0.3)
+        self.assertLess(time.monotonic() - t0, 1.5)
+        self.assertEqual(jobs[0]['company'], 'Fa Eqid Saasfaprod1')
+        self.assertEqual(report['looked_up'], 0)
+
+    def test_safe_names_falls_back_to_the_table(self):
+        from unittest import mock
+        from engine import dataset_discovery as dd
+        jobs = [{'company': 'mdlz', 'ats_type': 'workday', 'url': 'https://mdlz.wd3.myworkdayjobs.com/x'}]
+        with mock.patch.object(dd, 'name_jobs', side_effect=[RuntimeError('boom'), {'renamed': 1, 'looked_up': 0}]):
+            self.assertEqual(dd.safe_names(jobs), {'renamed': 1, 'looked_up': 0, 'lookup_failed': True})
+
+
 class Collector(unittest.TestCase):
     def test_collector_rows_use_the_display_name(self):
         from engine.staging_bridge import codex_to_d1_job

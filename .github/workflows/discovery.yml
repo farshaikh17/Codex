@@ -102,6 +102,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: D1 usage at the start (plan H1; Cloudflare analytics, reads nothing from D1; the run row stores what this run used)
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: mkdir -p work && node dashboard/scripts/usage_snapshot.mjs > work/usage_start.json
       - name: Validate inputs
         env:
           MAX_NEW: ${{ inputs.max_new || '1500' }}
@@ -135,11 +141,11 @@ jobs:
           DOWNLOAD: ${{ steps.download.outcome }}
         run: |
           if [ "$DOWNLOAD" = "success" ] && [ -s work/all.parquet ]; then
-            python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export
+            python engine/dataset_discovery.py --out work --dataset work/all.parquet --home-quota 400 --remote-quota 200 --rescore-export --rescore-per-candidate 800
           else
             echo "::warning::The dataset download failed: continuing with an empty dataset result (boards, other sources, re-score, still-open check and shortlist still run)"
             rm -f work/all.parquet
-            python engine/dataset_discovery.py --out work --no-dataset --rescore-export
+            python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 800
           fi
       - name: Light job-site search (no credentials; a blocked site is skipped)
         if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}
@@ -299,6 +305,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          node scripts/usage_snapshot.mjs > ../work/usage_end.json || true
           node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" --status "${{ job.status }}" > ../work/runlog.sql
           echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/runlog.sql   # the page's "Updated" note sees this run at once
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
@@ -317,6 +324,53 @@ jobs:
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Plan G1: one short message per person to a phone ("Sana: 4 new jobs today · ... · <link>"), also when the run failed ("today's update did
+  # not finish"). Off until the owner adds the repository secret TELEGRAM_BOT_TOKEN (and links chats with telegram-link.yml) or sets the
+  # variable DIGEST_PROVIDER=smtp with its secrets; without them this job only prints that it was skipped. Never fails the run.
+  message:
+    needs: [guard, discover]
+    if: ${{ always() && needs.guard.outputs.skip != 'true' && (needs.discover.result == 'success' || needs.discover.result == 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Is a channel set up?
+        id: channel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DIGEST_PROVIDER: ${{ vars.DIGEST_PROVIDER }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] || [ "$DIGEST_PROVIDER" = "smtp" ]; then echo "on=true" >> "$GITHUB_OUTPUT"
+          else echo "Daily message: skipped - no channel is set up (repository secret TELEGRAM_BOT_TOKEN, or variable DIGEST_PROVIDER=smtp with its secrets). See dashboard/docs/RELEASE.md."; fi
+      - uses: actions/setup-python@v5
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        with:
+          node-version: '22'
+      - name: Send the daily message (two small reads, one small write)
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DIGEST_PROVIDER: ${{ vars.DIGEST_PROVIDER }}
+          DIGEST_SMTP_HOST: ${{ vars.DIGEST_SMTP_HOST }}
+          DIGEST_SMTP_PORT: ${{ vars.DIGEST_SMTP_PORT }}
+          DIGEST_SMTP_USER: ${{ secrets.DIGEST_SMTP_USER }}
+          DIGEST_SMTP_PASSWORD: ${{ secrets.DIGEST_SMTP_PASSWORD }}
+          DIGEST_TO: ${{ secrets.DIGEST_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          STATUS: ${{ needs.discover.result }}
+        run: |
+          npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
+          python engine/daily_message.py --send --status "$STATUS"
 
   # A run that went through but did nothing useful (still-open check verified 0 of its targets, every source failed, nothing written from a
   # fresh dataset, or a stale dataset), or whose shortlist audit (plan A8) found a broken hard rule, is shown red here. It is a separate job so the "discover" job stays successful: the recent-run guard and

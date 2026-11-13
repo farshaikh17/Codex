@@ -49,3 +49,33 @@ An idle tick reads a one-row lease and scans ~17 source rows: order of 10^4 read
 * **Visitor-facing fallback**: the edge-cache backup serves a last good public answer only where the Cache API works (a custom domain; not `*.workers.dev`). Fix 1 stops it ever holding a share-link holder's answer.
 * **Data recovery [docs]**: Time Travel is always on and free; restores to any minute within **7 days on the free plan** (30 on paid); a restore overwrites the database in place and gives a bookmark to undo it. **Not exercised here** (destructive, needs Wrangler authentication): the bookmark could be read with the read-only `wrangler d1 time-travel info`, which also needs credentials the sandbox does not hold.
 * **Not verified**: the live site's behaviour during a real outage; the time Cloudflare takes to resume after midnight UTC.
+
+## 5. Measured read budget, 11-13 Nov (plan H1, recorded 13 Nov)
+Source: the budget guard's own line in the Actions logs ("rows read today N"), which is Cloudflare's account analytics for the UTC day, read at
+the start of each discovery and watchlist run. Differences between two readings give what ran in between. **[observed]**
+
+| UTC day | Reading time | Rows read so far | Rows written so far | What ran since the previous reading |
+|---|---|---|---|---|
+| 11 Nov | 21:57 | 1,666,354 | 15,506 | the whole day before the daily run (site, Worker cron, collector sync, two watchlist runs) |
+| 12 Nov | 18:12 | 766,793 | 18,923 | 00:08 manual daily run, 00:35 and 09:43 watchlist runs, site, cron |
+| 12 Nov | 21:26 | 841,669 | 19,552 | the 18:12 watchlist run (about 12 min), site, cron: **+74,876** |
+| 12 Nov | 21:50 | **3,281,301** | 42,893 | the 21:26 daily run (the first with the automatic shortlist): **+2,439,632 read, +23,341 written** |
+| 13 Nov | 09:27 | 1,663,824 | 3,207 | no daily run; a release preflight, a release attempt with its browser checks, one watchlist run, site, cron |
+
+By kind (12 Nov, the one fully covered day): **the daily run about 2.4M**, a watchlist run well under 75,000, everything else (site visits,
+the Worker's cron every 2 minutes, collector sync) roughly 0.7M a day. 12 Nov ended above 2.5M (3.28M at 21:50), so the budget guard
+then skipped the later triggers that day; 11 Nov was at 1.67M before its daily run. 13 Nov reached 1.66M by 09:27 with no daily run: a
+release day (cache flush, smoke and browser suites on both people's lists) costs as much as the background of a whole normal day.
+
+**Over 2.5M, so the plan's three steps apply:**
+1. List routes' cache TTL 30 minutes: already so for visitors (`CACHE_TTL_SECONDS.public = 1800` in `worker/index.ts`); nothing to change.
+   The operator level stays at 10 minutes (it is not used by the job seekers).
+2. The watchlist skips its database work when it found nothing new (`watchlist.yml`): no duplicate check when no source returned a
+   posting, and no SQL file when nothing is new. Before, every watchlist run wrote a file whose housekeeping statements scan the
+   `jobs` table, and bumped the cache generation, so every visitor's next list was recomputed (about 12,700 to 22,200 reads each, 3b).
+3. The re-score cap is 800 per person per daily run (was 1,500), passed by `discovery.yml` as `--rescore-per-candidate 800`.
+
+**Measured from now on:** each discovery and watchlist run row (`discovery_state`, key `run:<time>`) carries `d1_rows: {read, written}`,
+the account's totals at the run's end minus at its start (`scripts/usage_snapshot.mjs`, Cloudflare analytics, no D1 reads). It includes
+other traffic in the same minutes and the analytics can lag a few minutes, so it is an approximate cost of that run; a run across
+midnight UTC has none.
