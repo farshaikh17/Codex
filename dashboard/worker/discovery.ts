@@ -302,12 +302,28 @@ const lakhMonth = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}/mo
 export const TARGET_EXACT_BONUS=8, TARGET_WORD_BONUS=4, SENIORITY_BONUS=3;
 const GENERIC_TITLE_WORDS=new Set(['senior','sr','lead','manager','engineer','specialist','consultant','the','and','of','for','in','a','an','with','to','head','principal','staff','associate','director','officer','executive','analyst','coordinator','technical','industrial']);
 const words=(s:string)=>String(s||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9]+/g,' ').trim();
+const szWords=(x:string)=>words(x).replace(/is(ation|ing|e|ed)\b/g,'iz$1');   // 'Decarbonisation' fits 'Decarbonization Engineer' (plan S11)
 export function targetFit(title:string,targets:unknown):'exact'|'word'|null{
- const t=' '+words(title)+' ';let partial=false;
- for(const raw of list(targets)){const g=words(String(raw));if(!g)continue;
+ const t=' '+szWords(title)+' ';let partial=false;
+ for(const raw of list(targets)){const g=szWords(String(raw));if(!g)continue;
   if(t.includes(' '+g+' '))return 'exact';
   for(const w of g.split(' '))if(w.length>2&&!GENERIC_TITLE_WORDS.has(w)&&t.includes(' '+w+' '))partial=true;}
  return partial?'word':null;
+}
+export const TARGET_SKILL_MAX=2;
+const TARGET_SKILL_GENERIC=new Set(['maintenance','plant','operations','power','utilities','project','delivery','engineering','transition','energy']);
+const sz=(x:string)=>x.replace(/is(ation|ing|e|ed)\b/g,'iz$1');   // decarbonisation / decarbonization
+/** The distinctive phrases of the candidate's target roles (generic title words dropped) that the posting names and the skills do not already cover. */
+export function targetSkills(targets:unknown,have:string[],lower:string):string[]{
+ const text=sz(lower), mine=new Set(have.map((h)=>sz(String(h).toLowerCase()))), out:string[]=[];
+ for(const raw of list(targets)){
+  const phrase=words(String(raw)).split(' ').filter((w)=>w&&!GENERIC_TITLE_WORDS.has(w)).join(' ');
+  if(!phrase||(!phrase.includes(' ')&&TARGET_SKILL_GENERIC.has(phrase)))continue;
+  const key=sz(phrase);
+  if(mine.has(key)||out.some((o)=>sz(o.toLowerCase())===key))continue;
+  if(skillFound(key,text))out.push(phrase.replace(/\b\w/g,(c)=>c.toUpperCase()));
+ }
+ return out;
 }
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|general manager|head of)\b/i;   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
@@ -378,6 +394,10 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(noVisaRoute&&eligibility==='UNKNOWN')reason='Posting says it offers no visa sponsorship, so nothing here shows the candidate may work at this location. '+reason;
  const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?FARHAN_ROLE.test(p.title||''):SANA_ROLE.test(p.title||'');
  const skills=list(candidate.primary_skills).filter(s=>skillFound(s,lower));
+ // Plan S11: Sana's other target roles can score. The distinctive part of each of her target roles ('Energy Efficiency', 'Decarbonization', 'Asset
+ // Performance', 'Power Plant Operations') counts as a skill when the posting names it, at most twice, so a role outside maintenance is not scored as if
+ // it matched nothing of hers.
+ if(candidate.id==='sana_ansari'&&!prof)skills.push(...targetSkills(candidate.target_roles,skills,lower).slice(0,TARGET_SKILL_MAX));
  let score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
  // Fit to experience (owner goal 2026-11-07: put first the roles where the candidate is an easy yes). A posting asking for more than
  // two years beyond the candidate's own experience loses points; one whose stated requirement the candidate meets gains a little.

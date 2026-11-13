@@ -661,3 +661,19 @@ test('S9: Gulf details: nationals preference caps at 45, Gulf plant towns and co
   assert.equal(agencyPosting('Acme', 'Our client is a leading utility.'), true);
   assert.equal(agencyPosting('Gulf Manpower Recruitment', 'Maintenance supervisor.'), true);
 });
+
+test('S11: Sana\'s other target roles can score: their distinctive words count as skills, at most twice', () => {
+  const { targetSkills, TARGET_SKILL_MAX } = DISCOVERY;
+  const ee = p2eval(P2_SANA, 'Energy Efficiency Engineer', 'Remote (worldwide)', 'Conduct energy audits and decarbonization roadmaps for industrial clients. Work from anywhere in the world.', true);
+  assert.deepEqual(ee.skills, ['Energy Efficiency', 'Decarbonization']); assert.equal(p2tier(P2_SANA, ee), 'READY', `was 58 with no skill matched; now ${ee.score}`);
+  const dc = p2eval(P2_SANA, 'Decarbonisation Consultant', 'Remote - India', 'Net zero roadmaps, energy audits and decarbonisation plans for cement plants.', true);
+  assert.deepEqual(dc.skills, ['Decarbonization']); assert.ok(dc.score >= 60, `British spelling counts, and the title fits the target role (${dc.score})`);
+  // at most twice, never a generic word (maintenance, plant), never a skill already matched
+  const many = targetSkills(JSON.stringify(['Energy Efficiency Engineer', 'Decarbonization Engineer', 'Asset Performance Specialist', 'Plant Engineer', 'Maintenance Engineer (Power Plant)']), [], 'energy efficiency, decarbonization and asset performance at the plant; maintenance');
+  assert.deepEqual(many, ['Energy Efficiency', 'Decarbonization', 'Asset Performance']);
+  assert.equal(p2eval({ ...P2_SANA, target_roles: JSON.stringify(['Energy Efficiency Engineer', 'Decarbonization Engineer', 'Asset Performance Specialist']) }, 'Energy Engineer', 'Pune, India', 'energy efficiency, decarbonization and asset performance').skills.length, TARGET_SKILL_MAX);
+  assert.deepEqual(targetSkills(JSON.stringify(['Reliability Engineer']), ['Reliability'], 'reliability of pumps'), [], 'already a skill');
+  assert.deepEqual(targetSkills(JSON.stringify(['Plant Engineer', 'Industrial Maintenance Engineer']), [], 'plant maintenance'), [], 'generic words do not count');
+  // Farhan is unchanged
+  assert.deepEqual(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', 'Implementation of technical operations.').skills, []);
+});
