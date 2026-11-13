@@ -1,7 +1,7 @@
 // Plan phase 4, ranking (C1-C3): table-driven checks of each rule, with text taken from the saved samples plus near misses. The phase 2 caps still win.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, dutyCount, dutyAdjust, AVOID_TITLE_CAP } from '../worker/discovery.ts';
+import { evaluate, dutyCount, dutyAdjust, mixedTitle, MIXED_TITLE_PENALTY, AVOID_TITLE_CAP } from '../worker/discovery.ts';
 
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']), target_roles: JSON.stringify(['Implementation Manager', 'RevOps Manager']),
   total_years_experience: 9, qualification_threshold: 70 };
@@ -48,4 +48,26 @@ test('C1 in evaluate(): many duties rank above a bare role match; none at all ra
   const plant = evaluate(sana, post('Maintenance Engineer', S_RICH + ' ' + pad(FILLER, 500), 'Jamnagar, Gujarat, India', false));
   const bare = evaluate(sana, post('Maintenance Engineer', pad(FILLER, 700), 'Jamnagar, Gujarat, India', false));
   assert.ok(plant.score > bare.score, `${plant.score} > ${bare.score}`);
+});
+
+test('C2: titles joining two unrelated functions', () => {
+  const rows = [
+    ['Sales & Marketing Operations Manager', ['sales', 'marketing']], ['Finance and HR Operations Lead', ['finance', 'people']],
+    ['Sales and Customer Success Manager', ['sales', 'customer']], ['Marketing / Finance Analyst', ['marketing', 'finance']],
+    // near misses: one function, related functions, or operations / engineering with anything
+    ['O&M Engineer', null], ['Operations & Maintenance Manager', null], ['Revenue Operations & Sales Ops Manager', null], ['Maintenance & Reliability Engineer', null],
+    ['Electrical & Instrumentation Engineer', null], ['Health, Safety & Environment Manager', null], ['Implementation and Onboarding Manager', null],
+    ['Customer Success & Operations Manager', null], ['Supply Chain and Procurement Manager', null], ['Data & Analytics Lead', null], ['Implementation Manager', null],
+  ];
+  for (const [t, want] of rows) assert.deepEqual(mixedTitle(t), want, t);
+});
+
+test('C2 in evaluate(): -4 for a mixed title, none when a target role is contained exactly', () => {
+  const text = F_SOME + ' ' + pad(FILLER, 500);
+  const plain = evaluate(farhan, post('Revenue Operations Manager', text));
+  const mixed = evaluate(farhan, post('Sales & Marketing Operations Manager', text));
+  assert.equal(plain.score - mixed.score, MIXED_TITLE_PENALTY, `${plain.score} vs ${mixed.score}`);
+  assert.match(mixed.qualification_reason, /mixes two functions \(sales and marketing/);
+  const target = { ...farhan, target_roles: JSON.stringify(['Sales & Marketing Operations Manager']) };
+  assert.doesNotMatch(evaluate(target, post('Sales & Marketing Operations Manager', text)).qualification_reason, /mixes two functions/);
 });
