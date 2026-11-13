@@ -20,7 +20,7 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
 2. Download the dataset. A failed download does not stop the day: boards, other sources, re-score, still-open check and shortlist still run.
    The run is then shown red, as it is when the manifest is unreadable or over 48 hours old.
 3. Select matches from the dataset, and export rows to re-score: at most **800 per person** (best first) not yet scored under the current rules
-   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v14`).
+   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v15`).
 4. Job-site search, remote boards, more sources (Workable, Eightfold, Siemens Energy, SuccessFactors, Workday, Oracle, SmartRecruiters
    employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna with its free keys). Each writes its file after every source and stops starting
    sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. Employer career sites are stored as the

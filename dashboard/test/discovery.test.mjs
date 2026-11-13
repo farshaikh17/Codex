@@ -707,3 +707,23 @@ test('phase 2 tenth-man fixes: hybrid boilerplate, NCR, ", SA", analyst, Saudiza
   assert.doesNotMatch(p2eval(P2_SANA, 'Assistant General Manager - Maintenance', 'Korba', P2_PLANT).qualification_reason, /above the candidate's level/);
   assert.match(p2eval(P2_SANA, 'General Manager - Maintenance', 'Korba', P2_PLANT).qualification_reason, /above the candidate's level/);
 });
+
+test('full state and province names (gap fix, 13 Nov): "Houston, Texas" is abroad for Sana\'s visa cap; near misses are not', () => {
+  for (const l of ['Houston, Texas', 'Houston, Texas, United States', 'Baton Rouge, Louisiana 70801', 'Seattle, Washington', 'Atlanta, Georgia', 'Indianapolis, Indiana',
+    'Calgary, Alberta, Canada', 'Fort McMurray, Alberta', 'Sarnia, Ontario', 'Gladstone, Queensland', 'Perth, Western Australia', 'Melbourne, Victoria 3000',
+    'Kansas City, Missouri (Hybrid)', 'Mobile, Alabama; Pascagoula, Mississippi', 'Charleston, West Virginia - Onsite'])
+    assert.equal(foreignLocation(l), true, l);
+  for (const l of ['Indore, Madhya Pradesh', 'Indore', 'Panaji, Goa', 'Building 3, Washington Square', 'Washington Street, Pune', 'Office 4, Washington Plaza, Hyderabad', 'Plot 7, Victoria Road, Mumbai',
+    'Jamnagar, Gujarat', 'Ruwais, Abu Dhabi', 'Jubail, Saudi Arabia', 'Remote - India', 'Kolkata, West Bengal', 'Indiana Jones Road', 'Texas Instruments campus',
+    'Bengaluru, Karnataka; Houston, Texas'])
+    assert.equal(foreignLocation(l), l === 'Ruwais, Abu Dhabi' || l === 'Jubail, Saudi Arabia', l);   // Gulf places were foreign before too; the visa cap exempts them
+  const sana = { id: 'sana_ansari', primary_skills: JSON.stringify(['Breakdown Maintenance', 'Preventive Maintenance', 'Reliability', 'Root Cause Analysis']), total_years_experience: 9.2 };
+  const D = 'Lead breakdown maintenance and preventive maintenance; reliability and root cause analysis for the plant. 5+ years.';
+  const mk = (location, description = D) => evaluate(sana, { id: 'x', title: 'Maintenance Engineer', company: 'Acme', url: 'https://e.com/x', location, description, remote: false });
+  const tx = mk('Houston, Texas'), txCode = mk('Houston, TX'), india = mk('Jamnagar, Gujarat'), gulf = mk('Jubail, Saudi Arabia');
+  assert.ok(tx.score <= VISA_UNLIKELY_CAP, String(tx.score)); assert.equal(tx.score, txCode.score, 'the full name is capped like the code');
+  assert.match(tx.qualification_reason, /no visa route from India/);
+  assert.ok(mk('Houston, Texas', D + ' Visa sponsorship available.').score > VISA_UNLIKELY_CAP, 'a stated visa route still lifts the cap');
+  assert.ok(india.score > VISA_UNLIKELY_CAP && gulf.score > VISA_UNLIKELY_CAP, 'India and the Gulf are not capped');
+  assert.ok(mk('Panaji, Goa').score > VISA_UNLIKELY_CAP && mk('Indore, Madhya Pradesh').score > VISA_UNLIKELY_CAP);
+});

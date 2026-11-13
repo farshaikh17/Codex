@@ -546,7 +546,7 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       phase 4 rules (as at every bump). Rows scored under v13 can outrank re-scored ones for those days.
     - found while testing C3, not changed: a US location written with the full state name and no code ("Houston, Texas") is not "foreign" for Sana's
       visa-route cap (`foreignLocation()` reads state codes and countries, not state names). None of the saved samples has such a location.
-      Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement.
+      Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement. **Fixed after phase 6** (see "gaps fixed after phase 6" below).
     - migration 0021 renames stored rows only at the next release (phase 5's release); until then new rows carry names and old ones ids, read as one
       employer by the fixes above.
 - phase 5 (the site a job seeker uses, 13 Nov; PRs #168 (U1), #170 (U2-U4), #173 (U12 server and the "why" line), #176 (the page) and the
@@ -629,15 +629,21 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       person taps Start, the message holds nothing private, and `/stop` or the owner removing the row undoes it.
     - `d1_rows` is approximate (analytics lag, other traffic); it is labelled so and the budget guard uses the day totals, not it.
     - still open from phase 4: "Houston, Texas" (a US state name without a code) is not foreign for Sana's visa cap. D1 measured sources, not caps;
-      left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples.
+      left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples. **Fixed** (below).
 
 - gaps fixed after phase 6 (13 Nov, evening; one PR each, `gaps/*`):
+  - **full state names** (`profile_v15`, the one rules-marker bump for these gaps): `foreignLocation()` also reads a US state, Canadian province or
+    Australian state written in full after a comma when it ends the place (end of text, a separator, a ZIP / postcode or the country), so
+    "Houston, Texas" is capped for Sana like "Houston, TX" and "12 Washington Street" or "Building 3, Washington Square" are not places abroad.
+    Georgia was already foreign (the country); a location that also names an Indian place is never foreign, so Indore, Goa or "Washington Plaza,
+    Hyderabad" are unchanged. Measured on the saved samples (142 distinct locations from both people's top 100 and live lists): one changes,
+    "Moranbah, Queensland, au" (an Australian mine town), now abroad.
   - **Gulf job-board rows** (no rules-marker bump: `evaluate()` is unchanged): measured on the 12 Nov daily run, the job-site search returned
     Indeed 20, LinkedIn 79 and Bayt 0 rows, and 19 of the 150 still-open targets came back unknown (refused or timed out); job-board rows are
     stored with no verification date, and a board posting found again is dropped as a duplicate without any write. The job-site search asks
     only for postings listed in the last 48 hours, so "seen in the board's own listing within 2 days" is the same as "found in the last 2 days"
     (`discovered_at`), with no new column or step. Rule (`listedOnlyGulf()` in `worker/discovery.ts`): a posting at a Gulf place whose posting
-    or source URL is on bayt.com, indeed.com or linkedin.com (any country subdomain) and was found in the last 2 days counts as verified for
+    URL (the one the still-open check visits) is on bayt.com, indeed.com or linkedin.com (any country subdomain) and was found in the last 2 days counts as verified for
     Stretch only; Ready still needs the still-open check (a Ready-quality such row goes to Stretch); a posting the check found closed is out.
     Limited to Gulf places, where those boards are the main source and the "5 Gulf" shortfall is. The A8 audit accepts exactly these rows on
     Stretch (same rule, one hour of grace); the card's why line adds "could not be confirmed still open (the job site blocks the check)"; the

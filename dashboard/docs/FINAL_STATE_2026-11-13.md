@@ -73,7 +73,6 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
   line (first name, two counts, the public link). Run the link workflow right after the person taps Start.
 - **Re-score speed:** after a rules bump the stored lists take about five daily runs to be fully re-scored (800 rows per person per run).
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
-- **A US location with the full state name** ("Houston, Texas") is not foreign for Sana's visa-route cap.
 - **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
   except the open tracker's own actions).
 - **Out of scope:** private link per person, self sign-up, other professions, pricing, the operator key, the five held dependency updates.
@@ -92,5 +91,8 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 ## 7. Gaps fixed after the hand-off (13 Nov, evening)
 
 Gaps from section 5 fixed afterwards, one pull request each (`gaps/*`); details in the plan, section 10, "gaps fixed after phase 6":
+- **Full state names abroad:** "Houston, Texas", "Calgary, Alberta", "Perth, Western Australia" (a US state, Canadian province or Australian
+  state written in full after a comma, ending the place) now count as abroad for Sana's visa-route cap and Farhan's foreign-location penalty,
+  like "Houston, TX". Rules marker `profile_v15`: the stored lists are re-scored over the next daily runs (800 rows per person per run).
 - **Gulf jobs from job boards:** a Gulf posting from Bayt, Indeed or LinkedIn (which refuse the still-open check) found in the last 2 days now
   counts for Worth a try (never Best matches), and its card says it could not be confirmed still open. The audit agrees.
