@@ -304,6 +304,7 @@ export function targetFit(title:string,targets:unknown):'exact'|'word'|null{
  return partial?'word':null;
 }
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
+const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|general manager|head of)\b/i;   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
  const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|unable|never|cannot|can't|won't|isn't|aren't|doesn't|don't|no longer)\b[^.!?]*$/.test(before)||/^\s+(?:(?:is |are |will be )?(?:not|no longer|never|unavailable|unsupported)|isn't|aren't|won't be|will not be)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
@@ -419,9 +420,16 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
  if(platform)score=Math.max(0,score-PLATFORM_GAP_PENALTY);
  if(tooJunior)score=Math.min(score,UNDER_LEVEL_CAP);
+ // Plan S6: too senior is capped just below the person's threshold, so it never reaches Ready: the posting asks for more than their years + 2, or the
+ // title is an executive one (VP, chief, plant head, general manager, head of) that none of their target roles names.
+ const threshold=Number(candidate.qualification_threshold)||(candidate.id==='farhan_shaikh'?70:60);
+ const execTitle=EXEC_TITLE.exec(p.title||''), execTarget=!!execTitle&&list(candidate.target_roles).some((t)=>new RegExp(`\\b${escRe(execTitle[0])}\\b`,'i').test(String(t)));
+ const tooSenior=role&&!prof&&(overReach||(!!execTitle&&!execTarget));
+ if(tooSenior)score=Math.min(score,threshold-1);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
  return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score reduced).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+  +(tooSenior?' Pitched above the candidate\'s level (score capped below the shortlist).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')
