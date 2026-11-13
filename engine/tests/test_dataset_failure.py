@@ -81,9 +81,11 @@ class Workflow(unittest.TestCase):
         dl = wf[wf.index("Download today's dataset"):wf.index('Discovery state and past-applications')]
         self.assertIn('continue-on-error: true', dl, 'a failed download does not stop the run')
         self.assertIn('--no-dataset', wf)
-        fresh = wf[wf.index('Dataset freshness'):]
-        self.assertIn('if: always()', fresh.split('run:')[0])
-        self.assertIn('dataset_stale.txt', fresh)
+        health = wf[wf.index('Run health'):]
+        self.assertIn('if: always()', health.split('run:')[0])
+        self.assertIn('scripts/run_health.mjs', health)
+        script = (Path(__file__).resolve().parents[2] / 'dashboard' / 'scripts' / 'run_health.mjs').read_text()
+        self.assertIn('dataset_stale.txt', script, 'a stale dataset makes the run red (R8 health job)')
 
 
 if __name__ == '__main__':

@@ -81,6 +81,9 @@ jobs:
     if: ${{ needs.guard.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    outputs:
+      healthy: ${{ steps.health.outputs.healthy }}
+      reasons: ${{ steps.health.outputs.reasons }}
     # Cloudflare credentials are given only to the steps that use the database; the job-site step (third-party scraping
     # library) runs without them.
     steps:
@@ -258,13 +261,12 @@ jobs:
         run: |
           node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" > ../work/runlog.sql
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
-      - name: Dataset freshness (fails the run, after everything else ran, when the snapshot is over 48 hours old)
+      - name: Run health (decided here; the health job below turns a "no" into a red run)
+        id: health
         if: always()
-        run: |
-          if [ -f work/dataset_stale.txt ]; then
-            echo "::error::The open dataset is stale: snapshot $(cat work/dataset_stale.txt). Today's dataset jobs are missing and no closures were made."
-            exit 1
-          fi
+        continue-on-error: true
+        working-directory: dashboard
+        run: node scripts/run_health.mjs --work ../work
       - name: Summary (counts only)
         if: always()
         run: |
@@ -274,3 +276,21 @@ jobs:
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # A run that went through but did nothing useful (still-open check verified 0 of its targets, every source failed, nothing written from a
+  # fresh dataset, or a stale dataset) is shown red here. It is a separate job so the "discover" job stays successful: the recent-run guard and
+  # the watchdog count it as the day's run and do not start the whole run again every two hours on a problem a re-run would not fix.
+  health:
+    needs: discover
+    if: ${{ always() && needs.discover.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Daily run health
+        env:
+          HEALTHY: ${{ needs.discover.outputs.healthy }}
+          REASONS: ${{ needs.discover.outputs.reasons }}
+        run: |
+          if [ "$HEALTHY" = "true" ]; then echo "Run health: ok"; exit 0; fi
+          echo "::error title=Daily run health::${REASONS:-the health check did not run}"
+          exit 1
