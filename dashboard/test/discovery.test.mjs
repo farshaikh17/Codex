@@ -644,3 +644,20 @@ test('S8: office jobs do not pass Farhan\'s remote-only rule; "work from home" a
   // Sana is not remote-only: hybrid does not rule her out
   assert.equal(p2eval(P2_SANA, 'Maintenance Engineer', 'Pune, India', P2_PLANT + ' This is a hybrid role, 3 days in office.').eligibility, 'ELIGIBLE');
 });
+
+test('S9: Gulf details: nationals preference caps at 45, Gulf plant towns and country codes count, "for our clients" alone is not an agency', () => {
+  const { gulfPlace, agencyPosting, NATIONALS_PREFERENCE_CAP } = DISCOVERY;
+  const G = P2_PLANT + ' Tax-free salary, family status, accommodation.';
+  for (const extra of [' Saudization: preference to Saudi nationals.', ' Preference will be given to Omani nationals.', ' In line with Emiratisation goals.']) {
+    const r = p2eval(P2_SANA, 'Maintenance Engineer', 'Riyadh, KSA', G + extra);
+    assert.ok(r.score <= NATIONALS_PREFERENCE_CAP, extra); assert.equal(p2tier(P2_SANA, r), 'HOLD', extra); assert.match(r.qualification_reason, /preference to the country's nationals/);
+  }
+  assert.ok(p2eval(P2_SANA, 'Maintenance Engineer', 'Riyadh, KSA', G).score > 60, 'no preference stated: not capped');
+  for (const l of ['Ruwais, AE', 'Mesaieed, QA', 'Duqm', 'Salalah, Oman', 'Yanbu', 'Jubail, SA', 'Kuwait City, KW', 'Sitra, BH']) assert.ok(gulfPlace(l), l);
+  for (const l of ['Pune, India', 'Sacramento, CA', 'Paris', 'Saar, Germany']) assert.ok(!gulfPlace(l), l);
+  assert.equal(agencyPosting('Worley', 'We deliver engineering projects for our clients across energy.'), false);
+  assert.equal(agencyPosting('Fichtner Consultants', 'Engineering and consulting for power plants.'), false);
+  assert.equal(agencyPosting('Acme', 'We are hiring for one of our clients, a large refinery.'), true);
+  assert.equal(agencyPosting('Acme', 'Our client is a leading utility.'), true);
+  assert.equal(agencyPosting('Gulf Manpower Recruitment', 'Maintenance supervisor.'), true);
+});

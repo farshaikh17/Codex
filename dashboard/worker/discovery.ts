@@ -233,8 +233,9 @@ export function locationClass(text: string, location: string): 'worldwide' | 'in
   if (TZ_RESTRICTED.test(t)) return 'timezone';
   return 'unknown';
 }
-const AGENCY_NAME = /\b(recruit(?:ing|ment|ers?)?|staffing|talent (?:solutions|partners|acquisition|group)|manpower|headhunt|placements?|hr (?:solutions|services|consultants?)|workforce|consultants?|resourcing|executive search)\b/i;
-const AGENCY_TEXT = /\b(our client|on behalf of (?:our|a) client|for (?:one of )?our clients?|a leading client|client of ours|is recruiting (?:on behalf|for a))\b/i;
+// Plan S9: an engineering consultancy (Worley, Fichtner Consultants) is an employer, not a staffing agency, so a bare 'consultants' no longer counts.
+const AGENCY_NAME = /\b(recruit(?:ing|ment|ers?)?|staffing|talent (?:solutions|partners|acquisition|group)|manpower|headhunt|placements?|hr (?:solutions|services|consultants?)|workforce|resourcing|executive search)\b/i;
+const AGENCY_TEXT = /\b(our client|on behalf of (?:our|a) client|for one of our clients?|a leading client|client of ours|is recruiting (?:on behalf|for a))\b/i;   // 'for our clients' alone is how firms describe their own customers (plan S9)
 /** A staffing agency or recruiter posting (common in Gulf O&M postings). */
 export function agencyPosting(company: string, description: string) { return AGENCY_NAME.test(company || '') || AGENCY_TEXT.test((description || '').slice(0, 1500)); }
 const LANG_RULES: [RegExp, string][] = [
@@ -269,11 +270,16 @@ export function companyKey(name: string | null | undefined) {
 // Pay check. Rough conversion to rupees per month (reference rates, 2026-11); only a published pay range is ever compared.
 const INR_PER: Record<string, number> = { INR: 1, USD: 85, EUR: 92, GBP: 108, AED: 23, SAR: 22.6, QAR: 23.3, OMR: 220, KWD: 276, BHD: 225, SGD: 64, AUD: 56, CAD: 61, NZD: 51, CHF: 96, JPY: 0.56, PHP: 1.5, MYR: 18 };
 const perMonth = (period: string) => /year|annual|yr/.test(period) ? 1 / 12 : /month/.test(period) ? 1 : /week/.test(period) ? 4.33 : /day|daily/.test(period) ? 21.7 : /hour/.test(period) ? 173 : 0;
-const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|riyadh|jeddah|dammam|jubail|al[- ]jubail|yanbu|khobar|al[- ]khobar|ras tanura|qatar|doha|ras laffan|oman|muscat|sohar|kuwait|bahrain|manama)\b/i;
+const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|riyadh|jeddah|dammam|jubail|al[- ]jubail|yanbu|khobar|al[- ]khobar|ras tanura|qatar|doha|ras laffan|oman|muscat|sohar|kuwait|bahrain|manama|ruwais|mesaieed|duqm|salalah)\b|,\s*(?:AE|SA|QA|OM|KW|BH)\s*$/i;   // plan S9: plant towns and country codes ('Ruwais, AE')
 // From India, an on-site role abroad (outside the Gulf) with no stated visa route is not a realistic application: it stays in To review,
 // ranked below every realistic role, and can never be shortlisted (owner review 2026-11-12: US maintenance jobs offering only
 // "relocation assistance" were reaching Ready). Was a fixed 15-point deduction.
+/** A place in the Gulf states (used by the screen's visa-route rule and, later, the shortlist's place bands). */
+export function gulfPlace(location:string|null|undefined){return GULF_PLACE.test(location||'');}
 export const VISA_UNLIKELY_CAP = 45;
+// Plan S9: a Gulf posting that gives preference to nationals (Saudization, Emiratization, Omanization) is capped like an unworkable route.
+export const NATIONALS_PREFERENCE_CAP = 45;
+const NATIONALS_PREFERENCE=/\bpreference (?:will be given |is given |shall be given )?to (?:\w+ )?nationals\b|\bsaudi[sz]ation\b|\bemirati[sz]ation\b|\bomani[sz]ation\b|\bqatari[sz]ation\b|\bkuwaiti[sz]ation\b|\bbahraini[sz]ation\b/i;
 const NATIONALS_TITLE=/\b(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+nationals?\b/i;
 const NATIONALS_TEXT=/\b(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+nationals?\s+only\b|\b(?:only|exclusively)\s+(?:for\s+|open\s+to\s+)?(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+(?:nationals?|citizens)\b|\bopen\s+(?:only\s+)?to\s+(?:saudi|emirati|uae|qatari|omani|kuwaiti|bahraini)\s+(?:nationals?|citizens)\s+only\b/i;
 export const PAY_BELOW_FLOOR_PENALTY = 20, PAY_PREFERRED_BONUS = 5, GLOBAL_HIRER_BONUS = 5, YC_BONUS = 3;
@@ -420,6 +426,8 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // not from India, unless it says worldwide or names India.
  const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&foreignLocation(p.location)&&!gulf&&(!remote||(!explicitIndiaRemote&&!globalRemote));
  if(visaUnlikely)score=Math.min(score,VISA_UNLIKELY_CAP);
+ const nationalsPreferred=(!prof||String(prof.home_country||'').toLowerCase()==='india')&&NATIONALS_PREFERENCE.test(text);
+ if(nationalsPreferred)score=Math.min(score,NATIONALS_PREFERENCE_CAP);
  const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'');
  if(electricalOnly)score=Math.max(0,score-ELECTRICAL_ONLY_PENALTY);
  if(avoided)score=Math.min(score,AVOID_TITLE_CAP);
@@ -433,7 +441,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(tooSenior)score=Math.min(score,threshold-1);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
- return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
+ return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(nationalsPreferred?' Gives preference to the country\'s nationals (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(tooSenior?' Pitched above the candidate\'s level (score capped below the shortlist).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
