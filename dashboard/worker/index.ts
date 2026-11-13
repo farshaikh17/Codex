@@ -220,13 +220,13 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   found_on: enumOf('ALL', 'EMPLOYER', 'JOB_SITES', 'BOARDS'),
   source_adapter: (v) => v === 'ALL' || /^[a-z]{2,20}$/.test(v),
   sort_by: enumOf('score_desc', 'date_desc', 'title_asc', 'company_asc'),
-  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'), new_within: enumOf('1', '7'),
+  exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'), hidden: enumOf('true', 'false'), new_within: enumOf('1', '7'),
   limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
   search: (v) => /^[a-z0-9][a-z0-9 .+#-]{0,28}[a-z0-9.+#]$/i.test(v),
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
-  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'limit', 'min_score', 'new_within', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
+  [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'hidden', 'limit', 'min_score', 'new_within', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
   [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
   [/^\/api\/applications$/, ['candidate_id', 'status']],
@@ -1477,6 +1477,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
   if (payParam === undefined) return jsonResponse({ error: 'Unsupported pay_filter value.', detail: 'Unsupported pay_filter value.', allowed: ['ALL', 'PUBLISHED', 'UNPUBLISHED'] }, 400, corsHeaders(request, env));
   const excludeApplied = url.searchParams.get('exclude_applied') === 'true';
   const excludeDismissed = url.searchParams.get('exclude_dismissed') === 'true';
+  // Plan U2: "Hidden jobs" - the ones this person marked Not for me (still on Hold with that reason), so they can restore one.
+  const hiddenOnly = url.searchParams.get('hidden') === 'true';
   // "New today" (owner plan 2026-11-12): found, or put on this person's list, in the last 1 or 7 days.
   const newWithin = ({ '1': 1, '7': 7 } as Record<string, number>)[url.searchParams.get('new_within') || ''] || 0;
   const sortBy = url.searchParams.get('sort_by') || 'score_desc';
@@ -1500,6 +1502,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (excludeDismissed) {
       baseWhere += ` AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')`;
     }
+    if (hiddenOnly) baseWhere += ` AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`;
     if (search) {
       // % and _ in what was typed are literal characters, not wildcards (as in the India Remote search)
       baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
@@ -1698,6 +1701,8 @@ router.get('/api/jobs/:id/explanation', async (request, env, params, url) => {
   }
 });
 
+// Plan U2: the reason a hidden job carries. The daily re-score (dataset_apply.mjs) leaves reasons starting "You marked" alone.
+const NOT_FOR_ME_REASON = 'You marked this Not for me.';
 router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
   const jobId = params.id;
   try {
@@ -1712,10 +1717,36 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
     const notes = body?.notes ? String(body.notes).slice(0, 500) : null;
     const known = await env.DB.prepare('SELECT 1 AS ok FROM jobs WHERE id = ?').bind(jobId).first<any>();
     if (!known) return jsonResponse({ error: 'Unknown job' }, 404, corsHeaders(request, env));
-    // Stored per candidate and job (migration 0019). It is a private note for the candidate; it does not change a score or a ranking.
-    if (clearing) await env.DB.prepare('DELETE FROM job_feedback WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).run();
-    else await env.DB.prepare(`INSERT INTO job_feedback(candidate_id, job_id, rating, notes, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(candidate_id, job_id) DO UPDATE SET rating = excluded.rating, notes = excluded.notes, updated_at = excluded.updated_at`).bind(candidateId, jobId, rating, notes).run();
+    // Stored per candidate and job (migration 0019). Plan U2: "Not for me" (DOWN) also hides the job: it moves to Hold with the reason
+    // NOT_FOR_ME_REASON (not an override; the daily re-score leaves reasons starting "You marked" alone). Clearing it, or marking Good match,
+    // puts the job back where it was (the status before, from qualification_history). An applied job is never moved.
+    const qual = await env.DB.prepare('SELECT qualification_status, qualification_reason, manual_override_status FROM candidate_qualifications WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId).first<any>();
+    const hidden = !!qual && qual.qualification_status === 'HOLD' && String(qual.qualification_reason || '').startsWith(NOT_FOR_ME_REASON);
+    const stmts: D1PreparedStatement[] = [];
+    const tags: HistTag[] = [];
+    if (clearing) stmts.push(env.DB.prepare('DELETE FROM job_feedback WHERE candidate_id = ? AND job_id = ?').bind(candidateId, jobId));
+    else stmts.push(env.DB.prepare(`INSERT INTO job_feedback(candidate_id, job_id, rating, notes, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(candidate_id, job_id) DO UPDATE SET rating = excluded.rating, notes = excluded.notes, updated_at = excluded.updated_at`).bind(candidateId, jobId, rating, notes));
+    const before = qual ? { qualification_status: qual.qualification_status, qualification_reason: qual.qualification_reason ?? null } : null;
+    if (rating === 'DOWN' && qual && !hidden && qual.qualification_status !== 'APPLIED') {
+      tags.push([stmts.length, 'qualification_history', before]);
+      stmts.push(env.DB.prepare(`INSERT INTO qualification_history (candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?, ?, ?, 'HOLD', ?, 'Candidate')`)
+        .bind(candidateId, jobId, qual.qualification_status, NOT_FOR_ME_REASON));
+      stmts.push(env.DB.prepare(`UPDATE candidate_qualifications SET qualification_status = 'HOLD', qualification_reason = ? || COALESCE(qualification_reason, '')
+        WHERE candidate_id = ? AND job_id = ? AND qualification_status = ?`).bind(NOT_FOR_ME_REASON + ' ', candidateId, jobId, qual.qualification_status));
+    } else if (rating !== 'DOWN' && hidden) {
+      const earlier = await env.DB.prepare(`SELECT previous_status FROM qualification_history WHERE candidate_id = ? AND job_id = ? AND new_status = 'HOLD' AND reason = ?
+        AND previous_status IS NOT NULL AND previous_status <> 'HOLD' ORDER BY id DESC LIMIT 1`).bind(candidateId, jobId, NOT_FOR_ME_REASON).first<any>();
+      const back = earlier?.previous_status || 'NEEDS_REVIEW';
+      tags.push([stmts.length, 'qualification_history', before]);
+      stmts.push(env.DB.prepare(`INSERT INTO qualification_history (candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?, ?, 'HOLD', ?, ?, 'Candidate')`)
+        .bind(candidateId, jobId, back, 'Shown again (you undid Not for me)'));
+      const prefix = NOT_FOR_ME_REASON + ' ';
+      stmts.push(env.DB.prepare(`UPDATE candidate_qualifications SET qualification_status = ?,
+          qualification_reason = CASE WHEN substr(qualification_reason, 1, ?) = ? THEN substr(qualification_reason, ?) ELSE qualification_reason END
+        WHERE candidate_id = ? AND job_id = ? AND qualification_status = 'HOLD'`).bind(back, prefix.length, prefix, prefix.length + 1, candidateId, jobId));
+    }
+    await env.DB.batch(await withTags(env, request, stmts, tags, candidateId, jobId));
 
     // Fetch updated job details for the candidate
     const job = await env.DB.prepare(`
@@ -1932,6 +1963,14 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
       SELECT * FROM applications WHERE candidate_id = ? AND job_id = ?
     `).bind(candidateId, job_id).first<any>();
 
+    // Plan U4: a write made from an old copy of the record (another phone or tab changed it since) is refused, not applied over the newer one.
+    // The page sends the updated_at it last saw; a write without it (scripts, older pages) is not checked.
+    const seen = body.expected_updated_at;
+    if (seen !== undefined && (seen ?? null) !== (existing?.updated_at ?? null))
+      return jsonResponse({ error: 'This changed elsewhere; reload.', code: 'stale', current_updated_at: existing?.updated_at ?? null }, 409, corsHeaders(request, env));
+    // An empty note never silently replaces a written one: clearing it needs clear_notes: true.
+    if (typeof notes === 'string' && !notes.trim() && existing?.notes && String(existing.notes).trim() && body.clear_notes !== true)
+      return jsonResponse({ error: 'The note is empty but a note is saved. To delete the saved note, use "Clear note".', code: 'empty_note' }, 409, corsHeaders(request, env));
     const appId = existing?.id || `app-${crypto.randomUUID().slice(0, 8)}`;
     const finalAppliedAt = applied_at !== undefined ? applied_at : (existing?.applied_at || (['SUBMITTED', 'APPLIED'].includes(status) ? now : null));
     const finalNotes = notes !== undefined ? notes : (existing?.notes || null);

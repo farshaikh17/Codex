@@ -524,9 +524,10 @@ def taste_targets(local=None, per_candidate=400):
     in dataset_apply.mjs: the learned taste is re-applied to them every run, not only to new jobs."""
     rows = []
     for c in d1("SELECT id FROM candidates ORDER BY id", local):
-        rows += d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown
+        rows += d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown, q.qualification_reason AS reason
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
           WHERE q.candidate_id = {sql_str(c['id'])} AND j.is_active = 1 AND q.manual_override_status IS NULL
+            AND COALESCE(q.qualification_reason, '') NOT LIKE 'You marked%'   -- a job the person hid (plan U2) is theirs, not the taste pass's
             AND (q.qualification_status IN ('NEEDS_REVIEW','HOLD') OR q.qualification_reason LIKE 'Shortlisted automatically.%')
             AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
           ORDER BY s.overall_score DESC, q.job_id LIMIT {int(per_candidate)}""", local)
@@ -547,6 +548,7 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
             part = d1(f"""SELECT q.candidate_id, q.job_id, s.overall_score AS cur_score, j.title, j.company, j.salary_min, j.salary_max, j.salary_currency, j.salary_period, j.location_restrictions AS location, j.description, j.workplace_type, j.source_adapter, j.provenance, s.score_breakdown
               FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
               WHERE q.candidate_id = {sql_str(cid)} AND j.is_active = 1 AND q.manual_override_status IS NULL
+                AND COALESCE(q.qualification_reason, '') NOT LIKE 'You marked%'   -- hidden by the person (plan U2): never re-scored
                 AND (q.qualification_status IN ('NEEDS_REVIEW','HOLD') OR q.qualification_reason LIKE 'Shortlisted automatically.%'   -- the shortlist is re-scored too, so new rules never empty it for a day
                      OR (q.qualification_status = 'INELIGIBLE' AND q.eligibility_reason LIKE 'Hybrid or set office days%'))   -- the office-days reading (plan S8) is re-checked at each rules bump
                 AND s.score_breakdown LIKE '%preliminary%' AND s.score_breakdown NOT LIKE '%"{RULES_MARKER}":true%'
