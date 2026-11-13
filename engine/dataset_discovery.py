@@ -343,9 +343,14 @@ def main():
     ap.add_argument('--rescore-per-candidate', type=int, default=1500, help='most rows re-scored per person per run (bounds the writes)')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
     ap.add_argument('--profiles-only', action='store_true', help='only write candidates.json, profiles.json and taste_rows.json (watchlist runs)')
+    ap.add_argument('--shortlist-pool', default=None, help='only export the shortlist pool to this file (plan A1; after the import, before the still-open check)')
+    ap.add_argument('--pool-per-candidate', type=int, default=300)
     ap.add_argument('--no-dataset', action='store_true', help='the dataset download failed: write everything the later steps need and an empty matches.json')
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    if a.shortlist_pool:
+        print(json.dumps(write_pool(Path(a.shortlist_pool), a.d1_local, a.pool_per_candidate)))
+        return 0
     if a.profiles_only:
         profs = profiles(a.d1_local)
         (out / 'candidates.json').write_text(json.dumps(d1(CANDIDATES_SQL, a.d1_local)))
@@ -455,6 +460,68 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
                 break
             last = (part[-1]['cur_score'], part[-1]['job_id'])
     return rows + legacy_rows(cands, local)
+
+
+# ---- Shortlist pool (plan phase 3, A1) ------------------------------------------------------------------------------------------
+# The automatic shortlist is chosen by dashboard/scripts/shortlist_select.mjs from this export, not by SQL inside the database. The pool is every
+# row that passes the shortlist conditions EXCEPT "verified open in the last 4 days" (the still-open check that follows verifies the pool first,
+# and the selector then keeps only rows verified in 4 days), plus every row on the automatic shortlist now, whatever it scores (so the selector
+# can move or demote it). Rows a person decided on, or applied to, are never in the pool; their employer and title are exported as "held", so the
+# selector does not shortlist a twin of them.
+SHORTLIST_MARK = 'Shortlisted automatically. '
+POOL_COLS = """q.candidate_id, j.id AS job_id, j.title, j.company, j.location_restrictions AS location, j.workplace_type AS workplace,
+  j.source_adapter AS source, j.provenance, j.discovered_at, j.last_verified_at, j.is_active AS active,
+  CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
+  substr(COALESCE(j.description, ''), 1, 2000) AS description,
+  COALESCE(s.overall_score, 0) AS score, COALESCE(s.skill_score, 0) AS skill_score, q.eligibility_status AS eligibility,
+  q.qualification_status AS status, q.qualification_reason AS reason, c.qualification_threshold AS threshold,
+  CASE WHEN s.score_breakdown LIKE '%"target_exact":true%' THEN 1 ELSE 0 END AS target_exact"""
+POOL_FROM = """FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id
+  LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id"""
+POOL_FREE = "q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)"
+
+
+def shortlist_pool(local=None, per_candidate=300):
+    """Rows the shortlist selector chooses from, per candidate (plan A1):
+      kind 'auto'  every row on the automatic shortlist now (marked by its reason), no override and no application, whatever its state;
+      kind 'pool'  undecided rows (To review) that pass every shortlist condition except the 4-day verification: active, scored under the
+                   current rules, two matched skills or a title that is exactly a target role, and the Ready or Stretch score and eligibility
+                   rule; best score first, at most `per_candidate`;
+      kind 'held'  rows on Ready / Stretch that are not ours to move (a person's decision, an application, the first import): employer and
+                   title only, for the one-posting-per-employer-and-title rule.
+    `marked` says whether the row was scored under the current rules (RULES_MARKER)."""
+    marked = f"CASE WHEN s.score_breakdown LIKE '%\"{RULES_MARKER}\":true%' THEN 1 ELSE 0 END AS marked"
+    auto = f"q.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(q.qualification_reason, '') LIKE {sql_str(SHORTLIST_MARK + '%')}"
+    fits = """((s.overall_score >= c.qualification_threshold AND q.eligibility_status IN ('ELIGIBLE','UNKNOWN'))
+              OR (q.eligibility_status = 'ELIGIBLE' AND s.overall_score >= c.qualification_threshold - 10))"""
+    rows = []
+    for c in d1("SELECT id FROM candidates ORDER BY id", local):
+        cid = sql_str(c['id'])
+        rows += [{**r, 'kind': 'auto'} for r in d1(f"""SELECT {POOL_COLS}, {marked} {POOL_FROM}
+          WHERE q.candidate_id = {cid} AND {auto} AND {POOL_FREE} ORDER BY q.job_id""", local)]
+        rows += [{**r, 'kind': 'pool'} for r in d1(f"""SELECT {POOL_COLS}, 1 AS marked {POOL_FROM}
+          WHERE q.candidate_id = {cid} AND q.qualification_status = 'NEEDS_REVIEW' AND {POOL_FREE} AND j.is_active = 1
+            AND s.score_breakdown LIKE '%"{RULES_MARKER}":true%'
+            AND (s.skill_score >= 40 OR s.score_breakdown LIKE '%"target_exact":true%') AND {fits}
+          ORDER BY s.overall_score DESC, q.job_id LIMIT {int(per_candidate)}""", local)]
+        rows += [{**r, 'kind': 'held'} for r in d1(f"""SELECT q.candidate_id, j.id AS job_id, j.title, j.company, q.qualification_status AS status
+          FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+          WHERE q.candidate_id = {cid} AND q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')
+            AND NOT ({auto} AND {POOL_FREE}) ORDER BY q.job_id""", local)]
+    return rows
+
+
+def write_pool(path, local=None, per_candidate=300):
+    """Writes the pool atomically (a temporary file renamed into place), so a failed export never leaves a partial pool for the selector."""
+    rows = shortlist_pool(local, per_candidate)
+    tmp = Path(str(path) + '.tmp')
+    tmp.write_text(json.dumps({'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'rows': rows}))
+    tmp.replace(path)
+    kinds = {}
+    for r in rows:
+        key = f"{r['candidate_id']}:{r['kind']}"
+        kinds[key] = kinds.get(key, 0) + 1
+    return kinds
 
 
 def legacy_rows(cands, local=None, page=300, per_candidate=1000):
