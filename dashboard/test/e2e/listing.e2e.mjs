@@ -1,12 +1,15 @@
 // Real-browser regression for the India Remote filters and the READY dashboard. Runs against a LOCAL `wrangler dev` with a disposable database seeded by
-// test/e2e/listing-seed.mjs, as an anonymous visitor (no key). Every check names the jobs that must be on screen, not just a control or a counter.
-//   E2E_BASE=http://localhost:8787 node test/e2e/listing.e2e.mjs [desktop|mobile]
+// test/e2e/listing-seed.mjs, signed in as the operator (the operator screens need the key to view since the 13 Nov gap fix; nothing is written).
+// Every check names the jobs that must be on screen, not just a control or a counter.
+//   E2E_BASE=http://localhost:8787 E2E_KEY=<local test key> node test/e2e/listing.e2e.mjs [desktop|mobile]
 import { createRequire } from 'node:module';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
 const { chromium } = require('playwright');
 const BASE = process.env.E2E_BASE || 'http://localhost:8787';
 const mode = process.argv[2] || 'desktop';
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error('listing e2e only runs against a local server');
+const KEY = process.env.E2E_KEY;
+if (!KEY) throw new Error('E2E_KEY is required (the operator screens need the key to view)');
 
 let failed = 0, total = 0;
 const check = (name, ok, detail = '') => { total++; if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  [${mode}] ${name}${ok ? '' : '  -> ' + detail}`); };
@@ -14,12 +17,13 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const viewport = mode === 'mobile' ? { width: 375, height: 812 } : { width: 1440, height: 900 };
 const browser = await chromium.launch(process.env.E2E_CHROMIUM ? { executablePath: process.env.E2E_CHROMIUM, args: ['--no-sandbox'] } : {});
 const ctx = await browser.newContext({ viewport, isMobile: mode === 'mobile', hasTouch: mode === 'mobile' });
+await ctx.addInitScript((k) => window.sessionStorage.setItem('admin_session_key', k), KEY);
 const page = await ctx.newPage();
 const errors = [], bad = [], writes = [];
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text().slice(0, 140)); });
 page.on('pageerror', (e) => errors.push('pageerror ' + e.message.slice(0, 140)));
 page.on('response', (r) => { if (r.url().includes('/api/') && r.status() >= 400) bad.push(r.status() + ' ' + new URL(r.url()).pathname); });
-page.on('request', (r) => { if (r.url().includes('/api/') && r.method() !== 'GET') writes.push(r.method() + ' ' + new URL(r.url()).pathname); });
+page.on('request', (r) => { if (r.url().includes('/api/') && r.method() !== 'GET' && new URL(r.url()).pathname !== '/api/auth/verify') writes.push(r.method() + ' ' + new URL(r.url()).pathname); });
 
 const settle = () => page.waitForTimeout(1200);
 const ids = () => page.$$eval('[data-job-id]', (els) => els.map((e) => e.getAttribute('data-job-id')));

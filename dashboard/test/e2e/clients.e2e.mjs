@@ -84,9 +84,10 @@ const anonCtx = await browser.newContext(ctxOpts);
 const anon = await anonCtx.newPage();
 const anonErrs = watch(anon, 'visitor');
 await anon.goto(BASE + '/app?operator=1');
-await anon.waitForSelector('text=Open Sana', { timeout: 15000 });
-check('C7 a visitor has no tab and no dashboard card for the private client',
-  (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0 && (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 0);
+await anon.waitForSelector('[data-testid="operator-gate"]', { timeout: 15000 });
+check('C7 a visitor gets only the operator sign-in: no tab, no dashboard card, no client',
+  (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0 && (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 0
+  && !(await anon.innerText('body')).includes(NAME));
 check('C8 and the API refuses it without naming it', (await api(`/api/jobs?candidate_id=${ID}`, { key: null })).status === 400
   && !(await api(`/api/jobs?candidate_id=nobody_x`, { key: null })).text.includes(ID));
 
@@ -126,23 +127,20 @@ await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'Link
 await op.locator('[data-link-id]').first().getByRole('button', { name: 'Revoke' }).click();
 await op.waitForSelector('[data-link-id] >> text=revoked', { timeout: 10000 });
 await viewer.reload();
-await viewer.waitForSelector('[role="status"]:has-text("no longer valid")', { timeout: 15000 });
-await viewer.waitForSelector('text=Open Sana', { timeout: 15000 });
-check('C14 after revoking, the same browser is told the link is no longer valid, sees the public dashboard and none of the client’s jobs',
-  (await tableIds(viewer)).length === 0 && (await viewer.locator('[data-testid="share-banner"]').count()) === 0
+await viewer.waitForSelector('[data-testid="share-link-invalid"]', { timeout: 15000 });
+check('C14 after revoking, the same browser is told the link is no longer valid and sees no dashboard and none of the client’s jobs (the operator screens need the key)',
+  (await tableIds(viewer)).length === 0 && (await viewer.locator('[data-testid="share-banner"]').count()) === 0 && (await viewer.locator('text=Open Sana').count()) === 0
   && (await api(`/api/jobs?candidate_id=${ID}`, { key: null, view: token })).status === 400);
 
 // ---- making it public shows it to everyone, private hides it again -------------------------------------------------------
 await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'Make public' }).click();
 await op.waitForSelector(`tr[data-client-id="${ID}"] >> text=public`, { timeout: 10000 });
-await anon.reload();
-await anon.waitForSelector(`[data-testid="client-select"] option[value="${ID}"]`, { state: 'attached', timeout: 15000 });
-check('C15 made public: visitors get its tab and card', (await anon.locator(`[data-candidate-id="${ID}"]`).count()) === 1);
+// visitors no longer see the operator screens (gap fix, 13 Nov), so "public" is checked where a visitor reads it: the public API
+const anonList = async () => (await api('/api/candidates', { key: null })).text;
+check('C15 made public: the public API lists it and answers for its jobs', (await anonList()).includes(ID) && (await api(`/api/jobs?candidate_id=${ID}`, { key: null })).status === 200);
 await op.locator(`tr[data-client-id="${ID}"]`).getByRole('button', { name: 'Make private' }).click();
 await op.waitForSelector(`tr[data-client-id="${ID}"] >> text=private`, { timeout: 10000 });
-await anon.reload();
-await anon.waitForSelector('text=Open Sana', { timeout: 15000 });
-check('C16 made private again: gone for visitors at once', (await anon.locator(`[data-testid="client-select"] option[value="${ID}"]`).count()) === 0);
+check('C16 made private again: gone for visitors at once', !(await anonList()).includes(ID) && (await api(`/api/jobs?candidate_id=${ID}`, { key: null })).status === 400);
 
 check('C17 no console errors or page errors (operator, visitor, viewer before revoking)', errsBeforeRevoke.length === 0, errsBeforeRevoke.join(' | '));
 await browser.close();

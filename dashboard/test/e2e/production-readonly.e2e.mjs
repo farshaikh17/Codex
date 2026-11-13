@@ -1,5 +1,6 @@
 // Read-only real-browser verification of a DEPLOYED public dashboard. It needs NO credentials and makes no write:
-// every non-GET request is aborted before it leaves the browser.
+// every non-GET request is aborted before it leaves the browser (the operator sign-in's one POST /api/auth/verify, used only with E2E_KEY in a
+// local rehearsal, is let through: it changes nothing).
 //   E2E_BASE=https://career-job-engine.<account>.workers.dev node test/e2e/production-readonly.e2e.mjs [desktop|mobile]
 import { createRequire } from 'node:module';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
@@ -20,7 +21,7 @@ page.on('pageerror', (e) => consoleErrors.push('pageerror ' + e.message.slice(0,
 page.on('response', (r) => { if (r.url().includes('/api/')) { const u = new URL(r.url()); apiLog.push({ status: r.status(), method: r.request().method(), url: decodeURIComponent(u.pathname + u.search), auth: !!r.request().headers()['authorization'] }); } });
 await page.route('**/api/**', (route) => {
   const req = route.request();
-  if (req.method() !== 'GET') { blocked.push(req.method() + ' ' + req.url()); return route.abort(); }
+  if (req.method() !== 'GET' && !(process.env.E2E_KEY && req.method() === 'POST' && new URL(req.url()).pathname === '/api/auth/verify')) { blocked.push(req.method() + ' ' + req.url()); return route.abort(); }
   return route.continue();
 });
 const text = async () => (await page.innerText('body')).replace(/\s+/g, ' ');
@@ -54,19 +55,34 @@ for (const p of ['/candidates', '/profile?candidate_id=farhan_shaikh', '/profile
 }
 check('public endpoints answer 200 and expose no private field, employer, pay, city, note or email', leaks.length === 0, leaks.join('; '));
 
-// Browser: public view first, no credentials involved at any point.
+// Browser, no credentials: the operator screens are locked (gap fix, 13 Nov). /app?operator=1 shows only the sign-in prompt, loads no data and
+// sends no key; the release workflow has no operator key, so this is what it checks.
 await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
-check('first visit: no unlock window, no key sent, no request refused', !(await modalOpen()) && apiLog.length > 3 && apiLog.every((r) => !r.auth && r.status === 200), JSON.stringify(apiLog.filter((r) => r.status !== 200).slice(0, 3)));
+{
+  const t = await text();
+  check('operator screens locked: /app?operator=1 shows only the sign-in prompt, no job, no candidate data',
+    (await page.locator('[data-testid="operator-gate"] #operator-key-input').count()) === 1 && (await page.locator('[data-job-id], [data-testid="job-card"]').count()) === 0
+    && !/Workspace|READY TO APPLY|Analytics|Sana Ansari|Farhan Shaikh/i.test(t), t.slice(0, 160));
+  check('operator screens locked: no data request and no key sent', apiLog.every((r) => !r.auth) && !apiLog.some((r) => /^\/api\/(jobs|candidates|profile|applications|dashboard|analytics|india-remote)/.test(r.url)), JSON.stringify(apiLog.slice(0, 3)));
+}
 const shell = await (await fetch(BASE + '/app')).text();   // the app shell (the site root is the public website)
 const js = await (await fetch(BASE + (shell.match(/\/assets\/index-[^"']+\.js/) || [''])[0])).text();
 check('public bundle holds no candidate profile data', js.length > 50000 && !/RRVUNL|Mianro|Chhabra|1,?20,?000/.test(js) && !/B\.Tech|\bBMS\b|Rajasthan/.test(js));
+// With E2E_KEY (a local rehearsal on a disposable database; the release has no key), the operator screens are signed in through the prompt and
+// read-checked as before; still no write leaves the browser. Without it they are skipped: the job seeker's page and the API reads below still run.
+const KEY = process.env.E2E_KEY;
+if (KEY) {
+await page.fill('#operator-key-input', KEY);
+await page.locator('[data-testid="operator-gate"] button[type=submit]').click();
+await page.waitForSelector('[data-testid="operator-gate"]', { state: 'detached', timeout: 15000 }).catch(() => {});
+await page.waitForTimeout(1500);
 await tab('DASHBOARD');
 const overview = await api('/dashboard/overview');
 const dash = await text();
 check('dashboard shows both candidates', dash.includes(overview.farhan.full_name) && dash.includes(overview.sana.full_name), dash.slice(0, 120));
 check('dashboard READY counts equal the API', new RegExp(`${overview.farhan.ready_count}\\s+READY`).test(dash));
-check('no private text on the dashboard', !PRIVATE_TEXT.test(dash) && !PRIVATE_CITY.test(dash), (dash.match(PRIVATE_TEXT) || dash.match(PRIVATE_CITY) || [])[0]);
+// signed in, the operator sees the profiles in full by design: the privacy checks are the public ones above and on the job seeker's page below
 
 for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.farhan.full_name, overview.sana.full_name], ['SANA', 'sana_ansari', overview.sana.full_name, overview.farhan.full_name]]) {
   await tab(btn);
@@ -86,9 +102,8 @@ for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.far
   await tab('SETTINGS');
   const names = await page.locator('input').evaluateAll((els) => els.map((e) => e.value));
   const st = await text();
-  check(`${btn}: profile summary names this candidate and holds no private detail`, (names.includes(label) || st.includes(label)) && !names.includes(other) && !PRIVATE_TEXT.test(st + names.join(' ')) && !PRIVATE_CITY.test(names.join(' ')), names.slice(0, 4).join('|'));
-  await tab('APPLICATIONS');
-  if (!OPEN) check(`${btn}: tracker shows no private notes`, !/PRIVATE-|Playwright verified rejection test/i.test(await text()));   // open tracker: the tracker's notes are visible by design
+  check(`${btn}: profile summary names this candidate`, (names.includes(label) || st.includes(label)) && !names.includes(other), names.slice(0, 4).join('|'));
+  await tab('APPLICATIONS');   // signed in: the operator sees the tracker's notes by design (no private-notes check here)
 }
 // India Remote and READY lists: the jobs on screen are exactly the server's filtered first page (same query the screen sends; reads are cache hits after the visit).
 const onScreen = () => page.$$eval('[data-job-id]', (els) => els.map((e) => e.getAttribute('data-job-id')));
@@ -111,6 +126,10 @@ for (const [btn, cid] of [['FARHAN', 'farhan_shaikh'], ['SANA', 'sana_ansari']])
   r = await sameAsApi(rd.jobs.map((j) => j.id));
   check(`${btn}: READY dashboard shows exactly the server's READY jobs and its tab count is their total`, r.ok && rd.jobs.every((j) => j.farhan_fit === 'READY') && new RegExp(`READY to Apply \\(${rd.status_counts.READY}\\)`, 'i').test(await text()), `screen [${r.got}] api [${rd.jobs.map((j) => j.id)}]`);
 }
+await page.locator('button[title="Sync / Refresh"]').first().click(); await page.waitForTimeout(1500);
+check('signed in: no write was attempted while reading the operator screens', blocked.length === 0, blocked.join(', '));
+await page.evaluate(() => sessionStorage.clear());
+} else console.log(`SKIP  [${mode}] operator screens (no E2E_KEY; the release checks that they are locked)`);
 // Plan phase 5: the job seeker's page (the default /app). Read-only here: it loads each person's Today screen, the counts equal /api/today, the first job
 // starts near the top, nothing operator-only is on screen, and no write is attempted (every non-GET is aborted above).
 for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]) {
@@ -127,14 +146,8 @@ for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]
   check(`${slug}: no private text on the job seeker's page`, !PRIVATE_TEXT.test(t), (t.match(PRIVATE_TEXT) || [])[0]);
   check(`${slug}: no sideways scrolling`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
 }
-await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
-// The navbar refresh button only re-reads data: no write is attempted and no unlock window opens for a visitor.
-{
-  const before = blocked.length;
-  await page.locator('button[title="Sync / Refresh"]').first().click(); await page.waitForTimeout(1500);
-  check('navbar refresh re-reads data: no write attempted, no unlock window', blocked.length === before && !(await modalOpen()), blocked.slice(before).join(', '));
-}
-check('across the whole visit no request was refused and no key was used', apiLog.filter((r) => r.status >= 400).length === 0 && apiLog.every((r) => !r.auth), JSON.stringify(apiLog.filter((r) => r.status >= 400).slice(0, 3)));
+check(KEY ? 'across the whole visit no request was refused' : 'across the whole visit no request was refused and no key was used',
+  apiLog.filter((r) => r.status >= 400).length === 0 && (KEY || apiLog.every((r) => !r.auth)), JSON.stringify(apiLog.filter((r) => r.status >= 400).slice(0, 3)));
 check('no write request was attempted by the UI during this run', blocked.length === 0, blocked.join(', '));
 check('no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));
 console.log(`\n${mode}: ${results.filter(Boolean).length}/${results.length} passed`);

@@ -4,7 +4,8 @@ This replaces the hand-off of 11 Nov. It is written at the end of the build plan
 what is live, what is merged but waiting for a release, the numbers that were measured, what is knowingly left, and the owner's few steps.
 Every number has a date. Measure again before relying on one.
 
-**Live site:** https://career-job-engine.farshaikh17.workers.dev. The job seeker's page is at `/app`, the operator's at `/app?operator=1`.
+**Live site:** https://career-job-engine.farshaikh17.workers.dev. The job seeker's page is at `/app`, the operator's at `/app?operator=1`
+(it needs the operator key to view from the next release).
 **Live Worker:** commit `8dc3004` (#127, the open tracker), deployed on 13 Nov at 00:10 UTC. The release run's browser check then failed on a
 timing wait, which #129 fixed; the after-fingerprint step did not run. `GET /api/version` shows the live commit.
 **Rules that still hold:**
@@ -71,8 +72,6 @@ The daily run, the watchlist, the phone message, the undo workflow and the sourc
 The full list, with reasons, is in the plan's section 10 (per phase) and section 11 (next product stage). The ones the owner is most likely to meet:
 - **Re-score speed:** after a rules bump the stored lists take about five daily runs to be fully re-scored (800 rows per person per run).
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
-- **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
-  except the open tracker's own actions).
 - **Out of scope:** private link per person, self sign-up, other professions, pricing, the operator key, the five held dependency updates.
 
 ## 6. Owner steps
@@ -95,5 +94,8 @@ Gaps from section 5 fixed afterwards, one pull request each (`gaps/*`); details 
   like "Houston, TX". Rules marker `profile_v15`: the stored lists are re-scored over the next daily runs (800 rows per person per run).
 - **Gulf jobs from job boards:** a Gulf posting from Bayt, Indeed or LinkedIn (which refuse the still-open check) found in the last 2 days now
   counts for Worth a try (never Best matches), and its card says it could not be confirmed still open. The audit agrees.
+- **Operator screens locked:** `/app?operator=1` needs the operator key to view; without it only a plain sign-in prompt shows and no data
+  loads. Client share links still open their dashboard without a key; a revoked or made-up link shows only "no longer valid". The release's
+  browser check now checks the lock, the job seeker's page and the public reads (it has no key). Reaches the site with the next release.
 - **Telegram link:** the link workflow accepts only `/start <code>` where the code is a per-person secret the owner chooses (repository
   secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`); a name or id links nobody. New owner step in section 6.
