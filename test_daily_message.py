@@ -152,6 +152,18 @@ class Channels(unittest.TestCase):
             self.assertEqual(dm.run_link({}), 0)
         self.assertIn('TELEGRAM_BOT_TOKEN is not set', out.getvalue())
 
+    def test_link_without_codes_links_nobody_and_leaves_messages_unread(self):
+        calls = []
+        ups = [{'update_id': 5, 'message': {'chat': {'id': 11, 'type': 'private'}, 'text': '/start sana_ansari'}}]
+        reads = iter([[{'id': 'sana_ansari'}, {'id': 'farhan_shaikh'}], []])
+        out = io.StringIO()
+        with mock.patch.object(dm, 'telegram', side_effect=lambda t, m, p=None, timeout=20: (calls.append((m, p)), (ups, None))[1]), \
+             mock.patch.object(dm, 'd1_read', side_effect=lambda sql: next(reads)), \
+             mock.patch.object(dm, 'd1_write', side_effect=AssertionError('no write')), redirect_stdout(out):
+            self.assertEqual(dm.run_link({'TELEGRAM_BOT_TOKEN': 'x'}), 0)
+        self.assertEqual([m for m, _ in calls], ['getUpdates'], 'one read, no offset (nothing marked read), no reply')
+        self.assertIn('no link code is set', out.getvalue())
+
     def test_sends_and_never_prints_secrets(self):
         state = [{'key': 'telegram:sana_ansari', 'value': '[987654321]'}]
         counts = [{'id': 'sana_ansari', 'full_name': 'Sana Ansari', 'ready': 25, 'stretch': 25, 'new_ready': 4, 'new_stretch': 0}]

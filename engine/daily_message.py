@@ -322,6 +322,7 @@ def run_link(env, now=None):
     if not codes:
         print('Link Telegram chats: no link code is set - add repository secrets TELEGRAM_LINK_CODE_SANA / TELEGRAM_LINK_CODE_FARHAN '
               f'({MIN_CODE}-64 letters, digits, _ or -), send each person https://t.me/<bot>?start=<their code>, then run this again')
+        return 0   # nothing is read or marked read, so a person's Start still counts once the codes are added
     changes = link_updates(updates, codes, existing)
     if not updates:
         print('Link Telegram chats: the bot has no new messages (Telegram keeps them for 24 hours: ask the person to tap Start again)')
