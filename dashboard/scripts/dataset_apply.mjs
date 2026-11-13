@@ -263,6 +263,17 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE ${MARKED} ${undecided('candidate_job_scores')}
       AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.candidate_id = candidate_job_scores.candidate_id AND x.job_id = candidate_job_scores.job_id AND (x.manual_override_status IS NOT NULL OR (x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD') AND COALESCE(x.qualification_reason, '') NOT LIKE 'Shortlisted automatically.%')));`);
+    // Plan S3: a row held as outside the role family comes back to "to review" when the current rules call its title a role match (the role rules
+    // widen, S2). Before the reason below is replaced, while the stored reason still says why it was held. Never a decided or applied row, never an
+    // ineligible one. Rows are exported best old score first, so the whole held queue is re-checked over a few runs.
+    if (r.lane === 'STRONGEST_FIT' && r.status !== 'INELIGIBLE') {
+      const back = `candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND qualification_status = 'HOLD' AND manual_override_status IS NULL
+        AND COALESCE(eligibility_status, 'UNKNOWN') <> 'INELIGIBLE' AND qualification_reason LIKE 'Outside candidate target role family%' ${undecided('candidate_qualifications')}`;
+      out.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
+        SELECT candidate_id, job_id, 'HOLD', 'NEEDS_REVIEW', 'Back in the target role family under the current rules', 'discovery' FROM candidate_qualifications WHERE ${back};`);
+      out.push(`UPDATE candidate_qualifications SET qualification_status = 'NEEDS_REVIEW', last_reverified_at = ${q(now)} WHERE ${back};`);
+      report.held_role_rechecked = (report.held_role_rechecked || 0) + 1;
+    }
     out.push(`UPDATE candidate_qualifications SET qualification_reason = ${q(r.qualification_reason)} WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)}
       AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
     // Eligibility only ever moves UNKNOWN -> ELIGIBLE here, when the current rules find affirmative evidence (e.g. Sana's on-site India roles,
