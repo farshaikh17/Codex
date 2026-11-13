@@ -1,8 +1,8 @@
 {
   "schema": "public-job-index-1",
-  "run_id": "gh-43467281494-1",
+  "run_id": "gh-43467637152-1",
   "trigger": "push",
-  "attempted_at": "2026-11-13T16:53:54.483539+00:00",
+  "attempted_at": "2026-11-13T16:55:54.436292+00:00",
   "status": "ok",
   "outcome": "All 17 attempted sources succeeded.",
   "successful_sources": 17,
@@ -16,7 +16,7 @@
     {
       "source": "gitlab-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -26,7 +26,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -34,7 +34,7 @@
     {
       "source": "remote-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/remote/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -44,7 +44,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -52,7 +52,7 @@
     {
       "source": "clipboard-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/clipboard?includeCompensation=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -62,7 +62,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -70,7 +70,7 @@
     {
       "source": "oyster-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/oyster?includeCompensation=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -80,7 +80,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -88,7 +88,7 @@
     {
       "source": "zapier-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/zapier?includeCompensation=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -98,7 +98,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -106,7 +106,7 @@
     {
       "source": "posthog-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/posthog?includeCompensation=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -116,7 +116,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -124,7 +124,7 @@
     {
       "source": "drivetrain-lever",
       "endpoint": "https://api.lever.co/v0/postings/drivetrain?mode=json",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -134,7 +134,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -142,7 +142,7 @@
     {
       "source": "resilinc-lever",
       "endpoint": "https://api.lever.co/v0/postings/resilinc?mode=json",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -152,7 +152,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -160,7 +160,7 @@
     {
       "source": "weave-ashby",
       "endpoint": "https://api.ashbyhq.com/posting-api/job-board/weave?includeCompensation=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -170,7 +170,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -178,7 +178,7 @@
     {
       "source": "twilio-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/twilio/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -188,7 +188,7 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": null,
       "next_due_at": null
@@ -196,7 +196,7 @@
     {
       "source": "highlevel-lever",
       "endpoint": "https://api.lever.co/v0/postings/gohighlevel?mode=json",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -206,15 +206,15 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "cai-lever",
       "endpoint": "https://api.lever.co/v0/postings/cagents?mode=json",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -224,33 +224,33 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "cognite-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/cognite/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
       "status": "ok",
       "jobs": 58,
       "skipped": 0,
-      "new": 1,
+      "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "energyhub-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/energyhub/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -260,15 +260,15 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "voltus-lever",
       "endpoint": "https://api.lever.co/v0/postings/voltus?mode=json",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -278,15 +278,15 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "celigo-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/celigo/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -296,15 +296,15 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     },
     {
       "source": "avathon-greenhouse",
       "endpoint": "https://boards-api.greenhouse.io/v1/boards/avathon/jobs?content=true&pay_transparency=true",
-      "checked_at": "2026-11-13T16:53:54.483539+00:00",
+      "checked_at": "2026-11-13T16:55:54.436292+00:00",
       "attempted_this_run": true,
       "endpoint_changed": false,
       "normalization_changed": false,
@@ -314,31 +314,31 @@
       "new": 0,
       "changed": 0,
       "no_longer_listed": [],
-      "last_success_at": "2026-11-13T16:53:54.483539+00:00",
+      "last_success_at": "2026-11-13T16:55:54.436292+00:00",
       "consecutive_failures": 0,
       "poll_interval_hours": 24,
-      "next_due_at": "2026-11-14T16:53:54.483539+00:00"
+      "next_due_at": "2026-11-14T16:55:54.436292+00:00"
     }
   ],
   "notice": "Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.",
   "manifest": {
-    "boards/avathon-greenhouse.json": "4a9a4679b18c8651dcf11a591bc48e5805cedfc10199695fcfbc2ba9c0d18705",
-    "boards/cai-lever.json": "fab177819b83d4813fb82a6be14ec6a24f64d983c31116fa287b17efd08eaa68",
-    "boards/celigo-greenhouse.json": "31dc242b6e46f08ee748e414f0e781630ef06d5728ac6468c01b8d80150f6470",
-    "boards/clipboard-ashby.json": "a471402e552fb0e11b41dbd62ebfca3b6ee761c92fc9dfc09eee9f63ec217b4c",
-    "boards/cognite-greenhouse.json": "df4ccbfb1967aeab08c9e4e5881690802251c4e8973dd0b871fecb8726fb0025",
-    "boards/drivetrain-lever.json": "d8a069c04d1243f43d480ab4f580855c121f3fab6c57678b19c4e8eae6831e16",
-    "boards/energyhub-greenhouse.json": "24c1e5a639848ee0e73e654b7648f956edc2a2d83bab49812f5790cbe5abb845",
-    "boards/gitlab-greenhouse.json": "a7e63e9f515a4f8dbcb339b3625f24d2799b5037bc6a2f378f5e7b6fa15da64e",
-    "boards/highlevel-lever.json": "eb1d7b1026cdfde37609f76c00dc8da80f4cd6b18cc42c7e0608ab3c06316f6a",
-    "boards/oyster-ashby.json": "f07aca56bdbef7a955bf27a4e990f2bac5e1643f8aa8a7cedb75de7b0ff6932e",
-    "boards/posthog-ashby.json": "9f8f54ae9c74c9b02195fe49487d7f9f64a907619434d1e3a4202999d9ddc5d6",
-    "boards/remote-greenhouse.json": "c84ac582fdf5cc17cdb25328248c7edf2a8fda4aeddb0b844ff3f6d83a3afda9",
-    "boards/resilinc-lever.json": "06c1c2f948f39ebfa3e3ea88875272de5be86885145ae1e60ea040ed8a7d6a20",
-    "boards/twilio-greenhouse.json": "078db263dd3d64c78dd847ae106e95c12e5162f95d5c928813ec569b2b992b03",
-    "boards/voltus-lever.json": "8520d7ad7b8387d06f17395e11913309dd84a96fbd5a6399323578860d80e536",
-    "boards/weave-ashby.json": "c48db9104bf8cd63eb30fcd679c8529232a08a47f0afdf858a2907d36c57f4b2",
-    "boards/zapier-ashby.json": "6c9749479df1279f360a891a4706fe451577f0e27f43c55c1861cefcaec8824e",
-    "index.json": "589820159155ada0c043201da7aa38114611dfddc6f630b3390e7b30bef1e476"
+    "boards/avathon-greenhouse.json": "0e6c39750dcd0688b04b50c4f93e8cbc96520e9ad1a607ac38bffcdca0da69a1",
+    "boards/cai-lever.json": "3239288e41ba2b15413a6d70a0f836ee59b612fdb3a7becfe2795ccea5799c20",
+    "boards/celigo-greenhouse.json": "0adf186fc8c92b07d2fb1dd3fd5666a5d2c1b84f2b8dda573c25296b6284b23a",
+    "boards/clipboard-ashby.json": "da92acd5c11c6577ca1147ffb140da0c3055d3ee44be4dbe1adf756c868c0f0c",
+    "boards/cognite-greenhouse.json": "6b156b1226e6c44f22d90110f62ff59638cea416f93554070cb08a744fadf85f",
+    "boards/drivetrain-lever.json": "9f4e83c370da5fc4fbeb0039f1c855e5d999209b51a704cb534dc56772040d03",
+    "boards/energyhub-greenhouse.json": "a8ed37b6a19d8786b5057d4f5479825645217554b0b05eda4458bc8575722f60",
+    "boards/gitlab-greenhouse.json": "fb91b7ef050b87f33015ebfc57c3256def9c8de255eb8d6dd9d1daaa32692ea7",
+    "boards/highlevel-lever.json": "6a1f6da4ba3ea3556f2225b9227ea4a200cabda1d2b7c8c6f2fcb70ba55d5555",
+    "boards/oyster-ashby.json": "fb5c252e4b6439b00e7d8249706f281ca0fc551f26757effa1484e6aceb3fbc8",
+    "boards/posthog-ashby.json": "4fcf8ea527d58e7af222143b07c3c52988498de16d4b4cf9e20d696acbf4053a",
+    "boards/remote-greenhouse.json": "b36add0a6fa473611009b5b4909f924124b2b8907b1e29d7d6771ca4430ac8c5",
+    "boards/resilinc-lever.json": "6866576f421aaab11da7c3350d69bf2067864cf7a1ebee55d4d6a5915045a68f",
+    "boards/twilio-greenhouse.json": "dda2f448ef216793cb8562e7b54b169f7cf921a9813aab4240a1e177fe17e32e",
+    "boards/voltus-lever.json": "b485741621b3b7b4118eb405002075c20f41d2d339cf896a538681d4c947629e",
+    "boards/weave-ashby.json": "a8593d0201b19e8be79d52689d8788ed2431c47835c5e2170ec6395b07b6bbfc",
+    "boards/zapier-ashby.json": "53adb2a53b84e6a3016daf6d77b8d93eab455baef2a81c1c49947af8c1596a2b",
+    "index.json": "f44387480c0c7c026983c5377ef887b762a7b1f878664ed3e0a549e53ce0c1cf"
   }
 }
