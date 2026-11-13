@@ -579,3 +579,16 @@ print(json.dumps({'builtin': {c: split(p['role']) for c, p in d.BUILTIN.items()}
   // IT operations is not plant operations
   assert.ok(p2eval(P2_SANA, 'IT Operations Engineer', 'Pune, India', P2_PLANT).score <= 40);
 });
+
+test('S4: one matching word is not enough: Power BI, sales, aviation, plant-based and EV-battery reliability titles are capped for Sana', () => {
+  for (const [t, d] of [['Power BI Developer', 'Build dashboards. Root cause analysis of data issues. Procurement analytics.'], ['Energy Sales Manager', 'Sell rooftop solar. Procurement.'],
+    ['Aircraft Maintenance Engineer', 'DGCA licence B1. Preventive maintenance of A320 aircraft. Reliability.'], ['Reliability Engineer', 'Vehicle reliability testing, DFMEA, Weibull analysis for EV battery packs. Root cause analysis.'],
+    ['Power Platform Consultant', 'Power Apps, Power Automate. Procurement process.'], ['Power Electronics Engineer', 'Design inverters, PCB, magnetics. Reliability testing.'],
+    ['Plant-Based Product Manager', 'FMCG plant-based foods. Procurement.'], ['Sustainability Reporting Analyst', 'ESG reporting. Procurement data.'], ['Aviation Maintenance Planner', 'Maintenance planning for an airline fleet.']]) {
+    const r = p2eval(P2_SANA, t, t === 'Aircraft Maintenance Engineer' ? 'Delhi, India' : 'Pune, India', d);
+    assert.ok(r.score <= 40 && p2tier(P2_SANA, r) === 'HOLD', `${t}: ${r.score}`);
+  }
+  assert.ok(p2eval(P2_SANA, 'Reliability Engineer', 'Pune, India', P2_PLANT).score > 60, 'plant reliability is untouched');
+  assert.equal(p2eval(P2_SANA, 'Reliability Engineer', 'Pune, India', P2_PLANT).target_fit, 'exact');
+  assert.equal(p2eval(P2_SANA, 'Maintenance Planner', 'Pune, India', P2_PLANT).target_fit, 'word');
+});

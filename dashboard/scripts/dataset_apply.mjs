@@ -134,7 +134,7 @@ for (const { j, board, description, remote, onsite, rows } of planned.slice(0, M
     const guard = `WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ${q(j.id)}) AND NOT EXISTS (SELECT 1 FROM applications WHERE candidate_id = ${q(cid)} AND job_id = ${q(j.id)})`;
     out.push(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at) SELECT ${[cid, j.id, r.status, r.lane, r.eligibility, r.reason, r.qualification_reason, now].map(q).join(',')} ${guard};`);
     out.push(`INSERT OR IGNORE INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,role_score,strategy_lane,score_breakdown,calculated_at) SELECT ${[cid, j.id, r.score, Math.min(100, r.skills.length * 20), r.lane === 'STRONGEST_FIT' ? 70 : 0, r.lane,
-      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
+      JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', skills_v1: hasSkills(byId.get(cid)), assessed_from: board ? 'job_sites' : 'ats_dataset', matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.' }), now].map(q).join(',')} ${guard};`);
     report.rows++; report.by_status[r.status] = (report.by_status[r.status] || 0) + 1;
   }
 }
@@ -217,7 +217,7 @@ function rescreenLegacy(row, r) {
   const roleMatched = r.lane === 'STRONGEST_FIT';
   const fallback = roleMatched ? 'NEEDS_REVIEW' : 'HOLD';   // when the stored eligibility is kept, the screen's own INELIGIBLE does not apply
   const noApp = (t) => `NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
-  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, [RULES_MARKER]: true, assessed_from: 'legacy_rescreen',
+  const bd = JSON.stringify({ rule_version: RULE_VERSION, preliminary: true, ranking_v2: true, skills_v1: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', assessed_from: 'legacy_rescreen',
     matched_skills: r.skills, missing_skills: [], note: 'Conservative discovery screen; full qualification review pending.', rescored_at: now });
   // 1. the score, only while the row is still undecided and unscored
   out.push(`INSERT INTO candidate_job_scores(candidate_id, job_id, overall_score, skill_score, role_score, strategy_lane, score_breakdown, calculated_at)
@@ -258,7 +258,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     // The re-scored base plus the current taste (stored as taste_adj, so the taste pass below never adds it twice).
     const tasteAdj = r.status === 'INELIGIBLE' ? 0 : Math.round(tasteScore((signals.taste || {})[row.candidate_id], row.title, row.company) * TASTE_MAX);
     r.score = Math.max(0, Math.min(100, r.score + tasteAdj));
-    const tagged = JSON.stringify({ ...bd, skills_v1: true, [RULES_MARKER]: true, matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
+    const tagged = JSON.stringify({ ...bd, skills_v1: true, [RULES_MARKER]: true, target_exact: r.target_fit === 'exact', matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND score_breakdown NOT LIKE ${MARKED} ${undecided('candidate_job_scores')}
@@ -312,7 +312,8 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
 // The screen now shortlists by itself, on what is stored after this run's writes:
 //   READY          score >= the person's threshold, eligibility confirmed (ELIGIBLE)
 //   STRETCH_READY  score >= threshold with eligibility still to confirm (UNKNOWN), or ELIGIBLE and up to 10 points below the threshold
-// and in both cases: scored under the current rules (RULES_MARKER), one posting per employer and title, at least one profile skill named in the posting (a title match alone is not enough),
+// and in both cases: scored under the current rules (RULES_MARKER), one posting per employer and title, at least two profile skills named in the posting (skill_score >= 40;
+// one is enough when the title is exactly one of the person's target roles, plan S4),
 // the posting active and verified open in the last 4 days.
 // At most 25 of each per person, best score first. A shortlisted row is marked by its reason ("Shortlisted automatically. ...") so that it can be told
 // from a person's decision; it goes back to "to review" when it stops qualifying. Never touched: an override, an application, a row a person set.
@@ -328,7 +329,8 @@ function shortlistSql(requireVerified) {
   const free = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
   const base = `FROM candidate_qualifications q JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id
-    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND s.score_breakdown LIKE ${MARKED} AND s.skill_score > 0`;
+    WHERE q.candidate_id IN (${ids}) AND q.qualification_status IN ('NEEDS_REVIEW','READY','STRETCH_READY') AND ${free} AND j.is_active = 1 AND s.score_breakdown LIKE ${MARKED}
+      AND (s.skill_score >= 40 OR s.score_breakdown LIKE '%"target_exact":true%')`;   // plan S4: two matched skills, unless the title is one of the person's target roles
   const verified = `j.last_verified_at >= ${q(since)}`;
   const keepIf = requireVerified ? ` AND ${verified}` : '';   // the demotion's verification condition (skipped when the day's check verified nothing)
   const fitsReady = `s.overall_score >= c.qualification_threshold AND q.eligibility_status = 'ELIGIBLE'`;
