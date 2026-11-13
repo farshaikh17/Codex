@@ -554,7 +554,7 @@ print(json.dumps({'builtin': {c: split(p['role']) for c, p in d.BUILTIN.items()}
       'Ingenieur Instandhaltung', 'Wartungsingenieur', 'Kraftwerksingenieur', 'Elektroingenieur', 'Betriebsingenieur', 'Ingenieur Zuverlässigkeit', 'Anlageningenieur', 'Ingénieur maintenance',
       'Ingénieur centrale thermique', 'Onderhoudsingenieur', 'Elektrotechnisch Ingenieur', 'Adviseur energiebesparing', 'Ingenieur Energieeffizienz', 'Power Station Engineer', 'Substation Engineer',
       'Switchgear Engineer', 'Transmission Line Engineer', 'O&M Engineer – Solar', 'Operations and Maintenance Engineer', 'Maintenance Engineer', 'Plant Engineer', 'Reliability Engineer',
-      'Commissioning Engineer', 'Asset Performance Specialist', 'Energy Engineer', 'Utilities Engineer', 'Renewables Engineer', 'Solar Site Engineer', 'Wind Turbine Technician Lead', 'Thermal Engineer',
+      'Commissioning Engineer', 'Asset Performance Specialist', 'Energy Engineer', 'Utilities Engineer', 'Renewables Engineer', 'Solar Site Engineer', 'Wind Turbine Technician Lead', 'Thermal Power Plant Engineer',
       'Hydro Power Engineer', 'Decarbonisation Consultant', 'Sustainability Engineer', 'Cleantech Engineer', 'Net Zero Engineer', 'Emissions Engineer', 'Efficiency Engineer', 'Technical Consultant'],
   };
   const who = { farhan_shaikh: P2_FARHAN, sana_ansari: P2_SANA };
@@ -635,7 +635,7 @@ test('S8: office jobs do not pass Farhan\'s remote-only rule; "work from home" a
   const wfh = p2eval(P2_FARHAN, 'Implementation Manager', 'Bengaluru, India', V + ' We offer a flexible work from home policy and free lunches.', false);
   assert.notEqual(wfh.eligibility, 'ELIGIBLE'); assert.notEqual(p2tier(P2_FARHAN, wfh), 'READY');
   for (const [loc, d, remote] of [['Bengaluru, India', V + ' This is a hybrid role, 3 days in office.', false], ['India', V + ' This is a hybrid role, 3 days in our Pune office.', true],
-    ['Remote - India', V + ' You will work 2 days a week in the office.', true], ['Remote - India', V + ' On-site 3 days at the client.', true]]) {
+    ['Remote - India', V + ' You will work 2 days a week in the office.', true], ['Remote - India', V + ' The role is hybrid.', true]]) {
     const r = p2eval(P2_FARHAN, 'Implementation Manager', loc, d, remote);
     assert.equal(r.eligibility, 'INELIGIBLE', d); assert.match(r.reason, remote ? /Hybrid or set office days/ : /Not a remote role/);
   }
@@ -648,7 +648,7 @@ test('S8: office jobs do not pass Farhan\'s remote-only rule; "work from home" a
 test('S9: Gulf details: nationals preference caps at 45, Gulf plant towns and country codes count, "for our clients" alone is not an agency', () => {
   const { gulfPlace, agencyPosting, NATIONALS_PREFERENCE_CAP } = DISCOVERY;
   const G = P2_PLANT + ' Tax-free salary, family status, accommodation.';
-  for (const extra of [' Saudization: preference to Saudi nationals.', ' Preference will be given to Omani nationals.', ' In line with Emiratisation goals.']) {
+  for (const extra of [' Saudization: preference to Saudi nationals.', ' Preference will be given to Omani nationals.', ' Priority under Emiratisation rules.']) {
     const r = p2eval(P2_SANA, 'Maintenance Engineer', 'Riyadh, KSA', G + extra);
     assert.ok(r.score <= NATIONALS_PREFERENCE_CAP, extra); assert.equal(p2tier(P2_SANA, r), 'HOLD', extra); assert.match(r.qualification_reason, /preference to the country's nationals/);
   }
@@ -676,4 +676,34 @@ test('S11: Sana\'s other target roles can score: their distinctive words count a
   assert.deepEqual(targetSkills(JSON.stringify(['Plant Engineer', 'Industrial Maintenance Engineer']), [], 'plant maintenance'), [], 'generic words do not count');
   // Farhan is unchanged
   assert.deepEqual(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', 'Implementation of technical operations.').skills, []);
+});
+
+test('phase 2 tenth-man fixes: hybrid boilerplate, NCR, ", SA", analyst, Saudization boilerplate, "(Power Plant)", anchored words, AGM/DGM', () => {
+  const { gulfPlace, sanaIndiaCity } = DISCOVERY;
+  // 1. hybrid wording about the company or its customers is not this job
+  for (const extra of [' Offices in London and Pune with a hybrid working model for office-based staff; this role is fully remote.', ' We offer flexible hybrid working and a home office budget.',
+    ' Hybrid work policy for those near a hub.', ' You will onsite 2 days per quarter for customer workshops.', ' Help customers roll out a hybrid working model.'])
+    assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL + extra, true).eligibility, 'ELIGIBLE', extra);
+  // 2. NCR is Metro Manila too
+  assert.equal(sanaIndiaCity('Remote - Makati, NCR, Philippines'), false); assert.equal(sanaIndiaCity('Gurugram, NCR'), true);
+  assert.notEqual(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - Makati, NCR, Philippines', P2_IMPL, true).eligibility, 'ELIGIBLE');
+  // 3. ", SA" is South Australia / South Africa, and codes are upper case
+  for (const l of ['Adelaide, SA', 'Port Augusta, SA', 'Johannesburg, SA', 'Springfield, qa']) assert.ok(!gulfPlace(l), l);
+  assert.ok(p2eval(P2_SANA, 'Maintenance Engineer', 'Adelaide, SA', P2_PLANT + ' Relocation assistance available.').score <= 45);
+  // 5. plant analysts are hers
+  for (const t of ['Reliability Analyst', 'Condition Monitoring Analyst - Power Plant']) assert.ok(p2eval(P2_SANA, t, 'Vadodara', P2_PLANT).score > 45, t);
+  assert.ok(p2eval(P2_SANA, 'Business Analyst - Energy', 'Pune, India', P2_PLANT).score <= 40);
+  // 6. a bare Saudization mention is boilerplate
+  assert.ok(p2eval(P2_SANA, 'Senior Mechanical Maintenance Engineer', 'Jubail, Saudi Arabia', P2_PLANT + ' We are committed to Saudization. Visa sponsorship provided.').score > 60);
+  // 7. the one-skill exception needs the target's qualifier
+  const S7 = { ...P2_SANA, target_roles: JSON.stringify(['Maintenance Engineer (Power Plant)', 'Reliability Engineer']) };
+  assert.equal(p2eval(S7, 'Building Maintenance Engineer', 'Mumbai, India', 'Hotel lifts and HVAC.').target_exact, false);
+  assert.equal(p2eval(S7, 'Maintenance Engineer - Power Plant', 'Korba', P2_PLANT).target_exact, true);
+  assert.equal(p2eval(S7, 'Senior Reliability Engineer', 'Korba', P2_PLANT).target_exact, true);
+  // 8. anchored words
+  for (const t of ['Registered Nurse - Rotating Shifts', 'Thermal Engineer']) assert.equal(p2eval(P2_SANA, t, 'Pune, India', 'Patient care.').lane, 'UNASSIGNED', t);
+  for (const t of ['Clinical Program Manager', 'Project Manager - Construction']) assert.ok(p2eval(P2_FARHAN, t, 'Remote - India', P2_IMPL, true).score <= 40, t);
+  // 9. AGM and DGM are mid-senior grades
+  assert.doesNotMatch(p2eval(P2_SANA, 'Assistant General Manager - Maintenance', 'Korba', P2_PLANT).qualification_reason, /above the candidate's level/);
+  assert.match(p2eval(P2_SANA, 'General Manager - Maintenance', 'Korba', P2_PLANT).qualification_reason, /above the candidate's level/);
 });
