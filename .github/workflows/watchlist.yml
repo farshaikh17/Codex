@@ -80,14 +80,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: python engine/dataset_discovery.py --profiles-only --out work
+      # Each writes its file after every source and starts no new source after 80% of its time budget (the step limit), so a slow day
+      # keeps what it fetched; each exits non-zero when every one of its sources failed.
       - name: Priority employer sites (no credentials)
         continue-on-error: true
         timeout-minutes: 16
-        run: python engine/more_sources.py --fast --profiles work/profiles.json --out work --days 7
+        run: python engine/more_sources.py --fast --profiles work/profiles.json --out work --days 7 --budget-seconds 960
       - name: Remote job boards (no credentials)
         continue-on-error: true
         timeout-minutes: 5
-        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 2
+        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 2 --budget-seconds 300
       - name: Remove results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:
@@ -136,6 +138,21 @@ jobs:
         run: |
           node scripts/run_log.mjs --work ../work --kind watchlist --event "${{ github.event_name }}" > ../work/runlog.sql
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
+      # A run that fetched nothing from any source must not count as done for 7 hours (the recent-run guard counts only a successful
+      # "watch" job), so it fails here, after the run log is written, and the next trigger tries again.
+      - name: Fetched something?
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          read = 0
+          for f in ('work/more_sources_report.json', 'work/boards_report.json'):
+              if os.path.exists(f):
+                  read += sum(int(r.get('read') or 0) for r in json.load(open(f)).values() if isinstance(r, dict))
+          print(f'postings read from all sources: {read}')
+          if read == 0:
+              print('::error::The watchlist read nothing from any source (every source failed or ran out of time).')
+              sys.exit(1)
+          PY
       - name: Summary (counts only)
         if: always()
         run: |

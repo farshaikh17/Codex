@@ -142,14 +142,14 @@ jobs:
       - name: Remote job boards (official public feeds; no credentials)
         continue-on-error: true
         timeout-minutes: 5
-        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7
+        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7 --budget-seconds 300
       - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna when its free keys are set)
         continue-on-error: true
         timeout-minutes: 22
         env:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
-        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30
+        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30 --budget-seconds 1320
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:

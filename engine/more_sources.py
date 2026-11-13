@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
-from engine.remote_boards import UA, job, text, when  # noqa: E402
+from engine.remote_boards import UA, all_errored, job, over_budget, text, when, write_json  # noqa: E402
 
 PAUSE = 0.6
 # Sources that read an employer's own career site (not a job board): their rows are stored as the employer's posting.
@@ -111,12 +111,24 @@ def workable(queries):
                 break
 
 
+class AllEmployersFailed(RuntimeError):
+    """Every employer of one source failed: reported as that source's error (one employer down is only logged)."""
+
+
+def _all_failed(name, failed, total):
+    if total and failed == total:
+        raise AllEmployersFailed(f'{name}: all {total} employer sites failed')
+
+
 def eightfold():
+    failed = 0
     for company, host, domain in EIGHTFOLD:
         try:
             yield from eightfold_site(company, host, domain)
         except Exception as e:   # one employer's site down never loses the others
+            failed += 1
             print(f'eightfold {company}: {type(e).__name__}', file=sys.stderr)
+    _all_failed('eightfold', failed, len(EIGHTFOLD))
 
 
 def eightfold_site(company, host, domain):
@@ -174,6 +186,7 @@ def successfactors():
 def workday(pages=3):
     """Open postings of a few energy employers from Workday's public career-site JSON, searched with the same energy terms as SuccessFactors.
     The list answer carries no job text and only a relative "Posted N Days Ago", so the description is the location text and the posted date is unknown."""
+    failed = 0
     for company, tenant, dc, site in WORKDAY:
         base = f'https://{tenant}.{dc}.myworkdayjobs.com'
         seen = set()
@@ -195,10 +208,15 @@ def workday(pages=3):
                     if len(rows) < 20:
                         break
         except Exception as e:   # one employer down never loses the others
+            failed += 1
             print(f'workday {company}: {type(e).__name__}', file=sys.stderr)
+    _all_failed('workday', failed, len(WORKDAY))
+
+
 def smartrecruiters(pages=10):
     """Open postings of a few energy employers from SmartRecruiters' public API; the title filter in main() keeps the relevant ones.
     The list answer carries no job text, so the description is the function / industry / location labels only."""
+    failed = 0
     for company, ident in SMARTRECRUITERS:
         try:
             for page in range(pages):
@@ -216,12 +234,15 @@ def smartrecruiters(pages=10):
                 if len(rows) < 100:
                     break
         except Exception as e:   # one employer down never loses the others
+            failed += 1
             print(f'smartrecruiters {company}: {type(e).__name__}', file=sys.stderr)
+    _all_failed('smartrecruiters', failed, len(SMARTRECRUITERS))
 
 
 def oracle_hcm(pages=3):
     """Open postings of Oracle Recruiting Cloud career sites (Wood), searched with the same energy terms as SuccessFactors/Workday.
     The list answer carries no job text, so the description is the location text and the workplace type."""
+    failed = 0
     for company, host, site in ORACLE:
         seen = set()
         try:
@@ -246,7 +267,9 @@ def oracle_hcm(pages=3):
                     if len(rows) < 25:
                         break
         except Exception as e:   # one employer down never loses the others
+            failed += 1
             print(f'oracle_hcm {company}: {type(e).__name__}', file=sys.stderr)
+    _all_failed('oracle_hcm', failed, len(ORACLE))
 
 
 def arbeitnow(pages=3):
@@ -401,7 +424,9 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--days', type=int, default=30)
     ap.add_argument('--fast', action='store_true')
+    ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it")
     a = ap.parse_args()
+    started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
@@ -419,6 +444,9 @@ def main():
     report = {}
     used, enriched, spent = {}, {}, [0.0]
     for name, fn in sources.items():
+        if over_budget(started, a.budget_seconds):   # the step's time limit is near: what was fetched is kept, nothing new starts
+            report[name] = {'skipped': 'time budget', 'read': 0, 'kept': 0}
+            continue
         seen = kept = 0
         try:
             for j in fn():
@@ -442,9 +470,15 @@ def main():
             report[name] = {'read': seen, 'kept': kept, **({'full_text': enriched[name]} if enriched.get(name) else {})}
         except Exception as e:   # one failing source is skipped
             report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept}
-    raw_path.write_text(json.dumps(merged, default=str))
-    (out / 'more_sources_report.json').write_text(json.dumps(report, indent=1))
+        write_json(raw_path, merged)   # after every source: a step stopped at its time limit keeps what it fetched
+        write_json(out / 'more_sources_report.json', report, indent=1)
+    write_json(raw_path, merged)
+    write_json(out / 'more_sources_report.json', report, indent=1)
     print(json.dumps(report))
+    if all_errored(report):
+        print('every source failed', file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
