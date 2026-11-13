@@ -169,7 +169,7 @@ def profiles(local=None):
 
 # What dataset_apply.mjs scores with: skills, years, pay floor, and employers that rejected the candidate before (applications
 # marked REJECTED in the dashboard and past applications entered by hand, migration 0016).
-CANDIDATES_SQL = """SELECT c.id, c.primary_skills, c.target_roles, c.total_years_experience, c.cash_floor_inr_monthly, p.search_profile,
+CANDIDATES_SQL = """SELECT c.id, c.primary_skills, c.target_roles, c.total_years_experience, c.cash_floor_inr_monthly, c.qualification_threshold, p.search_profile,
   (SELECT json_group_array(json_object('company', x.company, 'on', x.decided_on)) FROM (
      SELECT company, decided_on FROM past_applications WHERE candidate_id = c.id AND outcome = 'REJECTED'
      UNION SELECT j.company, substr(coalesce(a.updated_at, a.created_at), 1, 10) FROM applications a JOIN jobs j ON j.id = a.job_id

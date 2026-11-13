@@ -605,3 +605,18 @@ test('S5: plain worldwide-remote wording counts; Farhan also takes Remote - APAC
   assert.notEqual(p2eval(P2_SANA, 'Energy Efficiency Engineer', 'Remote - APAC', P2_PLANT, true).reason, 'Posting explicitly advertises worldwide remote work.');
   assert.equal(p2eval(P2_SANA, 'Energy Efficiency Engineer', 'Remote (Global)', P2_PLANT, true).eligibility, 'ELIGIBLE');
 });
+
+test('S6: too senior is capped just below the threshold (never Ready); Chief of Staff and a target role naming the title are not', () => {
+  const lvl = (who, t, loc, d) => p2eval(who, t, loc, d);
+  for (const [who, t, loc, d] of [[P2_FARHAN, 'VP, Implementation', 'Remote - India', P2_IMPL.replace('5+ years', '15+ years')], [P2_SANA, 'Plant Head', 'Pune, India', P2_PLANT.replace('8+ years', '20+ years')],
+    [P2_FARHAN, 'Senior Implementation Manager', 'Remote - India', P2_IMPL.replace('5+ years', '12+ years') + ' Lead a team of 25.'], [P2_FARHAN, 'Head of Implementation', 'Remote - India', P2_IMPL],
+    [P2_SANA, 'General Manager - Maintenance', 'Pune, India', P2_PLANT]]) {
+    const r = lvl(who, t, loc, d);
+    assert.equal(r.score, who.qualification_threshold - 1, t); assert.notEqual(p2tier(who, r), 'READY', t);
+    assert.match(r.qualification_reason, /above the candidate's level/);
+  }
+  assert.ok(lvl(P2_FARHAN, 'Chief of Staff', 'Remote - India', P2_IMPL).score >= 70, 'Chief of Staff is a builder role, not an executive one');
+  assert.ok(lvl(P2_FARHAN, 'Implementation Manager', 'Remote - India', P2_IMPL.replace('5+ years', '11+ years')).score >= 70, 'years + 2 is still fine');
+  const headTarget = { ...P2_FARHAN, target_roles: JSON.stringify(['Head of Implementation']) };
+  assert.ok(lvl(headTarget, 'Head of Implementation', 'Remote - India', P2_IMPL).score >= 70, 'a target role naming the title is not capped');
+});
