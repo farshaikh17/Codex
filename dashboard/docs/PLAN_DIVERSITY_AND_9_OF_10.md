@@ -607,7 +607,10 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     - D1: no fetcher added. The vendors' boards and most of Sana's "failed" employers are already read daily through the open dataset; the rest gave
       no reliable public feed (Aramco answered once in four tries). Six Workable search terms were added where a live search returned mostly the
       person's roles; five of the plan's terms were left out by measurement. Full record: `DISCOVERY_PIPELINE.md`, "Sources by measurement".
-    - H3: branches are listed for the owner (this agent may not delete them); see the hand-off report.
+    - H2: `DISCOVERY_PIPELINE.md` opens with the daily run as of 13 Nov (phases 1-6); `RELEASE.md` covers the open tracker, its limits, the undo
+      workflow and the phone message; `dashboard/docs/FINAL_STATE_2026-11-13.md` replaces the 11 Nov hand-off (same folder as before), written
+      after phase 5 merged. It records that the live Worker is still `8dc3004` and that phases 1-5 need the next release.
+    - H3: branches are listed for the owner with a reason each (this agent may not delete them); see the phase 6 hand-off report.
   - tenth-man review (daily machinery), fixed in the same phase:
     - a failed run's "did not finish" message blocked the good message of the retry two hours later (the 12-hour gate); the gate now lets a good
       run's message follow a failure one.

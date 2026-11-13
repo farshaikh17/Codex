@@ -2,6 +2,53 @@
 
 Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate and client and writes them to D1. It replaces "about 30 sources" with an open dataset of **about 5 million live postings from about 80,000 employers across 64 hiring systems** (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Oracle, SuccessFactors, iCIMS, Darwinbox and more), plus a light job-site search.
 
+## The daily run as of 13 Nov 2026 (plan phases 1-6)
+
+This section is the current description; "Steps" below is the original one, kept for detail and corrected where it changed. The plan
+(`PLAN_DIVERSITY_AND_9_OF_10.md`) names every rule; its section 10 lists what was read differently and what is knowingly left.
+
+**When it runs.** `discovery.yml` is triggered at 15:13, 17:13, 19:13 and 21:13 UTC (after the dataset refresh) and at 01:13 and 03:13 UTC
+(catch-up). Two guards decide whether the trigger does the work:
+- the **budget guard** reads the account's rows read today from Cloudflare analytics (no D1 read) and starts the run only below **2.0M** (the run
+  itself reads about 2.4M; the free limit is 5M). A due run it skips leaves a row `{skipped: "budget"}`, and the page shows "Not updated today";
+- the **recent-run guard** lets one real run through per 20 hours (a manual run always goes).
+The **watchdog** (`discovery-watchdog.yml`, every 2 hours) starts a run when the last good one is over 24 hours old. Discovery has its own
+concurrency group, so the watchlist or the collector sync can never cancel a queued daily run.
+
+**What one run does, in order** (`discover` job):
+1. D1 usage snapshot (for the run's `d1_rows`).
+2. Download the dataset. A failed download does not stop the day: boards, other sources, re-score, still-open check and shortlist still run.
+   The run is then shown red, as it is when the manifest is unreadable or over 48 hours old.
+3. Select matches from the dataset, and export rows to re-score: at most **800 per person** (best first) not yet scored under the current rules
+   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v14`).
+4. Job-site search, remote boards, more sources (Workable, Eightfold, Siemens Energy, SuccessFactors, Workday, Oracle, SmartRecruiters
+   employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna with its free keys). Each writes its file after every source and stops starting
+   sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. Employer career sites are stored as the
+   employer's own posting (verified, normal eligibility); job boards stay "eligibility unknown".
+5. Duplicates against D1; employer names instead of hiring-system tenant ids (B1); the same job in several cities is stored once with the
+   cities listed (B3).
+6. Score every pair with the Worker's own `evaluate()` and write one SQL file (all or nothing). The scoring rules of phases 2 and 4: Indian plant
+   towns count as India (S1); every search term's title is a role match (S2); one matching word is not enough (S4); plain worldwide-remote wording
+   counts (S5); too-senior and wrong-platform postings are capped (S6, S7); office jobs fail Farhan's remote-only rule (S8); Gulf details (S9);
+   Sana's own target roles count as skills (S11); "N Locations" postings get their places (B2); what the job involves raises or lowers the score
+   (C1); mixed titles lose 4 (C2); a plain ceiling of 92 plus up to 3 for many duties (C3). A person's decision or an application is never changed.
+7. Shortlist pool (A1): every row that passes the shortlist conditions except the 4-day verification, plus every row on the automatic shortlist.
+8. Still open? The pool first (the shortlist, then by score, 150 per person), then the best undecided rows: 8 workers, 8 s per request, an
+   8-minute deadline after which it writes what it has. Only 404/410 twice closes a job.
+9. Shortlist (`scripts/shortlist_select.mjs`, A2-A6): per person, 25 Best matches (Ready) and 25 Worth a try (Stretch), from rows verified in the
+   last 4 days, ranked by score (an incumbent +2, a row over 30 days old -5); hard rules (one posting per employer and title, reposting sites at
+   most 3 per tier, tenant-id employers off) and soft rules swapped for variety (2 per employer per tier, 40% per role family, Sana's Gulf and
+   remote minimums, Farhan's worldwide-remote minimum, "something different"). When the still-open check verified too few rows, rows already
+   shortlisted keep their place (`--relaxed`). One SQL file of guarded moves, then the low-match Hold.
+10. Audit (A8) of the stored lists' hard rules; run log row (counts only: new, re-scored, closed, sources, the shortlist report with families,
+    bands and per-source counts, `d1_rows`); run health (R8). A run that did nothing useful, or whose audit failed, turns red in the separate
+    `health` job, so the guards still count the day's run.
+11. The **daily phone message** (G1, `message` job): one line per linked person, also when the run failed, did nothing or was postponed. Off until
+    the owner adds `TELEGRAM_BOT_TOKEN` (see `RELEASE.md`).
+
+**The watchlist** (`watchlist.yml`, about three times a day) reads the priority employer sites and the remote boards between daily runs; when it
+found nothing new it reads and writes nothing more in the database and leaves the visitors' cached lists alone (H1).
+
 ## Steps
 
 1. **Download.** The workflow downloads today's dataset once: the [ats-scrapers](https://github.com/kalil0321/ats-scrapers) "jobhive" parquet file (MIT licence, refreshed daily around 14:30 UTC, about 2.3 GB). DuckDB then queries it locally.
@@ -33,12 +80,12 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
    - Owner decision 2026-11-06: light daily use only.
 4. **Scoring and writing** (`dashboard/scripts/dataset_apply.mjs`).
    - Every (job, person) pair is scored by the Worker's own `evaluate()`, so stored rows and the live screen cannot disagree.
-   - The screen itself never returns READY or STRETCH. Since 12 Nov 2026 a shortlist step at the end of the write (owner decision) promotes the best screened rows:
+   - (Replaced on 13 Nov by the shortlist selector of plan phase 3; see "The daily run as of 13 Nov 2026" above.) The screen itself never returns READY or STRETCH. From 12 Nov 2026 a shortlist step at the end of the write (owner decision) promoted the best screened rows:
      READY = score at the threshold and eligibility confirmed; STRETCH = the same score with eligibility to confirm, or confirmed and up to 10 points lower. Both need the current rules' mark, one matched profile skill and a posting verified open in the last 4 days; 25 of each per person. The reason starts "Shortlisted automatically." and the row returns to review when it stops qualifying. A person's decision or an application is never touched.
    - Ineligible jobs and jobs scoring below 30 are not stored.
    - **Never touched:** a job someone applied to, a row with a human decision, or an existing row (inserts never overwrite).
    - **Field safety:** every field is bounded, control characters are removed, and a job with an unusable URL is skipped.
-   - **Daily cap:** at most 800 new jobs per run, best scores first. The `max_new` input allows up to 3,000.
+   - **Daily cap:** at most 1,500 new jobs per run (the workflow's default), best scores first. The `max_new` input allows up to 3,000.
    - **One-time re-score (owner-approved):** earlier rows the screen created are re-scored with the candidates' stored skills, score only. READY, STRETCH, applied and decided rows are excluded. Rows are tagged and not re-scored again.
    - **Storage:** the description of a job closed for more than 30 days is dropped. Title, company and links stay.
    - **Writing:** everything is sent as one D1 import, all or nothing, and the dashboard's cache is cleared.
