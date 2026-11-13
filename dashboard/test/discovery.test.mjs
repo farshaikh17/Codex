@@ -629,3 +629,18 @@ test('S7: a role built around a platform the profile does not list is capped at 
   }
   assert.ok(p2eval(P2_FARHAN, 'GoHighLevel Implementation Lead', 'Remote - India', P2_IMPL).score > PLATFORM_GAP_CAP, 'a platform the profile lists is not capped');
 });
+
+test('S8: office jobs do not pass Farhan\'s remote-only rule; "work from home" alone is not remote; a denied hybrid is fine', () => {
+  const V = 'Join our team. You will configure CRM workflows, build workflow automation, integrate API and webhooks, and manage stakeholders. 5+ years experience.';
+  const wfh = p2eval(P2_FARHAN, 'Implementation Manager', 'Bengaluru, India', V + ' We offer a flexible work from home policy and free lunches.', false);
+  assert.notEqual(wfh.eligibility, 'ELIGIBLE'); assert.notEqual(p2tier(P2_FARHAN, wfh), 'READY');
+  for (const [loc, d, remote] of [['Bengaluru, India', V + ' This is a hybrid role, 3 days in office.', false], ['India', V + ' This is a hybrid role, 3 days in our Pune office.', true],
+    ['Remote - India', V + ' You will work 2 days a week in the office.', true], ['Remote - India', V + ' On-site 3 days at the client.', true]]) {
+    const r = p2eval(P2_FARHAN, 'Implementation Manager', loc, d, remote);
+    assert.equal(r.eligibility, 'INELIGIBLE', d); assert.match(r.reason, remote ? /Hybrid or set office days/ : /Not a remote role/);
+  }
+  for (const d of [V + ' This is not a hybrid role; fully remote.', V + ' Experience with hybrid cloud integration.', V + ' Remote in India.'])
+    assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - India', d, true).eligibility, 'ELIGIBLE', d);
+  // Sana is not remote-only: hybrid does not rule her out
+  assert.equal(p2eval(P2_SANA, 'Maintenance Engineer', 'Pune, India', P2_PLANT + ' This is a hybrid role, 3 days in office.').eligibility, 'ELIGIBLE');
+});
