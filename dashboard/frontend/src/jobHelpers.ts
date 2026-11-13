@@ -62,3 +62,15 @@ export function followUpState(date: string | null | undefined, today: string): {
 export const AUTO_MARK = 'Shortlisted automatically. ';
 export const isAutoShortlisted = (reason?: string | null) => String(reason || '').startsWith(AUTO_MARK);
 export const withoutAutoMark = (reason?: string | null) => (isAutoShortlisted(reason) ? String(reason).slice(AUTO_MARK.length) : String(reason || ''));
+
+/** "Updated <date, time>" for the page header, from the last daily run that did its work (ISO time, or null when none is recorded).
+ *  stale = over 26 hours old (or none recorded): the page shows "Not updated today" in amber. undefined = the server does not report it yet. */
+export const STALE_HOURS = 26;
+export function updatedNote(lastRunAt: string | null | undefined, now: Date = new Date()): { label: string; stale: boolean; title: string } | null {
+  if (lastRunAt === undefined) return null;
+  const t = lastRunAt ? Date.parse(lastRunAt) : NaN;
+  if (!Number.isFinite(t)) return { label: 'Not updated today', stale: true, title: 'No daily update is recorded yet.' };
+  const when = new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+  const stale = (now.getTime() - t) / 3600000 > STALE_HOURS;
+  return { label: stale ? 'Not updated today' : `Updated ${when}`, stale, title: `Last daily update: ${when}` };
+}

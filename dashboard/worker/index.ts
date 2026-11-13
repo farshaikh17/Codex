@@ -2294,25 +2294,31 @@ const pct1 = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1
 
 // What the discovery and watchlist runs recorded (migration-free: rows "run:<time>" in discovery_state, written by scripts/run_log.mjs). Counts only, summed per
 // UTC day, newest first, at most 14 days. A missing table or an unreadable row simply gives fewer days.
+// last_run_at: the time of the newest daily (discovery) run that did its work; a run the budget guard skipped is recorded as { skipped } and only counted
+// in its day's "skipped", so the page can say "Not updated today" when the last real run is old.
 router.get('/api/discovery/daily', async (request, env) => {
   const days = new Map<string, any>();
+  let lastRunAt: string | null = null, lastSkippedAt: string | null = null;
   try {
     const { results } = await env.DB.prepare("SELECT key, value FROM discovery_state WHERE key LIKE 'run:%' ORDER BY key DESC LIMIT 80").all<any>();
     for (const r of results || []) {
       let v: any; try { v = JSON.parse(r.value); } catch { continue; }
       const day = String(r.key).slice(4, 14);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !v || typeof v !== 'object') continue;
-      const d = days.get(day) || { day, runs: 0, new_jobs: 0, rescored: 0, closed: 0, reopened: 0, alive: 0, dead: 0, sources: {} as Record<string, { read: number; kept: number; full_text: number }> };
+      const at = /^run:\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(r.key)) ? String(r.key).slice(4) : null;
+      const d = days.get(day) || { day, runs: 0, skipped: 0, new_jobs: 0, rescored: 0, closed: 0, reopened: 0, alive: 0, dead: 0, sources: {} as Record<string, { read: number; kept: number; full_text: number }> };
+      days.set(day, d);
+      if (v.skipped) { d.skipped++; if (at && !lastSkippedAt && (v.kind || 'discovery') === 'discovery') lastSkippedAt = at; continue; }
+      if (at && !lastRunAt && (v.kind || 'discovery') === 'discovery') lastRunAt = at;
       d.runs++;
       for (const k of ['new_jobs', 'rescored', 'closed', 'reopened', 'alive', 'dead'] as const) d[k] += Number(v[k]) || 0;
       for (const [name, s] of Object.entries(v.sources || {}) as [string, any][]) {
         const t = d.sources[name] || (d.sources[name] = { read: 0, kept: 0, full_text: 0 });
         t.read += Number(s?.read) || 0; t.kept += Number(s?.kept) || 0; t.full_text += Number(s?.full_text) || 0;
       }
-      days.set(day, d);
     }
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; /* no table yet: no days */ }
-  return jsonResponse({ days: [...days.values()].slice(0, 14) }, 200, corsHeaders(request, env));
+  return jsonResponse({ days: [...days.values()].slice(0, 14), last_run_at: lastRunAt, last_skipped_at: lastSkippedAt }, 200, corsHeaders(request, env));
 });
 
 router.get('/api/analytics/discovery', async (request, env, _params, url) => {
