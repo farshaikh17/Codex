@@ -140,6 +140,34 @@ export function familyOf(candidateId:string,title:string):string{
  for(const [key,re] of FAMILIES[candidateId]||[])if(re.test(title||''))return key;
  return 'unclassified';
 }
+// Plan A6: place bands for the shortlist's variety rules (scripts/shortlist_select.mjs), built on S1 (Indian places), S5 (worldwide wording) and S9
+// (Gulf places). Not used by evaluate() and not stored.
+//   gulf               a Gulf place
+//   remote             remote and workable from India: India named, worldwide, or no other country named. For Farhan a worldwide posting is
+//                      'remote_global' instead (his "at least 3 worldwide" rule counts those alone)
+//   india_onsite       on site in India
+//   abroad_with_route  on site abroad with a stated visa route
+//   other              everything else (remote limited to another country, on site abroad with no route, no place at all)
+const BAND_WORLDWIDE=/\b(?:anywhere|worldwide|global|fully remote)\b|work from anywhere|any time ?zone/i;
+const BAND_ROUTE=/\b(?:visa sponsorship|sponsorship (?:is )?available|sponsor (?:your |a |the )?(?:work )?visa|work permit (?:support|sponsorship|provided)|employment visa|relocation (?:assistance|support|package|provided))\b/i;
+const BAND_NO_ROUTE=/\b(?:no|not|unable to|cannot|can't|without|does not|do not|will not)\b[^.]{0,40}\b(?:visa|sponsor)/i;
+export function placeBand(candidateId:string,location:string|null|undefined,workplace:string|null|undefined,remote:boolean|null|undefined,description:string|null|undefined):string{
+ const loc=location||'',text=description||'';
+ if(gulfPlace(loc))return 'gulf';
+ const isRemote=!!remote||remoteFromStored(workplace,loc);
+ if(isRemote){
+  const lc=locationClass(text,loc);
+  const placeFree=!foreignLocation(loc)&&!usOnlyLocation(loc)&&!indianPlace(loc);
+  const worldwide=lc==='worldwide'||(placeFree&&(BAND_WORLDWIDE.test(loc)||(candidateId==='farhan_shaikh'&&/\b(?:apac|asia)\b/i.test(loc))));   // S5: 'Remote - APAC' counts for Farhan
+  if(worldwide&&lc!=='us_only'&&lc!=='eu_only')return candidateId==='farhan_shaikh'?'remote_global':'remote';
+  if(indianPlace(loc)||lc==='india_ok')return 'remote';
+  if(!foreignLocation(loc)&&!usOnlyLocation(loc)&&lc==='unknown')return 'remote';
+  return 'other';
+ }
+ if(sanaIndiaCity(loc))return 'india_onsite';
+ if(loc.trim()&&BAND_ROUTE.test(text)&&!BAND_NO_ROUTE.test(text))return 'abroad_with_route';
+ return 'other';
+}
 export function avoidedTitle(candidateId:string,title:string){
  if(candidateId==='sana_ansari')return SANA_AVOID.test(title||'');
  if(candidateId!=='farhan_shaikh')return false;const t=title||'';

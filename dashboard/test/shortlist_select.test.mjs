@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { selectInto, exportPool } from './shortlist_helpers.mjs';
 import { selectShortlist, selectionSql, MARK } from '../scripts/shortlist_select.mjs';
-import { RULES_MARKER, familyOf } from '../worker/discovery.ts';
+import { RULES_MARKER, familyOf, placeBand } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOW = Date.parse('2026-11-13T12:00:00Z');
@@ -136,7 +136,7 @@ test('A4: four per employer on both tiers, relaxed when nothing fits', () => {
   for (let i = 0; i < 6; i++) tight.push(row({ job_id: 'f' + i, company: 'Fixed', score: 90 }));
   for (let i = 0; i < 3; i++) tight.push(row({ score: 62 }));
   const r = sel(tight, { tierSize: 3 });
-  assert.deepEqual(r.report[C].READY.relaxed, ['employer_per_tier']);
+  assert.ok(r.report[C].READY.relaxed.includes('employer_per_tier'));
   assert.equal(r.report[C].READY.count, 3);
 });
 
@@ -154,9 +154,11 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
 });
 
 test('A4: a tenant-id employer is not shortlisted (B1 gives it a name first); known ids and short real names from other sites are', () => {
-  const pool = [row({ job_id: 't1', company: 'fa espx saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
-    row({ job_id: 'k1', company: 'abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' })];
-  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY' });
+  const pool = [row({ job_id: 't1', company: 'Fa Espx Saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
+    row({ job_id: 't3', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/hcmUI/job/1' }),
+    row({ job_id: 'k1', company: 'Abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' }), row({ job_id: 'k3', company: 'Jll', source: 'workday' }),
+    row({ job_id: 'k4', company: 'DAMAC', source: 'oracle', url: 'https://ejwe.fa.em2.oraclecloud.com/x' })];
+  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY', k3: 'READY', k4: 'READY' });
 });
 
 test('A5: role families, five sample titles each, first match wins, including the misfiles found', () => {
@@ -217,6 +219,43 @@ test('A5: "something different" takes up to 2 places at the end of Stretch for a
   assert.equal(res.report[C].STRETCH_READY.different, 2);
   assert.equal(res.report[C].STRETCH_READY.count, 25);
   assert.equal(sel(pool, { different: false }).changes.some((c) => c.job_id === 'sol'), false);
+});
+
+test('A6: place bands', () => {
+  const F = 'farhan_shaikh', S = 'sana_ansari';
+  const b = (cid, loc, wp = 'UNKNOWN', d = '') => placeBand(cid, loc, wp, null, d);
+  assert.equal(b(S, 'Ruwais, AE'), 'gulf'); assert.equal(b(S, 'Doha, Qatar', 'ONSITE'), 'gulf');
+  assert.equal(b(S, 'Jamnagar, Gujarat', 'ONSITE'), 'india_onsite'); assert.equal(b(S, 'Pune, India'), 'india_onsite');
+  assert.equal(b(S, 'Remote - India', 'REMOTE_RESTRICTED'), 'remote'); assert.equal(b(S, 'Remote (Global)', 'REMOTE_RESTRICTED'), 'remote');
+  assert.equal(b(F, 'Remote (Global)', 'REMOTE_RESTRICTED'), 'remote_global'); assert.equal(b(F, 'Anywhere', 'REMOTE_RESTRICTED'), 'remote_global');
+  assert.equal(b(F, 'Remote - APAC', 'REMOTE_RESTRICTED'), 'remote_global'); assert.equal(b(S, 'Remote - APAC', 'REMOTE_RESTRICTED'), 'remote');
+  assert.equal(b(F, 'Remote - India', 'REMOTE_RESTRICTED'), 'remote'); assert.equal(b(F, 'Remote', 'REMOTE_RESTRICTED', 'We hire anywhere in the world.'), 'remote_global');
+  assert.equal(b(F, 'Remote - US', 'REMOTE_RESTRICTED'), 'other'); assert.equal(b(F, 'Remote', 'REMOTE_RESTRICTED', 'US residents only.'), 'other');
+  assert.equal(b(S, 'Houston, TX', 'ONSITE', 'Visa sponsorship available for the right candidate.'), 'abroad_with_route');
+  assert.equal(b(S, 'Houston, TX', 'ONSITE', 'We are unable to offer visa sponsorship.'), 'other');
+  assert.equal(b(S, 'Houston, TX', 'ONSITE'), 'other');
+});
+
+test('A6: band minimums are met by swaps within the score floor, or reported as a shortfall', () => {
+  const S = 'sana_ansari';
+  const srow = (o) => row({ candidate_id: S, title: 'Maintenance Engineer ' + n, ...o });
+  const fam = ['Maintenance Engineer', 'Reliability Engineer', 'Energy Manager', 'Plant Engineer', 'Utilities Engineer', 'Electrical Engineer'];
+  const pool = [];
+  for (let i = 0; i < 60; i++) pool.push(srow({ title: fam[i % 6] + ' ' + i, location: 'Pune, India', workplace: 'ONSITE', score: 90 - (i % 5) }));
+  for (let i = 0; i < 6; i++) pool.push(srow({ job_id: 'gulf' + i, title: fam[i % 6] + ' G' + i, location: 'Ruwais, AE', workplace: 'ONSITE', score: 80, eligibility: 'UNKNOWN' }));
+  for (let i = 0; i < 4; i++) pool.push(srow({ job_id: 'rem' + i, title: fam[i % 6] + ' R' + i, location: 'Remote - India', workplace: 'REMOTE_RESTRICTED', score: 82 }));
+  const res = sel(pool);
+  const rep = res.report[S];
+  assert.ok(rep.READY.bands.remote >= 2, JSON.stringify(rep.READY.bands));
+  assert.ok(rep.STRETCH_READY.bands.gulf >= 5, JSON.stringify(rep.STRETCH_READY.bands));
+  assert.ok(rep.STRETCH_READY.bands.remote >= 2, JSON.stringify(rep.STRETCH_READY.bands));
+  assert.deepEqual(rep.READY.band_shortfall, {}); assert.deepEqual(rep.STRETCH_READY.band_shortfall, {});
+  // Gulf rows under the floor (threshold + 5) cannot be swapped in: reported, not forced
+  const low = pool.map((r) => (r.job_id.startsWith('gulf') ? { ...r, score: 62 } : r));
+  const r2 = sel(low).report[S].STRETCH_READY;
+  assert.equal(r2.bands.gulf || 0, 0);
+  assert.deepEqual(r2.band_shortfall, { gulf: 5 });
+  assert.ok(r2.relaxed.includes('band_gulf_min_5'));
 });
 
 test('deterministic: the same pool in any order gives the same changes', () => {

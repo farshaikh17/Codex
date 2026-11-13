@@ -11,7 +11,7 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey, familyOf } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand } from '../worker/discovery.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -61,13 +61,20 @@ export const REPOSTER_CAP = 3;
 export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
 export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
 export const isReposter = (r) => REPOSTERS.has(companyKey(r.company));
-// An employer shown by its hiring-system tenant id ('fa espx saasfaprod1', or one short lower-case token from Workday or Oracle) is not shortlisted
-// until phase 4 (B1) gives it its real name; the audit (A8) treats one on the shortlist as a broken hard rule. Ids B1 already maps are known employers.
+// An employer shown by its hiring-system tenant id is not shortlisted until phase 4 (B1) gives it its real name; the audit (A8) treats one on the
+// shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1'; an Oracle employer named exactly like its oraclecloud.com tenant host ('Hdga' at
+// hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1 already maps (abb, mdlz) are known employers.
 const TENANT_KNOWN = new Set(['abb', 'mdlz']);
-export function tenantEmployer(company, source) {
+export function tenantEmployer(company, source, url) {
   const c = String(company || '').trim();
-  if (/^fa [a-z]{4} saasfaprod\d+$/.test(c)) return true;
-  return /^(workday|oracle|oraclehcm)$/.test(String(source || '').toLowerCase()) && /^[a-z]{1,5}$/.test(c) && !TENANT_KNOWN.has(c);
+  if (/^fa[ -][a-z]{4}[ -]saasfaprod\d+$/i.test(c)) return true;
+  if (TENANT_KNOWN.has(c.toLowerCase())) return false;
+  const src = String(source || '').toLowerCase();
+  if (/^oracle/.test(src) && /^[a-z]{3,8}$/i.test(c)) {
+    let host = ''; try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch {}
+    if (host.endsWith('.oraclecloud.com') && host.split('.')[0] === c.toLowerCase()) return true;
+  }
+  return /^(workday|oracle|oraclehcm)$/.test(src) && /^[a-z]{1,5}$/.test(c);
 }
 const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 /** Hard: a reposter row duplicating a direct employer's row. */
@@ -104,8 +111,20 @@ const familyRule = { name: 'family_share', tiers: TIERS,
   count: (lists) => TIERS.reduce((n, t) => n + [...famGroups(lists[t]).values()].reduce((a, g) => a + Math.max(0, g.length - familyCap(lists[t].length)), 0), 0),
   breakers: (lists, tier) => [...famGroups(lists[tier]).values()].filter((g) => g.length > familyCap(lists[tier].length)).flat() };
 
+// Plan A6: place-band minimums per person and tier (soft; only by a swap, with the score floor).
+export const BAND_MINIMUMS = {
+  sana_ansari: { READY: { remote: 2 }, STRETCH_READY: { gulf: 5, remote: 2 } },
+  farhan_shaikh: { READY: { remote_global: 3 } },
+};
+const bandRule = (tier, band, min) => ({ name: `band_${band}_min_${min}`, tiers: [tier], band, min,
+  count: (lists) => Math.max(0, min - lists[tier].filter((r) => r.band === band).length),
+  breakers: (lists, t) => (t === tier && lists[tier].filter((r) => r.band === band).length < min ? lists[tier].filter((r) => r.band !== band) : []) });
+export function bandRules(candidateId) {
+  return Object.entries(BAND_MINIMUMS[candidateId] || {}).flatMap(([tier, mins]) => Object.entries(mins).map(([band, min]) => bandRule(tier, band, min)));
+}
+
 /** The soft rules in the order they are tried (the both-tiers cap last). A soft rule counts how far the lists break it; a swap may fix it (A3.4). */
-export function softRules() { return [employerTier, familyRule, employerBoth]; }
+export function softRules(ctx = {}) { return [employerTier, familyRule, ...bandRules(ctx.candidateId), employerBoth]; }
 export const HARD_RULES = [reposterCap];
 
 /** Plan A3.2-A3.4 for one person. Returns the tier lists and the report. `ctx` carries the person's threshold and what the rules need. */
@@ -113,7 +132,7 @@ function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
   const dupes = repostDuplicates(rows);
-  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r)) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source)), now);
+  const usable = ranked(rows.filter((r) => r.verified && (fitsReady(r) || fitsStretchRule(r)) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source, r.url)), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };
@@ -204,6 +223,9 @@ function pickFor(rows, held, ctx) {
     report[t].max_employer_share = lists[t].length ? Math.round(100 * Math.max(...per.values()) / lists[t].length) / 100 : 0;
     report[t].reposters = lists[t].filter(isReposter).length;
     report[t].families = {}; for (const r of lists[t]) report[t].families[r.family || 'unclassified'] = (report[t].families[r.family || 'unclassified'] || 0) + 1;
+    report[t].bands = {}; for (const r of lists[t]) report[t].bands[r.band || 'other'] = (report[t].bands[r.band || 'other'] || 0) + 1;
+    // band minimums not met: reported as "pool too small" (no swap candidate within the score floor)
+    report[t].band_shortfall = Object.fromEntries(Object.entries((BAND_MINIMUMS[ctx.candidateId] || {})[t] || {}).map(([b, m]) => [b, Math.max(0, m - (report[t].bands[b] || 0))]).filter(([, v]) => v > 0));
   }
   return { lists, tierOf, report };
 }
@@ -231,6 +253,7 @@ export function selectShortlist(pool, opts = {}) {
     const r = { ...r0, dead: dead.has(r0.job_id) };
     r.auto = isAuto(r);
     r.family = familyOf(r0.candidate_id, r0.title);
+    r.band = placeBand(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
     r.verified = alive.has(r.job_id) || now - when(r.last_verified_at) <= VERIFIED_DAYS * DAY || (!!opts.relaxed && r.auto);
     c.rows.push(r);
   }
