@@ -799,7 +799,7 @@ test('outage backup: the last good PUBLIC answer is kept outside D1 and served w
     // a good public read stores a copy
     const good = await get(env, '/api/candidates'); assert.equal(good.status, 200);
     const goodBody = await good.text(); await Promise.all(pending);
-    assert.ok([...store.keys()].some((k) => k.endsWith('/api/candidates')), 'stored outside D1');
+    assert.ok([...store.keys()].some((k) => new URL(k).pathname === '/api/candidates' && new URL(k).searchParams.get('__backup')?.endsWith(':commit-a')), 'stored outside D1, keyed by URL and commit (R10)');
     assert.ok(![...store.keys()].some((k) => /health|version/.test(k)), 'health and version are never stored');
     // D1 now refuses reads: the stored copy is served, marked, as a 200
     const stale = await get(down, '/api/candidates');
@@ -923,7 +923,7 @@ test('outage backup never stores an answer produced for a share-link holder, so 
     assert.equal(store.size, 0, 'nothing produced for a link holder is kept as a backup copy');
     // an anonymous visitor's answers are still backed up and still served during an outage
     for (const u of ['/api/candidates', '/api/dashboard/overview']) assert.equal((await get(env, u)).status, 200);
-    assert.ok(store.has(HOST + '/api/candidates'), 'anonymous answers are still backed up');
+    assert.ok([...store.keys()].some((k) => k.startsWith(HOST + '/api/candidates?__backup=')), 'anonymous answers are still backed up');
     const boom = () => { throw new Error("D1_ERROR: Your account has exceeded D1's free tier daily row read limit"); };
     const down = makeEnv({ ...d1, prepare: boom, batch: boom, exec: boom });
     for (const u of ['/api/candidates', '/api/dashboard/overview']) {

@@ -65,3 +65,22 @@ test('cron: skips quietly while D1 refuses and works again on the next tick, wit
     assert.ok(!lease || Number(lease.u) <= Math.floor(Date.now() / 1000) + 5, 'no lease is left held by a tick that was skipped');
   } finally { console.warn = realWarn; }
 });
+
+test('the outage copy is keyed by the commit too: after a release the old Worker\'s answer is never served to the new page; the same commit is served', async () => {
+  const store = new Map();
+  globalThis.caches = { default: { async put(req, res) { store.set(req.url, await res.text()); }, async match(req) { return store.has(req.url) ? new Response(store.get(req.url), { headers: { 'Content-Type': 'application/json' } }) : undefined; } } };
+  try {
+    const { env, setDown } = flaky();
+    const oldEnv = { ...env, GIT_COMMIT: 'aaaaaaa' }, newEnv = { ...env, GIT_COMMIT: 'bbbbbbb' };
+    const path = '/api/dashboard/overview?r10=1';
+    assert.equal((await get(oldEnv, path)).status, 200);   // the old release answers and keeps a copy
+    assert.ok([...store.keys()].some((k) => k.includes('aaaaaaa')), 'the stored key names the commit');
+    assert.ok([...store.keys()].every((k) => k.includes('__backup=')), 'no copy keyed by URL alone');
+    setDown(true);
+    const afterRelease = await get(newEnv, path);
+    assert.equal(afterRelease.status, 503, 'the new release does not serve the old release\'s copy');
+    assert.notEqual(afterRelease.xcache, 'STALE-OUTAGE');
+    const sameRelease = await get(oldEnv, path);
+    assert.equal(sameRelease.status, 200); assert.equal(sameRelease.xcache, 'STALE-OUTAGE', 'the release that stored it still serves it');
+  } finally { delete globalThis.caches; }
+});
