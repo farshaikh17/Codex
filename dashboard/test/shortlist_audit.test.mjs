@@ -53,7 +53,7 @@ test('each broken hard rule is found on stored data', () => {
   w.add(auto({ id: 'stale', verified: new Date(Date.now() - 6 * 86400000).toISOString() }));            // not verified in 4 days
   w.add(auto({ id: 'closed', active: 0 }));
   w.add(auto({ id: 'tenant', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/x' }));
-  const res = audit(w.rows());
+  const res = audit(w.rows(), { report: {} });   // the selector ran today and relaxed nothing
   const text = res.problems.join('\n');
   assert.match(text, /3 rows of one employer \(big\) in sana_ansari READY \(cap 2\)/);
   assert.match(text, /4 reposter rows in sana_ansari READY/);
@@ -69,7 +69,15 @@ test('each broken hard rule is found on stored data', () => {
   // the skills exception: an employer named in the person's skills may have 5
   const w2 = world();
   for (let i = 0; i < 4; i++) w2.add(auto({ company: 'Reliability' }));
-  assert.ok(audit(w2.rows(), { candidates: [{ id: C, primary_skills: JSON.stringify(['Reliability']) }] }).ok);
+  assert.ok(audit(w2.rows(), { report: {}, candidates: [{ id: C, primary_skills: JSON.stringify(['Reliability']) }] }).ok);
+  // tenth-man review: a day the selector did not run (no report) keeps yesterday's lists; the employer caps are not checked then
+  const noSel = audit(w.rows());
+  assert.doesNotMatch(noSel.problems.join('\n'), /of one employer/); assert.equal(noSel.info.employer_caps_checked, false);
+  assert.match(noSel.problems.join('\n'), /4 reposter rows/, 'the hard caps still are');
+  // one hour of grace at the 4-day boundary (the selector and the audit run minutes apart)
+  const w3 = world();
+  w3.add(auto({ id: 'edge', verified: new Date(Date.now() - 4 * 86400000 - 20 * 60000).toISOString() }));
+  assert.ok(audit(w3.rows(), { report: {} }).ok);
 });
 
 test('a decided or applied row the daily run changed fails the audit; a marked row a person later saved does not', () => {
@@ -81,6 +89,12 @@ test('a decided or applied row the daily run changed fails the audit; a marked r
   w.db.prepare(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor) VALUES (?,?,'NEEDS_REVIEW','READY','x','discovery')`).run(C, saved);
   assert.match(audit(w.rows()).problems.join('\n'), /decided or applied row was changed by the daily run/);
   assert.equal(audit(w.rows(sqlNow(Date.now() + 3600000))).ok, true, 'only history written since the run started counts');
+  // tenth-man review: the person applied AFTER the run changed the row: their later choice, not a broken guard
+  const w2 = world();
+  const later = w2.add({});
+  w2.db.prepare(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor, changed_at) VALUES (?,?,'HOLD','NEEDS_REVIEW','x','discovery',?)`).run(C, later, sqlNow(Date.now() - 600000));
+  w2.db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status,created_at) VALUES ('apl',?,?,'SAVED',?)`).run(C, later, sqlNow());
+  assert.equal(audit(w2.rows()).ok, true);
 });
 
 test('CLI: prints the query, reads wrangler --json output, exits 1 on a broken rule', () => {
@@ -91,7 +105,8 @@ test('CLI: prints the query, reads wrangler --json output, exits 1 on a broken r
   const w = world();
   for (let i = 0; i < 3; i++) w.add(auto({ company: 'BigCo' }));
   fs.writeFileSync(path.join(dir, 'rows.json'), JSON.stringify([{ results: w.rows(), success: true }]));
-  const bad = cli('--rows', path.join(dir, 'rows.json'));
+  fs.writeFileSync(path.join(dir, 'report.json'), '{}');
+  const bad = cli('--rows', path.join(dir, 'rows.json'), '--report', path.join(dir, 'report.json'));
   assert.equal(bad.code, 1); assert.match(bad.out, /FAILED/);
   fs.writeFileSync(path.join(dir, 'rows.json'), JSON.stringify([{ results: [], success: true }]));
   assert.equal(cli('--rows', path.join(dir, 'rows.json')).code, 0);

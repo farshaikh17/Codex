@@ -151,6 +151,20 @@ def _record(out, job_id, fut):
         out['unknown'] += 1
 
 
+def not_verified_by_host(targets, res, top=10):
+    """Tenth-man review (phase 3): which sites never answer the check (403, 429, timeouts), so a source whose rows can never be verified, and so
+    never shortlisted, is visible in the run summary. Host names only; the hosts with the most targets left unverified, at most `top`."""
+    done = set(res.get('alive', [])) | set(res.get('dead', []))
+    counts = {}
+    for t in targets:
+        if t['id'] in done:
+            continue
+        host = urlsplit(str(t.get('url') or '')).hostname or '?'
+        host = '.'.join(host.split('.')[-3:]) if not host.endswith(('oraclecloud.com', 'myworkdayjobs.com')) else '.'.join(host.split('.')[-2:])
+        counts[host] = counts.get(host, 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:top])
+
+
 def q(v):
     return "'" + str(v).replace("'", "''") + "'"
 
@@ -191,10 +205,11 @@ def main():
         Path(a.export).write_text(json.dumps(rows))
         print(json.dumps({'targets': len(rows), 'pool_targets': len(first)}))
     elif a.check:
-        res = check(json.loads(Path(a.check).read_text()))
+        targets = json.loads(Path(a.check).read_text())
+        res = check(targets)
         Path(a.out).write_text(json.dumps(res))
-        print(json.dumps({'targets': len(json.loads(Path(a.check).read_text())), 'dead': len(res['dead']), 'alive': len(res['alive']),
-                          'unknown': res['unknown'], 'unchecked': res['unchecked']}))
+        print(json.dumps({'targets': len(targets), 'dead': len(res['dead']), 'alive': len(res['alive']),
+                          'unknown': res['unknown'], 'unchecked': res['unchecked'], 'not_verified_by_host': not_verified_by_host(targets, res)}))
     elif a.sql:
         Path(a.out).write_text(to_sql(json.loads(Path(a.sql).read_text())))
     else:

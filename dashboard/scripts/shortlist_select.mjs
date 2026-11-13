@@ -11,7 +11,7 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey, familyOf, placeBand } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored } from '../worker/discovery.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -36,8 +36,22 @@ export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold
 /** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. */
 export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN')
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
-/** One posting per employer and title. */
-export const twinKey = (r) => (companyKey(r.company) || String(r.company || '').trim().toLowerCase()) + '|' + String(r.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+// Tenth-man review (phase 3): a title is compared without bracketed parts and trailing place or work-mode parts ("Solutions Engineer (Remote)",
+// "Maintenance Engineer - Jamnagar"), so the same job is not shown twice.
+const MODE_SEG = /^\s*(?:remote|hybrid|on-?site|onsite|wfh|work from home|anywhere|worldwide|global|apac|emea|asia|latam)\b/i;
+const placeSeg = (seg) => MODE_SEG.test(seg) || indianPlace(seg) || gulfPlace(seg) || foreignLocation(seg);
+export function titleKey(title) {
+  const parts = String(title || '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split(/\s+[-\u2013\u2014|]\s+|,\s*/).filter((x) => x.trim());
+  while (parts.length > 1 && placeSeg(parts[parts.length - 1])) parts.pop();
+  return parts.join(' ').toLowerCase().replace(/\b(?:remote|hybrid|on-?site|onsite|wfh)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+/** One posting per employer, title and (for an on-site job) city: the same title at two plants is two jobs (tenth-man review, phase 3); the employer caps
+ *  keep one employer from filling a tier with them. A remote job has no city. */
+export const twinKey = (r) => {
+  const onsite = !remoteFromStored(r.workplace, r.location);
+  const city = onsite ? String(r.location || '').split(/[,;/|]/)[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() : '';
+  return (companyKey(r.company) || String(r.company || '').trim().toLowerCase()) + '|' + titleKey(r.title) + '|' + city;
+};
 export const isAuto = (r) => TIERS.includes(r.status) && String(r.reason || '').startsWith(MARK);
 
 export const INCUMBENT_BONUS = 2;
@@ -60,7 +74,9 @@ export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peoplewor
 export const REPOSTER_CAP = 3;
 export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
 export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
-export const isReposter = (r) => REPOSTERS.has(companyKey(r.company));
+// By the whole name ('Turing Labs' is an employer, 'Turing' / 'Turing.com' the reposting site); not companyKey(), which drops 'labs', 'inc', 'io'.
+const REPOSTER_NAMES = new Set([...REPOSTERS, 'turingcom', 'jobgethercom', 'usebraintrust', 'braintrustnetwork', 'crossoverforwork']);
+export const isReposter = (r) => REPOSTER_NAMES.has(String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/(?:inc|llc|ltd)$/, ''));
 // An employer shown by its hiring-system tenant id is not shortlisted until phase 4 (B1) gives it its real name; the audit (A8) treats one on the
 // shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1'; an Oracle employer named exactly like its oraclecloud.com tenant host ('Hdga' at
 // hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1 already maps (abb, mdlz) are known employers.
@@ -77,10 +93,13 @@ export function tenantEmployer(company, source, url) {
   return /^(workday|oracle|oraclehcm)$/.test(src) && /^[a-z]{1,5}$/.test(c);
 }
 const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
-/** Hard: a reposter row duplicating a direct employer's row. */
+/** Hard: a reposter row duplicating a direct employer's row: the same title (as titleKey() reads it) and the direct row's first 200 characters of
+ *  description found anywhere in the repost (a reposting site puts its own sentence first: "This position is posted by Jobgether on behalf of..."),
+ *  or, when the direct row has under 60 characters of description, the same place. */
 export function repostDuplicates(rows) {
-  const direct = new Set(rows.filter((r) => !isReposter(r)).map((r) => [norm(r.title), norm(r.location), norm(r.description).slice(0, 200)].join('|')));
-  return new Set(rows.filter((r) => isReposter(r) && direct.has([norm(r.title), norm(r.location), norm(r.description).slice(0, 200)].join('|'))).map((r) => r.job_id));
+  const direct = rows.filter((r) => !isReposter(r)).map((r) => ({ t: titleKey(r.title), d: norm(r.description).slice(0, 200), l: norm(r.location) }));
+  return new Set(rows.filter((r) => isReposter(r) && direct.some((x) => x.t === titleKey(r.title)
+    && (x.d.length >= 60 ? norm(r.description).includes(x.d) : x.l === norm(r.location)))).map((r) => r.job_id));
 }
 /** Hard: at most 3 reposter rows per tier. */
 export const reposterCap = (r, tier, lists, without) => !isReposter(r) || lists[tier].filter((x) => x !== without && x !== r && isReposter(x)).length < REPOSTER_CAP;

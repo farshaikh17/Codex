@@ -102,6 +102,12 @@ class ShortlistPool(unittest.TestCase):
         merged = liveness.merge_targets(t, [{'id': 'p4', 'url': 'https://jobs.example/p4'}, {'id': 'other', 'url': 'https://jobs.example/other'}])
         self.assertEqual([x['id'] for x in merged], ['auto', 's1', 'p4', 'p3', 'other'])
 
+    def test_unverified_hosts_are_counted(self):
+        targets = [{'id': 'a', 'url': 'https://www.bayt.com/en/job/1'}, {'id': 'b', 'url': 'https://www.bayt.com/en/job/2'},
+                   {'id': 'c', 'url': 'https://hdga.fa.em3.oraclecloud.com/x'}, {'id': 'd', 'url': 'https://boards.greenhouse.io/acme/jobs/1'}]
+        out = liveness.not_verified_by_host(targets, {'alive': ['d'], 'dead': []})
+        self.assertEqual(out, {'www.bayt.com': 2, 'oraclecloud.com': 1})
+
     def test_written_atomically(self):
         self.add(F, 'p', 70)
         self.db.commit()
