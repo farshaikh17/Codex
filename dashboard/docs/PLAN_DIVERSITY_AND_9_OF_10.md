@@ -592,7 +592,7 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
       explained only in a tooltip (now a line under the buttons); a first visit showed greyed Today / Applications buttons.
   - tenth-man finding left, with the reason:
     - `?operator=1` opens the operator page to anyone who types it: U8 hides the operator screens, it does not lock them. Changes there still need
-      the operator key (except the open tracker's own actions); a per-person lock is out of scope (section 11).
+      the operator key (except the open tracker's own actions); a per-person lock is out of scope (section 11). **Fixed after phase 6** (below).
 - phase 6 (alerts, sources, checks, 13 Nov; PRs #169 G1, #172 H1, #174 D1, the tenth-man fix PR, and the H2 docs PR; no rules-marker bump):
   - readings and deviations:
     - G1: the message counts Best matches and Worth a try the way the page does (not applied, no override); "new" is found or put on the list in the
@@ -648,6 +648,15 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     Limited to Gulf places, where those boards are the main source and the "5 Gulf" shortfall is. The A8 audit accepts exactly these rows on
     Stretch (same rule, one hour of grace); the card's why line adds "could not be confirmed still open (the job site blocks the check)"; the
     shortlist report counts them (`listed_not_confirmed`). The why line reaches the page with the next release.
+  - **operator screens locked:** `/app?operator=1` renders the operator dashboard only after the server accepts the operator key
+    (`frontend/src/components/OperatorGate.tsx`); without it a plain sign-in prompt shows and no data request is made; signing out or a key the
+    server stops accepting locks it again. Client share links keep their read-only dashboard without a key; a revoked or made-up link no longer
+    falls back to the public dashboard (it shows "no longer valid" only). The public API reads stay public (the website and the job seeker's page
+    use them); this locks the screens, it adds no API protection. The release workflow has no operator key, so its browser check
+    (`production-readonly`) now checks the lock, the job seeker's page and the public reads, and reads the operator screens only when given
+    `E2E_KEY` (local rehearsal); the smoke test is unchanged. The local suites that open the operator screens (`browser`, `features`, `faults`,
+    `clients`, `listing`, `a11y`) sign in with their disposable key; `browser` part A now checks the lock and a made-up share link, and `clients`
+    checks "public / private client" through the public API, since visitors no longer see the operator dashboard.
 
 ---
 

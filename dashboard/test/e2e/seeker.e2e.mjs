@@ -175,7 +175,7 @@ const again = await ctx.newPage();
 await again.goto(BASE + '/app', { waitUntil: 'networkidle' }); await again.waitForTimeout(800);
 check('S29 the chosen person is remembered on this device (/app opens Sana\'s Today)', (await again.evaluate(() => location.hash)) === '#sana/today');
 await again.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await again.waitForTimeout(800);
-check('S30 ?operator=1 still opens the operator screens', /Viewing only|Operator|Dashboard/i.test((await again.innerText('body'))));
+check('S30 ?operator=1 opens the operator sign-in, not the operator screens, without the key', (await again.locator('[data-testid="operator-gate"] #operator-key-input').count()) === 1 && (await again.locator('[data-job-id]').count()) === 0);
 await again.close();
 check('S31 no console errors', errors.filter((e) => !/409|Conflict/.test(e)).length === 0, errors.join(' | '));
 await browser.close();

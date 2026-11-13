@@ -42,7 +42,8 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
 3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, add tables `auth_failures`,
    `response_cache` and `read_meter` (migrations 0008 and 0009, both additive; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
    commit recorded in the Worker, public smoke test (including anonymous write attempts that must be refused), read-only
-   real-browser check of both dashboards on desktop and 375 px mobile with no credentials, fingerprint again and fail if
+   real-browser check on desktop and 375 px mobile with no credentials (the job seeker's page for both people, the public reads, and that
+   `/app?operator=1` shows only the operator sign-in), fingerprint again and fail if
    any application, history, override or candidate record changed.
 4. Verify the live commit: `GET /api/version` returns `commit` equal to the released SHA. The smoke test waits for it and
    judges only answers whose `X-Worker-Commit` header is the released SHA.
@@ -68,8 +69,11 @@ requests save, set a stage, write notes and follow-ups, mark Good match / Not fo
   statement restores the job's state before that network's first change in the window, only if nobody changed that job afterwards, and writes
   an `owner-undo` history row. Because the owner runs it on purpose, it may change a row with an application or an override, but never a row the
   network did not change. Code: `dashboard/scripts/undo_since.mjs`.
-* **The operator screens** are at `/app?operator=1`. That address hides them from the job seeker's page; it does not lock them. Changes there still
-  need the operator key, except the open tracker's own actions.
+* **The operator screens** are at `/app?operator=1` and need the operator key to **view** (gap fix, 13 Nov): without it the page shows only a
+  plain sign-in prompt and loads no data. Signing out, or a key the server stops accepting, locks them again. A client's share link
+  (`/app#view=...`) still opens its read-only dashboard without a key; a revoked or made-up link shows "This shared link is no longer valid"
+  and nothing else. The public API reads are unchanged (the website and the job seeker's page use them); changes still need the key, except
+  the open tracker's own actions.
 
 ## Daily phone message
 
@@ -131,14 +135,16 @@ npx wrangler d1 migrations apply career-job-engine --local --persist-to .tmp-d1
 node test/seed-sql.mjs > .tmp-seed.sql && npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --file=.tmp-seed.sql
 npx wrangler dev --local --port 8787 --persist-to .tmp-d1 --var ADMIN_API_KEY:any-local-test-value &
 E2E_KEY=any-local-test-value node test/e2e/browser.e2e.mjs desktop      # and: mobile   (visitor, then operator, then limiter)
-E2E_BASE=http://localhost:8787 node test/e2e/production-readonly.e2e.mjs desktop   # rehearsal of the release browser check
+E2E_BASE=http://localhost:8787 node test/e2e/production-readonly.e2e.mjs desktop   # rehearsal of the release browser check (no key: the operator screens must be locked)
+E2E_KEY=any-local-test-value E2E_BASE=http://localhost:8787 node test/e2e/production-readonly.e2e.mjs desktop   # the same, plus the operator screens read signed in
 SMOKE_BASE=http://localhost:8787 node scripts/post_deploy_smoke.mjs                # rehearsal of the public smoke test
 # people links, skill list, follow-up dates / overdue flag, Applied card, daily card. Needs descriptions naming skills and a cleared cache:
 npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "DELETE FROM response_cache; DELETE FROM auth_failures; DELETE FROM application_followups; UPDATE jobs SET description = 'We need Salesforce, SQL, Python and Zapier experience for workflow automation.'; UPDATE candidates SET primary_skills = '[\"Salesforce\",\"Python\"]' WHERE id = 'farhan_shaikh'; UPDATE candidate_qualifications SET qualification_reason = '[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.' WHERE candidate_id = 'farhan_shaikh' AND job_id IN ('job_001','job_002','job_008')"
 E2E_KEY=any-local-test-value node test/e2e/features.e2e.mjs desktop    # and: mobile
 ```
-The job seeker's page (plan phase 5) is the default `/app`; the operator screens open with `/app?operator=1`, and the suites that test them
-(`browser`, `features`, `faults`, `clients`, `listing`, `production-readonly`) go there. Its own suite needs postings with a link:
+The job seeker's page (plan phase 5) is the default `/app`; the operator screens open with `/app?operator=1` and need the key to view, so the
+suites that test them (`browser`, `features`, `faults`, `clients`, `listing`, `a11y`, `site`) need `E2E_KEY`; `production-readonly` reads them
+only when given one. Its own suite needs postings with a link:
 ```
 npx wrangler d1 execute career-job-engine --local --persist-to .tmp-d1 --command "UPDATE jobs SET source_url = 'https://example.invalid/posting/' || id; DELETE FROM response_cache"
 node test/e2e/seeker.e2e.mjs desktop    # and: mobile  (the journey: Sana, Today, open a posting, "Yes, I applied", her applications, Not for me, Undo, reload)

@@ -169,9 +169,12 @@ export async function checkStoredOperatorKey(): Promise<'ok' | 'none' | 'rejecte
   return 'ok';
 }
 
+/** Fired when the operator signs out or a stored key stops being accepted: the operator screens lock again (OperatorGate). */
+export const OPERATOR_SIGNED_OUT_EVENT = 'operator-signed-out';
 export function logoutOperator(): void {
   verifiedKey = null;
   clearSessionAuthKey();
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(OPERATOR_SIGNED_OUT_EVENT));
 }
 
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {

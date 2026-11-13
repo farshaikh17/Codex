@@ -38,13 +38,14 @@ const goto = async () => { await page.goto(BASE + '/app?operator=1', { waitUntil
 const tab = async (name) => { await page.getByRole('button', { name: new RegExp('^' + name, 'i') }).first().click(); await page.waitForTimeout(1500); };
 const isoDay = (offset) => { const d = new Date(Date.now() + offset * 86400000); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };   // the viewer's own calendar day
 
-// ===== Part A: a visitor (no key) =================================================================================
+// ===== Part A: the operator screens (they need the key to view since the 13 Nov gap fix: signed in through the prompt) ===
 // The expected numbers come from the API, so records added by earlier suites on the same database do not matter.
 const apiApps = await (await fetch(BASE + '/api/applications?candidate_id=farhan_shaikh')).json();
 const appList = Array.isArray(apiApps) ? apiApps : (apiApps.applications || apiApps.jobs || []);
 const TRACKED = appList.length;
 const APPLIED = appList.filter((j) => ['APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER'].includes(String(j.application?.status || j.app_status || ''))).length;
 await goto();
+await page.fill('#operator-key-input', KEY); await page.locator('[data-testid="operator-gate"] button[type=submit]').click(); await page.waitForTimeout(1800);
 await page.locator('button[aria-label*="Analytics"]').first().click(); await page.waitForTimeout(1800);
 check('F1 Analytics shows the "What arrived each day" card', (await body()).includes('What arrived each day'));
 await page.goto(BASE + '/app?operator=1', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
@@ -72,14 +73,10 @@ await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 await page.evaluate(() => document.querySelector('[aria-label="Close"]')?.click());
 await page.waitForTimeout(500);
 await tab('APPLICATIONS');
-if (OPEN) check('F11 open tracker: a visitor gets the follow-up dates', followUpRequests.length > 0, 'no follow-up request');
-else check('F11 visitor tracker: no follow-up date input and no follow-up request', (await page.locator('input[type="date"]').count()) === 0 && followUpRequests.length === 0, followUpRequests.join());
+check('F11 the tracker asks for the follow-up dates', followUpRequests.length > 0, 'no follow-up request');
 
 // ===== Part B: operator ===========================================================================================
-await goto();
-await page.locator('button[aria-label*="Viewing only"]').first().click();
-await page.waitForSelector('#operator-key-input');
-await page.fill('#operator-key-input', KEY); await page.getByRole('button', { name: /unlock/i }).last().click(); await page.waitForTimeout(1800);
+await goto();   // still signed in (the key is kept for the tab)
 await tab('FARHAN'); await tab('APPLICATIONS');
 const inputs = page.locator('input[type="date"]');
 check('F12 operator tracker: every record has a follow-up date input', (await inputs.count()) === TRACKED, await inputs.count());

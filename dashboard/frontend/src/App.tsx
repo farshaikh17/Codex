@@ -142,7 +142,7 @@ export const App: React.FC = () => {
     const session = await checkStoredOperatorKey();
     if (session === 'unknown') setSessionNotice('Could not confirm the operator session just now; showing the public view.');
     // These two apply even if a newer load has superseded this one: the stored key is already gone.
-    if (session === 'rejected') setSessionNotice('The saved operator key is no longer valid. You are viewing the public dashboard.');
+    if (session === 'rejected') { logoutOperator(); setSessionNotice('The saved operator key is no longer valid. You are viewing the public dashboard.'); }   // under ?operator=1 this locks the screens again (OperatorGate)
     if (session === 'locked') { logoutOperator(); setSessionNotice('Too many failed sign-in attempts from this address. You are viewing the public dashboard; try signing in again later.'); }
     if (currentRequest !== requestId.current) { if (session !== 'ok') setIsOperator(false); return; }
     setIsOperator(session === 'ok');
@@ -194,15 +194,13 @@ export const App: React.FC = () => {
   const [candidateListLoaded, setCandidateListLoaded] = useState(false);
   const loadCandidates = useCallback(() => { fetchCandidateList().then((l) => { setCandidateList(l); setCandidateListLoaded(true); }).catch(() => setCandidateList([])); }, []);
   useEffect(() => { loadCandidates(); }, [isOperator, authEpoch, loadCandidates]);
-  // A revoked or wrong share link: the client is not in the list this link can see. Say so once, drop the link, show the public view.
-  const [shareView, setShareView] = useState(initialShareView);
+  // A revoked or wrong share link: the client is not in the list this link can see. Drop the link and say so (nothing else is shown).
+  const [shareView] = useState(initialShareView);
+  const [linkInvalid, setLinkInvalid] = useState(false);
   useEffect(() => {
     if (!shareView || !candidateListLoaded || isOperator) return;
-    if (!candidateList.some((c) => c.id === shareView.candidate)) {
-      clearShareView(); setShareView(null);
-      setSessionNotice('This shared link is no longer valid (it was revoked or is incomplete). Ask the sender for a new link. You are viewing the public dashboard.');
-      setCandidateId('farhan_shaikh'); changeActiveTab('dashboard'); setError(null); loadData();
-    }
+    // Gap fix (13 Nov): the operator screens need the key, so a wrong link no longer falls back to the public dashboard; it says so and stops.
+    if (!candidateList.some((c) => c.id === shareView.candidate)) { clearShareView(); setLinkInvalid(true); }
   }, [shareView, candidateList, candidateListLoaded, isOperator]);   // eslint-disable-line react-hooks/exhaustive-deps
   const clientTabs = candidateList.filter((c) => !BUILTIN.includes(c.id)).map((c) => ({ id: c.id, full_name: c.full_name }));
   const viewingName = shareView ? (candidateList.find((c) => c.id === shareView.candidate)?.full_name || shareView.candidate) : null;
@@ -285,6 +283,16 @@ export const App: React.FC = () => {
   const appliedStageCount = trackedJobs.filter((j) => ['APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER'].includes(String(j.application?.status || ''))).length;
   const readyCount = weeklyMetrics?.ready_inventory ?? jobs.filter((j) => j.farhan_fit === 'READY' || j.qualification_status === 'READY').length;
   const indiaRemoteCount = indiaRemoteSummary?.total_confirmed ?? 0;
+
+  if (linkInvalid) return (
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div role="alert" data-testid="share-link-invalid" className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-sm p-6 space-y-3 text-sm text-slate-700">
+        <h1 className="text-lg font-bold text-slate-900">This shared link is no longer valid</h1>
+        <p>It was revoked or is incomplete. Ask the sender for a new link.</p>
+        <p><a className="text-indigo-700 underline" href="/">Go to the website</a></p>
+      </div>
+    </main>
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
