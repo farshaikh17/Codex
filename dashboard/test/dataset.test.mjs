@@ -8,6 +8,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb } from "./harness.mjs";
+import { selectInto } from "./shortlist_helpers.mjs";
 import * as DS_DISCOVERY from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -43,6 +44,7 @@ test('new jobs are scored by the screen, written once, shortlisted only by the r
   const w = world();
   const { sql, report } = run(w.dir);
   w.sqlite.exec(sql);
+  selectInto(w.sqlite);   // the shortlist is chosen after the import, from the pool (plan A2)
   const q = (c, j) => w.sqlite.prepare(`SELECT q.qualification_status st, q.eligibility_status es, s.overall_score sc, s.score_breakdown bd FROM candidate_qualifications q JOIN candidate_job_scores s USING(candidate_id, job_id) WHERE q.candidate_id=? AND q.job_id=?`).get(c, j);
   assert.equal(q(F, 'ds:greenhouse:1').es, 'ELIGIBLE');
   assert.ok(q(F, 'ds:greenhouse:1').sc >= 60, 'role match with two skills found by key words, remote from India');
@@ -240,7 +242,7 @@ test('first-import rows the current screen never scored are screened fully, firs
   const l6 = db.prepare('SELECT qualification_status s, eligibility_status e, eligibility_reason r FROM candidate_qualifications WHERE job_id=?').get('L6');
   assert.deepEqual([l6.s, l6.e, l6.r], ['HOLD', 'ELIGIBLE', 'India affirmative verified'], 'a verified eligibility is kept; the role still decides the bucket');
   const hist = db.prepare(`SELECT job_id j, previous_status p, new_status n FROM qualification_history WHERE actor='discovery' ORDER BY job_id`).all();
-  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L5:READY>HOLD', 'L6:NEEDS_REVIEW>HOLD', 'ds:greenhouse:1:NEEDS_REVIEW>READY', 'ds:greenhouse:2:NEEDS_REVIEW>READY'], 'one history row per moved job, not repeated');
+  assert.deepEqual(hist.map((h) => `${h.j}:${h.p}>${h.n}`), ['L1:NEEDS_REVIEW>HOLD', 'L5:READY>HOLD', 'L6:NEEDS_REVIEW>HOLD'], 'one history row per moved job, not repeated (the import no longer shortlists: the selector does, plan A2)');
 });
 
 test('a row whose stored reason says it is outside the role family moves to Hold; decided and applied rows stay', () => {
@@ -300,8 +302,9 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   add('t1', 85, 'ELIGIBLE'); add('t2', 84, 'ELIGIBLE'); add('t3', 83, 'ELIGIBLE');                         // the same job in three cities
   for (const id of ['t2', 't3']) db.prepare(`UPDATE jobs SET title = 'T t1' WHERE id = ?`).run(id);
   const st = () => Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE candidate_id=?`).all(F).map((r) => [r.j, r.s]));
-  const { sql } = run(w.dir);
-  db.exec(sql);
+  db.exec(run(w.dir).sql);
+  const { sql } = selectInto(db);
+  db.exec(run(w.dir).sql);   // the low-match step runs after the selection in the daily run
   const a = st();
   assert.deepEqual([a.r1, a.r2, a.x2], ['READY', 'READY', 'READY']);
   assert.deepEqual([a.t1, a.t2, a.t3], ['READY', 'NEEDS_REVIEW', 'NEEDS_REVIEW'], 'one place per employer and title: the best-scored twin');
@@ -321,16 +324,18 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   const snap = () => JSON.stringify([db.prepare('SELECT * FROM candidate_qualifications ORDER BY 1,2').all(), db.prepare('SELECT COUNT(*) n FROM qualification_history').get()]);
   const before = snap();
   db.exec(sql); db.exec(run(w.dir).sql);
+  assert.equal(selectInto(db).sql, '', 'a second selection on the result changes nothing');
   const strip = (x) => x.replace(/"last_reverified_at":"[^"]*"/g, '');
   assert.equal(strip(snap()), strip(before));
   // a shortlisted posting that is no longer verified open drops back to review
   db.prepare(`UPDATE jobs SET last_verified_at = ? WHERE id = 'r1'`).run(OLD);
-  assert.doesNotMatch(run(w.dir, ['--no-shortlist']).sql, /Shortlisted automatically/, 'the watchlist run skips the step');
+  assert.doesNotMatch(run(w.dir, ['--no-shortlist']).sql, /Held automatically/, 'the watchlist run skips the low-match step');
   const split = path.join(w.dir, 'shortlist.sql');
   const sp = run(w.dir, ['--shortlist-out', split]);
-  assert.doesNotMatch(sp.sql, /Shortlisted automatically/, 'with --shortlist-out the step leaves the main file');
-  assert.match(fs.readFileSync(split, 'utf8'), /Shortlisted automatically[\s\S]*generation = generation \+ 1/, 'and goes to its own file, which refreshes the public cache');
+  assert.doesNotMatch(sp.sql + fs.readFileSync(split, 'utf8'), /Shortlisted automatically by/, 'the import no longer shortlists: the selector does (plan A2)');
+  assert.match(fs.readFileSync(split, 'utf8'), /Held automatically[\s\S]*generation = generation \+ 1/, 'the low-match step goes to its own file, which refreshes the public cache');
   db.exec(run(w.dir).sql);
+  selectInto(db);
   assert.equal(st().r1, 'NEEDS_REVIEW');
 });
 
@@ -371,6 +376,7 @@ test('re-score covers the automatic shortlist: a shortlisted row gets the new ru
   const row = (id) => ({ candidate_id: F, job_id: id, cur_score: 70, title: 'Senior Manager, Total Rewards Operations', company: 'GitLab', location: 'Remote - India', description: 'Fully remote role, open to candidates in India. CRM automation.', workplace_type: 'REMOTE', score_breakdown: '{"preliminary":true,"profile_v11":true}', provenance: 'LIVE_PUBLIC', source_adapter: 'greenhouse' });
   fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify([row('a1'), row('a2')]));
   db.exec(run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]).sql);
+  selectInto(db);
   const s = (id) => db.prepare(`SELECT s.overall_score o, s.score_breakdown b, q.qualification_status st, q.qualification_reason r FROM candidate_job_scores s JOIN candidate_qualifications q USING(candidate_id, job_id) WHERE s.job_id = ?`).get(id);
   assert.ok(s('a1').o <= 40 && /profile_v13/.test(s('a1').b), `the shortlisted row is re-scored under the new rules (${s('a1').o})`);
   assert.notEqual(s('a1').st, 'READY', 'and leaves the shortlist in the same run');
@@ -396,10 +402,12 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   add('fresh', 70, { verified: NOW });                               // verified today, ranks below the kept rows: no room
   add('stale', 95);                                                  // never promoted without a recent verification
   add('dec', 10, { status: 'READY', reason: MARK, override: 'READY' }); add('app', 10, { status: 'READY', reason: MARK, app: true });
-  const strict = path.join(w.dir, 'shortlist.sql'), relaxed = path.join(w.dir, 'shortlist_unverified.sql');
-  run(w.dir, ['--shortlist-out', strict, '--shortlist-unverified-out', relaxed]);
+  const strict = path.join(w.dir, 'shortlist.sql');
+  run(w.dir, ['--shortlist-out', strict]);
+  db.exec(fs.readFileSync(strict, 'utf8'));   // the low-match step
   const before = db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all();
-  db.exec(fs.readFileSync(relaxed, 'utf8'));
+  selectInto(db, { relaxed: true });
+  db.exec(fs.readFileSync(strict, 'utf8'));   // the low-match step runs after the selection
   const st = () => Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE candidate_id=?`).all(F).map((r) => [r.j, r.s]));
   const a = st();
   for (let i = 0; i < 25; i++) assert.equal(a['k' + String(i).padStart(2, '0')], 'READY', 'kept: not verified recently only because the check failed today');
@@ -408,14 +416,14 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   assert.equal(a.stale, 'NEEDS_REVIEW');
   assert.deepEqual(db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all(), before, 'decided and applied rows stay byte-identical');
   // a normal day (the check verified rows) demotes what was not verified in 4 days
-  db.exec(fs.readFileSync(strict, 'utf8'));
+  selectInto(db);
   const b = st();
   assert.equal(b.k00, 'NEEDS_REVIEW');
   assert.equal(b.fresh, 'READY');
   assert.deepEqual(db.prepare('SELECT * FROM candidate_qualifications WHERE job_id IN (\'dec\',\'app\') ORDER BY job_id').all(), before);
-  // the watchlist run (no shortlist) writes an empty second file
-  run(w.dir, ['--no-shortlist', '--shortlist-unverified-out', relaxed]);
-  assert.equal(fs.readFileSync(relaxed, 'utf8'), '');
+  // the watchlist run (no shortlist) writes an empty low-match file
+  run(w.dir, ['--no-shortlist', '--shortlist-out', strict]);
+  assert.equal(fs.readFileSync(strict, 'utf8'), '');
 });
 
 test('an employer career-site result (Workday, board: false) is stored as the employer\'s posting: verified now, the screen\'s eligibility, LIVE_PUBLIC; a remote-board result stays unverified and UNKNOWN', () => {
@@ -485,6 +493,7 @@ test('S4: the shortlist needs two matched skills unless the title is exactly a t
   const before = db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get();
   const { sql } = run(w.dir);
   db.exec(sql);
+  selectInto(db);
   const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE job_id LIKE 'k%'`).all().map((r) => [r.j, r.s]));
   assert.deepEqual(st, { k1: 'NEEDS_REVIEW', k2: 'READY', k3: 'READY', k4: 'READY' });
   assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get(), before);
@@ -546,14 +555,14 @@ test('S10: Stretch takes the overflow of Ready-quality rows first, ahead of the 
   for (let i = 0; i < 30; i++) add('r' + String(i).padStart(2, '0'), 90 - (i % 5));   // 30 eligible rows at 86-90: 25 Ready, 5 overflow
   for (let i = 0; i < 30; i++) add('s' + String(i).padStart(2, '0'), 55);              // 30 eligible "within 10 below" rows
   add('p1', 80, 'ELIGIBLE', { status: 'READY', override: 'READY' });                      // a person's Ready row: untouched, not counted
-  const { sql } = run(w.dir);
-  db.exec(sql);
+  db.exec(run(w.dir).sql);
+  selectInto(db);
   const n = (st, pre) => db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = ? AND job_id LIKE ?`).get(S, st, pre + '%').c;
   assert.equal(n('READY', 'r'), 25); assert.equal(n('STRETCH_READY', 'r'), 5, 'the five Ready-quality rows that did not fit go to Stretch first');
   assert.equal(n('STRETCH_READY', 's'), 20, 'then the best "within 10 below" rows fill Stretch');
   // a Ready row closes: the best Stretch overflow row moves up the next run
   db.prepare(`UPDATE jobs SET is_active = 0 WHERE id = (SELECT job_id FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = 'READY' AND job_id LIKE 'r%' ORDER BY job_id LIMIT 1)`).run(S);
-  db.exec(run(w.dir).sql);
+  db.exec(run(w.dir).sql); selectInto(db);
   assert.equal(n('READY', 'r'), 25); assert.equal(n('STRETCH_READY', 'r'), 4);
   assert.ok(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE previous_status = 'STRETCH_READY' AND new_status = 'READY'`).get().c >= 1);
   assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 'p1'`).get().s, 'READY');
@@ -583,7 +592,7 @@ test('phase 2 tenth-man fixes: an office-days ineligible row comes back when the
     d2.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?, 'READY', 'ELIGIBLE', ?, ?)`).run(S, id, i === 30 ? 'Set by a person.' : 'Shortlisted automatically. Cloud discovery match.', i === 30 ? 'READY' : null);
     d2.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,60,?)`).run(S, id, 95 - i, V);
   }
-  d2.exec(run(w2.dir).sql);
+  d2.exec(run(w2.dir).sql); selectInto(d2);
   const c = (st) => d2.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = ? AND qualification_reason LIKE 'Shortlisted automatically.%'`).get(S, st).c;
   assert.equal(c('READY'), 25); assert.equal(c('STRETCH_READY'), 5);
   assert.equal(d2.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 't30'`).get().s, 'READY', 'a person\'s Ready row is untouched');
