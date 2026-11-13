@@ -416,3 +416,25 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   run(w.dir, ['--no-shortlist', '--shortlist-unverified-out', relaxed]);
   assert.equal(fs.readFileSync(relaxed, 'utf8'), '');
 });
+
+test('an employer career-site result (Workday, board: false) is stored as the employer\'s posting: verified now, the screen\'s eligibility, LIVE_PUBLIC; a remote-board result stays unverified and UNKNOWN', () => {
+  const w = world();
+  const js = { source: 'job_sites', closed: [], jobs: [
+    { id: 'js:workday:abc', url: 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers/job/Pune/Maintenance-Engineer_1', title: 'Maintenance Engineer', company: 'KBR', ats_type: 'workday',
+      location: 'Pune, India', is_remote: false, description: 'Electrical maintenance and reliability programs for the plant.', posted_at: '', board: false, candidates: [S] },
+    { id: 'js:remoteok:def', url: 'https://remoteok.com/remote-jobs/1', title: 'Implementation Lead', company: 'Beta', ats_type: 'remoteok',
+      location: 'Remote - India', is_remote: true, description: 'Fully remote role. Implementation of CRM automation.', posted_at: '', board: true, candidates: [F] },
+  ] };
+  fs.writeFileSync(path.join(w.dir, 'jobsite_matches.json'), JSON.stringify(js));
+  w.sqlite.exec(run(w.dir, ['--in', path.join(w.dir, 'jobsite_matches.json')]).sql);
+  const job = (id) => w.sqlite.prepare(`SELECT provenance p, source_channel c, last_verified_at v, workplace_type wt FROM jobs WHERE id=?`).get(id);
+  const qual = (c, id) => w.sqlite.prepare(`SELECT eligibility_status es, eligibility_reason er FROM candidate_qualifications WHERE candidate_id=? AND job_id=?`).get(c, id);
+  const wd = job('js:workday:abc');
+  assert.equal(wd.p, 'LIVE_PUBLIC'); assert.equal(wd.c, 'JOB_SITES'); assert.ok(wd.v, 'verified at insert'); assert.equal(wd.wt, 'ONSITE');
+  assert.equal(qual(S, 'js:workday:abc').es, qual(S, 'ds:greenhouse:2').es, 'the same eligibility the screen gives the same posting from the dataset');
+  assert.equal(qual(S, 'js:workday:abc').es, 'ELIGIBLE');
+  assert.doesNotMatch(qual(S, 'js:workday:abc').er || '', /^Reported by/);
+  const rb = job('js:remoteok:def');
+  assert.equal(rb.p, 'PUBLIC_FEED_UNVERIFIED'); assert.equal(rb.v, null);
+  assert.equal(qual(F, 'js:remoteok:def').es, 'UNKNOWN');
+});

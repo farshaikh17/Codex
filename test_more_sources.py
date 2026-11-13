@@ -53,6 +53,11 @@ class MoreSources(unittest.TestCase):
             report = json.loads(Path(d, 'more_sources_report.json').read_text())
             self.assertIn('error', report['getro'])
             self.assertEqual(report['eightfold']['kept'], 1)
+            # employer career sites are the employer's own posting; aggregators stay job-board reports
+            for name in ('successfactors', 'avature', 'eightfold'):
+                self.assertIs(jobs[name]['board'], False, name)
+            for name in ('workable', 'arbeitnow', 'uncareers'):
+                self.assertIs(jobs[name]['board'], True, name)
 
 
     def test_doosan_group_feed_skips_bobcat_postings(self):
@@ -159,6 +164,13 @@ class MoreSources(unittest.TestCase):
         with mock.patch.object(ms, 'http', fake):
             self.assertFalse(ms.enrich_full_text(dict(sr, description='a'), 'smartrecruiters', {}, [ms.ENRICH_BUDGET_SECONDS + 1]), 'time budget spent')
             self.assertFalse(ms.enrich_full_text(dict(sr, description='a'), 'workable', {}, [0.0]), 'sources without a detail reader are untouched')
+
+
+class EmployerSitesAreNotBoards(unittest.TestCase):
+    def test_flags(self):
+        self.assertEqual(set(ms.EMPLOYER_SITES), {'workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold'})
+        self.assertIs(ms.job('workday', 'https://x', 'T', 'C', 'P', 'D', None, board=False)['board'], False)
+        self.assertIs(ms.job('remoteok', 'https://x', 'T', 'C', 'P', 'D', None)['board'], True, 'a remote board stays a board by default')
 
 
 if __name__ == '__main__':
