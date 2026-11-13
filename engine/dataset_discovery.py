@@ -29,6 +29,11 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+try:   # run as a script (engine/ on sys.path) or as part of the engine package (tests)
+    from company_names import http_fetch, name_jobs
+except ImportError:   # pragma: no cover
+    from engine.company_names import http_fetch, name_jobs
+
 DATASET = 'https://storage.stapply.ai/jobhive/v1/all.parquet'
 MANIFEST = 'https://storage.stapply.ai/jobhive/v1/manifest.json'
 DASHBOARD = Path(__file__).resolve().parent.parent / 'dashboard'
@@ -345,6 +350,7 @@ def main():
     ap.add_argument('--profiles-only', action='store_true', help='only write candidates.json, profiles.json and taste_rows.json (watchlist runs)')
     ap.add_argument('--shortlist-pool', default=None, help='only export the shortlist pool to this file (plan A1; after the import, before the still-open check)')
     ap.add_argument('--pool-per-candidate', type=int, default=300)
+    ap.add_argument('--no-name-lookup', action='store_true', help='use only the known employer names; open no career site (plan B1)')
     ap.add_argument('--no-dataset', action='store_true', help='the dataset download failed: write everything the later steps need and an empty matches.json')
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -360,9 +366,11 @@ def main():
         return 0
     if a.dedupe:
         raw = json.loads(Path(a.dedupe).read_text())
-        fresh, _, dup = split_new([clean(j) for j in raw.get('jobs', [])], a.d1_local)
+        jobs = [clean(j) for j in raw.get('jobs', [])]
+        names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())   # plan B1: employer names before the duplicate test
+        fresh, _, dup = split_new(jobs, a.d1_local)
         (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': []}, default=str))
-        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh)}))
+        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh), 'employer_names': names}))
         return 0
     if a.no_dataset:
         # The 2.3 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
@@ -398,12 +406,14 @@ def main():
                 j['candidates'].append(cid)
             j['public'] = j['public'] or bool(p.get('public'))
     jobs = [j for j in found.values() if len(j['url']) < LIMITS['url']]
+    # Plan B1: the employer's name, not its hiring-system tenant id, before the duplicate test (so caps and dedupe see the display name).
+    names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())
     fresh, reopen, dup = split_new(jobs, a.d1_local)
     # A partial snapshot must not close real jobs: no closures at all unless the snapshot has its usual size.
     close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local) if total >= 1_000_000 and not stale else ([], [], [], {})
     report = {'snapshot': manifest.get('generated_at'), 'snapshot_age_hours': None if age is None else round(age, 1), 'stale': stale, 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
               'duplicates_in_run': dup, 'already_stored': len(jobs) - dup - len(fresh), 'new': len(fresh), 'reopen': len(reopen),
-              'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear)}
+              'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear), 'employer_names': names}
     (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': manifest.get('generated_at'), 'jobs': fresh, 'closed': close,
                                                   'reopen': reopen, 'missing_mark': mark, 'missing_clear': clear, 'ats_counts': counts}, default=str))
     (out / 'report.json').write_text(json.dumps(report, indent=1))

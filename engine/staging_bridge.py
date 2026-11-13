@@ -30,6 +30,11 @@ import tempfile
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Callable
 
+try:   # plan B1: the employer's name, not a hiring-system id ('gohighlevel' -> 'GoHighLevel'); table only, nothing is fetched here
+    from engine.company_names import display_company
+except ImportError:   # pragma: no cover - run with engine/ on sys.path
+    from company_names import display_company
+
 VALID_CODEX_CANDIDATE_IDS = frozenset(['farhan', 'sana'])
 VALID_CLOUDFLARE_CANDIDATE_IDS = frozenset(['farhan_shaikh', 'sana_ansari'])
 
@@ -56,7 +61,7 @@ def codex_to_d1_job(job: Dict[str, Any], observed_at: Optional[str] = None) -> D
         board_display = board_name.replace('-', ' ').title()
     else:
         board_display = None
-    company = job.get('employer_name') or job.get('company') or board_display or 'Unknown'
+    company = display_company(job.get('employer_name') or job.get('company') or board_display or 'Unknown', job.get('provider'), job.get('url'))
     source_url = job.get('url') or ''
     apply_url = normalize_posting_url(job.get('apply_url') or source_url)
     
