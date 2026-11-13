@@ -82,12 +82,14 @@ test('GET /api/discovery/daily: a skipped run is counted apart and never becomes
 });
 
 test('A7: the shortlist report is stored in the run row as counts, rule names and flags only, and /api/discovery/daily returns the latest', async () => {
-  const report = { sana_ansari: { pool: 300, READY: { count: 25, employers: 21, max_employer_share: 0.08, reposters: 0, older_than_30_days: 2, swaps: 3, relaxed: ['band_remote_min_2'],
-    pool_smaller_than_tier: false, families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, title: 'Secret Job Title' },
+  const report = { sana_ansari: { pool: 300, pool_sources: { workday: 120, "x'y": 3 }, READY: { count: 25, employers: 21, max_employer_share: 0.08, reposters: 0, older_than_30_days: 2, swaps: 3, relaxed: ['band_remote_min_2'],
+    pool_smaller_than_tier: false, families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, sources: { workday: 9, ats_dataset: 16 }, title: 'Secret Job Title' },
     STRETCH_READY: { count: 25, different: 2, relaxed: ["x'); DROP TABLE jobs;--"] } } };
   const rec = shortlistRecord(report);
   assert.deepEqual(rec.sana_ansari.READY, { count: 25, employers: 21, max_employer_share: 0.08, reposters: 0, older_than_30_days: 2, swaps: 3, different: 0,
-    families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, relaxed: ['band_remote_min_2'], pool_smaller_than_tier: false });
+    families: { maintenance: 10, electrical: 3 }, bands: { india_onsite: 20, remote: 1 }, band_shortfall: { remote: 1 }, sources: { workday: 9, ats_dataset: 16 }, relaxed: ['band_remote_min_2'], pool_smaller_than_tier: false });
+  assert.deepEqual(rec.sana_ansari.pool_sources, { workday: 120, xy: 3 }, 'plan D1: pool rows per source, keys sanitised');
+  assert.deepEqual(rec.sana_ansari.STRETCH_READY.sources, {});
   assert.deepEqual(rec.sana_ansari.STRETCH_READY.relaxed, ['xDROPTABLEjobs']);
   assert.ok(!JSON.stringify(rec).includes('Secret'), 'no job text');
   assert.equal(shortlistRecord(null), null);

@@ -244,10 +244,18 @@ function pickFor(rows, held, ctx) {
     report[t].older_than_30_days = lists[t].filter((r) => (now - when(r.discovered_at)) / DAY > OLD_DAYS).length;
     report[t].families = {}; for (const r of lists[t]) report[t].families[r.family || 'unclassified'] = (report[t].families[r.family || 'unclassified'] || 0) + 1;
     report[t].bands = {}; for (const r of lists[t]) report[t].bands[r.band || 'other'] = (report[t].bands[r.band || 'other'] || 0) + 1;
+    report[t].sources = sourceCounts(lists[t]);   // plan D1: which sources the tier's rows came from
     // band minimums not met: reported as "pool too small" (no swap candidate within the score floor)
     report[t].band_shortfall = Object.fromEntries(Object.entries((BAND_MINIMUMS[ctx.candidateId] || {})[t] || {}).map(([b, m]) => [b, Math.max(0, m - (report[t].bands[b] || 0))]).filter(([, v]) => v > 0));
   }
   return { lists, tierOf, report };
+}
+
+/** Plan D1: rows per source (the stored source adapter), so the run log shows which sources feed the pool and the lists. */
+export function sourceCounts(rows) {
+  const out = {};
+  for (const r of rows || []) { const s = String(r?.source || 'unknown'); out[s] = (out[s] || 0) + 1; }
+  return out;
 }
 
 /** The person's skills from candidates.json (primary_skills is stored as JSON text). */
@@ -296,6 +304,7 @@ export function selectShortlist(pool, opts = {}) {
     }
     report[cid] = Object.fromEntries(TIERS.map((t) => [t, { count: lists[t].length, ...rep[t] }]));
     report[cid].pool = rows.length;
+    report[cid].pool_sources = sourceCounts(rows);
   }
   return { changes, report };
 }

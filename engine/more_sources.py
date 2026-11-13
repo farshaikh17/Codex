@@ -42,9 +42,15 @@ PAUSE = 0.6
 EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold')
 QUERIES = {
     'farhan_shaikh': ['gohighlevel', 'revops', 'revenue operations', 'implementation manager', 'automation specialist', 'crm manager',
-                      'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer'],
+                      'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer',
+                      # plan D1 (13 Nov): kept only where a live Workable read returned mostly his roles (implementation 20 of 20, solutions consultant
+                      # 16 of 20); onboarding (HR onboarding), technical account manager, customer engineer and business systems returned few and were left out
+                      'implementation', 'solutions consultant'],
     'sana_ansari': ['power plant', 'reliability engineer', 'maintenance engineer', 'electrical engineer', 'energy efficiency',
-                    'commissioning engineer', 'operations engineer', 'decarbonization'],
+                    'commissioning engineer', 'operations engineer', 'decarbonization',
+                    # plan D1 (13 Nov): her non-maintenance roles, kept where a live Workable read returned mostly her field (utilities engineer 17 of 20,
+                    # energy manager 18, plant engineer 13, O&M engineer 8); asset performance returned finance roles only and was left out
+                    'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer'],
 }
 EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom.com', 'neom.com'), ('TAQA', 'careers.taqa.com', 'taqa.com')]
 SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com'),

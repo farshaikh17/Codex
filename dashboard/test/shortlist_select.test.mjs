@@ -345,3 +345,12 @@ test('CLI: one SQL file; with no pool it writes an empty file and the lists stay
   cli('--pool', path.join(dir, 'pool.json'), '--liveness', path.join(dir, 'live.json'));
   assert.equal(fs.readFileSync(out, 'utf8'), '', 'found closed by today\'s check: not shortlisted');
 });
+
+test('plan D1: the report counts pool and tier rows per source', () => {
+  const pool = [row({ job_id: 'a', source: 'workday', company: 'A' }), row({ job_id: 'b', source: 'workday', company: 'B' }),
+    row({ job_id: 'c', source: 'ats_dataset', company: 'C', score: 50 }), row({ job_id: 'd', source: undefined, company: 'D', score: 40 })];
+  const { report } = sel(pool);
+  assert.deepEqual(report[C].pool_sources, { workday: 2, ats_dataset: 1, unknown: 1 });
+  assert.deepEqual(report[C].READY.sources, { workday: 2 });
+  assert.deepEqual(report[C].STRETCH_READY.sources, { ats_dataset: 1 });
+});
