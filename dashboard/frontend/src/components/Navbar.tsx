@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchDiscoveryDaily } from '../api';
+import { updatedNote } from '../jobHelpers';
 import { BarChart3, BookmarkCheck, RefreshCw, LayoutDashboard, Users, Lock, Unlock, Sliders, Briefcase } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
@@ -25,6 +27,21 @@ interface NavbarProps {
   viewer?: { name: string; onOpen: () => void } | null;
 }
 
+/** "Updated 13 Nov, 21:47" from the last daily run; amber "Not updated today" when it is over 26 hours old. Hidden when the server does not report it. */
+const UpdatedNote: React.FC = () => {
+  const [lastRunAt, setLastRunAt] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let live = true;
+    fetchDiscoveryDaily().then((d) => { if (live) setLastRunAt(d.last_run_at); }).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  const note = updatedNote(lastRunAt);
+  if (!note) return null;
+  return note.stale
+    ? <span data-testid="updated-note" role="status" title={note.title} className="shrink-0 whitespace-nowrap rounded-full bg-amber-300 text-amber-950 px-2 py-0.5">{note.label}</span>
+    : <span data-testid="updated-note" title={note.title} className="shrink-0 whitespace-nowrap text-white/80">{note.label}</span>;
+};
+
 // Same visual language as the public site: navy announcement bar, cream header, serif wordmark, coral for the active item.
 const item = (on: boolean) =>
   `px-3 py-1.5 text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 ${on ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:text-coral-600 hover:bg-white'}`;
@@ -36,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-40">
       <div className="bg-gradient-to-r from-[#173a4f] to-slate-900 text-white text-xs font-semibold px-4 py-2 flex items-center justify-between gap-3">
         <span>Daily-screened job dashboards · <span className="text-[#F5C451]">{isOperator ? 'Operator mode: changes enabled' : trackerOpen ? 'Tracker open: save, track and rate jobs without signing in' : 'Read-only view'}</span></span>
-        <a href="/" className="hidden sm:inline text-white/80 hover:text-white">← Website</a>
+        <span className="flex items-center gap-3"><UpdatedNote /><a href="/" className="hidden sm:inline text-white/80 hover:text-white">← Website</a></span>
       </div>
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-3 items-center justify-between">

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark } from '../frontend/src/jobHelpers.ts';
+import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark, updatedNote } from '../frontend/src/jobHelpers.ts';
 
 test('people search links are built from the employer name, encoded, and empty for no name', () => {
   const links = peopleSearchLinks('  Black & Veatch ');
@@ -54,4 +54,14 @@ test('the automatic shortlist mark is recognised only at the start of the reason
   assert.equal(withoutAutoMark('Shortlisted automatically. Meets the stated 5+ years.'), 'Meets the stated 5+ years.');
   assert.equal(withoutAutoMark('Strongest Fit verified match (61%)'), 'Strongest Fit verified match (61%)');
   assert.equal(withoutAutoMark(undefined), '');
+});
+
+test('updated note: "Updated <date, time>" when the last daily run is recent, amber "Not updated today" over 26 hours or when none is recorded, hidden for an older server', () => {
+  const now = new Date('2026-11-13T20:00:00Z');
+  const fresh = updatedNote('2026-11-12T21:47:00Z', now);
+  assert.equal(fresh.stale, false); assert.match(fresh.label, /^Updated 1[23] Nov, \d{2}:\d{2}$/);
+  const old = updatedNote('2026-11-12T17:00:00Z', now);
+  assert.equal(old.stale, true); assert.equal(old.label, 'Not updated today'); assert.match(old.title, /^Last daily update: 12 Nov, \d{2}:\d{2}$/);
+  assert.equal(updatedNote(null, now).label, 'Not updated today'); assert.equal(updatedNote(null, now).stale, true);
+  assert.equal(updatedNote(undefined, now), null, 'a Worker that does not report it yet shows nothing');
 });

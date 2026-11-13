@@ -880,11 +880,11 @@ export async function deletePastApplication(id: number): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete');
 }
 
-export interface DiscoveryDay { day: string; runs: number; new_jobs: number; rescored: number; closed: number; reopened: number; alive: number; dead: number;
+export interface DiscoveryDay { day: string; runs: number; skipped?: number; new_jobs: number; rescored: number; closed: number; reopened: number; alive: number; dead: number;
   sources: Record<string, { read: number; kept: number; full_text: number }>; }
 
 /** What the discovery and watchlist runs recorded, summed per UTC day (counts only). */
-export async function fetchDiscoveryDaily(): Promise<{ days: DiscoveryDay[] }> {
+export async function fetchDiscoveryDaily(): Promise<{ days: DiscoveryDay[]; last_run_at?: string | null; last_skipped_at?: string | null }> {
   const res = await authedFetch(`${API_BASE}/discovery/daily`);
   if (!res.ok) throw new Error('Failed to fetch the discovery log');
   return res.json();
