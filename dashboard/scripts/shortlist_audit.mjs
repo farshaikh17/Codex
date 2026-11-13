@@ -11,13 +11,15 @@
 //   - more than 3 rows from reposting sites in a tier;
 //   - an automatic row not verified open in the last 4 days (one hour of grace for the minutes between the selection and the audit; skipped with
 //     --relaxed, the day the still-open check verified too few rows), or closed;
+//     A Stretch row that is a Gulf posting from a job board refusing the check, found in the last 2 days, passes (the selector's 'listed' rule;
+//     never on Ready);
 //   - an employer shown by its hiring-system tenant id (until B1 names it);
 //   - a row with a manual override, or an application older than the change, that the daily run changed (a 'discovery' history row since the run
 //     started; an application made after that change is the person's own later choice). An automatic row
 //     a person later saved or applied to keeps its mark; that alone is a person's choice, not a broken rule, and is counted, not failed.
 import fs from 'node:fs';
 import { MARK, REPOSTER_CAP, EMPLOYER_TIER_CAP, EMPLOYER_SKILL_CAP, VERIFIED_DAYS, employerKey, isReposter, skillEmployer, skillsOf, tenantEmployer, when } from './shortlist_select.mjs';
-import { companyKey } from '../worker/discovery.ts';
+import { companyKey, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 
 const GRACE_MS = 3600000;
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
@@ -28,11 +30,12 @@ export function auditSql(since) {
   if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(String(since || ''))) throw new Error('--since must be "YYYY-MM-DD HH:MM:SS" (UTC)');
   return `SELECT 'row' AS kind, q.candidate_id, q.job_id, q.qualification_status AS status, j.company, j.source_adapter AS source,
   CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url, j.last_verified_at, j.is_active AS active,
-  CASE WHEN q.manual_override_status IS NOT NULL OR ${APPLIED('q')} THEN 1 ELSE 0 END AS decided
+  CASE WHEN q.manual_override_status IS NOT NULL OR ${APPLIED('q')} THEN 1 ELSE 0 END AS decided,
+  j.location_restrictions AS location, j.discovered_at
 FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
 WHERE q.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(q.qualification_reason, '') LIKE ${q(MARK + '%')}
 UNION ALL
-SELECT DISTINCT 'touched', h.candidate_id, h.job_id, h.new_status, NULL, NULL, NULL, h.changed_at, NULL, 1
+SELECT DISTINCT 'touched', h.candidate_id, h.job_id, h.new_status, NULL, NULL, NULL, h.changed_at, NULL, 1, NULL, NULL
 FROM qualification_history h JOIN candidate_qualifications q ON q.candidate_id = h.candidate_id AND q.job_id = h.job_id
 WHERE h.actor = 'discovery' AND h.changed_at >= ${q(String(since).replace('T', ' '))} AND (q.manual_override_status IS NOT NULL
   OR EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.created_at <= h.changed_at))`;
@@ -50,7 +53,8 @@ export function audit(rows, { candidates = [], report = null, relaxed = false, n
     const k = `${r.candidate_id}|${r.status}`;
     byTier.set(k, [...(byTier.get(k) || []), r]);
     if (!Number(r.active)) problems.push(`a closed posting is on the shortlist (${r.candidate_id} ${r.job_id})`);
-    else if (!relaxed && !(now - when(r.last_verified_at) <= VERIFIED_DAYS * 86400000 + GRACE_MS)) problems.push(`a row not verified open in ${VERIFIED_DAYS} days (${r.candidate_id} ${r.job_id})`);
+    else if (!relaxed && !(now - when(r.last_verified_at) <= VERIFIED_DAYS * 86400000 + GRACE_MS)
+      && !(r.status === 'STRETCH_READY' && listedOnlyGulf(r.url, r.location) && now - when(r.discovered_at) <= LISTED_DAYS * 86400000 + GRACE_MS)) problems.push(`a row not verified open in ${VERIFIED_DAYS} days (${r.candidate_id} ${r.job_id})`);
     if (tenantEmployer(r.company, r.source, r.url)) problems.push(`a tenant-id employer is on the shortlist (${r.candidate_id} ${r.job_id})`);
   }
   for (const [k, list] of byTier) {

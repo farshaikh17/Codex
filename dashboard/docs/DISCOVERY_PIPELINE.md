@@ -39,7 +39,9 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
    last 4 days, ranked by score (an incumbent +2, a row over 30 days old -5); hard rules (one posting per employer and title, reposting sites at
    most 3 per tier, tenant-id employers off) and soft rules swapped for variety (2 per employer per tier, 40% per role family, Sana's Gulf and
    remote minimums, Farhan's worldwide-remote minimum, "something different"). When the still-open check verified too few rows, rows already
-   shortlisted keep their place (`--relaxed`). One SQL file of guarded moves, then the low-match Hold.
+   shortlisted keep their place (`--relaxed`). A Gulf posting from a job board that refuses the check (Bayt, Indeed, LinkedIn) and was found
+   in the last 2 days (the job-site search asks only for postings listed in the last 48 hours) counts for Worth a try only, never Best matches;
+   its card says it could not be confirmed still open. One SQL file of guarded moves, then the low-match Hold.
 10. Audit (A8) of the stored lists' hard rules; run log row (counts only: new, re-scored, closed, sources, the shortlist report with families,
     bands and per-source counts, `d1_rows`); run health (R8). A run that did nothing useful, or whose audit failed, turns red in the separate
     `health` job, so the guards still count the day's run.

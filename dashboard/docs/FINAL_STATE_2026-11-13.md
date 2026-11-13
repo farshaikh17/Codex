@@ -73,8 +73,6 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
   line (first name, two counts, the public link). Run the link workflow right after the person taps Start.
 - **Re-score speed:** after a rules bump the stored lists take about five daily runs to be fully re-scored (800 rows per person per run).
 - **`d1_rows`** is approximate (other traffic in the same minutes, analytics lag).
-- **Gulf jobs from job boards** are rarely verified (those sites refuse the still-open check), so Sana's "5 Gulf in Worth a try" is often
-  reported as a shortfall.
 - **A US location with the full state name** ("Houston, Texas") is not foreign for Sana's visa-route cap.
 - **`?operator=1`** hides the operator screens from the job seeker's page; it does not lock them (changes there still need the key,
   except the open tracker's own actions).
@@ -90,3 +88,9 @@ The full list, with reasons, is in the plan's section 10 (per phase) and section
 3. **Old branches:** run **Delete merged branches**; the rest are listed in the phase 6 hand-off report with a reason each, to delete by hand.
 4. **First week:** check that the page says "Updated" every day and that the daily run's summary shows the audit passing (definition of done,
    plan section 13).
+
+## 7. Gaps fixed after the hand-off (13 Nov, evening)
+
+Gaps from section 5 fixed afterwards, one pull request each (`gaps/*`); details in the plan, section 10, "gaps fixed after phase 6":
+- **Gulf jobs from job boards:** a Gulf posting from Bayt, Indeed or LinkedIn (which refuse the still-open check) found in the last 2 days now
+  counts for Worth a try (never Best matches), and its card says it could not be confirmed still open. The audit agrees.
