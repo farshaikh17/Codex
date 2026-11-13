@@ -153,3 +153,57 @@ test('un-saving a job removes its follow-up date', async () => {
   assert.equal(w.sqlite.prepare('SELECT COUNT(*) c FROM application_followups').get().c, 0, 'no orphan left to come back when the job is saved again');
   assert.equal(w.sqlite.prepare('SELECT COUNT(*) c FROM applications').get().c, 0);
 });
+
+// ---- Plan phase 5 -------------------------------------------------------------------------------------------------------------
+test('U2: Not for me hides the job (Hold, not an override) and clearing it puts the job back where it was', async () => {
+  const w = world(); w.job('n1', 'Implementation Manager'); w.job('n2', 'Implementation Lead');
+  w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason) VALUES (?,?,?,?)`, F, 'n1', 'STRETCH_READY', 'Shortlisted automatically. Matches 3 skills.');
+  w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status) VALUES (?,?,?)`, F, 'n2', 'APPLIED');
+  const down = await req(w.env, 'POST', '/api/jobs/n1/feedback', { body: { candidate_id: F, rating: 'DOWN' } });
+  assert.equal(down.status, 200, down.text);
+  const row = w.sqlite.prepare('SELECT qualification_status s, qualification_reason r, manual_override_status o FROM candidate_qualifications WHERE candidate_id=? AND job_id=?').get(F, 'n1');
+  assert.deepEqual([row.s, row.o], ['HOLD', null], 'hidden, and not an override');
+  assert.match(row.r, /^You marked this Not for me\. Shortlisted automatically/);
+  assert.equal(down.json.job.qualification_status, 'HOLD');
+  // the hidden list finds it; the normal list does not
+  const hidden = await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&hidden=true`);
+  assert.deepEqual(hidden.json.jobs.map((j) => j.id), ['n1']);
+  assert.ok(!(await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&exclude_dismissed=true`)).json.jobs.some((j) => j.id === 'n1'));
+  // a second DOWN does nothing more
+  await req(w.env, 'POST', '/api/jobs/n1/feedback', { body: { candidate_id: F, rating: 'DOWN' } });
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM qualification_history WHERE job_id='n1'`).get().n, 1);
+  // clearing restores the status and the reason
+  await req(w.env, 'POST', '/api/jobs/n1/feedback', { body: { candidate_id: F, rating: 'CLEAR' } });
+  const back = w.sqlite.prepare('SELECT qualification_status s, qualification_reason r FROM candidate_qualifications WHERE candidate_id=? AND job_id=?').get(F, 'n1');
+  assert.deepEqual([back.s, back.r], ['STRETCH_READY', 'Shortlisted automatically. Matches 3 skills.']);
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) n FROM job_feedback WHERE job_id='n1'`).get().n, 0);
+  // Good match on a hidden job also brings it back
+  await req(w.env, 'POST', '/api/jobs/n1/feedback', { body: { candidate_id: F, rating: 'DOWN' } });
+  await req(w.env, 'POST', '/api/jobs/n1/feedback', { body: { candidate_id: F, rating: 'UP' } });
+  assert.equal(w.sqlite.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id='n1'`).get().s, 'STRETCH_READY');
+  // an applied job is never moved by a mark
+  await req(w.env, 'POST', '/api/jobs/n2/feedback', { body: { candidate_id: F, rating: 'DOWN' } });
+  assert.equal(w.sqlite.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id='n2'`).get().s, 'APPLIED');
+});
+
+test('U4: a write from an old copy is refused with 409; an empty note never silently replaces a saved one', async () => {
+  const w = world(); w.job('s1', 'Implementation Manager');
+  const first = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'SAVED', notes: 'call the recruiter first' } });
+  const seen = first.json.application.updated_at;
+  const stale = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'APPLIED', expected_updated_at: '2020-01-01T00:00:00.000Z' } });
+  assert.equal(stale.status, 409);
+  assert.match(stale.json.error, /changed elsewhere; reload/);
+  assert.equal(w.sqlite.prepare(`SELECT status FROM applications WHERE job_id='s1'`).get().status, 'SAVED');
+  // the copy the page last saw is accepted
+  const ok = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'APPLIED', expected_updated_at: seen } });
+  assert.equal(ok.status, 200, ok.text);
+  // a first save says "there was nothing": null is the expected value
+  w.job('s2', 'Implementation Lead');
+  assert.equal((await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's2', status: 'SAVED', expected_updated_at: null } })).status, 200);
+  // an empty note is refused while a note is saved; clear_notes deletes it on purpose
+  const empty = await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'APPLIED', notes: '  ' } });
+  assert.equal(empty.status, 409);
+  assert.equal(w.sqlite.prepare(`SELECT notes FROM applications WHERE job_id='s1'`).get().notes, 'call the recruiter first');
+  assert.equal((await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'APPLIED', notes: '', clear_notes: true } })).status, 200);
+  assert.equal(w.sqlite.prepare(`SELECT notes FROM applications WHERE job_id='s1'`).get().notes, '');
+});

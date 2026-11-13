@@ -223,13 +223,17 @@ test('a UK employer on the sponsor register removes Sana\'s visa penalty; a repo
   assert.match(evaluate(farhan, post({ repost: true })).qualification_reason, /Reposted/);
 });
 
-test('taste model, AI-review list and the 60-day note in the daily apply', () => {
+test('learned taste (plan U3), AI-review list and the 60-day note in the daily apply', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ten-'));
   const F = 'farhan_shaikh';
   fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
-  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { [F]: { n: 12, active: true, weights: { revops: 1.5, zoho: -1.8 } } } }));
-  const j = (id, title) => ({ id, url: `https://example.com/${id}`, title, company: 'Acme', ats_type: 'lever', location: 'Remote - India', is_remote: true, description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
-  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:t:1', 'RevOps Implementation Manager'), j('ds:t:2', 'Implementation Manager, Zoho'), j('ds:t:3', 'Implementation Manager')] }));
+  // Good match on a RevOps job elsewhere (+2 for the family); two Not for me on Zoho implementation jobs (-5 for that employer and family)
+  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: {}, taste_rows: [
+    { candidate_id: F, title: 'RevOps Lead', company: 'Liked Co', label: 'GOOD_MATCH' },
+    { candidate_id: F, title: 'Implementation Specialist', company: 'Zoho', label: 'NOT_FOR_ME' },
+    { candidate_id: F, title: 'Implementation Consultant', company: 'Zoho', label: 'NOT_FOR_ME' }] }));
+  const j = (id, title, company = 'Acme') => ({ id, url: `https://example.com/${id}`, title, company, ats_type: 'lever', location: 'Remote - India', is_remote: true, description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:t:1', 'RevOps Implementation Manager'), j('ds:t:2', 'Implementation Manager, Zoho', 'Zoho'), j('ds:t:3', 'Implementation Manager')] }));
   execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--signals', path.join(dir, 'signals.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
   const { sqlite } = createDb();
   sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
@@ -239,7 +243,8 @@ test('taste model, AI-review list and the 60-day note in the daily apply', () =>
   const sc = (id) => sqlite.prepare(`SELECT overall_score s FROM candidate_job_scores WHERE job_id=?`).get(id).s;
   const why = (id) => sqlite.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id=?`).get(id).r;
   assert.ok(sc('ds:t:1') > sc('ds:t:3') && sc('ds:t:2') < sc('ds:t:3'), `${sc('ds:t:1')} ${sc('ds:t:3')} ${sc('ds:t:2')}`);
-  assert.match(why('ds:t:1'), /Like roles you saved before/); assert.match(why('ds:t:2'), /Like roles you dismissed before/);
+  assert.match(why('ds:t:1'), /Ranked up: like jobs you marked Good match/); assert.match(why('ds:t:2'), /Ranked down: like jobs you marked Not for me/);
+  assert.doesNotMatch(why('ds:t:3'), /Ranked/);
   assert.match(why('old:9'), /Listed for 60\+ days/);
   const top = JSON.parse(fs.readFileSync(path.join(dir, 'a.top.json'), 'utf8'));
   assert.equal(top.length, 3); assert.equal(top[0].job_id, 'ds:t:1'); assert.ok(top[0].profile.includes('India') && !/farhan|shaikh|sana|ansari/i.test(top.map((t) => `${t.profile} ${t.title} ${t.company} ${t.description}`).join(' ')), 'no names in what is sent for review');
@@ -360,12 +365,17 @@ test('taste pass: Good match / Not for me move the rows a person sees, every run
     sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('farhan_shaikh',?,?,?)`).run(id, 'NEEDS_REVIEW', o.override || null);
     sqlite.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES ('farhan_shaikh',?,?,?)`).run(id, score, bd);
   };
-  add('t1', 'RevOps Lead', 60); add('t2', 'Support Agent', 60); add('t3', 'RevOps Manager', 60, undefined, { override: 'NEEDS_REVIEW' });
-  const model = { active: true, n: 12, weights: { revops: 3, support: -3 } };
-  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { farhan_shaikh: model } }));
+  add('t1', 'RevOps Lead', 60); add('t2', 'Solutions Engineer', 60, undefined, { company: 'Beta' }); add('t3', 'RevOps Manager', 60, undefined, { override: 'NEEDS_REVIEW' });
+  add('t4', 'Customer Support Agent', 60, undefined, { company: 'Beta' }); add('t5', 'Solutions Engineer', 60, undefined, { company: 'Jobgether' });
+  const F = 'farhan_shaikh';
+  let rows = [{ candidate_id: F, title: 'RevOps Analyst', company: 'Acme', label: 'APPLIED' },
+    { candidate_id: F, title: 'Solutions Consultant', company: 'Beta', label: 'NOT_FOR_ME' }, { candidate_id: F, title: 'Solutions Architect', company: 'Beta', label: 'NOT_FOR_ME' }];
+  const writeSignals = () => fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: {}, taste_rows: rows }));
+  writeSignals();
   fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: 'farhan_shaikh', primary_skills: '["CRM"]' }]));
   fs.writeFileSync(path.join(dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
-  const targets = () => sqlite.prepare(`SELECT s.candidate_id, s.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id`).all();
+  sqlite.exec(`UPDATE candidate_qualifications SET qualification_reason = 'Matches 3 skills.'`);
+  const targets = () => sqlite.prepare(`SELECT s.candidate_id, s.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown, q.qualification_reason AS reason FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id JOIN candidate_qualifications q ON q.job_id = s.job_id`).all();
   const runApply = () => {
     fs.writeFileSync(path.join(dir, 'targets.json'), JSON.stringify(targets()));
     execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'matches.json'),
@@ -373,12 +383,17 @@ test('taste pass: Good match / Not for me move the rows a person sees, every run
     sqlite.exec(fs.readFileSync(path.join(dir, 'apply.sql'), 'utf8'));
   };
   const sc = (id) => sqlite.prepare(`SELECT overall_score s FROM candidate_job_scores WHERE job_id = ?`).get(id).s;
+  const why = (id) => sqlite.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id = ?`).get(id).r;
   runApply();
-  assert.deepEqual([sc('t1'), sc('t2'), sc('t3')], [65, 55, 60], 'liked titles up 5, disliked down 5, a decided row untouched');
+  assert.deepEqual([sc('t1'), sc('t2'), sc('t3'), sc('t4'), sc('t5')], [65, 55, 60, 60, 60],
+    'applied at the same employer and family +5, two Not for me at the same employer and family -5, a decided row, an unclassified title and a reposter untouched');
+  assert.equal(why('t1'), 'Matches 3 skills. Ranked up: like jobs you marked Good match or applied to at this employer.');
   runApply();
   assert.deepEqual([sc('t1'), sc('t2')], [65, 55], 'a second run does not add it again');
-  model.weights = { revops: 0.6, support: -3 };   // taste weakened for RevOps
-  fs.writeFileSync(path.join(dir, 'signals.json'), JSON.stringify({ uk_sponsors: [], taste: { farhan_shaikh: model } }));
+  assert.equal((why('t2').match(/Ranked down/g) || []).length, 1, 'the sentence is never appended twice');
+  rows = rows.slice(0, 2); writeSignals();   // one Not for me left: -2
   runApply();
-  assert.equal(sc('t1'), 61, 'a changed taste replaces the old adjustment (60 + round(0.2 x 5))');
+  assert.equal(sc('t2'), 58, 'a changed taste replaces the old adjustment');
+  rows = []; writeSignals(); runApply();
+  assert.deepEqual([sc('t1'), sc('t2'), why('t1')], [60, 60, 'Matches 3 skills.'], 'no marks: back to the plain score and reason');
 });

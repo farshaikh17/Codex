@@ -89,7 +89,7 @@ def main():
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    sig = {'uk_sponsors': [], 'taste': {}}
+    sig = {'uk_sponsors': [], 'taste': {}, 'taste_rows': []}
     report = {}
     try:
         sig['uk_sponsors'] = sorted(uk_sponsors(a.uk_register)) if a.uk_register and Path(a.uk_register).exists() else []
@@ -99,6 +99,9 @@ def main():
     try:
         rows = json.loads(Path(a.taste_rows).read_text()) if a.taste_rows and Path(a.taste_rows).exists() else []
         sig['taste'] = train(rows)
+        # Plan U3: the score learns from the marks themselves (employer and role family, dashboard/scripts/taste_rules.mjs), so they are passed on.
+        sig['taste_rows'] = [{k: r.get(k) for k in ('candidate_id', 'title', 'company', 'label')} for r in rows
+                             if str(r.get('label') or '').upper() in ('GOOD_MATCH', 'NOT_FOR_ME', 'APPLIED', 'SUBMITTED', 'INTERVIEWING', 'OFFER')]
     except Exception as e:
         print(f'taste: {e}', file=sys.stderr)
     report['taste'] = {cid: {'n': m['n'], 'active': m['active'], 'terms': len(m['weights'])} for cid, m in sig['taste'].items()}

@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { evaluate, RULE_VERSION, RULES_MARKER, companyKey } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
+import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
@@ -43,15 +44,10 @@ const yc = new Map(Object.entries(hirers.yc || {}));
 const signalsFile = opt('--signals');
 const signals = signalsFile && fs.existsSync(signalsFile) ? JSON.parse(fs.readFileSync(signalsFile, 'utf8')) : {};
 const ukSponsors = new Set(signals.uk_sponsors || []);
-const TASTE_STOP = new Set(['and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an', 'at', 'or', 'by', 'ltd', 'inc', 'llc', 'remote', 'senior', 'junior', 'ii', 'iii']);
-const TASTE_MAX = 5;
-/** Same formula as engine/signals.py taste_score(): token log-odds summed, squashed to [-1, 1]. */
-function tasteScore(model, title, company) {
-  if (!model || !model.active) return 0;
-  const words = new Set((String(title || '') + ' ' + String(company || '')).toLowerCase().match(/[a-z][a-z0-9+#]+/g) || []);
-  let sum = 0; for (const w of words) if (!TASTE_STOP.has(w)) sum += model.weights[w] || 0;
-  return Math.max(-1, Math.min(1, sum / 3));
-}
+// Plan U3 (phase 5): the score now learns only from a person's own marks, by employer and role family (scripts/taste_rules.mjs), within +-5.
+// The marks are the taste rows engine/signals.py passes through (signals.taste_rows); the word model it trains is no longer used for the score.
+const marks = buildMarks(signals.taste_rows || []);
+const taste = (cid, title, company) => tasteAdjust(marks, cid, title, company);
 const ctxFor = new Map(candidates.map((c) => {
   let rows = []; try { rows = JSON.parse(c.rejected_companies || '[]') || []; } catch {}
   const rejected = new Map();
@@ -91,8 +87,8 @@ for (const file of many('--in')) {
         r.status = r.status === 'HOLD' ? 'HOLD' : 'NEEDS_REVIEW';
         r.qualification_reason = 'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.';
       }
-      const taste = tasteScore((signals.taste || {})[cid], j.title, j.company);
-      if (taste && r.status !== 'INELIGIBLE') { r.score = Math.max(0, Math.min(100, Math.round(r.score + taste * TASTE_MAX))); r.qualification_reason += taste > 0 ? ' Like roles you saved before.' : ' Like roles you dismissed before.'; }
+      const t = taste(cid, j.title, j.company);
+      if (t.adj && r.status !== 'INELIGIBLE') { r.score = Math.max(0, Math.min(100, r.score + t.adj)); r.qualification_reason = withTasteSentence(r.qualification_reason, t.sentence); }
       if (r.status === 'INELIGIBLE') { report.skipped_ineligible++; continue; }
       if (r.score < MIN_SCORE) { report.skipped_low++; continue; }
       rows.push({ cid, r });
@@ -266,8 +262,10 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     if (row.legacy) { rescreenLegacy(row, r); continue; }
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
     // The re-scored base plus the current taste (stored as taste_adj, so the taste pass below never adds it twice).
-    const tasteAdj = r.status === 'INELIGIBLE' ? 0 : Math.round(tasteScore((signals.taste || {})[row.candidate_id], row.title, row.company) * TASTE_MAX);
+    const t = r.status === 'INELIGIBLE' ? { adj: 0, sentence: '' } : taste(row.candidate_id, row.title, row.company);
+    const tasteAdj = t.adj;
     r.score = Math.max(0, Math.min(100, r.score + tasteAdj));
+    r.qualification_reason = withTasteSentence(r.qualification_reason, t.sentence);
     const tagged = JSON.stringify({ ...bd, skills_v1: true, [RULES_MARKER]: true, target_exact: !!r.target_exact, matched_skills: r.skills, rescored_at: now, taste_adj: tasteAdj });
     const undecided = (t) => `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
     out.push(`UPDATE candidate_job_scores SET overall_score = ${q(r.score)}, skill_score = ${q(Math.min(100, r.skills.length * 20))}, score_breakdown = ${q(tagged)}, calculated_at = ${q(now)}
@@ -295,7 +293,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
       report.held_role_rechecked = (report.held_role_rechecked || 0) + 1;
     }
     out.push(`UPDATE candidate_qualifications SET qualification_reason = ${q(r.qualification_reason)} WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)}
-      AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') ${undecided('candidate_qualifications')};`);
+      AND manual_override_status IS NULL AND qualification_status IN ('NEEDS_REVIEW','HOLD') AND COALESCE(qualification_reason, '') NOT LIKE 'You marked%' ${undecided('candidate_qualifications')};`);
     // Eligibility only ever moves UNKNOWN -> ELIGIBLE here, when the current rules find affirmative evidence (e.g. Sana's on-site India roles,
     // owner decision 2026-11-12). Job-board reports stay UNKNOWN (their employer is unverified); a stored ELIGIBLE or INELIGIBLE is not touched.
     if (r.eligibility === 'ELIGIBLE' && row.provenance !== 'PUBLIC_FEED_UNVERIFIED') {
@@ -369,18 +367,24 @@ const shortlistOn = !args.includes('--no-shortlist');
 const sl = opt('--shortlist-out') ? [] : out;   // see --shortlist-out below
 if (shortlistOn) sl.push(...shortlistSql());
 
-// ---- Taste pass (owner plan 2026-11-12: "learns from their choices") ---------------------------------------------------------------
-// The taste model (engine/signals.py; trained on saves, applications, Good match / Not for me and a person's own bucket moves) was applied
-// only to new jobs. Here it is re-applied every run to the rows a person looks at: the adjustment is stored in the score breakdown as
-// taste_adj, so a changed taste replaces the old adjustment instead of adding to it. At most TASTE_MAX points either way.
+// ---- Taste pass (owner plan 2026-11-12: "learns from their choices"; rules of plan U3) ---------------------------------------------
+// The learned adjustment (scripts/taste_rules.mjs: Not for me, Good match and applications, by employer and role family) is re-applied every
+// run to the rows a person looks at: it is stored in the score breakdown as taste_adj, so a changed taste replaces the old adjustment instead
+// of adding to it, and the "Ranked up / down" sentence in the reason is replaced, never appended twice. At most 5 points either way.
 const tasteFile = opt('--taste-targets');
 if (tasteFile && fs.existsSync(tasteFile)) {
   report.taste_adjusted = 0;
   for (const row of JSON.parse(fs.readFileSync(tasteFile, 'utf8'))) {
-    const model = (signals.taste || {})[row.candidate_id];
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
     const old = Number(bd.taste_adj) || 0;
-    const adj = Math.round(tasteScore(model, row.title, row.company) * TASTE_MAX);
+    const t = taste(row.candidate_id, row.title, row.company);
+    const adj = t.adj;
+    const reason = row.reason == null ? null : withTasteSentence(row.reason, t.sentence);
+    if (reason != null && reason !== row.reason && !String(row.reason).startsWith('You marked')) {
+      out.push(`UPDATE candidate_qualifications SET qualification_reason = ${q(reason)} WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)}
+      AND qualification_reason = ${q(row.reason)} AND manual_override_status IS NULL
+      AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = candidate_qualifications.candidate_id AND a.job_id = candidate_qualifications.job_id);`);
+    }
     if (adj === old) continue;
     out.push(`UPDATE candidate_job_scores SET overall_score = MAX(0, MIN(100, overall_score - ${old} + ${adj})), score_breakdown = json_set(COALESCE(score_breakdown, '{}'), '$.taste_adj', ${adj})
       WHERE candidate_id = ${q(row.candidate_id)} AND job_id = ${q(row.job_id)} AND COALESCE(json_extract(score_breakdown, '$.taste_adj'), 0) = ${old} AND json_valid(COALESCE(score_breakdown, '{}'))

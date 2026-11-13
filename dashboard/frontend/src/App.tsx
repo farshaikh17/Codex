@@ -8,7 +8,6 @@ import {
   fetchAnalytics, 
   fetchWeeklyMetrics,
   fetchIndiaRemoteSummary,
-  overrideJobQualification,
   isOperatorAuthenticated,
   loadAccessMode,
   OPERATOR_AUTH_EVENT,
@@ -21,6 +20,7 @@ import {
   downloadExport,
   fetchBrand,
   unsaveJob,
+  submitJobFeedback,
   CandidateRef
 } from './api';
 import { ClientsView } from './components/ClientsView';
@@ -239,8 +239,8 @@ export const App: React.FC = () => {
   const handleDismissJob = async (jobId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      // Mark as INELIGIBLE with audit reason so it immediately leaves the review queue
-      await overrideJobQualification(jobId, 'INELIGIBLE', 'Dismissed by reviewer: Irrelevant role', 'Candidate', candidateId);
+      // Plan U2: the card's "Not for me" does what the panel's thumbs-down does: a DOWN mark, which hides the job (Hold, reversible).
+      await submitJobFeedback(jobId, { rating: 'DOWN' }, candidateId);
       // Optimistically remove from visible list and reload fresh state
       setJobs((prev) => prev.filter((j) => j.id !== jobId));
       await loadData();
