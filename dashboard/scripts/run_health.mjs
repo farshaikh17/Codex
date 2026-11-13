@@ -5,7 +5,8 @@
 //   - the still-open check had targets but verified 0 of them;
 //   - every source of the boards and more-sources steps failed (a missing report means its step ended before any source finished);
 //   - nothing was written (no new job, no new row, nothing re-scored) although the dataset was fresh;
-//   - the dataset snapshot was stale (over 48 hours; engine/dataset_discovery.py writes dataset_stale.txt).
+//   - the dataset snapshot was stale (over 48 hours; engine/dataset_discovery.py writes dataset_stale.txt), the download failed, or the manifest
+//     could not be read. A red health job does not make the guards re-run the day (they count the successful "discover" job).
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -23,6 +24,8 @@ export function decideHealth({ targets = null, liveness = null, sources = null, 
   const written = num(apply?.new_jobs) + num(apply?.rows) + num(apply?.rescored) + num(apply?.rescreened_legacy);
   if (apply && fresh && written === 0) reasons.push('0 rows written although the dataset was fresh');
   if (stale || dataset?.stale) reasons.push('the dataset snapshot is over 48 hours old');
+  if (dataset?.dataset === 'download_failed') reasons.push('the dataset download failed (the other sources still ran)');
+  else if (dataset && 'snapshot_age_hours' in dataset && dataset.snapshot_age_hours === null) reasons.push('the dataset manifest could not be read (no closures were made)');
   return { healthy: reasons.length === 0, reasons };
 }
 

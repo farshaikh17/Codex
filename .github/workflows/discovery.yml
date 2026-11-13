@@ -243,15 +243,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           LIVE_WRITE: ${{ steps.live_write.outcome }}
-        # When the still-open check verified 0 rows today (it failed, ran out of time, or its write failed), the shortlist's demotion
+        # When the still-open check verified 0 or too few rows today (it failed, ran out of time, sites refused, or its write failed), the shortlist's demotion
         # skips its "verified in 4 days" condition, so a fault of ours does not empty the lists (promotion still needs a recent check).
         run: |
-          VERIFIED=0
+          # "Too few" = fewer than max(10, a fifth of the targets): a day when most career sites refused our requests is our fault, not closures.
+          RELAX=yes
           if [ "$LIVE_WRITE" = "success" ] && [ -f ../work/liveness_report.json ]; then
-            VERIFIED=$(python3 -c "import json,sys;print(int(json.load(open(sys.argv[1])).get('alive',0)))" ../work/liveness_report.json 2>/dev/null || echo 0)
+            RELAX=$(python3 -c "import json,sys;r=json.load(open(sys.argv[1]));a=int(r.get('alive',0));t=int(r.get('targets',0));print('yes' if a < max(10, t // 5) else 'no')" ../work/liveness_report.json 2>/dev/null || echo yes)
           fi
           FILE=../work/shortlist.sql
-          if [ "$VERIFIED" = "0" ]; then FILE=../work/shortlist_unverified.sql; echo "The still-open check verified 0 rows today: shortlist demotion skips the 4-day verification condition"; fi
+          if [ "$RELAX" = "yes" ]; then FILE=../work/shortlist_unverified.sql; echo "The still-open check verified too few rows today: shortlist demotion skips the 4-day verification condition"; fi
           [ -s "$FILE" ] && npx wrangler d1 execute career-job-engine --remote --file="$FILE" > /dev/null || echo "nothing to write"
       - name: Record this run (one counts-only row in discovery_state; shown on the dashboard)
         if: always()
@@ -261,7 +262,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" > ../work/runlog.sql
+          node scripts/run_log.mjs --work ../work --kind discovery --event "${{ github.event_name }}" --status "${{ job.status }}" > ../work/runlog.sql
+          echo "UPDATE cache_state SET generation = generation + 1 WHERE id = 1;" >> ../work/runlog.sql   # the page's "Updated" note sees this run at once
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
       - name: Run health (decided here; the health job below turns a "no" into a red run)
         id: health

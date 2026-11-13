@@ -42,7 +42,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
   const dir = opt('--work', '../work');
+  const failed = opt('--status') && opt('--status') !== 'success';   // the job had already failed (a database write or export): recorded, never shown as "Updated"
   const rec = opt('--skipped') ? skippedRecord(opt('--skipped'), { kind: opt('--kind', 'discovery'), event: opt('--event', 'unknown') }) : buildRunRecord({ apply: read(dir, 'apply.report.json'), sources: read(dir, 'more_sources_report.json'), boards: read(dir, 'boards_report.json'), liveness: read(dir, 'liveness_report.json') },
     { kind: opt('--kind', 'discovery'), event: opt('--event', 'unknown') });
+  if (failed && !rec.skipped) rec.failed = true;
   process.stdout.write(runLogSql(rec));
 }
