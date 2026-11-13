@@ -1,0 +1,77 @@
+name: Undo tracker changes from one network
+# Plan U1 (phase 5). The open tracker lets anyone with the link change Farhan's and Sana's tracker without a key. Each such change is tagged
+# with a hash of the network it came from (never the address). Run this by hand from the Actions tab:
+#   1. mode = list, since = the time trouble started (UTC): lists the networks that changed something, with counts.
+#   2. mode = preview with candidate, since and the network hash from step 1: shows the reverse statements; nothing is changed.
+#   3. mode = apply with the same inputs: runs them. Each statement applies only if nobody changed that job afterwards.
+# See dashboard/scripts/undo_since.mjs. Only the repository owner can run it; never triggered by a push or a schedule.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'list (networks), preview (show the undo) or apply (run it)'
+        type: choice
+        options: [list, preview, apply]
+        default: list
+      since:
+        description: 'UTC date or time the changes started, e.g. 2026-11-14 or 2026-11-14T08:00:00Z'
+        required: true
+      candidate:
+        description: 'whose tracker (preview / apply)'
+        type: choice
+        options: [sana_ansari, farhan_shaikh]
+        default: sana_ansari
+      network:
+        description: 'network hash from the list (preview / apply)'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-collector-sync
+  cancel-in-progress: false
+
+jobs:
+  undo:
+    if: github.actor == github.repository_owner && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: List networks
+        if: ${{ inputs.mode == 'list' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SINCE: ${{ inputs.since }}
+        run: node scripts/undo_since.mjs --list --since "$SINCE" --remote | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Write the undo statements
+        if: ${{ inputs.mode != 'list' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SINCE: ${{ inputs.since }}
+          CANDIDATE: ${{ inputs.candidate }}
+          NETWORK: ${{ inputs.network }}
+        run: |
+          node scripts/undo_since.mjs --candidate "$CANDIDATE" --since "$SINCE" --network "$NETWORK" --out undo.sql --remote | tee -a "$GITHUB_STEP_SUMMARY"
+          { echo '```sql'; head -c 60000 undo.sql; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Apply
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ ! -s undo.sql ]; then echo "Nothing to undo." | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          npx wrangler d1 execute career-job-engine --remote --file=undo.sql
+          echo "Applied. The page shows the restored records after its cache refreshes (a few minutes)." | tee -a "$GITHUB_STEP_SUMMARY"
