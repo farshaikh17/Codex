@@ -593,6 +593,40 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
   - tenth-man finding left, with the reason:
     - `?operator=1` opens the operator page to anyone who types it: U8 hides the operator screens, it does not lock them. Changes there still need
       the operator key (except the open tracker's own actions); a per-person lock is out of scope (section 11).
+- phase 6 (alerts, sources, checks, 13 Nov; PRs #169 G1, #172 H1, #174 D1, the tenth-man fix PR, and the H2 docs PR; no rules-marker bump):
+  - readings and deviations:
+    - G1: the message counts Best matches and Worth a try the way the page does (not applied, no override); "new" is found or put on the list in the
+      last 24 hours. It also goes out when the run failed, was stopped, finished without doing its work, or was postponed by the budget guard, saying
+      so. Telegram chats are stored in `discovery_state` (`telegram:<candidate>`, up to 3 per person, never replaced); a person links with
+      `/start <candidate id or first name>`; `/stop` unlinks. Email works through any SMTP account (`DIGEST_PROVIDER=smtp`). At most one message
+      per 12 hours, except that a good run's message always follows a "did not finish" one.
+    - H1: measured from the budget guard's analytics lines (no Cloudflare dashboard access): 12 Nov reached 3.28M rows read, 2.44M of it the daily
+      run. All three steps applied (the visitor cache was already 30 minutes). Each run row now stores `d1_rows` (approximate: other traffic in the
+      same minutes is included and the analytics lag a few minutes). Beyond the plan: the daily run may start only below 2.0M rows read that day
+      (was 2.5M), because a 2.4M run started at 2.49M would pass the free 5M limit and break the site until midnight UTC.
+    - D1: no fetcher added. The vendors' boards and most of Sana's "failed" employers are already read daily through the open dataset; the rest gave
+      no reliable public feed (Aramco answered once in four tries). Six Workable search terms were added where a live search returned mostly the
+      person's roles; five of the plan's terms were left out by measurement. Full record: `DISCOVERY_PIPELINE.md`, "Sources by measurement".
+    - H3: branches are listed for the owner (this agent may not delete them); see the hand-off report.
+  - tenth-man review (daily machinery), fixed in the same phase:
+    - a failed run's "did not finish" message blocked the good message of the retry two hours later (the 12-hour gate); the gate now lets a good
+      run's message follow a failure one.
+    - the budget guard let a 2.4M-row run start at 2.49M rows read; the start limit is now 2.0M.
+    - the message counted rows a person had overridden (Hold, Ineligible, Closed), unlike the page; they are excluded now.
+    - a green run that did nothing (the health check's "no") read as a normal day, a budget-postponed day and a run stopped by its time limit sent
+      nothing; each now sends its own wording.
+    - one refused Workable page ended the whole Workable source, losing the later search terms (the new ones first); a refused term is now
+      retried once and skipped, and the source fails only when every term failed.
+  - low findings left, with the reason:
+    - the re-score cap of 800 (H1) makes the `profile_v14` catch-up take longer than the 1,500 the phase 4 note assumed (Sana had about 3,800 rows
+      in Hold and To review on 12 Nov: about five daily runs instead of three, an estimate). Left: the plan sets 800 when reads are over 2.5M, and the budget protects the
+      site; `d1_rows` will show whether the cap can go back up.
+    - anyone who knows the bot's name and sends `/start sana` within the 24 hours before the owner runs the link workflow would get Sana's message
+      (her first name, two counts and the public site link) and could take one of her 3 places. Left: the workflow is run by hand right after the
+      person taps Start, the message holds nothing private, and `/stop` or the owner removing the row undoes it.
+    - `d1_rows` is approximate (analytics lag, other traffic); it is labelled so and the budget guard uses the day totals, not it.
+    - still open from phase 4: "Houston, Texas" (a US state name without a code) is not foreign for Sana's visa cap. D1 measured sources, not caps;
+      left for the next scoring change, with a test, so it is not changed without a re-score of the saved samples.
 
 ---
 

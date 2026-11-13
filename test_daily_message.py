@@ -25,9 +25,11 @@ class Message(unittest.TestCase):
         self.assertTrue(dm.build_message('Farhan', None, 'L').endswith(' · L'))
 
     def test_failed_run_says_so(self):
-        text = dm.build_message('Sana', {'new_ready': 5, 'ready': 25}, 'L', run_ok=False)
-        self.assertIn("today's update did not finish", text)
-        self.assertNotIn('5 new', text)
+        for status in ('failure', 'cancelled', 'unhealthy'):
+            text = dm.build_message('Sana', {'new_ready': 5, 'ready': 25}, 'L', status=status)
+            self.assertIn("today's update did not finish properly", text)
+            self.assertNotIn('5 new', text)
+        self.assertIn('postponed', dm.build_message('Sana', {'new_ready': 5}, 'L', status='postponed'))
 
     def test_link_and_name(self):
         self.assertEqual(dm.site_link('sana_ansari', 'https://s.dev/'), 'https://s.dev/app#sana/today')
@@ -42,7 +44,7 @@ class CountsQuery(unittest.TestCase):
         self.db.executescript("""
           CREATE TABLE candidates (id TEXT PRIMARY KEY, full_name TEXT NOT NULL);
           CREATE TABLE jobs (id TEXT PRIMARY KEY, is_active INTEGER, discovered_at TEXT);
-          CREATE TABLE candidate_qualifications (candidate_id TEXT, job_id TEXT, qualification_status TEXT, qualified_at TEXT);
+          CREATE TABLE candidate_qualifications (candidate_id TEXT, job_id TEXT, qualification_status TEXT, qualified_at TEXT, manual_override_status TEXT);
           CREATE TABLE applications (id TEXT PRIMARY KEY, candidate_id TEXT, job_id TEXT, status TEXT);
           INSERT INTO candidates VALUES ('sana_ansari', 'Sana Ansari'), ('farhan_shaikh', 'Farhan Shaikh');
         """)
@@ -54,10 +56,11 @@ class CountsQuery(unittest.TestCase):
             ('h1', 1, '2026-11-14T10:00:00Z', 'NEEDS_REVIEW', '2026-11-14 10:00:00'),   # not on a list
             ('a1', 1, '2026-11-14T10:00:00Z', 'READY', '2026-11-14 10:00:00'),          # applied
             ('s1', 1, '2026-11-14T10:00:00Z', 'READY', '2026-11-14 10:00:00'),          # saved only: still counts
+            ('v1', 1, '2026-11-14T10:00:00Z', 'READY', '2026-11-14 10:00:00'),          # a person's override (Hold): not counted, as on the page
         ]
         for jid, active, disc, st, qa in rows:
             self.db.execute('INSERT INTO jobs VALUES (?, ?, ?)', (jid, active, disc))
-            self.db.execute('INSERT INTO candidate_qualifications VALUES (?, ?, ?, ?)', ('sana_ansari', jid, st, qa))
+            self.db.execute('INSERT INTO candidate_qualifications VALUES (?, ?, ?, ?, ?)', ('sana_ansari', jid, st, qa, 'HOLD' if jid == 'v1' else None))
         self.db.execute("INSERT INTO applications VALUES ('p1', 'sana_ansari', 'a1', 'SAVED'), ('p2', 'sana_ansari', 'a1', 'SUBMITTED'), ('p3', 'sana_ansari', 's1', 'SAVED')")
 
     def test_counts(self):
@@ -103,6 +106,11 @@ class Linking(unittest.TestCase):
         self.assertTrue(dm.recently_sent('2026-11-14T08:00:00Z', NOW))
         self.assertFalse(dm.recently_sent('2026-11-13T15:00:00Z', NOW))
         self.assertFalse(dm.recently_sent('garbage', NOW))
+        self.assertTrue(dm.recently_sent('2026-11-14T08:00:00Z ok', NOW))
+        # after a recent "did not finish" message, the retried good run's message still goes out; a second failure does not repeat it
+        self.assertFalse(dm.recently_sent('2026-11-14T08:00:00Z failed', NOW, run_ok=True))
+        self.assertTrue(dm.recently_sent('2026-11-14T08:00:00Z failed', NOW, run_ok=False))
+        self.assertTrue(dm.recently_sent('2026-11-14T08:00:00Z ok', NOW, run_ok=False))
 
     def test_sql_quotes(self):
         self.assertIn("'[1, 2]'", dm.state_sql('telegram:sana_ansari', json.dumps([1, 2]), NOW))

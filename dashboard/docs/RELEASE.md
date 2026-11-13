@@ -56,8 +56,7 @@ read cache makes repeats cheap, but avoid repeated full suites against productio
 ## Daily phone message
 
 After each daily discovery run the `message` job sends each linked person one line, for example
-`Sana: 4 new jobs today · 25 best matches, 25 worth a try · https://…/app#sana/today` (or "today's update did not finish" when
-the run failed). It needs no release. It is **off** until the owner adds a channel; without one the job prints
+`Sana: 4 new jobs today · 25 best matches, 25 worth a try · https://…/app#sana/today`. It needs no release. It is **off** until the owner adds a channel; without one the job prints
 "Daily message: skipped - no channel is set up" and does nothing.
 
 Telegram (free):
@@ -73,7 +72,7 @@ Email (optional, instead or as well; e.g. a Gmail account with an app password):
 secrets `DIGEST_SMTP_USER`, `DIGEST_SMTP_PASSWORD` and `DIGEST_TO` (`farhan_shaikh=a@example.com; sana_ansari=b@example.com`);
 variables `DIGEST_SMTP_HOST` / `DIGEST_SMTP_PORT` only when not Gmail (default `smtp.gmail.com`, 465, SSL).
 
-A message goes out at most once in 12 hours. Code: `engine/daily_message.py`, tests `test_daily_message.py`.
+The counts are the page's: Best matches and Worth a try, not applied, no override. When the run failed, was stopped, or finished without doing its work, the message says "today's update did not finish properly"; when the budget guard postponed it, "today's update was postponed". A message goes out at most once in 12 hours, except that a good run's message always follows a "did not finish" one. Code: `engine/daily_message.py`, tests `test_daily_message.py`.
 
 ## Operator key
 

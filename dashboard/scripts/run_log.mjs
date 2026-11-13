@@ -19,9 +19,9 @@ export function shortlistRecord(report) {
     const tier = (t) => (t && typeof t === 'object' ? {
       count: num(t.count), employers: num(t.employers), max_employer_share: num(t.max_employer_share), reposters: num(t.reposters),
       older_than_30_days: num(t.older_than_30_days), swaps: num(t.swaps), different: num(t.different), families: counts(t.families), bands: counts(t.bands),
-      band_shortfall: counts(t.band_shortfall), relaxed: (Array.isArray(t.relaxed) ? t.relaxed : []).slice(0, 10).map(word), pool_smaller_than_tier: !!t.pool_smaller_than_tier,
+      band_shortfall: counts(t.band_shortfall), sources: counts(t.sources), relaxed: (Array.isArray(t.relaxed) ? t.relaxed : []).slice(0, 10).map(word), pool_smaller_than_tier: !!t.pool_smaller_than_tier,
     } : null);
-    out[word(cid)] = { pool: num(r.pool), READY: tier(r.READY), STRETCH_READY: tier(r.STRETCH_READY) };
+    out[word(cid)] = { pool: num(r.pool), pool_sources: counts(r.pool_sources), READY: tier(r.READY), STRETCH_READY: tier(r.STRETCH_READY) };
   }
   return out;
 }

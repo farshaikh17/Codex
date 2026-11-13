@@ -116,6 +116,38 @@ Once a day, `.github/workflows/discovery.yml` finds new jobs for every candidate
 
 The research file with all 20 verified sources and 17 ideas is kept outside the repository. The next candidates are EURES, The Muse, ReliefWeb, YC's job pages, free-key sources (Adzuna, Careerjet) and per-company Recruitee, Personio and Teamtailor boards.
 
+## Sources by measurement (plan D1, 13 Nov 2026)
+
+Each candidate source was probed live (one request each, a second apart) and added only when it answered with real rows **and** the
+daily sources did not already read it. The open ATS dataset's own company lists (`storage.stapply.ai/jobhive/v1/<ats>/companies.csv`)
+were used to tell what the daily run already reads.
+
+**Farhan (Greenhouse, Lever and Ashby boards of CRM and automation vendors).** Already read every day through the dataset, so nothing is
+added: GoHighLevel (Lever, 94 postings, 8 in his roles), HubSpot (Greenhouse `hubspotjobs`, 147 / 9), Zapier (Ashby, 9 / 1), Make
+(Greenhouse, 6 / 0), n8n (Ashby, 56 / 0), Airtable (Greenhouse, 9 / 2), ClickUp (Ashby, 46 / 6), ActiveCampaign (Lever, 10 / 0), Close
+(Ashby, 3 / 0), Intercom (Greenhouse, 115 / 13), Calendly (6 / 0), Typeform (6 / 1), Notion (Ashby, 166 / 45), Workato (Greenhouse,
+63 / 1), Retool (Gem, in the dataset). Webflow answers on Ashby (25 postings, 0 in his roles today) while the dataset lists it under Greenhouse;
+not added, because the daily sources have no Ashby reader of their own and it has nothing for him (re-probe if that changes). Probed, no public board on these three systems: monday.com, Pipedrive and Freshworks (empty Lever boards; both are in the
+dataset through SmartRecruiters), Keap, Zoho, Tray.io.
+
+**Sana (India and Gulf plant employers that failed the 12 Nov probe).** Several are already in the dataset through other systems, with
+postings in the 12 Nov snapshot: Adani (Oracle, 1,043, e.g. "Shift Operations Engineer (O&M) - Mechanical, Anantapur"), Honeywell
+(Oracle, 1,344), Emerson (Oracle, 1,199), ABB (Phenom, 2,282, about 190 in India), Linde (Cornerstone, 968), JSW (Darwinbox, 23).
+Listed in the dataset's company lists, rows not counted here: ADNOC and SABIC (SuccessFactors), BP (SmartRecruiters), Danfoss
+(SuccessFactors). Listed but with no postings in that snapshot: Larsen & Toubro and Tata Steel (Pinpoint), Eaton (Eightfold). Probed on their real career-site hosts and **not
+added**: Aramco (SuccessFactors RSS at `careers.aramco.com` answered once with 20 maintenance postings, then refused three times:
+too unreliable for a daily run), Aditya Birla for Hindalco and UltraTech (406), Reliance Industries (404), NTPC (403), QatarEnergy, DEWA,
+Saudi Electricity and Mahindra (no answer), Siemens and Schneider Electric (no public Eightfold, Workday or SmartRecruiters board).
+
+**Search terms (Workable).** Kept where one live search returned mostly the person's roles: Sana `utilities engineer` (17 of 20 on the
+first page in her role rule), `energy manager` (18), `plant engineer` (13), `O&M engineer` (8); Farhan `implementation` (20),
+`solutions consultant` (16). Left out: `asset performance` (finance roles only), `onboarding manager` (HR onboarding),
+`technical account manager` (1), `customer engineer` (0), `business systems` (5); `commissioning`, `revenue operations`, `crm` and
+`automation` were already searched. Every term passes the role test in `test/discovery.test.mjs`.
+
+**Run log.** The shortlist report now counts, per person, the pool rows (`pool_sources`) and each tier's rows (`sources`) per source;
+the run row and `/api/discovery/daily` carry it.
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.

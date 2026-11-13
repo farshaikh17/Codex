@@ -54,12 +54,16 @@ def plural(n, one, many):
     return f'{n} {one if n == 1 else many}'
 
 
-def build_message(name, counts, link, run_ok=True):
-    """counts = {new_ready, new_stretch, ready, stretch}. One line of plain text, the same for Telegram and email."""
+def build_message(name, counts, link, status='success'):
+    """counts = {new_ready, new_stretch, ready, stretch}. One line of plain text, the same for Telegram and email.
+    status: 'success' (the run finished and its health check passed), 'postponed' (the budget guard skipped a due run), anything else
+    (failed, cancelled, or finished without doing its work) says the update did not finish properly."""
     c = {k: max(0, int((counts or {}).get(k) or 0)) for k in ('new_ready', 'new_stretch', 'ready', 'stretch')}
     new = c['new_ready'] + c['new_stretch']
-    if not run_ok:
-        head = f"{name}: today's update did not finish; the lists are from the last good run"
+    if status == 'postponed':
+        head = f"{name}: today's update was postponed (daily database limit) and runs again in a few hours; the lists are from the last run"
+    elif status != 'success':
+        head = f"{name}: today's update did not finish properly; the lists may be out of date"
     elif new:
         head = f"{name}: {plural(new, 'new job', 'new jobs')} today"
     else:
@@ -82,6 +86,7 @@ def counts_sql(candidate_ids, now):
             f"SUM(CASE WHEN {ready} AND {new} THEN 1 ELSE 0 END) AS new_ready, SUM(CASE WHEN {stretch} AND {new} THEN 1 ELSE 0 END) AS new_stretch "
             f"FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidates c ON c.id = q.candidate_id "
             f"WHERE q.candidate_id IN ({ids}) AND j.is_active = 1 AND q.qualification_status IN ({', '.join(repr(t) for t in TIERS)}) "
+            f"AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') "   # as the page's counts (worker todayCounts)
             f"AND COALESCE((SELECT a.status FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id ORDER BY a.rowid DESC LIMIT 1), 'SAVED') = 'SAVED' "
             f"GROUP BY q.candidate_id")
 
@@ -121,9 +126,14 @@ def email_recipients(spec, known):
     return out
 
 
-def recently_sent(value, now, hours=RESEND_HOURS):
+def recently_sent(value, now, hours=RESEND_HOURS, run_ok=True):
+    """value = "<ISO time> ok|failed" (or a bare time: ok). True when the last message went out within `hours` and this one adds
+    nothing: a message about a good run is still sent after a recent "did not finish" one (the retried run's news)."""
+    stamp, _, kind = str(value).strip().partition(' ')
+    if run_ok and kind == 'failed':
+        return False
     try:
-        last = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        last = datetime.fromisoformat(stamp.replace('Z', '+00:00'))
     except ValueError:
         return False
     if last.tzinfo is None:
@@ -243,7 +253,9 @@ def run_send(a, env, now=None):
         return 0
     state = d1_read("SELECT key, value FROM discovery_state WHERE key LIKE 'telegram:%' OR key = 'message:last_sent'")
     last = next((r.get('value') for r in state if r.get('key') == 'message:last_sent'), None)
-    if last and recently_sent(last, now) and not a.force:
+    status = a.status or 'success'
+    run_ok = status == 'success'
+    if last and recently_sent(last, now, run_ok=run_ok) and not a.force:
         print(f'Daily message: already sent at {last} (within {RESEND_HOURS} h); nothing sent')
         return 0
     chats = chats_from_state(state) if token else {}
@@ -260,7 +272,7 @@ def run_send(a, env, now=None):
     for cid in people:
         r = rows.get(cid, {})
         name = first_name(r.get('full_name'), cid)
-        text = build_message(name, r, site_link(cid, site), run_ok=a.status in ('', 'success'))
+        text = build_message(name, r, site_link(cid, site), status=status)
         for chat in chats.get(cid, []):
             _, err = telegram(token, 'sendMessage', {'chat_id': chat, 'text': text, 'disable_web_page_preview': True})
             sent, failed = (sent + 1, failed) if not err else (sent, failed + 1)
@@ -270,7 +282,7 @@ def run_send(a, env, now=None):
             sent, failed = (sent + 1, failed) if not err else (sent, failed + 1)
             print(f'Daily message: email to {cid}: {"sent" if not err else "failed (" + err + ")"}')
     if sent:
-        d1_write(state_sql('message:last_sent', now.strftime('%Y-%m-%dT%H:%M:%SZ'), now))
+        d1_write(state_sql('message:last_sent', now.strftime('%Y-%m-%dT%H:%M:%SZ') + (' ok' if run_ok else ' failed'), now))
     print(f'Daily message: {sent} sent, {failed} failed')
     return 1 if failed and not sent else 0
 
@@ -312,7 +324,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--send', action='store_true', help='send today\'s message to every linked person')
     ap.add_argument('--link', action='store_true', help='store the chats of people who tapped Start on the bot')
-    ap.add_argument('--status', default='success', help='the discovery job status (anything but success says the update did not finish)')
+    ap.add_argument('--status', default='success', help="success | postponed | anything else (failure, cancelled, unhealthy): says the update did not finish")
     ap.add_argument('--force', action='store_true', help='send even when a message went out in the last 12 hours')
     a = ap.parse_args(argv)
     if a.link:
