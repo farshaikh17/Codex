@@ -256,7 +256,7 @@ jobs:
         run: |
           # "Too few" = fewer than max(10, a fifth of the targets): a day when most career sites refused our requests is our fault, not closures.
           RELAX=yes
-          SEL="--pool ../work/shortlist_pool.json --candidates ../work/candidates.json --out ../work/shortlist_select.sql"
+          SEL="--pool ../work/shortlist_pool.json --candidates ../work/candidates.json --out ../work/shortlist_select.sql --report ../work/shortlist.report.json"
           if [ "$LIVE_WRITE" = "success" ] && [ -f ../work/liveness_report.json ]; then
             RELAX=$(python3 -c "import json,sys;r=json.load(open(sys.argv[1]));a=int(r.get('alive',0));t=int(r.get('targets',0));print('yes' if a < max(10, t // 5) else 'no')" ../work/liveness_report.json 2>/dev/null || echo yes)
             [ -f ../work/liveness_result.json ] && SEL="$SEL --liveness ../work/liveness_result.json"
@@ -292,7 +292,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/triage_report.json work/liveness_report.json; do
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/triage_report.json work/liveness_report.json work/shortlist.report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"

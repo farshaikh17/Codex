@@ -258,6 +258,12 @@ test('A6: band minimums are met by swaps within the score floor, or reported as 
   assert.ok(r2.relaxed.includes('band_gulf_min_5'));
 });
 
+test('A7: the report counts rows found more than 30 days ago (they rank 5 lower)', () => {
+  const res = sel([row({ discovered_at: iso(40), score: 90 }), row({ discovered_at: iso(2), score: 86 })], { tierSize: 1 });
+  assert.equal(res.report[C].READY.older_than_30_days, 0, 'the 40-day-old 90 ranks as 85, below the new 86');
+  assert.equal(sel([row({ discovered_at: iso(40), score: 92 })]).report[C].READY.older_than_30_days, 1);
+});
+
 test('deterministic: the same pool in any order gives the same changes', () => {
   const pool = [];
   for (let i = 0; i < 60; i++) pool.push(row({ score: 55 + (i * 7) % 40, eligibility: i % 3 ? 'ELIGIBLE' : 'UNKNOWN', discovered_at: iso(i % 40) }));
@@ -313,8 +319,10 @@ test('CLI: one SQL file; with no pool it writes an empty file and the lists stay
   const now = new Date().toISOString();
   fs.writeFileSync(path.join(dir, 'pool.json'), JSON.stringify({ rows: [row({ job_id: 'p1', last_verified_at: now, discovered_at: now })] }));
   fs.writeFileSync(path.join(dir, 'live.json'), JSON.stringify({ alive: [], dead: ['p1'] }));
-  cli('--pool', path.join(dir, 'pool.json'));
+  cli('--pool', path.join(dir, 'pool.json'), '--report', path.join(dir, 'report.json'));
   assert.match(fs.readFileSync(out, 'utf8'), /'READY'[\s\S]*generation = generation \+ 1/);
+  const rep = JSON.parse(fs.readFileSync(path.join(dir, 'report.json'), 'utf8'))[C].READY;   // plan A7
+  for (const k of ['count', 'employers', 'max_employer_share', 'families', 'bands', 'older_than_30_days', 'swaps', 'relaxed', 'pool_smaller_than_tier']) assert.ok(k in rep, k);
   cli('--pool', path.join(dir, 'pool.json'), '--liveness', path.join(dir, 'live.json'));
   assert.equal(fs.readFileSync(out, 'utf8'), '', 'found closed by today\'s check: not shortlisted');
 });
