@@ -1,7 +1,7 @@
 // Plan phase 4, ranking (C1-C3): table-driven checks of each rule, with text taken from the saved samples plus near misses. The phase 2 caps still win.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, dutyCount, dutyAdjust, mixedTitle, MIXED_TITLE_PENALTY, AVOID_TITLE_CAP } from '../worker/discovery.ts';
+import { evaluate, dutyCount, dutyAdjust, mixedTitle, MIXED_TITLE_PENALTY, AVOID_TITLE_CAP, spreadBonus, PLAIN_CEILING, SCORE_CEILING, VISA_UNLIKELY_CAP } from '../worker/discovery.ts';
 
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel']), target_roles: JSON.stringify(['Implementation Manager', 'RevOps Manager']),
   total_years_experience: 9, qualification_threshold: 70 };
@@ -70,4 +70,22 @@ test('C2 in evaluate(): -4 for a mixed title, none when a target role is contain
   assert.match(mixed.qualification_reason, /mixes two functions \(sales and marketing/);
   const target = { ...farhan, target_roles: JSON.stringify(['Sales & Marketing Operations Manager']) };
   assert.doesNotMatch(evaluate(target, post('Sales & Marketing Operations Manager', text)).qualification_reason, /mixes two functions/);
+});
+
+test('C3: the spread above the plain ceiling', () => {
+  const rows = [[null, 900, 0], [5, 900, 0], [6, 900, 1], [7, 900, 2], [8, 900, 3], [13, 900, 3], [9, 299, 0], [0, 900, 0]];
+  for (const [d, len, want] of rows) assert.equal(spreadBonus(d, len), want, JSON.stringify([d, len]));
+});
+
+test('C3 in evaluate(): a full-bonus job stops at 92 unless it names many duties; the caps still win; age plays no part', () => {
+  const rich = { ...farhan, primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation', 'GoHighLevel', 'Zapier', 'Webhooks', 'SOP']) };
+  const full = (desc) => evaluate(rich, post('Senior Implementation Manager', desc + ' ' + pad(FILLER, 400) + ' 5+ years of experience. Fully remote, India.'));
+  const three = full('You will configure the CRM with GoHighLevel, own workflows and automation for clients.');
+  const many = full(F_RICH + ' CRM configuration with GoHighLevel.');
+  assert.equal(three.score, PLAIN_CEILING, 'every bonus, few duties: the plain ceiling');
+  assert.equal(many.score, SCORE_CEILING, '11 duties: +3 above it');
+  const capped = evaluate(sana, post('Maintenance Engineer', S_RICH + ' Shutdowns, overhauls, SCADA, DCS. ' + pad(FILLER, 400), 'Essen, Germany', false));
+  assert.ok(capped.score <= VISA_UNLIKELY_CAP, `visa cap still wins over the spread (${capped.score})`);
+  const posting = post('Senior Implementation Manager', F_RICH + ' ' + pad(FILLER, 400));
+  assert.equal(evaluate(rich, { ...posting, observedAt: '2020-01-01T00:00:00Z' }).score, evaluate(rich, { ...posting, observedAt: '2026-11-13T00:00:00Z' }).score);
 });
