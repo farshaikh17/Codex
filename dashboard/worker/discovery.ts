@@ -215,8 +215,11 @@ export function abroadByDescription(location:string|null|undefined,description:s
  if(!COUNT_LOCATION.test(location||''))return false;
  const d=String(description||'').replace(EXCLUSION_PHRASE,' ');
  if(!d.trim()||INDIA_PLACE.test(d)||GULF_PLACE.test(d))return false;
- return FOREIGN_NAME.test(d)||FOREIGN_US_DOTTED.test(d)||US_ONLY_PLACE.test(d);
+ return FOREIGN_NAME.test(d)||FOREIGN_US_DOTTED.test(d)||US_ONLY_PLACE.test(d)||US_CITY_STATE.test(d);
 }
+// A US city with its state code and no comma, as postings list their sites ('Archbold OH, Troy OH, Centralia IL'). Upper case only; codes that are
+// also common words or titles (IN, OR, ME, HI, OK, DE, PA, MD) are left out.
+const US_CITY_STATE=/\b[A-Z][a-z]+(?: [A-Z][a-z]+)? (?:AL|AK|AZ|AR|CA|CO|CT|FL|GA|IA|ID|IL|KS|KY|LA|MA|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)\b(?![a-z])/;
 /** The Worker's remote test, expressed on what is stored: workplace_type REMOTE* (the posting's own remote flag) or remote wording in its location. */
 export function remoteFromStored(workplaceType:string|null|undefined,location:string|null|undefined){
  return /^REMOTE/i.test(workplaceType||'')||/\b(remote|work from home|telecommut)/i.test(location||'');
@@ -405,6 +408,10 @@ export const DUTY_PHRASES:Record<string,RegExp[]>={
   /\bswitchgear\b/i,/\btransformers?\b/i,/\broot cause\b/i,/\brca\b/i,/\breliability\b/i,/\benergy audits?\b/i,/\benergy efficiency\b/i,/\butilities\b/i,/\bcommissioning\b/i,
   /\bpermit to work\b/i,/\bcondition monitoring\b/i,/\bcarbon\b/i,/\bnet[- ]?zero\b/i,/\bemissions?\b/i,/\biso 50001\b/i,/\bheat rate\b/i,/\benergy management\b/i,/\bperformance monitoring\b/i],
 };
+// Plan C3: the bonuses above the role score stop at a plain ceiling of 92; a job naming many of the person's duties gets up to 3 more on top
+// (max(0, min(3, duties - 5))), so the very best are told apart instead of tying at the ceiling. No age is used here (age lives only in the shortlist's order).
+export const PLAIN_CEILING=92, SPREAD_MAX=3, SPREAD_FROM=5, SCORE_CEILING=95;
+export function spreadBonus(duties:number|null,descriptionLength:number){return duties===null||descriptionLength<DUTY_MIN_TEXT?0:Math.max(0,Math.min(SPREAD_MAX,duties-SPREAD_FROM));}
 export const DUTY_MANY=6, DUTY_SOME=3, DUTY_MANY_BONUS=6, DUTY_SOME_BONUS=3, DUTY_NONE_PENALTY=8, DUTY_MIN_TEXT=300, DUTY_NONE_TEXT=600;
 /** Plan C1: how many distinct duty phrases of the person's work the description names (null when the person has no list). */
 export function dutyCount(candidateId:string,description:string|null|undefined):number|null{
@@ -530,24 +537,24 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Sana is an engineer with 9+ years: a technician post is below her level (owner review 2026-11-12).
  const tooJunior=role&&(underLevel(p.title||'',p.description||'',have)||(candidate.id==='sana_ansari'&&!prof&&have>=5&&/\btechnicians?\b/i.test(p.title||'')));
  const overReach=role&&have>0&&need>have+2, meets=role&&!tooJunior&&have>0&&need>0&&need<=have;
- if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(95,score+EXPERIENCE_MATCH_BONUS);
+ if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(PLAIN_CEILING,score+EXPERIENCE_MATCH_BONUS);
  const fit=role&&!prof?targetFit(p.title||'',candidate.target_roles):null;
- if(fit)score=Math.min(95,score+(fit==='exact'?TARGET_EXACT_BONUS:TARGET_WORD_BONUS));
+ if(fit)score=Math.min(PLAIN_CEILING,score+(fit==='exact'?TARGET_EXACT_BONUS:TARGET_WORD_BONUS));
  const atLevel=role&&!tooJunior&&have>=7&&SENIOR_TITLE.test(p.title||'');
- if(atLevel)score=Math.min(95,score+SENIORITY_BONUS);
+ if(atLevel)score=Math.min(PLAIN_CEILING,score+SENIORITY_BONUS);
  const platform=role?platformGap(p.title||'',candidate.primary_skills):null;
  // Pay floor (owner rule 2026-11-07): only a published range is compared. Below the candidate's floor loses points; reaching the
  // preferred level gains a little. A candidate with no floor on record is never compared.
  const floor=Number(candidate.cash_floor_inr_monthly)||(candidate.id==='farhan_shaikh'?120000:0), preferred=candidate.id==='farhan_shaikh'?2500000/12:0;
  const pay=floor>0?monthlyInr(p.salary):null, belowFloor=!!pay&&pay.hi<floor, preferredPay=!!pay&&!belowFloor&&preferred>0&&pay.hi>=preferred;
- if(belowFloor)score=Math.max(0,score-PAY_BELOW_FLOOR_PENALTY);else if(preferredPay)score=Math.min(95,score+PAY_PREFERRED_BONUS);
+ if(belowFloor)score=Math.max(0,score-PAY_BELOW_FLOOR_PENALTY);else if(preferredPay)score=Math.min(PLAIN_CEILING,score+PAY_PREFERRED_BONUS);
  // Employers recorded publicly as hiring worldwide (Farhan: remote from India). Not proof of eligibility, so eligibility is unchanged.
  const key=companyKey(p.company), globalHirer=candidate.id==='farhan_shaikh'&&eligibility!=='INELIGIBLE'&&!!key&&!!ctx.globalHirers?.has(key);
- if(globalHirer&&role)score=Math.min(95,score+GLOBAL_HIRER_BONUS);
+ if(globalHirer&&role)score=Math.min(PLAIN_CEILING,score+GLOBAL_HIRER_BONUS);
  const rejectedOn=key&&ctx.rejected?.has(key)?(ctx.rejected.get(key)||'date not recorded'):null;
  // Funded early-stage founders (Farhan's builder goal): a YC company that is hiring gains a little, for a role-match only.
  const ycBatch=candidate.id==='farhan_shaikh'&&role&&eligibility!=='INELIGIBLE'&&key&&ctx.yc?.has(key)?(ctx.yc.get(key)||'batch not listed'):null;
- if(ycBatch)score=Math.min(95,score+YC_BONUS);
+ if(ycBatch)score=Math.min(PLAIN_CEILING,score+YC_BONUS);
  // Time-zone restriction (remote, but on another region's hours): a cost, not a bar. Agency postings and language requirements likewise.
  const locClass=locationClass(p.description||'',p.location||'');
  const tzRestricted=candidate.id==='farhan_shaikh'&&eligibility!=='INELIGIBLE'&&locClass==='timezone';
@@ -558,10 +565,13 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(lang&&role)score=Math.max(0,score-LANGUAGE_PENALTY);
  // Plan C1: what the job involves, read from the description (role-matched titles of the two built-in profiles only).
  const descLen=String(p.description||'').length, duties=role&&!prof?dutyCount(candidate.id,p.description):null, dutyAdj=dutyAdjust(duties,descLen,fit==='exact');
- if(dutyAdj>0)score=Math.min(95,score+dutyAdj);else if(dutyAdj<0)score=Math.max(0,score+dutyAdj);
+ if(dutyAdj>0)score=Math.min(PLAIN_CEILING,score+dutyAdj);else if(dutyAdj<0)score=Math.max(0,score+dutyAdj);
+ // Plan C3: the spread above the plain ceiling (applied after C2 and before the caps below, so every cap still wins).
+ const spread=spreadBonus(duties,descLen);
  // Plan C2: a title joining two unrelated functions loses a little, unless a target role is contained exactly.
  const mixed=role&&!prof&&fit!=='exact'?mixedTitle(p.title):null;
  if(mixed)score=Math.max(0,score-MIXED_TITLE_PENALTY);
+ if(spread)score=Math.min(SCORE_CEILING,score+spread);
  const ukSponsor=candidate.id==='sana_ansari'&&!!key&&!!ctx.ukSponsors?.has(key)&&/\b(uk|united kingdom|england|scotland|wales|london|manchester|birmingham|leeds|glasgow|edinburgh)\b/i.test(p.location||'');
  const reposted=!!(p as any).repost;
  // Ranking quality (owner-approved 2026-11-05). Titles in the candidate's avoid list are capped below the review threshold, and a

@@ -12,6 +12,9 @@ test('the rule itself', () => {
   assert.equal(abroadByDescription('3 Locations', TX), true);
   assert.equal(abroadByDescription('', 'Maintenance at our plants in Germany and the Netherlands.'), true);
   assert.equal(abroadByDescription('1 Location', 'Sites in Rotterdam.'), true);
+  assert.equal(abroadByDescription('16 Locations', 'Primary job location options include: Archbold OH, Troy OH, Centralia IL, Waterloo IA.'), true, 'US sites written without commas');
+  assert.equal(abroadByDescription('2 Locations', 'Plants at Hosur TN and Chennai.'), false, 'TN with an Indian place is Tamil Nadu');
+  assert.equal(abroadByDescription('2 Locations', 'Report to the Plant Head. Power BI and SAP PM skills. Work with the PA team.'), false, 'no state code read in ordinary words');
   assert.equal(abroadByDescription('3 Locations', 'Plants in Pune, India and Houston, Texas.'), false, 'an Indian place too');
   assert.equal(abroadByDescription('2 Locations', 'Sites in Jubail and Houston.'), false, 'a Gulf place too');
   assert.equal(abroadByDescription('4 Locations', 'Reliability and maintenance of rotating equipment.'), false, 'no place named');
