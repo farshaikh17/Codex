@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v14';
+export const RULES_MARKER = 'profile_v15';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -202,10 +202,22 @@ const FOREIGN_US_BARE=/(?:^|[^A-Za-z0-9.])(?:US|EU|GB)(?![A-Za-z0-9.])/;        
 const FOREIGN_STATE=/,\s*(?:AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?![A-Za-z])/;   // US state codes (OR and IN are omitted: ambiguous with the word "or" and India's code; TN stays, with Tamil Nadu places in INDIA_PLACE so 'Coimbatore, TN' is not foreign)
 const EXCLUSION_PLACE='(?:US|U\\.S\\.|USA|United States|UK|United Kingdom|EU|Europe|Canada|APAC|EMEA)(?![A-Za-z0-9])';
 const EXCLUSION_PHRASE=new RegExp('\\b(?:excl\\.|(?:excluding|excl|except|outside(?: of)?|not including|other than|anywhere but|but not|not|no|non|ex)\\b)[\\s-]*(?:in\\s+)?(?:the\\s+)?'+EXCLUSION_PLACE+'(?:\\s*(?:,\\s*)?(?:,|and|or|&|/)\\s*(?:the\\s+)?'+EXCLUSION_PLACE+')*','gi');   // also consumes lists: \'excluding US and Canada\', \'non-US\', \'(excl. US)\'
+// A US state, Canadian province or Australian state written in full after a comma, as the last part of a place ('Houston, Texas', 'Calgary,
+// Alberta, Canada', 'Perth, Western Australia'). It must end the place: end of text, a separator, a ZIP / postcode or a country, so a street
+// ('12 Washington Street') or a name ('Indiana Jones') is not read as one. Georgia is already in FOREIGN_NAME (the country); Indore, Goa and other
+// Indian places never match a whole state name, and a location that also names an Indian place is never foreign (indianPlace below).
+const FOREIGN_STATE_NAME=new RegExp(',\\s*(?:'+[
+ 'alabama','alaska','arizona','arkansas','california','colorado','connecticut','delaware','florida','hawaii','idaho','illinois','indiana','iowa',
+ 'kansas','kentucky','louisiana','maine','maryland','massachusetts','michigan','minnesota','mississippi','missouri','montana','nebraska','nevada',
+ 'new hampshire','new jersey','new mexico','north carolina','north dakota','ohio','oklahoma','oregon','pennsylvania','rhode island',
+ 'south carolina','south dakota','tennessee','texas','utah','vermont','virginia','washington','west virginia','wisconsin','wyoming',
+ 'alberta','british columbia','manitoba','new brunswick','newfoundland(?: and labrador)?','nova scotia','ontario','prince edward island','quebec',
+ 'saskatchewan','new south wales','queensland','victoria','tasmania','western australia','south australia','northern territory',
+].join('|')+')(?=\\s*(?:$|[,;/|()]|-\\s|\\d{4,5}\\b|(?:usa|us|united states|canada|australia)\\b))','i');
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||indianPlace(l))return false;   // 'Remote, excluding the US' is not a US location
- return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l);
+ return FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l)||FOREIGN_STATE_NAME.test(l);
 }
 /** Plan B2: a location that gives no place ('3 Locations', or empty) and a description that names only places outside India and the Gulf is abroad
  *  for Sana's visa-route cap ('Maintenance Engineer, 4 Locations' whose text is all about sites in Texas). A description that also names an Indian or
