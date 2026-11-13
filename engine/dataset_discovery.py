@@ -76,15 +76,48 @@ def clean(job):
     return job
 
 
-def d1(sql, local=None):
-    """Runs one read query on D1 through wrangler and returns the rows. local = a --persist-to path for a local database."""
+D1_WAITS = (5, 20, 60)   # seconds before each retry of a read that failed for a network or server reason
+# wrangler's own wording for a failure that may pass on its own: connection problems, timeouts and 5xx-type answers from the API or D1.
+TRANSIENT = re.compile(r'ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|ENOTFOUND|EPIPE|socket hang up|fetch failed|network|timed? ?out|'
+                       r'\b5\d\d\b|internal (server )?error|bad gateway|service unavailable|gateway time-?out|overloaded|temporarily unavailable|'
+                       r'try again|connection (was )?(lost|reset|closed)', re.I)
+
+
+class D1Error(RuntimeError):
+    def __init__(self, message, transient):
+        super().__init__(message)
+        self.transient = transient
+
+
+def _d1_once(sql, local):
     where = ['--local', '--persist-to', local] if local else ['--remote']
-    out = subprocess.run(['npx', 'wrangler', 'd1', 'execute', 'career-job-engine', *where, '--json', '--command', sql],
-                         cwd=DASHBOARD, capture_output=True, text=True, timeout=180)
-    text = out.stdout
+    try:
+        out = subprocess.run(['npx', 'wrangler', 'd1', 'execute', 'career-job-engine', *where, '--json', '--command', sql],
+                             cwd=DASHBOARD, capture_output=True, text=True, timeout=180)
+    except subprocess.TimeoutExpired as e:
+        raise D1Error(f'D1 query timed out after {e.timeout} s', True) from e
+    text = out.stdout or ''
     if out.returncode != 0 or '[' not in text:
-        raise RuntimeError(f'D1 query failed: {(out.stderr or text)[-400:]}')
+        msg = (out.stderr or text)[-400:]
+        raise D1Error(f'D1 query failed: {msg}', bool(TRANSIENT.search(msg)))
     return json.loads(text[text.index('['):])[0]['results']
+
+
+def d1(sql, local=None, waits=None, sleep=None):
+    """Runs one read query on D1 through wrangler and returns the rows. local = a --persist-to path for a local database.
+    A failure for a network or 5xx-type reason (or a wrangler timeout) is retried three times, after 5, 20 and 60 s; any other
+    failure (an SQL error, a missing token) is raised at once."""
+    import time
+    waits = D1_WAITS if waits is None else waits
+    sleep = sleep or time.sleep
+    for attempt in range(len(waits) + 1):
+        try:
+            return _d1_once(sql, local)
+        except D1Error as e:
+            if not e.transient or attempt == len(waits):
+                raise
+            print(f'D1 read failed ({str(e)[:120]}); retrying in {waits[attempt]} s', file=sys.stderr)
+            sleep(waits[attempt])
 
 
 def sql_str(s):
