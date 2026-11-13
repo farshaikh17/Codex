@@ -53,6 +53,28 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
 D1 budget: Workers Free allows 5,000,000 rows read per UTC day. Every smoke pass and browser suite costs reads; the
 read cache makes repeats cheap, but avoid repeated full suites against production on the same day.
 
+## Daily phone message
+
+After each daily discovery run the `message` job sends each linked person one line, for example
+`Sana: 4 new jobs today · 25 best matches, 25 worth a try · https://…/app#sana/today` (or "today's update did not finish" when
+the run failed). It needs no release. It is **off** until the owner adds a channel; without one the job prints
+"Daily message: skipped - no channel is set up" and does nothing.
+
+Telegram (free):
+1. In Telegram, open `@BotFather`, send `/newbot`, choose a name and a username ending in `bot`. BotFather replies with a token.
+2. GitHub -> the repository -> Settings -> Secrets and variables -> Actions -> New repository secret: name `TELEGRAM_BOT_TOKEN`,
+   value the token. Never paste it anywhere else.
+3. Send each person the link `https://t.me/<bot username>?start=sana_ansari` (or `?start=farhan_shaikh`); they tap **Start**.
+   Anyone else who should get a person's message (e.g. the owner) can open the same link; up to 3 chats per person.
+4. Within 24 hours, Actions -> **Link Telegram chats** -> Run workflow. The bot answers "Linked". The chat is stored in the database
+   (`discovery_state`, key `telegram:<candidate id>`), never in the repository or the log. Sending `/stop` to the bot unlinks a chat at the next link run.
+
+Email (optional, instead or as well; e.g. a Gmail account with an app password): repository variable `DIGEST_PROVIDER` = `smtp`;
+secrets `DIGEST_SMTP_USER`, `DIGEST_SMTP_PASSWORD` and `DIGEST_TO` (`farhan_shaikh=a@example.com; sana_ansari=b@example.com`);
+variables `DIGEST_SMTP_HOST` / `DIGEST_SMTP_PORT` only when not Gmail (default `smtp.gmail.com`, 465, SSL).
+
+A message goes out at most once in 12 hours. Code: `engine/daily_message.py`, tests `test_daily_message.py`.
+
 ## Operator key
 
 * One shared key allows changes for **both** candidates. It is not per-user or per-candidate authorization.
