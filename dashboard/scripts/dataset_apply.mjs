@@ -183,6 +183,15 @@ const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE source_channel = 'JOB_SITES' AND is_active = 1 AND discovered_at < ${q(monthAgo)} ${guarded};`);
 // storage: the text of jobs closed for more than 30 days is dropped (title, company and links stay), unless someone applied or decided
 out.push(`UPDATE jobs SET description = NULL WHERE source_channel IN ('ATS_DATASET', 'JOB_SITES') AND is_active = 0 AND expired_at < ${q(monthAgo)} AND description IS NOT NULL ${guarded};`);
+// Plan B3: a new posting that is a stored active job in another city (same employer, title and text) was not inserted; its city is added to the
+// stored job's location. Only while the location is still what was read, the job is active, and no one applied to it or decided on it.
+const merges = [];
+for (const file of many('--in')) merges.push(...(JSON.parse(fs.readFileSync(file, 'utf8')).merge || []));
+for (const m of merges) {
+  if (!m || !m.id || typeof m.new !== 'string' || !m.new.trim()) continue;
+  out.push(`UPDATE jobs SET location_restrictions = ${q(cap(m.new, 300))} WHERE id = ${q(m.id)} AND is_active = 1 AND COALESCE(location_restrictions, '') = ${q(m.old || '')} ${guarded};`);
+}
+report.same_job_other_city = merges.length;
 report.closed = toClose.length; report.reopened = reopen.length; report.missing_marked = missingMark.length; report.missing_cleared = missingClear.length;
 
 // ---- long-open listings: a note on undecided rows for jobs first seen more than 60 days ago (reposts are noted at insert time)

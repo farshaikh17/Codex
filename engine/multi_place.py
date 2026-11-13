@@ -58,3 +58,34 @@ def from_count(location, url):
         return location
     first = workday_path_place(url)
     return places_text([first], n) if first else location
+
+
+MORE = re.compile(r'^\+(\d+) more$')
+
+
+def merge_places(current, add):
+    """Plan B3: the location of a job listed in several cities, with one more city added: 'Pune' + 'Chennai' -> 'Pune; Chennai'; past three
+    places nothing more is added: the posting a city came from is not stored, so it comes back every day, and counting it again would grow
+    '+N more' each run. A '+N more' already there (a source's own count) is kept, as is a trailing '(Country)'. A city already named changes
+    nothing."""
+    cur = str(current or '').strip()
+    suffix = ''
+    m = re.search(r'\s*(\([^)]*\))\s*$', cur)
+    if m and ';' in cur:
+        suffix, cur = ' ' + m.group(1), cur[:m.start()]
+    places, extra = [], 0
+    for part in [p.strip() for p in cur.split(';') if p.strip()]:
+        mm = MORE.match(part)
+        if mm:
+            extra += int(mm.group(1))
+        else:
+            places.append(part)
+    new = str(add or '').strip()
+    key = lambda x: re.sub(r'[^a-z0-9]+', ' ', x.lower()).strip()   # noqa: E731
+    if not new or key(new) in {key(p) for p in places}:
+        return current
+    if len(places) >= MAX_PLACES:
+        return current
+    places.append(new)
+    out = '; '.join(places) + (f'; +{extra} more' if extra else '') + suffix
+    return out[:300]

@@ -55,7 +55,7 @@ class DatasetFailure(unittest.TestCase):
         closures = mock.Mock(return_value=(['c1'], ['m1'], [], {'greenhouse': 1}))
         with tempfile.TemporaryDirectory() as d, mock.patch.dict(sys.modules, {'duckdb': fake_duckdb}), \
                 mock.patch.object(dd, 'load_manifest', lambda: {'generated_at': generated, 'stats': {'total_jobs': 5_000_000}}), \
-                mock.patch.object(dd, 'select', lambda *a, **k: []), mock.patch.object(dd, 'split_new', lambda jobs, local=None: ([], [], 0)), \
+                mock.patch.object(dd, 'select', lambda *a, **k: []), mock.patch.object(dd, 'split_new', lambda jobs, local=None, merges=None: ([], [], 0)), \
                 mock.patch.object(dd, 'closures', closures):
             self.assertEqual(self.run_main(d, '--dataset', 'work/all.parquet'), 0)
             return (Path(d, 'dataset_stale.txt').exists(), json.loads(Path(d, 'matches.json').read_text()), json.loads(Path(d, 'report.json').read_text()), closures.called)

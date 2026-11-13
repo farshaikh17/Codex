@@ -31,10 +31,10 @@ from pathlib import Path
 
 try:   # run as a script (engine/ on sys.path) or as part of the engine package (tests)
     from company_names import http_fetch, name_jobs
-    from multi_place import from_count
+    from multi_place import from_count, merge_places
 except ImportError:   # pragma: no cover
     from engine.company_names import http_fetch, name_jobs
-    from engine.multi_place import from_count
+    from engine.multi_place import from_count, merge_places
 
 DATASET = 'https://storage.stapply.ai/jobhive/v1/all.parquet'
 MANIFEST = 'https://storage.stapply.ai/jobhive/v1/manifest.json'
@@ -236,7 +236,8 @@ def chunks(xs, n):
 
 
 def existing(jobs, local=None):
-    """Ids (with is_active), URLs and active (company, title) pairs already in D1, so nothing is inserted twice."""
+    """Ids (with is_active), URLs and active (company, title, location) rows already in D1, so nothing is inserted twice. `stored` maps an
+    active (company, title) pair to its rows (id, location, workplace) for the many-cities rule (plan B3)."""
     ids, urls = {}, set()
     for part in chunks(jobs, 150):
         id_list = json.dumps([j['id'] for j in part])
@@ -246,22 +247,101 @@ def existing(jobs, local=None):
         for r in d1(f"SELECT source_url u FROM jobs WHERE source_url IN (SELECT value FROM json_each({sql_str(url_list)})) "
                     f"UNION SELECT original_posting_url FROM jobs WHERE original_posting_url IN (SELECT value FROM json_each({sql_str(url_list)}))", local):
             urls.add(r['u'])
-    # Employer, title AND stated location: the same role in another city is a different opening (owner rule: only exact duplicates collapse).
-    pairs = {(norm(r['c']), norm(r['t']), norm(r['l'])) for r in d1("SELECT company c, title t, location_restrictions l FROM jobs WHERE is_active = 1", local)}
+    # Employer, title AND stated location: the same role in another city is a different opening (owner rule: only exact duplicates collapse),
+    # unless its text is the same but for the city (plan B3, split_new()).
+    pairs, stored = set(), {}
+    for r in d1("SELECT id, company c, title t, location_restrictions l, workplace_type w FROM jobs WHERE is_active = 1", local):
+        pairs.add((norm(r['c']), norm(r['t']), norm(r['l'])))
+        stored.setdefault((norm(r['c']), norm(r['t'])), []).append(r)
     closed = {(norm(r['c']), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
-    return ids, urls, pairs, closed
+    return ids, urls, pairs, closed, stored
 
 
-def split_new(jobs, local=None):
-    """New jobs to insert, and earlier dataset jobs that reappeared after being closed (to reopen)."""
+SAME_TEXT_MIN = 200   # characters of description needed to call two postings the same job (shorter texts are never merged)
+
+
+def _text(desc, *locations):
+    """A posting's text with its places taken out, for the many-cities test: lower case, words only, the words of both locations removed."""
+    import html
+    words = norm(re.sub(r'<[^>]*>', ' ', html.unescape(str(desc or '')))).split()
+    drop = {w for loc in locations for w in norm(loc).split()}
+    return ' '.join(w for w in words if w not in drop)[:3000]
+
+
+def _country(location):
+    """The country a location names: a trailing '(Country)' (multi_place.places_text) or the last comma part of its first place; None for a bare city."""
+    loc = str(location or '')
+    m = re.search(r'\(([^)]*)\)\s*$', loc)
+    if m:
+        return norm(m.group(1))
+    parts = [p.strip() for p in loc.split(';')[0].split(',') if p.strip()]
+    return norm(parts[-1]) if len(parts) >= 2 else None
+
+
+def _remote(loc, flag=None, workplace=None):
+    return flag is True or bool(re.search(r'remote', str(loc or ''), re.I)) or str(workplace or '').upper().startswith('REMOTE')
+
+
+def same_job_other_city(a_loc, a_desc, a_remote, b_loc, b_desc, b_remote):
+    """Plan B3: two postings of one employer and title differ only by city when their places differ, both are remote or both are not, they
+    name no different country, and their texts (200 characters or more) are the same once each one's places are taken out."""
+    if norm(a_loc) == norm(b_loc) or a_remote != b_remote:
+        return False
+    ca, cb = _country(a_loc), _country(b_loc)
+    if ca and cb and ca != cb:
+        return False
+    ta, tb = _text(a_desc, a_loc, b_loc), _text(b_desc, a_loc, b_loc)
+    return len(ta) >= SAME_TEXT_MIN and ta == tb
+
+
+def _descriptions(ids, local=None):
+    out = {}
+    for part in chunks(sorted(ids), 150):
+        for r in d1(f"SELECT id, substr(description, 1, 6000) d FROM jobs WHERE id IN (SELECT value FROM json_each({sql_str(json.dumps(part))}))", local):
+            out[r['id']] = r['d'] or ''
+    return out
+
+
+def split_new(jobs, local=None, merges=None):
+    """New jobs to insert, and earlier dataset jobs that reappeared after being closed (to reopen).
+    Plan B3: a new posting with the same employer and title as a stored active one (or an earlier one in this run), differing only by city, is
+    stored once: its city is added to the other's location ("Pune; Chennai; +3 more"). For a stored row the change is appended to `merges`
+    ('stored': [{id, old, new}], dataset_apply.mjs writes it, guarded); stored duplicates are not merged with each other."""
     seen, unique = set(), []
     for j in jobs:   # duplicates inside one run (same company, title and location)
         k = (norm(j['company']), norm(j['title']), norm(j.get('location')))
         if k not in seen:
             seen.add(k); unique.append(j)
-    ids, urls, pairs, closed = existing(unique, local) if unique else ({}, set(), set(), set())
+    ids, urls, pairs, closed, stored = existing(unique, local) if unique else ({}, set(), set(), set(), {})
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
     fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
+    # Plan B3, against stored rows: read the text of only the stored rows that share an employer and title with a new posting.
+    want = {r.get('id') for j in fresh for r in stored.get((norm(j['company']), norm(j['title'])), []) if r.get('id')}
+    texts = _descriptions(want, local) if want else {}
+    changed, kept, merged = {}, [], 0
+    for j in fresh:
+        jr = _remote(j.get('location'), j.get('is_remote'))
+        host = next((r for r in stored.get((norm(j['company']), norm(j['title'])), [])
+                     if r.get('id') and same_job_other_city(changed.get(r['id'], r['l']), texts.get(r['id'], ''), _remote(r['l'], None, r.get('w')),
+                                            j.get('location'), j.get('description'), jr)), None)
+        if host:
+            now = changed.get(host['id'], host['l'])
+            changed[host['id']] = merge_places(now, j.get('location'))
+            merged += 1
+            continue
+        twin = next((k for k in kept if norm(k['company']) == norm(j['company']) and norm(k['title']) == norm(j['title'])
+                     and same_job_other_city(k.get('location'), k.get('description'), _remote(k.get('location'), k.get('is_remote')),
+                                             j.get('location'), j.get('description'), jr)), None)
+        if twin:   # the same job twice in this run: one row, both cities
+            twin['location'] = merge_places(twin.get('location'), j.get('location'))
+            merged += 1
+            continue
+        kept.append(j)
+    fresh = kept
+    if merges is not None:   # {'stored': [{id, old, new}], 'merged': n}
+        old = {r.get('id'): r['l'] for rows in stored.values() for r in rows}
+        merges.setdefault('stored', []).extend({'id': i, 'old': old[i], 'new': loc} for i, loc in changed.items() if (loc or '') != (old[i] or ''))
+        merges['merged'] = merges.get('merged', 0) + merged
     for j in fresh:   # the same role closed within the last 180 days and is back under a new id
         if (norm(j['company']), norm(j['title'])) in closed:
             j['repost'] = True
@@ -371,9 +451,11 @@ def main():
         raw = json.loads(Path(a.dedupe).read_text())
         jobs = [clean(j) for j in raw.get('jobs', [])]
         names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())   # plan B1: employer names before the duplicate test
-        fresh, _, dup = split_new(jobs, a.d1_local)
-        (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': []}, default=str))
-        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh), 'employer_names': names}))
+        merges = {}
+        fresh, _, dup = split_new(jobs, a.d1_local, merges)
+        (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': [], 'merge': merges.get('stored', [])}, default=str))
+        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh), 'employer_names': names,
+                          'same_job_other_city': merges.get('merged', 0)}))
         return 0
     if a.no_dataset:
         # The 2.3 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
@@ -411,14 +493,17 @@ def main():
     jobs = [j for j in found.values() if len(j['url']) < LIMITS['url']]
     # Plan B1: the employer's name, not its hiring-system tenant id, before the duplicate test (so caps and dedupe see the display name).
     names = name_jobs(jobs, None if a.no_name_lookup else http_fetch())
-    fresh, reopen, dup = split_new(jobs, a.d1_local)
+    merges = {}
+    fresh, reopen, dup = split_new(jobs, a.d1_local, merges)
     # A partial snapshot must not close real jobs: no closures at all unless the snapshot has its usual size.
     close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local) if total >= 1_000_000 and not stale else ([], [], [], {})
     report = {'snapshot': manifest.get('generated_at'), 'snapshot_age_hours': None if age is None else round(age, 1), 'stale': stale, 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
               'duplicates_in_run': dup, 'already_stored': len(jobs) - dup - len(fresh), 'new': len(fresh), 'reopen': len(reopen),
-              'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear), 'employer_names': names}
+              'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear), 'employer_names': names,
+              'same_job_other_city': merges.get('merged', 0)}
     (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': manifest.get('generated_at'), 'jobs': fresh, 'closed': close,
-                                                  'reopen': reopen, 'missing_mark': mark, 'missing_clear': clear, 'ats_counts': counts}, default=str))
+                                                  'reopen': reopen, 'missing_mark': mark, 'missing_clear': clear, 'ats_counts': counts,
+                                                  'merge': merges.get('stored', [])}, default=str))
     (out / 'report.json').write_text(json.dumps(report, indent=1))
     print(json.dumps(report))
     return 0
