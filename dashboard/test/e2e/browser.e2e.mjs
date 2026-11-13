@@ -52,7 +52,9 @@ const checkCandidate = async (btn, cid, label, other) => {
   check(`A5 ${btn}: workspace heading and READY card match the API, jobs are listed`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
   check(`A6 ${btn}: job rows are visible without a key`, (await page.locator('[data-job-id]').count()) > 0 || /Role j\d/.test(t));
   await tab('Analytics');
-  const ta = await bodyText();
+  // Analytics loads after the tab opens; wait up to 15 s for its summary line.
+  let ta = await bodyText();
+  for (let i = 0; i < 15 && !/Current inventory for/.test(ta); i++) { await page.waitForTimeout(1000); ta = await bodyText(); }
   const who = cid === 'sana_ansari' ? 'Sana' : 'Farhan'; const not = cid === 'sana_ansari' ? /Farhan has/ : /Sana has/;
   check(`A7 ${btn}: Analytics is scoped to this candidate`, new RegExp('Current inventory for ' + who).test(ta) && !not.test(ta));
   await tab('SETTINGS');

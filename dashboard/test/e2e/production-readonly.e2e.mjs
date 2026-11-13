@@ -79,8 +79,10 @@ for (const [btn, cid, label, other] of [['FARHAN', 'farhan_shaikh', overview.far
   const card = readCard(t);
   check(`${btn}: workspace heading and READY card match the API`, new RegExp(label + ' Workspace', 'i').test(t) && !new RegExp(other + ' Workspace', 'i').test(t) && card === sc.READY, `${card} vs ${sc.READY}`);
   await tab('Analytics');
-  const ta = await text();
-  check(`${btn}: Analytics is scoped to this candidate`, new RegExp('Current inventory for ' + (cid === 'sana_ansari' ? 'Sana' : 'Farhan')).test(ta) && !(cid === 'sana_ansari' ? /Farhan has/ : /Sana has/).test(ta));
+  // Analytics loads after the tab opens (slower for the larger candidate right after a deploy); wait up to 15 s for its summary line.
+  let ta = await text();
+  for (let i = 0; i < 15 && !/Current inventory for/.test(ta); i++) { await page.waitForTimeout(1000); ta = await text(); }
+  check(`${btn}: Analytics is scoped to this candidate`, new RegExp('Current inventory for ' + (cid === 'sana_ansari' ? 'Sana' : 'Farhan')).test(ta) && !(cid === 'sana_ansari' ? /Farhan has/ : /Sana has/).test(ta), (ta.match(/Current inventory for \w+|(Farhan|Sana) has/) || ['summary line not shown'])[0]);
   await tab('SETTINGS');
   const names = await page.locator('input').evaluateAll((els) => els.map((e) => e.value));
   const st = await text();
