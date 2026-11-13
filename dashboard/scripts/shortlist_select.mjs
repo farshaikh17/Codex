@@ -13,7 +13,8 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
+import { titleKey } from '../worker/twins.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -43,14 +44,8 @@ export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.t
 const readyOk = (r) => r.verified && fitsReady(r);
 const shortlistable = (r) => (r.verified || r.listed) && (fitsReady(r) || fitsStretchRule(r));
 // Tenth-man review (phase 3): a title is compared without bracketed parts and trailing place or work-mode parts ("Solutions Engineer (Remote)",
-// "Maintenance Engineer - Jamnagar"), so the same job is not shown twice.
-const MODE_SEG = /^\s*(?:remote|hybrid|on-?site|onsite|wfh|work from home|anywhere|worldwide|global|apac|emea|asia|latam)\b/i;
-const placeSeg = (seg) => MODE_SEG.test(seg) || indianPlace(seg) || gulfPlace(seg) || foreignLocation(seg);
-export function titleKey(title) {
-  const parts = String(title || '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split(/\s+[-\u2013\u2014|]\s+|,\s*/).filter((x) => x.trim());
-  while (parts.length > 1 && placeSeg(parts[parts.length - 1])) parts.pop();
-  return parts.join(' ').toLowerCase().replace(/\b(?:remote|hybrid|on-?site|onsite|wfh)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
-}
+// "Maintenance Engineer - Jamnagar"), so the same job is not shown twice. titleKey() lives in worker/twins.ts, which the To review lists also use.
+export { titleKey };
 /** One posting per employer, title and (for an on-site job) city: the same title at two plants is two jobs (tenth-man review, phase 3); the employer caps
  *  keep one employer from filling a tier with them. A remote job has no city. */
 export const twinKey = (r) => {
