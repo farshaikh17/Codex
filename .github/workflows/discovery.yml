@@ -212,12 +212,19 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           [ -s ../work/triage.sql ] && npx wrangler d1 execute career-job-engine --remote --file=../work/triage.sql > /dev/null || echo "no review to write"
-      - name: Still open? List the best-ranked undecided jobs
+      - name: Shortlist pool (plan A1; after today's import, before the still-open check, which verifies the pool first)
+        id: pool
+        continue-on-error: true   # no pool file: the shortlist selector does not run and the lists stay as they are
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python engine/dataset_discovery.py --out work --shortlist-pool work/shortlist_pool.json
+      - name: Still open? List the shortlist pool first, then the best-ranked undecided jobs
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: python engine/liveness.py --export work/liveness_targets.json
+        run: python engine/liveness.py --export work/liveness_targets.json --pool work/shortlist_pool.json
       - name: Still open? Check each posting (no credentials; only 404/410 twice closes a job)
         id: live_check
         if: ${{ hashFiles('work/liveness_targets.json') != '' }}

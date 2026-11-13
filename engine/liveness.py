@@ -1,12 +1,13 @@
 """Daily "still open?" check of the best-ranked jobs (owner decision 2026-11-07).
 
 Three steps, so credentials never reach the step that visits third-party websites:
-  --export OUT   (D1 credentials) the 50 best-scored undecided jobs per candidate, with their posting URL
+  --export OUT   (D1 credentials) the 75 best-scored undecided jobs per candidate, with their posting URL; with --pool (plan A1) the shortlist
+                 pool's rows come first: the automatic shortlist, then the pool by score, up to 150 per person
   --check  IN    (no credentials) one GET per URL (8 at a time, 8 s each; after 8 minutes it stops and keeps what it has); a job is dead only on HTTP 404/410 twice, or when a known hiring system
                  says so (a Greenhouse redirect carrying error=true, a Lever 404); 403/429/5xx/timeouts prove nothing
   --sql    IN    writes SQL: dead jobs are closed (never one with an application or a human decision), live ones get
                  last_verified_at = now
-Usage: python engine/liveness.py --export work/liveness_targets.json
+Usage: python engine/liveness.py --export work/liveness_targets.json [--pool work/shortlist_pool.json]
        python engine/liveness.py --check work/liveness_targets.json --out work/liveness_result.json
        python engine/liveness.py --sql work/liveness_result.json --out work/liveness.sql
 """
@@ -40,6 +41,32 @@ EXPORT_SQL = f"""SELECT id, url FROM (
     AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id AND {DECIDED})
     AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
 ) WHERE rk <= {PER_CANDIDATE}"""
+
+
+POOL_PER_CANDIDATE = 150
+
+
+def pool_targets(pool, per_candidate=POOL_PER_CANDIDATE):
+    """Plan A1: the still-open check verifies the shortlist pool first, so the selector (which keeps only rows verified in the last 4 days) can
+    choose from it. Per person: the rows on the automatic shortlist now, then the pool by score, at most `per_candidate`; active rows with an
+    https posting URL only."""
+    out, seen, taken = [], set(), {}
+    rows = [r for r in (pool or {}).get('rows', []) if r.get('kind') in ('auto', 'pool') and r.get('active') and str(r.get('url') or '').startswith('https://')]
+    rows.sort(key=lambda r: (r['kind'] != 'auto', -(r.get('score') or 0), str(r['job_id'])))
+    for r in rows:
+        cid = r['candidate_id']
+        if taken.get(cid, 0) >= per_candidate or r['job_id'] in seen:
+            continue
+        seen.add(r['job_id'])
+        taken[cid] = taken.get(cid, 0) + 1
+        out.append({'id': r['job_id'], 'url': r['url']})
+    return out
+
+
+def merge_targets(first, rest):
+    """The pool's targets first, then the usual export's, each job once."""
+    seen = {t['id'] for t in first}
+    return list(first) + [t for t in rest if t['id'] not in seen]
 
 
 WORKERS = 8           # parallel requests
@@ -150,12 +177,19 @@ def main():
     ap.add_argument('--check')
     ap.add_argument('--sql')
     ap.add_argument('--out')
+    ap.add_argument('--pool', help='the shortlist pool (engine/dataset_discovery.py --shortlist-pool); its rows are checked first')
     a = ap.parse_args()
     if a.export:
         from engine.dataset_discovery import d1
-        rows = d1(EXPORT_SQL)
+        first = []
+        if a.pool and Path(a.pool).exists():
+            try:
+                first = pool_targets(json.loads(Path(a.pool).read_text()))
+            except ValueError:
+                first = []   # an unreadable pool: the usual targets only (the selector does not run without a pool)
+        rows = merge_targets(first, d1(EXPORT_SQL))
         Path(a.export).write_text(json.dumps(rows))
-        print(json.dumps({'targets': len(rows)}))
+        print(json.dumps({'targets': len(rows), 'pool_targets': len(first)}))
     elif a.check:
         res = check(json.loads(Path(a.check).read_text()))
         Path(a.out).write_text(json.dumps(res))
