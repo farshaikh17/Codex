@@ -96,11 +96,26 @@ def http(url, data=None, headers=None, timeout=40):
 
 def workable(queries):
     seen = set()
+    failed, last_error = 0, None
     for q, remote_only in queries:
         token = None
         for _ in range(2):   # two pages a query
             url = 'https://jobs.workable.com/api/v1/jobs?' + urllib.parse.urlencode({'query': q, **({'workplace': 'remote'} if remote_only else {}), **({'pageToken': token} if token else {})})
-            d = json.loads(http(url))
+            # Phase 6 tenth man: one refused page (a 429, a timeout) used to end the whole source, losing every later search term. Now that
+            # term is skipped after one retry, and the source fails only when every term failed.
+            d = None
+            for attempt in range(2):
+                try:
+                    d = json.loads(http(url))
+                    break
+                except Exception as e:   # noqa: BLE001 - network, HTTP or JSON error: retried once, then this term is skipped
+                    last_error = e
+                    if attempt == 0:
+                        time.sleep(PAUSE * 5)
+            if d is None:
+                failed += 1
+                print(f'workable: search term skipped after an error ({type(last_error).__name__})', file=sys.stderr)
+                break
             for r in d.get('jobs') or []:
                 if r.get('id') in seen:
                     continue
@@ -116,6 +131,8 @@ def workable(queries):
             token = d.get('nextPageToken')
             if not token:
                 break
+    if queries and failed == len(queries):
+        raise last_error
 
 
 class AllEmployersFailed(RuntimeError):

@@ -74,6 +74,8 @@ release day (cache flush, smoke and browser suites on both people's lists) costs
    posting, and no SQL file when nothing is new. Before, every watchlist run wrote a file whose housekeeping statements scan the
    `jobs` table, and bumped the cache generation, so every visitor's next list was recomputed (about 12,700 to 22,200 reads each, 3b).
 3. The re-score cap is 800 per person per daily run (was 1,500), passed by `discovery.yml` as `--rescore-per-candidate 800`.
+4. (Phase 6 tenth man.) The daily run may start only while the day's total is under **2.0M** (was 2.5M): 5M free limit, minus about 2.5M for
+   the run, minus 0.5M for the evening's site traffic. A later start waits for the 01:13 / 03:13 UTC triggers of the next UTC day.
 
 **Measured from now on:** each discovery and watchlist run row (`discovery_state`, key `run:<time>`) carries `d1_rows: {read, written}`,
 the account's totals at the run's end minus at its start (`scripts/usage_snapshot.mjs`, Cloudflare analytics, no D1 reads). It includes
