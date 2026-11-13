@@ -466,6 +466,20 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
   - fixed in the same phase: a red health job no longer makes the guards re-run the day (they read every completed run); a run whose job
     failed no longer shows as "Updated"; a failed download or unreadable manifest turns the run red; too few verified rows (not only 0)
     use the relaxed shortlist demotion.
+- phase 2 (sorting, 13 Nov; PRs #141-#151 and the tenth-man fix PR, which also carries the phase's one rules-marker bump to `profile_v13`):
+  - deviations from the items above: S6's cap (threshold − 1) keeps a too-senior row out of Ready, but an ELIGIBLE one meets the Stretch rule, so it can
+    show under "Worth a try"; "Chief of Staff" is not an executive title. S8 reads hybrid only as wording tied to the job ("the role is hybrid", "hybrid
+    role", "(hybrid)", "N days a week in the office"), not a bare `hybrid`. S9 drops a bare "consultants" from the agency names (Fichtner Consultants).
+    S11 applies to Sana only. S2 also added `gohighlevel`, `tech ops`, `operations engineer`, `transmission` and `renewable`, which are search terms.
+  - tenth-man review (sorting angle), fixed in the same phase: the office-days rule read company or customer hybrid wording as the job's, and the
+    re-score made it permanent (narrowed; such rows are re-checked at each rules bump); "NCR" (also Metro Manila) counted as India; ", SA" (South
+    Australia, South Africa) counted as the Gulf; Ready and Stretch grew past 25 a day (each automatic tier is now trimmed to 25); a bare `analyst`
+    held plant reliability analysts; a bare Saudization / Omanisation mention capped visa-sponsored Gulf jobs; the one-skill exception ignored a
+    target's qualifier ("(Power Plant)"); `rotating`, `thermal` and clinical / construction programme titles were too broad; AGM / DGM were capped as executives.
+  - low findings left: a few wrong-field titles still sit in "To review" at 50-58 ("Senior Operations Engineer" at a fintech, "Customer Engineer,
+    Google Cloud", "Program Manager, Health Equity"); the two-skill shortlist rule keeps them off both lists, and the words are her and his search terms.
+    "Plant Engineer - Food Processing" still uses the one-skill exception, because "Plant Engineer" is itself one of Sana's target roles. A posting
+    asking too many years gets both the 15-point cut and the cap (it still lands in Stretch or To review, which is the intent).
 
 ---
 

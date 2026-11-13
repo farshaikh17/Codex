@@ -85,7 +85,7 @@ class RescorePaging(unittest.TestCase):
         db.execute("INSERT INTO applications VALUES ('farhan','j01')")
         db.execute("UPDATE candidate_qualifications SET manual_override_status='READY' WHERE candidate_id='sana' AND job_id='j02'")
         # columns the legacy-row export reads (rescore_rows also returns never-scored first-import rows; this fixture has none: every row is 'preliminary')
-        db.executescript("ALTER TABLE jobs ADD COLUMN provenance TEXT; ALTER TABLE jobs ADD COLUMN source_adapter TEXT; ALTER TABLE candidate_qualifications ADD COLUMN qualification_reason TEXT;")
+        db.executescript("ALTER TABLE jobs ADD COLUMN provenance TEXT; ALTER TABLE jobs ADD COLUMN source_adapter TEXT; ALTER TABLE candidate_qualifications ADD COLUMN qualification_reason TEXT; ALTER TABLE candidate_qualifications ADD COLUMN eligibility_reason TEXT;")
         return db
 
     def _run(self, db, **kw):
@@ -97,6 +97,15 @@ class RescorePaging(unittest.TestCase):
             return [dict(r) for r in db.execute(sql).fetchall()]
         with mock.patch.object(dd, 'd1', fake_d1):
             return dd.rescore_rows(**kw), calls
+
+    def test_office_days_ineligible_rows_are_rechecked(self):
+        db = self._db()
+        db.execute("UPDATE candidate_qualifications SET qualification_status='INELIGIBLE', eligibility_reason='Hybrid or set office days (candidate rule: remote only).' WHERE candidate_id='farhan' AND job_id='j03'")
+        db.execute("UPDATE candidate_qualifications SET qualification_status='INELIGIBLE', eligibility_reason='Not a remote role (candidate rule: remote only).' WHERE candidate_id='farhan' AND job_id='j04'")
+        rows, _ = self._run(db, page=1000, per_candidate=1000)
+        keys = {(r['candidate_id'], r['job_id']) for r in rows}
+        self.assertIn(('farhan', 'j03'), keys, 'the office-days reading is re-checked at a rules bump (tenth-man review, phase 2)')
+        self.assertNotIn(('farhan', 'j04'), keys, 'other ineligible rows are not')
 
     def test_best_first_paged_and_complete(self):
         db = self._db()

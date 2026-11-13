@@ -559,3 +559,33 @@ test('S10: Stretch takes the overflow of Ready-quality rows first, ahead of the 
   assert.equal(db.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 'p1'`).get().s, 'READY');
   assert.equal(db.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE qualification_reason LIKE 'Shortlisted automatically. Shortlisted automatically.%'`).get().c, 0, 'the mark is never doubled');
 });
+
+test('phase 2 tenth-man fixes: an office-days ineligible row comes back when the rule no longer applies; each automatic tier is trimmed to 25', () => {
+  const w = world(); const db = w.sqlite;
+  const D = 'Configure our CRM and build workflow automation. Fully remote, open to candidates in India.';
+  db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES ('o1','Implementation Manager','Acme','lever','https://x.example/o1',1,'Remote - India',?,'REMOTE','2026-11-01','LIVE_PUBLIC')`).run(D);
+  db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,eligibility_status,eligibility_reason) VALUES (?,?,'INELIGIBLE','Cloud discovery match.','INELIGIBLE','Hybrid or set office days (candidate rule: remote only).')`).run(F, 'o1');
+  db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,80,'{"preliminary":true}')`).run(F, 'o1');
+  const row = { candidate_id: F, job_id: 'o1', cur_score: 80, title: 'Implementation Manager', company: 'Acme', location: 'Remote - India', description: D, workplace_type: 'REMOTE', score_breakdown: '{"preliminary":true}', provenance: 'LIVE_PUBLIC', source_adapter: 'lever' };
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify([row]));
+  db.exec(run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json'), '--no-shortlist']).sql);
+  const o = db.prepare(`SELECT qualification_status s, eligibility_status e FROM candidate_qualifications WHERE job_id='o1'`).get();
+  assert.deepEqual({ ...o }, { s: 'NEEDS_REVIEW', e: 'ELIGIBLE' });
+  assert.equal(db.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE job_id='o1' AND previous_status='INELIGIBLE'`).get().c, 1);
+  // trim: 30 automatic Ready rows (an earlier day's overgrowth) become 25 Ready and the 5 lowest go to Stretch (S10 overflow), never a person's row
+  const w2 = world(); const d2 = w2.sqlite;
+  fs.writeFileSync(path.join(w2.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
+  d2.prepare(`UPDATE candidates SET qualification_threshold = 60 WHERE id = ?`).run(S);
+  const NOW = new Date().toISOString(), V = JSON.stringify({ preliminary: true, [DS_DISCOVERY.RULES_MARKER]: true });
+  for (let i = 0; i < 31; i++) {
+    const id = 't' + String(i).padStart(2, '0');
+    d2.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,1,?,?)`).run(id, 'T ' + id, 'Co ' + id, 'lever', 'https://x.example/' + id, NOW, NOW);
+    d2.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?, 'READY', 'ELIGIBLE', ?, ?)`).run(S, id, i === 30 ? 'Set by a person.' : 'Shortlisted automatically. Cloud discovery match.', i === 30 ? 'READY' : null);
+    d2.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,60,?)`).run(S, id, 95 - i, V);
+  }
+  d2.exec(run(w2.dir).sql);
+  const c = (st) => d2.prepare(`SELECT COUNT(*) c FROM candidate_qualifications WHERE candidate_id = ? AND qualification_status = ? AND qualification_reason LIKE 'Shortlisted automatically.%'`).get(S, st).c;
+  assert.equal(c('READY'), 25); assert.equal(c('STRETCH_READY'), 5);
+  assert.equal(d2.prepare(`SELECT qualification_status s FROM candidate_qualifications WHERE job_id = 't30'`).get().s, 'READY', 'a person\'s Ready row is untouched');
+  assert.equal(d2.prepare(`SELECT COUNT(*) c FROM qualification_history WHERE reason LIKE 'Outranked%'`).get().c, 5);
+});
