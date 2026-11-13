@@ -7,6 +7,8 @@ import { createDb } from './harness.mjs';
 import { seed } from './fixtures.mjs';
 import { VISA_UNLIKELY_CAP, evaluate, avoidedTitle, foreignLocation, remoteFromStored, AVOID_TITLE_CAP, FOREIGN_LOCATION_PENALTY, SANA_OLD_ACCESS_REASON, SANA_UNKNOWN_ACCESS_REASON } from '../worker/discovery.ts';
 import { plan, SELECT_ROWS } from '../scripts/rescore_ranking_v2.mjs';
+import * as DISCOVERY from '../worker/discovery.ts';
+const SANA_INDIA_ONSITE_REASON_P2 = DISCOVERY.SANA_INDIA_ONSITE_REASON;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']) };
@@ -223,10 +225,10 @@ test('review round 3: exclusion lists, non-US forms, Indian TN, board rows and t
     assert.equal(foreignLocation(l), false, l);
   for (const l of ['Remote - US', 'Austin, TX', 'London, UK', 'New York, NY']) assert.equal(foreignLocation(l), true, l);
   const { sanaIndiaCity } = await import('../worker/discovery.ts');
-  assert.equal(sanaIndiaCity('Kolkata, West Bengal'), false); assert.equal(sanaIndiaCity('Mumbai, India'), true);
+  assert.equal(sanaIndiaCity('Kathmandu, Nepal'), false); assert.equal(sanaIndiaCity('Mumbai, India'), true);   // Kolkata counts as India since phase 2 (S1)
   const w = world();
   // a board row for Sana in a city the Worker does not treat as Indian, scored from sponsorship: untouched
-  w.job('k1', 'Reliability Engineer', 'Kolkata, West Bengal');
+  w.job('k1', 'Reliability Engineer', 'Kathmandu, Nepal');
   w.row(S, 'k1', 58, { elig: 'UNKNOWN', reason: 'Reported by Some Board; employer availability and eligibility are unverified.', bd: JSON.stringify({ rule_version: 'cloud-conservative-review-1', matched_skills: ['a'] }) });
   // a Farhan board row: eligibility was forced to UNKNOWN after scoring, so no foreign-location penalty
   w.job('k2', 'Implementation Manager', 'Remote (US)', 'REMOTE_RESTRICTED', 'CRM Configuration. Remote in India welcome.');
@@ -485,4 +487,40 @@ test('live shortlist review (12 Nov 22:00): HR-pay and travel operations are not
   assert.ok(mk(fa, 'Revenue Operations Manager', 'Remote - India', R).score > 40, 'RevOps stays');
   assert.ok(mk(sa, 'Reliability Engineer II', 'Gurgaon, Haryana, India', 'Keep our low-latency trading infrastructure and Linux production systems reliable; root cause analysis.').score <= 40);
   assert.ok(mk(sa, 'Reliability Engineer', 'Pune, India', 'Plant equipment reliability, rotating equipment and maintenance; root cause analysis.').score > 40, 'plant reliability stays');
+});
+
+// ---- Phase 2 (plan section 6): sorting must agree with the profiles. Invented postings, each landing where the plan says it should. ----
+const P2_SANA = { id: 'sana_ansari', total_years_experience: 9.2, qualification_threshold: 60,
+  primary_skills: JSON.stringify(['Power Plant Operations', 'DCS Monitoring', 'Preventive Maintenance', 'Breakdown Maintenance', 'Rotating Equipment Maintenance', 'Root Cause Analysis', 'Reliability', 'Shutdown Planning', 'Maintenance Planning', 'Procurement', 'Contractor Supervision']),
+  target_roles: JSON.stringify(['Reliability Engineer', 'Maintenance Engineer (Power Plant)', 'Power Plant Operations Engineer', 'Plant Engineer', 'Asset Performance Specialist', 'Energy Efficiency Engineer', 'Decarbonization Engineer']) };
+const P2_FARHAN = { id: 'farhan_shaikh', total_years_experience: 9, qualification_threshold: 70,
+  primary_skills: JSON.stringify(['GoHighLevel', 'CRM Configuration', 'Workflow Automation', 'API & Webhook Integration', 'Requirements Gathering', 'Product Implementation', 'Technical Delivery', 'Process Design', 'SOP Development', 'Stakeholder Management']),
+  target_roles: JSON.stringify(['Technical Operations Lead', 'Implementation Manager', 'Automation Specialist', 'Technical Delivery Manager', 'Business Systems Lead', 'CRM / Revenue Operations Specialist']) };
+const P2_PLANT = 'Responsible for preventive maintenance and breakdown maintenance of rotating equipment (pumps, compressors, turbines, boilers) at a 660 MW thermal power plant. Root cause analysis, shutdown planning, maintenance planning, reliability improvement, DCS monitoring, contractor supervision and procurement of spares. 8+ years of experience required.';
+const P2_IMPL = 'Implement and configure our CRM for customers, build workflow automation, integrate APIs and webhooks, gather requirements from stakeholders, write SOPs and lead technical delivery of onboarding projects. 5+ years of experience.';
+const p2eval = (who, title, location, description, remote = /remote/i.test(location), company = 'Acme') => evaluate(who, { id: 'x', title, company, url: 'https://e.com/x', location, description, remote });
+/** Where a row lands under the shortlist rule (scripts/dataset_apply.mjs), ignoring the 25-row limits. */
+function p2tier(who, r) {
+  const thr = who.qualification_threshold;
+  if (r.status === 'INELIGIBLE') return 'INELIGIBLE';
+  if (r.status === 'HOLD') return 'HOLD';
+  if (r.score <= 45) return 'HOLD';
+  if (r.score >= thr && r.eligibility === 'ELIGIBLE') return 'READY';
+  if ((r.score >= thr && r.eligibility === 'UNKNOWN') || (r.eligibility === 'ELIGIBLE' && r.score >= thr - 10)) return 'STRETCH';
+  return 'REVIEW';
+}
+
+test('S1: Indian plant towns, states and union territories count as India; a namesake abroad does not', () => {
+  const { sanaIndiaCity, indianPlace } = DISCOVERY;
+  for (const l of ['Jamnagar', 'Vadodara', 'Mundra', 'Raigarh, Chhattisgarh', 'Visakhapatnam, Andhra Pradesh', 'Jharsuguda, Odisha', 'Nagpur, Maharashtra', 'IN-Singrauli',
+    'Kolkata, West Bengal', 'Angul', 'Hosur, Tamil Nadu', 'Dahej, Gujarat', 'Thoothukudi', 'Sri City', 'Chandigarh', 'Puducherry', 'Jamnagar, GJ, IN'])
+    assert.ok(sanaIndiaCity(l) && !foreignLocation(l), l);
+  for (const l of ['Lahore, Punjab, Pakistan', 'Kochi, Japan', 'Hyderabad, Sindh, Pakistan', 'Ruwais, AE', 'Remote', '16 Locations', 'London, UK'])
+    assert.ok(!sanaIndiaCity(l), l);
+  assert.ok(indianPlace('Punjab, India') && !indianPlace('Punjab, Pakistan'));
+  assert.equal(p2tier(P2_SANA, p2eval(P2_SANA, 'Senior Engineer - Mechanical Maintenance', 'Jamnagar', P2_PLANT)), 'READY');
+  assert.equal(p2tier(P2_SANA, p2eval(P2_SANA, 'Maintenance Engineer', 'Vadodara', P2_PLANT)), 'READY');
+  assert.equal(p2eval(P2_SANA, 'Maintenance Engineer', 'Vadodara', P2_PLANT).reason, SANA_INDIA_ONSITE_REASON_P2);
+  // Farhan: a remote role stated in an Indian state is remote from India
+  assert.equal(p2eval(P2_FARHAN, 'Implementation Manager', 'Remote - Gujarat', P2_IMPL).eligibility, 'ELIGIBLE');
 });
