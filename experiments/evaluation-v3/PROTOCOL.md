@@ -9,7 +9,7 @@ Sample: `sample_jobs.py`, seed 20261030, broad public title pools (wider than an
 development and 20 holdout jobs per candidate, distinct posting identities. No implementation output is read
 when sampling or labelling. Holdout labels are used once, after the repair is final.
 
-Labeller: one reviewer (Claude, the same agent that implements the repair) reading each job's dossier
+Labeller: one reviewer (the same agent that implements the repair) reading each job's dossier
 (`dossiers/<candidate>.md`: title, employer, structured locations, workplace field, description length,
 location/remote/authorisation/relocation sentences, mandatory requirement lines, pay lines). This is not an
 independent recruiter review; it is a documented, reproducible label set for comparing implementations.

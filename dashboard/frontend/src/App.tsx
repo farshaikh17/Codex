@@ -34,7 +34,6 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { SourcesView } from './components/SourcesView';
 import { ReadyDashboardView } from './components/ReadyDashboardView';
 import { AutomationDashboardView } from './components/AutomationDashboardView';
-import { GoogleSyncView } from './components/GoogleSyncView';
 import { OperatorOnlyPanel } from './components/OperatorOnlyPanel';
 import { IndiaRemoteView } from './components/IndiaRemoteView';
 import { DashboardOverview } from './components/DashboardOverview';
@@ -531,9 +530,6 @@ export const App: React.FC = () => {
               <AutomationDashboardView onRefreshData={loadData} />
             )}
 
-            {activeTab === 'google-sync' && (isOperator
-              ? <GoogleSyncView />
-              : <OperatorOnlyPanel what="Spreadsheet sync" onUnlock={() => setAuthOpen(true)} />)}
           </>
         )}
       </main>

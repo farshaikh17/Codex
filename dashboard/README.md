@@ -31,7 +31,6 @@ dashboard/
   scripts/       post_deploy_smoke.mjs (public smoke test), fingerprint.mjs (protected-record comparison), ...
   test/          Worker unit tests (SQLite harness), bundle-privacy test, real-browser tests (test/e2e)
   docs/          RELEASE.md, QA_REPORT.md, KNOWN_ISSUES.md, REPOSITORIES.md
-  legacy/        original local Windows scripts, not used
   wrangler.toml  the one Worker named career-job-engine
 ```
 

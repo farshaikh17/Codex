@@ -4,7 +4,7 @@ One page, in the order I would take them. "Recommend" is the QA view only; every
 commit `5832c43`. Changes only reach it when they are merged to `main` and the manual workflow `dashboard-release.yml` is run.
 
 ## A. Getting the work live
-1. **Merge ChatGPT's six draft pull requests (#62 to #67).** They fix: a visa/relocation conflict (#62), the shared D1 budget guard (#64), JobSpy refusal detection (#63),
+1. **Merge the other reviewer's six draft pull requests (#62 to #67).** They fix: a visa/relocation conflict (#62), the shared D1 budget guard (#64), JobSpy refusal detection (#63),
    application-link validation and the import limit (#65), decided-job protection in liveness checks (#66) and distinct jobs with the same employer and title (#67).
    Checked: all six merge cleanly with each other and with the QA branch, and on the combined code every test passes (205 Node, 357 Python). Recommend: review and merge.
 2. **Open a pull request for the QA branch `ccr-31e055c3-e2y6ub`** (about 20 commits: privacy leak, login limiter during outages, client deletion, accessibility, error boundary, adapters,

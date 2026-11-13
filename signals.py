@@ -2,7 +2,7 @@
 
 These are keyword observations about public text, never candidate fit or eligibility: a "strong" title signal
 means the title names concrete delivery/engineering work in a tracked family, nothing more. Private matching,
-effort allocation and decisions stay in the private ChatGPT/Sheet review.
+effort allocation and decisions stay in the private Sheet review.
 """
 import re
 

@@ -30,8 +30,8 @@ The repository is private.
 |---|---|---|
 | Posting store (farshaikh17/Codex#2, unmerged) | Reads `public/` from a checkout | Yes, offline: `ingest_snapshot` against this branch's outputs (scratch scenario) |
 | Repository owner | GitHub UI / git | Yes (owner pushes) |
-| This Claude Code session | Repository-scoped GitHub access | Yes |
-| ChatGPT tasks | Authenticated GitHub connector, per MIGRATION.md | **Not verified.** Nothing in this repository proves a ChatGPT task has read these files. |
+| This coding session | Repository-scoped GitHub access | Yes |
+| Review tasks | Authenticated GitHub connector, per MIGRATION.md | **Not verified.** Nothing in this repository proves a review task has read these files. |
 | Anyone via `raw.githubusercontent.com` without auth | – | **Will not work** for a private repository. Don't rely on it. |
 
 No new external endpoints are created by this work. See [CONSUMER_TEST.md](CONSUMER_TEST.md) for how the original chat can test its access.
