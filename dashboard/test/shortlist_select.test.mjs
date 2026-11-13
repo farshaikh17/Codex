@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { selectInto, exportPool } from './shortlist_helpers.mjs';
-import { selectShortlist, selectionSql, MARK } from '../scripts/shortlist_select.mjs';
+import { selectShortlist, selectionSql, MARK, titleKey, isReposter } from '../scripts/shortlist_select.mjs';
 import { RULES_MARKER, familyOf, placeBand } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -144,10 +144,13 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
   const D = 'Configure the CRM and own workflow automation for our customers. Remote within India. '.repeat(3);
   const pool = [row({ job_id: 'direct', company: 'Acme', title: 'Implementation Lead', location: 'Remote - India', description: D, score: 80 }),
     row({ job_id: 'dup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: D + ' Apply via Jobgether.', score: 90 }),
-    row({ job_id: 'notdup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: 'Another company entirely. ' + D, score: 90 })];
+    row({ job_id: 'notdup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: 'Another company entirely: onboard our SaaS customers and run their implementations from kickoff to go-live. '.repeat(2), score: 90 }),
+    // tenth-man review: the reposter puts its own sentence first and the title says "(Remote)": still the same job
+    row({ job_id: 'dup2', company: 'Jobgether', title: 'Implementation Lead (Remote)', location: 'India', description: 'This position is posted by Jobgether on behalf of a partner company. ' + D, score: 90 })];
   for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', 'Paired'][i], score: 95 }));
   const t = tiers(sel(pool));
   assert.equal(t.dup, undefined, 'the duplicate is dropped');
+  assert.equal(t.dup2, undefined, 'and the one with its own opening sentence and a (Remote) title');
   assert.ok(t.notdup, 'a different posting from the same reposter stays');
   assert.equal(Object.entries(t).filter(([k, v]) => (k.startsWith('rp') || k === 'notdup') && v === 'READY').length, 3, 'three reposter rows in Ready');
   assert.equal(Object.entries(t).filter(([k, v]) => (k.startsWith('rp') || k === 'notdup') && v === 'STRETCH_READY').length, 3, 'the rest overflow to Stretch, three there too');
@@ -262,6 +265,22 @@ test('A7: the report counts rows found more than 30 days ago (they rank 5 lower)
   const res = sel([row({ discovered_at: iso(40), score: 90 }), row({ discovered_at: iso(2), score: 86 })], { tierSize: 1 });
   assert.equal(res.report[C].READY.older_than_30_days, 0, 'the 40-day-old 90 ranks as 85, below the new 86');
   assert.equal(sel([row({ discovered_at: iso(40), score: 92 })]).report[C].READY.older_than_30_days, 1);
+});
+
+test('tenth-man fixes: titles compare without place and work-mode parts; the same title at another plant is another job; reposters by their whole name', () => {
+  assert.equal(titleKey('Solutions Engineer (Remote)'), titleKey('Solutions Engineer'));
+  assert.equal(titleKey('Senior Engineer - Mechanical Maintenance, Jamnagar'), titleKey('Senior Engineer - Mechanical Maintenance'));
+  assert.equal(titleKey('Delivery Manager – Remote, India'), 'delivery manager');
+  assert.notEqual(titleKey('Engineer - Maintenance'), titleKey('Engineer - Reliability'));
+  const pool = [row({ job_id: 'z1', company: 'Zapier', title: 'Solutions Engineer', score: 90 }), row({ job_id: 'z2', company: 'Zapier, Inc.', title: 'Solutions Engineer (Remote)', score: 89 }),
+    row({ job_id: 'a1', company: 'Adani Power', title: 'Electrical Maintenance Engineer', location: 'Udupi, Karnataka, India', workplace: 'ONSITE', score: 83 }),
+    row({ job_id: 'a2', company: 'Adani Power', title: 'Electrical Maintenance Engineer', location: 'Kawai, Rajasthan, India', workplace: 'ONSITE', score: 82 }),
+    row({ job_id: 'a3', company: 'Adani Power', title: 'Electrical Maintenance Engineer', location: 'Udupi, India', workplace: 'ONSITE', score: 81 }),
+    row({ job_id: 'tl', company: 'Turing Labs', title: 'Implementation Engineer', score: 80 })];
+  const t = tiers(sel(pool));
+  assert.equal(t.z1, 'READY'); assert.equal(t.z2, undefined, 'the same Zapier job once');
+  assert.deepEqual([t.a1, t.a2, t.a3], ['READY', 'READY', undefined], 'two plants are two jobs; the same plant twice is one');
+  assert.equal(isReposter({ company: 'Turing Labs' }), false); assert.equal(isReposter({ company: 'Turing' }), true); assert.equal(isReposter({ company: 'Jobgether' }), true);
 });
 
 test('deterministic: the same pool in any order gives the same changes', () => {

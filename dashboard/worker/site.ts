@@ -252,7 +252,7 @@ ${st ? `<section class="stats" aria-label="Live figures"><div class="wrap">
 <div class="grid3">
 <div class="card"><div class="ico">◎</div><h3>Location rules that are checked</h3><p>"Remote" is not taken at face value. A posting counts as eligible only when it says you can work from where you are; when it does not say, it stays "unknown".</p></div>
 <div class="card"><div class="ico">❝</div><h3>Evidence, not guesses</h3><p>Each match shows the sentence from the posting it is based on, so you can judge it in seconds.</p></div>
-<div class="card"><div class="ico">⚑</div><h3>Nothing promoted automatically</h3><p>The engine never marks a role "ready" on its own. A person reviews it first, so your shortlist stays honest.</p></div>
+<div class="card"><div class="ico">⚑</div><h3>Picked by a stated rule</h3><p>A job reaches your best matches only when it scores at your level, its posting says it can hire someone where you live, and it was checked open in the last few days. Your own choices are never changed.</p></div>
 <div class="card"><div class="ico">↻</div><h3>New roles every day</h3><p>Employers' hiring systems are visited on a rolling schedule, so new postings reach your lists within days of going up, not weeks.</p></div>
 <div class="card"><div class="ico">▤</div><h3>Your pipeline in one place</h3><p>Saved, applied, interviewing, offer: your advisor keeps your applications up to date next to your matches.</p></div>
 <div class="card"><div class="ico">⇩</div><h3>Your data, exportable</h3><p>Download your list as a spreadsheet whenever you like. Your dashboard is private to you and anyone you share it with.</p></div>

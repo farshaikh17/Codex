@@ -504,7 +504,8 @@ def shortlist_pool(local=None, per_candidate=300):
             AND s.score_breakdown LIKE '%"{RULES_MARKER}":true%'
             AND (s.skill_score >= 40 OR s.score_breakdown LIKE '%"target_exact":true%') AND {fits}
           ORDER BY s.overall_score DESC, q.job_id LIMIT {int(per_candidate)}""", local)]
-        rows += [{**r, 'kind': 'held'} for r in d1(f"""SELECT q.candidate_id, j.id AS job_id, j.title, j.company, q.qualification_status AS status
+        rows += [{**r, 'kind': 'held'} for r in d1(f"""SELECT q.candidate_id, j.id AS job_id, j.title, j.company, j.location_restrictions AS location, j.workplace_type AS workplace,
+            q.qualification_status AS status
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
           WHERE q.candidate_id = {cid} AND q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')
             AND NOT ({auto} AND {POOL_FREE}) ORDER BY q.job_id""", local)]

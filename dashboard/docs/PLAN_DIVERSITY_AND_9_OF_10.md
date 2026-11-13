@@ -480,6 +480,39 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     Google Cloud", "Program Manager, Health Equity"); the two-skill shortlist rule keeps them off both lists, and the words are her and his search terms.
     "Plant Engineer - Food Processing" still uses the one-skill exception, because "Plant Engineer" is itself one of Sana's target roles. A posting
     asking too many years gets both the 15-point cut and the cap (it still lands in Stretch or To review, which is the intent).
+- phase 3 (a varied shortlist, 13 Nov; PRs #153-#160 and the tenth-man fix PR; no rules-marker bump, because nothing in `evaluate()` or the scores
+  changed):
+  - readings and deviations: A1 says both "after" and "before" the still-open step. The pool is exported before the check, so the check verifies the
+    pool first, and the selector runs after it. It counts the check's result (open means verified now, closed means out) only when the check's write
+    succeeded. The old SQL shortlist in `dataset_apply.mjs` is gone; its low-match Hold step stays and now runs after the selection. The family and band
+    rows of the A4 table shipped with A5 and A6, which define them. Reposting sites are capped only by their own hard cap (3 per tier), not by the
+    employer caps, and are recognised by their whole name. An employer named in the person's skills may have 10 rows across both tiers, because 5 per
+    tier would otherwise break the 4. `unclassified` is not a family and is not capped. A tenant-id employer is not shortlisted until B1 names it
+    (`abb` and `mdlz` excepted; an Oracle employer named like its `oraclecloud.com` host counts, because stored names are title-cased). The soft rules
+    are tried in this order: employer per tier, family, bands, employer on both tiers. A swap must make no other soft rule worse. The A8 audit fails
+    on the employer cap only when the selector ran and did not report that tier's pool as too small or the rule as relaxed. It reads "an automatic row
+    with an override or an application" as "one the daily run changed": a marked row a person later saved is their choice and is counted, not failed.
+    A failed audit turns the run red through the health job, not the `discover` job the guards count.
+  - tenth-man review (the person on a phone), fixed in the same phase:
+    - the same job could show twice. A "(Remote)" or place suffix in the title made a new key, and a reposter's own opening sentence beat the
+      200-character duplicate test. Titles are now compared without those parts, and a repost duplicates a direct row when it contains that row's
+      opening text.
+    - "one posting per employer and title" hid the same title at another plant. An on-site job's city is now part of the key; the employer caps still
+      keep one employer from filling a tier.
+    - the audit went red on a day the selector did not run. It now skips the employer caps without a report, gives one hour of grace at the 4-day
+      boundary, and no longer fails a row the person applied to after the run changed it.
+    - "Turing Labs" counted as a reposter. The audit's header now says what it prints.
+    - the still-open report lists the hosts it could not verify. The public site no longer says "nothing promoted automatically"; that text goes live
+      with the next release.
+  - tenth-man findings left, with the reason:
+    - a card does not say why a job is in "Worth a try" or why it left "Best matches" (the reasons are in the history). Phase 5 rebuilds the card with
+      a one-line "why" (U6, U9); changing the stored reasons now would be redone there.
+    - Gulf jobs from job boards (Bayt, Indeed, LinkedIn) are rarely verified, because those sites refuse the still-open check, so Sana's
+      "5 Gulf in Stretch" is often reported as a shortfall. The 4-day verification is a plan rule; the run now shows which hosts never verify, and D1
+      (phase 6) decides sources by measurement.
+    - "relaxed" is decided across all sites, and many relaxed days in a row would skip the 4-day check every day. Each relaxed day is printed in the
+      run; a streak counter is left for H1/H2.
+    - "Braintrust" the AI company shares its name with the reposting site and stays capped as a reposter.
 
 ---
 
