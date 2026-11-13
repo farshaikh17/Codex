@@ -323,7 +323,13 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const noVisaWords=/\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)/i.test(text);
  // Application-form style answers: 'Visa Sponsorship Available: No', 'Relocation eligible : No' (Black & Veatch, owner review 2026-11-12).
  const noVisaRoute=noVisaWords||/\b(?:visa\s+)?sponsorship(?:\s+(?:available|offered|provided))?\s*[:\-–]\s*no\b/i.test(text);
- const globalRemote=/\bworldwide\W{0,6}remote|\bremote\W{0,6}worldwide|remote.?global|work from anywhere in the world/i.test(text);   // 'Remote - Worldwide' and 'Worldwide (Remote)' as well as 'worldwide remote'
+ const globalRemoteWords=/\bworldwide\W{0,6}remote|\bremote\W{0,6}worldwide|remote.?global|work from anywhere in the world/i.test(text);   // 'Remote - Worldwide' and 'Worldwide (Remote)' as well as 'worldwide remote'
+ // Plan S5: plain worldwide wording in a remote posting's location ('Remote (Global)', 'Anywhere', 'Worldwide', 'Fully remote') is worldwide remote, unless
+ // the location also names a place ('Anywhere in the US', 'Global - EMEA'). For Farhan, 'Remote - APAC' or 'Asia' with no country restriction counts too.
+ const locOnly=p.location||'', placeFree=!foreignLocation(locOnly)&&!usOnlyLocation(locOnly)&&!indianPlace(locOnly);
+ const worldLocation=placeFree&&(remote||/\b(?:anywhere|worldwide)\b/i.test(locOnly))&&/\b(?:anywhere|worldwide|global|fully remote)\b/i.test(locOnly);
+ const asiaLocation=candidate.id==='farhan_shaikh'&&remote&&placeFree&&/\b(?:apac|asia)\b/i.test(locOnly)&&!/\b(?:south[- ]?east|east|central|west(?:ern)?) asia\b/i.test(locOnly);
+ const globalRemote=globalRemoteWords||worldLocation||asiaLocation;
  let eligibility='UNKNOWN',reason='No affirmative candidate-specific location evidence.';
  const prof=parseProfile(candidate.search_profile);
  if(security){eligibility='INELIGIBLE';reason='Explicit citizenship, security clearance or licensing restriction requires exclusion.';}
