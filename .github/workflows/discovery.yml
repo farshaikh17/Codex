@@ -325,6 +325,53 @@ jobs:
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Plan G1: one short message per person to a phone ("Sana: 4 new jobs today · ... · <link>"), also when the run failed ("today's update did
+  # not finish"). Off until the owner adds the repository secret TELEGRAM_BOT_TOKEN (and links chats with telegram-link.yml) or sets the
+  # variable DIGEST_PROVIDER=smtp with its secrets; without them this job only prints that it was skipped. Never fails the run.
+  message:
+    needs: [guard, discover]
+    if: ${{ always() && needs.guard.outputs.skip != 'true' && (needs.discover.result == 'success' || needs.discover.result == 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Is a channel set up?
+        id: channel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DIGEST_PROVIDER: ${{ vars.DIGEST_PROVIDER }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] || [ "$DIGEST_PROVIDER" = "smtp" ]; then echo "on=true" >> "$GITHUB_OUTPUT"
+          else echo "Daily message: skipped - no channel is set up (repository secret TELEGRAM_BOT_TOKEN, or variable DIGEST_PROVIDER=smtp with its secrets). See dashboard/docs/RELEASE.md."; fi
+      - uses: actions/setup-python@v5
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        with:
+          node-version: '22'
+      - name: Send the daily message (two small reads, one small write)
+        if: ${{ steps.channel.outputs.on == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DIGEST_PROVIDER: ${{ vars.DIGEST_PROVIDER }}
+          DIGEST_SMTP_HOST: ${{ vars.DIGEST_SMTP_HOST }}
+          DIGEST_SMTP_PORT: ${{ vars.DIGEST_SMTP_PORT }}
+          DIGEST_SMTP_USER: ${{ secrets.DIGEST_SMTP_USER }}
+          DIGEST_SMTP_PASSWORD: ${{ secrets.DIGEST_SMTP_PASSWORD }}
+          DIGEST_TO: ${{ secrets.DIGEST_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          STATUS: ${{ needs.discover.result }}
+        run: |
+          npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
+          python engine/daily_message.py --send --status "$STATUS"
+
   # A run that went through but did nothing useful (still-open check verified 0 of its targets, every source failed, nothing written from a
   # fresh dataset, or a stale dataset), or whose shortlist audit (plan A8) found a broken hard rule, is shown red here. It is a separate job so the "discover" job stays successful: the recent-run guard and
   # the watchdog count it as the day's run and do not start the whole run again every two hours on a problem a re-run would not fix.

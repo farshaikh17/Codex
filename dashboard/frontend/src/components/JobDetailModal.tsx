@@ -368,7 +368,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <button
                     onClick={() => handleFeedback(job.feedback?.rating === 'THUMBS_UP' || job.feedback?.rating === 'UP' ? 'CLEAR' : 'UP')}
                     disabled={feedbackLoading}
-                    title="Thumbs Up: mark this as a good match. Saved for you; it does not change the ranking."
+                    title="Thumbs Up: a good match. Similar jobs move a little higher."
+                    aria-pressed={job.feedback?.rating === 'THUMBS_UP' || job.feedback?.rating === 'UP'}
                     className={`px-2.5 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
                       job.feedback?.rating === 'THUMBS_UP' || job.feedback?.rating === 'UP'
                         ? 'bg-emerald-100 text-emerald-800 font-bold'
@@ -381,7 +382,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <button
                     onClick={() => handleFeedback(job.feedback?.rating === 'THUMBS_DOWN' || job.feedback?.rating === 'DOWN' ? 'CLEAR' : 'DOWN')}
                     disabled={feedbackLoading}
-                    title="Thumbs Down: mark this as not for you. Saved for you; it does not change the ranking."
+                    title="Thumbs Down: not for me. Hides this job (you can undo it); similar jobs move a little lower."
+                    aria-pressed={job.feedback?.rating === 'THUMBS_DOWN' || job.feedback?.rating === 'DOWN'}
                     className={`px-2.5 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
                       job.feedback?.rating === 'THUMBS_DOWN' || job.feedback?.rating === 'DOWN'
                         ? 'bg-rose-100 text-rose-800 font-bold'
