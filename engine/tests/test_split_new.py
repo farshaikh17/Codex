@@ -1,5 +1,6 @@
 """A new posting is dropped only as an exact duplicate of a stored job: same employer, same title AND same stated location.
 The same role in another city is a different opening and must come through (owner rule of 2026-11-10)."""
+import json
 import unittest
 from unittest import mock
 
@@ -85,15 +86,45 @@ class ManyCities(unittest.TestCase):
     def test_in_the_same_run_one_row_lists_the_cities_and_stops_at_three(self):
         jobs = [jobd(i, 'Acme Foods', 'Maintenance Engineer', f'{c}, India', TEXT.format(city=c)) for i, c in enumerate(['Pune', 'Chennai', 'Hosur', 'Nagpur'])]
         ids, merges, locs = self.run_split([], jobs)
-        self.assertEqual(ids, ['ds:x:0'])
+        self.assertEqual(ids, ['ds:x:0', 'ds:x:3'], 'a fourth city cannot be added, so it is stored as its own row (tenth-man review)')
         self.assertEqual(locs['ds:x:0'], 'Pune, India; Chennai, India; Hosur, India')
-        self.assertEqual(merges['merged'], 3)
+        self.assertEqual(merges['merged'], 2)
 
     def test_idempotent_when_the_city_is_already_listed(self):
         stored = [('s1', 'Acme Foods', 'Maintenance Engineer', 'Pune, India; Chennai, India', 'ONSITE', TEXT.format(city='Pune'))]
         ids, merges, _ = self.run_split(stored, [jobd(1, 'Acme Foods', 'Maintenance Engineer', 'Chennai, India', TEXT.format(city='Chennai'))])
         self.assertEqual(ids, [])
         self.assertEqual(merges['stored'], [], 'nothing to write: the city is already there')
+        self.assertEqual(merges['already_listed'], 1)
+
+    def test_tenth_man_cases(self):
+        # a bare city and a city with a country are not one job ('Berlin' and 'Austin, TX')
+        self.assertFalse(dd.same_job_other_city('Berlin', TEXT.format(city='Berlin'), False, 'Austin, TX', TEXT.format(city='Austin'), False))
+        # a stored row someone applied to (or decided on) is never joined: the posting is stored as its own row
+        guarded = [('s1', 'Acme Foods', 'Maintenance Engineer', 'Pune, India', 'ONSITE', TEXT.format(city='Pune'))]
+        base = fake_d1_b3(guarded)
+        d1 = lambda sql, local=None: [{**r, 'g': 1} for r in base(sql)] if 'substr(description' in sql else base(sql)   # noqa: E731
+        merges = {}
+        with mock.patch.object(dd, 'd1', d1):
+            fresh, _, _ = dd.split_new([jobd(1, 'Acme Foods', 'Maintenance Engineer', 'Chennai, India', TEXT.format(city='Chennai'))], None, merges)
+        self.assertEqual([j['id'] for j in fresh], ['ds:x:1'])
+        self.assertEqual(merges['stored'], [])
+        # a stored row with three places already: the fourth city is stored as its own row
+        full = [('s2', 'Acme Foods', 'Maintenance Engineer', 'Pune, India; Hosur, India; Nagpur, India', 'ONSITE', TEXT.format(city='Pune'))]
+        ids, merges, _ = self.run_split(full, [jobd(2, 'Acme Foods', 'Maintenance Engineer', 'Chennai, India', TEXT.format(city='Chennai'))])
+        self.assertEqual(ids, ['ds:x:2'])
+        # a failure in the check never stops the run: every posting is inserted as before
+        with mock.patch.object(dd, 'd1', fake_d1_b3(guarded)), mock.patch.object(dd, 'merge_cities', side_effect=RuntimeError('boom')):
+            fresh, _, _ = dd.split_new([jobd(3, 'Acme Foods', 'Maintenance Engineer', 'Chennai, India', TEXT.format(city='Chennai'))], None, {})
+        self.assertEqual([j['id'] for j in fresh], ['ds:x:3'])
+
+    def test_stored_tenant_ids_key_as_the_employer(self):
+        stored = [('s1', 'mdlz', 'Maintenance Engineer', 'Baddi, India', 'ONSITE', 'x')]
+        ids, _, _ = self.run_split(stored, [jobd(1, 'Mondelez International', 'Maintenance Engineer', 'Baddi, India', 'y')])
+        self.assertEqual(ids, [], 'the same job stored under the tenant id is a duplicate of the named one')
+        with mock.patch.object(dd, 'd1', lambda sql, local=None: [{'id': 'farhan_shaikh', 'rejected_companies': '[{"company": "mdlz", "on": "2026-11-01"}]'}]):
+            rows = dd.candidates_rows()
+        self.assertEqual(json.loads(rows[0]['rejected_companies'])[0]['company'], 'Mondelez International')
 
 
 if __name__ == '__main__':

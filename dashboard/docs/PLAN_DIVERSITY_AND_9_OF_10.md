@@ -513,6 +513,42 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     - "relaxed" is decided across all sites, and many relaxed days in a row would skip the 4-day check every day. Each relaxed day is printed in the
       run; a streak counter is left for H1/H2.
     - "Braintrust" the AI company shares its name with the reposting site and stays capped as a reposter.
+- phase 4 (names, places and ranking, 13 Nov; PRs #162-#167 and the tenth-man fix PR, which also carries the phase's one rules-marker bump to
+  `profile_v14`):
+  - readings and deviations:
+    - B1: the unknown ids were read from the employers' own career sites: `hdga` Lucy Electric, `egup` Vertiv, `ekkh` Hormel Foods, `fa espx` Cummins,
+      `fa emqh` Kent, plus two more found in the samples (`fa exty` Howmet Aerospace, `fa etqd` Perficient). The import-time lookup reads the career
+      site's page, not a posting page (one stable name per site), at most 40 sites a run, eight at a time, with a deadline. Workday pages carry no
+      employer name, so Workday ids outside the table stay raw (and off the shortlist). The collector sync uses the table too.
+    - B2: the dataset gives Workday's first place in the posting's path, so a count becomes "Berlin; +7 more". The Workday detail gives up to three
+      places and the country. SmartRecruiters already gives one place per posting. A US site list written without commas ("Archbold OH, Troy OH") also
+      counts as abroad (found in the re-score).
+    - B3: "differing only by city" is read as: both remote or both not, the same country named (or both bare cities), and the same text (200+
+      characters) once the places are taken out. A posting whose text differs stays a separate opening (owner rule of 10 Nov). A stored row lists at
+      most three places and is never joined when someone applied to it or decided on it; a posting that cannot be added is stored as its own row.
+    - C1: `configur` also matches "configuration". C2's "unrelated functions" are function groups; operations, ops, engineering and technical go with
+      any function, so O&M titles are never mixed. C3: bonuses stop at 92, the spread is added before the caps, so every phase 2 cap still wins.
+  - tenth-man review (daily machinery), fixed in the same phase:
+    - B3 could join a bare city to a city in another country and drop the posting for good. It could also drop a posting whose city was never added
+      (three places listed, a guarded row, or two inputs on one day), and a joined row kept its old score. Now: same country required; a posting is
+      dropped only when its city really went in, or was already there; the two inputs' cities are combined in one UPDATE; and a joined row loses the
+      rules marker (guarded), so the next run re-scores it at its new places.
+    - Rows the rename leaves on their tenant id (applied to or decided, or stored before migration 0021 is released) are read through the names table
+      for the duplicate test, the repost flag, the "rejected before" note, the taste model and the shortlist pool, so one employer keys once.
+    - The name lookups and the B3 check can no longer stop the run (a failure falls back to the table / to no merge). The lookups have an overall
+      deadline of 60 s, and each page 15 s in all, so a site that trickles bytes cannot hold the step.
+  - low findings left, with the reason:
+    - a career site that does not answer one day leaves that day's new rows on the tenant id ("Egup" one day, "Vertiv" the next). Rare (lookups
+      only for unknown tenant ids), visible, and the shortlist keeps tenant ids off the lists; persisting looked-up names is left for H1/H2.
+    - a merged posting comes back every day and re-reads its stored row's text (one bounded read per such row). The report counts these
+      separately ("already listed") and no longer counts them as merges.
+    - the `profile_v14` bump re-scores at most 1,500 rows per person per run, best first, so the stored lists take a few days to be fully on the
+      phase 4 rules (as at every bump). Rows scored under v13 can outrank re-scored ones for those days.
+    - found while testing C3, not changed: a US location written with the full state name and no code ("Houston, Texas") is not "foreign" for Sana's
+      visa-route cap (`foreignLocation()` reads state codes and countries, not state names). None of the saved samples has such a location.
+      Left for phase 6 (D1 measures sources), to avoid changing the cap mid-phase without measurement.
+    - migration 0021 renames stored rows only at the next release (phase 5's release); until then new rows carry names and old ones ids, read as one
+      employer by the fixes above.
 
 ---
 
