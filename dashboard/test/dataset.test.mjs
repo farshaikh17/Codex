@@ -438,3 +438,34 @@ test('an employer career-site result (Workday, board: false) is stored as the em
   assert.equal(rb.p, 'PUBLIC_FEED_UNVERIFIED'); assert.equal(rb.v, null);
   assert.equal(qual(F, 'js:remoteok:def').es, 'UNKNOWN');
 });
+
+test('S3: a row held as outside the role family comes back to To review when the current rules call it a role match; decided, applied and ineligible rows stay', () => {
+  const w = world(); const db = w.sqlite;
+  const OUT = 'Outside candidate target role family; retained for review.';
+  const D = 'Preventive maintenance and reliability of rotating equipment at a thermal power plant. Electrical maintenance.';
+  const add = (id, title, status, reason, o = {}) => {
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at) VALUES (?,?,?,?,?,1,'Chennai, India',?,'ONSITE','2026-11-01')`).run(id, title, 'Acme', 'lever', 'https://x.example/' + id, D);
+    db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,manual_override_status,eligibility_status) VALUES (?,?,?,?,?,?)`).run(S, id, status, reason, o.override || null, o.elig || 'UNKNOWN');
+    db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES (?,?,35,'{"preliminary":true}')`).run(S, id);
+    if (o.app) db.prepare(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES (?,?,?,'SAVED')`).run('ap' + id, S, id);
+    return { candidate_id: S, job_id: id, cur_score: 35, title, company: 'Acme', location: 'Chennai, India', description: D, workplace_type: 'ONSITE', score_breakdown: '{"preliminary":true}', provenance: 'LIVE_PUBLIC', source_adapter: 'lever' };
+  };
+  const rows = [
+    add('h1', 'Lead Engineer – Rotating Equipment', 'HOLD', OUT),                                  // role match now (S2): back
+    add('h2', 'Lead Engineer – Rotating Equipment', 'HOLD', OUT, { override: 'HOLD' }),           // a person's decision: stays
+    add('h3', 'Lead Engineer – Rotating Equipment', 'HOLD', OUT, { app: true }),                  // applied: stays
+    add('h4', 'Lead Engineer – Rotating Equipment', 'HOLD', OUT, { elig: 'INELIGIBLE' }),         // stored ineligible: stays
+    add('h5', 'Brand Designer', 'HOLD', OUT),                                                      // still outside: stays
+    add('h6', 'Lead Engineer – Rotating Equipment', 'HOLD', 'Held automatically (low match). Cloud discovery match.'),   // held for another reason: not this rule
+  ];
+  const before = db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('h2','h3') ORDER BY job_id`).all();
+  fs.writeFileSync(path.join(w.dir, 'rescore.json'), JSON.stringify(rows));
+  const { sql, report } = run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json'), '--no-shortlist']);
+  db.exec(sql); db.exec(sql);
+  const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE job_id LIKE 'h%'`).all().map((r) => [r.j, r.s]));
+  assert.deepEqual(st, { h1: 'NEEDS_REVIEW', h2: 'HOLD', h3: 'HOLD', h4: 'HOLD', h5: 'HOLD', h6: 'HOLD' });
+  assert.match(db.prepare(`SELECT qualification_reason r FROM candidate_qualifications WHERE job_id='h1'`).get().r, /^Cloud discovery match/);
+  assert.deepEqual(db.prepare(`SELECT previous_status p, new_status n, actor a FROM qualification_history WHERE job_id LIKE 'h%'`).all().map((r) => ({ ...r })), [{ p: 'HOLD', n: 'NEEDS_REVIEW', a: 'discovery' }], 'one history row, not repeated');
+  assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id IN ('h2','h3') ORDER BY job_id`).all(), before, 'decided and applied rows are byte-identical');
+  assert.ok(report.held_role_rechecked >= 1);
+});
