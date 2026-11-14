@@ -1,5 +1,6 @@
 """R5: engine/more_sources.py and engine/remote_boards.py write their output after every source (a step stopped at its time limit keeps what
 it fetched), start no new source after 80% of the step's time budget, and exit non-zero when every source failed. Offline."""
+import contextlib
 import json
 import tempfile
 import unittest
@@ -47,10 +48,13 @@ class PartialWrites(unittest.TestCase):
         def second():
             seen_on_disk.extend(self.raw())
             return iter([])
-        with mock.patch.object(ms, 'workable', lambda q: one('workable')()), mock.patch.object(ms, 'eightfold', second), \
-                mock.patch.object(ms, 'siemens_energy', lambda: iter([])), mock.patch.object(ms, 'successfactors', lambda: iter([])), \
-                mock.patch.object(ms, 'smartrecruiters', lambda: iter([])), mock.patch.object(ms, 'workday', lambda: iter([])), \
-                mock.patch.object(ms, 'oracle_hcm', lambda: iter([])), mock.patch('sys.argv', self.argv + ['--fast']):
+        quiet = [n for n in ('siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards') if hasattr(ms, n)]
+        with contextlib.ExitStack() as stack:   # every other --fast source returns nothing (no network in tests)
+            for n in quiet:
+                stack.enter_context(mock.patch.object(ms, n, lambda: iter([])))
+            stack.enter_context(mock.patch.object(ms, 'workable', lambda q: one('workable')()))
+            stack.enter_context(mock.patch.object(ms, 'eightfold', second))
+            stack.enter_context(mock.patch('sys.argv', self.argv + ['--fast']))
             self.assertEqual(ms.main(), 0)
         self.assertEqual(seen_on_disk, ['workable'])
 
