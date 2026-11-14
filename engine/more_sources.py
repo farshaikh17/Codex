@@ -105,7 +105,8 @@ WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd
 # 14 Nov: Bosch and Vattenfall left the list: their SmartRecruiters career pages now forward to their own sites (jobs.bosch.com,
 # careers.vattenfall.com), and the SmartRecruiters API that still served them is disallowed by robots.txt.
 SMARTRECRUITERS = [('Masdar', 'Masdar'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1'),
-                   ('Continental', 'Continental')]   # added 2026-11-12, live that day (large India plants)
+                   ('Continental', 'Continental'),   # added 2026-11-12, live that day (large India plants)
+                   ('Sulzer', 'Sulzer')]   # 14 Nov (owner: any country): pumps and turbine service worldwide, its career page answers
 # Oracle Recruiting Cloud public candidate-experience REST (no key). (display name, host, site number); answered on a live read.
 # Options: terms (keywords searched, '' = the whole list), facet (an extra finder filter such as a location id), pages (25 rows each),
 # gulf (keep only postings placed in the Gulf).
