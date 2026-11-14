@@ -83,10 +83,11 @@ class FacilitiesTitles(unittest.TestCase):
         self.assertNotIn('farhan_shaikh', ms.title_candidates('Shift Engineer', RULES))
 
     def test_search_terms_include_them(self):
-        for term in ('shift engineer', 'chief engineer', 'facility manager technical', 'MEP engineer'):
-            self.assertIn(term, ms.QUERIES['sana_ansari'])
         jll = next(c for c in ms.WORKDAY if c[0] == 'JLL')
-        self.assertIn('shift engineer', jll[4]['terms'])
+        for term in ms.FM_TERMS:
+            self.assertIn(term, jll[4]['terms'])
+        for term in ('Shift Engineer', 'Chief Engineer', 'Facility Manager Engineering', 'Technical Supervisor', 'MEP Engineer'):
+            self.assertIn('sana_ansari', ms.title_candidates(term, RULES), term)
 
 
 if __name__ == '__main__':
