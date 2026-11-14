@@ -47,7 +47,7 @@ Disallow: /job-search
 User-Agent: Turnitin
 Disallow: /
 """
-NAUKRI_STYLE = """User-agent: ClaudeBot
+NAUKRI_STYLE = """User-agent: ExampleBot
 Disallow: /
 
 User-agent: *
@@ -88,7 +88,7 @@ class Robots(unittest.TestCase):
         self.assertFalse(self.ok(SMARTRECRUITERS_API, '/v1/companies/Masdar/postings'), 'only LinkedInBot is allowed')
         self.assertTrue(self.ok(SMARTRECRUITERS_API, '/v1/companies/Masdar/postings', 'LinkedInBot'))
         self.assertTrue(self.ok(NAUKRI_STYLE, '/jobapi/v3/search'), 'the * group applies to our own agent name')
-        self.assertFalse(self.ok(NAUKRI_STYLE, '/jobapi/v3/search', 'ClaudeBot'))
+        self.assertFalse(self.ok(NAUKRI_STYLE, '/jobapi/v3/search', 'ExampleBot'))
 
     def test_longest_rule_wins_and_allow_on_tie(self):
         self.assertTrue(self.ok(FOURDAYWEEK, '/api/v2/jobs?work_arrangement=remote&country=India'), '"Allow: /api/v2" is longer than "Disallow: /api/"')
