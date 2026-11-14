@@ -197,6 +197,48 @@ first page in her role rule), `energy manager` (18), `plant engineer` (13), `O&M
 **Run log.** The shortlist report now counts, per person, the pool rows (`pool_sources`) and each tier's rows (`sources`) per source;
 the run row and `/api/discovery/daily` carry it.
 
+### Compliance, 14 Nov 2026 (robots.txt at run time)
+
+Every reader now asks `engine/robots.py` before each request: the host's robots.txt is read once a run with the engine's own
+User-Agent (`career-job-engine/1.0`), `*` and `$` are honoured, the longest rule wins, a 429/5xx/unreachable robots.txt means "do not
+read this host this run", a 4xx (no robots.txt) means allowed, a redirect is checked against the robots.txt of where it leads, and
+requests to one host are spaced by 0.6-1 s or the host's `Crawl-delay`. A refused source is reported as
+`robots.txt disallows ...` in `more_sources_report.json` / `boards_report.json`; each source's report also gives its `requests`.
+
+| Source | Before | Now | Measured 14 Nov (one polite read) |
+|---|---|---|---|
+| SuccessFactors (ENGIE, ACWA, Tata Power, EGA, Black & Veatch, Doosan, Tata Motors) | `/services/rss/job/` x 6 terms (disallowed: `Disallow: /services/`) | `/search/` result pages, newest first (allowed); a site with another page template is read from `/sitemap.xml` plus the job pages whose address names a role; descriptions from the `/job/` page | 112 read, 56 kept, 76 requests. Sana: 54 kept, 22 at 60+ (11 ELIGIBLE at 60+, all ReNew wind and solar O&M); ACWA 36 kept (Gulf, eligibility unknown until a visa route is stated). ENGIE, EGA, Black & Veatch and Tata Motors answered 404 on `/search/` (their sites showed "site maintenance" on 13-14 Nov: re-measure). Farhan: 0 |
+| ReNew (new, SuccessFactors) | not read | sitemap + role job pages | 20 kept for Sana, 14 at 60+, 11 ELIGIBLE at 60+ (e.g. "Senior Engineer - Wind O & M" 94, "Engineer - Wind O & M" 91) |
+| SmartRecruiters (Masdar, AFRY, Statkraft, Continental) | postings API (disallowed: `api.smartrecruiters.com` allows only LinkedInBot) | the employer's public career page `careers.smartrecruiters.com/<id>` and its "more" pages; descriptions from the posting page | 353 read, 35 kept (AFRY 29, Masdar 3, Continental 3), 66 requests; Sana 27 kept, 0 at 60+ with a list-only description. Bosch and Vattenfall left the list: their career pages forward to their own sites |
+| Getro (collections 628, 1198) | public search API | **dropped**: `api.getro.com` disallows everything | cost: about 3 kept rows a day (13 Nov) |
+| Remotive (Worker, 2 searches) | `/api/remote-jobs?search=` | **dropped** (migration 0024 switches its two sources off): robots.txt disallows `/api/*` and `/*search=` | cost: 2 x 10 rows a day, none in either person's lists on 13 Nov |
+| Naukri (JobSpy) | 5 India searches | **dropped**: its terms forbid automated access and its robots.txt blocks AI agents | cost: 12 kept rows on 13 Nov (none with a description) |
+| Jobspresso | `/feed/?post_type=job_listing` (disallowed: `Disallow: /*?`) | `/jobs/feed/` (allowed, same 20 newest jobs) | no loss |
+| Adzuna (free keys) | read when the keys are set | `api.adzuna.com` disallows every agent, so it is read only when the keys are set **and** the owner sets the repository variable `ADZUNA_API_TERMS_ACCEPTED=true` (the keyed API's own terms then govern) | 0 today (no keys) |
+| Indeed, LinkedIn, Glassdoor, Google (JobSpy) | searched | still searched; the job-site report now says per site whether robots.txt allows the address JobSpy reads (14 Nov: all four disallow). Skipping them is a separate owner decision (its own pull request) | - |
+### New employer sources, 14 Nov 2026 (Sana; measured with one polite read and scored with the repo's `evaluate()`)
+
+"Right" = scored 60 or more and not ineligible (Sana's Gulf rows stay "eligibility unknown" until a visa route is stated); the
+ELIGIBLE count is given too. Requests are per daily run (the watchlist reads the same employer sites three times a day).
+
+| Source | Reader | Read / kept / requests | Sana: kept, right (60+), ELIGIBLE 60+ | Farhan |
+|---|---|---|---|---|
+| Schneider Electric (India, UAE, Saudi) | `jibe()`: `careers.se.com/api/jobs` (robots.txt allows; its 5 s Crawl-delay is kept) | 667 / 48 / 9 | 32 kept, 2 right, 2 ELIGIBLE ("Sr. Manager - Product Management - Solar Inverters" 66, "Deputy Manager - Switchgear Training Centre" 61) | 17 kept, 0 eligible (office roles) |
+| Cummins India (Oracle `cx_1007`, India filter) | `oracle_hcm()` entry, no keyword, location filter | part of 305 / 25 / 42 below | 5 kept, 2 right ("Maintenance Manager, Pune" 92, "Maintenance Engineer, Ranjangaon" 82) | 4 kept, 0 |
+| Apraava Energy (Oracle `CX_1`) | `oracle_hcm()` entry | (same read) | 7 kept, 3 right ("Assistant Manager - HSSE (Renewables)" 74, "Assistant Manager - Operations (Renewables)" 61) | 0 |
+| Transguard Group (Oracle `CX_2`) | `oracle_hcm()` entry | (same read) | 0 kept today (its facilities titles name no engineering/technical side) | 0 |
+| Wood in the Gulf (Oracle, by place) | `oracle_hcm()` entry, Gulf places only | (same read) | 9 kept, 0 at 60+ today (project and PMC roles) | 0 |
+| KBR in the Gulf (Workday, by place) | `workday()` entry, Gulf places only | not measured: `kbr.wd5.myworkdayjobs.com/robots.txt` answered 521 (server error) at both tries, so the robots rule skipped KBR for that run | - | - |
+| JLL (Workday `jllcareers`, facilities-engineering terms) | `workday()` entry | 266 / 50 / 68 | 44 kept, 8 right, 7 ELIGIBLE ("Shift Engineer" Mumbai 78, Bengaluru 77, Gurugram 74; "Senior Shift In-charge" Hyderabad 77) | 6 kept, 0 |
+| Sulzer (SmartRecruiters career page) | `smartrecruiters()` entry | measured below | | |
+
+**Facilities-engineering titles (owner default: yes).** `FM_ROLE` in `engine/more_sources.py` accepts Shift Engineer / Shift In-charge,
+Chief Engineer, Facility Manager - Engineering / Technical, Facilities Engineer, Technical Supervisor and MEP Engineer / Manager for Sana at
+the source, and `FM_EXCLUDE` keeps office, admin, workplace, housekeeping, soft-services, security, coordinator, software and design roles
+out (`test_employer_sources.py`). They are searched on JLL's board only: the Worker's role rule (`discovery.ts`, test S2) does not name
+"chief engineer" or "technical supervisor" yet, so they are not Workable search terms. CBRE is not read: `careers.cbre.com` is behind a
+bot challenge, and its Avature feed ignores filters (India share unmeasured).
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.
