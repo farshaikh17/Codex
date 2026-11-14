@@ -230,7 +230,11 @@ ELIGIBLE count is given too. Requests are per daily run (the watchlist reads the
 | Wood in the Gulf (Oracle, by place) | `oracle_hcm()` entry, Gulf places only | (same read) | 9 kept, 0 at 60+ today (project and PMC roles) | 0 |
 | KBR in the Gulf (Workday, by place) | `workday()` entry, Gulf places only | not measured: `kbr.wd5.myworkdayjobs.com/robots.txt` answered 521 (server error) at both tries, so the robots rule skipped KBR for that run | - | - |
 | JLL (Workday `jllcareers`, facilities-engineering terms) | `workday()` entry | 266 / 50 / 68 | 44 kept, 8 right, 7 ELIGIBLE ("Shift Engineer" Mumbai 78, Bengaluru 77, Gurugram 74; "Senior Shift In-charge" Hyderabad 77) | 6 kept, 0 |
-| Sulzer (SmartRecruiters career page) | `smartrecruiters()` entry | measured below | | |
+
+**Worldwide energy employers probed for the owner's "any country" rule (14 Nov):** Sulzer's SmartRecruiters page lists no postings;
+Wärtsilä's and Veolia's forward to their own sites (`jobs.smartrecruiters.com`, `jobs.veolia.com`); Enel's Avature feed answers empty;
+Ørsted's Workday tenant refused the guessed site name; Iberdrola's careers host did not answer. None added. Already read: ENGIE,
+Siemens Energy, GE Vernova, Statkraft, Vattenfall (dataset), AFRY, Masdar, EURES (EU-wide) and Arbeitnow (visa-sponsored, Germany).
 
 **Facilities-engineering titles (owner default: yes).** `FM_ROLE` in `engine/more_sources.py` accepts Shift Engineer / Shift In-charge,
 Chief Engineer, Facility Manager - Engineering / Technical, Facilities Engineer, Technical Supervisor and MEP Engineer / Manager for Sana at
