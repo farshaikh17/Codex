@@ -1,4 +1,5 @@
 // Public, keyless sources. Preserve their attribution and polling requirements.
+// Remotive: not read since 14 Nov 2026 (robots.txt disallows /api/* and /*search=); migration 0024 switches its source rows off.
 export const isBroad = (kind:string) => ['jobicy','remotive','hnjobs'].includes(kind);
 export function broadURL(s:any,detail?:string) {
  if(s.kind==='jobicy')return `https://jobicy.com/api/jobs?count=10${s.cursor_token?'&cursor='+encodeURIComponent(s.cursor_token):''}`;

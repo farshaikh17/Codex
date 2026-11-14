@@ -25,6 +25,7 @@ migrations = [
     '0020_farhan_drop_marketing_stretch.sql',
     '0021_company_display_names.sql',
     '0022_history_client.sql',
+    '0024_drop_remotive_source.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:

@@ -2,25 +2,32 @@
 
 Each source is read through a public endpoint its own site uses (no login, no key). The reads are polite: one run a day,
 a pause between requests, and bounded pages. Postings are kept only when the title matches a candidate's own role rule.
-Results merge into work/jobsite_raw.json. Aggregators (Workable, Arbeitnow, Getro, UN Careers, EURES, Adzuna) are job-board reports
+Results merge into work/jobsite_raw.json. Aggregators (Workable, Arbeitnow, UN Careers, EURES, Adzuna) are job-board reports
 (the screen never takes eligibility from them). Employer career sites (EMPLOYER_SITES: Workday, Oracle, SuccessFactors, SmartRecruiters,
 Siemens Energy, Eightfold) carry board=False: stored verified, with normal eligibility and provenance LIVE_PUBLIC.
 
   * Workable job search      jobs.workable.com/api/v1/jobs: every Workable employer (not in the open dataset)
   * Eightfold career sites   Fluor, NEOM, TAQA (energy and Gulf employers not in the open dataset)
   * Siemens Energy (Avature) the public jobs RSS feed
-  * SuccessFactors RSS       ENGIE, ACWA Power, Tata Power (employer-branded sites)
+  * SuccessFactors           ENGIE, ACWA Power, Tata Power, ReNew and others: the /search/ result pages or the sitemap plus job pages
+                             (robots.txt disallows the /services/ RSS feed read before 14 Nov)
   * Arbeitnow                the public job-board API, visa-sponsorship jobs (terms: link back; every job links to Arbeitnow)
-  * Getro VC networks        public collection search (startup and climate-fund portfolio jobs)
   * UN Careers               the public openings list (consultancies are often home-based)
   * EURES                    the EU job-mobility portal's public search (about 2 million EU vacancies), English titles where given
-  * Adzuna                   only when the free ADZUNA_APP_ID / ADZUNA_APP_KEY secrets are set (India, UK, Germany, Netherlands)
+  * Adzuna                   only when the free ADZUNA_APP_ID / ADZUNA_APP_KEY secrets are set AND the owner accepted the API terms
+                             (ADZUNA_API_TERMS_ACCEPTED=true), because api.adzuna.com's robots.txt disallows every agent
+
+Every request first passes engine/robots.py: the host's robots.txt (read once a run) must allow the path, and requests to one host
+are spaced by PAUSE or the host's Crawl-delay. A refused source is reported with the reason; it never fails the run.
+Not read for compliance (14 Nov): the SuccessFactors RSS (/services/ disallowed), Getro (api.getro.com disallows everything) and the
+SmartRecruiters postings API (api.smartrecruiters.com disallows every agent but LinkedIn's; the public career pages are read instead).
 
 Runs WITHOUT database credentials. One failing source is skipped, never fatal.
 Usage: python engine/more_sources.py --profiles work/profiles.json --out work/ [--days 30]
 """
 import argparse
 import hashlib
+import html
 import json
 import os
 import re
@@ -31,10 +38,12 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
 from engine.multi_place import from_count, places_text  # noqa: E402
+from engine import robots  # noqa: E402
 from engine.remote_boards import UA, all_errored, job, over_budget, text, when, write_json  # noqa: E402
 
 PAUSE = 0.6
@@ -53,11 +62,14 @@ QUERIES = {
                     'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer'],
 }
 EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom.com', 'neom.com'), ('TAQA', 'careers.taqa.com', 'taqa.com')]
-SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com'), ('ACWA Power', 'careers.acwapower.com'), ('Tata Power', 'careers.tatapower.com'),
-                  ('Emirates Global Aluminium', 'careers.ega.ae'), ('Black & Veatch', 'careers.bv.com'),
+# (display name, host, options): iso=True maps a trailing two-letter country ("Riyadh, SA") to its name on sites outside the US.
+SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com', {}), ('ACWA Power', 'careers.acwapower.com', {'iso': True}), ('Tata Power', 'careers.tatapower.com', {'iso': True}),
+                  ('Emirates Global Aluminium', 'careers.ega.ae', {'iso': True}), ('Black & Veatch', 'careers.bv.com', {}),
                   # jobs.doosan.com serves the whole Doosan group; Bobcat (vehicles) postings are skipped, Enerbility / Skoda Power / Fuel Cell are kept
-                  ('Doosan', 'jobs.doosan.com', '/bobcat/'),
-                  ('Tata Motors', 'careers.tatamotors.com')]   # added 2026-11-12, live that day (India plants)
+                  ('Doosan', 'jobs.doosan.com', {'skip': ('/bobcat/', 'Bobcat')}),
+                  ('Tata Motors', 'careers.tatamotors.com', {'iso': True}),   # added 2026-11-12, live that day (India plants)
+                  # 14 Nov: ReNew (wind and solar O&M in India); its /search/ page has another template, so it is read from its sitemap
+                  ('ReNew', 'careers.renew.com', {'iso': True})]
 # Workday public career-site JSON (no key). (display name, tenant, data-centre prefix, site id); all three answered on a live read.
 WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi'),
            # Added 2026-11-12 (Sana: plant, utilities and energy employers with large India and Gulf operations); each answered a live read that day.
@@ -81,17 +93,32 @@ ADZUNA = {'sana_ansari': [('in', 'maintenance engineer'), ('in', 'power plant'),
           'farhan_shaikh': [('in', 'revenue operations'), ('gb', 'remote implementation manager'), ('in', 'crm automation')]}
 
 
-def http(url, data=None, headers=None, timeout=40):
+REQUESTS = [0]   # requests sent this run (robots.txt reads not counted); the report gives each source its share
+_LAST = {}       # host -> monotonic time of its last request
+
+
+def http(url, data=None, headers=None, timeout=40, robots_ok=False):
+    """One polite request: robots.txt must allow the URL (engine/robots.py, read once per host per run), and requests to one host
+    are at least PAUSE seconds apart, or the host's Crawl-delay when robots.txt sets a longer one. robots_ok=True only for a keyed API
+    whose own terms the owner accepted in writing (Adzuna)."""
+    if not robots_ok:
+        robots.check(url)
+    host = urlsplit(url).netloc
+    wait = max(PAUSE, robots.crawl_delay(url)) - (time.monotonic() - _LAST.get(host, -1e9))
+    if wait > 0:
+        time.sleep(wait)
     h = {'User-Agent': UA, 'Accept': 'application/json, application/rss+xml, */*'}
     h.update(headers or {})
     body = json.dumps(data).encode() if data is not None else None
     if body is not None:
         h['Content-Type'] = 'application/json'
     req = urllib.request.Request(url, data=body, headers=h, method='POST' if body is not None else 'GET')
-    with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https hosts above)
-        out = r.read(12_000_000)
-    time.sleep(PAUSE)
-    return out
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https hosts above)
+            return r.read(12_000_000)
+    finally:
+        _LAST[host] = time.monotonic()
+        REQUESTS[0] += 1
 
 
 def workable(queries):
@@ -190,21 +217,126 @@ def siemens_energy(pages=60):
             break
 
 
+# Compliance (14 Nov): SuccessFactors career sites disallow /services/ (the RSS feed this reader used) in robots.txt. They allow the
+# /search/ result pages and the /job/ pages, so the list is read from /search/ (newest first, about 10-25 rows a page) and, where a site's
+# search page has another template, from /sitemap.xml plus the job pages whose address matches a role rule (ReNew).
+SF_SEARCH_PAGES = 12          # at most 12 result pages a site (120-300 newest postings)
+SF_SITEMAP_PAGES = 40         # at most 40 job pages a site from its sitemap (only those whose address names a role)
+SF_ROLE_FILTER = []           # (role, exclude) regexes from the profiles, set by main(); empty: every sitemap job page is read
+SF_ISO = {'SA': 'Saudi Arabia', 'AE': 'United Arab Emirates', 'QA': 'Qatar', 'OM': 'Oman', 'KW': 'Kuwait', 'BH': 'Bahrain', 'IN': 'India',
+          'EG': 'Egypt', 'MA': 'Morocco', 'ZA': 'South Africa', 'UZ': 'Uzbekistan', 'AZ': 'Azerbaijan', 'CN': 'China', 'ID': 'Indonesia'}
+_ROW = re.compile(r'<tr class="data-row.*?</tr>', re.S)
+_SPAN = lambda cls: re.compile(r'<span class="' + cls + r'">(.*?)</span>', re.S)   # noqa: E731
+_TITLE_LINK = re.compile(r'<a href="(/job/[^"]+)" class="jobTitle-link">(.*?)</a>', re.S)
+
+
+def sf_place(loc, iso):
+    """'Riyadh, SA' -> 'Riyadh, Saudi Arabia' on sites outside the US (iso=True), so a two-letter country is not read as a US state."""
+    loc = text(loc)
+    m = re.match(r'^(.*?)(?:,\s*)?\b([A-Z]{2})(?:,\s*\d{4,6})?$', loc) if iso else None
+    if m and m.group(2) in SF_ISO:
+        return ', '.join(x for x in (m.group(1).strip(' ,'), SF_ISO[m.group(2)]) if x)
+    return loc
+
+
+def sf_search_rows(html_text):
+    """(path, title, location, date) for each result row of a SuccessFactors /search/ page."""
+    for row in _ROW.findall(html_text):
+        m = _TITLE_LINK.search(row)
+        if not m:
+            continue
+        loc = _SPAN('jobLocation').findall(row)
+        date = _SPAN('jobDate').findall(row)
+        yield m.group(1), text(m.group(2)), text(loc[-1]) if loc else '', text(date[-1]) if date else ''
+
+
+def sf_date(value):
+    v = text(value)
+    for fmt in ('%b %d, %Y', '%a %b %d %H:%M:%S UTC %Y', '%d %b %Y', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(v, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    return when(v)
+
+
+def sf_job_page(html_text):
+    """Title, location, description and posting date from a SuccessFactors /job/ page (schema.org JobPosting microdata)."""
+    def meta(prop):
+        m = re.search(r'<meta itemprop="' + prop + r'" content="([^"]*)"', html_text)
+        return text(m.group(1)) if m else ''
+    t = re.search(r'itemprop="title"[^>]*>(.*?)</', html_text, re.S)
+    d = re.search(r'itemprop="description"[^>]*>(.*?)(?:<div class="clear|<footer|<script|$)', html_text, re.S)
+    country = meta('addressCountry')
+    place = ', '.join(x for x in (meta('addressLocality'), SF_ISO.get(country, country)) if x)
+    return {'title': text(t.group(1)) if t else '', 'location': place, 'description': text(d.group(1))[:8000] if d else '',
+            'posted': sf_date(meta('datePosted'))}
+
+
+def sf_slug_wanted(url):
+    """A sitemap job address names the role ("/job/Kolind-ka-Bas-Senior-Engineer-Wind-O-&-M-KA/61209744/"): only those matching a role rule are read."""
+    m = re.search(r'/job/([^/]+)/', url)
+    slug = urllib.parse.unquote(m.group(1) if m else url).replace('-', ' ').replace('_', ' ').lower()
+    return not SF_ROLE_FILTER or any(role.search(slug) and not (excl and excl.search(slug)) for role, excl in SF_ROLE_FILTER)
+
+
+def sf_site(company, host, skip=(), iso=False):
+    seen, step = set(), None
+    for page in range(SF_SEARCH_PAGES):
+        raw = http(f'https://{host}/search/?q=&sortColumn=referencedate&sortDirection=desc&startrow={page * (step or 0)}',
+                   headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
+        rows = list(sf_search_rows(raw))
+        if page == 0 and not rows:   # another page template: read the sitemap instead
+            yield from sf_sitemap(company, host, skip, iso)
+            return
+        step = step or len(rows)
+        fresh = 0
+        for path, title, loc, date in rows:
+            url = f'https://{host}{path}'
+            if url in seen or any(x in path for x in skip):
+                continue
+            seen.add(url)
+            fresh += 1
+            m = re.match(r'^(.*?)\s*\(([^()]*)\)\s*$', title)   # "Role (SA)": the place is in the title on some sites
+            if m and not loc:
+                title, loc = m.group(1), m.group(2)
+            j = job('successfactors', url, title, company, sf_place(loc, iso) or 'See posting', '', sf_date(date), board=False)
+            j['is_remote'] = 'remote' in (loc or '').lower()
+            yield j
+        if not fresh or len(rows) < step:
+            break
+
+
+def sf_sitemap(company, host, skip=(), iso=False):
+    raw = http(f'https://{host}/sitemap.xml', headers={'Accept': 'application/xml'}).decode('utf-8', 'replace')
+    urls = [html.unescape(u).strip() for u in re.findall(r'<loc>([^<]+)</loc>', raw)]
+    urls = [u for u in dict.fromkeys(urls) if '/job/' in u and not any(x in u for x in skip) and sf_slug_wanted(u)]
+    for url in urls[:SF_SITEMAP_PAGES]:
+        try:
+            p = sf_job_page(http(url, headers={'Accept': 'text/html'}).decode('utf-8', 'replace'))
+        except robots.RobotsDisallowed:
+            raise
+        except Exception as e:   # one job page down never loses the others
+            print(f'successfactors {company}: a job page failed ({type(e).__name__})', file=sys.stderr)
+            continue
+        if not p['title']:
+            continue
+        j = job('successfactors', url, p['title'], company, p['location'] or 'See posting', p['description'], p['posted'], board=False)
+        j['is_remote'] = False
+        j['_full_text'] = True
+        yield j
+
+
 def successfactors():
-    for company, host, *skip in SUCCESSFACTORS:
-        for term in SF_TERMS:
-            raw = http(f'https://{host}/services/rss/job/?locale=en_US&keywords={urllib.parse.quote(term)}')
-            for it in rss_items(raw):
-                if any(x in (it.findtext('link') or '') for x in skip):
-                    continue
-                title = text(it.findtext('title'))
-                if title.lower().startswith('no jobs currently available'):   # the portal's empty-result placeholder
-                    continue
-                m = re.match(r'^(.*?)\s*\(([^()]*)\)\s*$', title)   # "Role (City, CC, zip)"
-                j = job('successfactors', (it.findtext('link') or '').strip(), m.group(1) if m else title, company, m.group(2) if m else '',
-                        text(it.findtext('description')), when(it.findtext('pubDate')), board=False)
-                j['is_remote'] = False
-                yield j
+    failed = 0
+    for company, host, *opts in SUCCESSFACTORS:
+        o = opts[0] if opts else {}
+        try:
+            yield from sf_site(company, host, o.get('skip', ()), o.get('iso', False))
+        except Exception as e:   # one employer's site down (or its robots.txt refusing) never loses the others
+            failed += 1
+            print(f'successfactors {company}: {type(e).__name__}: {str(e)[:100]}', file=sys.stderr)
+    _all_failed('successfactors', failed, len(SUCCESSFACTORS))
 
 
 def workday(pages=3):
@@ -238,30 +370,62 @@ def workday(pages=3):
     _all_failed('workday', failed, len(WORKDAY))
 
 
-def smartrecruiters(pages=10):
-    """Open postings of a few energy employers from SmartRecruiters' public API; the title filter in main() keeps the relevant ones.
-    The list answer carries no job text, so the description is the function / industry / location labels only."""
+# Compliance (14 Nov): api.smartrecruiters.com disallows every agent but LinkedIn's in robots.txt, so the postings API is no longer read.
+# The employer's public career page (careers.smartrecruiters.com/<company>, whose robots.txt allows it) lists the same postings grouped by
+# place; a group's further postings and further groups come from the page's own "more" links. The posting page (jobs.smartrecruiters.com,
+# no robots.txt) gives the description.
+SR_PAGES = 8          # group pages and "more" pages per employer
+_SR_GROUP = re.compile(r'<section data-qty="(\d+)"(.*?)</section>', re.S)
+_SR_JOB = re.compile(r'<a href="(https://jobs\.smartrecruiters\.com/[^"/]+/(\d+)[^"]*)"[^>]*class="[^"]*js-job-ad-link[^"]*">\s*<h4[^>]*>(.*?)</h4>', re.S)
+_SR_MORE = re.compile(r'<a data-page="(\d+)" data-value="([^"]*)" data-type="([^"]*)" data-more="([^"]*)"')
+
+
+def sr_groups(page_html):
+    """(place, posting count, [(url, id, title)], more-link or None) for each place group of a SmartRecruiters career page."""
+    for m in _SR_GROUP.finditer(page_html):
+        body = m.group(2)
+        place = re.search(r'opening-title[^>]*>([^<]*)<', body)
+        more = _SR_MORE.search(body)
+        yield (text(place.group(1)) if place else '', int(m.group(1)), [(u, i, text(t)) for u, i, t in _SR_JOB.findall(body)],
+               (more.group(4), more.group(3), more.group(2)) if more else None)
+
+
+def smartrecruiters():
     failed = 0
     for company, ident in SMARTRECRUITERS:
         try:
-            for page in range(pages):
-                d = json.loads(http(f'https://api.smartrecruiters.com/v1/companies/{urllib.parse.quote(ident)}/postings?limit=100&offset={page * 100}'))
-                rows = d.get('content') or []
-                for r in rows:
-                    loc = r.get('location') or {}
-                    place = loc.get('fullLocation') or ', '.join(x for x in (loc.get('city'), (loc.get('country') or '').upper()) if x) or 'See posting'
-                    remote = bool(loc.get('remote'))
-                    labels = ' '.join(text((r.get(k) or {}).get('label')) for k in ('function', 'industry', 'typeOfEmployment', 'experienceLevel'))
-                    j = job('smartrecruiters', f"https://jobs.smartrecruiters.com/{ident}/{r.get('id')}", text(r.get('name')), company,
-                            f'Remote ({place})' if remote else place, labels, when(r.get('releasedDate')), board=False)
-                    j['is_remote'] = remote
-                    yield j
-                if len(rows) < 100:
-                    break
+            yield from smartrecruiters_site(company, ident)
         except Exception as e:   # one employer down never loses the others
             failed += 1
             print(f'smartrecruiters {company}: {type(e).__name__}', file=sys.stderr)
     _all_failed('smartrecruiters', failed, len(SMARTRECRUITERS))
+
+
+def smartrecruiters_site(company, ident):
+    base = f'https://careers.smartrecruiters.com/{urllib.parse.quote(ident)}'
+    get = lambda url: http(url, headers={'Accept': 'text/html'}).decode('utf-8', 'replace')   # noqa: E731
+    first = get(base)
+    m = re.search(r'data-groups-pages="(\d+)"', first)
+    pages = [first] + [get(f'{base}/api/groups?page={n}') for n in range(1, min(int(m.group(1)) if m else 1, SR_PAGES))]
+    seen, budget = set(), SR_PAGES
+    for page in pages:
+        for place, qty, jobs, more in sr_groups(page):
+            n = 1
+            while more and len(jobs) < qty and budget > 0:   # the group shows its first postings; the rest come from its "more" link
+                budget -= 1
+                extra = _SR_JOB.findall(get(f"https://careers.smartrecruiters.com{more[0]}?type={more[1]}&value={more[2]}&page={n}"))
+                if not extra:
+                    break
+                jobs += [(u, i, text(t)) for u, i, t in extra]
+                n += 1
+            for url, pid, title in jobs:
+                if pid in seen:
+                    continue
+                seen.add(pid)
+                remote = 'remote' in place.lower()
+                j = job('smartrecruiters', url.split('?')[0], title, company, f'Remote ({place})' if remote else (place or 'See posting'), place, None, board=False)
+                j['is_remote'] = remote
+                yield j
 
 
 def oracle_hcm(pages=3):
@@ -308,6 +472,7 @@ def arbeitnow(pages=3):
             yield j
 
 
+# Getro: not read since 14 Nov (api.getro.com's robots.txt disallows every path). Kept for reference; not in main()'s sources.
 def getro(pages=5):
     for cid in GETRO:
         for page in range(pages):
@@ -367,14 +532,18 @@ def eures(terms):
 
 
 def adzuna(queries):
+    """Adzuna's free keyed API (developer.adzuna.com). Read only when the free ADZUNA_APP_ID / ADZUNA_APP_KEY secrets are set.
+    api.adzuna.com's robots.txt says "Disallow: /" for every agent, so even with keys nothing is read unless the owner records that the
+    API's own terms (which the free key accepts) govern this use: repository variable ADZUNA_API_TERMS_ACCEPTED=true."""
     app_id, key = os.environ.get('ADZUNA_APP_ID', ''), os.environ.get('ADZUNA_APP_KEY', '')
     if not app_id or not key:
         return
+    api_terms = os.environ.get('ADZUNA_API_TERMS_ACCEPTED', '').strip().lower() == 'true'
     for cid, pairs in queries.items():
         for country, what in pairs:
             url = f'https://api.adzuna.com/v1/api/jobs/{country}/search/1?' + urllib.parse.urlencode(
                 {'app_id': app_id, 'app_key': key, 'results_per_page': 50, 'what': what, 'max_days_old': 14, 'content-type': 'application/json'})
-            d = json.loads(http(url))
+            d = json.loads(http(url, robots_ok=api_terms))
             for r in d.get('results') or []:
                 loc = r.get('location') or {}
                 place = loc.get('display_name') or ', '.join(loc.get('area') or []) or country.upper()
@@ -390,12 +559,14 @@ ENRICH_BUDGET_SECONDS = 240   # time spent in full-text fetches, all sources of 
 
 
 def _detail_smartrecruiters(j):
-    m = re.match(r'^https://jobs\.smartrecruiters\.com/([^/]+)/(\d+)$', j['url'])
-    if not m:
+    if not re.match(r'^https://jobs\.smartrecruiters\.com/[^/]+/\d+', j['url']):
         return None
-    r = json.loads(http(f'https://api.smartrecruiters.com/v1/companies/{urllib.parse.quote(m.group(1))}/postings/{m.group(2)}'))
-    sec = (r.get('jobAd') or {}).get('sections') or {}
-    return ' '.join(text((sec.get(k) or {}).get('text')) for k in ('jobDescription', 'qualifications', 'additionalInformation'))
+    page = http(j['url'], headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
+    d = re.search(r'<div itemprop="description">(.*?)</main>', page, re.S) or re.search(r'<div itemprop="description">(.*)', page, re.S)
+    posted = re.search(r'<meta itemprop="datePosted" content="([^"]+)"', page)
+    if posted and when(posted.group(1)):
+        j['posted_at'] = when(posted.group(1)).isoformat()
+    return text(d.group(1))[:8000] if d else None
 
 
 MORE = re.compile(r'; \+\d+ more')
@@ -416,6 +587,15 @@ def _detail_workday(j):
     return text(info.get('jobDescription'))
 
 
+def _detail_successfactors(j):
+    if not re.match(r'^https://[^/]+/job/', j['url']):
+        return None
+    p = sf_job_page(http(j['url'], headers={'Accept': 'text/html'}).decode('utf-8', 'replace'))
+    if p['location'] and j.get('location') in ('', 'See posting'):
+        j['location'] = p['location']
+    return p['description']
+
+
 def _detail_oracle(j):
     m = re.match(r'^https://([^/]+)/hcmUI/CandidateExperience/en/sites/([^/]+)/job/(\d+)$', j['url'])
     if not m:
@@ -427,12 +607,14 @@ def _detail_oracle(j):
     return ' '.join(text(it.get(k)) for k in ('ExternalDescriptionStr', 'ExternalQualificationsStr'))
 
 
-ENRICH = {'smartrecruiters': _detail_smartrecruiters, 'workday': _detail_workday, 'oracle_hcm': _detail_oracle}
+ENRICH = {'smartrecruiters': _detail_smartrecruiters, 'workday': _detail_workday, 'oracle_hcm': _detail_oracle, 'successfactors': _detail_successfactors}
 
 
 def enrich_full_text(j, name, used, spent):
     """Replace the thin list description of a kept posting by the posting's own text, so the screen can read sponsorship, years, pay and remote wording.
     Bounded per source and by time; any failure keeps the posting with its list description."""
+    if j.pop('_full_text', False):   # read from the posting's own page already
+        return False
     fn = ENRICH.get(name)
     if not fn or used.get(name, 0) >= ENRICH_CAP or spent[0] > ENRICH_BUDGET_SECONDS:
         return False
@@ -461,9 +643,10 @@ def main():
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
+    SF_ROLE_FILTER[:] = list(rules.values())
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
     sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm,
-               'arbeitnow': arbeitnow, 'getro': getro, 'uncareers': un_careers,
+               'arbeitnow': arbeitnow, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm')}
@@ -480,6 +663,7 @@ def main():
             report[name] = {'skipped': 'time budget', 'read': 0, 'kept': 0}
             continue
         seen = kept = 0
+        sent = REQUESTS[0]
         try:
             for j in fn():
                 seen += 1
@@ -499,9 +683,9 @@ def main():
                 if enrich_full_text(j, name, used, spent):
                     enriched[name] = enriched.get(name, 0) + 1
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1
-            report[name] = {'read': seen, 'kept': kept, **({'full_text': enriched[name]} if enriched.get(name) else {})}
-        except Exception as e:   # one failing source is skipped
-            report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept}
+            report[name] = {'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent, **({'full_text': enriched[name]} if enriched.get(name) else {})}
+        except Exception as e:   # one failing source is skipped (a robots.txt refusal is reported here as "robots.txt disallows ...")
+            report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent}
         write_json(raw_path, merged)   # after every source: a step stopped at its time limit keeps what it fetched
         write_json(out / 'more_sources_report.json', report, indent=1)
     write_json(raw_path, merged)

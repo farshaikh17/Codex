@@ -36,7 +36,7 @@ class BlockedCount(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'p.json').write_text(json.dumps(profs))
             with mock.patch.object(jd, 'QUERIES', queries), mock.patch.object(jd, 'run_search', fake_search), \
-                    mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'p.json')), '--out', d]):
+                    mock.patch.object(jd.robots, 'allowed', lambda url: True), mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'p.json')), '--out', d]):
                 jd.main()
             rep = json.loads(Path(d, 'jobsite_report.json').read_text())
         self.assertEqual(rep['blocked'], 2, 'linkedin 429 and bayt 403; indeed simply found nothing')
