@@ -248,7 +248,7 @@ class MoreSources(unittest.TestCase):
 
 class EmployerSitesAreNotBoards(unittest.TestCase):
     def test_flags(self):
-        self.assertEqual(set(ms.EMPLOYER_SITES), {'workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe'})
+        self.assertEqual(set(ms.EMPLOYER_SITES), {'workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe', 'watch_boards'})
         self.assertIs(ms.job('workday', 'https://x', 'T', 'C', 'P', 'D', None, board=False)['board'], False)
         self.assertIs(ms.job('remoteok', 'https://x', 'T', 'C', 'P', 'D', None)['board'], True, 'a remote board stays a board by default')
 
