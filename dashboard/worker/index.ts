@@ -1326,7 +1326,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
       LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       WHERE q.candidate_id = ?
         AND q.qualification_status IN (${placeholders})
-    `;
+        AND j.is_active = 1
+    `;   // jobs QA 2 (14 Nov): closed postings are left out, as on the site's own lists (/api/jobs)
 
     const sqlParams: any[] = [candidateId, ...statuses];
 

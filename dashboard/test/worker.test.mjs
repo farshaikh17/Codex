@@ -823,6 +823,19 @@ test('resume import is honest: no invented profile for any pasted text', async (
   assert.equal(body.status, 'not_implemented'); assert.ok(!body.parsed, 'no parsed profile'); assert.ok(!/Farhan|Python|TypeScript/i.test(JSON.stringify(body)));
 });
 
+test('jobs QA 2: /api/candidates/:id/jobs leaves closed postings out, as the site lists do', async () => {
+  const { sqlite, env } = fresh();
+  const statuses = 'status=READY,STRETCH_READY,NEEDS_REVIEW,HOLD,INELIGIBLE';
+  const before = await call(worker, env, 'GET', `/api/candidates/farhan_shaikh/jobs?${statuses}`, { key: ADMIN_KEY });
+  assert.equal(before.status, 200);
+  const ids = before.json.map((j) => j.id);
+  assert.ok(ids.length >= 2, 'the seed has jobs for him');
+  sqlite.prepare('UPDATE jobs SET is_active = 0 WHERE id = ?').run(ids[0]);
+  sqlite.exec('DELETE FROM response_cache');
+  const after = await call(worker, env, 'GET', `/api/candidates/farhan_shaikh/jobs?${statuses}&x=1`, { key: ADMIN_KEY });
+  assert.deepEqual(after.json.map((j) => j.id), ids.slice(1));
+});
+
 test('QA: junk paging parameters never cause a 500 on the job lists', async () => {
   const { env } = fresh();
   for (const q of ['limit=-5&offset=abc', 'limit=abc', 'limit=0&offset=-9', 'offset=NaN', 'limit=1e9']) {
