@@ -59,10 +59,12 @@ QUERIES = {
                     'commissioning engineer', 'operations engineer', 'decarbonization',
                     # plan D1 (13 Nov): her non-maintenance roles, kept where a live Workable read returned mostly her field (utilities engineer 17 of 20,
                     # energy manager 18, plant engineer 13, O&M engineer 8); asset performance returned finance roles only and was left out
-                    'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer',
-                    # owner default 14 Nov: engineering facilities roles (plant-room and utilities work in buildings and campuses)
-                    'shift engineer', 'chief engineer', 'facility manager technical', 'MEP engineer'],
+                    'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer'],
 }
+# Owner default 14 Nov: engineering facilities roles (plant-room and utilities work in buildings and campuses) are searched on JLL's
+# Workday board (FM_TERMS) and accepted at the source by FM_ROLE below. They are not Workable search terms yet: the Worker's role rule
+# (dashboard/worker/discovery.ts, test S2) does not name "chief engineer" or "technical supervisor", so that rule must learn them first.
+FM_TERMS = ['shift engineer', 'chief engineer', 'facility manager engineering', 'technical supervisor', 'MEP engineer']
 # Owner default 14 Nov (Sana): engineering facilities titles count as her field at the source, next to her profile's role rule (which
 # lives in dataset_discovery.py and does not name them). Office, admin and soft-services facilities roles stay out.
 FM_ROLE = re.compile(r'shift (?:engineer|in.?charge|charge engineer)|chief engineer|facilit(?:y|ies) manager\W{0,5}(?:technical|engineering)|'
@@ -100,7 +102,7 @@ WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd
            # facilities roles (shift engineer, chief engineer, technical facility manager) in India and the Gulf
            ('KBR', 'kbr', 'wd5', 'KBR_Careers', {'terms': ['Abu Dhabi', 'Jubail', 'Dhahran', 'Riyadh', 'Doha', 'Kuwait', 'Muscat'], 'gulf': True, 'pages': 2}),
            ('JLL', 'jll', 'wd1', 'jllcareers', {'terms': ['shift engineer', 'chief engineer', 'facility manager engineering', 'technical supervisor', 'MEP engineer',
-                                                         'maintenance engineer'], 'pages': 3})]
+                                                         'maintenance engineer'], 'pages': 3})]   # the first five are FM_TERMS
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
 # 14 Nov: Bosch and Vattenfall left the list: their SmartRecruiters career pages now forward to their own sites (jobs.bosch.com,
 # careers.vattenfall.com), and the SmartRecruiters API that still served them is disallowed by robots.txt.
