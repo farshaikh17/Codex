@@ -239,6 +239,28 @@ out (`test_employer_sources.py`). They are searched on JLL's board only: the Wor
 "chief engineer" or "technical supervisor" yet, so they are not Workable search terms. CBRE is not read: `careers.cbre.com` is behind a
 bot challenge, and its Avature feed ignores filters (India share unmeasured).
 
+### New boards and watchlist employers, 14 Nov 2026 (Farhan; one polite read, scored with `evaluate()`)
+
+| Source | Reader | Read / kept / requests a run | Farhan: kept, right (60+, not ineligible), ELIGIBLE 60+ |
+|---|---|---|---|
+| 4dayweek.io API v2, remote + India | `remote_boards.fourdayweek()`; robots.txt `Allow: /api/v2`; their only ask is a link back, and every stored posting links to its 4dayweek.io page | 273 / 22 / 3 | 22 kept, 13 right, 12 ELIGIBLE ("Solutions Engineer", Fingerprint 79; "EPM Implementation Consultant", Vena 74; "Revenue Operations Manager", Paired 61; "Project Manager - Enterprise Customer Onboarding", Sprinto 61) |
+| Real Work From Anywhere RSS | `remote_boards.realworkfromanywhere()`; every posting stored as "Remote (Worldwide)" (the board lists only work-from-anywhere jobs); the feed's bare "&" are escaped before parsing | 139 / 11 / 1 | 11 kept, 6 right, 6 ELIGIBLE (Camunda "Senior Architect, Enterprise Agentic Automation" 77) |
+| WWR customer-support category | one more entry in `WWR` | 96 / 20 / 1 | 20 kept, 6 right, 5 ELIGIBLE (Databricks "Director, Delivery Solutions Architects" 82; Veeva "Solutions Architect - Cloud CRM" 66) |
+| Watchlist employers' own boards (MonetizeMore on JazzHR; Massive Rocket, Sprinto, Firework on Lever; UptimeAI, Canvas Medical on Ashby; Fingerprint on Greenhouse; Paired on Workable) | `more_sources.watch_boards()`, also in the watchlist run (three times a day); JazzHR lists one posting per country, so only India / anywhere rows are read, and their text comes from the posting page | 198 / 52 / 32 | 50 kept, 13 right, 11 ELIGIBLE (UptimeAI "Implementation Engineer" 90; Fingerprint "Solutions Engineer - India" 79; Canvas Medical "Solutions Consultant" 77, "Implementation Manager" 72; Firework "Sales & Marketing Operations Manager" 67). Paired's Workable widget answered 429 to this sandbox (rate limit), so it is unmeasured; MonetizeMore kept rows had no text in this read (fixed since: 0 of them at 60+ then) |
+| Jobspresso (allowed feed) | `/jobs/feed/` | 20 / 3 / 1 | 3 kept, 0 |
+
+Sana gets nothing from these boards (remote office roles); UptimeAI's "Technical Consultant" (Bangalore) scored 63 for her.
+
+**Reposting sites and VA staffing firms** (`engine/reposters.py`): Jobgether, Turing, Crossover, Peopleworth, Pavago, Braintrust and
+virtual-assistant staffing firms (20four7VA, names such as "... Virtual Assistants" or "24/7 VA") enter at most 3 postings per firm per
+run across every source, marked `reposter: true`. The shortlist's own list (`REPOSTERS` in `dashboard/scripts/shortlist_select.mjs`)
+does not name 20four7VA yet, and it names Paired, which posts its own RevOps roles (watchlisted here): both are for the shortlist's owner.
+
+**Adzuna (owner step).** Free keys: sign up at developer.adzuna.com (free plan, 250 requests a day), create an application, and add the
+repository secrets `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` (Settings > Secrets and variables > Actions). Because `api.adzuna.com`'s robots.txt
+disallows every agent, the reader also needs the repository variable `ADZUNA_API_TERMS_ACCEPTED` set to `true` (the owner accepting that
+the keyed API's own terms govern). It then makes 10 requests a day (7 for Sana, 3 for Farhan).
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.
