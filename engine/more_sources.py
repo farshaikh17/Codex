@@ -557,6 +557,7 @@ def jibe():
 WATCH = [('MonetizeMore', 'jazzhr', 'monetizem'), ('Massive Rocket', 'lever', 'massive-rocket'), ('Sprinto', 'lever', 'Sprinto'),
          ('UptimeAI', 'ashby', 'uptimeai'), ('Canvas Medical', 'ashby', 'canvas-medical'), ('Fingerprint', 'greenhouse', 'fingerprint'),
          ('Paired', 'workable', 'paired'), ('Firework', 'lever', 'fireworkhq')]
+JAZZ_PLACES = re.compile(r'india|anywhere|worldwide|global|apac|asia|^$', re.I)
 _JAZZ_ROW = re.compile(r'<div id="row_job_(\d{8})\d*_\w+" class="jobs_row">\s*<div>\s*<a class="job_title_link" href="(/apply/jobs/details/\w+)[^"]*">(.*?)</a>'
                        r'.*?<strong>Location:</strong>\s*([^<]*)</span>', re.S)
 
@@ -601,6 +602,8 @@ def watch_board(company, kind, board):
         page = http(f'https://{board}.applytojob.com/apply/jobs/', headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
         for day, path, title, place in _JAZZ_ROW.findall(page):
             title, place = text(title), text(place)
+            if not JAZZ_PLACES.search(place):   # one posting is listed once per country: only India and anywhere are read (Farhan's watchlist)
+                continue
             remote = 'remote' in title.lower()
             yield job('watch_boards', f'https://{board}.applytojob.com{path}', title, company, _remote_place(place, remote), '',
                       datetime.strptime(day, '%Y%m%d').replace(tzinfo=timezone.utc), board=False), remote
@@ -758,7 +761,7 @@ def _detail_jazzhr(j):
     if not re.match(r'^https://[\w-]+\.applytojob\.com/apply/jobs/details/\w+$', j['url']):
         return None
     page = http(j['url'], headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
-    d = re.search(r'<div id="job-description"[^>]*>(.*?)(?:<div id="(?:job-application|apply)|<form|$)', page, re.S)
+    d = re.search(r'<div class="job_description">(.*?)(?:<div id="resumator|<form|$)', page, re.S)
     return text(d.group(1))[:8000] if d else None
 
 

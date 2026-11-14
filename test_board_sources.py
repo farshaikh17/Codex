@@ -73,6 +73,16 @@ class WatchBoards(unittest.TestCase):
         self.assertTrue(all(j['board'] is False for j in got))
         self.assertEqual({w[0] for w in ms.WATCH}, {'MonetizeMore', 'Massive Rocket', 'Sprinto', 'UptimeAI', 'Canvas Medical', 'Fingerprint', 'Paired', 'Firework'})
 
+    def test_jazzhr_detail_and_places(self):
+        page = (FIX / 'jazzhr_monetizem_job.html').read_bytes()
+        j = {'url': 'https://monetizem.applytojob.com/apply/jobs/details/QMtZDQf0Lj', 'description': '', 'location': 'Remote (India)', 'posted_at': ''}
+        with mock.patch.object(ms, 'http', lambda url, **k: page):
+            self.assertTrue(ms.enrich_full_text(j, 'watch_boards', {}, [0.0]))
+        self.assertIn('MonetizeMore', j['description']); self.assertNotIn('<span', j['description'])
+        with mock.patch.object(ms, 'http', self.fake):
+            places = [x['location'] for x, _ in ms.watch_board('MonetizeMore', 'jazzhr', 'monetizem')]
+        self.assertEqual(places, ['Remote (India)'], 'the same posting listed for Viet Nam and Venezuela is not read')
+
     def test_watchlist_run_reads_them(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'implementation|crm|solutions', 'exclude': ''}}))
