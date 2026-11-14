@@ -197,6 +197,26 @@ first page in her role rule), `energy manager` (18), `plant engineer` (13), `O&M
 **Run log.** The shortlist report now counts, per person, the pool rows (`pool_sources`) and each tier's rows (`sources`) per source;
 the run row and `/api/discovery/daily` carry it.
 
+### Compliance, 14 Nov 2026 (robots.txt at run time)
+
+Every reader now asks `engine/robots.py` before each request: the host's robots.txt is read once a run with the engine's own
+User-Agent (`career-job-engine/1.0`), `*` and `$` are honoured, the longest rule wins, a 429/5xx/unreachable robots.txt means "do not
+read this host this run", a 4xx (no robots.txt) means allowed, a redirect is checked against the robots.txt of where it leads, and
+requests to one host are spaced by 0.6-1 s or the host's `Crawl-delay`. A refused source is reported as
+`robots.txt disallows ...` in `more_sources_report.json` / `boards_report.json`; each source's report also gives its `requests`.
+
+| Source | Before | Now | Measured 14 Nov (one polite read) |
+|---|---|---|---|
+| SuccessFactors (ENGIE, ACWA, Tata Power, EGA, Black & Veatch, Doosan, Tata Motors) | `/services/rss/job/` x 6 terms (disallowed: `Disallow: /services/`) | `/search/` result pages, newest first (allowed); a site with another page template is read from `/sitemap.xml` plus the job pages whose address names a role; descriptions from the `/job/` page | 112 read, 56 kept, 76 requests. Sana: 54 kept, 22 at 60+ (11 ELIGIBLE at 60+, all ReNew wind and solar O&M); ACWA 36 kept (Gulf, eligibility unknown until a visa route is stated). ENGIE, EGA, Black & Veatch and Tata Motors answered 404 on `/search/` (their sites showed "site maintenance" on 13-14 Nov: re-measure). Farhan: 0 |
+| ReNew (new, SuccessFactors) | not read | sitemap + role job pages | 20 kept for Sana, 14 at 60+, 11 ELIGIBLE at 60+ (e.g. "Senior Engineer - Wind O & M" 94, "Engineer - Wind O & M" 91) |
+| SmartRecruiters (Masdar, AFRY, Statkraft, Continental) | postings API (disallowed: `api.smartrecruiters.com` allows only LinkedInBot) | the employer's public career page `careers.smartrecruiters.com/<id>` and its "more" pages; descriptions from the posting page | 353 read, 35 kept (AFRY 29, Masdar 3, Continental 3), 66 requests; Sana 27 kept, 0 at 60+ with a list-only description. Bosch and Vattenfall left the list: their career pages forward to their own sites |
+| Getro (collections 628, 1198) | public search API | **dropped**: `api.getro.com` disallows everything | cost: about 3 kept rows a day (13 Nov) |
+| Remotive (Worker, 2 searches) | `/api/remote-jobs?search=` | **dropped** (migration 0024 switches its two sources off): robots.txt disallows `/api/*` and `/*search=` | cost: 2 x 10 rows a day, none in either person's lists on 13 Nov |
+| Naukri (JobSpy) | 5 India searches | **dropped**: its terms forbid automated access and its robots.txt blocks AI agents | cost: 12 kept rows on 13 Nov (none with a description) |
+| Jobspresso | `/feed/?post_type=job_listing` (disallowed: `Disallow: /*?`) | `/jobs/feed/` (allowed, same 20 newest jobs) | no loss |
+| Adzuna (free keys) | read when the keys are set | `api.adzuna.com` disallows every agent, so it is read only when the keys are set **and** the owner sets the repository variable `ADZUNA_API_TERMS_ACCEPTED=true` (the keyed API's own terms then govern) | 0 today (no keys) |
+| Indeed, LinkedIn, Glassdoor, Google (JobSpy) | searched | still searched; the job-site report now says per site whether robots.txt allows the address JobSpy reads (14 Nov: all four disallow). Skipping them is a separate owner decision (its own pull request) | - |
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.
