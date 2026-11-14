@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "7704acf48a600a89e203710e143d5281b71517f6d0dbf90f888f952a7c1e629e",
+   "kind": "content_changed",
+   "to_hash": "c76d75826a28b151803bce35168e4e9e7fe0d80c3eccd759b67de81aa00a1e5f"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nClient Engagement & Moving Strategy to Reality: Partner with Account Executives to prioritize strategic opportunities and act as the technical lead for complex engagements. You will move clients from high-level strategy to live, functioning versions of Cognite’s solutions through Fast AI Prototyping via Cognite Atlas AI™ and Cognite Data Fusion®.\n\nAgentic Solution Development: Lead the design and implementation of first-of-their-kind industrial agents. You will leverage the Atlas AI workbench to automate complex industrial workflows, ensuring solutions are technically feasible, scalable, and grounded in the contextualized data foundation of our Industrial Knowledge Graph.\n\nTechnical Representation & Use Case Design: Lead use case workshops and briefings, translating functional and non-functional requirements into deliverable high-level use cases. You will build executive confidence by delivering client-focused demos and reference architectures that prove the ROI of Industrial AI.\n\nProduct Innovation & Field Leadership: Act as the critical bridge between the field and Cognite’s Product organization. Translate \"field friction\" and deployment learnings into actionable product requirements and scalable best practices that strengthen Cognite’s position as the leader in Industrial DataOps.\n\nThe Impact you bring to Cognite\n\nIndustrial Architecture Expertise: Ability to design scalable architectures that unify siloed IT/OT/ET data into a single source of truth using Cognite Data Fusion®.\n\nAgentic AI Proficiency: Demonstrated experience building with LLMs (Gemini, Claude, GPT-4) and a deep understanding of the Agentic AI landscape to create trusted, mission-critical industrial agents via Cognite Atlas AI™.\n\nFull-Stack Solution Engineering: Ability to orchestrate and build end-to-end prototypes—integrating GenAI components, CDF data models, and legacy customer systems—using scalable software practices and open-source AI frameworks.\n\nTechnical Evangelism & Strategic Influence: The ability to distill complex technical AI solutions into compelling, value-driven narratives. You can pivot seamlessly between deep architectural sessions with engineers and strategy briefings with C-level executives.\n\nRequired Qualifications\n\n3+ years in forward deployed engineering/pre-sales engineering roles ideally in enterprise SaaS, cloud platforms, or industrial software companies.\n\nStrong engineering background. Preferred fields include but are not limited to Computer Science, Mathematics, Software Engineering, Physics, and Machine Learning.\n\nA strong foundation in Python and a deep understanding of the GenAI landscape (embeddings, RAG, and prompt chaining).\n\nExcellent problem-solving, analytical, and communication skills.\n\nAbility and interest to travel up to 50% as needed to be \"on the ground\" where the impact happens.\n\nPreferred Experience\n\nEducation or experience in the industrial space (e.g., Petroleum, Chemical, Mechanical, or Control System Engineering).\n\nPrevious customer facing or sales experience.\n\nYou’ve worked with \"messy\" real-world variables from the Industries we work in (Energy, Oil and Gas, Chemicals, Life Sciences, Discrete) and understand, for example, why data quality in a refinery is harder than data quality in a web app.\n\nYou are excited to bridge the gap between traditional heavy industry and the future of Autonomous Operations via Cognite Data Fusion® and Agentic AI.\n\nA snapshot of our many perks and benefits as a Cogniter\n\nCompetitive compensation\n\n401(k) with employer matching\n\nCompetitive health, dental, vision & disability coverages for employees and all dependents\n\nUnlimited PTO\n\nPaid Parental Leave Program\n\nEmployee Referral Program\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nClient Engagement & Moving Strategy to Reality: Partner with Account Executives to prioritize strategic opportunities and act as the technical lead for complex engagements. You will move clients from high-level strategy to live, functioning versions of Cognite’s solutions through Fast AI Prototyping via Cognite Atlas AI™ and Cognite Data Fusion®.\n\nAgentic Solution Development: Lead the design and implementation of first-of-their-kind industrial agents. You will leverage the Atlas AI workbench to automate complex industrial workflows, ensuring solutions are technically feasible, scalable, and grounded in the contextualized data foundation of our Industrial Knowledge Graph.\n\nTechnical Representation & Use Case Design: Lead use case workshops and briefings, translating functional and non-functional requirements into deliverable high-level use cases. You will build executive confidence by delivering client-focused demos and reference architectures that prove the ROI of Industrial AI.\n\nProduct Innovation & Field Leadership: Act as the critical bridge between the field and Cognite’s Product organization. Translate \"field friction\" and deployment learnings into actionable product requirements and scalable best practices that strengthen Cognite’s position as the leader in Industrial DataOps.\n\nThe Impact you bring to Cognite\n\nIndustrial Architecture Expertise: Ability to design scalable architectures that unify siloed IT/OT/ET data into a single source of truth using Cognite Data Fusion®.\n\nAgentic AI Proficiency: Demonstrated experience building with LLMs (Gemini, Claude, GPT-4) and a deep understanding of the Agentic AI landscape to create trusted, mission-critical industrial agents via Cognite Atlas AI™.\n\nFull-Stack Solution Engineering: Ability to orchestrate and build end-to-end prototypes—integrating GenAI components, CDF data models, and legacy customer systems—using scalable software practices and open-source AI frameworks.\n\nTechnical Evangelism & Strategic Influence: The ability to distill complex technical AI solutions into compelling, value-driven narratives. You can pivot seamlessly between deep architectural sessions with engineers and strategy briefings with C-level executives.\n\nRequired Qualifications\n\n3+ years in forward deployed engineering/pre-sales engineering roles ideally in enterprise SaaS, cloud platforms, or industrial software companies.\n\nStrong engineering background. Preferred fields include but are not limited to Computer Science, Mathematics, Software Engineering, Physics, and Machine Learning.\n\nA strong foundation in Python and a deep understanding of the GenAI landscape (embeddings, RAG, and prompt chaining).\n\nExcellent problem-solving, analytical, and communication skills.\n\nAbility and interest to travel up to 50% as needed to be \"on the ground\" where the impact happens.\n\nPreferred Experience\n\nEducation or experience in the industrial space (e.g., Petroleum, Chemical, Mechanical, or Control System Engineering).\n\nPrevious customer facing or sales experience.\n\nYou’ve worked with \"messy\" real-world variables from the Industries we work in (Energy, Oil and Gas, Chemicals, Life Sciences, Discrete) and understand, for example, why data quality in a refinery is harder than data quality in a web app.\n\nYou are excited to bridge the gap between traditional heavy industry and the future of Autonomous Operations via Cognite Data Fusion® and Agentic AI.\n\nA snapshot of our many perks and benefits as a Cogniter\n\nCompetitive compensation\n\n401(k) with employer matching\n\nCompetitive health, dental, vision & disability coverages for employees and all dependents\n\nUnlimited PTO\n\nPaid Parental Leave Program\n\nEmployee Referral Program\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -27,8 +37,8 @@
   "title": "Senior Field Engineer (Pre-Sales/Forward Deployed)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T20:34:22.271289+00:00",
- "content_hash": "7704acf48a600a89e203710e143d5281b71517f6d0dbf90f888f952a7c1e629e",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "c76d75826a28b151803bce35168e4e9e7fe0d80c3eccd759b67de81aa00a1e5f",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -47,7 +57,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "USA (Houston)",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      },
@@ -55,7 +65,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "USA (remote)",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      }
@@ -68,7 +78,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "A strong foundation in Python and a deep understanding of the GenAI landscape (embeddings, RAG, and prompt chaining).\nExcellent problem-solving, analytical, and communication skills.\nAbility and interest to travel up to 50% as needed to be \"on the ground\" where the impact happens.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      }
@@ -81,7 +91,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "3+ years in forward deployed engineering/pre-sales engineering roles ideally in enterprise SaaS, cloud platforms, or industrial software companies.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      },
@@ -89,15 +99,15 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "Strong engineering background. Preferred fields include but are not limited to Computer Science, Mathematics, Software Engineering, Physics, and Machine Learning.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      },
      {
       "interpretation": null,
       "method": "description_section:Preferred Experience",
-      "quote": "Education or experience in the industrial space (e.g., Petroleum, Chemical, Mechanical, or Control System Engineering).\nPrevious customer facing or sales experience.\nYou’ve worked with \"messy\" real-world variables from the Industries we work in (Energy, Oil and Gas, Chemicals, Life Sciences, Discrete) and understand, for example, why data quality in a refinery is harder than data quality in a web app.\nYou are excited to bridge the gap between traditional heavy industry and the future of Autonomous Operations via Cognite Data Fusion® and Agentic AI.\nA snapshot of our many perks and benefits as a Cogniter\nCompetitive compensation\n401(k) with employer matching\nCompetitive health, dental, vision & disability coverages for employees and all dependents\nUnlimited PTO\nPaid Parental Leave Program\nEmployee Referral Program\nLearn more about us\nImpact 2025\nCognite's Industrial AI: Moonshot\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "quote": "Education or experience in the industrial space (e.g., Petroleum, Chemical, Mechanical, or Control System Engineering).\nPrevious customer facing or sales experience.\nYou’ve worked with \"messy\" real-world variables from the Industries we work in (Energy, Oil and Gas, Chemicals, Life Sciences, Discrete) and understand, for example, why data quality in a refinery is harder than data quality in a web app.\nYou are excited to bridge the gap between traditional heavy industry and the future of Autonomous Operations via Cognite Data Fusion® and Agentic AI.\nA snapshot of our many perks and benefits as a Cogniter\nCompetitive compensation\n401(k) with employer matching\nCompetitive health, dental, vision & disability coverages for employees and all dependents\nUnlimited PTO\nPaid Parental Leave Program\nEmployee Referral Program\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      }
@@ -110,7 +120,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "USA (remote)",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5002767101"
      }

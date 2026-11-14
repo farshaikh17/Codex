@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "24a26195182491ce79f175b6f2978283f58615bbea45320ffeaa951b57c6136a",
+   "kind": "content_changed",
+   "to_hash": "fd4c09423b3952f13f9ca451d47da61e770a466e184dff9ea0170936d42f862c"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAs a Data Scientist at Cognite, you will work on challenging data-problems with leaders in the industry. You will be a part of cross-functional teams that include data engineers, solution architects, and project managers. Together, your focus will be on configuring, deploying, and operationalizing digital solutions in sectors such as Oil and Gas, Energy, Power & Utilities, Manufacturing.\n\nThe Impact you bring to Cognite\n\nLead the design and development of scalable solutions for customer use cases from Oil and Gas, Manufacturing and Power & Utilities industries using Cognite’s core capabilities. Take ownership of design and execution\n\nLead intensive use case generation workshops with subject matter experts to understand the problem and how it maps to the data\n\nPerform data cleansing and exploratory data analysis\n\nDesign and lead implementation of physical models / machine learning models in Python and deploy to our model hosting environment\n\nApply GenAI techniques to enhance data-driven decision-making in customer use cases\n\nDevelop web applications built on Cognite Data Fusion with the help of AI agents\n\nUtilize and contribute to solution templates and best practices within the Data Science team\n\nCollaborate with data engineers, project managers and solution architects on project deliveries to enable our customers to achieve the full potential of our industrial dataops platform\n\nSupport customers and partners in conducting data science tasks with Cognite products\n\nRequired Qualifications\n\nBachelor or Master of Science in a quantitative field or mechanical - , systems - , electrical - or industrial engineering\n\n6+ years of full-time work experience as a data scientist (preferably within related industry)\n\nProficient experience with Python and SQL. Experience with Python in a production setting is a plus\n\nExperience with machine learning methods and techniques, statistics and/or optimization\n\nExperience with Git\n\nExperience working customer faced, with external customers\n\nExperience with managed cloud services such as GCP, Azure or AWS is a plus\n\nEnjoy working in cross-functional teams\n\nAble to deliver independently, coach and mentor others internally\n\nEnjoy challenges and dare to set ambitious goals that drive innovation\n\nPreferred Experience\n\nDomain knowledge or a good understanding of the Oil and Gas industry Asset Performance Management - covering i.e. production optimization is a big plus. (As key CDF advisors, we want our Data Scientist to have a good understanding of our customer data, and assist them in understanding how CDF can help solve their problems related to i.e. production optimization)\n\nA snapshot of our many perks and benefits as a Cogniter\n\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n\n* Flat structure with direct access to decision-makers\n\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n\n* Get access to private health services with Cognite Care.\n\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAs a Data Scientist at Cognite, you will work on challenging data-problems with leaders in the industry. You will be a part of cross-functional teams that include data engineers, solution architects, and project managers. Together, your focus will be on configuring, deploying, and operationalizing digital solutions in sectors such as Oil and Gas, Energy, Power & Utilities, Manufacturing.\n\nThe Impact you bring to Cognite\n\nLead the design and development of scalable solutions for customer use cases from Oil and Gas, Manufacturing and Power & Utilities industries using Cognite’s core capabilities. Take ownership of design and execution\n\nLead intensive use case generation workshops with subject matter experts to understand the problem and how it maps to the data\n\nPerform data cleansing and exploratory data analysis\n\nDesign and lead implementation of physical models / machine learning models in Python and deploy to our model hosting environment\n\nApply GenAI techniques to enhance data-driven decision-making in customer use cases\n\nDevelop web applications built on Cognite Data Fusion with the help of AI agents\n\nUtilize and contribute to solution templates and best practices within the Data Science team\n\nCollaborate with data engineers, project managers and solution architects on project deliveries to enable our customers to achieve the full potential of our industrial dataops platform\n\nSupport customers and partners in conducting data science tasks with Cognite products\n\nRequired Qualifications\n\nBachelor or Master of Science in a quantitative field or mechanical - , systems - , electrical - or industrial engineering\n\n6+ years of full-time work experience as a data scientist (preferably within related industry)\n\nProficient experience with Python and SQL. Experience with Python in a production setting is a plus\n\nExperience with machine learning methods and techniques, statistics and/or optimization\n\nExperience with Git\n\nExperience working customer faced, with external customers\n\nExperience with managed cloud services such as GCP, Azure or AWS is a plus\n\nEnjoy working in cross-functional teams\n\nAble to deliver independently, coach and mentor others internally\n\nEnjoy challenges and dare to set ambitious goals that drive innovation\n\nPreferred Experience\n\nDomain knowledge or a good understanding of the Oil and Gas industry Asset Performance Management - covering i.e. production optimization is a big plus. (As key CDF advisors, we want our Data Scientist to have a good understanding of our customer data, and assist them in understanding how CDF can help solve their problems related to i.e. production optimization)\n\nA snapshot of our many perks and benefits as a Cogniter\n\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n\n* Flat structure with direct access to decision-makers\n\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n\n* Get access to private health services with Cognite Care.\n\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +33,8 @@
   "title": "Senior Data Scientist",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-10T16:44:59.028386+00:00",
- "content_hash": "24a26195182491ce79f175b6f2978283f58615bbea45320ffeaa951b57c6136a",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "fd4c09423b3952f13f9ca451d47da61e770a466e184dff9ea0170936d42f862c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Norway (Oslo)",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "Bachelor or Master of Science in a quantitative field or mechanical - , systems - , electrical - or industrial engineering\n6+ years of full-time work experience as a data scientist (preferably within related industry)",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      },
@@ -64,7 +74,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "Experience with machine learning methods and techniques, statistics and/or optimization\nExperience with Git\nExperience working customer faced, with external customers",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      },
@@ -72,7 +82,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "Enjoy working in cross-functional teams\nAble to deliver independently, coach and mentor others internally\nEnjoy challenges and dare to set ambitious goals that drive innovation",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      }
@@ -85,7 +95,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "Proficient experience with Python and SQL. Experience with Python in a production setting is a plus",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      },
@@ -93,15 +103,15 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "Experience with managed cloud services such as GCP, Azure or AWS is a plus",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      },
      {
       "interpretation": null,
       "method": "description_section:Preferred Experience",
-      "quote": "Domain knowledge or a good understanding of the Oil and Gas industry Asset Performance Management - covering i.e. production optimization is a big plus. (As key CDF advisors, we want our Data Scientist to have a good understanding of our customer data, and assist them in understanding how CDF can help solve their problems related to i.e. production optimization)\nA snapshot of our many perks and benefits as a Cogniter\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n* Flat structure with direct access to decision-makers\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n* Get access to private health services with Cognite Care.\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\nLearn more about us\nImpact 2025\nCognite's Industrial AI: Moonshot\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.",
-      "retrieved_at": "2026-11-10T16:44:59.028386+00:00",
+      "quote": "Domain knowledge or a good understanding of the Oil and Gas industry Asset Performance Management - covering i.e. production optimization is a big plus. (As key CDF advisors, we want our Data Scientist to have a good understanding of our customer data, and assist them in understanding how CDF can help solve their problems related to i.e. production optimization)\nA snapshot of our many perks and benefits as a Cogniter\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n* Flat structure with direct access to decision-makers\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n* Get access to private health services with Cognite Care.\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4986996101"
      }
