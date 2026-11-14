@@ -87,20 +87,27 @@ export const employerKey = (r) => companyKey(r.company) || String(r.company || '
 const REPOSTER_NAMES = new Set([...REPOSTERS, 'turingcom', 'jobgethercom', 'usebraintrust', 'braintrustnetwork', 'crossoverforwork']);
 export const isReposter = (r) => REPOSTER_NAMES.has(String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/(?:inc|llc|ltd)$/, ''));
 // An employer shown by its hiring-system tenant id is not shortlisted until phase 4 (B1) gives it its real name; the audit (A8) treats one on the
-// shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1'; an Oracle employer named exactly like its oraclecloud.com tenant host ('Hdga' at
-// hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1 already maps (abb, mdlz) are known employers.
+// shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1' (also with its site, 'Fa Elxu Saasfaprod1 (CX_1001)'); an Oracle employer named
+// exactly like its oraclecloud.com tenant host ('Hdga' at hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1
+// already maps (abb, mdlz) are known employers. The same reading as tenant_like() in engine/company_names.py.
 const TENANT_KNOWN = new Set(['abb', 'mdlz']);
+export const FA_TENANT = /^fa[ -][a-z]{4}[ -](?:test[ -])?saasfaprod\d+(?:\s*\([^)]*\))?$/i;
 export function tenantEmployer(company, source, url) {
   const c = String(company || '').trim();
-  if (/^fa[ -][a-z]{4}[ -]saasfaprod\d+$/i.test(c)) return true;
+  if (!c) return false;
+  if (FA_TENANT.test(c)) return true;
   if (TENANT_KNOWN.has(c.toLowerCase())) return false;
+  let host = ''; try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch {}
+  if (host.endsWith('.oraclecloud.com') && host.split('.')[0] === c.toLowerCase() && /^[a-z]{3,8}$/i.test(c)) return true;
   const src = String(source || '').toLowerCase();
-  if (/^oracle/.test(src) && /^[a-z]{3,8}$/i.test(c)) {
-    let host = ''; try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch {}
-    if (host.endsWith('.oraclecloud.com') && host.split('.')[0] === c.toLowerCase()) return true;
-  }
-  return /^(workday|oracle|oraclehcm)$/.test(src) && /^[a-z]{1,5}$/.test(c);
+  if (!/^(?:workday|oracle|oracle_?hcm)$/.test(src) && !host.endsWith('oraclecloud.com') && !host.endsWith('myworkdayjobs.com')) return false;
+  return /^[a-z]{1,5}$/.test(c);
 }
+/** The one tenant test the selector and the audit share (13 Nov run: they disagreed). It reads the employer name STORED on the job, which is what the
+ *  lists show and what the audit reads: the pool export names its rows through the known-names table (engine/company_names.py, `company`) and keeps
+ *  the stored name as `stored_company`, so a row whose stored name is still a tenant id (a migration not yet applied) stays off the shortlist until
+ *  the stored row is renamed, instead of being shortlisted under a name the database does not have. */
+export const shortlistTenant = (r) => tenantEmployer(r?.stored_company ?? r?.company, r?.source, r?.url);
 const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 /** Hard: a reposter row duplicating a direct employer's row: the same title (as titleKey() reads it) and the direct row's first 200 characters of
  *  description found anywhere in the repost (a reposting site puts its own sentence first: "This position is posted by Jobgether on behalf of..."),
@@ -160,7 +167,7 @@ function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
   const dupes = repostDuplicates(rows);
-  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source, r.url)), now);
+  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };

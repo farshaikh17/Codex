@@ -13,12 +13,12 @@
 //     --relaxed, the day the still-open check verified too few rows), or closed;
 //     A Stretch row that is a Gulf posting from a job board refusing the check, found in the last 2 days, passes (the selector's 'listed' rule;
 //     never on Ready);
-//   - an employer shown by its hiring-system tenant id (until B1 names it);
+//   - an employer shown by its hiring-system tenant id (until B1 names it; shortlistTenant(), the selector's own test, on the stored name);
 //   - a row with a manual override, or an application older than the change, that the daily run changed (a 'discovery' history row since the run
 //     started; an application made after that change is the person's own later choice). An automatic row
 //     a person later saved or applied to keeps its mark; that alone is a person's choice, not a broken rule, and is counted, not failed.
 import fs from 'node:fs';
-import { MARK, REPOSTER_CAP, EMPLOYER_TIER_CAP, EMPLOYER_SKILL_CAP, VERIFIED_DAYS, employerKey, isReposter, skillEmployer, skillsOf, tenantEmployer, when } from './shortlist_select.mjs';
+import { MARK, REPOSTER_CAP, EMPLOYER_TIER_CAP, EMPLOYER_SKILL_CAP, VERIFIED_DAYS, employerKey, isReposter, skillEmployer, skillsOf, shortlistTenant, when } from './shortlist_select.mjs';
 import { companyKey, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 
 const GRACE_MS = 3600000;
@@ -55,7 +55,7 @@ export function audit(rows, { candidates = [], report = null, relaxed = false, n
     if (!Number(r.active)) problems.push(`a closed posting is on the shortlist (${r.candidate_id} ${r.job_id})`);
     else if (!relaxed && !(now - when(r.last_verified_at) <= VERIFIED_DAYS * 86400000 + GRACE_MS)
       && !(r.status === 'STRETCH_READY' && listedOnlyGulf(r.url, r.location) && now - when(r.discovered_at) <= LISTED_DAYS * 86400000 + GRACE_MS)) problems.push(`a row not verified open in ${VERIFIED_DAYS} days (${r.candidate_id} ${r.job_id})`);
-    if (tenantEmployer(r.company, r.source, r.url)) problems.push(`a tenant-id employer is on the shortlist (${r.candidate_id} ${r.job_id})`);
+    if (shortlistTenant(r)) problems.push(`a tenant-id employer is on the shortlist (${r.candidate_id} ${r.job_id})`);
   }
   for (const [k, list] of byTier) {
     const [cid, tier] = k.split('|');

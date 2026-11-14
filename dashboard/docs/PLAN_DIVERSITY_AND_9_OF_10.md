@@ -678,10 +678,23 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     'KW' / 'BH' is the Gulf. A posting with no description, or one of 600 characters or less, counts the phrases of her field in its title (O&M,
     power plant, energy audit, ...) as skills, at most two. The shortlist lets an exact target title stand in for the two skills only with 300+
     characters of description.
+  - from a hand review of the live lists: Farhan, a place of just 'Remote' whose text keeps the job in one country (US payroll words: 401(k),
+    E-Verify, Form I-9; 'authorized to work in the US'; 'must be based in Canada'; 'right to work in the UK') is ruled out too, unless the text names
+    India, APAC, Asia, worldwide or hiring globally ('Must be able to work during US business hours' alone is not a place); sales, marketing,
+    revenue and GTM operations titles keep the +4 ('Sales & Marketing Operations Manager'). Sana: the design / study penalty above, and business /
+    digital architect and marine titles on her avoid list ('Business Architect / Digital Architecture', 'Marine Electrical Engineer' at a resort).
+  - employer names: the Oracle tenant 'Fa Elxu Saasfaprod1 (CX_1001)' (the dataset adds the site) is SVKM's (sites NMIMS, SVKM Central Office,
+    SVKM, read from its own career site); the table and the tenant test read an id followed by its site, and migration `0023_company_names_svkm.sql`
+    renames the stored rows (same guards as 0021; applied by the release).
+  - the 13 Nov daily run turned red: the shortlist audit failed 7 Oracle rows of Sana's as tenant ids. The selector had read their names through
+    the names table ('Lucy Electric') while the jobs still stored the ids ('hdga') that the lists show and the audit reads (0021 not yet applied).
+    The selector and the audit now share one test, `shortlistTenant()` in `scripts/shortlist_select.mjs`, on the stored name: the pool export
+    keeps it as `stored_company`, so a row whose stored name is still an id stays off the shortlist until a migration renames it. The JS test
+    reads a name equal to its oraclecloud.com host whatever the source, as `tenant_like()` in `engine/company_names.py` does.
   - measured on the QA's saved samples, re-scored with `evaluate()` and the shortlist selector (every row assumed verified, as in the QA; main →
-    this change, using the QA's verdicts): Farhan Best matches 7 of 9 fit → 7 of 8, Worth a try 2 of 10 → 3 of 4; Sana Best matches 23 of 25 →
-    25 of 25, Worth a try 17 of 25 → 20 of 20. No job the QA judged a good fit left the shortlist; one moved from Best matches to Worth a try (a
-    'Sales & Marketing Operations Manager' lost the +4 for 'operations').
+    this change, using the QA's verdicts): Farhan Best matches 7 of 9 fit → 8 of 9, Worth a try 2 of 10 → 2 of 3; Sana Best matches 23 of 25 →
+    25 of 25, Worth a try 17 of 25 → 20 of 20. No job the QA judged a good fit left the shortlist (an ACWA Power KSA row is off on main too: two
+    rows per employer per tier); the RevOps specialist and the energy-audit manager joined it.
 
 ---
 

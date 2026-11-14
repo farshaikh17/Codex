@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { evaluate, avoidedTitle, foreignLocation, gulfPlace, abroadByDescription, onsiteByText, yearsRequired, yearsCeiling, sanaTitleSkills, targetFit,
-  bareForeignCode, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP } from '../worker/discovery.ts';
+  bareForeignCode, remoteCountryByText, farhanTargetFit, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']), total_years_experience: 9,
@@ -152,4 +152,25 @@ test('Sana: a posting with no (or a very short) description counts the field phr
   assert.ok(!long.skills.includes('O&M'), 'a full description is judged on its own words');
   assert.ok(ev(sana, 'Office Manager', 'Raigarh, Chhattisgarh, India', '').skills.length === 0, 'a title outside her field gains nothing');
   assert.ok(ev(sana, 'Segment Manager - Power Plant O&M', 'Raigarh, Chhattisgarh, India', '').score <= AVOID_TITLE_CAP, 'the avoid list still wins');
+});
+
+test('Farhan: a "Remote" place whose text keeps the job in one country is ruled out; India, worldwide and US-hours wording are not (live list review)', () => {
+  for (const d of ['Benefits: 401(k) with company match. E-Verify participant; Form I-9 on the first day.', 'You must be based in Canada to apply.',
+    'This role is remote within the United States.', 'Candidates must be authorized to work in the U.S.', 'The right to work in the UK is required.'])
+    assert.equal(ev(farhan, 'Implementation Manager', 'Remote', CRM + ' ' + d, true).eligibility, 'INELIGIBLE', d);
+  assert.match(ev(farhan, 'Implementation Manager', 'Remote', CRM + ' We offer a 401(k).', true).reason, /another country only \(the posting's text says so\)/);
+  for (const d of ['Must be able to work during US business hours.', 'You do not need to be based in the US.', 'We hire globally; 401(k) for US staff.',
+    'Open to candidates in India and the US.', 'Work closely with the US team.'])
+    assert.equal(remoteCountryByText(d), false, d);
+  assert.notEqual(ev(farhan, 'Sales & Marketing Operations Manager', 'India', CRM + ' Must be able to work during US business hours.', true).eligibility, 'INELIGIBLE');
+  assert.notEqual(ev(farhan, 'Head of Operations', 'Remote, Global', CRM + ' We hire globally. 401(k).', true).eligibility, 'INELIGIBLE');
+  // Sana is not affected
+  assert.notEqual(ev(sana, 'Reliability Engineer', 'Remote', PLANT + ' 401(k) plan.', true).status, 'INELIGIBLE');
+});
+
+test('Farhan: sales, marketing and GTM operations titles keep the +4 (his RevOps field); a bare "operations" does not', () => {
+  for (const t of ['Sales & Marketing Operations Manager', 'Marketing Operations Lead', 'GTM Operations', 'Sales Ops Manager'])
+    assert.equal(farhanTargetFit(t, farhan.target_roles), 'word', t);
+  for (const t of ['Head of AI Native Operations', 'Infrastructure Operations Engineer', 'Travel Operations Manager'])
+    assert.equal(farhanTargetFit(t, farhan.target_roles), null, t);
 });

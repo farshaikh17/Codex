@@ -422,6 +422,10 @@ export function exactWithQualifier(title:string,targets:unknown){
 // Jobs QA 13 Nov: for Farhan 'operations', 'solutions' and 'architect' are too common to make a title close to one of his targets (Infrastructure
 // Operations, Solutions Architect); the +4 needs a distinctive word (implementation, crm, revenue, automation, delivery...). Sana keeps them.
 export const FARHAN_GENERIC_TITLE_WORDS=new Set([...GENERIC_TITLE_WORDS,'operations','solutions','architect']);
+// Sales, marketing, revenue and go-to-market operations are his RevOps field: 'Sales & Marketing Operations Manager' keeps the +4 (live list review).
+const FARHAN_GTM_OPS=/\b(?:sales|marketing|revenue|rev|gtm|go[- ]to[- ]market|crm)\b(?:\s*(?:&|and|,|\/)\s*[a-z]+)?\s+op(?:eration)?s\b/i;
+/** Farhan's +4: a distinctive word of a target role, or a sales / marketing / GTM operations title. */
+export function farhanTargetFit(title:string,targets:unknown):'exact'|'word'|null{return targetFit(title,targets,FARHAN_GENERIC_TITLE_WORDS)||(FARHAN_GTM_OPS.test(title||'')?'word':null);}
 export function targetFit(title:string,targets:unknown,generic:Set<string>=GENERIC_TITLE_WORDS):'exact'|'word'|null{
  const t=' '+szWords(title)+' ';let partial=false;
  for(const raw of list(targets)){const g=szWords(String(raw));if(!g)continue;
@@ -533,6 +537,21 @@ export function onsiteByText(description:string|null|undefined){
  }
  return false;
 }
+// Live list review 13 Nov (a 'Remote' place, a US-only text): words that tie a remote job to one country other than India. US payroll and work-permit
+// words (401(k), E-Verify, Form I-9, 'authorized to work in the US', 'based in the US'), or 'must be based / located / resident in <country>', 'right to
+// work in <country>'. A text that also names India, APAC, Asia, worldwide or hiring globally, or a denied mention ('you do not need to be based in
+// the US'), does not count.
+const COUNTRY_TEXT=new RegExp('\\b401\\s?\\(?k\\)?(?![a-z])|\\be-?verify\\b|\\bform i-?9\\b|\\b(?:authori[sz]ed|eligible|legally (?:authori[sz]ed|able|permitted)) to work in the (?:us|u\\.s\\.?|united states)(?![a-z])'
+ +'|\\b(?:remote|work|based|located|reside|resident|live|living) (?:anywhere )?(?:in|within|from) the (?:contiguous |continental )?(?:us|u\\.s\\.?|united states)(?![a-z])|\\bus[- ]based (?:candidates|applicants|remote|role|position|employees? only)\\b'
+ +'|\\b(?:must|should|need to|required to|will need to) (?:be )?(?:based|located|resid(?:e|ent)|live|living) (?:in|within) (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
+ +'|\\bright to work in (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,''),'gi');
+export function remoteCountryByText(description:string|null|undefined){
+ const d=String(description||'').toLowerCase();
+ if(!d.trim()||/\b(?:india|apac|asia|worldwide|globally|anywhere in the world|any country)\b/.test(d))return false;
+ COUNTRY_TEXT.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=COUNTRY_TEXT.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|without|don't|do not|needn't)\b[^.!?]*$/.test(before))return true;}
+ return false;
+}
 const SANA_BELOW_LEVEL=/\btechnicians?\b|(?<!\b(?:system|grid|network|transmission|distribution|independent)\s)\boperators?\b|\bfield officers?\b/i;
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|(?<!assistant |deputy |asst\.? |dy\.? )general manager|head of)\b/i;   // AGM / DGM are mid-senior Indian grades   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
@@ -595,6 +614,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   // Jobs QA 13 Nov: the owner's US-only rule, extended to every other country: 'Remote (United Kingdom)', 'Remote (Mexico)', 'Remote - EMEA'. Not when the
   // place or the text names India, Asia or APAC, the place also says worldwide / anywhere / global, or the text says worldwide (S5's readings win).
   else if(!explicitIndiaRemote&&!globalRemote&&foreignLocation(p.location)&&!/\b(?:india|apac|asia|worldwide|anywhere|global)\b/i.test(p.location||'')&&!/\b(?:india|apac|asia)\b/i.test(p.description||'')&&!['worldwide','india_ok'].includes(locationClass(p.description||'',p.location||''))){eligibility='INELIGIBLE';reason='Remote within another country or region only, not from India.';}
+  // Live list review 13 Nov: a posting whose place is only 'Remote' but whose text keeps the job in one country (US payroll words such as 401(k),
+  // E-Verify or Form I-9; 'must be based in Canada'; 'right to work in the UK') is the same case.
+  else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&remoteCountryByText(p.description)){eligibility='INELIGIBLE';reason='Remote within another country only (the posting\'s text says so), not from India.';}
   // (officeDays already ruled out hybrid and office days above; a passing 'on-site visit' or a denied 'not a hybrid role' no longer blocks, plan S8)
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site)\b/i.test(p.location||'')&&!/\b(not remote|no remote)\b/i.test(p.description||'')){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
   else if(globalRemote){eligibility='ELIGIBLE';reason='Posting explicitly advertises worldwide remote work.';}
@@ -625,7 +647,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const tooJunior=role&&(underLevel(p.title||'',p.description||'',have)||(candidate.id==='sana_ansari'&&!prof&&have>=5&&SANA_BELOW_LEVEL.test(p.title||'')));
  const overReach=role&&have>0&&need>have+2, meets=role&&!tooJunior&&have>0&&need>0&&need<=have;
  if(overReach)score=Math.max(0,score-EXPERIENCE_OVER_PENALTY);else if(meets)score=Math.min(PLAIN_CEILING,score+EXPERIENCE_MATCH_BONUS);
- const fit=role&&!prof?targetFit(p.title||'',candidate.target_roles,candidate.id==='farhan_shaikh'?FARHAN_GENERIC_TITLE_WORDS:GENERIC_TITLE_WORDS):null;
+ const fit=role&&!prof?(candidate.id==='farhan_shaikh'?farhanTargetFit(p.title||'',candidate.target_roles):targetFit(p.title||'',candidate.target_roles)):null;
  if(fit)score=Math.min(PLAIN_CEILING,score+(fit==='exact'?TARGET_EXACT_BONUS:TARGET_WORD_BONUS));
  const atLevel=role&&!tooJunior&&have>=7&&SENIOR_TITLE.test(p.title||'');
  if(atLevel)score=Math.min(PLAIN_CEILING,score+SENIORITY_BONUS);

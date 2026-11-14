@@ -28,8 +28,14 @@ KNOWN = {
     'fa emqh saasfaprod1': 'Kent',                # "Kent Careers"
     'fa exty saasfaprod1': 'Howmet Aerospace',
     'fa etqd saasfaprod1': 'Perficient',
+    # fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com: SVKM's career sites (14 Nov 2026: CX_1001 "NMIMS", CX_1012 "SVKM Central Office", CX_1016 "SVKM");
+    # the dataset gives the site after the tenant id
+    'fa elxu saasfaprod1 (cx_1001)': 'NMIMS',
+    'fa elxu saasfaprod1 (cx_1012)': 'SVKM',
+    'fa elxu saasfaprod1 (cx_1016)': 'SVKM',
+    'fa elxu saasfaprod1': 'SVKM',
 }
-FA_TENANT = re.compile(r'^fa[ -][a-z]{4}[ -]saasfaprod\d+$', re.I)
+FA_TENANT = re.compile(r'^fa[ -][a-z]{4}[ -](?:test[ -])?saasfaprod\d+(?:\s*\([^)]*\))?$', re.I)   # also with its site: 'Fa Elxu Saasfaprod1 (CX_1001)'
 SHORT_TOKEN = re.compile(r'^[a-z]{1,5}$')   # lower case only: 'Wood' is a name, 'bmc' an id
 TENANT_SOURCES = re.compile(r'^(workday|oracle|oracle_?hcm)$', re.I)
 # Words a career site puts around the employer's name, and names that are not an employer at all.
