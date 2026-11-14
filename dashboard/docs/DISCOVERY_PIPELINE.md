@@ -234,7 +234,7 @@ ELIGIBLE count is given too. Requests are per daily run (the watchlist reads the
 **Worldwide energy employers probed for the owner's "any country" rule (14 Nov):** Sulzer's SmartRecruiters page lists no postings;
 Wärtsilä's and Veolia's forward to their own sites (`jobs.smartrecruiters.com`, `jobs.veolia.com`); Enel's Avature feed answers empty;
 Ørsted's Workday tenant refused the guessed site name; Iberdrola's careers host did not answer. None added. Already read: ENGIE,
-Siemens Energy, GE Vernova, Statkraft, Vattenfall (dataset), AFRY, Masdar, EURES (EU-wide) and Arbeitnow (visa-sponsored, Germany).
+Siemens Energy, GE Vernova, Statkraft, AFRY, Masdar, EURES (EU-wide) and Arbeitnow (visa-sponsored, Germany).
 
 **Facilities-engineering titles (owner default: yes).** `FM_ROLE` in `engine/more_sources.py` accepts Shift Engineer / Shift In-charge,
 Chief Engineer, Facility Manager - Engineering / Technical, Facilities Engineer, Technical Supervisor and MEP Engineer / Manager for Sana at
