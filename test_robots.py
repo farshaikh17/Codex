@@ -195,6 +195,8 @@ class JobSitesRobotsReport(unittest.TestCase):
             rep = json.loads(Path(d, 'jobsite_report.json').read_text())
         self.assertEqual(rep['robots']['indeed'], 'disallowed'); self.assertEqual(rep['robots']['linkedin'], 'allowed')
         self.assertEqual([x['site'] for x in rep['log']], ['indeed'], 'naukri in an old query list is never searched')
+        self.assertEqual(rep['log'][0].get('error'), 'robots.txt: disallowed', 'a disallowed site is skipped, not searched')
+        self.assertEqual(rep['blocked'], 1)
 
 
 class Compliance(unittest.TestCase):

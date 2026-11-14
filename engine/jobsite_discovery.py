@@ -25,9 +25,12 @@ INDIA_SITES = ['indeed', 'linkedin', 'glassdoor', 'google']
 SITE_ENDPOINT = {'indeed': 'https://apis.indeed.com/graphql', 'linkedin': 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search',
                  'glassdoor': 'https://www.glassdoor.co.in/graph', 'google': 'https://www.google.com/search?q=jobs&udm=8',
                  'bayt': 'https://www.bayt.com/en/international/jobs/'}
-# False: a site whose robots.txt disallows the address is still searched and the report says "robots: disallowed" (the owner decides;
-# see the PR that turns this on). True: such a site is skipped and reported as blocked by robots.txt.
-ENFORCE_ROBOTS = False
+# True (owner decision needed, see the PR): a site whose robots.txt disallows the address JobSpy requests is skipped and reported as
+# blocked by robots.txt. On 14 Nov that is Indeed (apis.indeed.com: "Disallow: /"), LinkedIn ("Disallow: /" for every agent not
+# whitelisted), Glassdoor ("Disallow: /graph") and Google ("Disallow: /search"). Bayt is skipped as well: its pages sit behind a bot
+# challenge that JobSpy passes only by imitating a browser's TLS fingerprint.
+ENFORCE_ROBOTS = True
+BOT_WALL = {'bayt'}
 GULF_SITES = ['bayt', 'indeed', 'linkedin']   # Bayt is the largest Gulf job board; Indeed searched in that country
 # A few searches per built-in candidate: (search term, location, Indeed country, sites). The title filter below (the
 # Worker's own role rule) removes loose matches. Owner rules 2026-11-07: Farhan remote only, from any country;
@@ -108,6 +111,8 @@ def main():
             for site in sites:
                 if site not in SITES:   # a site dropped for compliance (Naukri) is never searched, even from an old profile
                     continue
+                if site in BOT_WALL:
+                    log.append({'site': site, 'term': term, 'error': 'bot challenge (not passed)'}); continue
                 if ENFORCE_ROBOTS and robots_status.get(site) != 'allowed':
                     log.append({'site': site, 'term': term, 'error': f'robots.txt: {robots_status.get(site)}'}); continue
                 watch.take()
