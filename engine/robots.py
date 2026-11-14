@@ -131,3 +131,20 @@ def check(url, **kw):
 
 def reset():
     _cache.clear()
+
+
+class CheckedRedirects(urllib.request.HTTPRedirectHandler):
+    """A redirect is followed only when robots.txt of the address it leads to allows it (a career page that moved to the employer's
+    own site is checked against that site's robots.txt, not the one first asked)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        check(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_opener = urllib.request.build_opener(CheckedRedirects)
+
+
+def urlopen(req, timeout):
+    """urllib's urlopen with every redirect checked against robots.txt."""
+    return _opener.open(req, timeout=timeout)

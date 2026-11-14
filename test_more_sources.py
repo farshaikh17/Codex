@@ -179,6 +179,8 @@ class MoreSources(unittest.TestCase):
                 return more
             if url.startswith('https://careers.smartrecruiters.com/Masdar/'):
                 return b''
+            if url == 'https://careers.smartrecruiters.com/AFRY':
+                return b'<html>forwarded to the employer site</html>'
             raise OSError('down')
         with mock.patch.object(ms, 'http', fake):
             got = list(ms.smartrecruiters())
@@ -191,6 +193,7 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(g['url'], 'https://jobs.smartrecruiters.com/Masdar/744000027104115-document-controller-sppc5')
         self.assertTrue(any('api/groups?page=1' in u for u in calls), 'the further group page is read')
         self.assertIn('Statkraft1', [c[1] for c in ms.SMARTRECRUITERS])
+        self.assertNotIn('BoschGroup', [c[1] for c in ms.SMARTRECRUITERS])
 
 
     def test_oracle_hcm_reads_public_requisitions(self):

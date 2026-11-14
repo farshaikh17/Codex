@@ -56,7 +56,7 @@ def get(url, timeout=30):
         time.sleep(wait)
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json, application/rss+xml, */*'})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https URLs above)
+        with robots.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https URLs above; redirects checked against robots.txt)
             return r.read(8_000_000)
     finally:
         _LAST[host] = time.monotonic()
