@@ -1,0 +1,77 @@
+{
+ "jobs": [
+  {
+   "absolute_url": "https://fingerprint.com/careers/jobs/apply/?gh_jid=6173440004",
+   "internal_job_id": 5208390004,
+   "location": {
+    "name": "Remote"
+   },
+   "id": 6173440004,
+   "updated_at": "2026-09-14T09:45:56-04:00",
+   "requisition_id": "SAL27-02",
+   "title": "Solutions Engineer - India",
+   "company_name": "Fingerprint",
+   "first_published": "2026-08-28T14:14:23-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;strong&gt;Fingerprint&lt;/strong&gt; empowers enterprises to detect and stop online fraud with the world\u2019s most accurate device intelligence.&amp;nbsp; We lead our industry with bleeding-edge identification capabilities and work on turning new ideas and discoveries in the fraud detection space into reality. Our customers range from innovative",
+   "departments": [
+    {
+     "id": 4025885004,
+     "name": "Sales",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4012422004,
+     "name": "Remote",
+     "location": "Remote",
+     "child_ids": [
+      4022054004
+     ],
+     "parent_id": null
+    }
+   ]
+  },
+  {
+   "absolute_url": "https://fingerprint.com/careers/jobs/apply/?gh_jid=6251090004",
+   "internal_job_id": 5237453004,
+   "location": {
+    "name": "Remote"
+   },
+   "id": 6251090004,
+   "updated_at": "2026-11-05T17:51:15-05:00",
+   "requisition_id": "GA27-01",
+   "title": "Business Operations Associate",
+   "company_name": "Fingerprint",
+   "first_published": "2026-11-05T17:50:04-05:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;strong&gt;Fingerprint&lt;/strong&gt; empowers enterprises to detect and stop online fraud with the world\u2019s most accurate device intelligence.&amp;nbsp; We lead our industry with bleeding-edge identification capabilities and work on turning new ideas and discoveries in the fraud detection space into reality. Our customers range from innovative",
+   "departments": [
+    {
+     "id": 4114181004,
+     "name": "Business Operations",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4012422004,
+     "name": "Remote",
+     "location": "Remote",
+     "child_ids": [
+      4022054004
+     ],
+     "parent_id": null
+    }
+   ]
+  }
+ ],
+ "meta": {
+  "total": 2
+ }
+}

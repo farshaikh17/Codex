@@ -1,6 +1,8 @@
 name: Watchlist (priority employers and boards, three times a day)
 # Owner-approved 2026-11-07. Between the daily dataset runs, the employer sites that matter most (Siemens Energy, ENGIE, ACWA Power,
 # Tata Power, Fluor, NEOM, TAQA, Workable) and the remote boards are read again, so a new posting is on the dashboard within hours.
+# 14 Nov: also the watchlist employers' own boards (MonetizeMore, Massive Rocket, Sprinto, UptimeAI, Canvas Medical, Fingerprint, Paired,
+# Firework), KBR and Wood in the Gulf, Schneider Electric, Cummins India, Apraava, Transguard, ReNew, JLL; every request passes robots.txt.
 # Same scoring, same guards, same cap logic as the daily run; the dataset itself is not downloaded here.
 on:
   workflow_dispatch:

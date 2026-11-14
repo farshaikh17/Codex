@@ -43,12 +43,12 @@ from urllib.parse import urlsplit
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.dataset_discovery import clean  # noqa: E402
 from engine.multi_place import from_count, places_text  # noqa: E402
-from engine import robots  # noqa: E402
+from engine import reposters, robots  # noqa: E402
 from engine.remote_boards import UA, all_errored, job, over_budget, text, when, write_json  # noqa: E402
 
 PAUSE = 0.6
 # Sources that read an employer's own career site (not a job board): their rows are stored as the employer's posting.
-EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe')
+EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe', 'watch_boards')
 QUERIES = {
     'farhan_shaikh': ['gohighlevel', 'revops', 'revenue operations', 'implementation manager', 'automation specialist', 'crm manager',
                       'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer',
@@ -547,6 +547,73 @@ def jibe():
     _all_failed('jibe', failed, len(JIBE))
 
 
+# Watchlist employers (14 Nov): employers whose own boards already post the right jobs, read three times a day by the watchlist run.
+# Farhan: employers seen hiring his roles remote from India or worldwide. (display name, system, board id).
+WATCH = [('MonetizeMore', 'jazzhr', 'monetizem'), ('Massive Rocket', 'lever', 'massive-rocket'), ('Sprinto', 'lever', 'Sprinto'),
+         ('UptimeAI', 'ashby', 'uptimeai'), ('Canvas Medical', 'ashby', 'canvas-medical'), ('Fingerprint', 'greenhouse', 'fingerprint'),
+         ('Paired', 'workable', 'paired'), ('Firework', 'lever', 'fireworkhq')]
+_JAZZ_ROW = re.compile(r'<div id="row_job_(\d{8})\d*_\w+" class="jobs_row">\s*<div>\s*<a class="job_title_link" href="(/apply/jobs/details/\w+)[^"]*">(.*?)</a>'
+                       r'.*?<strong>Location:</strong>\s*([^<]*)</span>', re.S)
+
+
+def _remote_place(place, flag):
+    place = text(place) or 'See posting'
+    return place if not flag or 'remote' in place.lower() else f'Remote ({place})'
+
+
+def watch_board(company, kind, board):
+    """One employer's public job board: Lever, Greenhouse and Ashby posting APIs, Workable's account widget, JazzHR's list page."""
+    if kind == 'lever':
+        for r in json.loads(http(f'https://api.lever.co/v0/postings/{urllib.parse.quote(board)}?mode=json')):
+            cat = r.get('categories') or {}
+            remote = r.get('workplaceType') == 'remote'
+            place = ', '.join(cat.get('allLocations') or []) or cat.get('location') or ''
+            desc = ' '.join([text(r.get('descriptionBody') or r.get('description'))] + [text(x.get('text')) + ' ' + text(x.get('content')) for x in r.get('lists') or []]
+                            + [text(r.get('additional'))])
+            yield job('watch_boards', r.get('hostedUrl') or '', text(r.get('text')), company, _remote_place(place, remote), desc, when(r.get('createdAt')), board=False), remote
+    elif kind == 'greenhouse':
+        for r in json.loads(http(f'https://boards-api.greenhouse.io/v1/boards/{urllib.parse.quote(board)}/jobs?content=true')).get('jobs') or []:
+            place = text((r.get('location') or {}).get('name'))
+            remote = 'remote' in place.lower()
+            yield job('watch_boards', r.get('absolute_url') or '', text(r.get('title')), company, place or 'See posting', text(html.unescape(r.get('content') or '')),
+                      when(r.get('first_published') or r.get('updated_at')), board=False), remote
+    elif kind == 'ashby':
+        for r in json.loads(http(f'https://api.ashbyhq.com/posting-api/job-board/{urllib.parse.quote(board)}')).get('jobs') or []:
+            if r.get('isListed') is False:
+                continue
+            remote = bool(r.get('isRemote')) or str(r.get('workplaceType') or '').lower() == 'remote'
+            places = [text(r.get('location'))] + [text(x.get('location')) for x in r.get('secondaryLocations') or [] if isinstance(x, dict)]
+            yield job('watch_boards', r.get('jobUrl') or '', text(r.get('title')), company, _remote_place('; '.join(x for x in places if x), remote),
+                      text(r.get('descriptionPlain') or r.get('descriptionHtml')), when(r.get('publishedAt')), board=False), remote
+    elif kind == 'workable':
+        d = json.loads(http(f'https://apply.workable.com/api/v1/widget/accounts/{urllib.parse.quote(board)}?details=true'))
+        for r in d.get('jobs') or []:
+            remote = bool(r.get('telecommuting'))
+            place = ', '.join(x for x in (r.get('city'), r.get('country')) if x)
+            yield job('watch_boards', r.get('url') or r.get('shortlink') or '', text(r.get('title')), company, _remote_place(place, remote),
+                      text(r.get('description')), when(r.get('published_on') or r.get('created_at')), board=False), remote
+    elif kind == 'jazzhr':
+        page = http(f'https://{board}.applytojob.com/apply/jobs/', headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
+        for day, path, title, place in _JAZZ_ROW.findall(page):
+            title, place = text(title), text(place)
+            remote = 'remote' in title.lower()
+            yield job('watch_boards', f'https://{board}.applytojob.com{path}', title, company, _remote_place(place, remote), '',
+                      datetime.strptime(day, '%Y%m%d').replace(tzinfo=timezone.utc), board=False), remote
+
+
+def watch_boards():
+    failed = 0
+    for company, kind, board in WATCH:
+        try:
+            for j, remote in watch_board(company, kind, board):
+                j['is_remote'] = remote
+                yield j
+        except Exception as e:   # one employer down (or its robots.txt refusing) never loses the others
+            failed += 1
+            print(f'watch_boards {company}: {type(e).__name__}: {str(e)[:100]}', file=sys.stderr)
+    _all_failed('watch_boards', failed, len(WATCH))
+
+
 def arbeitnow(pages=3):
     for page in range(1, pages + 1):
         d = json.loads(http(f'https://www.arbeitnow.com/api/job-board-api?page={page}&visa_sponsorship=true'))
@@ -682,6 +749,14 @@ def _detail_successfactors(j):
     return p['description']
 
 
+def _detail_jazzhr(j):
+    if not re.match(r'^https://[\w-]+\.applytojob\.com/apply/jobs/details/\w+$', j['url']):
+        return None
+    page = http(j['url'], headers={'Accept': 'text/html'}).decode('utf-8', 'replace')
+    d = re.search(r'<div id="job-description"[^>]*>(.*?)(?:<div id="(?:job-application|apply)|<form|$)', page, re.S)
+    return text(d.group(1))[:8000] if d else None
+
+
 def _detail_oracle(j):
     m = re.match(r'^https://([^/]+)/hcmUI/CandidateExperience/en/sites/([^/]+)/job/(\d+)$', j['url'])
     if not m:
@@ -693,7 +768,7 @@ def _detail_oracle(j):
     return ' '.join(text(it.get(k)) for k in ('ExternalDescriptionStr', 'ExternalQualificationsStr'))
 
 
-ENRICH = {'smartrecruiters': _detail_smartrecruiters, 'workday': _detail_workday, 'oracle_hcm': _detail_oracle, 'successfactors': _detail_successfactors}
+ENRICH = {'smartrecruiters': _detail_smartrecruiters, 'workday': _detail_workday, 'oracle_hcm': _detail_oracle, 'successfactors': _detail_successfactors, 'watch_boards': _detail_jazzhr}
 
 
 def enrich_full_text(j, name, used, spent):
@@ -731,17 +806,18 @@ def main():
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     SF_ROLE_FILTER[:] = list(rules.values()) + ([(FM_ROLE, FM_EXCLUDE)] if any(c in rules for c in FM_CANDIDATES) else [])
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe,
+    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe, 'watch_boards': watch_boards,
                'arbeitnow': arbeitnow, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
-        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe')}
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
-    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe'}   # employer sites: the date is the original posting date; the still-open check guards staleness
+    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}
     have = {j['id'] for j in merged['jobs']}
+    held = reposters.counts_in(merged['jobs'])   # reposting sites and VA staffing firms: at most REPOSTER_CAP each per run, every source together
     report = {}
     used, enriched, spent = {}, {}, [0.0]
     for name, fn in sources.items():
@@ -762,6 +838,8 @@ def main():
                     continue
                 j['id'] = f"js:{name}:{hashlib.sha1(j['url'].encode()).hexdigest()[:20]}"
                 if j['id'] in have:
+                    continue
+                if not reposters.admit(j, held):
                     continue
                 j['candidates'] = cands
                 j['board'] = name not in EMPLOYER_SITES   # an employer's own career site is not a job board

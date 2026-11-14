@@ -59,6 +59,6 @@ export function indiaWords(classification?: string | null): string {
 /** Where the posting was found, in plain words. */
 export function sourceText(adapter?: string | null, provenance?: string | null): string {
   if (provenance === 'PUBLIC_FEED_UNVERIFIED') return 'From a job board (the employer is not confirmed)';
-  const boards = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'bayt', 'adzuna', 'remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'arbeitnow', 'getro'];
+  const boards = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'bayt', 'adzuna', 'remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'arbeitnow', 'getro', 'fourdayweek', 'realworkfromanywhere'];
   return boards.includes(String(adapter || '')) ? 'From a job board' : "From the employer's own site";
 }
