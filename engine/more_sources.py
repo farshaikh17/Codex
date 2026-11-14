@@ -102,8 +102,10 @@ WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd
            ('JLL', 'jll', 'wd1', 'jllcareers', {'terms': ['shift engineer', 'chief engineer', 'facility manager engineering', 'technical supervisor', 'MEP engineer',
                                                          'maintenance engineer'], 'pages': 3})]
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
-SMARTRECRUITERS = [('Masdar', 'Masdar'), ('Vattenfall', 'Vattenfall'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1'),
-                   ('Bosch', 'BoschGroup'), ('Continental', 'Continental')]   # added 2026-11-12, live that day (large India plants)
+# 14 Nov: Bosch and Vattenfall left the list: their SmartRecruiters career pages now forward to their own sites (jobs.bosch.com,
+# careers.vattenfall.com), and the SmartRecruiters API that still served them is disallowed by robots.txt.
+SMARTRECRUITERS = [('Masdar', 'Masdar'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1'),
+                   ('Continental', 'Continental')]   # added 2026-11-12, live that day (large India plants)
 # Oracle Recruiting Cloud public candidate-experience REST (no key). (display name, host, site number); answered on a live read.
 # Options: terms (keywords searched, '' = the whole list), facet (an extra finder filter such as a location id), pages (25 rows each),
 # gulf (keep only postings placed in the Gulf).
@@ -150,7 +152,7 @@ def http(url, data=None, headers=None, timeout=40, robots_ok=False):
         h['Content-Type'] = 'application/json'
     req = urllib.request.Request(url, data=body, headers=h, method='POST' if body is not None else 'GET')
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https hosts above)
+        with robots.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https hosts above; redirects checked against robots.txt)
             return r.read(12_000_000)
     finally:
         _LAST[host] = time.monotonic()
@@ -414,7 +416,7 @@ def workday(pages=3):
 # The employer's public career page (careers.smartrecruiters.com/<company>, whose robots.txt allows it) lists the same postings grouped by
 # place; a group's further postings and further groups come from the page's own "more" links. The posting page (jobs.smartrecruiters.com,
 # no robots.txt) gives the description.
-SR_PAGES = 8          # group pages and "more" pages per employer
+SR_PAGES = 15         # group pages and "more" pages per employer (10 postings a "more" page)
 _SR_GROUP = re.compile(r'<section data-qty="(\d+)"(.*?)</section>', re.S)
 _SR_JOB = re.compile(r'<a href="(https://jobs\.smartrecruiters\.com/[^"/]+/(\d+)[^"]*)"[^>]*class="[^"]*js-job-ad-link[^"]*">\s*<h4[^>]*>(.*?)</h4>', re.S)
 _SR_MORE = re.compile(r'<a data-page="(\d+)" data-value="([^"]*)" data-type="([^"]*)" data-more="([^"]*)"')
@@ -445,6 +447,8 @@ def smartrecruiters_site(company, ident):
     base = f'https://careers.smartrecruiters.com/{urllib.parse.quote(ident)}'
     get = lambda url: http(url, headers={'Accept': 'text/html'}).decode('utf-8', 'replace')   # noqa: E731
     first = get(base)
+    if 'js-openings' not in first:
+        raise RuntimeError(f'{ident}: no SmartRecruiters career page (it forwards to the employer\'s own site)')
     m = re.search(r'data-groups-pages="(\d+)"', first)
     pages = [first] + [get(f'{base}/api/groups?page={n}') for n in range(1, min(int(m.group(1)) if m else 1, SR_PAGES))]
     seen, budget = set(), SR_PAGES
