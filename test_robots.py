@@ -135,7 +135,7 @@ class Robots(unittest.TestCase):
     def test_readers_refuse_disallowed_paths_before_any_request(self):
         robots._cache['https://remotive.com'] = robots.parse(REMOTIVE)
         robots._cache['https://careers.acwapower.com'] = robots.parse(SUCCESSFACTORS)
-        with mock.patch('urllib.request.urlopen') as op:
+        with mock.patch.object(robots, 'urlopen') as op:
             with self.assertRaises(robots.RobotsDisallowed):
                 ms.http('https://careers.acwapower.com/services/rss/job/?keywords=x')
             with self.assertRaises(robots.RobotsDisallowed):
@@ -147,11 +147,20 @@ class Robots(unittest.TestCase):
         resp = mock.MagicMock()
         resp.__enter__.return_value.read.return_value = b'{}'
         sleeps = []
-        with mock.patch('urllib.request.urlopen', return_value=resp), mock.patch.object(ms.time, 'sleep', side_effect=sleeps.append):
+        with mock.patch.object(robots, 'urlopen', return_value=resp), mock.patch.object(ms.time, 'sleep', side_effect=sleeps.append):
             ms._LAST.clear()
             ms.http('https://careers.se.com/api/jobs?page=1')
             ms.http('https://careers.se.com/api/jobs?page=2')
         self.assertTrue(sleeps and sleeps[-1] > 4.0, 'the second request to a host waits for its Crawl-delay')
+
+    def test_redirect_to_a_disallowed_address_is_refused(self):
+        robots._cache['https://own.example'] = robots.parse('User-agent: *\nDisallow: /careers\n')
+        h = robots.CheckedRedirects()
+        req = __import__('urllib.request').request.Request('https://careers.smartrecruiters.com/X')
+        with self.assertRaises(robots.RobotsDisallowed):
+            h.redirect_request(req, None, 302, 'Found', {}, 'https://own.example/careers')
+        robots._cache['https://ok.example'] = robots.parse('')
+        self.assertIsNotNone(h.redirect_request(req, None, 302, 'Found', {}, 'https://ok.example/jobs'))
 
     def test_adzuna_needs_owner_api_terms_decision(self):
         robots._cache['https://api.adzuna.com'] = robots.parse('User-agent: *\nDisallow: /\n')
@@ -160,14 +169,14 @@ class Robots(unittest.TestCase):
             sent.append(req.full_url)
             r = mock.MagicMock(); r.__enter__.return_value.read.return_value = json.dumps({'results': []}).encode(); return r
         env = {'ADZUNA_APP_ID': 'test-id', 'ADZUNA_APP_KEY': 'test-key'}
-        with mock.patch.dict('os.environ', env, clear=False), mock.patch('urllib.request.urlopen', side_effect=fake_open), mock.patch.object(ms.time, 'sleep'):
+        with mock.patch.dict('os.environ', env, clear=False), mock.patch.object(robots, 'urlopen', side_effect=fake_open), mock.patch.object(ms.time, 'sleep'):
             with self.assertRaises(robots.RobotsDisallowed):
                 list(ms.adzuna({'sana_ansari': [('in', 'maintenance engineer')]}))
             self.assertEqual(sent, [])
             with mock.patch.dict('os.environ', {'ADZUNA_API_TERMS_ACCEPTED': 'true'}):
                 list(ms.adzuna({'sana_ansari': [('in', 'maintenance engineer')]}))
         self.assertEqual(len(sent), 1)
-        with mock.patch.dict('os.environ', {'ADZUNA_APP_ID': '', 'ADZUNA_APP_KEY': ''}), mock.patch('urllib.request.urlopen') as op:
+        with mock.patch.dict('os.environ', {'ADZUNA_APP_ID': '', 'ADZUNA_APP_KEY': ''}), mock.patch.object(robots, 'urlopen') as op:
             self.assertEqual(list(ms.adzuna({'sana_ansari': [('in', 'x')]})), [], 'no keys: nothing is read')
             op.assert_not_called()
 
