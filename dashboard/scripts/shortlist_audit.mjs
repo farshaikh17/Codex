@@ -13,7 +13,7 @@
 //     --relaxed, the day the still-open check verified too few rows), or closed;
 //     A Stretch row that is a Gulf posting from a job board refusing the check, found in the last 2 days, passes (the selector's 'listed' rule;
 //     never on Ready);
-//   - an employer shown by its hiring-system tenant id (until B1 names it; shortlistTenant(), the selector's own test, on the stored name);
+//   - an employer shown by its hiring-system tenant id (until B1 names it; shortlistTenant(), the selector's own test: the stored name read through the names table);
 //   - a row with a manual override, or an application older than the change, that the daily run changed (a 'discovery' history row since the run
 //     started; an application made after that change is the person's own later choice). An automatic row
 //     a person later saved or applied to keeps its mark; that alone is a person's choice, not a broken rule, and is counted, not failed.

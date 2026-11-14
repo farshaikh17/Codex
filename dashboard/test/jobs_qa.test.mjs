@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createDb } from './harness.mjs';
 import { evaluate, avoidedTitle, foreignLocation, gulfPlace, abroadByDescription, onsiteByText, yearsRequired, yearsCeiling, sanaTitleSkills, targetFit,
-  bareForeignCode, remoteCountryByText, farhanTargetFit, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP } from '../worker/discovery.ts';
+  bareForeignCode, remoteCountryByText, farhanTargetFit, remoteFlagTrusted, PLATFORM_GAP_CAP, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP } from '../worker/discovery.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const farhan = { id: 'farhan_shaikh', primary_skills: JSON.stringify(['CRM Configuration', 'Workflow Automation']), total_years_experience: 9,
@@ -173,4 +173,47 @@ test('Farhan: sales, marketing and GTM operations titles keep the +4 (his RevOps
     assert.equal(farhanTargetFit(t, farhan.target_roles), 'word', t);
   for (const t of ['Head of AI Native Operations', 'Infrastructure Operations Engineer', 'Travel Operations Manager'])
     assert.equal(farhanTargetFit(t, farhan.target_roles), null, t);
+});
+
+test('jobs QA 2, Farhan: India or Asia exempts only when it is about the person; more regions are places abroad', () => {
+  assert.equal(ev(farhan, 'Implementation Consultant', 'Remote (Kenya)', CRM + ' We serve partners across Africa, Asia and Latin America.', true).eligibility, 'INELIGIBLE');
+  assert.notEqual(ev(farhan, 'Implementation Consultant', 'Remote (Kenya)', CRM + ' Candidates based in India are welcome.', true).eligibility, 'INELIGIBLE');
+  for (const loc of ['Remote - Latin America', 'North Macedonia', 'Remote (Africa)']) assert.ok(foreignLocation(loc), loc);
+});
+
+test('jobs QA 2: an Oracle, Workday or SuccessFactors remote flag counts only when the text or the place says remote', () => {
+  assert.equal(remoteFlagTrusted('oracle', 'Manage the automation platform for the bank.', 'Bengaluru, Karnataka, India'), false);
+  assert.equal(remoteFlagTrusted('workday', 'This is a remote role.', 'Pune'), true);
+  assert.equal(remoteFlagTrusted('successfactors', '', 'Remote - India'), true);
+  assert.equal(remoteFlagTrusted('lever', '', 'Bengaluru'), true, 'other sources keep their flag');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qa2-'));
+  const S = 'sana_ansari';
+  fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: S, primary_skills: sana.primary_skills, target_roles: sana.target_roles, total_years_experience: 9, search_profile: null }]));
+  const j = (id, ats, description) => ({ id, url: `https://example.com/${id}`, title: 'Reliability Engineer', company: 'Co ' + id, ats_type: ats, location: 'Pune, India', is_remote: true, description, candidates: [S] });
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:r:1', 'oracle', PLANT), j('ds:r:2', 'lever', PLANT), j('ds:r:3', 'workday', PLANT + ' Fully remote.')] }));
+  execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
+  const { sqlite } = createDb();
+  sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'S')`).run(S);
+  sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
+  const wt = Object.fromEntries(sqlite.prepare('SELECT id, workplace_type w FROM jobs').all().map((r) => [r.id, r.w]));
+  assert.notEqual(wt['ds:r:1'], 'REMOTE_RESTRICTED', 'an Oracle flag alone');
+  assert.equal(wt['ds:r:2'], 'REMOTE_RESTRICTED'); assert.equal(wt['ds:r:3'], 'REMOTE_RESTRICTED');
+});
+
+test('jobs QA 2, Farhan: CRM and automation platforms count for his skills, "RevOps" reads as GTM ops, and the platform cap sits below his Worth-a-try floor', () => {
+  const r = ev(farhan, 'Marketing Operations Specialist', 'Remote - India', 'Run our HubSpot and ActiveCampaign funnels and Zapier and n8n automations.');
+  assert.deepEqual([...r.skills].sort(), ['CRM Configuration', 'Workflow Automation']);
+  assert.equal(farhanTargetFit('RevOps Manager', farhan.target_roles), 'word');
+  assert.ok(PLATFORM_GAP_CAP < 70 - 10);
+});
+
+test('jobs QA 2, Sana: core thermal-plant posts rank higher; language-required jobs abroad meet the visa cap; chip-design titles are avoided; design posts stay near her threshold', () => {
+  const plain = ev(sana, 'Maintenance Engineer', 'Pune, Maharashtra, India', 'Preventive maintenance and reliability at a shopping mall. '.repeat(3));
+  const core = ev(sana, 'Maintenance Engineer', 'Pune, Maharashtra, India', 'Preventive maintenance and reliability of the turbine and boiler at a thermal power plant. '.repeat(2));
+  assert.ok(core.score > plain.score, `${core.score} vs ${plain.score}`);
+  const dutch = ev(sana, 'Reliability Engineer', 'Delfzijl', PLANT + ' Vloeiend Nederlands is vereist.');
+  assert.ok(dutch.score <= VISA_UNLIKELY_CAP, String(dutch.score));
+  for (const t of ['Senior ASIC Power and Thermal Engineer', 'Silicon Engineer, Power and Thermal Controllers']) assert.ok(avoidedTitle('sana_ansari', t), t);
+  const study = evaluate({ ...sana, qualification_threshold: 60 }, { id: 'x', title: 'Power System Study Senior Expert', company: 'Acme', url: 'https://e.com/x', location: 'Mumbai, India', description: PLANT.repeat(3), remote: false });
+  assert.ok(study.score <= 64 && study.status !== 'INELIGIBLE', String(study.score));
 });

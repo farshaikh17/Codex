@@ -159,11 +159,12 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
 });
 
 test('A4: a tenant-id employer is not shortlisted (B1 gives it a name first); known ids and short real names from other sites are', () => {
-  const pool = [row({ job_id: 't1', company: 'Fa Espx Saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
-    row({ job_id: 't3', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/hcmUI/job/1' }),
+  const pool = [row({ job_id: 't1', company: 'Fa Eqid Saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'eluq', source: 'workday' }),
+    row({ job_id: 't3', company: 'Eluq', source: 'oracle', url: 'https://eluq.fa.em3.oraclecloud.com/hcmUI/job/1' }),
+    row({ job_id: 'k5', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/hcmUI/job/1' }),   // the names table knows it (Lucy Electric)
     row({ job_id: 'k1', company: 'Abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' }), row({ job_id: 'k3', company: 'Jll', source: 'workday' }),
     row({ job_id: 'k4', company: 'DAMAC', source: 'oracle', url: 'https://ejwe.fa.em2.oraclecloud.com/x' })];
-  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY', k3: 'READY', k4: 'READY' });
+  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY', k3: 'READY', k4: 'READY', k5: 'READY' });
 });
 
 test('A5: role families, five sample titles each, first match wins, including the misfiles found', () => {

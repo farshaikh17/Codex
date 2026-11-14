@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createDb } from './harness.mjs';
-import { employerKey, tenantEmployer, shortlistTenant, selectShortlist, MARK } from '../scripts/shortlist_select.mjs';
+import { employerKey, tenantEmployer, shortlistTenant, tableName, selectShortlist, MARK } from '../scripts/shortlist_select.mjs';
 import { audit } from '../scripts/shortlist_audit.mjs';
 import { companyKey } from '../worker/discovery.ts';
 
@@ -59,25 +59,26 @@ test('migration 0023 names the SVKM tenant stored with its site, only on its own
   assert.deepEqual(names, { e1: 'NMIMS', e2: 'SVKM', e3: 'Fa Elxu Saasfaprod1 (CX_1001)', e4: 'Fa Elxu Saasfaprod1 (CX_1012)' });
 });
 
-test('the selector and the audit share one tenant test, on the name stored on the job (13 Nov run: 7 rows shortlisted, then failed by the audit)', () => {
-  const url = 'https://hdga.fa.em3.oraclecloud.com/?site_number=Lucyelectric#26081';
+test('the selector and the audit share one tenant test: the stored name read through the names table (13 Nov run: 7 rows shortlisted, then failed by the audit)', () => {
+  const url = 'https://hdga.fa.em3.oraclecloud.com/?site_number=Lucyelectric#26081', other = 'https://abcd.fa.em2.oraclecloud.com/?site_number=CX#1';
   assert.equal(tenantEmployer('Fa Elxu Saasfaprod1 (CX_1001)', 'oracle', 'https://fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com/?site_number=CX_1001#1'), true, 'a tenant id with its site');
   assert.equal(tenantEmployer('Hdga', 'jobsite', url), true, 'named like its oraclecloud.com host, whatever the source says');
   assert.equal(tenantEmployer('Wood', 'oracle_hcm', 'https://ehif.fa.em2.oraclecloud.com/x'), false);
   assert.equal(tenantEmployer('bmc', 'lever', 'https://jobs.lever.co/bmc/1'), false);
-  // a pool row named through the table, whose job still stores the tenant id (0021 not yet applied): kept off, as the audit would fail it
+  assert.equal(tableName('Fa-Elxu-Saasfaprod1 (CX_1001)'), 'NMIMS');
+  assert.equal(tableName('hdga'), 'Lucy Electric');
   const now = Date.parse('2026-11-13T12:00:00Z'), fresh = '2026-11-13T00:00:00Z';
-  const row = (id, company, stored) => ({ kind: 'pool', candidate_id: 'sana_ansari', job_id: id, title: 'Maintenance Engineer ' + id, company, stored_company: stored, location: 'Pune, India',
-    workplace: 'ONSITE', source: 'oracle', url, description: 'x'.repeat(400), active: 1, score: 85, skill_score: 60, eligibility: 'ELIGIBLE', status: 'NEEDS_REVIEW',
+  const row = (id, company, stored, u = url) => ({ kind: 'pool', candidate_id: 'sana_ansari', job_id: id, title: 'Maintenance Engineer ' + id, company, stored_company: stored, location: 'Pune, India',
+    workplace: 'ONSITE', source: 'oracle', url: u, description: 'x'.repeat(400), active: 1, score: 85, skill_score: 60, eligibility: 'ELIGIBLE', status: 'NEEDS_REVIEW',
     reason: 'Cloud discovery match.', threshold: 60, marked: 1, target_exact: 0, last_verified_at: fresh, discovered_at: fresh });
-  const pool = [row('o1', 'Lucy Electric', 'hdga'), row('o2', 'Lucy Electric', 'Lucy Electric')];
-  assert.equal(shortlistTenant(pool[0]), true);
-  assert.equal(shortlistTenant(pool[1]), false, 'renamed on the job: shortlisted under its name');
-  const picked = selectShortlist(pool, { now }).changes.filter((c) => c.to !== 'NEEDS_REVIEW').map((c) => c.job_id);
-  assert.deepEqual(picked, ['o2']);
-  // what the audit reads for each (the stored name), had both been shortlisted: it fails exactly the row the selector kept off
+  // o1: stored 'hdga' (migration not yet applied), the table names it; o2: already renamed; o3: an id the table does not know
+  const pool = [row('o1', 'Lucy Electric', 'hdga'), row('o2', 'Lucy Electric', 'Lucy Electric'), row('o3', 'abcd', 'abcd', other)];
+  assert.deepEqual(pool.map(shortlistTenant), [false, false, true]);
+  const picked = selectShortlist(pool, { now }).changes.filter((c) => c.to !== 'NEEDS_REVIEW').map((c) => c.job_id).sort();
+  assert.deepEqual(picked, ['o1', 'o2']);
+  // the audit reads the stored names; had all three been shortlisted it fails exactly the row the selector kept off
   const stored = pool.map((r) => ({ kind: 'row', candidate_id: r.candidate_id, job_id: r.job_id, status: 'READY', company: r.stored_company, source: r.source, url: r.url,
     last_verified_at: fresh, active: 1, decided: 0, location: r.location, discovered_at: fresh }));
-  assert.deepEqual(audit(stored, { now, relaxed: true }).problems, ['a tenant-id employer is on the shortlist (sana_ansari o1)']);
+  assert.deepEqual(audit(stored, { now, relaxed: true }).problems, ['a tenant-id employer is on the shortlist (sana_ansari o3)']);
   assert.ok(MARK);
 });

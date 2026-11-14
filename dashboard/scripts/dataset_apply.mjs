@@ -9,7 +9,7 @@
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, onsiteByText } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, onsiteByText, remoteFlagTrusted } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
 import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
 
@@ -72,8 +72,11 @@ for (const file of many('--in')) {
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     // Jobs QA 13 Nov: the source's remote flag is wrong for some postings whose own text places the job in an office ('The position is based in
     // Bengaluru', '#LI-Onsite', 'two days a week from our London office'); the text wins (evaluate() reads it the same way).
-    const textOnsite = j.is_remote === true && onsiteByText(description);
-    const remote = (j.is_remote === true && !textOnsite) || /\bremote\b/i.test(j.location || '');
+    // Jobs QA 2 (14 Nov): an Oracle, Workday or SuccessFactors flag alone is not trusted (Mashreq Bengaluru, on site, flagged remote): the text or
+    // the place must say remote too.
+    const flagged = j.is_remote === true && remoteFlagTrusted(j.ats_type, description, j.location);
+    const textOnsite = flagged && onsiteByText(description);
+    const remote = (flagged && !textOnsite) || /\bremote\b/i.test(j.location || '');
     const onsite = j.is_remote === false || (textOnsite && !remote);
     const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, repost: !!j.repost, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
     const rows = [];
@@ -232,7 +235,8 @@ report.closed = toClose.length; report.reopened = reopen.length; report.missing_
 // remote for a remote-only candidate). Rows someone applied to or decided on, and READY/STRETCH rows, are never touched.
 // Workable jobs were all stored as remote until 2026-11-12 (the feed helper defaulted to remote). A genuinely remote one has a location written
 // "Remote (...)"; any other is not remote. The stored rows are corrected below; a row being re-scored in this same run is judged correctly here.
-const storedRemote = (row) => /^REMOTE/i.test(row.workplace_type || '') && !(row.source_adapter === 'workable' && !/^remote\b/i.test(row.location || ''));
+const storedRemote = (row) => /^REMOTE/i.test(row.workplace_type || '') && !(row.source_adapter === 'workable' && !/^remote\b/i.test(row.location || ''))
+  && remoteFlagTrusted(row.source_adapter, plain(row.description), row.location);
 out.push(`UPDATE jobs SET workplace_type = 'UNKNOWN' WHERE source_adapter = 'workable' AND workplace_type = 'REMOTE_RESTRICTED' AND location_restrictions NOT LIKE 'Remote%';`);
 
 // A legacy row: undecided, score 0, never scored by the current screen (see legacy_rows in engine/dataset_discovery.py). It gets what a new row gets: the

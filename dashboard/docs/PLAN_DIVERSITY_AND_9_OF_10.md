@@ -687,14 +687,24 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     SVKM, read from its own career site); the table and the tenant test read an id followed by its site, and migration `0023_company_names_svkm.sql`
     renames the stored rows (same guards as 0021; applied by the release).
   - the 13 Nov daily run turned red: the shortlist audit failed 7 Oracle rows of Sana's as tenant ids. The selector had read their names through
-    the names table ('Lucy Electric') while the jobs still stored the ids ('hdga') that the lists show and the audit reads (0021 not yet applied).
-    The selector and the audit now share one test, `shortlistTenant()` in `scripts/shortlist_select.mjs`, on the stored name: the pool export
-    keeps it as `stored_company`, so a row whose stored name is still an id stays off the shortlist until a migration renames it. The JS test
-    reads a name equal to its oraclecloud.com host whatever the source, as `tenant_like()` in `engine/company_names.py` does.
-  - measured on the QA's saved samples, re-scored with `evaluate()` and the shortlist selector (every row assumed verified, as in the QA; main →
-    this change, using the QA's verdicts): Farhan Best matches 7 of 9 fit → 8 of 9, Worth a try 2 of 10 → 2 of 3; Sana Best matches 23 of 25 →
-    25 of 25, Worth a try 17 of 25 → 20 of 20. No job the QA judged a good fit left the shortlist (an ACWA Power KSA row is off on main too: two
-    rows per employer per tier); the RevOps specialist and the energy-audit manager joined it.
+    the names table ('Lucy Electric') while the audit read the ids still stored on the jobs ('hdga'; 0021 not yet applied). The selector and the
+    audit now share one test, `shortlistTenant()` in `scripts/shortlist_select.mjs`: the name stored on the job (the pool keeps it as
+    `stored_company`) read through the one names table, now `engine/company_names.json`, which `engine/company_names.py` loads too. A row the
+    table names stays on the shortlist before its migration runs (0023 goes live with the release after this change); an id the table does not
+    know stays off. The JS test reads a name equal to its oraclecloud.com host whatever the source, as `tenant_like()` does.
+  - jobs QA 2 (14 Nov, live lists): Farhan, India / APAC / Asia in the text exempts a remote-elsewhere posting only when it is about the person
+    (based, located, candidates, hiring, time zone ... within a few words), and Latin / South / Central America, Africa, the Balkans, the Nordics,
+    North Macedonia and a few more are places abroad; an Oracle, Workday or SuccessFactors remote flag counts only when the text or the place
+    also says remote (import and re-score); an unconfirmed (UNKNOWN) row reaches his Worth a try only with a place naming India; named CRM and
+    automation platforms (HubSpot, Salesforce, ActiveCampaign, Zapier, Make, n8n ...) count for 'CRM Configuration' / 'Workflow Automation';
+    'RevOps' reads as GTM operations; the platform cap is 59, below his Worth-a-try floor. Sana: +8 for her core plant (thermal / captive power,
+    power plant, turbine, boiler, coal handling, BTG; not design titles), before the caps; a required local language with no Indian place counts
+    as abroad for the visa cap; ASIC and silicon titles are avoided; a design or study post is also capped at her threshold + 4.
+  - measured, main → this change, with the QAs' verdicts (every row assumed verified). QA of 13 Nov samples: Farhan Best matches 7 of 9 fit →
+    9 of 10, Worth a try 2 of 10 → 3 of 3; Sana Best matches 23 of 25 → 25 of 25, Worth a try 17 of 25 → 20 of 20. QA 2 (14 Nov live lists):
+    Farhan Best matches 8 of 11 → 14 of 15 (good fits 2 → 5), Worth a try 3 of 14 → 4 of 4; Sana Best matches 22 of 25 → 25 of 25, Worth a try
+    19 of 25 → 25 of 25, top 100 78 → 90; the same with employer names as stored today. No job either QA judged a good fit left the shortlist
+    against main (an ACWA Power KSA row is off on main too, and one ENGIE row gives its place to another ENGIE row: two per employer per tier).
 
 ---
 

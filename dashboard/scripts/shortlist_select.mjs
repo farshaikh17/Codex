@@ -13,6 +13,7 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
+import { indianPlace as namesIndia } from '../worker/discovery.ts';   // its own line: the To review twins change rewrites the import below
 import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 
 export const MARK = 'Shortlisted automatically. ';
@@ -38,8 +39,9 @@ const skillsOk = (r) => Number(r.skill_score) >= 40 || (!!Number(r.target_exact)
 const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !r.dead;
 /** Ready: score at the person's threshold and eligibility confirmed. */
 export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold) && r.eligibility === 'ELIGIBLE';
-/** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. */
-export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN')
+/** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. Jobs QA 2 (14 Nov): for Farhan (remote from India
+ *  only) an unconfirmed row also needs a place naming India ("Remote" alone was US-market jobs: Arcadia, SimpliGov). */
+export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location)))
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
 /** Gap fix: verified for Ready only by the still-open check; a 'listed' row (a Gulf job-board posting seen in the board's listing in 2 days) may go
  *  to Stretch. */
@@ -103,11 +105,16 @@ export function tenantEmployer(company, source, url) {
   if (!/^(?:workday|oracle|oracle_?hcm)$/.test(src) && !host.endsWith('oraclecloud.com') && !host.endsWith('myworkdayjobs.com')) return false;
   return /^[a-z]{1,5}$/.test(c);
 }
-/** The one tenant test the selector and the audit share (13 Nov run: they disagreed). It reads the employer name STORED on the job, which is what the
- *  lists show and what the audit reads: the pool export names its rows through the known-names table (engine/company_names.py, `company`) and keeps
- *  the stored name as `stored_company`, so a row whose stored name is still a tenant id (a migration not yet applied) stays off the shortlist until
- *  the stored row is renamed, instead of being shortlisted under a name the database does not have. */
-export const shortlistTenant = (r) => tenantEmployer(r?.stored_company ?? r?.company, r?.source, r?.url);
+// The employer names table of engine/company_names.py (engine/company_names.json), read here so the selector and the audit name a tenant id
+// exactly as the import does.
+const NAMES = (() => { try { return JSON.parse(fs.readFileSync(new URL('../../engine/company_names.json', import.meta.url), 'utf8')).names || {}; } catch { return {}; } })();
+const nameKey = (raw) => String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, ' ');
+/** The employer's name as the names table reads it (display_company() without a career-site lookup). */
+export const tableName = (raw) => NAMES[nameKey(raw)] || String(raw || '').trim();
+/** The one tenant test the selector and the audit share (13 Nov run: they disagreed, the selector reading names through the table and the audit
+ *  the stored tenant ids). Both read the name stored on the job (the pool keeps it as `stored_company`) through the names table: a row whose employer
+ *  the table names ('hdga' -> Lucy Electric) passes, also before a migration renames the stored row; an id the table does not know stays off. */
+export const shortlistTenant = (r) => tenantEmployer(tableName(r?.stored_company ?? r?.company), r?.source, r?.url);
 const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 /** Hard: a reposter row duplicating a direct employer's row: the same title (as titleKey() reads it) and the direct row's first 200 characters of
  *  description found anywhere in the repost (a reposting site puts its own sentence first: "This position is posted by Jobgether on behalf of..."),

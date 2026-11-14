@@ -288,6 +288,8 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   add('r1', 80, 'ELIGIBLE'); add('r2', 60, 'ELIGIBLE');                       // Ready
   add('s1', 75, 'UNKNOWN'); add('s2', 55, 'ELIGIBLE');                        // Stretch: eligibility to confirm / just under the threshold
   add('n1', 59, 'UNKNOWN'); add('n2', 49, 'ELIGIBLE');                        // below both rules
+  db.prepare(`UPDATE jobs SET location_restrictions = 'Remote, India' WHERE id = 's1'`).run();   // jobs QA 2: Farhan's unconfirmed Stretch rows need an Indian place
+  add('s3', 75, 'UNKNOWN');                                                   // ... so the same row with no place stays in To review
   add('n3', 90, 'ELIGIBLE', { verified: OLD });                               // not verified open recently
   add('n4', 90, 'ELIGIBLE', { bd: '{"preliminary":true}' });                  // not screened under the current rules
   add('n5', 90, 'ELIGIBLE', { skill: 0 });                                    // title match only, no profile skill named
@@ -309,7 +311,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   assert.deepEqual([a.r1, a.r2, a.x2], ['READY', 'READY', 'READY']);
   assert.deepEqual([a.t1, a.t2, a.t3], ['READY', 'NEEDS_REVIEW', 'NEEDS_REVIEW'], 'one place per employer and title: the best-scored twin');
   assert.deepEqual([a.s1, a.s2], ['STRETCH_READY', 'STRETCH_READY']);
-  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2']) assert.equal(a[id], 'NEEDS_REVIEW', id);
+  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2', 's3']) assert.equal(a[id], 'NEEDS_REVIEW', id);
   assert.equal(a.x1, 'HOLD', 'shortlisted earlier, score fell to 20: back off the shortlist, then held as a low match');
   assert.equal(a.n7, 'HOLD'); assert.equal(a.d3, 'READY'); assert.equal(a.d4, 'READY');
   assert.equal(Object.values(a).filter((s) => s === 'STRETCH_READY').length, 25, 'at most 25 Stretch per person, best first');

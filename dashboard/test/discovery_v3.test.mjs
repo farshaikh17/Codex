@@ -50,7 +50,7 @@ test('companyKey matches the same employer across a display name and an ATS slug
 
 test('employers listed as hiring worldwide: Farhan gets a small boost and no foreign-location penalty; eligibility is unchanged', () => {
   const ctx = { globalHirers: new Set([companyKey('Zapier')]) };
-  const europe = { location: 'Remote - Europe', description: 'CRM Configuration and Workflow Automation. Clients across Asia.' };   // names Asia, so not ruled out (jobs QA 13 Nov)
+  const europe = { location: 'Remote - Europe', description: 'CRM Configuration and Workflow Automation. Candidates based in Asia welcome.' };   // the person may be in Asia, so not ruled out (jobs QA 13 Nov, 2)
   const plain = evaluate(farhan, post({ ...europe, company: 'Acme' }), ctx);
   const listed = evaluate(farhan, post({ ...europe, company: 'Zapier' }), ctx);
   assert.equal(listed.eligibility, plain.eligibility);
