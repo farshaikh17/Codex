@@ -443,12 +443,14 @@ test('U12: every count on the Today screen equals what the matching list returns
   add('t6', 'Boiler Engineer', 'NEEDS_REVIEW', { reason: '[GITHUB_COLLECTOR] Unassessed public ATS posting from x; review pending.', score: 0 });
   add('t7', 'Turbine Engineer', 'HOLD', { reason: 'You marked this Not for me. Matches 3 skills.' });
   add('t8', 'Utilities Engineer', 'READY'); add('t9', 'Electrical Engineer', 'STRETCH_READY');
+  // jobs QA 13 Nov: two more listings of t4's job (same employer and title, other places) count once in To review
+  add('t10', 'Shift Engineer - Jamnagar', 'NEEDS_REVIEW', { score: 62, elig: 'UNKNOWN', loc: 'Jamnagar, Gujarat' }); add('t11', 'Shift Engineer (Hybrid)', 'NEEDS_REVIEW', { score: 55, loc: 'Mundra, Gujarat' });
   w.run(`INSERT INTO applications(id,candidate_id,job_id,status) VALUES ('s1',?,?,'SAVED'),('s2',?,?,'APPLIED'),('s3',?,?,'REJECTED')`, S, 't8', S, 't9', S, 't7');
   w.run(`INSERT INTO application_followups(candidate_id,job_id,follow_up_at) VALUES (?,?,?)`, S, 't9', '2020-01-01');
   const today = await req(w.env, 'GET', `/api/today?candidate_id=${S}`, { key: null });
   assert.equal(today.status, 200, today.text);
   const c = today.json.counts;
-  const total = async (q) => (await req(w.env, 'GET', `/api/jobs?candidate_id=${S}&exclude_applied=true&exclude_dismissed=true&limit=100${q}`, { key: null })).json;
+  const total = async (q) => (await req(w.env, 'GET', `/api/jobs?candidate_id=${S}&exclude_applied=true&exclude_dismissed=true&collapse_twins=true&limit=100${q}`, { key: null })).json;
   const all = await total('');
   assert.equal(c.everything, all.total, 'Show everything else = the full list');
   assert.equal(c.best, all.status_counts.READY, 'Best matches');
@@ -460,6 +462,18 @@ test('U12: every count on the Today screen equals what the matching list returns
   assert.equal(c.applications.total, (Array.isArray(apps) ? apps : apps.applications || apps.jobs).length, 'My applications');
   assert.deepEqual([c.best, c.worth_a_try, c.more_to_look, c.more_good, c.everything, c.says_india, c.hidden], [3, 1, 2, 1, 7, 4, 1], 'a saved job is still listed (not applied)');
   assert.deepEqual(c.applications, { saved: 1, waiting: 1, finished: 1, total: 3 });
+  // the To review lists the page opens agree with the counts, show the best-scored listing once, and name the other places
+  const review = await total('&qualification_status=NEEDS_REVIEW'), good = await total('&qualification_status=NEEDS_REVIEW&min_score=60');
+  assert.equal(review.total, c.everything - c.best - c.worth_a_try, 'Show everything else (n) = the To review list');
+  assert.deepEqual(review.jobs.map((j) => j.id).sort(), ['t4', 't5', 't6']); assert.equal(review.jobs.length, review.total);
+  assert.equal(good.total, c.more_good, 'N more good matches = the good list'); assert.deepEqual(good.jobs.map((j) => j.id), ['t4']);
+  const t4 = review.jobs.find((j) => j.id === 't4');
+  assert.equal(t4.more_places, 2); assert.deepEqual(t4.other_places.sort(), ['Jamnagar, Gujarat', 'Mundra, Gujarat']);
+  assert.equal(good.jobs[0].more_places, 1, 'within the good list only the 60+ listing is folded in');
+  assert.equal((await total('&qualification_status=NEEDS_REVIEW&eligibility=UNKNOWN')).jobs.map((j) => j.id).sort().join(), 't10,t5', 'a twin is the kept row where the better one is filtered out');
+  // without collapse_twins (the operator's lists) every listing is still there
+  const plain = (await req(w.env, 'GET', `/api/jobs?candidate_id=${S}&exclude_applied=true&exclude_dismissed=true&qualification_status=NEEDS_REVIEW&limit=100`, { key: null })).json;
+  assert.equal(plain.total, 5); assert.ok(plain.jobs.every((j) => j.more_places === undefined));
   assert.equal(c.followups_due, 1);
   // the lists on Today are the counted rows, best first, with the plain "why" line
   assert.deepEqual(today.json.best.map((j) => j.id), ['t1', 't2', 't8']);

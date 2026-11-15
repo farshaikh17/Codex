@@ -6,6 +6,7 @@
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
 import * as site from './site';
 import { whyLine } from './why';
+import { collapseTwins, reviewKey, type Twins, type TwinRow } from './twins';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -1344,7 +1345,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
       LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       WHERE q.candidate_id = ?
         AND q.qualification_status IN (${placeholders})
-    `;
+        AND j.is_active = 1
+    `;   // jobs QA 2 (14 Nov): closed postings are left out, as on the site's own lists (/api/jobs)
 
     const sqlParams: any[] = [candidateId, ...statuses];
 
@@ -1479,6 +1481,18 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         } : null,
       };
 }
+// Jobs QA 13 Nov: the job seeker's To review lists show one row per employer and title (worker/twins.ts). The To review rows of the given predicate
+// (`where` starts at FROM, as in /api/jobs), read once; the hidden twins are then left out of the counts and the page by id. A list too long to pass
+// as one parameter is not collapsed (D1 statements stay under 100 KB).
+async function reviewRows(env: Env, where: string, params: any[]): Promise<(TwinRow & { eligibility: string })[]> {
+  const { results } = await env.DB.prepare(`SELECT q.job_id AS id, j.title, j.company, j.location_restrictions AS location, j.discovered_at AS found, q.eligibility_status AS eligibility,
+      COALESCE((SELECT s3.overall_score FROM candidate_job_scores s3 WHERE s3.candidate_id = q.candidate_id AND s3.job_id = q.job_id), 0) AS score,
+      CASE WHEN ${UNSCREENED_SQL} THEN 1 ELSE 0 END AS unscreened
+    ${where} AND q.qualification_status = 'NEEDS_REVIEW'`).bind(...params).all<any>();
+  return results || [];
+}
+const TWINS_MAX_PARAM = 90000;
+function usableTwins(t: Twins): Twins { return JSON.stringify(t.hidden).length > TWINS_MAX_PARAM ? { hidden: [], groups: NaN, places: new Map() } : t; }
 async function candidateThreshold(env: Env, candidateId: string): Promise<number | null> {
   try { const r = await env.DB.prepare('SELECT qualification_threshold AS t FROM candidates WHERE id = ?').bind(candidateId).first<any>(); return typeof r?.t === 'number' ? r.t : null; } catch { return null; }
 }
@@ -1554,6 +1568,14 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       baseParams.push(since, since);
     }
 
+    // Jobs QA 13 Nov: collapse_twins=true (the job seeker's lists) shows one To review row per employer and title, the best-scored one, with a
+    // "+N more places" note; the counts and totals below then count it once, as /api/today does.
+    let twins: Twins | null = null;
+    if (url.searchParams.get('collapse_twins') === 'true') {
+      twins = usableTwins(collapseTwins(await reviewRows(env, baseWhere, baseParams)));
+      if (twins.hidden.length) { baseWhere += ` AND q.job_id NOT IN (SELECT value FROM json_each(?))`; baseParams.push(JSON.stringify(twins.hidden)); }
+    }
+
     // 1. Status counts over the base predicate (one query; the total below is derived from it)
     const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
     const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
@@ -1605,7 +1627,11 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     }
 
     const threshold = await candidateThreshold(env, candidateId);
-    const jobs = results.map((r: any) => shapeJob(r, candidateId, threshold));
+    const jobs = results.map((r: any) => {
+      const job: any = shapeJob(r, candidateId, threshold), more = twins?.places.get(r.id);
+      if (more) { job.more_places = more.more; job.other_places = more.places; }
+      return job;
+    });
 
     return jsonResponse({
       count: jobs.length,
@@ -1634,21 +1660,28 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 //   hidden         marked Not for me (Hold with that reason)
 //   applications   saved (Saved / Preparing), waiting (applied, first call, interviews, offer), finished (didn't work out, withdrawn)
 //   followups_due  follow-up dates on or before today (India time)
+// To review rows (more_to_look, more_good and their part of everything and says_india) count once per employer and title (jobs QA 13 Nov;
+// worker/twins.ts), as the lists asked with collapse_twins=true show them.
 const TODAY_LIST = 25;
 const UNSCREENED_SQL = `q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'`;
 async function todayCounts(env: Env, candidateId: string) {
+  // The same predicate as /api/jobs?exclude_applied=true&exclude_dismissed=true. Jobs QA 13 Nov: To review is counted one row per employer and title,
+  // within each count's own rows, exactly as the lists with collapse_twins=true group them.
+  const listWhere = `FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1
+      AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
+      AND ${NOT_APPLIED}`;
+  const review = await reviewRows(env, listWhere, [candidateId]);
+  const screened = review.filter((r) => !Number(r.unscreened));
+  const groups = (rows: TwinRow[]) => { const t = usableTwins(collapseTwins(rows)); return Number.isNaN(t.groups) ? rows.length : t.groups; };
   const row = await env.DB.prepare(`SELECT
       SUM(CASE WHEN q.qualification_status IN ('READY','READY_HIGH') THEN 1 ELSE 0 END) AS best,
       SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) AS worth_a_try,
-      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) THEN 1 ELSE 0 END) AS more_to_look,
-      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0)
-               AND COALESCE((SELECT s.overall_score FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id), 0) >= 60 THEN 1 ELSE 0 END) AS more_good,
       COUNT(*) AS everything,
-      SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS says_india
-    FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-    WHERE q.candidate_id = ? AND j.is_active = 1
-      AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
-      AND ${NOT_APPLIED}`).bind(candidateId).first<any>();
+      SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS says_india,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) AS review_rows,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS review_india
+    ${listWhere}`).bind(candidateId).first<any>();
   const hidden = await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
     WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`).bind(candidateId).first<any>();
   const apps = await env.DB.prepare(`SELECT
@@ -1665,9 +1698,13 @@ async function todayCounts(env: Env, candidateId: string) {
     followupsDue = Number(f?.n || 0);
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; }
   const n = (v: any) => Number(v || 0);
+  // the To review part of each count, one row per employer and title (the rows read above; the SQL counts give the rest)
+  const moreToLook = groups(screened), moreGood = groups(screened.filter((r) => Number(r.score) >= 60));
+  const everything = n(row?.everything) - n(row?.review_rows) + groups(review);
+  const saysIndia = n(row?.says_india) - n(row?.review_india) + groups(review.filter((r) => r.eligibility === 'ELIGIBLE'));
   return {
-    best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: n(row?.more_to_look), more_good: n(row?.more_good),
-    everything: n(row?.everything), says_india: n(row?.says_india), hidden: n(hidden?.n),
+    best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: moreToLook, more_good: moreGood,
+    everything, says_india: saysIndia, hidden: n(hidden?.n),
     applications: { saved: n(apps?.saved), waiting: n(apps?.waiting), finished: n(apps?.finished), total: n(apps?.total) },
     followups_due: followupsDue, today_india: today,
   };
@@ -1701,7 +1738,9 @@ router.get('/api/today', async (request, env, _params, url) => {
       for (const r of full || []) byId.set(r.id, shapeJob(r, candidateId, threshold));
     }
     const pick = (list: string[]) => list.map((id) => byId.get(id)).filter(Boolean);
-    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: pick(recent) }, 200, corsHeaders(request, env));
+    // the good matches found lately are To review rows: one per employer and title (the best-scored first), as in the lists (jobs QA 13 Nov)
+    const seen = new Set<string>(), recentOnce = pick(recent).filter((j: any) => { const k = reviewKey(j.company, j.title); if (seen.has(k)) return false; seen.add(k); return true; });
+    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: recentOnce }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
