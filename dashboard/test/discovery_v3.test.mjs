@@ -50,7 +50,7 @@ test('companyKey matches the same employer across a display name and an ATS slug
 
 test('employers listed as hiring worldwide: Farhan gets a small boost and no foreign-location penalty; eligibility is unchanged', () => {
   const ctx = { globalHirers: new Set([companyKey('Zapier')]) };
-  const europe = { location: 'Remote - Europe', description: 'CRM Configuration and Workflow Automation.' };
+  const europe = { location: 'Remote - Europe', description: 'CRM Configuration and Workflow Automation. Candidates based in Asia welcome.' };   // the person may be in Asia, so not ruled out (jobs QA 13 Nov, 2)
   const plain = evaluate(farhan, post({ ...europe, company: 'Acme' }), ctx);
   const listed = evaluate(farhan, post({ ...europe, company: 'Zapier' }), ctx);
   assert.equal(listed.eligibility, plain.eligibility);
@@ -104,7 +104,7 @@ test('daily apply: rejected employers from the database and the worldwide list r
   fs.writeFileSync(path.join(dir, 'gh.json'), JSON.stringify({ keys: [companyKey('Zapier')] }));
   const job = (id, company, location, extra = {}) => ({ id, url: `https://example.com/${id}`, title: 'Implementation Manager', company, ats_type: 'greenhouse', location, is_remote: true,
     description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F], ...extra });
-  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [job('ds:g:1', 'Euka', 'Remote - India'), job('ds:g:2', 'Zapier', 'Remote - Europe'),
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [job('ds:g:1', 'Euka', 'Remote - India'), job('ds:g:2', 'Zapier', 'Remote'),
     job('ds:g:3', 'Cheap Co', 'Remote - India', { salary_min: 300000, salary_max: 500000, salary_currency: 'INR', salary_period: 'year' })] }));
   execFileSync(process.execPath, ['--import', './test/register.mjs', 'scripts/dataset_apply.mjs', '--candidates', path.join(dir, 'candidates.json'), '--in', path.join(dir, 'm.json'),
     '--global-hirers', path.join(dir, 'gh.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
@@ -164,8 +164,8 @@ test('same-title jobs with distinct URLs or locations remain available', () => {
   fs.writeFileSync(path.join(dir, 'candidates.json'), JSON.stringify([{ id: F, primary_skills: farhan.primary_skills, total_years_experience: 9, search_profile: null }]));
   const j = (id, company, location) => ({ id, url: `https://example.com/${id}`, title: 'Implementation Manager', company, ats_type: 'lever', location, is_remote: true,
     description: 'Fully remote role. CRM Configuration and Workflow Automation.', candidates: [F] });
-  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:a:1', 'Agg', 'Remote - Chile'), j('ds:a:2', 'Agg', 'Remote - India'), j('ds:a:3', 'Agg', 'Remote - Greece'),
-    j('ds:b:1', 'Two', 'Remote - India'), j('ds:b:2', 'Two', 'Remote - Spain'), j('ds:c:1', 'Dup', 'Remote - India'), j('ds:c:2', 'Dup', 'remote - india')] }));
+  fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ jobs: [j('ds:a:1', 'Agg', 'Remote - Pune, India'), j('ds:a:2', 'Agg', 'Remote - India'), j('ds:a:3', 'Agg', 'Remote - Worldwide'),
+    j('ds:b:1', 'Two', 'Remote - India'), j('ds:b:2', 'Two', 'Remote - APAC'), j('ds:c:1', 'Dup', 'Remote - India'), j('ds:c:2', 'Dup', 'remote - india')] }));
   const { sqlite } = createDb();
   sqlite.prepare(`INSERT INTO candidates(id,full_name) VALUES (?, 'F')`).run(F);
   // copies already stored from an earlier run: three of one role, one with an application
@@ -301,10 +301,10 @@ test('Farhan rule gaps found in his top-of-queue review (9 Nov): worldwide wordi
   for (const loc of ['Remote - Worldwide', 'Worldwide (Remote)', 'Remote, Worldwide', 'Remote/Worldwide']) assert.equal(mk('Solutions Engineer', loc).eligibility, 'ELIGIBLE', loc);
   // a US state or NYC only is a US-only posting; the country Georgia is not
   for (const loc of ['Remote - Pennsylvania', 'Remote, Texas', 'NYC Office', 'Remote - Bay Area']) assert.equal(mk('Implementation Manager', loc).status, 'INELIGIBLE', loc);
-  assert.notEqual(mk('Implementation Manager', 'Remote - Georgia').status, 'INELIGIBLE', 'the country');
-  // one foreign country, no worldwide or India wording: stays UNKNOWN (reviewable), ranked below an affirmative posting
+  assert.doesNotMatch(mk('Implementation Manager', 'Remote - Georgia').reason, /United States/, 'the country');
+  // one foreign country, no worldwide or India wording: ruled out like the US (jobs QA 13 Nov; was UNKNOWN), ranked below an affirmative posting
   const colombia = mk('Implementation Consultant', 'Remote (Colombia)'), india = mk('Implementation Consultant', 'India (Remote)');
-  assert.equal(colombia.eligibility, 'UNKNOWN'); assert.equal(india.eligibility, 'ELIGIBLE'); assert.ok(india.score > colombia.score);
+  assert.equal(colombia.eligibility, 'INELIGIBLE'); assert.match(colombia.reason, /another country/); assert.equal(india.eligibility, 'ELIGIBLE'); assert.ok(india.score > colombia.score);
   // junior-type and developer-type titles he already excluded, in the spellings that slipped through
   for (const t of ['Marketing Operations Apprentice', 'Operations Trainee', 'SDE (Automation & Quality Focus)', 'Sales Operations Apprenticeship']) assert.ok(mk(t, 'India (Remote)').score < 70, t);
   assert.ok(mk('Implementation Manager', 'India (Remote)').score >= 60, 'his own roles are not affected');
@@ -320,7 +320,7 @@ test('foreignLocation knows every country, not only a short list (Colombia, Arge
     assert.ok(mk(loc).score < base, `${loc} should rank below an affirmative worldwide posting`);
   }
   for (const loc of ['India', 'Remote, India', 'Bengaluru, Karnataka, India', 'Remote - Worldwide', '', 'Remote, excluding the US']) assert.equal(foreignLocation(loc), false, loc);
-  assert.equal(mk('Remote (Colombia)').eligibility, 'UNKNOWN', 'still reviewable, not hidden');
+  assert.equal(mk('Remote (Colombia)').eligibility, 'INELIGIBLE', 'remote within another country only (jobs QA 13 Nov)');
 });
 
 test('owner rules 10 Nov: Sana\'s role pattern drops generic field-service roles; electrical-only titles rank below mechanical/reliability/energy ones', () => {
@@ -360,7 +360,7 @@ test('taste pass: Good match / Not for me move the rows a person sees, every run
   const { sqlite } = createDb();
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'taste-'));
   sqlite.exec(`INSERT INTO candidates(id,full_name,primary_skills) VALUES ('farhan_shaikh','F','["CRM"]')`);
-  const add = (id, title, score, bd = '{"preliminary":true,"profile_v15":true}', o = {}) => {
+  const add = (id, title, score, bd = '{"preliminary":true,"profile_v16":true}', o = {}) => {
     sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES (?,?,?,?,1,'2026-11-01')`).run(id, title, o.company || 'Acme', 'lever');
     sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('farhan_shaikh',?,?,?)`).run(id, 'NEEDS_REVIEW', o.override || null);
     sqlite.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES ('farhan_shaikh',?,?,?)`).run(id, score, bd);

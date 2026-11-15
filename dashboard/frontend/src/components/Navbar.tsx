@@ -3,7 +3,7 @@ import { fetchDiscoveryDaily } from '../api';
 import { updatedNote } from '../jobHelpers';
 import { BarChart3, BookmarkCheck, RefreshCw, LayoutDashboard, Users, Lock, Unlock, Sliders, Briefcase } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation' | 'google-sync';
+export type NavTab = 'dashboard' | 'farhan' | 'sana' | 'client' | 'clients' | 'tracker' | 'discovery' | 'profile' | 'sources' | 'analytics' | 'india-remote' | 'ready' | 'pilot' | 'automation';
 
 interface NavbarProps {
   activeTab: NavTab;

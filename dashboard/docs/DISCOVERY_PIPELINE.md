@@ -20,7 +20,7 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
 2. Download the dataset. A failed download does not stop the day: boards, other sources, re-score, still-open check and shortlist still run.
    The run is then shown red, as it is when the manifest is unreadable or over 48 hours old.
 3. Select matches from the dataset, and export rows to re-score: at most **800 per person** (best first) not yet scored under the current rules
-   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v15`).
+   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v16`).
 4. Job-site search, remote boards, more sources (Workable, Eightfold, Siemens Energy, SuccessFactors, Workday, Oracle, SmartRecruiters
    employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna with its free keys). Each writes its file after every source and stops starting
    sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. Employer career sites are stored as the
@@ -59,13 +59,23 @@ found nothing new it reads and writes nothing more in the database and leaves th
      - The two built-in candidates use focused title searches, which are subsets of the screen's own role rules.
      - Clients use their stored role keywords and location rule.
      - Search values are passed to DuckDB as bound parameters. A keyword like `women's health` or a country like `Côte d'Ivoire` is safe.
-   - **Two quotas per person,** so neither crowds out the other:
-     - up to 400 in the home country. For a remote-only search, remote roles come first. The country is matched as a whole word, so Indiana is not India.
-     - up to 200 remote roles open to anyone.
-     - up to 300 more per person (owner rules, 2026-11-07):
-       - **Farhan:** remote roles posted in other countries, never the United States.
-       - **Sana:** on-site roles anywhere in the world, with postings that offer visa sponsorship or relocation first.
-   - **Recency:** postings up to 45 days old, newest first.
+   - **Wide intake (14 Nov 2026): every posting that can fit, in any country.**
+     - Every posting whose title passes the person's role rule, posted in the last 45 days or undated, is read, whatever its country or
+       region (about 32,000 for Farhan and 38,000 for Sana on the 12 Nov snapshot). Nothing is dropped by place before scoring.
+     - Each one is pre-scored on the runner (free; no database reads) with the Worker's own screen: `scripts/prescore.mjs` runs `evaluate()`
+       and `placeBand()` on the same posting object the import stores. The person's place rules decide: Farhan remote and workable from India;
+       Sana India, the Gulf, or abroad with a stated visa route.
+     - Selected: every row that is not ruled out and scores within 15 points of the person's threshold (never 45 or below, which the import
+       would hold as a low match), best fit first (score, then a stated eligibility, then newest; an undated live posting counts as today's).
+     - The only cap is the D1 read budget of the duplicate check that follows: `--select-read-budget` (150,000 rows read) divided by about
+       11 rows read per selected row, shared between the people (about 6,800 each; on 12 Nov it did not bind). If it binds, place sets go
+       first: India / worldwide / APAC remote for Farhan; India, the Gulf, abroad with a visa route and remote for Sana.
+     - The import (`dataset_apply.mjs --max-new`, 1,500) still writes the best-scored new rows first, so a backlog reaches D1 over a few days.
+     - If the pre-score cannot run, the old bounded quotas are used for the day (home 400 with the Worker's Indian places, remote 200, Gulf 150,
+       abroad 300), newest first with undated rows counted as today's.
+     - Measured on the 12 Nov snapshot (thresholds 70 and 60): rows that can fit reaching the import went from 56 to 384 for Farhan (79 at
+       his threshold, was 7) and from 265 to 2,408 for Sana (1,014 at her threshold, was 81; India 209 -> 628, Gulf 2 -> 88, abroad with a
+       visa route 5 -> 139).
    - **Duplicates.**
      - Within the run: same company, title and location.
      - Against D1: same id, same URL, or the same company and title still active.
@@ -258,7 +268,7 @@ Sana gets nothing from these boards (remote office roles); UptimeAI's "Technical
 **Reposting sites and VA staffing firms** (`engine/reposters.py`): Jobgether, Turing, Crossover, Peopleworth, Pavago, Braintrust and
 virtual-assistant staffing firms (20four7VA, names such as "... Virtual Assistants" or "24/7 VA") enter at most 3 postings per firm per
 run across every source, marked `reposter: true`. The shortlist's own list (`REPOSTERS` in `dashboard/scripts/shortlist_select.mjs`)
-does not name 20four7VA yet, and it names Paired, which posts its own RevOps roles (watchlisted here): both are for the shortlist's owner.
+names 20four7VA and no longer names Paired, which posts its own RevOps roles (watchlisted here) (#182, 15 Nov).
 
 **Adzuna (owner step).** Free keys: sign up at developer.adzuna.com (free plan, 250 requests a day), create an application, and add the
 repository secrets `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` (Settings > Secrets and variables > Actions). Because `api.adzuna.com`'s robots.txt
@@ -271,7 +281,7 @@ the keyed API's own terms govern). It then makes 10 requests a day (7 for Sana, 
 2. **Title synonyms.** The searches and the screen's role rules now include German, French and Dutch power-plant titles (Instandhaltung, Kraftwerk, Elektroingenieur, ingénieur maintenance, onderhoudsingenieur and more) and Farhan's adjacent titles (sales ops, marketing ops, systems architect, customer onboarding, business operations).
 3. **Learning from decisions.** Saves, applies and hand-set READY rows are positive; hand-set INELIGIBLE, HOLD and CLOSED rows are negative. A small word model per person (`engine/signals.py`) moves a score by at most 5 points and says "like roles you saved" or "like roles you dismissed". It switches on only after 10 decisions.
 4. **UK sponsor register.** GOV.UK's daily list of Skilled Worker sponsors. For Sana, a UK posting from a licensed sponsor is not penalised as "no visa route", and the note says so.
-5. **Free AI review** (`engine/ai_triage.py`). The 50 best new jobs per person go to GitHub Models' free tier with the job text and a generic description of what the person wants (never a name). The review moves the score by at most 10 points and is put in front of the note. Applied, decided, READY and STRETCH rows are never touched.
+5. **AI review: removed.** It was switched off when its free provider was retired (30 Jul 2026) and the owner's standing rule is no AI review, so the script, its probe workflow and its daily step were deleted on 13 Nov. Nothing in the daily run sends job text to a model.
 6. **Watchlist, three times a day** (`.github/workflows/watchlist.yml`). The priority employer sites and the remote boards are read at 03:07, 09:07 and 21:07 UTC, between the daily runs. Up to 300 new jobs each time.
 7. **Reposts and long-open listings.** A role that closed in the last 180 days and is back under a new id is noted as reposted. Undecided rows for jobs first seen more than 60 days ago get a "listed for 60+ days" note.
 8. **Agency flag.** Staffing-agency names and "on behalf of our client" wording cost 5 points and are said in the note.
@@ -285,7 +295,7 @@ The daily cap is now 1,500 new jobs (about 35,000 of the 100,000 free daily writ
 | Resource | Use |
 |---|---|
 | GitHub Actions | About 10 minutes for the daily run plus about 4 minutes for each of the three watchlist runs: about 25 minutes a day, inside the 2,000 minutes a month |
-| D1 writes | About 18 to 27 row writes per new job, counting indexes. 1,500 jobs is about 27,000 to 40,000 a day, plus closures, the watchlist and the AI review; inside the free 100,000 a day |
+| D1 writes | About 18 to 27 row writes per new job, counting indexes. 1,500 jobs is about 27,000 to 40,000 a day, plus closures and the watchlist; inside the free 100,000 a day |
 | D1 reads | Duplicate checks (about 2 rows per selected posting), one scan of active jobs, one of this pipeline's jobs, and the re-score export (one-time) |
 | D1 storage | About 4 to 6 MB a day at the cap, reclaimed as closed jobs' text is dropped. The free database limit is 500 MB; the diagnose workflow reports the size |
 | Worker CPU | None: scoring happens in the Action |

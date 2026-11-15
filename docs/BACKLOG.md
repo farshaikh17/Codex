@@ -71,4 +71,4 @@ K tool evaluations: only on demonstrated gaps.   E8 rest + E9 scheduling/accepta
 
 ## Out of scope by instruction
 
-No repository visibility changes, no new external endpoints, no edits to live ChatGPT tasks or Google Sheets, no paid APIs, proxies, LLM calls or hosting, no CAPTCHA solving or stealth, no Activepieces, vector database, multi-agent framework or dashboard.
+No repository visibility changes, no new external endpoints, no edits to live review tasks or Google Sheets, no paid APIs, proxies, LLM calls or hosting, no CAPTCHA solving or stealth, no Activepieces, vector database, multi-agent framework or dashboard.

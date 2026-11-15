@@ -26,7 +26,7 @@ This report covers the public read-only dashboard release (see "Production relea
 
 ## Independent review
 
-Two reviews by a reviewer context that did not write the code (a separate Claude session given the diff, the acceptance
+Two reviews by a reviewer context that did not write the code (a separate session given the diff, the acceptance
 criteria and no conclusions). Round 1 (commit `4cfc591`) found a candidate leak on the India Remote list and five smaller
 problems; all were fixed. Round 2 (commit `fe28b97`) found no authentication bypass and these defects, all fixed in the
 following commit: a stale browser key could burn 7 of the 8 allowed attempts in one page load; some `/api/candidates/:id/*`
@@ -150,4 +150,4 @@ Two different numbers, and they must not be mixed up:
 
 **Database after 2026-11-08:** jobs 3,699 (3,553 active), qualifications and scores 5,921 each, applications 12, history 44, cache entries 112, auth failures 0. Jobs first seen 2026-11-08: 213; 2026-11-07: 1,298. Queue DONE 297, FAILED 5, PENDING 6; last-day runs 71 posting and 50 source successes, 1 posting and 1 source error.
 
-**Remaining errors:** five `greenhouse:elastic` postings return HTTP 404 upstream (they end FAILED legitimately); `lever:gohighlevel` timed out once; `greenhouse:canonical` is disabled by design (the board exceeds the 512 KiB free-tier processing budget). The free AI review is off: GitHub Models was retired on 2026-07-30 (probe run 42518603571 saw HTTP 200 text/plain "OK").
+**Remaining errors:** five `greenhouse:elastic` postings return HTTP 404 upstream (they end FAILED legitimately); `lever:gohighlevel` timed out once; `greenhouse:canonical` is disabled by design (the board exceeds the 512 KiB free-tier processing budget). The free AI review is off: the free model provider was retired on 2026-07-30 (probe run 42518603571 saw HTTP 200 text/plain "OK").

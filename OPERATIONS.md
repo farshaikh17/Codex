@@ -10,7 +10,7 @@ One request per employer feed, spaced two seconds apart. Redirects, unauthorized
 
 Hourly scheduler collects when at least five hours have elapsed since the last attempt. GitHub schedules may be delayed; monitor timestamps. Public schedules can be disabled after 60 days of repository inactivity. Manual workflow_dispatch supports testing.
 
-No CVs, candidate profiles, email, application history or secrets belong here. No Google credentials needed: ChatGPT can use the connected GitHub reader. Private Google Sheets remain the application ledgers.
+No CVs, candidate profiles, email, application history or secrets belong here. No Google credentials needed: the review assistant can use the connected GitHub reader. Private Google Sheets remain the application ledgers.
 
 Local checks: python -m unittest -v. Collection: python collect.py. Ten employer feeds are a coverage trial, not a guarantee of suitable vacancies. Expand after measuring source yield.
 
@@ -123,7 +123,7 @@ Attempt object (last_attempt):
 | final_url | string | URL after redirects (the official URL if none). |
 | browser_requests | object {seen, blocked, over_cap: integer} or null | Routable browser traffic for this page; null if no navigation. |
 
-### ChatGPT consumer instructions
+### Review consumer instructions
 
 1. Read public/pages/index.json only. Refuse a schema other than public-page-capture-index-3. Remember the review_hash you last processed per id; discard review hashes stored under an earlier schema.
 2. Queue for AI review only pages whose review_hash differs from your stored value. Do not queue boilerplate_only, listings_unchanged, unchanged, not_checked or never_attempted pages; the raw text is still available if a person asks.

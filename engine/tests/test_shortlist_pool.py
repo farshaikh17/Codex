@@ -108,6 +108,23 @@ class ShortlistPool(unittest.TestCase):
         out = liveness.not_verified_by_host(targets, {'alive': ['d'], 'dead': []})
         self.assertEqual(out, {'www.bayt.com': 2, 'oraclecloud.com': 1})
 
+    def test_pool_keeps_the_stored_name_beside_the_table_name(self):
+        # 13 Nov run: the selector saw 'Lucy Electric' (named through the table) while the job still stored 'hdga', which the audit read; the pool now
+        # carries both, and the selector's tenant test reads the stored one, as the audit does.
+        self.add(S, 'o1', 70, company='hdga', url='https://hdga.fa.em3.oraclecloud.com/?site_number=Lucyelectric#1')
+        self.add(S, 'o2', 70, company='Siemens Energy')
+        self.db.commit()
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'pool.json'
+
+            def d1(sql, local=None):
+                return [dict(r) for r in self.db.execute(sql).fetchall()]
+            with mock.patch.object(dd, 'd1', d1):
+                dd.write_pool(path)
+            rows = {r['job_id']: r for r in json.loads(path.read_text())['rows']}
+        self.assertEqual((rows['o1']['company'], rows['o1']['stored_company']), ('Lucy Electric', 'hdga'))
+        self.assertEqual((rows['o2']['company'], rows['o2']['stored_company']), ('Siemens Energy', 'Siemens Energy'))
+
     def test_written_atomically(self):
         self.add(F, 'p', 70)
         self.db.commit()
