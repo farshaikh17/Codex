@@ -163,7 +163,7 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(got[0]['company'], 'KBR'); self.assertEqual(got[0]['location'], 'Saudi Arabia, Rabigh')
         self.assertFalse(got[0]['is_remote']); self.assertTrue(got[1]['is_remote'])
         self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
-        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M'})
+        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M', 'JLL'})
 
     def test_smartrecruiters_reads_public_career_pages_not_the_api(self):
         first = (FIX / 'sr_careers_masdar.html').read_bytes()
@@ -204,7 +204,7 @@ class MoreSources(unittest.TestCase):
                 {'Id': '30930', 'Title': 'Mechanical Technician', 'PostedDate': '2026-11-10', 'PrimaryLocation': 'Malabo, Equatorial Guinea', 'WorkplaceType': 'On-site'},
                 {'Id': '555', 'Title': 'Planner', 'PostedDate': '2026-11-09', 'PrimaryLocation': 'London, United Kingdom', 'WorkplaceType': 'Remote'}]}]}).encode()
         with mock.patch.object(ms, 'http', fake):
-            got = list(ms.oracle_hcm(pages=1))
+            got = [j for j in ms.oracle_hcm(pages=1) if j['company'] == 'Wood']
         self.assertEqual([j['title'] for j in got], ['Mechanical Technician', 'Planner'], 'a requisition repeated across search terms is read once')
         self.assertEqual(got[0]['url'], 'https://ehif.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/30930')
         self.assertEqual(got[0]['company'], 'Wood'); self.assertEqual(got[0]['location'], 'Malabo, Equatorial Guinea')
@@ -248,7 +248,7 @@ class MoreSources(unittest.TestCase):
 
 class EmployerSitesAreNotBoards(unittest.TestCase):
     def test_flags(self):
-        self.assertEqual(set(ms.EMPLOYER_SITES), {'workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold'})
+        self.assertEqual(set(ms.EMPLOYER_SITES), {'workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe'})
         self.assertIs(ms.job('workday', 'https://x', 'T', 'C', 'P', 'D', None, board=False)['board'], False)
         self.assertIs(ms.job('remoteok', 'https://x', 'T', 'C', 'P', 'D', None)['board'], True, 'a remote board stays a board by default')
 

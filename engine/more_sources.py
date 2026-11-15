@@ -48,7 +48,7 @@ from engine.remote_boards import UA, all_errored, job, over_budget, text, when, 
 
 PAUSE = 0.6
 # Sources that read an employer's own career site (not a job board): their rows are stored as the employer's posting.
-EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold')
+EMPLOYER_SITES = ('workday', 'oracle_hcm', 'successfactors', 'smartrecruiters', 'siemens_energy', 'eightfold', 'jibe')
 QUERIES = {
     'farhan_shaikh': ['gohighlevel', 'revops', 'revenue operations', 'implementation manager', 'automation specialist', 'crm manager',
                       'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer',
@@ -61,6 +61,29 @@ QUERIES = {
                     # energy manager 18, plant engineer 13, O&M engineer 8); asset performance returned finance roles only and was left out
                     'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer'],
 }
+# Owner default 14 Nov: engineering facilities roles (plant-room and utilities work in buildings and campuses) are searched on JLL's
+# Workday board (FM_TERMS) and accepted at the source by FM_ROLE below. They are not Workable search terms yet: the Worker's role rule
+# (dashboard/worker/discovery.ts, test S2) does not name "chief engineer" or "technical supervisor", so that rule must learn them first.
+FM_TERMS = ['shift engineer', 'chief engineer', 'facility manager engineering', 'technical supervisor', 'MEP engineer']
+# Owner default 14 Nov (Sana): engineering facilities titles count as her field at the source, next to her profile's role rule (which
+# lives in dataset_discovery.py and does not name them). Office, admin and soft-services facilities roles stay out.
+FM_ROLE = re.compile(r'shift (?:engineer|in.?charge|charge engineer)|chief engineer|facilit(?:y|ies) manager\W{0,5}(?:technical|engineering)|'
+                     r'(?:technical|engineering) facilit(?:y|ies) manager|facilities engineer|technical supervisor|\bmep (?:engineer|manager|lead|supervisor|in.?charge)', re.I)
+FM_EXCLUDE = re.compile(r'admin|office|front desk|reception|housekeeping|soft services|hospitality|workplace|mailroom|cleaning|security|catering|'
+                        r'coordinator|software|cloud|\bdata\b|\bai\b|platform|sales|estimat|design|draft', re.I)
+FM_CANDIDATES = ('sana_ansari',)
+
+
+def title_candidates(title, rules):
+    """The candidates whose role rule this title matches (plus Sana's engineering facilities titles)."""
+    t = (title or '').lower()
+    out = []
+    for cid, (role, excl) in rules.items():
+        if excl and excl.search(t):
+            continue
+        if role.search(t) or (cid in FM_CANDIDATES and FM_ROLE.search(t) and not FM_EXCLUDE.search(t)):
+            out.append(cid)
+    return out
 EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom.com', 'neom.com'), ('TAQA', 'careers.taqa.com', 'taqa.com')]
 # (display name, host, options): iso=True maps a trailing two-letter country ("Riyadh, SA") to its name on sites outside the US.
 SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com', {}), ('ACWA Power', 'careers.acwapower.com', {'iso': True}), ('Tata Power', 'careers.tatapower.com', {'iso': True}),
@@ -74,14 +97,29 @@ SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com', {}), ('ACWA Power', 'careers.acwap
 WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi'),
            # Added 2026-11-12 (Sana: plant, utilities and energy employers with large India and Gulf operations); each answered a live read that day.
            ('Johnson Controls', 'jci', 'wd5', 'JCI'), ('Baker Hughes', 'bakerhughes', 'wd5', 'BakerHughes'), ('Shell', 'shell', 'wd3', 'ShellCareers'),
-           ('Unilever', 'unilever', 'wd3', 'Unilever_Experienced_Professionals'), ('Dow', 'dow', 'wd1', 'ExternalCareers'), ('3M', '3m', 'wd1', 'Search')]
+           ('Unilever', 'unilever', 'wd3', 'Unilever_Experienced_Professionals'), ('Dow', 'dow', 'wd1', 'ExternalCareers'), ('3M', '3m', 'wd1', 'Search'),
+           # 14 Nov (Sana): KBR's Gulf postings by place (the newest-first term reads above rarely reach them), and JLL's engineering
+           # facilities roles (shift engineer, chief engineer, technical facility manager) in India and the Gulf
+           ('KBR', 'kbr', 'wd5', 'KBR_Careers', {'terms': ['Abu Dhabi', 'Jubail', 'Dhahran', 'Riyadh', 'Doha', 'Kuwait', 'Muscat'], 'gulf': True, 'pages': 2}),
+           ('JLL', 'jll', 'wd1', 'jllcareers', {'terms': ['shift engineer', 'chief engineer', 'facility manager engineering', 'technical supervisor', 'MEP engineer',
+                                                         'maintenance engineer'], 'pages': 3})]   # the first five are FM_TERMS
 # SmartRecruiters public postings API (no key). (display name, company identifier). Statkraft's identifier is 'Statkraft1'.
 # 14 Nov: Bosch and Vattenfall left the list: their SmartRecruiters career pages now forward to their own sites (jobs.bosch.com,
 # careers.vattenfall.com), and the SmartRecruiters API that still served them is disallowed by robots.txt.
 SMARTRECRUITERS = [('Masdar', 'Masdar'), ('AFRY', 'AFRY'), ('Statkraft', 'Statkraft1'),
                    ('Continental', 'Continental')]   # added 2026-11-12, live that day (large India plants)
 # Oracle Recruiting Cloud public candidate-experience REST (no key). (display name, host, site number); answered on a live read.
-ORACLE = [('Wood', 'ehif.fa.em2.oraclecloud.com', 'CX_1')]
+# Options: terms (keywords searched, '' = the whole list), facet (an extra finder filter such as a location id), pages (25 rows each),
+# gulf (keep only postings placed in the Gulf).
+GULF_TERMS = ['Abu Dhabi', 'Dubai', 'Saudi Arabia', 'Qatar', 'Oman', 'Kuwait']
+ORACLE = [('Wood', 'ehif.fa.em2.oraclecloud.com', 'CX_1', {}),
+          # 14 Nov: Wood's Gulf postings (Sana) by place, since the newest-first term reads above rarely reach them
+          ('Wood', 'ehif.fa.em2.oraclecloud.com', 'CX_1', {'terms': GULF_TERMS, 'pages': 2, 'gulf': True}),
+          # 14 Nov (Sana, India): Cummins India (location filter "India"), Apraava Energy (CLP India, every posting is in India),
+          # Transguard Group (UAE facilities management)
+          ('Cummins', 'fa-espx-saasfaprod1.fa.ocs.oraclecloud.com', 'CX_1007', {'terms': [''], 'facet': 'locationId=300000000440677', 'pages': 7}),
+          ('Apraava Energy', 'iaarcp.fa.ocs.oraclecloud.com', 'CX_1', {'terms': [''], 'pages': 2}),
+          ('Transguard Group', 'iaboey.fa.ocs.oraclecloud.com', 'CX_2', {'terms': [''], 'pages': 4})]
 SF_TERMS = ['maintenance', 'reliability', 'operations', 'power plant', 'electrical', 'energy efficiency']
 GETRO = [628, 1198]
 EURES_TERMS = {'sana_ansari': ['maintenance engineer', 'power plant', 'reliability engineer', 'electrical engineer', 'energy efficiency', 'Instandhaltungsingenieur',
@@ -345,12 +383,14 @@ def workday(pages=3):
     """Open postings of a few energy employers from Workday's public career-site JSON, searched with the same energy terms as SuccessFactors.
     The list answer carries no job text and only a relative "Posted N Days Ago", so the description is the location text and the posted date is unknown."""
     failed = 0
-    for company, tenant, dc, site in WORKDAY:
+    seen_by_site = {}   # a tenant read by two entries (KBR worldwide terms, KBR Gulf places) gives each posting once
+    for company, tenant, dc, site, *opts in WORKDAY:
+        o = opts[0] if opts else {}
         base = f'https://{tenant}.{dc}.myworkdayjobs.com'
-        seen = set()
+        seen = seen_by_site.setdefault(base + site, set())
         try:
-            for term in SF_TERMS:
-                for page in range(pages):
+            for term in o.get('terms', SF_TERMS):
+                for page in range(o.get('pages', pages)):
                     d = json.loads(http(f'{base}/wday/cxs/{tenant}/{site}/jobs', {'appliedFacets': {}, 'limit': 20, 'offset': page * 20, 'searchText': term}))
                     rows = d.get('jobPostings') or []
                     for r in rows:
@@ -360,6 +400,8 @@ def workday(pages=3):
                         seen.add(path)
                         url = f'{base}/en-US/{site}{path}'
                         place = from_count(text(r.get('locationsText')), url) or 'See posting'   # plan B2: '5 Locations' -> 'Assen; +4 more'
+                        if o.get('gulf') and not GULF_PLACE.search(place + ' ' + path):
+                            continue
                         remote = 'remote' in place.lower()
                         j = job('workday', url, text(r.get('title')), company, place, place, None, board=False)
                         j['is_remote'] = remote
@@ -432,16 +474,23 @@ def smartrecruiters_site(company, ident):
                 yield j
 
 
+GULF_PLACE = re.compile(r'united arab emirates|\buae\b|abu dhabi|dubai|sharjah|ruwais|saudi|riyadh|jeddah|jubail|dammam|dhahran|yanbu|rabigh|'
+                        r'qatar|doha|ras laffan|oman|muscat|sohar|duqm|kuwait|bahrain|manama', re.I)
+
+
 def oracle_hcm(pages=3):
-    """Open postings of Oracle Recruiting Cloud career sites (Wood), searched with the same energy terms as SuccessFactors/Workday.
+    """Open postings of Oracle Recruiting Cloud career sites, searched with the energy terms (or an entry's own terms or filter).
     The list answer carries no job text, so the description is the location text and the workplace type."""
     failed = 0
-    for company, host, site in ORACLE:
-        seen = set()
+    seen_by_site = {}   # a site read by two entries (Wood worldwide terms, Wood Gulf places) gives each posting once
+    for company, host, site, *opts in ORACLE:
+        o = opts[0] if opts else {}
+        seen = seen_by_site.setdefault(host + site, set())
         try:
-            for term in SF_TERMS:
-                for page in range(pages):
-                    finder = f'findReqs;siteNumber={site},limit=25,offset={page * 25},keyword={urllib.parse.quote(term)},sortBy=POSTING_DATES_DESC'
+            for term in o.get('terms', SF_TERMS):
+                for page in range(o.get('pages', pages)):
+                    finder = (f'findReqs;siteNumber={site},limit=25,offset={page * 25},' + (f'keyword={urllib.parse.quote(term)},' if term else '')
+                              + (f"{o['facet']}," if o.get('facet') else '') + 'sortBy=POSTING_DATES_DESC')
                     d = json.loads(http(f'https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder={finder}',
                                         headers={'Accept': 'application/json'}))
                     rows = ((d.get('items') or [{}])[0].get('requisitionList')) or []
@@ -451,6 +500,8 @@ def oracle_hcm(pages=3):
                             continue
                         seen.add(rid)
                         place = text(r.get('PrimaryLocation')) or 'See posting'
+                        if o.get('gulf') and not GULF_PLACE.search(place):
+                            continue
                         kind = text(r.get('WorkplaceType'))
                         remote = kind.lower() == 'remote'
                         j = job('oracle_hcm', f'https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{rid}', text(r.get('Title')), company,
@@ -463,6 +514,43 @@ def oracle_hcm(pages=3):
             failed += 1
             print(f'oracle_hcm {company}: {type(e).__name__}', file=sys.stderr)
     _all_failed('oracle_hcm', failed, len(ORACLE))
+
+
+# Jibe (iCIMS career-site search) public JSON: (display name, host, places searched). careers.se.com's robots.txt allows /api and asks
+# for a 5-second Crawl-delay, which http() keeps. The list answer carries the full description and qualifications.
+JIBE = [('Schneider Electric', 'careers.se.com', ['India', 'United Arab Emirates', 'Saudi Arabia'])]
+JIBE_PAGES = 8   # 100 postings a page
+
+
+def jibe():
+    failed = 0
+    for company, host, places in JIBE:
+        seen = set()
+        try:
+            for place in places:
+                for page in range(1, JIBE_PAGES + 1):
+                    d = json.loads(http(f'https://{host}/api/jobs?' + urllib.parse.urlencode({'location': place, 'limit': 100, 'page': page})))
+                    rows = d.get('jobs') or []
+                    for x in rows:
+                        r = x.get('data') or {}
+                        slug = str(r.get('slug') or r.get('req_id') or '')
+                        if not slug or slug in seen:
+                            continue
+                        seen.add(slug)
+                        where = text(r.get('full_location') or r.get('location_name') or r.get('country')) or place
+                        kinds = ' '.join(r.get('tags7') or []) if isinstance(r.get('tags7'), list) else text(r.get('tags7'))
+                        remote = 'remote' in kinds.lower()
+                        desc = ' '.join(text(r.get(k)) for k in ('description', 'qualifications') if r.get(k))
+                        j = job('jibe', f'https://{host}/jobs/{slug}?lang=en-us', text(r.get('title')), text(r.get('hiring_organization')) or company,
+                                f'Remote ({where})' if remote else where, f'{desc} {kinds}'.strip(), when(r.get('create_date') or r.get('posted_date')), board=False)
+                        j['is_remote'] = remote
+                        yield j
+                    if len(rows) < 100:
+                        break
+        except Exception as e:   # one employer down never loses the others
+            failed += 1
+            print(f'jibe {company}: {type(e).__name__}', file=sys.stderr)
+    _all_failed('jibe', failed, len(JIBE))
 
 
 def arbeitnow(pages=3):
@@ -647,15 +735,15 @@ def main():
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
-    SF_ROLE_FILTER[:] = list(rules.values())
+    SF_ROLE_FILTER[:] = list(rules.values()) + ([(FM_ROLE, FM_EXCLUDE)] if any(c in rules for c in FM_CANDIDATES) else [])
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm,
+    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe,
                'arbeitnow': arbeitnow, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
-        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm')}
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe')}
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
-    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm'}   # employer sites: the date is the original posting date; the still-open check guards staleness
+    no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}
@@ -675,8 +763,7 @@ def main():
                     continue
                 if name not in no_cutoff and j['posted_at'] and when(j['posted_at']) and when(j['posted_at']) < since:
                     continue
-                t = j['title'].lower()
-                cands = [cid for cid, (role, excl) in rules.items() if role.search(t) and not (excl and excl.search(t))]
+                cands = title_candidates(j['title'], rules)
                 if not cands:
                     continue
                 j['id'] = f"js:{name}:{hashlib.sha1(j['url'].encode()).hexdigest()[:20]}"

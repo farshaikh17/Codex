@@ -226,6 +226,32 @@ requests to one host are spaced by 0.6-1 s or the host's `Crawl-delay`. A refuse
 | Jobspresso | `/feed/?post_type=job_listing` (disallowed: `Disallow: /*?`) | `/jobs/feed/` (allowed, same 20 newest jobs) | no loss |
 | Adzuna (free keys) | read when the keys are set | `api.adzuna.com` disallows every agent, so it is read only when the keys are set **and** the owner sets the repository variable `ADZUNA_API_TERMS_ACCEPTED=true` (the keyed API's own terms then govern) | 0 today (no keys) |
 | Indeed, LinkedIn, Glassdoor, Google (JobSpy) | searched | still searched; the job-site report now says per site whether robots.txt allows the address JobSpy reads (14 Nov: all four disallow). Skipping them is a separate owner decision (its own pull request) | - |
+### New employer sources, 14 Nov 2026 (Sana; measured with one polite read and scored with the repo's `evaluate()`)
+
+"Right" = scored 60 or more and not ineligible (Sana's Gulf rows stay "eligibility unknown" until a visa route is stated); the
+ELIGIBLE count is given too. Requests are per daily run (the watchlist reads the same employer sites three times a day).
+
+| Source | Reader | Read / kept / requests | Sana: kept, right (60+), ELIGIBLE 60+ | Farhan |
+|---|---|---|---|---|
+| Schneider Electric (India, UAE, Saudi) | `jibe()`: `careers.se.com/api/jobs` (robots.txt allows; its 5 s Crawl-delay is kept) | 667 / 48 / 9 | 32 kept, 2 right, 2 ELIGIBLE ("Sr. Manager - Product Management - Solar Inverters" 66, "Deputy Manager - Switchgear Training Centre" 61) | 17 kept, 0 eligible (office roles) |
+| Cummins India (Oracle `cx_1007`, India filter) | `oracle_hcm()` entry, no keyword, location filter | part of 305 / 25 / 42 below | 5 kept, 2 right ("Maintenance Manager, Pune" 92, "Maintenance Engineer, Ranjangaon" 82) | 4 kept, 0 |
+| Apraava Energy (Oracle `CX_1`) | `oracle_hcm()` entry | (same read) | 7 kept, 3 right ("Assistant Manager - HSSE (Renewables)" 74, "Assistant Manager - Operations (Renewables)" 61) | 0 |
+| Transguard Group (Oracle `CX_2`) | `oracle_hcm()` entry | (same read) | 0 kept today (its facilities titles name no engineering/technical side) | 0 |
+| Wood in the Gulf (Oracle, by place) | `oracle_hcm()` entry, Gulf places only | (same read) | 9 kept, 0 at 60+ today (project and PMC roles) | 0 |
+| KBR in the Gulf (Workday, by place) | `workday()` entry, Gulf places only | not measured: `kbr.wd5.myworkdayjobs.com/robots.txt` answered 521 (server error) at both tries, so the robots rule skipped KBR for that run | - | - |
+| JLL (Workday `jllcareers`, facilities-engineering terms) | `workday()` entry | 266 / 50 / 68 | 44 kept, 8 right, 7 ELIGIBLE ("Shift Engineer" Mumbai 78, Bengaluru 77, Gurugram 74; "Senior Shift In-charge" Hyderabad 77) | 6 kept, 0 |
+
+**Worldwide energy employers probed for the owner's "any country" rule (14 Nov):** Sulzer's SmartRecruiters page lists no postings;
+Wärtsilä's and Veolia's forward to their own sites (`jobs.smartrecruiters.com`, `jobs.veolia.com`); Enel's Avature feed answers empty;
+Ørsted's Workday tenant refused the guessed site name; Iberdrola's careers host did not answer. None added. Already read: ENGIE,
+Siemens Energy, GE Vernova, Statkraft, AFRY, Masdar, EURES (EU-wide) and Arbeitnow (visa-sponsored, Germany).
+
+**Facilities-engineering titles (owner default: yes).** `FM_ROLE` in `engine/more_sources.py` accepts Shift Engineer / Shift In-charge,
+Chief Engineer, Facility Manager - Engineering / Technical, Facilities Engineer, Technical Supervisor and MEP Engineer / Manager for Sana at
+the source, and `FM_EXCLUDE` keeps office, admin, workplace, housekeeping, soft-services, security, coordinator, software and design roles
+out (`test_employer_sources.py`). They are searched on JLL's board only: the Worker's role rule (`discovery.ts`, test S2) does not name
+"chief engineer" or "technical supervisor" yet, so they are not Workable search terms. CBRE is not read: `careers.cbre.com` is behind a
+bot challenge, and its Avature feed ignores filters (India share unmeasured).
 
 ## The ten additions of 2026-11-07 (owner-approved)
 
