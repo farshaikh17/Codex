@@ -7,7 +7,10 @@ Workday, SmartRecruiters, ...). The workflow downloads the parquet file once per
 What this does (no candidate data is ever written to the repository):
   1. reads every candidate's search profile from D1 (the two built-in candidates use focused title searches that are subsets
      of the Worker's role rules; resold clients use their stored role keywords and location rule);
-  2. selects postings per profile in two quotas (home country, and remote roles open to anyone) so neither crowds out the other;
+  2. selects postings per profile (wide intake): every posting whose title passes the person's role rule, in any country, is pre-scored on the
+     runner with the Worker's own screen (dashboard/scripts/prescore.mjs), and every one that can plausibly fit (not ruled out by the person's
+     place rules, scoring near or above their threshold) is selected, best fit first, within a cap set by the D1 read budget; bounded quotas per
+     place are the fallback when the pre-score cannot run;
   3. drops duplicates within the run and postings already in D1 (same id, same URL, or the same company and title active),
      and lists earlier jobs that reappeared after being closed (to reopen them);
   4. closes nothing on its own: a job this pipeline added is closed only after it is missing from two consecutive snapshots
@@ -17,7 +20,7 @@ What this does (no candidate data is ever written to the repository):
 Search values (keywords, home country) are always passed to DuckDB as bound parameters, never pasted into SQL.
 
 Usage:
-  python engine/dataset_discovery.py --out work/ [--dataset work/all.parquet] [--d1-local PATH] [--home-quota 400] [--remote-quota 200]
+  python engine/dataset_discovery.py --out work/ [--dataset work/all.parquet] [--d1-local PATH] [--select-read-budget 150000] [--no-prescore]
   python engine/dataset_discovery.py --dedupe work/jobsite_raw.json --out work/   (job-site results: duplicates against D1)
 """
 import argparse
@@ -188,34 +191,191 @@ BASE_COLS = """url, title, company, ats_type, location, country_iso, lower(coale
 COMMON = """title IS NOT NULL AND url IS NOT NULL AND company IS NOT NULL
   AND regexp_matches(lower(title), $role) AND ($exclude = '' OR NOT regexp_matches(lower(title), $exclude))
   AND (posted_at IS NULL OR CAST(posted_at AS VARCHAR) >= $since)"""
-INSIDE = "(list_contains($countries::VARCHAR[], country_iso) OR regexp_matches(lower(coalesce(location,'')), $home))"
+def _worker_source():
+    return (DASHBOARD / 'worker' / 'discovery.ts').read_text()
+
+
+def india_place_words(src=None):
+    """The Worker's own Indian places (INDIA_PLACE in dashboard/worker/discovery.ts: the country, states, cities and plant towns), read from its one
+    definition so the selection and the screen never disagree (wide intake). dashboard/test/place_lists.test.mjs checks the same cases on both sides."""
+    src = src or _worker_source()
+    m = re.search(r"const INDIA_PLACE=new RegExp\('\\\\b\(\?:'\+\[(.*?)\]\.join\('\|'\)", src, re.S)
+    if not m:
+        raise RuntimeError('INDIA_PLACE not found in dashboard/worker/discovery.ts')
+    return re.findall(r"'([^']+)'", m.group(1))
+
+
+def gulf_place_source(src=None):
+    """The Worker's GULF_PLACE alternation (place names, lower case), read from discovery.ts."""
+    src = src or _worker_source()
+    m = re.search(r"const GULF_PLACE=/\\b\((.*?)\)\\b/i", src)
+    if not m:
+        raise RuntimeError('GULF_PLACE not found in dashboard/worker/discovery.ts')
+    return m.group(1)
+
+
+# DuckDB (RE2) forms of the Worker's place tests, on lower(location): an Indian place, or the country code IN at the end ("Pithampur, IN"), as
+# sanaIndiaCity() does; a Gulf place name, or a Gulf country code at the end ("Ruwais, AE"), as gulfPlace() does. Only the fallback selection
+# (select_quota) uses them; the wide selection takes the place band from the Worker itself (scripts/prescore.mjs).
+INDIA_LOC = '(^|[^a-z])(' + '|'.join(re.escape(w).replace(r'\ ', ' ') for w in india_place_words()) + r')([^a-z]|$)|(^|, )in$'
+GULF_LOC = r'(^|[^a-z])(' + gulf_place_source() + r')([^a-z]|$)'
+GULF_ISO = ['AE', 'SA', 'QA', 'OM', 'KW', 'BH']
+INSIDE = ("(list_contains($countries::VARCHAR[], country_iso) OR regexp_matches(lower(coalesce(location,'')), $home)"
+          " OR ($home_is_india AND regexp_matches(lower(coalesce(location,'')), $india_loc)))")
 OPEN = f"""(lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' AND (nullif(country_iso, '') IS NULL
   OR regexp_matches(lower(coalesce(location,'')), '{OPEN_REMOTE}')))"""
+GULF = f"(list_contains({GULF_ISO!r}::VARCHAR[], country_iso) OR regexp_matches(lower(coalesce(location,'')), $gulf_loc) OR regexp_matches(coalesce(location,''), ',\\s*(AE|QA|OM|KW|BH)\\s*$'))"
+# Undated rows (all of KBR's Workday Gulf postings, for one) are live postings in today's snapshot: they sort as if posted today, not last.
+NEWEST = "coalesce(CAST(posted_at AS VARCHAR), $today) DESC"
 
 
-def select(con, src, p, home_quota, remote_quota, max_days, abroad_quota=300):
-    """Two bounded selections per profile: in the home country (remote ones first for a remote-only search), and remote roles
-    open to anyone that are not in the home country. Every search value is a bound parameter."""
-    params = {'role': p['role'], 'exclude': p.get('exclude') or '', 'countries': p['countries'],
-              'home': '(^|[^a-z])' + re.escape(p['home']) + '([^a-z]|$)',
-              'since': (datetime.now(timezone.utc) - timedelta(days=max_days)).date().isoformat()}
-    remote_first = "CASE WHEN lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' OR regexp_matches(lower(coalesce(location,'')), 'remote') THEN 0 ELSE 1 END," if p['mode'] == 'REMOTE_FROM_HOME' else ''
-    rows = []
-    quotas = [(INSIDE, remote_first, home_quota), (f'{OPEN} AND NOT {INSIDE}', '', remote_quota)]
-    if p.get('worldwide'):   # on-site roles abroad; postings that offer visa sponsorship or relocation come first
-        quotas.append((f'NOT {INSIDE} AND NOT {OPEN}', f"CASE WHEN regexp_matches(lower(coalesce(description,'')), '{RELOCATION}') THEN 0 ELSE 1 END,", abroad_quota))
-    if p.get('remote_anywhere'):   # remote roles posted in another country (not the United States), newest first
-        quotas.append((f"lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' AND NOT {INSIDE} AND NOT {OPEN} AND coalesce(country_iso, '') <> 'US'", '', abroad_quota))
-    for where, order, limit in quotas:
-        cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON} AND {where} ORDER BY {order} posted_at DESC NULLS LAST LIMIT {int(limit)}",
-                          {**params, 'src': src})
-        cols = [d[0] for d in cur.description]
-        rows += [dict(zip(cols, r)) for r in cur.fetchall()]
+def _params(p, max_days):
+    now = datetime.now(timezone.utc)
+    return {'role': p['role'], 'exclude': p.get('exclude') or '', 'countries': p['countries'],
+            'home': '(^|[^a-z])' + re.escape(p['home']) + '([^a-z]|$)', 'home_is_india': p.get('home') == 'india',
+            'india_loc': INDIA_LOC, 'since': (now - timedelta(days=max_days)).date().isoformat()}
+
+
+def _finish(rows):
     for r in rows:   # true, false, or unknown (most postings do not say)
         r['location'] = from_count(r.get('location'), r.get('url'))   # plan B2: 'Berlin; +7 more' instead of '8 Locations' (Workday)
         flag = r.pop('remote_flag')
         r['is_remote'] = True if flag == 'true' else False if flag == 'false' else None
     return rows
+
+
+def select_quota(con, src, p, home_quota, remote_quota, max_days, abroad_quota=300, gulf_quota=150):
+    """The fallback selection (used only when the wide pre-score cannot run): bounded quotas per place, newest first with undated rows treated as
+    today's. In the home country (an Indian place by the Worker's list counts as India; remote ones first for a remote-only search), remote roles open
+    to anyone, and for a worldwide search the Gulf and other places abroad (postings that offer visa sponsorship or relocation first)."""
+    params = {**_params(p, max_days), 'today': datetime.now(timezone.utc).date().isoformat()}
+    remote_first = "CASE WHEN lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' OR regexp_matches(lower(coalesce(location,'')), 'remote') THEN 0 ELSE 1 END," if p['mode'] == 'REMOTE_FROM_HOME' else ''
+    reloc = f"CASE WHEN regexp_matches(lower(coalesce(description,'')), '{RELOCATION}') THEN 0 ELSE 1 END,"
+    quotas = [(INSIDE, remote_first, home_quota, {}), (f'{OPEN} AND NOT {INSIDE}', '', remote_quota, {})]
+    if p.get('worldwide'):
+        quotas.append((f'NOT {INSIDE} AND {GULF} AND NOT {OPEN}', reloc, gulf_quota, {'gulf_loc': GULF_LOC}))
+        quotas.append((f'NOT {INSIDE} AND NOT {OPEN} AND NOT {GULF}', reloc, abroad_quota, {'gulf_loc': GULF_LOC}))
+    if p.get('remote_anywhere'):   # remote roles posted in another country (not the United States)
+        quotas.append((f"lower(coalesce(CAST(is_remote AS VARCHAR), '')) = 'true' AND NOT {INSIDE} AND NOT {OPEN} AND coalesce(country_iso, '') <> 'US'", '', abroad_quota, {}))
+    rows = []
+    for where, order, limit, extra in quotas:
+        cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON} AND {where} ORDER BY {order} {NEWEST} LIMIT {int(limit)}",
+                          {**params, **extra, 'src': src})
+        cols = [d[0] for d in cur.description]
+        rows += [dict(zip(cols, r)) for r in cur.fetchall()]
+    return _finish(rows)
+
+
+select = select_quota   # the name earlier callers and notes use
+
+
+# ---- Wide intake (14 Nov 2026) ---------------------------------------------------------------------------------------------------------------
+# Every posting in the snapshot whose title passes a person's role rule (any country, any region, dated or not, last max_days) is pre-scored on the
+# runner with the Worker's own evaluate() (scripts/prescore.mjs; free compute, no database reads). Each person gets every row that can plausibly fit:
+# not ineligible under their place rules and scoring near or above their threshold, best fit first. No place is filtered out before the score: the
+# person's own place rules decide (Farhan: remote and workable from India; Sana: India, the Gulf, or abroad with a stated visa route).
+# The only cap is the D1 read budget of the duplicate check that follows (split_new: about SELECT_READS_PER_ROW rows read per selected row); the
+# writes are bounded by dataset_apply.mjs --max-new, best score first.
+SELECT_READS_PER_ROW = 11      # measured on a local D1 (miniflare rows_read): existing() id + URL lookups and the many-cities texts, per selected row
+SELECT_READ_BUDGET = 150_000   # D1 rows read the daily run may spend on the duplicate check of the dataset selection (about 6% of the run)
+FIT_MARGIN = 15                # "near the threshold": a row within this many points below it can still reach the lists after a re-score or taste
+LOW_MATCH = 45                 # dataset_apply.mjs moves rows at or below this to Hold: never worth importing
+# Place sets filled first, in this order, each up to its share of the person's cap; the rest of the cap goes to the best remaining rows. With the
+# default budget the caps rarely bind; the shares only decide what goes first if they do.
+PLACE_SETS = {
+    'farhan_shaikh': [('india_worldwide_apac', ('remote_global', 'remote'), 0.7)],
+    'sana_ansari': [('india', ('india_onsite',), 0.4), ('gulf', ('gulf',), 0.25), ('abroad_with_route', ('abroad_with_route',), 0.15), ('remote', ('remote',), 0.05)],
+}
+
+
+def fit_floor(threshold):
+    return max(LOW_MATCH + 1, int(threshold) - FIT_MARGIN)
+
+
+def candidate_rows(con, src, p, max_days):
+    """Every row whose title passes the person's role rule, in any place, posted in the last max_days or undated."""
+    cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON}",
+                      {k: v for k, v in {**_params(p, max_days), 'src': src}.items() if k in ('role', 'exclude', 'since', 'src')})
+    cols = [d[0] for d in cur.description]
+    return _finish([dict(zip(cols, r)) for r in cur.fetchall()])
+
+
+def node_scorer(work, candidates_file):
+    """The pre-score: scripts/prescore.mjs (the Worker's evaluate() and placeBand()) over a JSON-lines file. Returns score(items) -> results."""
+    def score(items):
+        inp, out = Path(work) / 'prescore_in.jsonl', Path(work) / 'prescore_out.jsonl'
+        with inp.open('w') as f:
+            for k, (cid, r) in enumerate(items):
+                f.write(json.dumps({'k': k, 'cid': cid, **{x: r.get(x) for x in ('title', 'company', 'ats_type', 'location', 'description', 'is_remote', 'url',
+                        'salary_min', 'salary_max', 'salary_currency', 'salary_period')}}, default=str) + '\n')
+        subprocess.run(['node', '--import', './test/register.mjs', 'scripts/prescore.mjs', '--candidates', str(Path(candidates_file).resolve()),
+                        '--in', str(inp.resolve()), '--out', str(out.resolve())], cwd=DASHBOARD, check=True, timeout=1800)
+        res = [None] * len(items)
+        for line in out.read_text().splitlines():
+            if line.strip():
+                x = json.loads(line)
+                res[x['k']] = x
+        inp.unlink(missing_ok=True)
+        out.unlink(missing_ok=True)
+        return res
+    return score
+
+
+def _fit_key(r, today):
+    s = r['_pre']
+    return (-s['score'], 0 if s['eligibility'] == 'ELIGIBLE' else 1, _neg_date(r.get('posted_at') or today))
+
+
+def _neg_date(d):
+    """Newest first as an ascending key (undated rows count as today's)."""
+    return ''.join(chr(0x10FFFF - ord(ch)) for ch in str(d)[:19])
+
+
+def pick(rows, cap, sets=()):
+    """Rows (each with '_pre') in fit order within the person's cap: each place set first, up to its share, then the best of the rest."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    ordered = sorted(rows, key=lambda r: _fit_key(r, today))
+    taken, out = set(), []
+    for _, bands, share in sets:
+        n = 0
+        for i, r in enumerate(ordered):
+            if n >= int(cap * share) or len(out) >= cap:
+                break
+            if i not in taken and r['_pre'].get('band') in bands:
+                taken.add(i); out.append(r); n += 1
+    for i, r in enumerate(ordered):
+        if len(out) >= cap:
+            break
+        if i not in taken:
+            taken.add(i); out.append(r)
+    return sorted(out, key=lambda r: _fit_key(r, today))
+
+
+def select_wide(con, src, profs, cands, max_days, read_budget=SELECT_READ_BUDGET, scorer=None, stats=None):
+    """Wide intake. Returns {cid: rows}, each row carrying its pre-score ('_pre': score, status, eligibility, band). `cands` = candidates.json rows
+    (threshold). `stats` (a dict) receives per-person counts: candidates read, plausible, picked, and picked by place band."""
+    cap_total = max(0, int(read_budget) // SELECT_READS_PER_ROW)
+    thresholds = {c['id']: c.get('qualification_threshold') for c in cands}
+    items, by_cid = [], {}
+    for cid, p in profs.items():
+        rows = candidate_rows(con, src, p, max_days)
+        by_cid[cid] = rows
+        items += [(cid, r) for r in rows]
+    results = scorer(items) if items else []
+    for (cid, r), res in zip(items, results):
+        r['_pre'] = res or {'score': 0, 'status': 'INELIGIBLE', 'eligibility': 'UNKNOWN', 'band': 'other'}
+    per_person = cap_total // max(1, len(profs))
+    out = {}
+    for cid, rows in by_cid.items():
+        t = thresholds.get(cid) or (70 if cid == 'farhan_shaikh' else 60)
+        ok = [r for r in rows if r['_pre']['status'] not in ('INELIGIBLE', 'UNKNOWN_CANDIDATE') and r['_pre']['score'] >= fit_floor(t)]
+        out[cid] = pick(ok, per_person, PLACE_SETS.get(cid, ()))
+        if stats is not None:
+            bands = {}
+            for r in out[cid]:
+                bands[r['_pre']['band']] = bands.get(r['_pre']['band'], 0) + 1
+            stats[cid] = {'read': len(rows), 'plausible': len(ok), 'picked': len(out[cid]), 'cap': per_person, 'floor': fit_floor(t), 'by_band': bands}
+    return out
 
 
 def job_id(ats, url):
@@ -452,9 +612,13 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--dataset', default=DATASET, help='a downloaded copy of all.parquet (the workflow downloads it once per run)')
     ap.add_argument('--d1-local', default=None, help='a local wrangler --persist-to path instead of the remote database')
-    ap.add_argument('--home-quota', type=int, default=400)
+    ap.add_argument('--select-read-budget', type=int, default=SELECT_READ_BUDGET,
+                    help='D1 rows read the duplicate check of the dataset selection may cost; the selection cap is this / SELECT_READS_PER_ROW')
+    ap.add_argument('--no-prescore', action='store_true', help='skip the wide pre-score and use the bounded quotas (select_quota)')
+    ap.add_argument('--home-quota', type=int, default=400, help='fallback quotas (select_quota) only')
     ap.add_argument('--remote-quota', type=int, default=200)
     ap.add_argument('--abroad-quota', type=int, default=300)
+    ap.add_argument('--gulf-quota', type=int, default=150)
     ap.add_argument('--max-days', type=int, default=45)
     ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with the current profile and rules')
     ap.add_argument('--rescore-per-candidate', type=int, default=1500, help='most rows re-scored per person per run (bounds the writes)')
@@ -511,9 +675,11 @@ def main():
     if a.dataset.startswith('http'):
         con.execute('INSTALL httpfs; LOAD httpfs;')
     profs = write_context(out, a.d1_local, a.rescore_export, a.rescore_per_candidate)
+    picked, intake = wide_or_quota(con, a, profs, out)
     found = {}
     for cid, p in profs.items():
-        for r in select(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota):
+        for r in picked.get(cid, []):
+            r = {k: v for k, v in r.items() if k != '_pre'}
             jid = job_id(r['ats_type'], r['url'])
             j = found.setdefault(jid, {**clean(r), 'id': jid, 'candidates': [], 'public': False})
             if cid not in j['candidates']:
@@ -529,13 +695,29 @@ def main():
     report = {'snapshot': manifest.get('generated_at'), 'snapshot_age_hours': None if age is None else round(age, 1), 'stale': stale, 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
               'duplicates_in_run': dup, 'already_stored': len(jobs) - dup - len(fresh), 'new': len(fresh), 'reopen': len(reopen),
               'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear), 'employer_names': names,
-              'same_job_other_city': merges.get('merged', 0)}
+              'same_job_other_city': merges.get('merged', 0), 'intake': intake}
     (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': manifest.get('generated_at'), 'jobs': fresh, 'closed': close,
                                                   'reopen': reopen, 'missing_mark': mark, 'missing_clear': clear, 'ats_counts': counts,
                                                   'merge': merges.get('stored', [])}, default=str))
     (out / 'report.json').write_text(json.dumps(report, indent=1))
     print(json.dumps(report))
     return 0
+
+
+def wide_or_quota(con, a, profs, out, scorer=None):
+    """The wide selection, or, when its pre-score cannot run (Node missing, a script error), the bounded quotas, so the day's import still runs.
+    Returns ({cid: rows}, report)."""
+    if not a.no_prescore:
+        try:
+            cands = json.loads((out / 'candidates.json').read_text())
+            stats = {}
+            picked = select_wide(con, a.dataset, profs, cands, a.max_days, a.select_read_budget,
+                                 scorer or node_scorer(out, out / 'candidates.json'), stats)
+            return picked, {'mode': 'wide', 'read_budget': a.select_read_budget, 'per_person': stats}
+        except Exception as e:   # noqa: BLE001
+            print(f'::warning::Wide pre-score failed ({type(e).__name__}: {str(e)[:160]}); using the bounded quotas today', file=sys.stderr)
+    picked = {cid: select_quota(con, a.dataset, p, a.home_quota, a.remote_quota, a.max_days, a.abroad_quota, a.gulf_quota) for cid, p in profs.items()}
+    return picked, {'mode': 'quota', 'per_person': {cid: {'picked': len(r)} for cid, r in picked.items()}}
 
 
 def safe_names(jobs, lookup=True):

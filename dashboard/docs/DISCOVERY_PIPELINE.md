@@ -59,13 +59,23 @@ found nothing new it reads and writes nothing more in the database and leaves th
      - The two built-in candidates use focused title searches, which are subsets of the screen's own role rules.
      - Clients use their stored role keywords and location rule.
      - Search values are passed to DuckDB as bound parameters. A keyword like `women's health` or a country like `Côte d'Ivoire` is safe.
-   - **Two quotas per person,** so neither crowds out the other:
-     - up to 400 in the home country. For a remote-only search, remote roles come first. The country is matched as a whole word, so Indiana is not India.
-     - up to 200 remote roles open to anyone.
-     - up to 300 more per person (owner rules, 2026-11-07):
-       - **Farhan:** remote roles posted in other countries, never the United States.
-       - **Sana:** on-site roles anywhere in the world, with postings that offer visa sponsorship or relocation first.
-   - **Recency:** postings up to 45 days old, newest first.
+   - **Wide intake (14 Nov 2026): every posting that can fit, in any country.**
+     - Every posting whose title passes the person's role rule, posted in the last 45 days or undated, is read, whatever its country or
+       region (about 32,000 for Farhan and 38,000 for Sana on the 12 Nov snapshot). Nothing is dropped by place before scoring.
+     - Each one is pre-scored on the runner (free; no database reads) with the Worker's own screen: `scripts/prescore.mjs` runs `evaluate()`
+       and `placeBand()` on the same posting object the import stores. The person's place rules decide: Farhan remote and workable from India;
+       Sana India, the Gulf, or abroad with a stated visa route.
+     - Selected: every row that is not ruled out and scores within 15 points of the person's threshold (never 45 or below, which the import
+       would hold as a low match), best fit first (score, then a stated eligibility, then newest; an undated live posting counts as today's).
+     - The only cap is the D1 read budget of the duplicate check that follows: `--select-read-budget` (150,000 rows read) divided by about
+       11 rows read per selected row, shared between the people (about 6,800 each; on 12 Nov it did not bind). If it binds, place sets go
+       first: India / worldwide / APAC remote for Farhan; India, the Gulf, abroad with a visa route and remote for Sana.
+     - The import (`dataset_apply.mjs --max-new`, 1,500) still writes the best-scored new rows first, so a backlog reaches D1 over a few days.
+     - If the pre-score cannot run, the old bounded quotas are used for the day (home 400 with the Worker's Indian places, remote 200, Gulf 150,
+       abroad 300), newest first with undated rows counted as today's.
+     - Measured on the 12 Nov snapshot (thresholds 70 and 60): rows that can fit reaching the import went from 56 to 384 for Farhan (79 at
+       his threshold, was 7) and from 265 to 2,408 for Sana (1,014 at her threshold, was 81; India 209 -> 628, Gulf 2 -> 88, abroad with a
+       visa route 5 -> 139).
    - **Duplicates.**
      - Within the run: same company, title and location.
      - Against D1: same id, same URL, or the same company and title still active.

@@ -9,9 +9,10 @@
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, onsiteByText, remoteFlagTrusted } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, remoteFlagTrusted } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
 import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
+import { posting as postingOf } from './prescore.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
@@ -68,17 +69,9 @@ for (const file of many('--in')) {
   for (const id of m.closed || []) closed.add(id);
   for (const j of m.jobs || []) {
     const board = !!j.board;
-    const description = plain(j.description).slice(0, 6000);
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
-    // Jobs QA 13 Nov: the source's remote flag is wrong for some postings whose own text places the job in an office ('The position is based in
-    // Bengaluru', '#LI-Onsite', 'two days a week from our London office'); the text wins (evaluate() reads it the same way).
-    // Jobs QA 2 (14 Nov): an Oracle, Workday or SuccessFactors flag alone is not trusted (Mashreq Bengaluru, on site, flagged remote): the text or
-    // the place must say remote too.
-    const flagged = j.is_remote === true && remoteFlagTrusted(j.ats_type, description, j.location);
-    const textOnsite = flagged && onsiteByText(description);
-    const remote = (flagged && !textOnsite) || /\bremote\b/i.test(j.location || '');
-    const onsite = j.is_remote === false || (textOnsite && !remote);
-    const posting = { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, repost: !!j.repost, salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
+    const posting = postingOf(j);   // the same posting the selection's pre-score saw (scripts/prescore.mjs)
+    const { description, remote, onsite } = posting;
     const rows = [];
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);

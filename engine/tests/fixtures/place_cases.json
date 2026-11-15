@@ -1,0 +1,18 @@
+[
+ {"location": "Gurugram, HR", "india": true, "gulf": false},
+ {"location": "Pithampur, IN", "india": true, "gulf": false},
+ {"location": "Chakan, Chakan_MahTower, IN", "india": true, "gulf": false},
+ {"location": "Nagpur Plant", "india": true, "gulf": false},
+ {"location": "Bengaluru, Karnataka, India", "india": true, "gulf": false},
+ {"location": "Remote - India", "india": true, "gulf": false},
+ {"location": "Jamnagar", "india": true, "gulf": false},
+ {"location": "Ruwais, AE", "india": false, "gulf": true},
+ {"location": "Abu Dhabi, United Arab Emirates", "india": false, "gulf": true},
+ {"location": "Al Jubail, Saudi Arabia", "india": false, "gulf": true},
+ {"location": "Doha", "india": false, "gulf": true},
+ {"location": "Berlin, Germany", "india": false, "gulf": false},
+ {"location": "Houston, TX", "india": false, "gulf": false},
+ {"location": "Lagos, Nigeria", "india": false, "gulf": false},
+ {"location": "Remote (Worldwide)", "india": false, "gulf": false},
+ {"location": "Adelaide, SA", "india": false, "gulf": false}
+]
