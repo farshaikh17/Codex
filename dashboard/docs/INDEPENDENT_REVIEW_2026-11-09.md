@@ -1,4 +1,4 @@
-# Independent review of ChatGPT's QA findings (Claude, 2026-11-09)
+# Independent review of the other reviewer's QA findings (2026-11-09)
 
 Method: every finding was treated as a hypothesis and tested here with disposable local fixtures (no production access, no writes, no deploys). Evidence is labelled
 **[exec]** executed here, **[code]** read in the repository, **[live]** observed through a connector, **[claimed]** reported by someone else and not checked.
@@ -6,13 +6,13 @@ Method: every finding was treated as a hypothesis and tested here with disposabl
 ## 1. Refreshed state (about 21:30 UTC)
 | Item | Value |
 |---|---|
-| Repository head | `origin/main` = `a1ac61eb72cc8950f6fedd38ed10f7108a812dbe`, identical to ChatGPT's reported head, no commits since **[live: git fetch]** |
+| Repository head | `origin/main` = `a1ac61eb72cc8950f6fedd38ed10f7108a812dbe`, identical to the other reviewer's reported head, no commits since **[live: git fetch]** |
 | Open pull requests | six drafts #62 to #67, same tips as before: #62 `0564b93`, #63 `23d0bb2`, #64 `d617c80`, #65 `7188101`, #66 `a5d3abb`, #67 `0e80185` **[live: GitHub]** |
 | Deployed commit | `5832c43` with high confidence: the newest release run is #44 (run 42542910591, success, 00:56:50 to 01:02:25 UTC) on `5832c43`; no release run since; the Worker's last-modified time was 00:58:48 UTC **[live: GitHub Actions, Cloudflare]**. I could not read `/api/version` (the sandbox cannot reach the site) and cannot see a Worker "version id", so `b4bba92c...` is **not** confirmed or contradicted |
 | D1 databases on the account | two: `career-job-engine` (43.7 MB) and `parenthood` (24 KB) **[live: Cloudflare]** |
 
 ## 2. Verdict on each finding
-| # | ChatGPT's finding | Verdict | Evidence |
+| # | the other reviewer's finding | Verdict | Evidence |
 |---|---|---|---|
 | 1 | Outage cache may expose a private response | **CONFIRMED (scope narrowed), fixed in isolation** | [exec] With a fake Cache API: a share-link holder's GET of `/api/candidates` and `/api/dashboard/overview` was stored under the URL alone; with D1 failing, an anonymous visitor then received it (`X-Cache: STALE-OUTAGE`) including the private client's id, name, display title, citizenship, education, location, timezone, years of experience, target roles and both skill lists. Candidate-specific URLs (`/api/jobs?candidate_id=...`, `/api/profile?...`) did **not** leak on a cold instance (the unknown id gives 400). Preconditions: the Cache API must work on the serving host (it does not on `*.workers.dev`, so this is latent there; it becomes live on a custom domain), a link holder must have loaded the page recently (copy lives 3 days), then a D1 outage. Fix: `backupEligible` refuses requests that carry a share link. Residual: a client switched from public to private keeps appearing in the stored anonymous copy until it expires (3 days); a shorter backup lifetime would reduce that |
 | 2 | Possible unsave race, wrong audit result | **CONFIRMED (both sequences), fixed in isolation** | [exec] A change injected between the handler's check and its batch: (a) a note added in between was deleted with the record; (b) a status moved to APPLIED in between left the record, yet the answer was `200 {unsaved:true}` and a false `UNSAVED` history row was written. Fix: both statements repeat the rule (status SAVED and no notes) inside the atomic batch, the history row exists only if the delete's conditions still hold, a delete that changed nothing answers 409. My first reproduction attempt was wrong (the injected change fired during the save, not the un-save); I caught it by asserting the injection happened at the right moment |
@@ -29,11 +29,11 @@ Method: every finding was treated as a hypothesis and tested here with disposabl
 * Previously unverified items now covered **locally** (not live): mobile layout at 375 px, keyboard operation (job rows were not reachable by keyboard; fixed in the QA branch), contrast (787 failures fixed), filter and listing suites (48/48), end-to-end integration.
 
 ## 4. Draft pull requests
-**[exec]** Merged `origin/main`, #62 to #67 and the QA branch in a scratch copy: no conflict; 205 Node and 357 Python tests pass; the six new Node test files and ChatGPT's three Python tests pass when run. **[exec]** Before my CI fix, those nine files and three Python tests were never executed by CI (`npm test` listed files by name; `tests/` had no `__init__.py`), so the drafts' green checks said nothing about them.
+**[exec]** Merged `origin/main`, #62 to #67 and the QA branch in a scratch copy: no conflict; 205 Node and 357 Python tests pass; the six new Node test files and the other reviewer's three Python tests pass when run. **[exec]** Before my CI fix, those nine files and three Python tests were never executed by CI (`npm test` listed files by name; `tests/` had no `__init__.py`), so the drafts' green checks said nothing about them.
 **[code]** Diffs read: #62 (sponsorship/relocation conflict; with it, "No sponsorship. Relocation assistance provided." and "Sponsorship is not offered ... for other roles" still screen ELIGIBLE, which is a screening-rule question for the owner), #64 (strict analytics parsing, fails closed), #66 (cross-candidate decision guard matches the import's semantics; redirect-to-homepage becomes "unknown"), #67 (removes the title-and-employer collapse and the closing of stored copies: right for distinct cities, but it brings back near-duplicate rows, which cost writes at import and enlarge the read cost measured in QA segment 2; bounded per run by the 1,500 new-job cap; an identity-based dedupe such as the same apply URL or requisition id would keep both benefits). #63 and #65 were run (tests, merge) but not read line by line.
 
 ## 5. What changed in this repository
-Three fixes, each also available as an isolated patch built from `origin/main` (`dashboard/docs/qa-patches/`, see its README): `fix1` outage backup, `fix2` un-save race, `fix3` job-row button names. On the QA branch they are commits `e9ff420`, `4a5cbf9`, `e988f23`.
+Three fixes (the isolated patch files that were kept under `dashboard/docs/qa-patches/` were deleted on 13 Nov; the fixes are merged): `fix1` outage backup, `fix2` un-save race, `fix3` job-row button names. On the QA branch they are commits `e9ff420`, `4a5cbf9`, `e988f23`.
 Result on the QA branch: `npm run verify` 199 of 199 Node tests; the accessibility browser test passes.
 Side finding while isolating fix 3: on plain `origin/main` the release's own read-only browser check fails locally on `/profile` (the education line leak fixed earlier on the QA branch, commit `688b8d5`), because the test seed has empty education; on live data it passes, so live data must already hold a stored education value.
 

@@ -661,6 +661,50 @@ Package F of the draft (chips, group by employer, filters, diversity line) is **
     chooses (repository secrets `TELEGRAM_LINK_CODE_SANA`, `TELEGRAM_LINK_CODE_FARHAN`, 12-64 characters; compared in constant time); a name, a
     candidate id, another case or a prefix links nobody, and one code given for two people links neither. With no code set it links nobody and
     leaves the waiting messages unread. `/stop` still unlinks the sender's own chat. Owner steps in `RELEASE.md`, "Daily phone message".
+- jobs QA fixes (13 Nov, night; a hand QA of 100 jobs per person on saved samples; `profile_v16`, the one rules-marker bump for them; `qa-fixes/*`):
+  - Farhan: a remote posting limited to another country or region ('Remote (United Kingdom)', 'Remote (Mexico)', 'Germany') is ineligible, like
+    US-only, unless the place or text names India, Asia or APAC, the place says worldwide / anywhere / global, or the text says worldwide. The hard
+    avoid list adds solutions / systems architect, engineering manager, staff / principal engineer, infrastructure, cloud / platform operations, product
+    manager, clinical, territory operations, ATQC and automation frameworks; 'Commercial Operations Specialist' is capped unless the title also says
+    RevOps. For him 'operations', 'solutions' and 'architect' no longer earn the +4 "close to a target role" alone (Sana keeps them).
+  - Both: the posting's text wins over the source's remote flag ('The position is based in ...', '#LI-Onsite' / '#LI-Hybrid', 'N days a week in /
+    from / at our ... office'); a bare 'hybrid working' is still not read (phase 2 tenth-man rule). The import stores such a posting as ONSITE.
+    `yearsRequired` reads '12+ years in software engineering' and decimals; `yearsCeiling` reads '1-1.5 years'.
+  - Sana: segment manager, IT-stack words (java, angular, databricks, snowflake, sfmc, grc, tenant migration), business / digital / enterprise
+    architect titles and marine / yacht titles are on her avoid list; a design or study title loses 8 (ranked below maintenance and O&M); a
+    technical / engineering consultant title needs a word of her field; operator and field officer posts are below her level; 'AR - Little Rock', and
+    'nationwide', a dollar salary or 'City, ST' in the text of a posting with no place, are abroad; a bare two-letter location is a country abroad
+    unless it is IN or an Indian state code (so BR, NL, CH, TR, which are also Indian codes, stay unread), and a bare 'SA' / 'AE' / 'QA' / 'OM' /
+    'KW' / 'BH' is the Gulf. A posting with no description, or one of 600 characters or less, counts the phrases of her field in its title (O&M,
+    power plant, energy audit, ...) as skills, at most two. The shortlist lets an exact target title stand in for the two skills only with 300+
+    characters of description.
+  - from a hand review of the live lists: Farhan, a place of just 'Remote' whose text keeps the job in one country (US payroll words: 401(k),
+    E-Verify, Form I-9; 'authorized to work in the US'; 'must be based in Canada'; 'right to work in the UK') is ruled out too, unless the text names
+    India, APAC, Asia, worldwide or hiring globally ('Must be able to work during US business hours' alone is not a place); sales, marketing,
+    revenue and GTM operations titles keep the +4 ('Sales & Marketing Operations Manager'). Sana: the design / study penalty above, and business /
+    digital architect and marine titles on her avoid list ('Business Architect / Digital Architecture', 'Marine Electrical Engineer' at a resort).
+  - employer names: the Oracle tenant 'Fa Elxu Saasfaprod1 (CX_1001)' (the dataset adds the site) is SVKM's (sites NMIMS, SVKM Central Office,
+    SVKM, read from its own career site); the table and the tenant test read an id followed by its site, and migration `0023_company_names_svkm.sql`
+    renames the stored rows (same guards as 0021; applied by the release).
+  - the 13 Nov daily run turned red: the shortlist audit failed 7 Oracle rows of Sana's as tenant ids. The selector had read their names through
+    the names table ('Lucy Electric') while the audit read the ids still stored on the jobs ('hdga'; 0021 not yet applied). The selector and the
+    audit now share one test, `shortlistTenant()` in `scripts/shortlist_select.mjs`: the name stored on the job (the pool keeps it as
+    `stored_company`) read through the one names table, now `engine/company_names.json`, which `engine/company_names.py` loads too. A row the
+    table names stays on the shortlist before its migration runs (0023 goes live with the release after this change); an id the table does not
+    know stays off. The JS test reads a name equal to its oraclecloud.com host whatever the source, as `tenant_like()` does.
+  - jobs QA 2 (14 Nov, live lists): Farhan, India / APAC / Asia in the text exempts a remote-elsewhere posting only when it is about the person
+    (based, located, candidates, hiring, time zone ... within a few words), and Latin / South / Central America, Africa, the Balkans, the Nordics,
+    North Macedonia and a few more are places abroad; an Oracle, Workday or SuccessFactors remote flag counts only when the text or the place
+    also says remote (import and re-score); an unconfirmed (UNKNOWN) row reaches his Worth a try only with a place naming India; named CRM and
+    automation platforms (HubSpot, Salesforce, ActiveCampaign, Zapier, Make, n8n ...) count for 'CRM Configuration' / 'Workflow Automation';
+    'RevOps' reads as GTM operations; the platform cap is 59, below his Worth-a-try floor. Sana: +8 for her core plant (thermal / captive power,
+    power plant, turbine, boiler, coal handling, BTG; not design titles), before the caps; a required local language with no Indian place counts
+    as abroad for the visa cap; ASIC and silicon titles are avoided; a design or study post is also capped at her threshold + 4.
+  - measured, main → this change, with the QAs' verdicts (every row assumed verified). QA of 13 Nov samples: Farhan Best matches 7 of 9 fit →
+    9 of 10, Worth a try 2 of 10 → 3 of 3; Sana Best matches 23 of 25 → 25 of 25, Worth a try 17 of 25 → 20 of 20. QA 2 (14 Nov live lists):
+    Farhan Best matches 8 of 11 → 14 of 15 (good fits 2 → 5), Worth a try 3 of 14 → 4 of 4; Sana Best matches 22 of 25 → 25 of 25, Worth a try
+    19 of 25 → 25 of 25, top 100 78 → 90; the same with employer names as stored today. No job either QA judged a good fit left the shortlist
+    against main (an ACWA Power KSA row is off on main too, and one ENGIE row gives its place to another ENGIE row: two per employer per tier).
 
 ---
 

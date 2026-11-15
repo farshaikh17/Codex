@@ -117,6 +117,8 @@ export interface ApplicationRecord {
 
 export interface Job {
   why_line?: string;   // plan U6: one plain line on why this job is on the list (server: worker/why.ts)
+  more_places?: number;   // jobs QA 13 Nov: To review shows one row per employer and title; how many other listings of it were folded in
+  other_places?: string[];   // up to three of their places
   assessment_conflict?: boolean;
   provenance?: string;
   id: string;

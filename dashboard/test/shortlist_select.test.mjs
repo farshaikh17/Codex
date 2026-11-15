@@ -28,7 +28,9 @@ const sel = (pool, o = {}) => selectShortlist(pool, { now: NOW, ...o });
 test('tier rule: Ready needs the threshold and confirmed eligibility; Stretch takes unconfirmed at the threshold or confirmed up to 10 below', () => {
   const pool = [row({ job_id: 'r', score: 60 }), row({ job_id: 'su', score: 75, eligibility: 'UNKNOWN' }), row({ job_id: 'sb', score: 50 }),
     row({ job_id: 'low', score: 49 }), row({ job_id: 'ul', score: 59, eligibility: 'UNKNOWN' }), row({ job_id: 'one', score: 90, skill_score: 20 }),
-    row({ job_id: 'exact', score: 90, skill_score: 20, target_exact: 1 }), row({ job_id: 'old', score: 90, marked: 0 }), row({ job_id: 'shut', score: 90, active: 0 })];
+    row({ job_id: 'exact', score: 90, skill_score: 20, target_exact: 1, description: 'Plant maintenance and reliability work. '.repeat(10) }), row({ job_id: 'old', score: 90, marked: 0 }), row({ job_id: 'shut', score: 90, active: 0 }),
+    row({ job_id: 'bare', score: 90, skill_score: 20, target_exact: 1, description: '' }), row({ job_id: 'short', score: 90, skill_score: 20, target_exact: 1, description: 'Reliability Engineer. '.repeat(13) })];
+  // jobs QA 13 Nov: the exact title stands in for the two skills only with 300+ characters of description ('Reliability Engineer II' at a trading firm had none)
   assert.deepEqual(tiers(sel(pool)), { r: 'READY', su: 'STRETCH_READY', sb: 'STRETCH_READY', exact: 'READY' });
 });
 
@@ -147,7 +149,7 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
     row({ job_id: 'notdup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: 'Another company entirely: onboard our SaaS customers and run their implementations from kickoff to go-live. '.repeat(2), score: 90 }),
     // tenth-man review: the reposter puts its own sentence first and the title says "(Remote)": still the same job
     row({ job_id: 'dup2', company: 'Jobgether', title: 'Implementation Lead (Remote)', location: 'India', description: 'This position is posted by Jobgether on behalf of a partner company. ' + D, score: 90 })];
-  for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', 'Paired'][i], score: 95 }));
+  for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', '20four7VA'][i], score: 95 }));
   const t = tiers(sel(pool));
   assert.equal(t.dup, undefined, 'the duplicate is dropped');
   assert.equal(t.dup2, undefined, 'and the one with its own opening sentence and a (Remote) title');
@@ -157,11 +159,12 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
 });
 
 test('A4: a tenant-id employer is not shortlisted (B1 gives it a name first); known ids and short real names from other sites are', () => {
-  const pool = [row({ job_id: 't1', company: 'Fa Espx Saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'hdga', source: 'workday' }),
-    row({ job_id: 't3', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/hcmUI/job/1' }),
+  const pool = [row({ job_id: 't1', company: 'Fa Eqid Saasfaprod1', source: 'oracle' }), row({ job_id: 't2', company: 'eluq', source: 'workday' }),
+    row({ job_id: 't3', company: 'Eluq', source: 'oracle', url: 'https://eluq.fa.em3.oraclecloud.com/hcmUI/job/1' }),
+    row({ job_id: 'k5', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/hcmUI/job/1' }),   // the names table knows it (Lucy Electric)
     row({ job_id: 'k1', company: 'Abb', source: 'workday' }), row({ job_id: 'k2', company: 'skip', source: 'ashby' }), row({ job_id: 'k3', company: 'Jll', source: 'workday' }),
     row({ job_id: 'k4', company: 'DAMAC', source: 'oracle', url: 'https://ejwe.fa.em2.oraclecloud.com/x' })];
-  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY', k3: 'READY', k4: 'READY' });
+  assert.deepEqual(tiers(sel(pool)), { k1: 'READY', k2: 'READY', k3: 'READY', k4: 'READY', k5: 'READY' });
 });
 
 test('A5: role families, five sample titles each, first match wins, including the misfiles found', () => {

@@ -6,6 +6,7 @@
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
 import * as site from './site';
 import { whyLine } from './why';
+import { collapseTwins, reviewKey, type Twins, type TwinRow } from './twins';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -156,6 +157,8 @@ const TRACKER_ROUTES: [string, RegExp][] = [
   ['POST', /^\/api\/jobs\/[^/]+\/qualification-override$/], ['GET', /^\/api\/jobs\/[^/]+\/qualification-audit$/],
 ];
 const TRACKER_KEYS = new Set(['notes', 'application_notes', 'app_notes', 'rejection_notes', 'manual_override_reason', 'feedback', 'rejection_stage', 'rejection_reason_category', 'application_channel', 'resume_version']);
+// A refused keyless tracker request keeps its explanation (the app shows it: "This changed elsewhere; reload.", "The note is empty ...").
+const TRACKER_ERROR_KEYS = new Set([...TRACKER_KEYS, 'error']);
 // Open-tracker abuse limits (12 Nov review: a stranger with the link sent 50 writes in 1.6 s). A keyless tracker write counts against its
 // network (hashed CF-Connecting-IP, in the existing auth_failures table under a 'tracker:' key): at most TRACKER_WRITES_PER_HOUR per hour.
 // A person triaging a list stays far below it; a script is stopped after a handful of seconds. A D1 error never blocks a write.
@@ -280,11 +283,16 @@ async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup |
       FROM cache_state s LEFT JOIN response_cache c ON c.key = ? WHERE s.id = 1`).bind(key).first<CacheLookup>();
   } catch { return null; }
 }
-async function writeResponseCache(env: Env, key: string, body: string, generation: number): Promise<void> {
+// Marker row (never a real key: real keys start with the cache namespace) holding the time of the last selective tracker invalidation.
+const TRACKER_CHANGE_KEY = '~tracker-change';
+/** readStart: when this request looked the entry up (seconds). The answer is not stored if a tracker action cleared answers since then
+ *  (it may have been computed from the rows before that action); a few seconds of margin cover clock differences between isolates. */
+async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number): Promise<void> {
   if (new TextEncoder().encode(body).length > CACHE_MAX_BYTES) return;
   try {
     const now = Math.floor(Date.now() / 1000);
-    await env.DB.prepare('INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, ?, ?, ?)').bind(key, body, now, generation).run();
+    await env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) SELECT ?, ?, ?, ?
+      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, now, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
     meterAdd(utcDay(), { cache_writes: 1 });
     // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
@@ -294,11 +302,17 @@ async function writeResponseCache(env: Env, key: string, body: string, generatio
 // save / status / note / rating click cost a full recomputation of every list for everyone; on an active day that used up the free
 // read allowance (12 Nov review). Here only the answers that can show this person's data are removed: those keyed by their
 // candidate_id or path, and the cross-person summaries (overview, candidate list). Everything else stays cached.
+// Without a generation bump, a read that was computed before the action but stored after it would come back for up to 30 minutes (code QA,
+// 13 Nov). So the same batch records the time of the action (TRACKER_CHANGE_KEY); writeResponseCache does not store an answer whose read
+// started before that time. That costs one indexed row read per cache write, and only an answer in flight during an action goes uncached.
 async function invalidateCandidateCache(env: Env, candidateId: string): Promise<void> {
   const id = candidateId.replace(/[%_\\]/g, (c) => '\\' + c);
   try {
-    await env.DB.prepare(`DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\' OR key LIKE ? ESCAPE '\\' OR key LIKE '%:/api/dashboard/overview?%' OR key LIKE '%:/api/candidates?%'`)
-      .bind(`%candidate_id=${id}%`, `%/api/candidates/${id}/%`).run();
+    await env.DB.batch([
+      env.DB.prepare(`DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\' OR key LIKE ? ESCAPE '\\' OR key LIKE '%:/api/dashboard/overview?%' OR key LIKE '%:/api/candidates?%'`)
+        .bind(`%candidate_id=${id}%`, `%/api/candidates/${id}/%`),
+      env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, '', ?, 0)`).bind(TRACKER_CHANGE_KEY, Math.floor(Date.now() / 1000)),
+    ]);
   } catch (e: any) {
     if (/no such table/i.test(String(e?.message))) return;
     await invalidateResponseCache(env);   // cannot clear selectively: fall back to clearing everything rather than serve stale data
@@ -381,6 +395,9 @@ function logPrivately(tag: string, pathname: string, message: unknown) {
 
 // Who is asking. Set by the router for every /api request; handlers use it to decide which fields to return.
 const accessLevel = new WeakMap<Request, 'public' | 'operator'>();
+// Keyless open-tracker requests. They run at operator level (the handlers are the operator's), but their answers are stripped like a public
+// answer except for the tracker's own fields (TRACKER_KEYS): no audit actor, document path or other private field (code QA F4, 13 Nov).
+const keylessTracker = new WeakSet<Request>();
 // Plan U1: the network hash of a keyless open-tracker write. Every history row such a request writes is tagged with it (history_client,
 // migration 0022), so the owner can undo one network's changes with scripts/undo_since.mjs.
 const writerOf = new WeakMap<Request, string>();
@@ -415,7 +432,7 @@ const isOperatorRequest = (request: Request) => accessLevel.get(request) === 'op
 // audit actors, override reasons, pay and notice details, contact details and anything credential-shaped.
 const PRIVATE_KEYS = new Set([
   'notes', 'application_notes', 'app_notes', 'rejection_notes', 'resume_version', 'cover_letter_path', 'application_channel',
-  'manual_override_reason', 'actor', 'payload', 'raw_payload', 'audit', 'audit_payload', 'feedback',
+  'manual_override_reason', 'actor', 'reviewer', 'payload', 'raw_payload', 'audit', 'audit_payload', 'feedback',
   'email', 'phone', 'phone_number', 'linkedin', 'address', 'contact', 'contact_email',
   'cash_floor_inr_monthly', 'cash_floor_inr_annual', 'min_acceptable_salary_usd', 'min_fixed_monthly_inr', 'preferred_inr_range',
   'notice_period_days', 'pay_line', 'employment_history', 'location_preferences', 'relocation_interest', 'unsupported_claims',
@@ -625,7 +642,8 @@ class WorkerRouter {
   private async finish(request: Request, res: Response, env?: Env): Promise<Response> {
     const isApi = new URL(request.url).pathname.startsWith('/api/');
     const isPublic = accessLevel.get(request) === 'public';
-    if (!isApi || (res.status !== 500 && !isPublic)) return res;
+    const trackerAnswer = keylessTracker.has(request);
+    if (!isApi || (res.status !== 500 && !isPublic && !trackerAnswer)) return res;
     const type = res.headers.get('Content-Type') || '';
     if (!type.includes('json')) return res;
     const headers = new Headers(res.headers);
@@ -641,7 +659,8 @@ class WorkerRouter {
       return new Response(JSON.stringify({ error: 'Internal error. The request was not completed.' }), { status: 500, headers });
     }
     const data = await res.json<any>();
-    return new Response(JSON.stringify(stripPrivate(data, env && openTracker(env) ? TRACKER_KEYS : undefined)), { status: res.status, headers });
+    const keep = trackerAnswer ? (res.status >= 400 ? TRACKER_ERROR_KEYS : TRACKER_KEYS) : env && openTracker(env) ? TRACKER_KEYS : undefined;
+    return new Response(JSON.stringify(stripPrivate(data, keep)), { status: res.status, headers });
   }
 
   async handle(request: Request, env: Env): Promise<Response> {
@@ -667,6 +686,7 @@ class WorkerRouter {
           return jsonResponse({ error: 'Too many changes from this network in the last hour. Please wait a while and try again.' }, 429, { ...corsHeaders(request, env), 'Retry-After': '900' });
         if (request.method !== 'GET') writerOf.set(request, await clientKey(request));
         accessLevel.set(request, 'operator');
+        keylessTracker.add(request);
       } else {
         const denied = await checkOperatorAuth(request, env);
         if (denied) return denied;
@@ -742,7 +762,7 @@ class WorkerRouter {
         const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
         if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now);
           await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });
@@ -1325,7 +1345,8 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
       LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       WHERE q.candidate_id = ?
         AND q.qualification_status IN (${placeholders})
-    `;
+        AND j.is_active = 1
+    `;   // jobs QA 2 (14 Nov): closed postings are left out, as on the site's own lists (/api/jobs)
 
     const sqlParams: any[] = [candidateId, ...statuses];
 
@@ -1460,6 +1481,18 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         } : null,
       };
 }
+// Jobs QA 13 Nov: the job seeker's To review lists show one row per employer and title (worker/twins.ts). The To review rows of the given predicate
+// (`where` starts at FROM, as in /api/jobs), read once; the hidden twins are then left out of the counts and the page by id. A list too long to pass
+// as one parameter is not collapsed (D1 statements stay under 100 KB).
+async function reviewRows(env: Env, where: string, params: any[]): Promise<(TwinRow & { eligibility: string })[]> {
+  const { results } = await env.DB.prepare(`SELECT q.job_id AS id, j.title, j.company, j.location_restrictions AS location, j.discovered_at AS found, q.eligibility_status AS eligibility,
+      COALESCE((SELECT s3.overall_score FROM candidate_job_scores s3 WHERE s3.candidate_id = q.candidate_id AND s3.job_id = q.job_id), 0) AS score,
+      CASE WHEN ${UNSCREENED_SQL} THEN 1 ELSE 0 END AS unscreened
+    ${where} AND q.qualification_status = 'NEEDS_REVIEW'`).bind(...params).all<any>();
+  return results || [];
+}
+const TWINS_MAX_PARAM = 90000;
+function usableTwins(t: Twins): Twins { return JSON.stringify(t.hidden).length > TWINS_MAX_PARAM ? { hidden: [], groups: NaN, places: new Map() } : t; }
 async function candidateThreshold(env: Env, candidateId: string): Promise<number | null> {
   try { const r = await env.DB.prepare('SELECT qualification_threshold AS t FROM candidates WHERE id = ?').bind(candidateId).first<any>(); return typeof r?.t === 'number' ? r.t : null; } catch { return null; }
 }
@@ -1535,6 +1568,14 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       baseParams.push(since, since);
     }
 
+    // Jobs QA 13 Nov: collapse_twins=true (the job seeker's lists) shows one To review row per employer and title, the best-scored one, with a
+    // "+N more places" note; the counts and totals below then count it once, as /api/today does.
+    let twins: Twins | null = null;
+    if (url.searchParams.get('collapse_twins') === 'true') {
+      twins = usableTwins(collapseTwins(await reviewRows(env, baseWhere, baseParams)));
+      if (twins.hidden.length) { baseWhere += ` AND q.job_id NOT IN (SELECT value FROM json_each(?))`; baseParams.push(JSON.stringify(twins.hidden)); }
+    }
+
     // 1. Status counts over the base predicate (one query; the total below is derived from it)
     const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
     const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
@@ -1586,7 +1627,11 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     }
 
     const threshold = await candidateThreshold(env, candidateId);
-    const jobs = results.map((r: any) => shapeJob(r, candidateId, threshold));
+    const jobs = results.map((r: any) => {
+      const job: any = shapeJob(r, candidateId, threshold), more = twins?.places.get(r.id);
+      if (more) { job.more_places = more.more; job.other_places = more.places; }
+      return job;
+    });
 
     return jsonResponse({
       count: jobs.length,
@@ -1615,21 +1660,28 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 //   hidden         marked Not for me (Hold with that reason)
 //   applications   saved (Saved / Preparing), waiting (applied, first call, interviews, offer), finished (didn't work out, withdrawn)
 //   followups_due  follow-up dates on or before today (India time)
+// To review rows (more_to_look, more_good and their part of everything and says_india) count once per employer and title (jobs QA 13 Nov;
+// worker/twins.ts), as the lists asked with collapse_twins=true show them.
 const TODAY_LIST = 25;
 const UNSCREENED_SQL = `q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'`;
 async function todayCounts(env: Env, candidateId: string) {
+  // The same predicate as /api/jobs?exclude_applied=true&exclude_dismissed=true. Jobs QA 13 Nov: To review is counted one row per employer and title,
+  // within each count's own rows, exactly as the lists with collapse_twins=true group them.
+  const listWhere = `FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+    WHERE q.candidate_id = ? AND j.is_active = 1
+      AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
+      AND ${NOT_APPLIED}`;
+  const review = await reviewRows(env, listWhere, [candidateId]);
+  const screened = review.filter((r) => !Number(r.unscreened));
+  const groups = (rows: TwinRow[]) => { const t = usableTwins(collapseTwins(rows)); return Number.isNaN(t.groups) ? rows.length : t.groups; };
   const row = await env.DB.prepare(`SELECT
       SUM(CASE WHEN q.qualification_status IN ('READY','READY_HIGH') THEN 1 ELSE 0 END) AS best,
       SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) AS worth_a_try,
-      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) THEN 1 ELSE 0 END) AS more_to_look,
-      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0)
-               AND COALESCE((SELECT s.overall_score FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id), 0) >= 60 THEN 1 ELSE 0 END) AS more_good,
       COUNT(*) AS everything,
-      SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS says_india
-    FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-    WHERE q.candidate_id = ? AND j.is_active = 1
-      AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
-      AND ${NOT_APPLIED}`).bind(candidateId).first<any>();
+      SUM(CASE WHEN q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS says_india,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) AS review_rows,
+      SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS review_india
+    ${listWhere}`).bind(candidateId).first<any>();
   const hidden = await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
     WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`).bind(candidateId).first<any>();
   const apps = await env.DB.prepare(`SELECT
@@ -1646,9 +1698,13 @@ async function todayCounts(env: Env, candidateId: string) {
     followupsDue = Number(f?.n || 0);
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; }
   const n = (v: any) => Number(v || 0);
+  // the To review part of each count, one row per employer and title (the rows read above; the SQL counts give the rest)
+  const moreToLook = groups(screened), moreGood = groups(screened.filter((r) => Number(r.score) >= 60));
+  const everything = n(row?.everything) - n(row?.review_rows) + groups(review);
+  const saysIndia = n(row?.says_india) - n(row?.review_india) + groups(review.filter((r) => r.eligibility === 'ELIGIBLE'));
   return {
-    best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: n(row?.more_to_look), more_good: n(row?.more_good),
-    everything: n(row?.everything), says_india: n(row?.says_india), hidden: n(hidden?.n),
+    best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: moreToLook, more_good: moreGood,
+    everything, says_india: saysIndia, hidden: n(hidden?.n),
     applications: { saved: n(apps?.saved), waiting: n(apps?.waiting), finished: n(apps?.finished), total: n(apps?.total) },
     followups_due: followupsDue, today_india: today,
   };
@@ -1682,7 +1738,9 @@ router.get('/api/today', async (request, env, _params, url) => {
       for (const r of full || []) byId.set(r.id, shapeJob(r, candidateId, threshold));
     }
     const pick = (list: string[]) => list.map((id) => byId.get(id)).filter(Boolean);
-    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: pick(recent) }, 200, corsHeaders(request, env));
+    // the good matches found lately are To review rows: one per employer and title (the best-scored first), as in the lists (jobs QA 13 Nov)
+    const seen = new Set<string>(), recentOnce = pick(recent).filter((j: any) => { const k = reviewKey(j.company, j.title); if (seen.has(k)) return false; seen.add(k); return true; });
+    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: recentOnce }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
