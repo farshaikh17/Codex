@@ -9,27 +9,15 @@ A looked-up name is used only when it is a plausible name (three letters or more
 Acquisition' and 'Family of Companies' are trimmed ('Cummins Talent Acquisition' -> 'Cummins'). The shortlist never shows a tenant id
 (scripts/shortlist_select.mjs tenantEmployer()), so a name that stays raw costs the job its place on the shortlist, not its place in the pool.
 """
+import json
+import pathlib
 import re
 import urllib.parse
 
-# Ids the hiring systems use for these employers. Keys are lower case, with '-' and ' ' alike.
-KNOWN = {
-    'mdlz': 'Mondelez International',
-    'aecom2': 'AECOM',
-    'generalmotors': 'General Motors',
-    'thermofisher': 'Thermo Fisher Scientific',
-    'gohighlevel': 'GoHighLevel',
-    'abb': 'ABB',
-    # Oracle Recruiting Cloud tenants, read from each career site's page title / og:site_name (13 Nov 2026)
-    'hdga': 'Lucy Electric',          # hdga.fa.em3.oraclecloud.com, site Lucyelectric
-    'egup': 'Vertiv',                 # egup.fa.us2.oraclecloud.com, site CX
-    'ekkh': 'Hormel Foods',           # ekkh.fa.us2.oraclecloud.com: "Hormel Foods Family of Companies"
-    'fa espx saasfaprod1': 'Cummins',             # "Cummins Talent Acquisition"
-    'fa emqh saasfaprod1': 'Kent',                # "Kent Careers"
-    'fa exty saasfaprod1': 'Howmet Aerospace',
-    'fa etqd saasfaprod1': 'Perficient',
-}
-FA_TENANT = re.compile(r'^fa[ -][a-z]{4}[ -]saasfaprod\d+$', re.I)
+# Ids the hiring systems use for these employers: engine/company_names.json (keys lower case, with '-' and ' ' alike; where each name was read).
+# The shortlist selector and its audit read the same file (dashboard/scripts/shortlist_select.mjs), so a name known here is known there.
+KNOWN = json.loads((pathlib.Path(__file__).resolve().parent / 'company_names.json').read_text(encoding='utf-8'))['names']
+FA_TENANT = re.compile(r'^fa[ -][a-z]{4}[ -](?:test[ -])?saasfaprod\d+(?:\s*\([^)]*\))?$', re.I)   # also with its site: 'Fa Elxu Saasfaprod1 (CX_1001)'
 SHORT_TOKEN = re.compile(r'^[a-z]{1,5}$')   # lower case only: 'Wood' is a name, 'bmc' an id
 TENANT_SOURCES = re.compile(r'^(workday|oracle|oracle_?hcm)$', re.I)
 # Words a career site puts around the employer's name, and names that are not an employer at all.

@@ -12,6 +12,15 @@ class Known(unittest.TestCase):
                           ('Fa Espx Saasfaprod1', 'Cummins'), ('fa-emqh-saasfaprod1', 'Kent'), ('fa exty saasfaprod1', 'Howmet Aerospace')]:
             self.assertEqual(display_company(raw, 'workday', 'https://x.example/'), name, raw)
 
+    def test_tenant_with_its_site(self):
+        # the dataset stores some Oracle tenants with their site after the id; fa-elxu-saasfaprod1 is SVKM's (sites NMIMS, SVKM Central Office, SVKM)
+        url = 'https://fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com/?keyword=&mode=jobs&lang=en&site_number=CX_1001#1'
+        self.assertEqual(display_company('Fa Elxu Saasfaprod1 (CX_1001)', 'oracle', url), 'NMIMS')
+        self.assertEqual(display_company('Fa Elxu Saasfaprod1 (CX_1016)', 'oracle', url), 'SVKM')
+        self.assertTrue(tenant_like('Fa Eqid Saasfaprod1 (CX_2)', 'oracle', 'https://fa-eqid-saasfaprod1.fa.ocs.oraclecloud.com/?site_number=CX_2#1'))
+        self.assertEqual(display_company('Fa Eqid Saasfaprod1 (CX_2)', 'oracle', 'https://fa-eqid-saasfaprod1.fa.ocs.oraclecloud.com/?site_number=CX_2#1',
+                                         lambda u: '<title>Acme Careers</title>'), 'Acme', 'an unknown tenant with its site is looked up')
+
     def test_known_needs_no_fetch(self):
         def boom(url):
             raise AssertionError('no fetch for a known id')

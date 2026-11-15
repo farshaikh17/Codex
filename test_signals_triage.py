@@ -1,12 +1,11 @@
-"""engine/signals.py and engine/ai_triage.py: UK register parsing, the taste model, the AI review parser and its SQL. Offline."""
+"""engine/signals.py and engine/more_sources.py: UK register parsing, the taste model, EURES parsing. Offline."""
 import json
-import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from engine import ai_triage, signals, more_sources as ms
+from engine import signals, more_sources as ms
 
 
 class Signals(unittest.TestCase):
@@ -34,113 +33,6 @@ class Signals(unittest.TestCase):
         self.assertTrue(m['f']['active'])
         self.assertGreater(signals.taste_score(m['f'], 'Implementation Lead', 'Z'), 0)
         self.assertLess(signals.taste_score(m['f'], 'Support Specialist', 'Z'), 0)
-
-
-class Triage(unittest.TestCase):
-    def test_parse_and_sql(self):
-        out = ai_triage.parse('Sure: [{"i":0,"fit":82,"eligible":"yes","why":"Good match."},{"i":1,"fit":20,"eligible":"no","why":"US only."},{"i":9,"fit":50}]', 2)
-        self.assertEqual(set(out), {0, 1}); self.assertEqual(out[1]['eligible'], 'no')
-        self.assertEqual(ai_triage.parse('no json here', 2), {})
-        job = {'candidate_id': 'f', 'job_id': 'j1'}
-        db = sqlite3.connect(':memory:')
-        db.executescript("""CREATE TABLE candidate_job_scores(candidate_id, job_id, overall_score, score_breakdown, calculated_at);
-          CREATE TABLE candidate_qualifications(candidate_id, job_id, qualification_status, manual_override_status, qualification_reason);
-          CREATE TABLE applications(candidate_id, job_id); CREATE TABLE cache_state(id, generation);
-          INSERT INTO candidate_job_scores VALUES ('f','j1',70,'{"preliminary":true}',NULL),('f','j2',70,'{"preliminary":true}',NULL);
-          INSERT INTO candidate_qualifications VALUES ('f','j1','NEEDS_REVIEW',NULL,'Cloud match.'),('f','j2','NEEDS_REVIEW','READY','Cloud match.');""")
-        sql = '\n'.join(ai_triage.to_sql(job, out[0], 'now') + ai_triage.to_sql({'candidate_id': 'f', 'job_id': 'j2'}, out[1], 'now'))
-        db.executescript(sql); db.executescript(sql)   # idempotent
-        self.assertEqual(db.execute("SELECT overall_score FROM candidate_job_scores WHERE job_id='j1'").fetchone()[0], 76)
-        self.assertTrue(db.execute("SELECT qualification_reason FROM candidate_qualifications WHERE job_id='j1'").fetchone()[0].startswith('AI review (fit 82, eligibility yes): Good match. Cloud'))
-        self.assertIn('ai_review', db.execute("SELECT score_breakdown FROM candidate_job_scores WHERE job_id='j1'").fetchone()[0])
-        self.assertEqual(db.execute("SELECT overall_score FROM candidate_job_scores WHERE job_id='j2'").fetchone()[0], 70, 'a decided row is never touched')
-
-    def test_batches_never_mix_candidates(self):
-        """7 jobs for one person then 3 for another, batch size 5: the old slicing made [f,f,f,f,f] [f,f,s,s,s]; the second request
-        then described the wrong person for three of its five postings."""
-        jobs = [{'candidate_id': 'farhan', 'job_id': f'f{i}', 'profile': 'builder'} for i in range(7)] + \
-               [{'candidate_id': 'sana', 'job_id': f's{i}', 'profile': 'plant'} for i in range(3)]
-        out = list(ai_triage.batches(jobs, 5))
-        self.assertEqual([len(b) for b in out], [5, 2, 3])
-        for b in out:
-            self.assertEqual(len({j['candidate_id'] for j in b}), 1)
-            self.assertEqual(len({j['profile'] for j in b}), 1)
-        self.assertEqual(sorted(j['job_id'] for b in out for j in b), sorted(j['job_id'] for j in jobs), 'every job is reviewed exactly once')
-        self.assertEqual(list(ai_triage.batches([], 5)), [])
-
-    def test_each_request_carries_its_own_candidate_profile(self):
-        jobs = [{'candidate_id': 'f', 'job_id': f'f{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'PROFILE_F'} for i in range(7)] + \
-               [{'candidate_id': 's', 'job_id': f's{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'PROFILE_S'} for i in range(3)]
-        seen = []
-        def fake_call(messages, token, timeout=60):
-            seen.append(messages[1]['content']); return '[]'
-        with tempfile.TemporaryDirectory() as d, mock.patch.object(ai_triage, 'call', fake_call), mock.patch.object(ai_triage.time, 'sleep'), \
-                mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'x'}):
-            Path(d, 'top.json').write_text(json.dumps(jobs))
-            with mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
-                ai_triage.main()
-        self.assertEqual(len(seen), 3)
-        for text in seen:
-            self.assertEqual(('PROFILE_F' in text) + ('PROFILE_S' in text), 1, 'one profile per request')
-            self.assertEqual(text.count('PROFILE_F') + text.count('PROFILE_S'), 1)
-
-    def test_bad_replies_are_described_and_stop_after_three(self):
-        """The first production run failed all 20 batches with a bare JSONDecodeError and a 'success' mark. Now the reason is printed, and
-        three failures in a row stop the review instead of hammering the endpoint for the rest of the list."""
-        import io, urllib.error
-        class Resp:
-            status = 200
-            headers = {'Content-Type': 'text/html'}
-            def __init__(self, raw): self._raw = raw
-            def read(self): return self._raw
-            def __enter__(self): return self
-            def __exit__(self, *a): return False
-        jobs = [{'candidate_id': 'f', 'job_id': f'j{i}', 'title': 't', 'company': 'c', 'location': 'l', 'description': 'd', 'profile': 'p'} for i in range(40)]
-        calls = []
-        def fake_urlopen(req, timeout=0):
-            calls.append(1); return Resp(b'<html><body>Sign in to GitHub</body></html>')
-        with tempfile.TemporaryDirectory() as d, mock.patch.object(ai_triage.urllib.request, 'urlopen', fake_urlopen), mock.patch.object(ai_triage.time, 'sleep'), \
-                mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'x'}), mock.patch('sys.stdout', new_callable=io.StringIO) as out, mock.patch('sys.stderr', new_callable=io.StringIO) as err:
-            Path(d, 'top.json').write_text(json.dumps(jobs))
-            with mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
-                ai_triage.main()
-        rep = json.loads(out.getvalue().strip().splitlines()[-1])
-        self.assertEqual(len(calls), 3, 'stopped after three failures in a row, not 8 batches')
-        self.assertEqual(rep['reviewed'], 0); self.assertEqual(rep['failed_batches'], 3)
-        self.assertIn('Sign in to GitHub', rep['failure_samples'][0]); self.assertIn('text/html', rep['failure_samples'][0])
-
-    def test_probe_reports_failure_and_success(self):
-        import io
-        class Resp:
-            status = 200
-            headers = {'Content-Type': 'application/json'}
-            def __init__(self, raw): self._raw = raw
-            def read(self): return self._raw
-            def __enter__(self): return self
-            def __exit__(self, *a): return False
-        good = json.dumps({'choices': [{'message': {'content': 'ready'}}]}).encode()
-        for raw, expect, rc in ((good, 'ok', 0), (b'', 'failed', 1)):
-            with mock.patch.object(ai_triage.urllib.request, 'urlopen', lambda req, timeout=0, raw=raw: Resp(raw)), mock.patch.dict('os.environ', {'GITHUB_TOKEN': 'secret-token'}), \
-                    mock.patch('sys.stdout', new_callable=io.StringIO) as out, mock.patch('sys.argv', ['x', '--in', 'a', '--out', 'b', '--probe']):
-                self.assertEqual(ai_triage.main(), rc)
-            self.assertEqual(json.loads(out.getvalue())['probe'], expect)
-            self.assertNotIn('secret-token', out.getvalue())
-
-    def test_probe_needs_no_input_files_but_a_review_run_does(self):
-        import io
-        with mock.patch('sys.argv', ['x', '--probe']), mock.patch.dict('os.environ', {'GITHUB_TOKEN': ''}), mock.patch('sys.stdout', new_callable=io.StringIO) as out:
-            self.assertEqual(ai_triage.main(), 1)   # no token: it fails visibly, but it did not complain about missing --in/--out
-        self.assertEqual(json.loads(out.getvalue())['probe'], 'failed')
-        with mock.patch('sys.argv', ['x']), mock.patch('sys.stderr', new_callable=io.StringIO):
-            with self.assertRaises(SystemExit):
-                ai_triage.main()
-
-    def test_no_token_writes_nothing(self):
-        with tempfile.TemporaryDirectory() as d:
-            Path(d, 'top.json').write_text('[{"candidate_id":"f","job_id":"j","title":"t","company":"c","location":"l","description":"d","profile":"p"}]')
-            with mock.patch.dict('os.environ', {'GITHUB_TOKEN': ''}), mock.patch('sys.argv', ['x', '--in', str(Path(d, 'top.json')), '--out', str(Path(d, 't.sql'))]):
-                ai_triage.main()
-            self.assertEqual(Path(d, 't.sql').read_text(), '')
 
 
 class Eures(unittest.TestCase):

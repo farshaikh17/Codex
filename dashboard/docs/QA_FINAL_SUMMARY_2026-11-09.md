@@ -1,12 +1,12 @@
-# Final QA summary, 2026-11-09 (Claude, technical QA only)
+# Final QA summary, 2026-11-09 (technical QA only)
 
 Scope rule from the owner: the engine never decides whether a job suits Farhan or Sana. Everything here is about whether the engine works. Nothing in this summary has been deployed:
-the live site is still commit `5832c43`. Branch: `ccr-31e055c3-e2y6ub` (18 commits, 34 files, no pull request yet). Details per segment: `QA_LOG_CLAUDE_2026-11-09.md`; schedule and evidence:
+the live site is still commit `5832c43`. Branch: `ccr-31e055c3-e2y6ub` (18 commits, 34 files, no pull request yet). Details per segment: `QA_LOG_2026-11-09.md`; schedule and evidence:
 `QA_SCHEDULE_2026-11-09.md`; what needs a decision: `OWNER_DECISIONS_2026-11-09.md`.
 
 ## Completion round (evening of 2026-11-09): integration, verification and the two open concerns
 **Exact integration commit: `732897124cdbb886282c41620fb320716582de78`** (branch `qa/integration-2026-11-09`, base `origin/main` `75a092e`; 45 commits, 54 files, +1,566/-88).
-* Included: this QA branch at code commit `bf94461` (all QA fixes and tests) and ChatGPT's #64 (`d617c80`, account-wide budget), #63 (`23d0bb2`, JobSpy refusals), #65 (`7188101`, links and import limit), #66 (`a5d3abb`, decided jobs in liveness).
+* Included: this QA branch at code commit `bf94461` (all QA fixes and tests) and the other reviewer's #64 (`d617c80`, account-wide budget), #63 (`23d0bb2`, JobSpy refusals), #65 (`7188101`, links and import limit), #66 (`a5d3abb`, decided jobs in liveness).
 * Excluded and kept separate: **#62** (`0564b93`, a screening-rule change) and **#67** (`0e80185`, removes the title-and-employer collapse: right for distinct cities, but it brings back near-duplicate rows that cost writes and list reads; an owner trade-off).
 * Checked on the combined diff: no stray or sensitive file, no secret, no `.only`/debugger, no migration, no schema change; `evaluate()` (lines 227 to 328 of `discovery.ts`) is untouched (the file differs only inside `backfillClient`); the only file edited by two merged branches is `budget_guard.mjs` (my warning line plus #64's rewrite; read, coherent, tested).
 * Docs-only commits made after `bf94461` on this branch (this summary, `COST_MODEL_2026-11-09.md`, corrections, patches) change nothing the integration commit tests: `git diff bf94461 HEAD --stat` lists only `dashboard/docs/**`.
@@ -23,10 +23,10 @@ Public profile fell back to the full degree line; login limiter failed open whil
 **New this round: the onboarding backfill scanned every active job on every call** (11.15 million job rows to onboard 21,120 jobs in the local model; now 21,647, 515 times fewer; see `COST_MODEL_2026-11-09.md`). **Draft pull request for this branch: https://github.com/farshaikh17/Codex/pull/68** (draft, not merged). Isolated branches (one commit each on `main` `75a092e`): `qa/outage-backup-share-link`, `qa/unsave-race`, `qa/job-row-button-names`, `qa/backfill-cursor`; patches in `dashboard/docs/qa-patches/`.
 
 ### Disproved, retracted or narrowed
-* ChatGPT's outage-cache concern is narrower than stated: candidate-specific URLs do not leak. The leak is the two list-style answers.
+* the other reviewer's outage-cache concern is narrower than stated: candidate-specific URLs do not leak. The leak is the two list-style answers.
 * My earlier theory that the shared concurrency group drops scheduled runs: disproved (drops happen while nothing else runs).
 * My earlier "about two rows written per job" for onboarding: wrong (index entries omitted); it is about nine. My earlier "150,000 rows per list miss": revised (see the cost model).
-* ChatGPT's "budget guard may undercount": the code does filter by one database (confirmed), but no undercount is demonstrated (the second database is 24 KB, one database in the analytics).
+* the other reviewer's "budget guard may undercount": the code does filter by one database (confirmed), but no undercount is demonstrated (the second database is 24 KB, one database in the analytics).
 * `dashboard/legacy/test_*.py`: not defects, dead files (one defines no tests, one hard-codes a Windows path; the README calls the folder unused).
 
 ### Verification at the exact commit `7328971` (commands, exit codes, counts)
@@ -78,7 +78,7 @@ Whether to merge #62 (screening wording: with it, "No sponsorship. Relocation as
 | a11y (axe on 9 public pages + every screen + keyboard open/close) | all pass |
 | site, listing, clients suites | 20/20, 48/48, 18/18 per width |
 | post-deploy smoke | all pass |
-| Combined code: `origin/main` + ChatGPT's six drafts + this branch | no merge conflict; 205 Node and 357 Python tests pass |
+| Combined code: `origin/main` + the other reviewer's six drafts + this branch | no merge conflict; 205 Node and 357 Python tests pass |
 Two suites needed care, not code: `browser.e2e` deliberately locks the local login limiter at its end (the docs say to clear `auth_failures` before the next run; `site.e2e` fails with a cryptic
 "282 vs undefined" if you do not), and `clients.e2e` had stale selectors (fixed).
 
@@ -90,17 +90,17 @@ Two suites needed care, not code: `browser.e2e` deliberately locks the local log
 5. No way to delete a client although the privacy notice promises it: operator-only `DELETE /api/clients/:id` (segment 9).
 6. Accessibility: 787 low-contrast elements, unlabelled controls, colour-only links, job rows unusable from the keyboard (segment 10).
 7. CORS reflected any origin; security headers added; junk paging parameters caused a 500; two dead buttons (Sync/Refresh, Reverify) fixed (segments 1 and earlier).
-8. CI never ran 9 Node test files (four from ChatGPT) and ChatGPT's 3 Python tests; now it does (segment 11). Stale browser tests brought up to date.
+8. CI never ran 9 Node test files (four from the review assistant) and the other reviewer's 3 Python tests; now it does (segment 11). Stale browser tests brought up to date.
 9. Re-score SQL: a 400-row randomized property test now proves protected rows never change (segment 4).
 A first attempt to change screening rules (sponsorship wording) was reverted: that is the owner's call, not QA's.
 
-## Compared with ChatGPT's notes (six draft pull requests #62 to #67)
+## Compared with the other reviewer's notes (six draft pull requests #62 to #67)
 * Same finding, found separately: the budget guard must count the whole Cloudflare account, not one database (its #64; my segment 2). It also validated the GraphQL query against the live account, which I could not.
 * Complementary: its #66 (decided jobs protected during liveness checks) and #67 (stop collapsing same-title jobs) cover import behaviour I only tested for the re-score; its #63 fixes JobSpy refusal detection.
 * Its tests are honest about being unverified ("CI pending", "no production data changed"). They were not running in CI until my segment 11 fix; all of them pass.
 * Not yet resolved between us: with its #62 applied, "No sponsorship. Relocation assistance provided." and "Sponsorship is not offered ... visa sponsorship available for other roles" still classify as
-  ELIGIBLE (my probe, segment 3 of the first pass). Whether that matters is a screening-rule question for ChatGPT and the owner.
-* Neither of us could see live usage figures or the live site from the sandbox (mine) / had less to say about the front end and reselling (ChatGPT's PRs are all in the importer and screen).
+  ELIGIBLE (my probe, segment 3 of the first pass). Whether that matters is a screening-rule question for the review assistant and the owner.
+* Neither of us could see live usage figures or the live site from the sandbox (mine) / had less to say about the front end and reselling (the other reviewer's PRs are all in the importer and screen).
 
 ## What this QA did not cover
 Live-site behaviour and real D1 timing (the sandbox cannot reach production); the cause of the 7 Nov overrun (needs the analytics token); the run 42 browser flake; screen readers, high contrast and

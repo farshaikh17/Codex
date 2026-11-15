@@ -919,7 +919,7 @@ test('QA: DELETE /api/clients/:id erases the client and everything tied to them,
   assert.equal((await call(worker, env, 'DELETE', `/api/clients/${a}`)).status, 400, 'a second delete is a clean "unknown client", not an error');
 });
 
-// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): a share-link holder's answer must never become the outage copy served to anonymous visitors.
+// Independent review 2026-11-09 (reproduced from the other reviewer's hypothesis): a share-link holder's answer must never become the outage copy served to anonymous visitors.
 test('outage backup never stores an answer produced for a share-link holder, so a private client is not handed to anonymous visitors during an outage', async () => {
   const store = new Map(); const HOST = 'https://share-link-leak-check.invalid';   // own host: the Worker remembers recently stored URLs per instance
   globalThis.caches = { default: { async put(req, res) { store.set(req.url, await res.text()); }, async match(req) { return store.has(req.url) ? new Response(store.get(req.url), { headers: { 'Content-Type': 'application/json' } }) : undefined; } } };
@@ -947,7 +947,7 @@ test('outage backup never stores an answer produced for a share-link holder, so 
   } finally { delete globalThis.caches; }
 });
 
-// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): un-save checks the record, then writes. A change made by someone else in between must neither
+// Independent review 2026-11-09 (reproduced from the other reviewer's hypothesis): un-save checks the record, then writes. A change made by someone else in between must neither
 // lose their notes nor leave a false "UNSAVED" entry in the history while the record is still there.
 test('un-save: a note added after the check is not lost, and the history only records an un-save that really happened', async () => {
   const racing = async (mutateSql) => {

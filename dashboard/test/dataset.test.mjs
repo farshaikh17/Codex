@@ -169,10 +169,10 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
     insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
     insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
-    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v15":true}' : '{"preliminary":true}');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v16":true}' : '{"preliminary":true}');
     if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
     // an application by the OTHER candidate on the same job must not protect this row's score
-    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v15":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v16":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
   }
   const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
     jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
@@ -192,7 +192,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
     if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
     if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
-    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v15, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v16, true, `re-scored row carries the marker: ${k}`); changedScores++; }
     if (JSON.stringify(q1) !== JSON.stringify(q0)) {
       changedQuals++;
       assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
@@ -278,7 +278,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V8 = '{"preliminary":true,"profile_v15":true}';
+  const V8 = '{"preliminary":true,"profile_v16":true}';
   const add = (id, score, elig, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? NOW);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', elig, o.reason ?? 'Cloud discovery match.', o.override || null);
@@ -288,6 +288,8 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   add('r1', 80, 'ELIGIBLE'); add('r2', 60, 'ELIGIBLE');                       // Ready
   add('s1', 75, 'UNKNOWN'); add('s2', 55, 'ELIGIBLE');                        // Stretch: eligibility to confirm / just under the threshold
   add('n1', 59, 'UNKNOWN'); add('n2', 49, 'ELIGIBLE');                        // below both rules
+  db.prepare(`UPDATE jobs SET location_restrictions = 'Remote, India' WHERE id = 's1'`).run();   // jobs QA 2: Farhan's unconfirmed Stretch rows need an Indian place
+  add('s3', 75, 'UNKNOWN');                                                   // ... so the same row with no place stays in To review
   add('n3', 90, 'ELIGIBLE', { verified: OLD });                               // not verified open recently
   add('n4', 90, 'ELIGIBLE', { bd: '{"preliminary":true}' });                  // not screened under the current rules
   add('n5', 90, 'ELIGIBLE', { skill: 0 });                                    // title match only, no profile skill named
@@ -309,7 +311,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   assert.deepEqual([a.r1, a.r2, a.x2], ['READY', 'READY', 'READY']);
   assert.deepEqual([a.t1, a.t2, a.t3], ['READY', 'NEEDS_REVIEW', 'NEEDS_REVIEW'], 'one place per employer and title: the best-scored twin');
   assert.deepEqual([a.s1, a.s2], ['STRETCH_READY', 'STRETCH_READY']);
-  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2']) assert.equal(a[id], 'NEEDS_REVIEW', id);
+  for (const id of ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'd1', 'd2', 's3']) assert.equal(a[id], 'NEEDS_REVIEW', id);
   assert.equal(a.x1, 'HOLD', 'shortlisted earlier, score fell to 20: back off the shortlist, then held as a low match');
   assert.equal(a.n7, 'HOLD'); assert.equal(a.d3, 'READY'); assert.equal(a.d4, 'READY');
   assert.equal(Object.values(a).filter((s) => s === 'STRETCH_READY').length, 25, 'at most 25 Stretch per person, best first');
@@ -343,7 +345,7 @@ test('low matches leave To review with a mark and come back when the score rises
   const w = world();
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
-  const V = '{"preliminary":true,"profile_v15":true}';
+  const V = '{"preliminary":true,"profile_v16":true}';
   const add = (id, score, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at) VALUES (?,?,?,?,?,1,'2026-11-01')`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', 'UNKNOWN', o.reason ?? 'Cloud discovery match.', o.override || null);
@@ -378,7 +380,7 @@ test('re-score covers the automatic shortlist: a shortlisted row gets the new ru
   db.exec(run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]).sql);
   selectInto(db);
   const s = (id) => db.prepare(`SELECT s.overall_score o, s.score_breakdown b, q.qualification_status st, q.qualification_reason r FROM candidate_job_scores s JOIN candidate_qualifications q USING(candidate_id, job_id) WHERE s.job_id = ?`).get(id);
-  assert.ok(s('a1').o <= 40 && /profile_v15/.test(s('a1').b), `the shortlisted row is re-scored under the new rules (${s('a1').o})`);
+  assert.ok(s('a1').o <= 40 && /profile_v16/.test(s('a1').b), `the shortlisted row is re-scored under the new rules (${s('a1').o})`);
   assert.notEqual(s('a1').st, 'READY', 'and leaves the shortlist in the same run');
   assert.deepEqual([s('a2').o, s('a2').st], [70, 'READY'], 'a person\'s Ready row is untouched');
 });
@@ -388,7 +390,7 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V = '{"preliminary":true,"profile_v15":true}';
+  const V = '{"preliminary":true,"profile_v16":true}';
   const MARK = 'Shortlisted automatically. Cloud discovery match.';
   const add = (id, score, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? OLD);
@@ -479,23 +481,24 @@ test('S3: a row held as outside the role family comes back to To review when the
   assert.ok(report.held_role_rechecked >= 1);
 });
 
-test('S4: the shortlist needs two matched skills unless the title is exactly a target role; decided rows untouched', () => {
+test('S4: the shortlist needs two matched skills unless the title is exactly a target role (with a description to check it, jobs QA 13 Nov); decided rows untouched', () => {
   const w = world(); const db = w.sqlite;
   const { RULES_MARKER: M } = DS_DISCOVERY;
   db.prepare(`UPDATE candidates SET qualification_threshold = 60 WHERE id = ?`).run(S);
   const now = new Date().toISOString();
+  const TEXT = 'Plant maintenance of pumps, compressors and boilers; planning of preventive work and shutdowns. '.repeat(4);
   const add = (id, skill, exact, o = {}) => {
-    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,1,?,?)`).run(id, 'Maintenance Engineer ' + id, 'Co' + id, 'lever', 'https://x.example/' + id, now, now);
+    db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at,description) VALUES (?,?,?,?,?,1,?,?,?)`).run(id, 'Maintenance Engineer ' + id, 'Co' + id, 'lever', 'https://x.example/' + id, now, now, o.description ?? TEXT);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,eligibility_status,manual_override_status) VALUES (?,?,?,?, 'ELIGIBLE', ?)`).run(S, id, o.status || 'NEEDS_REVIEW', 'Cloud discovery match.', o.override || null);
     db.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,80,?,?)`).run(S, id, skill, JSON.stringify({ preliminary: true, [M]: true, target_exact: exact }));
   };
-  add('k1', 20, false); add('k2', 40, false); add('k3', 20, true); add('k4', 20, false, { status: 'READY', override: 'READY' });
+  add('k1', 20, false); add('k2', 40, false); add('k3', 20, true); add('k4', 20, false, { status: 'READY', override: 'READY' }); add('k5', 20, true, { description: '' });
   const before = db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get();
   const { sql } = run(w.dir);
   db.exec(sql);
   selectInto(db);
   const st = Object.fromEntries(db.prepare(`SELECT job_id j, qualification_status s FROM candidate_qualifications WHERE job_id LIKE 'k%'`).all().map((r) => [r.j, r.s]));
-  assert.deepEqual(st, { k1: 'NEEDS_REVIEW', k2: 'READY', k3: 'READY', k4: 'READY' });
+  assert.deepEqual(st, { k1: 'NEEDS_REVIEW', k2: 'READY', k3: 'READY', k4: 'READY', k5: 'NEEDS_REVIEW' }, 'an exact title with no description to check it needs the two skills');
   assert.deepEqual(db.prepare(`SELECT * FROM candidate_qualifications WHERE job_id = 'k4'`).get(), before);
   // the breakdown written for a new row says whether the title is exactly a target role
   const bd = db.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE job_id = 'ds:greenhouse:2'`).get();

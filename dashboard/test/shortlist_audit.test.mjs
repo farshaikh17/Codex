@@ -39,7 +39,7 @@ const auto = (o) => ({ status: 'READY', reason: MARK + 'Cloud discovery match.',
 test('a shortlist chosen by the selector passes the audit', () => {
   const w = world();
   for (let i = 0; i < 40; i++) w.add({ company: i < 10 ? 'BigCo' : 'Co ' + i, score: 90 - (i % 7) });
-  w.add({ company: 'Fa Espx Saasfaprod1', source: 'oracle', score: 99 });
+  w.add({ company: 'Fa Eqid Saasfaprod1', source: 'oracle', score: 99 });   // an id the names table does not know
   const sel = selectInto(w.db);
   const res = audit(w.rows(), { report: sel.report });
   assert.deepEqual(res.problems, []);
@@ -52,7 +52,7 @@ test('each broken hard rule is found on stored data', () => {
   for (let i = 0; i < 4; i++) w.add(auto({ company: 'Jobgether' }));                                     // 4 reposter rows
   w.add(auto({ id: 'stale', verified: new Date(Date.now() - 6 * 86400000).toISOString() }));            // not verified in 4 days
   w.add(auto({ id: 'closed', active: 0 }));
-  w.add(auto({ id: 'tenant', company: 'Hdga', source: 'oracle', url: 'https://hdga.fa.em3.oraclecloud.com/x' }));
+  w.add(auto({ id: 'tenant', company: 'Eluq', source: 'oracle', url: 'https://eluq.fa.em3.oraclecloud.com/x' }));   // not in the names table
   const res = audit(w.rows(), { report: {} });   // the selector ran today and relaxed nothing
   const text = res.problems.join('\n');
   assert.match(text, /3 rows of one employer \(big\) in sana_ansari READY \(cap 2\)/);

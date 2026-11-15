@@ -157,6 +157,8 @@ const TRACKER_ROUTES: [string, RegExp][] = [
   ['POST', /^\/api\/jobs\/[^/]+\/qualification-override$/], ['GET', /^\/api\/jobs\/[^/]+\/qualification-audit$/],
 ];
 const TRACKER_KEYS = new Set(['notes', 'application_notes', 'app_notes', 'rejection_notes', 'manual_override_reason', 'feedback', 'rejection_stage', 'rejection_reason_category', 'application_channel', 'resume_version']);
+// A refused keyless tracker request keeps its explanation (the app shows it: "This changed elsewhere; reload.", "The note is empty ...").
+const TRACKER_ERROR_KEYS = new Set([...TRACKER_KEYS, 'error']);
 // Open-tracker abuse limits (12 Nov review: a stranger with the link sent 50 writes in 1.6 s). A keyless tracker write counts against its
 // network (hashed CF-Connecting-IP, in the existing auth_failures table under a 'tracker:' key): at most TRACKER_WRITES_PER_HOUR per hour.
 // A person triaging a list stays far below it; a script is stopped after a handful of seconds. A D1 error never blocks a write.
@@ -281,11 +283,16 @@ async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup |
       FROM cache_state s LEFT JOIN response_cache c ON c.key = ? WHERE s.id = 1`).bind(key).first<CacheLookup>();
   } catch { return null; }
 }
-async function writeResponseCache(env: Env, key: string, body: string, generation: number): Promise<void> {
+// Marker row (never a real key: real keys start with the cache namespace) holding the time of the last selective tracker invalidation.
+const TRACKER_CHANGE_KEY = '~tracker-change';
+/** readStart: when this request looked the entry up (seconds). The answer is not stored if a tracker action cleared answers since then
+ *  (it may have been computed from the rows before that action); a few seconds of margin cover clock differences between isolates. */
+async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number): Promise<void> {
   if (new TextEncoder().encode(body).length > CACHE_MAX_BYTES) return;
   try {
     const now = Math.floor(Date.now() / 1000);
-    await env.DB.prepare('INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, ?, ?, ?)').bind(key, body, now, generation).run();
+    await env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) SELECT ?, ?, ?, ?
+      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, now, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
     meterAdd(utcDay(), { cache_writes: 1 });
     // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
@@ -295,11 +302,17 @@ async function writeResponseCache(env: Env, key: string, body: string, generatio
 // save / status / note / rating click cost a full recomputation of every list for everyone; on an active day that used up the free
 // read allowance (12 Nov review). Here only the answers that can show this person's data are removed: those keyed by their
 // candidate_id or path, and the cross-person summaries (overview, candidate list). Everything else stays cached.
+// Without a generation bump, a read that was computed before the action but stored after it would come back for up to 30 minutes (code QA,
+// 13 Nov). So the same batch records the time of the action (TRACKER_CHANGE_KEY); writeResponseCache does not store an answer whose read
+// started before that time. That costs one indexed row read per cache write, and only an answer in flight during an action goes uncached.
 async function invalidateCandidateCache(env: Env, candidateId: string): Promise<void> {
   const id = candidateId.replace(/[%_\\]/g, (c) => '\\' + c);
   try {
-    await env.DB.prepare(`DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\' OR key LIKE ? ESCAPE '\\' OR key LIKE '%:/api/dashboard/overview?%' OR key LIKE '%:/api/candidates?%'`)
-      .bind(`%candidate_id=${id}%`, `%/api/candidates/${id}/%`).run();
+    await env.DB.batch([
+      env.DB.prepare(`DELETE FROM response_cache WHERE key LIKE ? ESCAPE '\\' OR key LIKE ? ESCAPE '\\' OR key LIKE '%:/api/dashboard/overview?%' OR key LIKE '%:/api/candidates?%'`)
+        .bind(`%candidate_id=${id}%`, `%/api/candidates/${id}/%`),
+      env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) VALUES (?, '', ?, 0)`).bind(TRACKER_CHANGE_KEY, Math.floor(Date.now() / 1000)),
+    ]);
   } catch (e: any) {
     if (/no such table/i.test(String(e?.message))) return;
     await invalidateResponseCache(env);   // cannot clear selectively: fall back to clearing everything rather than serve stale data
@@ -382,6 +395,9 @@ function logPrivately(tag: string, pathname: string, message: unknown) {
 
 // Who is asking. Set by the router for every /api request; handlers use it to decide which fields to return.
 const accessLevel = new WeakMap<Request, 'public' | 'operator'>();
+// Keyless open-tracker requests. They run at operator level (the handlers are the operator's), but their answers are stripped like a public
+// answer except for the tracker's own fields (TRACKER_KEYS): no audit actor, document path or other private field (code QA F4, 13 Nov).
+const keylessTracker = new WeakSet<Request>();
 // Plan U1: the network hash of a keyless open-tracker write. Every history row such a request writes is tagged with it (history_client,
 // migration 0022), so the owner can undo one network's changes with scripts/undo_since.mjs.
 const writerOf = new WeakMap<Request, string>();
@@ -416,7 +432,7 @@ const isOperatorRequest = (request: Request) => accessLevel.get(request) === 'op
 // audit actors, override reasons, pay and notice details, contact details and anything credential-shaped.
 const PRIVATE_KEYS = new Set([
   'notes', 'application_notes', 'app_notes', 'rejection_notes', 'resume_version', 'cover_letter_path', 'application_channel',
-  'manual_override_reason', 'actor', 'payload', 'raw_payload', 'audit', 'audit_payload', 'feedback',
+  'manual_override_reason', 'actor', 'reviewer', 'payload', 'raw_payload', 'audit', 'audit_payload', 'feedback',
   'email', 'phone', 'phone_number', 'linkedin', 'address', 'contact', 'contact_email',
   'cash_floor_inr_monthly', 'cash_floor_inr_annual', 'min_acceptable_salary_usd', 'min_fixed_monthly_inr', 'preferred_inr_range',
   'notice_period_days', 'pay_line', 'employment_history', 'location_preferences', 'relocation_interest', 'unsupported_claims',
@@ -626,7 +642,8 @@ class WorkerRouter {
   private async finish(request: Request, res: Response, env?: Env): Promise<Response> {
     const isApi = new URL(request.url).pathname.startsWith('/api/');
     const isPublic = accessLevel.get(request) === 'public';
-    if (!isApi || (res.status !== 500 && !isPublic)) return res;
+    const trackerAnswer = keylessTracker.has(request);
+    if (!isApi || (res.status !== 500 && !isPublic && !trackerAnswer)) return res;
     const type = res.headers.get('Content-Type') || '';
     if (!type.includes('json')) return res;
     const headers = new Headers(res.headers);
@@ -642,7 +659,8 @@ class WorkerRouter {
       return new Response(JSON.stringify({ error: 'Internal error. The request was not completed.' }), { status: 500, headers });
     }
     const data = await res.json<any>();
-    return new Response(JSON.stringify(stripPrivate(data, env && openTracker(env) ? TRACKER_KEYS : undefined)), { status: res.status, headers });
+    const keep = trackerAnswer ? (res.status >= 400 ? TRACKER_ERROR_KEYS : TRACKER_KEYS) : env && openTracker(env) ? TRACKER_KEYS : undefined;
+    return new Response(JSON.stringify(stripPrivate(data, keep)), { status: res.status, headers });
   }
 
   async handle(request: Request, env: Env): Promise<Response> {
@@ -668,6 +686,7 @@ class WorkerRouter {
           return jsonResponse({ error: 'Too many changes from this network in the last hour. Please wait a while and try again.' }, 429, { ...corsHeaders(request, env), 'Retry-After': '900' });
         if (request.method !== 'GET') writerOf.set(request, await clientKey(request));
         accessLevel.set(request, 'operator');
+        keylessTracker.add(request);
       } else {
         const denied = await checkOperatorAuth(request, env);
         if (denied) return denied;
@@ -743,7 +762,7 @@ class WorkerRouter {
         const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
         if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now);
           await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });

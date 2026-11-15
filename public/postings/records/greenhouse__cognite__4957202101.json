@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "7e4097a3a63b5c5f79bcf11f1a55fb5a5189417603b7138b4a661802ab298a73",
+   "kind": "content_changed",
+   "to_hash": "8bf5d5dc472baa34a872cc03c726647c0543aa930a15e2406f9762c32aaed59c"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAs a Senior Solution Architect at Cognite, you will play a pivotal role in the Technology department within our Value Delivery organisation. In this customer-facing position, you will work directly with key customers, field sales, delivery teams, and product development. You will use your seniority and technical competencies to help to lead Norwegian and international industrial customers to increase productivity, profitability, reduce environmental impact and reduce costs. Our customers are large international process and energy industries, with challenges in asset performance and maintenance, production efficiency, and sustainability. Together with the team, you will define solutions and support each integration through to a successful finish.\n\nEnd-to-end architecture and solution design leadership.\n\nProviding strategic and technical expertise to support customers and the customer-facing project teams.\n\nDefining enterprise and solution architecture, including integration and data models and data ingestion pipelines, as well as user-facing solutions\n\nExpressing complex technical solutions through architecture modeling tools\n\nEnsure operational responsibility and support agreements for the delivered solutions\n\nBuilding strong relationships with key stakeholders, C-level executives, and IT and Business Data Managers to drive long-term adoption of Cognite’s products and services\n\nTraining internal teams and partners in your area of specialization\n\nCollaborating with Sales, Engineering, and Product Management teams to translate customer needs into product offerings\n\nIndependently work with managing integration, data modeling, and related activities using Cognite data connectors and extractors, SQL, Python/Java, Rest APIs and Cloud platform providers like Azure, AWS & Google\n\nCollaborate with our Sales, Engineering and Product Management teams to turn customer needs into a prioritised pipeline of product offerings\n\nDevelop and maintain technical and business expertise for Cognite’s products\n\nThe Impact you bring to Cognite\n\nWe expect all our solutions architects to be hands-on in python as well as a good hands-on expertise with software development best practices.\n\nOpen to travel.\n\nYou must be highly organised, thorough, and communicate well with all stakeholders.\n\nTake ownership and drive tasks independently\n\nYou will be required to collaborate, lead, and coach, as well as work independently.\n\nRequired Qualifications\n\n9+ years of experience working as a Data Engineer\n\nTechnical background, willing and able to dive in and contribute code for advanced topics when needed\n\nPreferred Experience\n\nExperience in Data Engineering is preferred.\n\nExperience from domains like Manufacturing, Energy, O&G, Pharma, Life sciences is preferred\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAs a Senior Solution Architect at Cognite, you will play a pivotal role in the Technology department within our Value Delivery organisation. In this customer-facing position, you will work directly with key customers, field sales, delivery teams, and product development. You will use your seniority and technical competencies to help to lead Norwegian and international industrial customers to increase productivity, profitability, reduce environmental impact and reduce costs. Our customers are large international process and energy industries, with challenges in asset performance and maintenance, production efficiency, and sustainability. Together with the team, you will define solutions and support each integration through to a successful finish.\n\nEnd-to-end architecture and solution design leadership.\n\nProviding strategic and technical expertise to support customers and the customer-facing project teams.\n\nDefining enterprise and solution architecture, including integration and data models and data ingestion pipelines, as well as user-facing solutions\n\nExpressing complex technical solutions through architecture modeling tools\n\nEnsure operational responsibility and support agreements for the delivered solutions\n\nBuilding strong relationships with key stakeholders, C-level executives, and IT and Business Data Managers to drive long-term adoption of Cognite’s products and services\n\nTraining internal teams and partners in your area of specialization\n\nCollaborating with Sales, Engineering, and Product Management teams to translate customer needs into product offerings\n\nIndependently work with managing integration, data modeling, and related activities using Cognite data connectors and extractors, SQL, Python/Java, Rest APIs and Cloud platform providers like Azure, AWS & Google\n\nCollaborate with our Sales, Engineering and Product Management teams to turn customer needs into a prioritised pipeline of product offerings\n\nDevelop and maintain technical and business expertise for Cognite’s products\n\nThe Impact you bring to Cognite\n\nWe expect all our solutions architects to be hands-on in python as well as a good hands-on expertise with software development best practices.\n\nOpen to travel.\n\nYou must be highly organised, thorough, and communicate well with all stakeholders.\n\nTake ownership and drive tasks independently\n\nYou will be required to collaborate, lead, and coach, as well as work independently.\n\nRequired Qualifications\n\n9+ years of experience working as a Data Engineer\n\nTechnical background, willing and able to dive in and contribute code for advanced topics when needed\n\nPreferred Experience\n\nExperience in Data Engineering is preferred.\n\nExperience from domains like Manufacturing, Energy, O&G, Pharma, Life sciences is preferred\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +33,8 @@
   "title": "Senior Solution Architect",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-27T20:34:22.271289+00:00",
- "content_hash": "7e4097a3a63b5c5f79bcf11f1a55fb5a5189417603b7138b4a661802ab298a73",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "8bf5d5dc472baa34a872cc03c726647c0543aa930a15e2406f9762c32aaed59c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "India (Bengaluru)",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4957202101"
      }
@@ -56,7 +66,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "9+ years of experience working as a Data Engineer\nTechnical background, willing and able to dive in and contribute code for advanced topics when needed",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4957202101"
      }
@@ -68,8 +78,8 @@
      {
       "interpretation": null,
       "method": "description_section:Preferred Experience",
-      "quote": "Experience in Data Engineering is preferred.\nExperience from domains like Manufacturing, Energy, O&G, Pharma, Life sciences is preferred\nLearn more about us\nImpact 2025\nCognite's Industrial AI: Moonshot\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.",
-      "retrieved_at": "2026-10-27T20:34:22.271289+00:00",
+      "quote": "Experience in Data Engineering is preferred.\nExperience from domains like Manufacturing, Energy, O&G, Pharma, Life sciences is preferred\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4957202101"
      }

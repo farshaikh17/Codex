@@ -8,8 +8,9 @@ name: Dashboard release to production (manual)
 #   mode = diagnose            read-only incident check: D1 info and 24h usage (when the token can read it), one SELECT 1, and
 #                              the Worker's own error for one public request (wrangler tail, filtered). No fingerprint, no tests
 #                              against production beyond that single request.
-#   mode = release              preflight, fingerprint, migrations 0008-0016 (additive), the owner-approved score correction (idempotent, capped writes), deploy, public smoke test, real-browser
-#                               check (desktop + 375px mobile), fingerprint comparison.
+#   mode = release              preflight, fingerprint, migrations 0008-0022 (each idempotent; 0001-0007 are never replayed), deploy, requeue, the owner-approved score
+#                               correction (idempotent, capped writes), cache flush, public smoke test, real-browser check (desktop + 375px mobile),
+#                               fingerprint comparison (with the open tracker on, changes tagged as keyless tracker writes during the run are allowed).
 #
 # Secrets (repository secrets; the collector's sync workflow already uses the same two):
 #   CLOUDFLARE_API_TOKEN   Account: Workers Scripts Edit, D1 Edit (nothing else). Never printed.
@@ -209,14 +210,17 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node scripts/fingerprint.mjs --remote > before.json && cat before.json
+        run: |
+          # Start of the release window for the comparison at the end (a little early, so a write during this read is inside it).
+          echo "RELEASE_WINDOW_START=$(date -u -d '-2 minutes' '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
+          node scripts/fingerprint.mjs --remote --rows before_rows.json > before.json && cat before.json
 
       - name: Preflight finished - nothing was changed
         if: ${{ inputs.mode == 'preflight' }}
         run: |
           echo "Preflight passed - token permissions, account, database and rollback records are in order. Run again with mode=release to deploy." | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Add the guess-limiter, read-cache and read-meter tables (additive, idempotent; migrations 0001-0007 are NOT replayed)
+      - name: Apply migrations 0008-0022 (each idempotent, replayed on every release; 0001-0007 are NOT replayed), then check the schema
         if: ${{ inputs.mode == 'release' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -237,6 +241,7 @@ jobs:
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0020_farhan_drop_marketing_stretch.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0021_company_display_names.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0022_history_client.sql
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0023_company_names_svkm.sql
           # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
           npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0; SELECT candidate_id, visibility, search_profile FROM client_profiles LIMIT 0; SELECT token_hash, revoked_at FROM client_view_tokens LIMIT 0; SELECT id, status, source_hash FROM client_requests LIMIT 0; SELECT key, value FROM site_settings LIMIT 0; SELECT id, candidate_id, company, outcome, decided_on FROM past_applications LIMIT 0; SELECT candidate_id, job_id, follow_up_at, note FROM application_followups LIMIT 0; SELECT candidate_id, job_id, rating, notes FROM job_feedback LIMIT 0; SELECT history_table, history_id, client_hash, before_json FROM history_client LIMIT 0" > /dev/null
 
@@ -323,14 +328,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          node scripts/fingerprint.mjs --remote > after.json
-          node -e "
-            const b=require('./before.json'),a=require('./after.json');let bad=0;const lines=['| table | rows before | rows after | identical |','|---|---|---|---|'];
-            for(const t of ['applications','application_history','manual_overrides','candidates']){const same=b[t].sha256===a[t].sha256;if(!same)bad++;lines.push('| '+t+' | '+b[t].rows+' | '+a[t].rows+' | '+(same?'yes':'**NO**')+' |');}
-            for(const t of ['qualifications','scores']){lines.push('| '+t+' (informational: the collector may legitimately write) | '+b[t].rows+' | '+a[t].rows+' | '+(b[t].sha256===a[t].sha256?'yes':'changed')+' |');}
-            require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n### Protected records, field-level\n'+lines.join('\n')+'\n');
-            console.log(lines.join('\n'));
-            if(bad){console.error('Protected records changed during the release');process.exit(1);}"
+          node scripts/fingerprint.mjs --remote --rows after_rows.json > after.json
+          # With the open tracker on, Farhan or Sana may save or move a job during the run. Rows changed by a keyless tracker write tagged in
+          # history_client since RELEASE_WINDOW_START are allowed and listed; any other change fails this step (scripts/protected_compare.mjs).
+          OPEN_TRACKER=$(sed -nE 's/^OPEN_TRACKER *= *"([^"]*)".*/\1/p' wrangler.toml | head -n 1)
+          node scripts/protected_compare.mjs --before before.json --after after.json --before-rows before_rows.json --after-rows after_rows.json \
+            --open-tracker "${OPEN_TRACKER:-off}" --since "$RELEASE_WINDOW_START" --remote --summary "$GITHUB_STEP_SUMMARY"
 
       - name: How to roll back (only shown on failure)
         if: ${{ failure() }}
@@ -339,5 +342,6 @@ jobs:
             echo "### The run did not complete"
             echo "If mode was preflight, nothing in production changed."
             echo "If mode was release: prefer a forward fix. To restore the previous Worker and frontend: \`npx wrangler rollback <previous version id from the preflight list>\` (run from the dashboard folder with the Cloudflare token)."
-            echo "The previous Worker had no API authentication and no public/private split, so use the rollback only if the new Worker is unusable."
+            echo "If only the step 'Fingerprint protected records after and compare' failed, the deploy and its checks passed: read that step's changed-rows table first. A row marked 'no' was changed by something other than a keyless tracker write (an operator edit, a script, a migration); find the cause before deciding anything. A rollback does not undo record changes."
+            echo "A rollback restores the previous Worker (code and frontend) only; the database keeps every migration and score correction this release applied. Use it only if the new Worker is unusable."
           } >> "$GITHUB_STEP_SUMMARY"
