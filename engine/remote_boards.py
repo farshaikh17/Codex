@@ -6,6 +6,8 @@ Sources, each read through its own public feed (no scraping, no login):
   * We Work Remotely  category RSS feeds
   * Himalayas      https://himalayas.app/jobs/api  (newest pages)
   * Working Nomads https://www.workingnomads.com/api/exposed_jobs/
+  * 4dayweek.io    https://4dayweek.io/api/v2/jobs (remote, open to India; link back: every stored job links to its 4dayweek.io page)
+  * Real Work From Anywhere  https://www.realworkfromanywhere.com/rss.xml (worldwide-only board)
   * Hacker News "Ask HN: Who is hiring?" (the current monthly thread, through the official Algolia HN API): one posting per
     role named in each top-level post ("Company | Role | Location | REMOTE | ..."); linked to the post on news.ycombinator.com
 Every request first passes engine/robots.py (the host's robots.txt, read once a run, must allow the path; one host at most once a
@@ -33,11 +35,12 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from engine import robots  # noqa: E402
+from engine import reposters, robots  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 
 UA = robots.UA
-WWR = ['remote-management-and-finance-jobs', 'remote-product-jobs', 'remote-sales-and-marketing-jobs', 'all-other-remote-jobs', 'remote-devops-sysadmin-jobs']
+WWR = ['remote-management-and-finance-jobs', 'remote-product-jobs', 'remote-sales-and-marketing-jobs', 'all-other-remote-jobs', 'remote-devops-sysadmin-jobs',
+       'remote-customer-support-jobs']   # 14 Nov: the one category not read before (implementation and onboarding roles are filed here too)
 HIMALAYAS_PAGES = 10   # 20 newest jobs a page
 TAG = re.compile(r'<[^>]+>')
 
@@ -140,6 +143,47 @@ def workingnomads():
                   text(r.get('description')), when(r.get('pub_date')))
 
 
+FOURDAYWEEK_PAGES = 3   # 100 postings a page
+
+
+def fourdayweek():
+    """4dayweek.io public API v2 (robots.txt: "Allow: /api/v2"; keyless; their only ask is a link back, so every stored posting links to its
+    4dayweek.io page and is labelled "fourdayweek"). Remote postings open to India, with each posting's structured country list."""
+    for page in range(1, FOURDAYWEEK_PAGES + 1):
+        d = json.loads(get(f'https://4dayweek.io/api/v2/jobs?work_arrangement=remote&country=India&limit=100&page={page}'))
+        for r in d.get('data') or []:
+            locs = [x for x in r.get('locations') or [] if isinstance(x, dict)]
+            remote_in = [x.get('country') for x in locs if str(x.get('work_arrangement') or r.get('work_arrangement')).lower() == 'remote' and x.get('country')]
+            world = bool((r.get('company') or {}).get('hires_worldwide')) or any(str(x.get('country') or '').lower() in ('worldwide', 'anywhere') for x in locs)
+            where = 'Worldwide' if world and not remote_in else ', '.join(dict.fromkeys(remote_in)) or 'See posting'
+            company = text((r.get('company') or {}).get('name'))
+            if not company:   # a few postings carry no company object; the address names it: "...-at-paired-fa195803"
+                m = re.search(r'-at-([a-z0-9-]+?)-[0-9a-f]{6,}$', str(r.get('slug') or ''))
+                company = m.group(1).replace('-', ' ').title() if m else ''
+            j = job('fourdayweek', r.get('url') or '', text(r.get('title')), company, f'Remote ({where})',
+                    text(r.get('description')), when(r.get('posted_at')))
+            j['is_remote'] = str(r.get('work_arrangement') or '').lower() == 'remote'
+            yield j
+        if not d.get('has_more'):
+            break
+
+
+def realworkfromanywhere():
+    """Real Work From Anywhere's public RSS (robots.txt allows it). The board lists only jobs open to people anywhere in the world,
+    so each posting is stored as "Remote (Worldwide)". The title reads "Role at Company"."""
+    raw_feed = get('https://www.realworkfromanywhere.com/rss.xml').decode('utf-8', 'replace')
+    root = ET.fromstring(re.sub(r'&(?!#?\w+;)', '&amp;', raw_feed))   # the feed has bare "&" in image addresses
+    for it in root.iter('item'):
+        raw = text(it.findtext('title'))
+        author = text(it.findtext('author'))
+        if author and raw.lower().endswith(' at ' + author.lower()):
+            title, company = raw[:-len(author) - 4], author
+        else:
+            title, _, company = raw.rpartition(' at ')
+        yield job('realworkfromanywhere', (it.findtext('link') or '').strip(), title or raw, company if title else '', 'Remote (Worldwide)',
+                  text(it.findtext('description')), when(it.findtext('pubDate')))
+
+
 HN_API = 'https://hn.algolia.com/api/v1'
 LOCATION_WORD = re.compile(r'remote|onsite|on-site|hybrid|anywhere|worldwide|\b[A-Z][a-z]+,\s*[A-Z]{2}\b|europe|india|usa|\bus\b|uk|canada|germany|london|berlin|bangalore|bengaluru', re.I)
 
@@ -186,7 +230,8 @@ def all_errored(report):
     return bool(ran) and all(r.get('error') for r in ran)
 
 
-SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn, 'jobspresso': jobspresso}
+SOURCES = {'remoteok': remoteok, 'weworkremotely': wwr, 'himalayas': himalayas, 'workingnomads': workingnomads, 'hnhiring': hn, 'jobspresso': jobspresso,
+           'fourdayweek': fourdayweek, 'realworkfromanywhere': realworkfromanywhere}
 MAX_DAYS = {'hnhiring': 35}   # the thread is monthly: its posts stay current all month
 
 
@@ -205,6 +250,7 @@ def main():
     raw_path = out / 'jobsite_raw.json'
     merged = json.loads(raw_path.read_text()) if raw_path.exists() else {'source': 'job_sites', 'jobs': []}
     have = {j['id'] for j in merged['jobs']}
+    held = reposters.counts_in(merged['jobs'])   # reposting sites and VA staffing firms: at most REPOSTER_CAP each per run, every source together
     report = {}
     for name, fn in SOURCES.items():
         if over_budget(started, a.budget_seconds):
@@ -226,6 +272,8 @@ def main():
                     continue
                 j['id'] = f"js:{name}:{hashlib.sha1(j.pop('_key', j['url']).encode()).hexdigest()[:20]}"
                 if j['id'] in have:
+                    continue
+                if not reposters.admit(j, held):
                     continue
                 j['candidates'] = cands
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1

@@ -1,0 +1,48 @@
+{
+ "jobs": [
+  {
+   "id": "6e8850f4-d46b-4813-bc33-9789c69994b6",
+   "title": "Implementation Engineer",
+   "department": "Customer Successs & Delivery",
+   "team": "Customer Successs & Delivery",
+   "employmentType": "FullTime",
+   "location": "Bangalore (India)",
+   "secondaryLocations": [],
+   "publishedAt": "2025-06-02T09:53:39.146+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressCountry": "India"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/uptimeai/6e8850f4-d46b-4813-bc33-9789c69994b6",
+   "applyUrl": "https://jobs.ashbyhq.com/uptimeai/6e8850f4-d46b-4813-bc33-9789c69994b6/application",
+   "descriptionPlain": "Implementation Engineer\u00a0\n\nAbout this role:\u00a0\u00a0\n\nUptimeAI is looking for a highly motivated and detail-oriented Implementation Engineer to join our growing team in India. This role is critical to the success of our customer implementations and is focused on the core technical responsibility of model building and product delivery during the implementation process.\u00a0\n\nYou will work closely with Project "
+  },
+  {
+   "id": "1aaa7603-e90e-4c98-ae8b-3ba8ed15da59",
+   "title": "Account Executive",
+   "department": "Sales",
+   "team": "Sales APAC+Middle East",
+   "employmentType": "FullTime",
+   "location": "Remote (India)",
+   "secondaryLocations": [],
+   "publishedAt": "2025-06-10T12:02:52.617+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Remote",
+   "address": {
+    "postalAddress": {
+     "addressCountry": "India",
+     "addressLocality": ""
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/uptimeai/1aaa7603-e90e-4c98-ae8b-3ba8ed15da59",
+   "applyUrl": "https://jobs.ashbyhq.com/uptimeai/1aaa7603-e90e-4c98-ae8b-3ba8ed15da59/application",
+   "descriptionPlain": "About UptimeAI:\n\nUptimeAI is leading the way in predictive analytics and AI-driven solutions to optimize operational uptime and reduce downtime for industrial and enterprise clients. Our innovative platform harnesses cutting-edge data science to deliver actionable insights, ensuring maximum efficiency and reliability. UptimeAI uniquely combines Artificial Intelligence with Subject Matter Knowledge"
+  }
+ ],
+ "apiVersion": "1"
+}

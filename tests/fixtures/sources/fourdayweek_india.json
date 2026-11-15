@@ -1,0 +1,155 @@
+{
+ "data": [
+  {
+   "id": "01a1c8ca-94fb-79f4-b3c1-b8c9d63db853",
+   "slug": "data-loss-prevention-dlp-implementation-consultant-at-muller-s-solutions-28a168a0",
+   "title": "Data Loss Prevention (DLP) Implementation Consultant",
+   "url": "https://4dayweek.io/job/data-loss-prevention-dlp-implementation-consultant-at-muller-s-solutions-28a168a0",
+   "description": "#### **Job Summary**\n\nWe are looking for a **Data Loss Prevention (DLP) Implementation Consultant** to deploy, configure, and implement an enterprise Data Loss Prevention solution. The consultant will be responsible for installing and activating the DLP platform, configuring security policies, deploying endpoint agents for Windows and macOS devices, and ensuring the solution is operational and aligned with customer security requirements.\n\n#### **Key Responsibilities**\n\n- Activate and configure D",
+   "work_arrangement": "remote",
+   "locations": [
+    {
+     "city": "Amman",
+     "country": "Jordan",
+     "continent": "Asia",
+     "latitude": 31.95522,
+     "longitude": 35.94503,
+     "work_arrangement": "remote",
+     "is_primary": true
+    },
+    {
+     "city": "Beirut",
+     "state": "Beirut Governorate",
+     "country": "Lebanon",
+     "continent": "Asia",
+     "latitude": 33.8937913,
+     "longitude": 35.5017767,
+     "work_arrangement": "remote"
+    },
+    {
+     "city": "Cairo",
+     "country": "Egypt",
+     "continent": "Africa",
+     "latitude": 30.06263,
+     "longitude": 31.24967,
+     "work_arrangement": "remote"
+    },
+    {
+     "city": "Casablanca",
+     "state": "Casablanca-Settat",
+     "country": "Morocco",
+     "continent": "Africa",
+     "latitude": 33.5731104,
+     "longitude": -7.5898434,
+     "work_arrangement": "remote"
+    },
+    {
+     "country": "India",
+     "continent": "Asia",
+     "latitude": 20.59,
+     "longitude": 78.96,
+     "work_arrangement": "remote"
+    }
+   ],
+   "posted_at": "2026-11-11T04:08:02Z",
+   "role": "Implementation Consultant",
+   "category": "security",
+   "company": {
+    "id": null,
+    "slug": null,
+    "name": null,
+    "url": null,
+    "hires_worldwide": null
+   }
+  },
+  {
+   "id": "01a1c111-9fe3-7c1f-9241-b1e51891bb9a",
+   "slug": "revenue-operations-manager-at-paired-fa195803",
+   "title": "Revenue Operations Manager",
+   "url": "https://4dayweek.io/job/revenue-operations-manager-at-paired-fa195803",
+   "description": "**About Paired**\n\nPaired is a global staffing and recruiting agency that specializes in pairing remote work with top-tier talent!\n\nWe are dedicated to connecting talented individuals with remarkable companies in need of their skills. Our goal is to create fulfilling job opportunities for professionals around the world.\n\n**The client**\n\nAdvertising and consultancy services company working with RevOps infrastructure for B2B teams. They build the systems that make growth work.\n\nThe founder has reac",
+   "work_arrangement": "remote",
+   "locations": [
+    {
+     "country": "Brazil",
+     "continent": "South America",
+     "latitude": -14.24,
+     "longitude": -51.93,
+     "work_arrangement": "remote",
+     "is_primary": true
+    },
+    {
+     "country": "India",
+     "continent": "Asia",
+     "latitude": 20.59,
+     "longitude": 78.96,
+     "work_arrangement": "remote"
+    },
+    {
+     "country": "Philippines",
+     "continent": "Asia",
+     "latitude": 12.88,
+     "longitude": 121.77,
+     "work_arrangement": "remote"
+    },
+    {
+     "country": "South Africa",
+     "continent": "Africa",
+     "latitude": -30.56,
+     "longitude": 22.94,
+     "work_arrangement": "remote"
+    },
+    {
+     "country": "Venezuela",
+     "continent": "South America",
+     "latitude": 6.42,
+     "longitude": -66.59,
+     "work_arrangement": "remote"
+    }
+   ],
+   "posted_at": "2026-11-09T16:08:40Z",
+   "role": "Revenue Operations Manager",
+   "category": "operations",
+   "company": {
+    "id": null,
+    "slug": null,
+    "name": null,
+    "url": null,
+    "hires_worldwide": null
+   }
+  },
+  {
+   "id": "01a1cb9b-9623-78b3-ba30-ca6a45de3d7d",
+   "slug": "account-executive-smb-north-america-region-at-jumpcloud-c4807816",
+   "title": "Account Executive, SMB, North America Region",
+   "url": "https://4dayweek.io/job/account-executive-smb-north-america-region-at-jumpcloud-c4807816",
+   "description": "All roles at JumpCloud\u00ae are Remote unless otherwise specified in the Job Description. This opportunity requires that you work a specific shift as this is a region specific role.\nAbout JumpCloud\u00ae\nJumpCloud\u00ae is the AI-powered unified IT management platform designed to secure the modern workforce. By consolidating identity, device, and access management, JumpCloud provides intelligent, secure IT that scales from human users to autonomous AI agents. We help organizations around the globe eliminate c",
+   "work_arrangement": "remote",
+   "locations": [
+    {
+     "country": "India",
+     "continent": "Asia",
+     "latitude": 20.59,
+     "longitude": 78.96,
+     "work_arrangement": "remote",
+     "is_primary": true
+    }
+   ],
+   "posted_at": "2026-11-11T17:15:34Z",
+   "role": "Account Executive",
+   "category": "sales",
+   "company": {
+    "id": "019e84af-8fde-75c7-9114-017819592f57",
+    "slug": "jumpcloud",
+    "name": "JumpCloud",
+    "url": "https://4dayweek.io/company/jumpcloud",
+    "hires_worldwide": false
+   }
+  }
+ ],
+ "page": 1,
+ "limit": 100,
+ "total": 3,
+ "has_more": false,
+ "_note": "trimmed recording of 4dayweek.io/api/v2/jobs?work_arrangement=remote&country=India 14 Nov 2026"
+}

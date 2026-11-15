@@ -1376,7 +1376,7 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 // The latest application record for (candidate, job), if any, is SAVED or there is none: "not applied".
 const sqlList = (xs: string[]) => xs.map((x) => `'${x}'`).join(', ');
 const JOB_SITE_ADAPTERS = sqlList(['indeed', 'linkedin', 'naukri', 'glassdoor', 'google', 'bayt', 'adzuna', 'ziprecruiter']);
-const BOARD_ADAPTERS = sqlList(['remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'workable', 'arbeitnow', 'getro', 'uncareers', 'eures']);
+const BOARD_ADAPTERS = sqlList(['remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'workable', 'arbeitnow', 'getro', 'uncareers', 'eures', 'fourdayweek', 'realworkfromanywhere']);
 const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
 const JOB_COLUMNS = `
