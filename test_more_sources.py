@@ -7,8 +7,10 @@ from unittest import mock
 
 from engine import more_sources as ms
 
-RSS = b"""<rss><channel><item><title>Reliability Engineer (Riyadh, SA, 11564)</title><link>https://careers.acwapower.com/job/1</link>
-<description>Plant</description><pubDate>Fri, 06 Nov 2026 10:00:00 GMT</pubDate></item></channel></rss>"""
+FIX = Path(__file__).resolve().parent / 'tests' / 'fixtures' / 'sources'
+SF_ROW = ('<tr class="data-row"><td class="colTitle"><span class="jobTitle hidden-phone"><a href="/job/Riyadh-Reliability-Engineer/11/" class="jobTitle-link">'
+          'Reliability Engineer</a></span></td><td class="colLocation"><span class="jobLocation"> Riyadh, SA </span></td>'
+          '<td class="colDate"><span class="jobDate">Nov 6, 2026 </span></td></tr>')
 
 
 def fake_http(url, data=None, headers=None, timeout=40):
@@ -20,7 +22,11 @@ def fake_http(url, data=None, headers=None, timeout=40):
         return json.dumps({'data': [{'title': 'Maintenance Engineer', 'company_name': 'Kraftwerk GmbH', 'url': 'https://www.arbeitnow.com/jobs/x',
                                      'location': 'Hamburg', 'remote': False, 'description': 'Turbines', 'created_at': 1794000000, 'visa_sponsorship': True}]}).encode()
     if 'services/rss' in url:
-        return RSS
+        raise AssertionError('the SuccessFactors RSS (/services/) is disallowed by robots.txt and must not be requested')
+    if 'jobs.engie.com/search/?' in url and 'startrow=0' in url:
+        return ('<table>' + SF_ROW + '</table>').encode()
+    if '/search/?' in url:
+        return b'<table></table>'
     if 'siemens-energy' in url:
         return (b'<rss><channel><item><title>Gas Turbine Field Service Technician</title><link>https://jobs.siemens-energy.com/jobs/FolderDetail/x/1</link>'
                 b'<description>Canada</description><pubDate>Thu, 12 Sep 2024 00:00:00 +0000</pubDate></item></channel></rss>')
@@ -45,13 +51,15 @@ class MoreSources(unittest.TestCase):
             jobs = {j['ats_type']: j for j in json.loads(Path(d, 'jobsite_raw.json').read_text())['jobs']}
             self.assertEqual(jobs['workable']['location'], 'Remote (India)'); self.assertEqual(jobs['workable']['candidates'], ['farhan_shaikh'])
             self.assertTrue(jobs['arbeitnow']['description'].startswith('Visa sponsorship available.'))
-            self.assertEqual(jobs['successfactors']['title'], 'Reliability Engineer'); self.assertEqual(jobs['successfactors']['location'], 'Riyadh, SA, 11564')
-            self.assertEqual(jobs['successfactors']['company'], 'ENGIE')
+            self.assertEqual(jobs['successfactors']['title'], 'Reliability Engineer')
+            self.assertEqual(jobs['successfactors']['company'], 'ENGIE'); self.assertEqual(jobs['successfactors']['location'], 'Riyadh, SA', 'ENGIE: no country mapping')
+            self.assertEqual(jobs['successfactors']['url'], 'https://jobs.engie.com/job/Riyadh-Reliability-Engineer/11/')
             self.assertTrue(jobs['uncareers']['is_remote']); self.assertEqual(jobs['uncareers']['location'], 'Remote (home-based)')
             self.assertEqual(jobs['avature']['title'], 'Gas Turbine Field Service Technician', 'an old posting date on an employer site is not a cutoff')
             self.assertEqual(jobs['eightfold']['company'], 'Fluor', 'one Eightfold host failing keeps the others')
             report = json.loads(Path(d, 'more_sources_report.json').read_text())
-            self.assertIn('error', report['getro'])
+            self.assertNotIn('getro', report, 'Getro is not read (robots.txt disallows its API)')
+            self.assertIn('requests', report['workable'])
             self.assertEqual(report['eightfold']['kept'], 1)
             # employer career sites are the employer's own posting; aggregators stay job-board reports
             for name in ('successfactors', 'avature', 'eightfold'):
@@ -75,24 +83,69 @@ class MoreSources(unittest.TestCase):
             with self.assertRaises(OSError):
                 list(ms.workable([('bad', True)]))   # every term failed: the source reports an error, as before
 
-    def test_doosan_group_feed_skips_bobcat_postings(self):
-        rss = (b'<rss><channel>'
-               b'<item><title>Forklift Operator (Statesville, NC, US, 28625)</title><link>https://jobs.doosan.com/bobcat/job/Statesville-Forklift/1/</link><description>x</description></item>'
-               b'<item><title>No jobs currently available - Check out our other sites</title><link>https://jobs.doosan.com/go/x/1/</link><description>x</description></item>'
-               b'<item><title>Turbine Maintenance Engineer (Changwon, KR, 51392)</title><link>https://jobs.doosan.com/job/Changwon-Turbine-Maintenance/2/</link><description>x</description></item>'
-               b'</channel></rss>')
+    def test_doosan_group_search_skips_bobcat_postings(self):
+        page = ('<table>'
+                '<tr class="data-row"><td><a href="/bobcat/job/Statesville-Forklift/1/" class="jobTitle-link">Forklift Operator</a><span class="jobLocation">Statesville, NC, US</span></td></tr>'
+                '<tr class="data-row"><td><a href="/job/Changwon-Turbine-Maintenance/2/" class="jobTitle-link">Turbine Maintenance Engineer</a><span class="jobLocation">Changwon, KR</span></td></tr>'
+                '</table>').encode()
         def only_doosan(url, data=None, headers=None, timeout=40):
-            if 'jobs.doosan.com' in url:
-                return rss
-            return b'<rss><channel></channel></rss>'
+            if 'jobs.doosan.com/search/' in url:
+                return page if 'startrow=0' in url else b'<table></table>'
+            raise OSError('down')
         with mock.patch.object(ms, 'http', only_doosan):
             got = [j for j in ms.successfactors() if j['company'] == 'Doosan']
-        self.assertTrue(got)
-        self.assertTrue(all('/bobcat/' not in j['url'] for j in got), 'Bobcat postings are skipped')
-        self.assertEqual({j['title'] for j in got}, {'Turbine Maintenance Engineer'})
-        self.assertIn('Emirates Global Aluminium', [c[0] for c in ms.SUCCESSFACTORS])
-        self.assertIn('Black & Veatch', [c[0] for c in ms.SUCCESSFACTORS])
+        self.assertEqual({j['title'] for j in got}, {'Turbine Maintenance Engineer'}, 'Bobcat postings are skipped; other employers down keep Doosan')
+        names = [c[0] for c in ms.SUCCESSFACTORS]
+        for n in ('Emirates Global Aluminium', 'Black & Veatch', 'ACWA Power', 'ReNew'):
+            self.assertIn(n, names)
 
+    def test_successfactors_reads_allowed_search_pages_not_the_rss(self):
+        calls = []
+        page = (FIX / 'sf_search_acwa.html').read_bytes()
+        def fake(url, data=None, headers=None, timeout=40):
+            calls.append(url)
+            if 'careers.acwapower.com/search/' in url:
+                return page if 'startrow=0' in url else b'<table></table>'
+            raise OSError('down')
+        with mock.patch.object(ms, 'http', fake):
+            got = [j for j in ms.successfactors() if j['company'] == 'ACWA Power']
+        self.assertFalse(any('/services/' in u for u in calls), 'robots.txt disallows /services/ on SuccessFactors sites')
+        self.assertEqual([j['title'] for j in got], ['HSE Manager', 'Electro Mechanical Technician', 'Director BD'])
+        self.assertEqual(got[2]['location'], 'Riyadh, Saudi Arabia', 'a two-letter Gulf country is named on non-US sites')
+        self.assertEqual(got[1]['location'], 'United Arab Emirates')
+        self.assertEqual(got[0]['url'], 'https://careers.acwapower.com/job/Shanghai-HSE-Manager/1368484223/')
+        self.assertTrue(got[0]['posted_at'].startswith('2026-11-13'))
+        self.assertIs(got[0]['board'], False)
+
+    def test_successfactors_sitemap_reads_role_job_pages_only(self):
+        sitemap = (FIX / 'sf_sitemap_renew.xml').read_bytes()
+        job_page = (FIX / 'sf_job_renew.html').read_bytes()
+        calls = []
+        def fake(url, data=None, headers=None, timeout=40):
+            calls.append(url)
+            if url.startswith('https://careers.renew.com/search/'):
+                return b'<html>another template, no data-row</html>'
+            if url == 'https://careers.renew.com/sitemap.xml':
+                return sitemap
+            if url.startswith('https://careers.renew.com/job/'):
+                return job_page
+            raise OSError('down')
+        with mock.patch.object(ms, 'http', fake), mock.patch.object(ms, 'SF_ROLE_FILTER', [(__import__('re').compile(r'o ?& ?m|wind'), None)]):
+            got = [j for j in ms.successfactors() if j['company'] == 'ReNew']
+        pages = [u for u in calls if '/job/' in u]
+        self.assertTrue(pages and all('Wind' in u for u in pages), 'only job pages whose address names a role are read')
+        self.assertLess(len(pages), 6, 'non-role addresses (legal, HR, civil design) are not read')
+        self.assertEqual(got[0]['title'], 'Senior Manager - Wind Engineering')
+        self.assertEqual(got[0]['location'], 'Kolind ka Bas, India')
+        self.assertIn('ReNew', got[0]['description']); self.assertGreater(len(got[0]['description']), 500)
+        self.assertTrue(got[0]['posted_at'].startswith('2026-11-02'))
+
+    def test_successfactors_job_page_enriches_a_search_row(self):
+        job_page = (FIX / 'sf_job_renew.html').read_bytes()
+        row = {'url': 'https://careers.renew.com/job/x/61209744/', 'description': '', 'location': 'See posting', 'posted_at': ''}
+        with mock.patch.object(ms, 'http', lambda url, **kw: job_page):
+            self.assertTrue(ms.enrich_full_text(row, 'successfactors', {}, [0.0]))
+        self.assertEqual(row['location'], 'Kolind ka Bas, India'); self.assertIn('renewable', row['description'].lower())
 
     def test_workday_reads_public_career_sites(self):
         calls = []
@@ -112,23 +165,35 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
         self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M'})
 
-    def test_smartrecruiters_reads_public_postings(self):
-        page = {'content': [{'id': '7', 'name': 'Reliability Engineer', 'releasedDate': '2026-11-10T10:00:00.000Z',
-                             'location': {'fullLocation': 'Abu Dhabi, United Arab Emirates', 'remote': False},
-                             'function': {'label': 'Engineering'}, 'industry': {'label': 'Renewables'}},
-                            {'id': '8', 'name': 'Remote Analyst', 'location': {'city': 'Oslo', 'country': 'no', 'remote': True}}]}
+    def test_smartrecruiters_reads_public_career_pages_not_the_api(self):
+        first = (FIX / 'sr_careers_masdar.html').read_bytes()
+        more = (FIX / 'sr_more_masdar.html').read_bytes()
+        calls = []
         def fake(url, data=None, headers=None, timeout=40):
-            if 'api.smartrecruiters.com' in url and '/Masdar/' in url:
-                return json.dumps(page).encode()
+            calls.append(url)
+            if 'api.smartrecruiters.com' in url:
+                raise AssertionError('robots.txt disallows api.smartrecruiters.com')
+            if url == 'https://careers.smartrecruiters.com/Masdar':
+                return first
+            if url.startswith('https://careers.smartrecruiters.com/Masdar/api/more') and 'page=1' in url:
+                return more
+            if url.startswith('https://careers.smartrecruiters.com/Masdar/'):
+                return b''
+            if url == 'https://careers.smartrecruiters.com/AFRY':
+                return b'<html>forwarded to the employer site</html>'
             raise OSError('down')
         with mock.patch.object(ms, 'http', fake):
             got = list(ms.smartrecruiters())
-        self.assertEqual([j['title'] for j in got], ['Reliability Engineer', 'Remote Analyst'], 'other employers failing keeps Masdar')
-        self.assertEqual(got[0]['company'], 'Masdar')
-        self.assertEqual(got[0]['url'], 'https://jobs.smartrecruiters.com/Masdar/7')
-        self.assertEqual(got[0]['location'], 'Abu Dhabi, United Arab Emirates')
-        self.assertTrue(got[1]['is_remote']); self.assertTrue(got[1]['location'].startswith('Remote'))
+        titles = [j['title'] for j in got]
+        self.assertIn('Manager, Technical – Civil & Structural', titles)
+        self.assertIn('Manager, Technical – PV', titles, "a group's further postings come from its 'more' link")
+        self.assertIn('Document Controller SPPC5', titles)
+        g = next(j for j in got if j['title'] == 'Document Controller SPPC5')
+        self.assertEqual(g['location'], 'As Sadawi, Saudi Arabia'); self.assertEqual(g['company'], 'Masdar')
+        self.assertEqual(g['url'], 'https://jobs.smartrecruiters.com/Masdar/744000027104115-document-controller-sppc5')
+        self.assertTrue(any('api/groups?page=1' in u for u in calls), 'the further group page is read')
         self.assertIn('Statkraft1', [c[1] for c in ms.SMARTRECRUITERS])
+        self.assertNotIn('BoschGroup', [c[1] for c in ms.SMARTRECRUITERS])
 
 
     def test_oracle_hcm_reads_public_requisitions(self):
@@ -149,9 +214,9 @@ class MoreSources(unittest.TestCase):
 
     def test_full_text_replaces_the_thin_description_within_caps(self):
         def fake(url, data=None, headers=None, timeout=40):
-            if 'api.smartrecruiters.com' in url and '/postings/7' in url:
-                return json.dumps({'jobAd': {'sections': {'jobDescription': {'text': '<p>Maintain gas turbines. Visa sponsorship is not available.</p>'},
-                                                          'qualifications': {'text': '<ul><li>5 years</li></ul>'}}}}).encode()
+            if url == 'https://jobs.smartrecruiters.com/Masdar/7':
+                return (b'<main><meta itemprop="datePosted" content="2026-11-10T09:34:47.764Z"><div itemprop="description"><p>Maintain gas turbines. '
+                        b'Visa sponsorship is not available.</p><ul><li>5 years</li></ul></div></main>')
             if 'myworkdayjobs.com/wday/cxs/kbr/KBR_Careers/job/X/Y_R1' in url:
                 return json.dumps({'jobPostingInfo': {'jobDescription': '<div>Plant reliability role, relocation assistance offered. ' + 'x' * 60 + '</div>', 'startDate': '2026-11-09'}}).encode()
             if 'recruitingCEJobRequisitionDetails' in url and 'Id="42"' in url:
@@ -160,7 +225,7 @@ class MoreSources(unittest.TestCase):
         sr = {'url': 'https://jobs.smartrecruiters.com/Masdar/7', 'description': 'Engineering Renewables', 'location': 'Abu Dhabi', 'posted_at': ''}
         wd = {'url': 'https://kbr.wd5.myworkdayjobs.com/en-US/KBR_Careers/job/X/Y_R1', 'description': 'X', 'location': 'Rabigh', 'posted_at': ''}
         orc = {'url': 'https://ehif.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/42', 'description': 'Z', 'location': 'Basra', 'posted_at': ''}
-        bad = {'url': 'https://jobs.smartrecruiters.com/Masdar/999', 'description': 'keep me', 'location': 'Oslo', 'posted_at': ''}
+        bad = {'url': 'https://jobs.smartrecruiters.com/Masdar/999-x', 'description': 'keep me', 'location': 'Oslo', 'posted_at': ''}
         used, spent = {}, [0.0]
         with mock.patch.object(ms, 'http', fake):
             self.assertTrue(ms.enrich_full_text(sr, 'smartrecruiters', used, spent))

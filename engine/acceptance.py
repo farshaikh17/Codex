@@ -5,7 +5,7 @@ deterministic synthetic reviewer, labelled as such) and the spreadsheet (FakeShe
 python -m engine.acceptance [--out DIR]      # writes acceptance.json and acceptance.md; exit 1 on any failed check
 
 Scope, stated in the report: this proves the engine's behaviour offline. It does not prove live collection,
-scheduled execution, live Google Sheets, ChatGPT access to the repository or real candidates' outcomes.
+scheduled execution, live Google Sheets, review-task access to the repository or real candidates' outcomes.
 """
 import sqlite3
 import argparse,copy,json,re,shutil,sys,tempfile
@@ -24,7 +24,7 @@ FIXTURES=ROOT/'engine'/'tests'/'fixtures'/'candidates'
 T0=datetime(2030,1,1,9,0,tzinfo=timezone.utc)  # a fixed clock, later than any committed snapshot
 SCOPE={'proves':'engine behaviour end to end, offline: store, extraction, leads, screening, review queue, outputs, ledger sync and the locked run pipeline',
        'does_not_prove':['live collection against employer feeds','scheduled execution','live Google Sheets or tracker ingestion',
-                         'ChatGPT access to this private repository','outcomes for real candidates (synthetic profiles only)']}
+                         'review-task access to this private repository','outcomes for real candidates (synthetic profiles only)']}
 def at(minutes):
     return (T0+timedelta(minutes=minutes)).isoformat()
 class Report:

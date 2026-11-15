@@ -236,7 +236,7 @@ class D1StagingBridge:
     def __init__(
         self,
         mode: str = "local",
-        cwd: str = r"C:\Users\admin\Documents\ChatGPT\Business\deployment\cloud-deploy-final",
+        cwd: str = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dashboard"),   # the folder with wrangler.toml
         executor: Optional[Callable[[str], Any]] = None
     ):
         self.mode = mode

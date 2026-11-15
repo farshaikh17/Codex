@@ -9,7 +9,7 @@
 // job or qualification is never overwritten by an insert; closures skip jobs someone applied to or decided on.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { evaluate, RULE_VERSION, RULES_MARKER, companyKey } from '../worker/discovery.ts';
+import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, remoteFlagTrusted } from '../worker/discovery.ts';
 import { safeApplicationUrl } from './posting_urls.mjs';
 import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
 import { posting as postingOf } from './prescore.mjs';
@@ -71,8 +71,7 @@ for (const file of many('--in')) {
     const board = !!j.board;
     if (!j.url || String(j.url).length > 2000 || !/^https:\/\//.test(String(j.url))) continue;
     const posting = postingOf(j);   // the same posting the selection's pre-score saw (scripts/prescore.mjs)
-    const { description, remote } = posting;
-    const onsite = j.is_remote === false;
+    const { description, remote, onsite } = posting;
     const rows = [];
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);
@@ -229,7 +228,8 @@ report.closed = toClose.length; report.reopened = reopen.length; report.missing_
 // remote for a remote-only candidate). Rows someone applied to or decided on, and READY/STRETCH rows, are never touched.
 // Workable jobs were all stored as remote until 2026-11-12 (the feed helper defaulted to remote). A genuinely remote one has a location written
 // "Remote (...)"; any other is not remote. The stored rows are corrected below; a row being re-scored in this same run is judged correctly here.
-const storedRemote = (row) => /^REMOTE/i.test(row.workplace_type || '') && !(row.source_adapter === 'workable' && !/^remote\b/i.test(row.location || ''));
+const storedRemote = (row) => /^REMOTE/i.test(row.workplace_type || '') && !(row.source_adapter === 'workable' && !/^remote\b/i.test(row.location || ''))
+  && remoteFlagTrusted(row.source_adapter, plain(row.description), row.location);
 out.push(`UPDATE jobs SET workplace_type = 'UNKNOWN' WHERE source_adapter = 'workable' AND workplace_type = 'REMOTE_RESTRICTED' AND location_restrictions NOT LIKE 'Remote%';`);
 
 // A legacy row: undecided, score 0, never scored by the current screen (see legacy_rows in engine/dataset_discovery.py). It gets what a new row gets: the

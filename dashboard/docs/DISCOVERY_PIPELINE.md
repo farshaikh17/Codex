@@ -20,7 +20,7 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
 2. Download the dataset. A failed download does not stop the day: boards, other sources, re-score, still-open check and shortlist still run.
    The run is then shown red, as it is when the manifest is unreadable or over 48 hours old.
 3. Select matches from the dataset, and export rows to re-score: at most **800 per person** (best first) not yet scored under the current rules
-   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v15`).
+   marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v16`).
 4. Job-site search, remote boards, more sources (Workable, Eightfold, Siemens Energy, SuccessFactors, Workday, Oracle, SmartRecruiters
    employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna with its free keys). Each writes its file after every source and stops starting
    sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. Employer career sites are stored as the
@@ -207,13 +207,33 @@ first page in her role rule), `energy manager` (18), `plant engineer` (13), `O&M
 **Run log.** The shortlist report now counts, per person, the pool rows (`pool_sources`) and each tier's rows (`sources`) per source;
 the run row and `/api/discovery/daily` carry it.
 
+### Compliance, 14 Nov 2026 (robots.txt at run time)
+
+Every reader now asks `engine/robots.py` before each request: the host's robots.txt is read once a run with the engine's own
+User-Agent (`career-job-engine/1.0`), `*` and `$` are honoured, the longest rule wins, a 429/5xx/unreachable robots.txt means "do not
+read this host this run", a 4xx (no robots.txt) means allowed, a redirect is checked against the robots.txt of where it leads, and
+requests to one host are spaced by 0.6-1 s or the host's `Crawl-delay`. A refused source is reported as
+`robots.txt disallows ...` in `more_sources_report.json` / `boards_report.json`; each source's report also gives its `requests`.
+
+| Source | Before | Now | Measured 14 Nov (one polite read) |
+|---|---|---|---|
+| SuccessFactors (ENGIE, ACWA, Tata Power, EGA, Black & Veatch, Doosan, Tata Motors) | `/services/rss/job/` x 6 terms (disallowed: `Disallow: /services/`) | `/search/` result pages, newest first (allowed); a site with another page template is read from `/sitemap.xml` plus the job pages whose address names a role; descriptions from the `/job/` page | 112 read, 56 kept, 76 requests. Sana: 54 kept, 22 at 60+ (11 ELIGIBLE at 60+, all ReNew wind and solar O&M); ACWA 36 kept (Gulf, eligibility unknown until a visa route is stated). ENGIE, EGA, Black & Veatch and Tata Motors answered 404 on `/search/` (their sites showed "site maintenance" on 13-14 Nov: re-measure). Farhan: 0 |
+| ReNew (new, SuccessFactors) | not read | sitemap + role job pages | 20 kept for Sana, 14 at 60+, 11 ELIGIBLE at 60+ (e.g. "Senior Engineer - Wind O & M" 94, "Engineer - Wind O & M" 91) |
+| SmartRecruiters (Masdar, AFRY, Statkraft, Continental) | postings API (disallowed: `api.smartrecruiters.com` allows only LinkedInBot) | the employer's public career page `careers.smartrecruiters.com/<id>` and its "more" pages; descriptions from the posting page | 353 read, 35 kept (AFRY 29, Masdar 3, Continental 3), 66 requests; Sana 27 kept, 0 at 60+ with a list-only description. Bosch and Vattenfall left the list: their career pages forward to their own sites |
+| Getro (collections 628, 1198) | public search API | **dropped**: `api.getro.com` disallows everything | cost: about 3 kept rows a day (13 Nov) |
+| Remotive (Worker, 2 searches) | `/api/remote-jobs?search=` | **dropped** (migration 0024 switches its two sources off): robots.txt disallows `/api/*` and `/*search=` | cost: 2 x 10 rows a day, none in either person's lists on 13 Nov |
+| Naukri (JobSpy) | 5 India searches | **dropped**: its terms forbid automated access and its robots.txt blocks AI agents | cost: 12 kept rows on 13 Nov (none with a description) |
+| Jobspresso | `/feed/?post_type=job_listing` (disallowed: `Disallow: /*?`) | `/jobs/feed/` (allowed, same 20 newest jobs) | no loss |
+| Adzuna (free keys) | read when the keys are set | `api.adzuna.com` disallows every agent, so it is read only when the keys are set **and** the owner sets the repository variable `ADZUNA_API_TERMS_ACCEPTED=true` (the keyed API's own terms then govern) | 0 today (no keys) |
+| Indeed, LinkedIn, Glassdoor, Google (JobSpy) | searched | still searched; the job-site report now says per site whether robots.txt allows the address JobSpy reads (14 Nov: all four disallow). Skipping them is a separate owner decision (its own pull request) | - |
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.
 2. **Title synonyms.** The searches and the screen's role rules now include German, French and Dutch power-plant titles (Instandhaltung, Kraftwerk, Elektroingenieur, ingénieur maintenance, onderhoudsingenieur and more) and Farhan's adjacent titles (sales ops, marketing ops, systems architect, customer onboarding, business operations).
 3. **Learning from decisions.** Saves, applies and hand-set READY rows are positive; hand-set INELIGIBLE, HOLD and CLOSED rows are negative. A small word model per person (`engine/signals.py`) moves a score by at most 5 points and says "like roles you saved" or "like roles you dismissed". It switches on only after 10 decisions.
 4. **UK sponsor register.** GOV.UK's daily list of Skilled Worker sponsors. For Sana, a UK posting from a licensed sponsor is not penalised as "no visa route", and the note says so.
-5. **Free AI review** (`engine/ai_triage.py`). The 50 best new jobs per person go to GitHub Models' free tier with the job text and a generic description of what the person wants (never a name). The review moves the score by at most 10 points and is put in front of the note. Applied, decided, READY and STRETCH rows are never touched.
+5. **AI review: removed.** It was switched off when its free provider was retired (30 Jul 2026) and the owner's standing rule is no AI review, so the script, its probe workflow and its daily step were deleted on 13 Nov. Nothing in the daily run sends job text to a model.
 6. **Watchlist, three times a day** (`.github/workflows/watchlist.yml`). The priority employer sites and the remote boards are read at 03:07, 09:07 and 21:07 UTC, between the daily runs. Up to 300 new jobs each time.
 7. **Reposts and long-open listings.** A role that closed in the last 180 days and is back under a new id is noted as reposted. Undecided rows for jobs first seen more than 60 days ago get a "listed for 60+ days" note.
 8. **Agency flag.** Staffing-agency names and "on behalf of our client" wording cost 5 points and are said in the note.
@@ -227,7 +247,7 @@ The daily cap is now 1,500 new jobs (about 35,000 of the 100,000 free daily writ
 | Resource | Use |
 |---|---|
 | GitHub Actions | About 10 minutes for the daily run plus about 4 minutes for each of the three watchlist runs: about 25 minutes a day, inside the 2,000 minutes a month |
-| D1 writes | About 18 to 27 row writes per new job, counting indexes. 1,500 jobs is about 27,000 to 40,000 a day, plus closures, the watchlist and the AI review; inside the free 100,000 a day |
+| D1 writes | About 18 to 27 row writes per new job, counting indexes. 1,500 jobs is about 27,000 to 40,000 a day, plus closures and the watchlist; inside the free 100,000 a day |
 | D1 reads | Duplicate checks (about 2 rows per selected posting), one scan of active jobs, one of this pipeline's jobs, and the re-score export (one-time) |
 | D1 storage | About 4 to 6 MB a day at the cap, reclaimed as closed jobs' text is dropped. The free database limit is 500 MB; the diagnose workflow reports the size |
 | Worker CPU | None: scoring happens in the Action |

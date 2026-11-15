@@ -823,6 +823,19 @@ test('resume import is honest: no invented profile for any pasted text', async (
   assert.equal(body.status, 'not_implemented'); assert.ok(!body.parsed, 'no parsed profile'); assert.ok(!/Farhan|Python|TypeScript/i.test(JSON.stringify(body)));
 });
 
+test('jobs QA 2: /api/candidates/:id/jobs leaves closed postings out, as the site lists do', async () => {
+  const { sqlite, env } = fresh();
+  const statuses = 'status=READY,STRETCH_READY,NEEDS_REVIEW,HOLD,INELIGIBLE';
+  const before = await call(worker, env, 'GET', `/api/candidates/farhan_shaikh/jobs?${statuses}`, { key: ADMIN_KEY });
+  assert.equal(before.status, 200);
+  const ids = before.json.map((j) => j.id);
+  assert.ok(ids.length >= 2, 'the seed has jobs for him');
+  sqlite.prepare('UPDATE jobs SET is_active = 0 WHERE id = ?').run(ids[0]);
+  sqlite.exec('DELETE FROM response_cache');
+  const after = await call(worker, env, 'GET', `/api/candidates/farhan_shaikh/jobs?${statuses}&x=1`, { key: ADMIN_KEY });
+  assert.deepEqual(after.json.map((j) => j.id), ids.slice(1));
+});
+
 test('QA: junk paging parameters never cause a 500 on the job lists', async () => {
   const { env } = fresh();
   for (const q of ['limit=-5&offset=abc', 'limit=abc', 'limit=0&offset=-9', 'offset=NaN', 'limit=1e9']) {
@@ -906,7 +919,7 @@ test('QA: DELETE /api/clients/:id erases the client and everything tied to them,
   assert.equal((await call(worker, env, 'DELETE', `/api/clients/${a}`)).status, 400, 'a second delete is a clean "unknown client", not an error');
 });
 
-// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): a share-link holder's answer must never become the outage copy served to anonymous visitors.
+// Independent review 2026-11-09 (reproduced from the other reviewer's hypothesis): a share-link holder's answer must never become the outage copy served to anonymous visitors.
 test('outage backup never stores an answer produced for a share-link holder, so a private client is not handed to anonymous visitors during an outage', async () => {
   const store = new Map(); const HOST = 'https://share-link-leak-check.invalid';   // own host: the Worker remembers recently stored URLs per instance
   globalThis.caches = { default: { async put(req, res) { store.set(req.url, await res.text()); }, async match(req) { return store.has(req.url) ? new Response(store.get(req.url), { headers: { 'Content-Type': 'application/json' } }) : undefined; } } };
@@ -934,7 +947,7 @@ test('outage backup never stores an answer produced for a share-link holder, so 
   } finally { delete globalThis.caches; }
 });
 
-// Independent review 2026-11-09 (reproduced from ChatGPT's hypothesis): un-save checks the record, then writes. A change made by someone else in between must neither
+// Independent review 2026-11-09 (reproduced from the other reviewer's hypothesis): un-save checks the record, then writes. A change made by someone else in between must neither
 // lose their notes nor leave a false "UNSAVED" entry in the history while the record is still there.
 test('un-save: a note added after the check is not lost, and the history only records an un-save that really happened', async () => {
   const racing = async (mutateSql) => {

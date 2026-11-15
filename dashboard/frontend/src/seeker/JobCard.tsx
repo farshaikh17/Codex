@@ -38,6 +38,7 @@ export const JobCard: React.FC<Props> = ({ job, onOpen, onPosting, onSave, onHid
       </div>
       <p className="text-sm text-slate-600 mt-1 break-words">{meta}</p>
       {job.why_line && <p className="text-sm text-slate-800 mt-1.5" data-testid="why-line">{job.why_line}</p>}
+      {!!job.more_places && <p className="text-sm text-slate-600 mt-1 break-words" data-testid="more-places">+{job.more_places} more place{job.more_places === 1 ? '' : 's'}{job.other_places?.length ? `: ${job.other_places.join(' · ')}` : ''}</p>}
       {stage && <p className="text-sm font-semibold mt-1.5 text-emerald-800" data-testid="card-state">{saved ? (stage === 'REVIEWING' ? 'Saved · preparing' : 'Saved') : stageWord(stage)}</p>}
       <div className="mt-3 flex flex-wrap gap-3">
         {url

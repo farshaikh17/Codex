@@ -1,4 +1,4 @@
-"""Light daily search of job sites (Indeed, LinkedIn, Naukri, and Glassdoor / Google Jobs when they answer) through the
+"""Light daily search of job sites (Indeed, LinkedIn, and Glassdoor / Google Jobs when they answer; Naukri dropped 14 Nov for its terms) through the
 open-source JobSpy library (MIT). Owner decision 2026-11-06: a handful of targeted searches per candidate per day, never
 bulk scraping. Results are job-board reports, so the screen treats eligibility as unknown until verified.
 
@@ -15,10 +15,19 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from engine import robots  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 
-SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google', 'bayt']
-INDIA_SITES = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'google']
+# Naukri dropped 14 Nov (compliance): its terms forbid automated access and its robots.txt blocks AI agents.
+SITES = ['indeed', 'linkedin', 'glassdoor', 'google', 'bayt']
+INDIA_SITES = ['indeed', 'linkedin', 'glassdoor', 'google']
+# The address JobSpy requests for each site, checked against that host's robots.txt at run time (engine/robots.py).
+SITE_ENDPOINT = {'indeed': 'https://apis.indeed.com/graphql', 'linkedin': 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search',
+                 'glassdoor': 'https://www.glassdoor.co.in/graph', 'google': 'https://www.google.com/search?q=jobs&udm=8',
+                 'bayt': 'https://www.bayt.com/en/international/jobs/'}
+# False: a site whose robots.txt disallows the address is still searched and the report says "robots: disallowed" (the owner decides;
+# see the PR that turns this on). True: such a site is skipped and reported as blocked by robots.txt.
+ENFORCE_ROBOTS = False
 GULF_SITES = ['bayt', 'indeed', 'linkedin']   # Bayt is the largest Gulf job board; Indeed searched in that country
 # A few searches per built-in candidate: (search term, location, Indeed country, sites). The title filter below (the
 # Worker's own role rule) removes loose matches. Owner rules 2026-11-07: Farhan remote only, from any country;
@@ -68,7 +77,7 @@ def run_search(site, term, location, results, hours, country='India'):
     kw = {'country_indeed': country}
     if site == 'google':
         kw = {'google_search_term': f'{term} jobs in {location} since yesterday'}
-    if site in ('bayt', 'linkedin', 'naukri'):
+    if site in ('bayt', 'linkedin'):
         kw = {}
     df = scrape_jobs(site_name=[site], search_term=term, location=location, results_wanted=results, hours_old=hours, verbose=0, **kw)
     return [] if df is None else df.to_dict('records')
@@ -83,6 +92,12 @@ def main():
     a = ap.parse_args()
     profs = json.loads(Path(a.profiles).read_text())
     found, log = {}, []
+    robots_status = {}
+    for site in SITES:
+        try:
+            robots_status[site] = 'allowed' if robots.allowed(SITE_ENDPOINT[site]) else 'disallowed'
+        except Exception as e:   # noqa: BLE001 - reported, never fatal
+            robots_status[site] = f'unknown ({type(e).__name__})'
     watch = BlockWatch(); logging.getLogger().addHandler(watch)
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
@@ -91,6 +106,10 @@ def main():
         role = re.compile(p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
         for term, loc, country, sites in queries[:MAX_QUERIES]:
             for site in sites:
+                if site not in SITES:   # a site dropped for compliance (Naukri) is never searched, even from an old profile
+                    continue
+                if ENFORCE_ROBOTS and robots_status.get(site) != 'allowed':
+                    log.append({'site': site, 'term': term, 'error': f'robots.txt: {robots_status.get(site)}'}); continue
                 watch.take()
                 try:
                     rows = run_search(site, term, loc, a.results, a.hours, country)
@@ -124,7 +143,7 @@ def main():
     jobs = [clean(j) for j in found.values()]
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     report = {'searches': len(log), 'blocked': sum(1 for x in log if 'error' in x), 'selected': len(jobs),
-              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}}
+              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}, 'robots': robots_status}
     (out / 'jobsite_raw.json').write_text(json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str))
     (out / 'jobsite_report.json').write_text(json.dumps({**report, 'log': log}, indent=1, default=str))
     print(json.dumps(report))

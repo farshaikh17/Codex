@@ -1,6 +1,6 @@
 {
  "protocol": "PROTOCOL.md",
- "labeller": "Claude (implementing agent); not an independent recruiter review",
+ "labeller": "the implementing agent; not an independent recruiter review",
  "labelled_before_repair": true,
  "candidates": {
   "farhan": [

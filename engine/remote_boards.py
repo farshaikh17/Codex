@@ -8,6 +8,8 @@ Sources, each read through its own public feed (no scraping, no login):
   * Working Nomads https://www.workingnomads.com/api/exposed_jobs/
   * Hacker News "Ask HN: Who is hiring?" (the current monthly thread, through the official Algolia HN API): one posting per
     role named in each top-level post ("Company | Role | Location | REMOTE | ..."); linked to the post on news.ycombinator.com
+Every request first passes engine/robots.py (the host's robots.txt, read once a run, must allow the path; one host at most once a
+second, or its Crawl-delay).
 Postings are kept only when the title matches a candidate's own role rule (profiles.json, written by dataset_discovery.py).
 Results are job-board reports: the screen never takes eligibility from them.
 
@@ -23,6 +25,7 @@ import re
 import os
 import sys
 import time
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -30,18 +33,34 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from engine import robots  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 
-UA = 'career-job-engine/1.0 (+private job search)'
+UA = robots.UA
 WWR = ['remote-management-and-finance-jobs', 'remote-product-jobs', 'remote-sales-and-marketing-jobs', 'all-other-remote-jobs', 'remote-devops-sysadmin-jobs']
 HIMALAYAS_PAGES = 10   # 20 newest jobs a page
 TAG = re.compile(r'<[^>]+>')
 
 
+PAUSE = 1.0
+REQUESTS = [0]   # requests sent this run (robots.txt reads not counted)
+_LAST = {}
+
+
 def get(url, timeout=30):
+    """One polite request: robots.txt must allow the URL (engine/robots.py), one host at most once a PAUSE (or its Crawl-delay)."""
+    robots.check(url)
+    host = urllib.parse.urlsplit(url).netloc
+    wait = max(PAUSE, robots.crawl_delay(url)) - (time.monotonic() - _LAST.get(host, -1e9))
+    if wait > 0:
+        time.sleep(wait)
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json, application/rss+xml, */*'})
-    with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https URLs above)
-        return r.read(8_000_000)
+    try:
+        with robots.urlopen(req, timeout=timeout) as r:   # noqa: S310 (fixed https URLs above; redirects checked against robots.txt)
+            return r.read(8_000_000)
+    finally:
+        _LAST[host] = time.monotonic()
+        REQUESTS[0] += 1
 
 
 def text(s):
@@ -89,8 +108,9 @@ def wwr():
 
 
 def jobspresso():
-    """Jobspresso's public RSS (curated remote jobs). The creator field reads "Company<br>⚲ Location"."""
-    root = ET.fromstring(get('https://jobspresso.co/feed/?post_type=job_listing'))
+    """Jobspresso's public RSS (curated remote jobs). The creator field reads "Company<br>⚲ Location".
+    /jobs/feed/ since 14 Nov: robots.txt disallows every address with a query ("Disallow: /*?"), so the old ?post_type=job_listing feed is not read."""
+    root = ET.fromstring(get('https://jobspresso.co/jobs/feed/'))
     for it in root.iter('item'):
         creator = ''
         for c in it:
@@ -191,6 +211,7 @@ def main():
             report[name] = {'skipped': 'time budget', 'read': 0, 'kept': 0}
             continue
         seen = kept = 0
+        sent = REQUESTS[0]
         try:
             for j in fn():
                 seen += 1
@@ -208,9 +229,9 @@ def main():
                     continue
                 j['candidates'] = cands
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1
-            report[name] = {'read': seen, 'kept': kept}
-        except Exception as e:   # one failing feed is skipped
-            report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept}
+            report[name] = {'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent}
+        except Exception as e:   # one failing feed is skipped (a robots.txt refusal is reported as "robots.txt disallows ...")
+            report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent}
         write_json(raw_path, merged)   # after every source: a step stopped at its time limit keeps what it fetched
         write_json(out / 'boards_report.json', report, indent=1)
     write_json(raw_path, merged)

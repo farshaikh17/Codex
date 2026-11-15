@@ -3,16 +3,38 @@ name: Discovery watchdog (restarts a missed daily discovery run)
 # done its real work in the last 24 hours? If not, and no discovery run is queued, running or was started in the last 3 hours, it starts one
 # (see dashboard/scripts/discovery_watchdog.mjs). Its own workflow with no concurrency group (plan R6): it was a job of the watchlist and the
 # collector sync, whose shared group could hold it back or let a newer queued run replace the discovery run it started.
+# Wide intake (14 Nov): GitHub's scheduler starts this repository's scheduled runs hours late and drops most of them (8 days of Actions history:
+# discovery about 1 of its 6 daily triggers, watchlist 2-3 of 12, collect 2-3 of 5, this watchdog once in its first 10 hours, the career pipeline
+# about 8 hours late every day). A trigger still waiting when the next one falls due is not added again, so a 2-hour cron with a 2-8 hour delay
+# fires a few times a day at most. So the watchdog also runs when one of the other scheduled workflows finishes (workflow_run, which does not go
+# through the scheduler): about 8-10 more checks a day, spread over the day. It reads the run list and at most starts one run; it never checks out
+# or runs code from the run that triggered it.
 on:
   workflow_dispatch:
   schedule:
     - cron: '27 */2 * * *'
+  workflow_run:
+    workflows:
+      - 'Watchlist (priority employers and boards, three times a day)'
+      - 'Collect public job feeds'
+      - 'Sync Collector Postings to Cloudflare D1'
+      - 'Career pipeline (discovery, qualification, private dashboards)'
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
+# Its own group, shared with no other workflow (plan R6 still holds): two checks triggered minutes apart (collect, then the collector sync) wait
+# for each other instead of both seeing "nothing queued" and starting the daily run twice. A newer pending check replacing an older one is harmless.
+concurrency:
+  group: discovery-watchdog
+  cancel-in-progress: false
+
 jobs:
   discovery-watchdog:
+    # a workflow_run from a run on main only (not a pull request's run): the check itself never uses that run's code or files
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions:

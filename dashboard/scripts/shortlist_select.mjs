@@ -13,7 +13,9 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { companyKey, familyOf, placeBand, indianPlace, gulfPlace, foreignLocation, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
+import { indianPlace as namesIndia } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India (fitsStretchRule)
+import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
+import { titleKey } from '../worker/twins.ts';
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -31,26 +33,24 @@ export function when(s) {
   return Date.parse(t);
 }
 
-const skillsOk = (r) => Number(r.skill_score) >= 40 || !!Number(r.target_exact);   // plan S4
+// Plan S4: two matched skills, or a title that is exactly one of the person's target roles. Jobs QA 13 Nov: the title alone stands in for the two
+// skills only when the posting has a description to check it against (300+ characters; 'Reliability Engineer II' at a trading firm had none).
+export const EXACT_TITLE_MIN_TEXT = 300;
+const skillsOk = (r) => Number(r.skill_score) >= 40 || (!!Number(r.target_exact) && String(r.description || '').trim().length >= EXACT_TITLE_MIN_TEXT);
 const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !r.dead;
 /** Ready: score at the person's threshold and eligibility confirmed. */
 export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold) && r.eligibility === 'ELIGIBLE';
-/** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. */
-export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN')
+/** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. Jobs QA 2 (14 Nov): for Farhan (remote from India
+ *  only) an unconfirmed row also needs a place naming India ("Remote" alone was US-market jobs: Arcadia, SimpliGov). */
+export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location)))
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
 /** Gap fix: verified for Ready only by the still-open check; a 'listed' row (a Gulf job-board posting seen in the board's listing in 2 days) may go
  *  to Stretch. */
 const readyOk = (r) => r.verified && fitsReady(r);
 const shortlistable = (r) => (r.verified || r.listed) && (fitsReady(r) || fitsStretchRule(r));
 // Tenth-man review (phase 3): a title is compared without bracketed parts and trailing place or work-mode parts ("Solutions Engineer (Remote)",
-// "Maintenance Engineer - Jamnagar"), so the same job is not shown twice.
-const MODE_SEG = /^\s*(?:remote|hybrid|on-?site|onsite|wfh|work from home|anywhere|worldwide|global|apac|emea|asia|latam)\b/i;
-const placeSeg = (seg) => MODE_SEG.test(seg) || indianPlace(seg) || gulfPlace(seg) || foreignLocation(seg);
-export function titleKey(title) {
-  const parts = String(title || '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split(/\s+[-\u2013\u2014|]\s+|,\s*/).filter((x) => x.trim());
-  while (parts.length > 1 && placeSeg(parts[parts.length - 1])) parts.pop();
-  return parts.join(' ').toLowerCase().replace(/\b(?:remote|hybrid|on-?site|onsite|wfh)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
-}
+// "Maintenance Engineer - Jamnagar"), so the same job is not shown twice. titleKey() lives in worker/twins.ts, which the To review lists also use.
+export { titleKey };
 /** One posting per employer, title and (for an on-site job) city: the same title at two plants is two jobs (tenth-man review, phase 3); the employer caps
  *  keep one employer from filling a tier with them. A remote job has no city. */
 export const twinKey = (r) => {
@@ -76,7 +76,8 @@ export function ranked(rows, now) {
 // ---- The rules (plan A4) ----------------------------------------------------------------------------------------------------------------
 // Sites that repost other employers' jobs (not agencyPosting(): an agency is still the employer's channel). At most 3 per tier (hard), and a repost
 // of a direct employer's row in the pool (same title, same place, same first 200 characters of description) is dropped (hard).
-export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peopleworth', 'pavago', 'paired', 'braintrust']);
+// Integration 15 Nov: 20four7VA (a VA staffing firm) reposts; Paired posts its own RevOps roles, so it is an employer, not a reposter.
+export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peopleworth', 'pavago', 'braintrust', '20four7va']);
 export const REPOSTER_CAP = 3;
 export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
 export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
@@ -84,20 +85,32 @@ export const employerKey = (r) => companyKey(r.company) || String(r.company || '
 const REPOSTER_NAMES = new Set([...REPOSTERS, 'turingcom', 'jobgethercom', 'usebraintrust', 'braintrustnetwork', 'crossoverforwork']);
 export const isReposter = (r) => REPOSTER_NAMES.has(String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/(?:inc|llc|ltd)$/, ''));
 // An employer shown by its hiring-system tenant id is not shortlisted until phase 4 (B1) gives it its real name; the audit (A8) treats one on the
-// shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1'; an Oracle employer named exactly like its oraclecloud.com tenant host ('Hdga' at
-// hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1 already maps (abb, mdlz) are known employers.
+// shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1' (also with its site, 'Fa Elxu Saasfaprod1 (CX_1001)'); an Oracle employer named
+// exactly like its oraclecloud.com tenant host ('Hdga' at hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1
+// already maps (abb, mdlz) are known employers. The same reading as tenant_like() in engine/company_names.py.
 const TENANT_KNOWN = new Set(['abb', 'mdlz']);
+export const FA_TENANT = /^fa[ -][a-z]{4}[ -](?:test[ -])?saasfaprod\d+(?:\s*\([^)]*\))?$/i;
 export function tenantEmployer(company, source, url) {
   const c = String(company || '').trim();
-  if (/^fa[ -][a-z]{4}[ -]saasfaprod\d+$/i.test(c)) return true;
+  if (!c) return false;
+  if (FA_TENANT.test(c)) return true;
   if (TENANT_KNOWN.has(c.toLowerCase())) return false;
+  let host = ''; try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch {}
+  if (host.endsWith('.oraclecloud.com') && host.split('.')[0] === c.toLowerCase() && /^[a-z]{3,8}$/i.test(c)) return true;
   const src = String(source || '').toLowerCase();
-  if (/^oracle/.test(src) && /^[a-z]{3,8}$/i.test(c)) {
-    let host = ''; try { host = new URL(String(url || '')).hostname.toLowerCase(); } catch {}
-    if (host.endsWith('.oraclecloud.com') && host.split('.')[0] === c.toLowerCase()) return true;
-  }
-  return /^(workday|oracle|oraclehcm)$/.test(src) && /^[a-z]{1,5}$/.test(c);
+  if (!/^(?:workday|oracle|oracle_?hcm)$/.test(src) && !host.endsWith('oraclecloud.com') && !host.endsWith('myworkdayjobs.com')) return false;
+  return /^[a-z]{1,5}$/.test(c);
 }
+// The employer names table of engine/company_names.py (engine/company_names.json), read here so the selector and the audit name a tenant id
+// exactly as the import does.
+const NAMES = (() => { try { return JSON.parse(fs.readFileSync(new URL('../../engine/company_names.json', import.meta.url), 'utf8')).names || {}; } catch { return {}; } })();
+const nameKey = (raw) => String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, ' ');
+/** The employer's name as the names table reads it (display_company() without a career-site lookup). */
+export const tableName = (raw) => NAMES[nameKey(raw)] || String(raw || '').trim();
+/** The one tenant test the selector and the audit share (13 Nov run: they disagreed, the selector reading names through the table and the audit
+ *  the stored tenant ids). Both read the name stored on the job (the pool keeps it as `stored_company`) through the names table: a row whose employer
+ *  the table names ('hdga' -> Lucy Electric) passes, also before a migration renames the stored row; an id the table does not know stays off. */
+export const shortlistTenant = (r) => tenantEmployer(tableName(r?.stored_company ?? r?.company), r?.source, r?.url);
 const norm = (x) => String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 /** Hard: a reposter row duplicating a direct employer's row: the same title (as titleKey() reads it) and the direct row's first 200 characters of
  *  description found anywhere in the repost (a reposting site puts its own sentence first: "This position is posted by Jobgether on behalf of..."),
@@ -157,7 +170,7 @@ function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
   const dupes = repostDuplicates(rows);
-  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !tenantEmployer(r.company, r.source, r.url)), now);
+  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };
