@@ -306,7 +306,7 @@ def node_scorer(work, candidates_file):
         inp, out = Path(work) / 'prescore_in.jsonl', Path(work) / 'prescore_out.jsonl'
         with inp.open('w') as f:
             for k, (cid, r) in enumerate(items):
-                f.write(json.dumps({'k': k, 'cid': cid, **{x: r.get(x) for x in ('title', 'company', 'location', 'description', 'is_remote', 'url',
+                f.write(json.dumps({'k': k, 'cid': cid, **{x: r.get(x) for x in ('title', 'company', 'ats_type', 'location', 'description', 'is_remote', 'url',
                         'salary_min', 'salary_max', 'salary_currency', 'salary_period')}}, default=str) + '\n')
         subprocess.run(['node', '--import', './test/register.mjs', 'scripts/prescore.mjs', '--candidates', str(Path(candidates_file).resolve()),
                         '--in', str(inp.resolve()), '--out', str(out.resolve())], cwd=DASHBOARD, check=True, timeout=1800)

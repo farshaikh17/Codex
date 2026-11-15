@@ -4,19 +4,26 @@
 // the import will store, before the taste adjustment (at most 5 points) and the employer lists that are read later in the run.
 //
 //   node --import ./test/register.mjs scripts/prescore.mjs --candidates work/candidates.json --in work/prescore_in.jsonl --out work/prescore_out.jsonl
-// Input: one JSON object per line {k, cid, title, company, location, description, is_remote, salary_min, salary_max, salary_currency, salary_period}.
+// Input: one JSON object per line {k, cid, title, company, ats_type, location, description, is_remote, salary_min, salary_max, salary_currency, salary_period}.
 // Output: one line per input line {k, cid, score, status, eligibility, band}. A candidate that is not in candidates.json gets status 'UNKNOWN_CANDIDATE'.
 import fs from 'node:fs';
 import readline from 'node:readline';
-import { evaluate, placeBand, companyKey } from '../worker/discovery.ts';
+import { evaluate, placeBand, companyKey, onsiteByText, remoteFlagTrusted } from '../worker/discovery.ts';
 
 export const plain = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
 
 /** The posting evaluate() sees for one dataset or job-site row (the same object scripts/dataset_apply.mjs scores). */
 export function posting(j) {
   const description = plain(j.description).slice(0, 6000);
-  const remote = j.is_remote === true || /\bremote\b/i.test(j.location || '');
-  return { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, repost: !!j.repost,
+  // Jobs QA 13 Nov: the source's remote flag is wrong for some postings whose own text places the job in an office ('The position is based in
+  // Bengaluru', '#LI-Onsite', 'two days a week from our London office'); the text wins (evaluate() reads it the same way).
+  // Jobs QA 2 (14 Nov): an Oracle, Workday or SuccessFactors flag alone is not trusted (Mashreq Bengaluru, on site, flagged remote): the text or
+  // the place must say remote too.
+  const flagged = j.is_remote === true && remoteFlagTrusted(j.ats_type, description, j.location);
+  const textOnsite = flagged && onsiteByText(description);
+  const remote = (flagged && !textOnsite) || /\bremote\b/i.test(j.location || '');
+  const onsite = j.is_remote === false || (textOnsite && !remote);
+  return { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, onsite, repost: !!j.repost,
     salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
 }
 

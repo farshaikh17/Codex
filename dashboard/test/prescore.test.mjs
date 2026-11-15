@@ -45,3 +45,11 @@ test('prescore: the command line reads and writes JSON lines, one result per row
   assert.equal(out[1].status, 'UNKNOWN_CANDIDATE');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('prescore: the shared posting keeps the jobs QA remote rules (an Oracle / Workday flag alone is not remote; the text places the job in an office)', () => {
+  assert.equal(posting(row({ is_remote: true, ats_type: 'oracle', location: 'Bengaluru, India', description: 'Run the branch operations team.' })).remote, false);
+  assert.equal(posting(row({ is_remote: true, ats_type: 'oracle', location: 'Bengaluru, India', description: 'This is a fully remote role.' })).remote, true);
+  const office = posting(row({ is_remote: true, ats_type: 'lever', location: 'India', description: 'The position is based in our Pune office. #LI-Onsite' }));
+  assert.equal(office.remote, false); assert.equal(office.onsite, true);
+  assert.equal(posting(row({ is_remote: false })).onsite, true);
+});
