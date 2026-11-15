@@ -39,12 +39,14 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
    verification from a clean checkout; the Cloudflare account and the D1 database id match `wrangler.toml`; the token can
    read the Worker, its deployments, D1 and Time Travel; `ADMIN_API_KEY` exists on the Worker (name only; a warning, not a
    failure, if absent); and it records the rollback points and the currently live version in the run summary.
-3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, add tables `auth_failures`,
-   `response_cache` and `read_meter` (migrations 0008 and 0009, both additive; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
-   commit recorded in the Worker, public smoke test (including anonymous write attempts that must be refused), read-only
-   real-browser check on desktop and 375 px mobile with no credentials (the job seeker's page for both people, the public reads, and that
-   `/app?operator=1` shows only the operator sign-in), fingerprint again and fail if
-   any application, history, override or candidate record changed.
+3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, apply migrations 0008-0022 (each
+   idempotent and replayed on every release; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
+   commit recorded in the Worker, requeue, the owner-approved score correction, cache flush, public smoke test (including anonymous write
+   attempts that must be refused), read-only real-browser check on desktop and 375 px mobile with no credentials (the job seeker's page for
+   both people, the public reads, and that `/app?operator=1` shows only the operator sign-in), fingerprint again and fail if any
+   application, history, override or candidate record changed. With the open tracker on, rows changed by a keyless tracker write tagged in
+   `history_client` during the run are allowed and listed (`scripts/protected_compare.mjs`); any other change still fails the run. A
+   failure of only that last step means the deploy succeeded: read its changed-rows table before considering a rollback.
 4. Verify the live commit: `GET /api/version` returns `commit` equal to the released SHA. The smoke test waits for it and
    judges only answers whose `X-Worker-Commit` header is the released SHA.
 5. **Diagnose** (`mode = diagnose`, read-only) when production misbehaves: D1 info with 24-hour rows read and written, one

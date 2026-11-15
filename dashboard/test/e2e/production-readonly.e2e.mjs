@@ -142,7 +142,9 @@ for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]
   check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything - c.best - c.worth_a_try})`), t.slice(0, 200));
   const top = await page.locator('[data-testid="job-card"]').first().boundingBox().catch(() => null);
   check(`${slug}: the first job starts within 200 px of the top (or there is none)`, !top || top.y <= 200, JSON.stringify(top));
-  check(`${slug}: nothing operator-only on the job seeker's page`, !/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i.test(t), (t.match(/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i) || [])[0]);
+  // Job titles are data, not screen chrome: "Field Operator - Turbine" is a real posting. Read the page without the job cards.
+  const chrome = (await page.evaluate(() => { const b = document.body.cloneNode(true); b.querySelectorAll('[data-testid="job-card"], [data-job-id]').forEach((e) => e.remove()); return b.textContent || ''; })).replace(/\s+/g, ' ');
+  check(`${slug}: nothing operator-only on the job seeker's page`, !/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i.test(chrome), (chrome.match(/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i) || [])[0]);
   check(`${slug}: no private text on the job seeker's page`, !PRIVATE_TEXT.test(t), (t.match(PRIVATE_TEXT) || [])[0]);
   check(`${slug}: no sideways scrolling`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
 }
