@@ -120,5 +120,5 @@ group on its own evidence and the others keep their own REJECT reasons.
 - **Live collection (not done here):** no network collection was run for this repair; the 454 v2 extra records were
   never committed and cannot be replayed; SmartRecruiters is no longer fetched.
 - **Recruiter acceptance (not established):** labels are one implementing reviewer's reading of public text.
-  Eligibility, pay, application history and qualifications still need the private ChatGPT/Sheet review; nothing is
+  Eligibility, pay, application history and qualifications still need the private Sheet review; nothing is
   READY. The v2 68%→84% / 48%→60% figures remain broad role-domain audits, not matching accuracy.

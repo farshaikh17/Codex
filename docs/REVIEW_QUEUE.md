@@ -123,7 +123,7 @@ My gates were scored with #7's scorer on its 30 labelled decisions, using a thro
 - gate agreement: geography 30/30, engagement 30/30, prior application 30/30
 - missed READY 5; experience agreement 3/30; salary 19/30
 
-Every disagreement comes from a candidate-model question that farshaikh17/Codex#1's `docs/COORDINATION.md` leaves to the GPT Master as D3:
+Every disagreement comes from a candidate-model question that farshaikh17/Codex#1's `docs/COORDINATION.md` leaves to the review lead as D3:
 
 1. **Domain-specific experience.** #7 gives years per family (`sql: 2`, `implementation: 4`) and passes "3+ years of customer success" deterministically. Here a profile has only total years, so experience can fail mechanically but passes only through review. That causes the 5 missed READYs and the "5+ years … in Go" missed exclusion.
 2. **Salary floors per currency, and `$`.** #7's candidates have one floor per currency and read `$130,000` as USD. Here a profile has one floor, and `$` counts only with the candidate's `assume_currency_for_symbol`.

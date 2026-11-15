@@ -78,5 +78,5 @@ python -m engine.outputs submit-batch --response PRIVATE_DIR/batch-<id>.response
 
 The repository is private.
 - The posting outputs, once committed, are readable only through an authenticated GitHub connector or a repository-scoped token. Public raw URLs won't work.
-- Candidate outputs are private files. They reach ChatGPT only through whatever private channel the owner chooses: a private repository with its own scoped access, or the Sheets adapter.
-- Nothing here creates an endpoint, and no access has been verified with the ChatGPT consumer (`docs/CONSUMER_TEST.md` on PR #3 covers the public files).
+- Candidate outputs are private files. They reach the review assistant only through whatever private channel the owner chooses: a private repository with its own scoped access, or the Sheets adapter.
+- Nothing here creates an endpoint, and no access has been verified with the review consumer (`docs/CONSUMER_TEST.md` on PR #3 covers the public files).

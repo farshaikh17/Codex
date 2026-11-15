@@ -25,3 +25,8 @@ test('public assets contain no secrets or key-shaped values', () => {
 test('the shell does not embed the production database or account identifiers', () => {
   for (const [name, text] of bundle()) assert.ok(!/819f9296-661a-46bc-8d44-135dca005e42|c7e866f95a4275de2719647dd2bc4f34/.test(text), `${name} embeds a Cloudflare identifier`);
 });
+
+test('public assets name no AI tool, model or assistant (code QA F2, 13 Nov)', () => {
+  const names = [/antigravity/i, /\bgpt-?\d/i, /gpt-4o/i, /chatgpt/i, /\bopenai\b/i, /\bclaude\b/i, /anthropic/i, /\bsonnet\b/i, /\bgemini\b/i, /\bcopilot\b/i, /\bllama\b/i, /\bmistral\b/i];
+  for (const [name, text] of bundle()) for (const rx of names) assert.ok(!rx.test(text), `${name} contains ${rx}`);
+});

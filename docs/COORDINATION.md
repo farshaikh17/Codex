@@ -1,33 +1,33 @@
-# Claude coordination board
+# Coordination board
 
-Single shared coordination record for Claude work on farshaikh17/Codex. Owned by the Claude Master chat; workers may only append to the handoff log (section 9) and update their own row in section 4; everything else is changed by the Master.
+Single shared coordination record for agent work on farshaikh17/Codex. Owned by the coordination lead chat; workers may only append to the handoff log (section 9) and update their own row in section 4; everything else is changed by the Master.
 
-- **Requirements and priorities:** the GPT Master chat. Nothing here overrides it. Where this file needs a decision, it is listed in section 8 and waits.
+- **Requirements and priorities:** the review lead chat. Nothing here overrides it. Where this file needs a decision, it is listed in section 8 and waits.
 - **Coordination is through the repository.** Chats cannot read each other. A handoff is a commit, a PR comment, or an edit to this file, quoted with its commit SHA.
 - **Status labels** are the five defined in `docs/HANDOFF.md` (on `builderbranches`): *Implemented and tested offline*, *Live collection verified*, *Scheduled execution verified*, *Consumer access verified*, *End-to-end tracker ingestion verified*. Never substitute one for another.
 
-Last verified by the Claude Master: 2026-10-26 ~14:40 UTC, against the remote branches, PRs and Actions runs listed below.
+Last verified by the coordination lead: 2026-10-26 ~14:40 UTC, against the remote branches, PRs and Actions runs listed below.
 
 ## 1. Goal
 
 One job-research engine that does not cost anything:
 1. **Collection.** Official public ATS feeds (stdlib collector) plus a bounded, manual Crawl4AI fallback for allowlisted career pages.
 2. **Storage.** A shared SQLite posting store rebuilt from Git history, with evidence-based extraction records.
-3. **Assessment and review** on top of the store: candidate isolation, evidence gates, review queue, consumer outputs and a Sheets adapter interface. Not started; requirements come from the GPT Master.
+3. **Assessment and review** on top of the store: candidate isolation, evidence gates, review queue, consumer outputs and a Sheets adapter interface. Not started; requirements come from the review lead.
 
 The collector never decides eligibility. Nothing in `public/` is READY evidence.
 
 ## 2. Hard constraints (all workers)
 
 - $0. No paid APIs, proxies, LLM calls or hosting; no larger runners; no change to Actions spending limits.
-- Do not merge PRs, add or change schedules, touch ChatGPT tasks or Google Sheets, or change candidate rules without an explicit owner instruction.
+- Do not merge PRs, add or change schedules, touch review tasks or Google Sheets, or change candidate rules without an explicit owner instruction.
 - No candidate information in Git. Synthetic fixtures only.
 - Push only to your own branch. Never force-push someone else's branch.
 - Before pushing, run the offline test guard from `docs/INTEGRATION.md` (sockets disabled) and say the result in the commit or PR.
 
 ## 3. Verified state (2026-10-26 ~14:40 UTC; heads and combined tree refreshed 15:20; main and Actions refreshed 15:30)
 
-**Independent confirmation, 15:20:** the GPT Master confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
+**Independent confirmation, 15:20:** the review lead confirmed nine open PRs, `main` unchanged at `456397a`, and extractor v3 in #9.
 
 **Update, 19:20 UTC (supersedes the 18:55, 17:40 and 17:10 blocks below where they differ):**
 
@@ -134,7 +134,7 @@ The interim "log the owner instruction first" rule has not been used once. **The
 - **Cron:** now `37 1,6,11,16,21 * * *` UTC, with gaps of 5/5/5/5/4 h.
 - **Age gate:** the five-hour step is removed. The workflow runs `python collect.py` directly.
 - **Data:** `public/status.json` attempted 16:59, `ok`, 10/10 sources, 536 listings.
-- **Authorization:** the change was authorized by the owner and the GPT Master, who re-verified the Actions budget at $0 paid with usage blocked. See *GPT Master production schedule update* at the end of this file.
+- **Authorization:** the change was authorized by the owner and the review lead, who re-verified the Actions budget at $0 paid with usage blocked. See *Review lead production schedule update* at the end of this file.
 - **Not yet verified:** scheduled execution on the new cron. No `schedule` event on `37 …` has arrived yet.
 
 *Open PR heads, 17:10* (16:20 values in brackets where changed):
@@ -179,7 +179,7 @@ The interim "log the owner instruction first" rule has not been used once. **The
 - #9 `3018541`: merges `8794ca8`, not yet `8f026c4`/`5c87de2`; `EXTRACTOR_VERSION=3`
 - `integration/pr1-2-3` `4331322` (15:11). It is now behind #1, #2, #7 and `main`.
 
-**Re-sent instruction, 16:20:** the GPT Master's 15:20 message arrived a second time. Everything in it had already been applied at 15:20 (`70c5398`). Its "`main` unchanged" no longer holds (see *main* below).
+**Re-sent instruction, 16:20:** the review lead's 15:20 message arrived a second time. Everything in it had already been applied at 15:20 (`70c5398`). Its "`main` unchanged" no longer holds (see *main* below).
 
 The per-PR table below keeps the 14:40 heads for history.
 
@@ -187,7 +187,7 @@ The per-PR table below keeps the 14:40 heads for history.
 - **Head `4225d8e`** (bot snapshot, committed 15:18 UTC). It was written by scheduled run [40347918405](https://github.com/farshaikh17/Codex/actions/runs/40347918405): event `schedule`, created 15:17:48, success, on `456397a`, original (pre-P2) collector code.
   - `public/status.json`: `attempted_at` 15:17:54, status `ok`, 10/10 sources, **536 listings** (533 at 07:55).
   - The diff touches only `public/` (12 files). No code changed on `main`.
-  - This happened after the GPT Master's 15:20 confirmation of "`main` unchanged at `456397a`" was relayed. That statement held for `456397a` and is now superseded.
+  - This happened after the review lead's 15:20 confirmation of "`main` unchanged at `456397a`" was relayed. That statement held for `456397a` and is now superseded.
 - **Previous head:** `456397a` (07:55 UTC, 533 listings), from scheduled run [40288776346](https://github.com/farshaikh17/Codex/actions/runs/40288776346).
 - **Feed collector on `main`:**
   - *Live collection verified* (push runs).
@@ -258,10 +258,10 @@ Not a PR: `integration/pr1-2-3` (`70528f9`, Worker A), a throwaway merge of all 
 
 | ID | Workstream | Worker chat | Session | Branches / PRs | Owns (files) | Depends on |
 |---|---|---|---|---|---|---|
-| A | Crawl4AI page capture, PR CI, integration testing | Claude Worker A | `session_01WCd9wwgzPgNAHU6F2kv6QK` | `build/crawl4ai` (#1), `integration/pr1-2-3`; authored #5 and #6 (hand off, see below) | `crawl_pages.py`, `pages.json`, `test_crawl_pages.py`, `requirements-crawl.txt`, `.github/workflows/crawl-pages.yml`, `.github/workflows/tests.yml`, `public/pages/**`, root `OPERATIONS.md`/`README.md`/`MIGRATION.md`, `docs/INTEGRATION.md` | – |
-| B | Shared posting store, extraction (engine E-steps) | Claude Worker B | `session_01FQorivZRVyv3ggSUDwDoq6` | `builder1` (#2); adopts `fix/store-rebuild` (#6) | `engine/**`, `docs/ENGINE.md`, `data/posting-events.jsonl` | #4 for pay inputs; A for the page-capture contract (E2b) |
-| C | Source registry and collection reliability | Claude Worker C | `session_019pVgcPhTsH8cCJJZcQQ7Vd` | `builderbranches` (#3), `builderbranches-compensation` (#4), `builderbranches-benchmark` (#7), `builderbranches-discovery` (#10, from 18:09), `builderbranches-reliability` (#11, from 19:02); adopts `fix/publication-manifest` (#5) and `fix/ashby-comp-tiers` (#8) | `registry.py`, `test_registry.py`, `employers.json`, `sources.json`, `collect.py`, `adapters.py`, `test_collect.py`, `docs/` except `ENGINE.md`, `INTEGRATION.md` and this file | #1 lands first (shared `collect.yml` hunk) |
-| M | Coordination | Claude Master | this chat | this file only | `docs/COORDINATION.md` | – |
+| A | Crawl4AI page capture, PR CI, integration testing | Worker A | `(session id removed)` | `build/crawl4ai` (#1), `integration/pr1-2-3`; authored #5 and #6 (hand off, see below) | `crawl_pages.py`, `pages.json`, `test_crawl_pages.py`, `requirements-crawl.txt`, `.github/workflows/crawl-pages.yml`, `.github/workflows/tests.yml`, `public/pages/**`, root `OPERATIONS.md`/`README.md`/`MIGRATION.md`, `docs/INTEGRATION.md` | – |
+| B | Shared posting store, extraction (engine E-steps) | Worker B | `(session id removed)` | `builder1` (#2); adopts `fix/store-rebuild` (#6) | `engine/**`, `docs/ENGINE.md`, `data/posting-events.jsonl` | #4 for pay inputs; A for the page-capture contract (E2b) |
+| C | Source registry and collection reliability | Worker C | `(session id removed)` | `builderbranches` (#3), `builderbranches-compensation` (#4), `builderbranches-benchmark` (#7), `builderbranches-discovery` (#10, from 18:09), `builderbranches-reliability` (#11, from 19:02); adopts `fix/publication-manifest` (#5) and `fix/ashby-comp-tiers` (#8) | `registry.py`, `test_registry.py`, `employers.json`, `sources.json`, `collect.py`, `adapters.py`, `test_collect.py`, `docs/` except `ENGINE.md`, `INTEGRATION.md` and this file | #1 lands first (shared `collect.yml` hunk) |
+| M | Coordination | Coordination lead | this chat | this file only | `docs/COORDINATION.md` | – |
 
 Shared-file rules:
 - `.github/workflows/collect.yml` is edited by #1 (push filter, publish target), #3 (copies #1's hunks verbatim, replaces the gate step) and #5 (manifest verify and revert). Only C edits it from now on. A doesn't touch it again unless #1 needs a rebase fix.
@@ -279,12 +279,12 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - **B2 version (revised 17:40; 18:55: now 6):** B2 takes **the next unused `GATES_VERSION` at the moment it lands**, never a fixed number. `dbfdf1f` took 3, `897ddbe` took 4 and `877b6aa` took 5, so it is 6 as of 18:55. Any worker bumping `GATES_VERSION` or `EXTRACTOR_VERSION` first checks the current value on `builder1`.
 - **C1 has a new requirement:** see *C1 schedule integration* below.
 
-**GPT Master decision, 16:30 (binding until changed):**
+**Review lead decision, 16:30 (binding until changed):**
 - **Worker A** stands by. No pushes unless assigned.
 - **Worker B** finishes B1 before any further gate work, then does B2.
 - **Worker C** continues C1 only, including the C1 correction below. No new benchmark labels.
 - All candidate-specific work stays provisional.
-- No merges, schedule changes, ChatGPT task changes or Sheet writes.
+- No merges, schedule changes, review task changes or Sheet writes.
 
 ### A1: Make #1 review-ready and publish the page-capture contract (Worker A). **Done 15:11** (`1783532`, `f27a04a`; see section 9). **Status 16:30: stand by.** The unassigned `f284658` workflow edit (16:07) is accepted as is; no further workflow edits.
 - In `OPERATIONS.md` on `build/crawl4ai`, add an exact consumer contract for `public-page-capture-index-2`: every field and its type, which fields are stable, and the rule that a schema change means a new schema string.
@@ -294,7 +294,7 @@ Each task is one push or a small number of pushes to the worker's own branch. No
 - Not in scope: new pages, schedules, stealth, or dependency changes. (A `pip-audit` of `requirements-crawl.txt` is backlog K, after merge.)
 - **Acceptance:** OPERATIONS.md contract matches the committed `public/pages/index.json` field for field. Integration branch merges all six current heads cleanly. The offline suite passes there, with the count stated. Comments are posted on #2, #5 and #6. No workflow file changed.
 
-### B1: Adopt #6 and #9 into `builder1` and fix one-sided pay ranges (Worker B) (revised 15:20; **priority confirmed by the GPT Master 16:30. Do this before any further gate work**)
+### B1: Adopt #6 and #9 into `builder1` and fix one-sided pay ranges (Worker B) (revised 15:20; **priority confirmed by the review lead 16:30. Do this before any further gate work**)
 - **Adopt #6** (`fix/store-rebuild`, `1bca0d2`). Either merge it into `builder1` or keep it stacked, and say which on #2. Don't create a second persistence module.
 - **Fold #9** (`fix/ashby-comp-extract`, `3018541`) into `builder1` with a merge commit, no rebase.
   - #9 already contains `8794ca8` and sets `EXTRACTOR_VERSION=3`, so no version work is needed.
@@ -303,7 +303,7 @@ Each task is one push or a small number of pushes to the worker's own branch. No
     - Format detection is only by `data.get('source') == 'ashby.compensationTiers'`. Lever `salaryRange` JSON must still take the Lever path.
     - `additional_information` stays a verbatim quote and is never parsed into amounts.
     - #9's tests and `8794ca8`'s screening tests pass together.
-- **Fix the missing-bound collapse (GPT Master review finding, reproduced by the Master at 15:20 on all nine heads).**
+- **Fix the missing-bound collapse (Review lead review finding, reproduced by the Master at 15:20 on all nine heads).**
   - **Bug:** `_ashby_tiers` builds a range with `min()` and `max()` over the non-null amounts. A component that publishes only one bound becomes an exact salary. `minValue 90000, maxValue null` gives `{min: 90000, max: 90000}`, and `minValue null, maxValue 110000` gives `{min: 110000, max: 110000}`.
   - **Fix:**
     - Keep each bound independently. Take `min` from `minValue` and `max` from `maxValue`, and leave a missing bound `null`, never copied from the other.
@@ -326,7 +326,7 @@ Each task is one push or a small number of pushes to the worker's own branch. No
   - "US$130,000 – US$150,000" isn't parsed as one range.
 - **Not in scope:** `adapters.py`, `collect.py`, merging to `main`. The E3/E4 gates and candidate fixtures in `8794ca8` are **provisional** (D3). Don't extend them or change their rules. Changing them only to handle null bounds safely is in scope.
 - **Close-out:** say on #9 that it is folded in, and leave #9 for the owner to close.
-- **Report (required by the GPT Master):** post on #2, and append to section 9:
+- **Report (required by the review lead):** post on #2, and append to section 9:
   - the resulting `builder1` commit SHA
   - the offline test count and result
   - the five regression cases by name
@@ -339,10 +339,10 @@ Each task is one push or a small number of pushes to the worker's own branch. No
   - Append one line to section 9.
 
 ### B2: Keep employer-published "estimated" pay as evidence (Worker B; **only after B1 is reported**)
-GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `GATES_VERSION=2`) is too broad. It discards employer-published wording such as Twilio "The estimated pay ranges for this role are…" and Clipboard "Estimated OTE".
+Review lead decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `GATES_VERSION=2`) is too broad. It discards employer-published wording such as Twilio "The estimated pay ranges for this role are…" and Clipboard "Estimated OTE".
 - **Employer-published estimated ranges:** keep the evidence item, its verbatim quote and its wording, including `estimated`. Don't discard it automatically as a third-party estimate. Record in the gate result that the employer called it an estimate.
 - **Third-party figures:** only quotes that say the pay is third-party, name a salary site (Glassdoor, Levels.fyi, PayScale, Salary.com, Indeed), or say it is not provided by the employer stay not compared. Keep the guard #7 identified: a third-party "$135,000" estimate must not become a salary pass.
-- **Salary results stay provisional:** any salary result based on an estimated range is marked provisional. Final salary qualification awaits the GPT Master's canonical Sheets comparison (D3). Don't decide here whether an employer estimate can pass a floor; record it and leave the call open.
+- **Salary results stay provisional:** any salary result based on an estimated range is marked provisional. Final salary qualification awaits the review lead's canonical Sheets comparison (D3). Don't decide here whether an employer estimate can pass a floor; record it and leave the call open.
 - **Versioning:** bump `GATES_VERSION` to **the next unused number when B2 lands** (6 as of 18:55; 3, 4 and 5 were taken by `dbfdf1f`, `897ddbe` and `877b6aa`), with a comment naming the change.
 - **Tests:**
   - an employer "estimated pay range" quote is kept as evidence and not discarded
@@ -364,15 +364,15 @@ GPT Master decision, 16:30: `5c87de2`'s salary-gate rule (`NOT_EMPLOYER_PAY`, `G
   - Run a live trial in the container with scratch output and nothing committed. Report the postings whose hash changes. #8 reports 161 on replayed feeds, including Clipboard's 36, which only `normalization_changed` explains.
 - Refresh the stale `BACKLOG.md`/`HANDOFF.md` statements in section 3, and list #5–#9 there.
 - #7 (benchmark) is open. Don't extend its labels until D3 is answered; leave it as is for review.
-- **C1 correction (GPT Master decision, 16:30): the bare-`$` rule in #7 is not a verified owner instruction.** Remove both its attribution and its enforcement:
+- **C1 correction (Review lead decision, 16:30): the bare-`$` rule in #7 is not a verified owner instruction.** Remove both its attribution and its enforcement:
   - Revert `e1438f2` on `builderbranches-benchmark` with `git revert` (a new commit, no history rewrite).
     - That removes the `bare_dollar`/`us_only` check from `bench/score.py`, its test in `test_bench.py`, and the "Owner rule (2026-10-26)" text in `docs/BENCHMARK.md`.
     - It also restores the 3 salary labels it changed (`remote-unspecified` ×2 and `contract-role`/cand-us, `unknown` → `pass`).
   - If the revert conflicts, remove those items by hand. Don't keep any of them as an approved rule. **17:10: it does conflict.** `git revert e1438f2` on the current branch conflicts in `docs/BENCHMARK.md`, because `6e5ae79` edited the same table. Resolve it by hand.
-  - **17:10:** `98773d9` (commission-only fails a base floor) and `ea69b67` (multi-currency floors) also say "owner rule" and were pushed after the 16:30 "no new labels" decision. Leave them as they are, and don't revert or extend them. They are listed under D7/D8 for the GPT Master.
+  - **17:10:** `98773d9` (commission-only fails a base floor) and `ea69b67` (multi-currency floors) also say "owner rule" and were pushed after the 16:30 "no new labels" decision. Leave them as they are, and don't revert or extend them. They are listed under D7/D8 for the review lead.
   - In the benchmark docs you may record the question as an open proposal for D3 ("bare `$` → USD when every location is in the US: unverified, not applied"). Don't use the word "owner".
   - This is a removal, not new labels, and it is the only label change allowed.
-- **C1 schedule integration (owner and GPT Master requirement, 17:10; see the end of this file):**
+- **C1 schedule integration (owner and review lead requirement, 17:10; see the end of this file):**
   - Merge current `main` (`084bafb` or later) into `builderbranches`, `fix/publication-manifest` and `builderbranches-compensation` before touching `collect.yml`. Use merge commits, no rebase.
   - In the `collect.yml` conflict, **keep `main`'s cron `37 1,6,11,16,21 * * *` and keep the age-gate step removed**. Carry over only #3's and #5's own step changes (`--trigger`, verify and revert).
   - Make sure #3's per-source due logic can't act as an age gate. **Every slot of the new cron, including 01:37 after the 4-hour gap and a run that follows a delayed one, must collect every enabled source.** Pick a mechanism (for example, scheduled runs collect all enabled sources, or the default interval is well under 4 h), explain it on #3, and add a test that replays the five cron slots, including the 4-hour gap and a 40-minute-late run.
@@ -427,19 +427,19 @@ After each merge, the owner of the next PR merges `main` into their branch (no r
 
 | # | Decision or blocker | Who decides | Blocks |
 |---|---|---|---|
-| D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via GPT Master | All merges |
-| D2 | **Superseded 17:10 by the owner's `562baaf`** (five daily runs, age gate removed, authorized with a re-verified $0 budget). What remains is to verify that `schedule` events actually arrive on the new cron. Historical note: scheduled collection was unreliable: 2 schedule runs (07:55, 15:17) in about 14 hourly ticks, the second about 55 minutes late, and data reached about 7 h 20 m old before it. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / GPT Master | Freshness; P10/E9 |
-| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The GPT Master should confirm or correct their rules before more is built on them. Neither worker extends them until then. **GPT Master direction, 15:20:**
+| D1 | Approve the integration order in section 7, then merge (and mark #1, #2, #5, #6 ready for review). | Owner, via review lead | All merges |
+| D2 | **Superseded 17:10 by the owner's `562baaf`** (five daily runs, age gate removed, authorized with a re-verified $0 budget). What remains is to verify that `schedule` events actually arrive on the new cron. Historical note: scheduled collection was unreliable: 2 schedule runs (07:55, 15:17) in about 14 hourly ticks, the second about 55 minutes late, and data reached about 7 h 20 m old before it. Options to weigh: re-trigger with `workflow_dispatch` once to confirm, an off-peak cron such as `23 */5 * * *` (backlog P10), or accept best-effort. That cron also saves about 720 free minutes a month. **No change without instruction.** | Owner / Review lead | Freshness; P10/E9 |
+| D3 | Candidate requirements: H fixture labels, E3/E4 gate definitions, and where candidate outputs live (private path, artifact or Sheets only). **Now urgent:** work was built ahead of this decision. #7 (H labels, Worker C) and `8794ca8` on #2 (candidate config and screening gates, Worker B) both exist. The review lead should confirm or correct their rules before more is built on them. Neither worker extends them until then. **Review lead direction, 15:20:**
 - All candidate-specific gates and labels (`8794ca8` on #2 and the whole of #7) are **provisional** until compared with the canonical Google Sheets.
-- No Claude session reads or edits the Sheets. The comparison is the GPT Master's.
+- No coding session reads or edits the Sheets. The comparison is the review lead's.
 
 Note: #7's `c965b35` (15:13) changed a label and aligned #7 with `8794ca8`'s gate vocabulary. It is recorded as provisional too.
 
 **Added 16:20, more provisional candidate work, for the Sheets comparison:**
 - **#2 `8f026c4`:** a per-candidate review queue (E5, `engine/review.py`).
-- **#2 `5c87de2`** (**GPT Master decision, 16:30: too broad; employer-published estimated ranges must keep their evidence and wording. Fixed under B2, after B1**): the salary gate never compares pay quoted as an estimate, third-party or not employer-provided (`GATES_VERSION=2`). It is broader than intended: 59 quotes on the snapshot match, mostly *employer-published* wording such as Twilio "The estimated pay ranges…" and Clipboard "Estimated OTE". Worker B flags narrowing it as a D3 question.
-- **#7 `e1438f2`:** a bare-`$` rule, labelled in the code as an "owner rule (2026-10-26)": a bare `$` means USD only when every listed location is in the US. **GPT Master decision, 16:30: not verified as an owner instruction. Remove the attribution; don't implement it as an approved rule. Worker C reverts it under C1.** It stays an open D3 proposal only. Otherwise currency is unestablished and salary is `unknown`.
-  - The Master has no record of this rule from the owner or the GPT Master; please confirm it.
+- **#2 `5c87de2`** (**Review lead decision, 16:30: too broad; employer-published estimated ranges must keep their evidence and wording. Fixed under B2, after B1**): the salary gate never compares pay quoted as an estimate, third-party or not employer-provided (`GATES_VERSION=2`). It is broader than intended: 59 quotes on the snapshot match, mostly *employer-published* wording such as Twilio "The estimated pay ranges…" and Clipboard "Estimated OTE". Worker B flags narrowing it as a D3 question.
+- **#7 `e1438f2`:** a bare-`$` rule, labelled in the code as an "owner rule (2026-10-26)": a bare `$` means USD only when every listed location is in the US. **Review lead decision, 16:30: not verified as an owner instruction. Remove the attribution; don't implement it as an approved rule. Worker C reverts it under C1.** It stays an open D3 proposal only. Otherwise currency is unestablished and salary is `unknown`.
+  - The Master has no record of this rule from the owner or the review lead; please confirm it.
   - It is consistent with section 6 only if it lives in the gates. The extractor still never reads `$` as USD.
   - Today only #7's label checker enforces it; #2's gates don't. #7 measures salary agreement 22/30, with 5 mismatches on exactly this rule.
   - #7 notes that once the rule is in the gates, `5c87de2`'s estimate guard is what prevents a false READY on a third-party "$135,000" estimate.
@@ -449,20 +449,20 @@ Neither worker extends these further.
 
 **Added 17:40:** #2 `d3056d2` (17:12) adds an **E7 Google Sheets adapter interface**: fake only, no live client, no network, nothing written. It is provisional until the canonical Sheets comparison and the output-location decision. Commit `897ddbe` (commission-only rule) is listed under D7.
 
-**Added 17:10:** #2 `5cc7334` (17:02) adds **E6 consumer outputs** (`engine/outputs.py`, `docs/OUTPUTS.md`: posting records, cursor pages, review batches, decision feed). It is provisional; where candidate outputs live is still open here. #2 `dbfdf1f` and #7 `98773d9`/`ea69b67` are listed under D7. | GPT Master | H, E3–E7; merge of #7 and of #2's E3/E4 part |
+**Added 17:10:** #2 `5cc7334` (17:02) adds **E6 consumer outputs** (`engine/outputs.py`, `docs/OUTPUTS.md`: posting records, cursor pages, review batches, decision feed). It is provisional; where candidate outputs live is still open here. #2 `dbfdf1f` and #7 `98773d9`/`ea69b67` are listed under D7. | Review lead | H, E3–E7; merge of #7 and of #2's E3/E4 part |
 | D4 | Approve the held Offline tests run 40340180047 (the bot commit on #1), or ignore it. The code is identical to the passing `ea1935f`. | Owner (Actions UI) | Nothing; cosmetic |
-| D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / GPT Master | Usefulness of #1 |
+| D5 | Replace the stand-in `pages.json` allowlist with the owner's real problem pages. | Owner / Review lead | Usefulness of #1 |
 | D6 | Where this file lives. It is committed on `build/crawl4ai` (the only branch the Master session may push to), so it rides along in #1. Alternative: a one-file PR to `main`. | Owner | Nothing |
-| B-1 | **Resolved 17:10:** the GPT Master re-verified the Actions budget at $0 paid usage, with usage blocked, before `562baaf`. Claude sessions still can't check it. | Owner | – |
-| D7 | **Origin of the "owner rules".** Workers B and C cite owner instructions that the GPT Master hasn't verified. The bare-`$` → USD on US-only postings rule is in #7 `e1438f2` and, since 16:25, in #2's live gates (`dbfdf1f`). Also: commission-only fails a base floor (#7 `98773d9`, and since 17:07 in #2's live gates as `897ddbe`, `GATES_VERSION=4`), multi-currency floors compared per currency (#7 `ea69b67`), and amounts in millions or billions are never pay (#2 `dbfdf1f`). The GPT Master's 16:30 decision rejected only the bare-`$` rule, and only in #7. Needed: confirmation from the owner, per rule, and for each rejected rule whether its #2 commit (`dbfdf1f`, `897ddbe`) is removed too. **Added 18:55:**
+| B-1 | **Resolved 17:10:** the review lead re-verified the Actions budget at $0 paid usage, with usage blocked, before `562baaf`. Coding sessions still can't check it. | Owner | – |
+| D7 | **Origin of the "owner rules".** Workers B and C cite owner instructions that the review lead hasn't verified. The bare-`$` → USD on US-only postings rule is in #7 `e1438f2` and, since 16:25, in #2's live gates (`dbfdf1f`). Also: commission-only fails a base floor (#7 `98773d9`, and since 17:07 in #2's live gates as `897ddbe`, `GATES_VERSION=4`), multi-currency floors compared per currency (#7 `ea69b67`), and amounts in millions or billions are never pay (#2 `dbfdf1f`). The review lead's 16:30 decision rejected only the bare-`$` rule, and only in #7. Needed: confirmation from the owner, per rule, and for each rejected rule whether its #2 commit (`dbfdf1f`, `897ddbe`) is removed too. **Added 18:55:**
 - multi-currency floors and residents-only pay skipped for candidates elsewhere (#2 `877b6aa`, `GATES_VERSION=5`)
 - #7 `e63d3fa`: GitLab and Zapier cases "confirmed by the repository owner"
-- #10 `055c390`: "owner-approved" careers URLs | Owner, via GPT Master | B2; merge of #2's gates and #7 |
-| D10 | **Branch filter on `main`'s `collect.yml` (new 18:55, urgent).** The stray live collection (run 40377774005) can recur from any branch that merges `main` and pushes `*.py`, `sources.json` or `collect.yml`, and C1 requires such merges. Proposal: the owner adds `branches: [main]` under `push:` on `main` now, as a production-only change like `562baaf`, with the cron untouched. Until then, the interim rule at the top of section 3 applies. | Owner / GPT Master | Safe C1/B1 merges of `main` |
-| D11 | **PR #10 (bounded source discovery, new 18:09) and PR #11 (backoff and budgets, new 19:02).** Keep each as provisional review material, or park it until C1 is reported. For #10, verify the "owner-approved" careers URLs in `055c390` (Oyster, Zapier, Weave). For #11, decide the backoff policy: 10 h after a second failure, doubling to 7 days, which is about two missed runs of five daily; budgets are 40 requests and 8 minutes. | GPT Master | #10 |
-| D8 | Keep or drop #7's provisional cases added after the decision window: `6e5ae79` (2 cases for the `US$` range and company-revenue hazards; neither needs the bare-`$` rule). | GPT Master | #7 |
-| D9 | **Instruction channel (18:55: now the main blocker; see section 3).** The owner is instructing workers directly. That has given us the bare-`$` rule, the schema-3 bump and the "owner rule" labels, while the coordination plan assumed the GPT Master channel. Choose one: (a) the owner routes worker instructions through the GPT Master, or (b) workers log any direct owner instruction in section 9 before acting on it (the interim rule in section 5). | Owner / GPT Master | Coordination reliability |
-| B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the GPT Master chat (interactive). **Automated consumer access** (the scheduled ChatGPT task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | GPT Master | Consumer access verified |
+- #10 `055c390`: "owner-approved" careers URLs | Owner, via review lead | B2; merge of #2's gates and #7 |
+| D10 | **Branch filter on `main`'s `collect.yml` (new 18:55, urgent).** The stray live collection (run 40377774005) can recur from any branch that merges `main` and pushes `*.py`, `sources.json` or `collect.yml`, and C1 requires such merges. Proposal: the owner adds `branches: [main]` under `push:` on `main` now, as a production-only change like `562baaf`, with the cron untouched. Until then, the interim rule at the top of section 3 applies. | Owner / Review lead | Safe C1/B1 merges of `main` |
+| D11 | **PR #10 (bounded source discovery, new 18:09) and PR #11 (backoff and budgets, new 19:02).** Keep each as provisional review material, or park it until C1 is reported. For #10, verify the "owner-approved" careers URLs in `055c390` (Oyster, Zapier, Weave). For #11, decide the backoff policy: 10 h after a second failure, doubling to 7 days, which is about two missed runs of five daily; budgets are 40 requests and 8 minutes. | Review lead | #10 |
+| D8 | Keep or drop #7's provisional cases added after the decision window: `6e5ae79` (2 cases for the `US$` range and company-revenue hazards; neither needs the bare-`$` rule). | Review lead | #7 |
+| D9 | **Instruction channel (18:55: now the main blocker; see section 3).** The owner is instructing workers directly. That has given us the bare-`$` rule, the schema-3 bump and the "owner rule" labels, while the coordination plan assumed the review lead channel. Choose one: (a) the owner routes worker instructions through the review lead, or (b) workers log any direct owner instruction in section 9 before acting on it (the interim rule in section 5). | Owner / Review lead | Coordination reliability |
+| B-2 | **Partly resolved, 15:20:** authenticated reading of this private repo works in the review lead chat (interactive). **Automated consumer access** (the scheduled review task reading it unattended, per `docs/CONSUMER_TEST.md`) **remains unverified.** Until it is, don't use the *Consumer access verified* label. | Review lead | Consumer access verified |
 
 ## 9. Handoff log
 
@@ -473,7 +473,7 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
 - 2026-10-26 14:50 Master (on owner instruction): adopted the #8/#9 shape as section 6. Revised B1 to "adopt #6 and #9" and C1 to "adopt #5 and #8". Recorded #7–#9, `builder1` at `8794ca8`, the `EXTRACTOR_VERSION=2` clash (tier parser becomes 3), and D3's new urgency.
 - 2026-10-26 Worker A: A1 done. Contract for `public-page-capture-index-2` in OPERATIONS.md, test-enforced against the committed index (1783532). Field list posted on farshaikh17/Codex#2 (comment 6419553617). `integration/pr1-2-3` rebuilt from all nine open heads (4331322): 132 offline tests, 0 failures; one doc-only conflict between #6 and #9 in ENGINE.md (keep both); stale schema-1/Canonical statements removed from docs/INTEGRATION.md. Handoff comments posted: #5 and #8 to Worker C, #6 to Worker B (#9 handed to B earlier, comment 6419022846). Worker A no longer pushes to #5, #6, #8 or #9. No workflow file changed.
 - 2026-10-26 15:20 Master:
-  - Recorded the GPT Master's independent confirmation: nine PRs, `main` unchanged, extractor v3 in #9.
+  - Recorded the review lead's independent confirmation: nine PRs, `main` unchanged, extractor v3 in #9.
   - Recorded that interactive private-repo reading works; automated consumer access is still unverified (B-2).
   - Recorded that candidate gates and labels are provisional pending the canonical Sheets comparison (D3).
   - Revised B1: no version step (#9 already took v3), plus the fix for the one-sided pay-range collapse in `_ashby_tiers`, reproduced in both directions.
@@ -481,12 +481,12 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - Marked A1 done. A1, B1 and C1 continue; no merges or schedule changes.
 - 2026-10-26 15:30 Master: section 3 refreshed. `main` is now `4225d8e`, from scheduled run 40347918405 (15:17, 10/10 sources, 536 listings, `public/` only). That is the second schedule run in about 14 ticks. Actions now has 18 runs. All nine heads re-validated on the new `main`: 132 offline tests OK. D2 wording updated; still no schedule change.
 - 2026-10-26 16:20 Master:
-  - Re-sent GPT Master instruction received. Already applied at 15:20; its "`main` unchanged" is superseded by `4225d8e`.
+  - Re-sent review lead instruction received. Already applied at 15:20; its "`main` unchanged" is superseded by `4225d8e`.
   - Re-validated all nine heads (#1 `a4867d0`, #2 `5c87de2`, #7 `e1438f2`, others unchanged) on `main` `4225d8e`: 149 offline tests OK. The one-sided pay-range bug still reproduces (B1 pending).
   - Recorded capture run 40356103511 (6/6 usable; first meaningful `review_change`).
   - Recorded new provisional candidate work under D3: E5 queue, the estimate guard, and the reported bare-`$` owner rule.
   - A1/B1/C1 continue unchanged. No merges or schedule changes.
-- 2026-10-26 16:30 Master (GPT Master decision):
+- 2026-10-26 16:30 Master (Review lead decision):
   - B finishes B1 first, and reports the commit and offline test results; B2 (keep employer-published estimated pay as evidence, results provisional) comes after.
   - The bare-`$` rule in #7 is unverified: C reverts `e1438f2` under C1, with no "owner" attribution.
   - C does C1 only, with no new labels. A stands by.
@@ -519,26 +519,26 @@ Append one line per handoff: date, worker, commit or comment link, what changed.
   - No further off-`main` collections.
   - Combined tree of eleven heads: 205 tests OK, but not a true combined result because of the #5/#11 conflict.
 
-## GPT Master production schedule update — 2026-10-26
+## Review lead production schedule update — 2026-10-26
 
-Owner requested immediate completion and schedule repair. GPT Master reverified the Actions account budget: $0 paid usage, Usage blocked. Production-only workflow commit `562baaf` on main now schedules `37 1,6,11,16,21 * * *` UTC (five daily collections; 5/5/5/5/4-hour gaps) and removes the five-hour age gate. Push verification run: https://github.com/farshaikh17/Codex/actions/runs/40364324592 . Future cron reliability remains unverified until actual schedule events arrive. No development PR was merged.
+Owner requested immediate completion and schedule repair. Review lead reverified the Actions account budget: $0 paid usage, Usage blocked. Production-only workflow commit `562baaf` on main now schedules `37 1,6,11,16,21 * * *` UTC (five daily collections; 5/5/5/5/4-hour gaps) and removes the five-hour age gate. Push verification run: https://github.com/farshaikh17/Codex/actions/runs/40364324592 . Future cron reliability remains unverified until actual schedule events arrive. No development PR was merged.
 
 Worker C must preserve this new cron and removal of the age gate when integrating #3/#5; merge current main before editing the workflow. This supersedes D2's no-change status and old hourly schedule proposals. Do not restore the age gate or hourly cron inadvertently.
 
-Farhan and Sana ChatGPT tasks were independently read: both enabled, RRULE hourly interval 5, with completed recorded runs scheduled around 09:48 America/New_York on 26 October. Their schedules and candidate rules were not changed. Consumer task access still requires separate end-to-end verification.
+Farhan and Sana review tasks were independently read: both enabled, RRULE hourly interval 5, with completed recorded runs scheduled around 09:48 America/New_York on 26 October. Their schedules and candidate rules were not changed. Consumer task access still requires separate end-to-end verification.
 - 2026-10-26 17:10 Master:
   - Recorded the owner's production schedule change `562baaf` and `main` `084bafb` (D2 superseded, B-1 resolved).
   - Verified that #3/#4/#5 now conflict with `main` in `collect.yml`, and that #3's due logic would skip every source at the 01:37 slot (4-hour gap). C1 now requires preserving the cron and proving every slot collects.
   - Recorded schema 3 (B1 targets `-3`), B2 at gate version 4, the `e1438f2` revert conflict, and the new provisional work (`dbfdf1f`, `5cc7334`, `98773d9`, `ea69b67`, `6e5ae79`, `1441d0f`).
   - Combined tree: 159 code tests OK.
   - Opened D7 (origin of the "owner rules"), D8 (#7's new cases) and D9 (instruction channel).
-  - Placement note: the owner's *GPT Master production schedule update* section follows this log and is kept as written.
+  - Placement note: the owner's *Review lead production schedule update* section follows this log and is kept as written.
 - 2026-10-26 Worker A: every Worker A push after A1 was a direct owner request in this chat (captures to check review_change, the schema 3 review fix, pip caching, cache-hit confirmation, PR #1/#5/#6 ready for review). Cause of the 13-minute capture run 40364258754 (§ #1 c93190e) was investigated: `playwright install --with-deps` spent 10 min 16 s fetching 21.1 MB of fonts and system libraries via apt at 34 kB/s; pip took 36 s. Fixed in 5d652b3 (pip and Playwright caches, apt only if a Chromium launch check fails). Run 40374013855 (18:02): both caches hit, apt skipped, whole job 1 min 42 s. #6 re-tested merged onto builder1 5d420e9: 115 tests, 0 failures; #5 and #6 marked ready for review on owner request (still stacked; fold into #3 and #2).
 
 
-## GPT Master completion priority — 26 October 2026 (after a2a4e0f)
+## Review lead completion priority — 26 October 2026 (after a2a4e0f)
 
-Owner now requests completion of Claude work before further manual job-search tests. Consolidate the existing engine; no new engine, feature steps or PR expansion until the blockers below are closed. Direct later owner instructions still take precedence; record their exact scope before acting.
+Owner now requests completion of agent work before further manual job-search tests. Consolidate the existing engine; no new engine, feature steps or PR expansion until the blockers below are closed. Direct later owner instructions still take precedence; record their exact scope before acting.
 
 D10 resolved in production: main commit 709948e adds only push.branches: [main] to collect.yml. The five daily cron slots and no-age-gate collection remain unchanged. All worker branches must preserve this on integration.
 
@@ -551,9 +551,9 @@ Completion assignments:
 
 Candidate information and decisions stay in their existing separate canonical Sheets; do not commit real profiles/history/decision exports. Live Sheets writes and candidate-rule deployment remain outside this software consolidation. No PR merges authorized by this note. No new schedule changes, paid services or manual job-search runs requested.
 
-## Completion report (Claude Master, 2026-10-26 ~20:10 UTC)
+## Completion report (Coordination lead, 2026-10-26 ~20:10 UTC)
 
-Executed by the Master session, on owner instruction, following the GPT Master completion priority above (`bc6cb8a`). It fast-forwards the PR branches with no force-push. Nothing is merged, and no schedule, ChatGPT task or Sheet was changed. #10 and #11 are parked and untouched.
+Executed by the Master session, on owner instruction, following the review lead completion priority above (`bc6cb8a`). It fast-forwards the PR branches with no force-push. Nothing is merged, and no schedule, review task or Sheet was changed. #10 and #11 are parked and untouched.
 
 **Branch heads after this work:**
 - `builder1` (#2): `fc68672` → **`2fab32a`**
@@ -576,7 +576,7 @@ Executed by the Master session, on owner instruction, following the GPT Master c
 | 6 | Acceptance failed on main's 19:23 snapshot, also on unmodified `builder1` | `2fab32a` | The follow-up simulation edited a posting with no ledger row. It now prefers one with a row. Acceptance: 42/0 on the B branch; **44 passed / 0 failed / 1 not run in the integration tree** | — |
 | 7 | #5 (manifest) not in #3, and #3/#4/#5 not on current `main` | `f11dd5f`, `0c76b85` (#3); `c4e38fc` (#4, includes #8) | #3+#5: 32 tests OK. #4+#8: 36 tests OK. #8's `compensation_raw` shape equals section 6 exactly. **Real publish step from `collect.yml`** in a scratch repo: a complete generation publishes; **a mixed generation is refused, `public/` reverted, HEAD unchanged**; the next real live collection verifies and publishes; page captures untouched | #5 vs #11 conflict is unresolved because #11 is parked; a future #11 resolution must keep the manifest |
 | 8 | C1 live trial | none (scratch only, nothing committed) | 10/10 sources in 23 s, 532 listings. **162 changed, all `changed_fields: ["compensation_raw"]`**; each changing source has `endpoint_changed` or `normalization_changed`. Clipboard's 36 rewrites are explained only by `normalization_changed`. 2 genuinely new postings; all 10 boards at normalization version 2; manifest of 11 files; `--verify` consistent | The first production run after merge publishes this one-time wave |
-| 9 | Combined validation | `f1d31c8` (integration) | **195 offline tests, 0 failures, 0 errors, 0 skipped**, outbound sockets disabled; #1's captures make the leads test run. Cache invalidation on real data: main snapshot 534 extracted → live v2 snapshot re-extracts only **164** (162 changed + 2 new) → rerun 0; store records 126 `compensation_source_added` and 36 `content_changed`. Two rebuilds from real history identical (14 tables, 539 postings, integrity ok). Candidate isolation: all 5 acceptance isolation checks pass (no shared-store writes, private outputs refused in repo, per-candidate items, cross-candidate sheet sync refused, no candidate id in public outputs) | Candidate gates, review queue, outputs and the fake Sheets adapter remain provisional (D3); only neutral synthetic behaviour is demonstrated. Live Sheets, scheduled execution of the integrated code and automated ChatGPT access are not verified |
+| 9 | Combined validation | `f1d31c8` (integration) | **195 offline tests, 0 failures, 0 errors, 0 skipped**, outbound sockets disabled; #1's captures make the leads test run. Cache invalidation on real data: main snapshot 534 extracted → live v2 snapshot re-extracts only **164** (162 changed + 2 new) → rerun 0; store records 126 `compensation_source_added` and 36 `content_changed`. Two rebuilds from real history identical (14 tables, 539 postings, integrity ok). Candidate isolation: all 5 acceptance isolation checks pass (no shared-store writes, private outputs refused in repo, per-candidate items, cross-candidate sheet sync refused, no candidate id in public outputs) | Candidate gates, review queue, outputs and the fake Sheets adapter remain provisional (D3); only neutral synthetic behaviour is demonstrated. Live Sheets, scheduled execution of the integrated code and automated Review-task access are not verified |
 
 **Not done by this work:**
 - B3 extractor follow-ups: "$1B annually" extracted as pay, and `US$x - US$y` not parsed as one range.
@@ -585,7 +585,7 @@ Executed by the Master session, on owner instruction, following the GPT Master c
 - Any merge.
 - 2026-10-26 Worker A: independently reproduced `completion/integration` `f1d31c8` in a fresh worktree (owner note bc6cb8a assigned this integration to A; Master built it first, so no duplicate tree was made). It contains main `e812b42`, #1 `bc6cb8a`, #3/#4 `c4e38fc` and #2 `2fab32a`; #1's own files are byte-identical to `bc6cb8a`. Offline suite with outbound sockets disabled: **195 run, 0 failures, 0 errors, 0 skipped**. `collect.yml` keeps `branches: [main]`, cron `37 1,6,11,16,21 * * *` and #5's verify step. Named tests present for each owner-required check: mixed-generation rejection (`test_crash_during_replacement_is_detected_not_silent`), rebuild idempotency and resume (`test_persist.py`), one-sided pay bounds (`screening_cases.py` pay_minimum_only/pay_maximum_only), extractor cache invalidation (`test_extraction_is_cached_by_content_and_incremental`), Ashby tiers (`test_ashby_tiers_keep_currency_period_and_basis_per_component`) and candidate isolation (shared-posting screening cases, acceptance second candidate).
 
-## Handoff — Claude Master recheck, 2026-10-26 ~22:35 UTC
+## Handoff — Coordination lead recheck, 2026-10-26 ~22:35 UTC
 
 Sources:
 - each session's status record
@@ -598,9 +598,9 @@ No merges, schedule, task or Sheet changes.
 
 | Worker | Session (title) | State | Last activity |
 |---|---|---|---|
-| A | `session_01WCd9…` "Crawl4AI fallback" | idle, connected | 22:23. `5a08f51` independently reproduced `completion/integration` `f1d31c8` (195 tests, 0 failures). `4301da0`: navigation links beside postings no longer count as job links (Canonical 333 → 313, Atlassian 335 → 334). Reports PR #1 CI green on `4301da0`; next self-check 01:15 UTC |
-| B | `session_01FQor…` "Shared engine foundation" | idle, **disconnected since 19:11** | Last report: step 8 on PR #2. **Has not seen the completion work**: `builder1` moved `fc68672` → `2fab32a` at 19:52, after it went idle |
-| C | `session_019pVg…` "Codex engine extension" | idle, connected | 22:21. Merged the consolidated #3/#4/#5/#8/#7 work up into the parked #10 (`51d450d`) and #11 (`5c26659`). Updated HANDOFF.md: the bare-`$` rule is not applied. Status: "bare-$ rule decision pending"; next self-check 23:13 UTC |
+| A | `(session id removed)` "Crawl4AI fallback" | idle, connected | 22:23. `5a08f51` independently reproduced `completion/integration` `f1d31c8` (195 tests, 0 failures). `4301da0`: navigation links beside postings no longer count as job links (Canonical 333 → 313, Atlassian 335 → 334). Reports PR #1 CI green on `4301da0`; next self-check 01:15 UTC |
+| B | `(session id removed)` "Shared engine foundation" | idle, **disconnected since 19:11** | Last report: step 8 on PR #2. **Has not seen the completion work**: `builder1` moved `fc68672` → `2fab32a` at 19:52, after it went idle |
+| C | `(session id removed)` "Codex engine extension" | idle, connected | 22:21. Merged the consolidated #3/#4/#5/#8/#7 work up into the parked #10 (`51d450d`) and #11 (`5c26659`). Updated HANDOFF.md: the bare-`$` rule is not applied. Status: "bare-$ rule decision pending"; next self-check 23:13 UTC |
 
 ### Heads
 
@@ -640,10 +640,10 @@ No merges, schedule, task or Sheet changes.
   - C1 is done on #3/#4/#7, apart from the `BACKLOG.md`/`HANDOFF.md` refresh on #3.
   - Keep #10 and #11 parked; don't extend them.
   - Wait for D7.
-- **Owner / GPT Master:**
+- **Owner / Review lead:**
   - **D7, bare `$`. Conflicting records:**
     - Worker C's HANDOFF.md (`51d450d`) says the rule was "given directly by the user" in its session.
-    - The GPT Master's 16:30 decision treated it as unverified, and `4cc3fce`/`2bae921` removed it from #2's gates and #7's benchmark.
+    - The review lead's 16:30 decision treated it as unverified, and `4cc3fce`/`2bae921` removed it from #2's gates and #7's benchmark.
     - Only the owner can settle which stands. If it stands, it should be re-added once, in #2's gates, with the US-only definition, plus matching #7 labels.
   - D7, other "owner rules": commission-only, multi-currency floors, residents-only pay, `human_confirmed` cases, and #10's careers URLs. Still unconfirmed.
   - D1: merge order `#1 → #3 → #4 → #2`, then #7. Every candidate-specific part stays provisional.
@@ -669,23 +669,23 @@ No merges, schedule, task or Sheet changes.
   - #10 `51d450d`
   - #11 `5c26659`
   - `completion/integration` `f1d31c8` (not rebuilt; #1's newer commits merge into it cleanly)
-- **Schedule (verified in Actions, 22:45):** there has been no `schedule` run since 15:17. The 21:37 UTC slot, the first under `562baaf`'s cron, created no run. The next slot is 01:37 UTC. No change proposed; this is for the owner or GPT Master.
+- **Schedule (verified in Actions, 22:45):** there has been no `schedule` run since 15:17. The 21:37 UTC slot, the first under `562baaf`'s cron, created no run. The next slot is 01:37 UTC. No change proposed; this is for the owner or review lead.
 - **Still open, unchanged from 22:35:**
   - Worker B pulls `builder1` and accepts or rejects the completion commits on #2.
   - B3 extractor follow-ups.
   - Worker C refreshes `BACKLOG.md`/`HANDOFF.md`; #10 and #11 stay parked.
-  - D7: the bare-`$` conflict (Worker C reports a direct owner instruction; the GPT Master treated it as unverified), plus the other "owner rules".
+  - D7: the bare-`$` conflict (Worker C reports a direct owner instruction; the review lead treated it as unverified), plus the other "owner rules".
   - D1 merge order.
   - Closing the superseded #5, #6, #8 and #9.
   - D3.
-  - Automated ChatGPT access and live Sheets remain unverified.
+  - Automated review-task access and live Sheets remain unverified.
 
 ### Recheck schedule
 
 Worker A is standing by; it self-checks at 01:15 UTC and Worker C at 23:13 UTC. Neither check replaces the actions above.
 - 2026-10-26 Worker A (A2, done): fixed the stale-index regression from 4301da0. Run 40412808666 (22:30, from 2df792d, which adds crawl_pages.py to the branch-only push paths) republished 5/6 pages, but Canonical timed out and kept its old entry (job_links 333 vs 313 derived). Root fix 8fcfea9: listing labels (job_links, claimed_total, listing_quality, coverage, flags, boilerplate_share) are re-derived from every stored capture on every run, failed fetches included; evidence/change fields and capture files untouched (test_listing_labels_follow_the_code_even_when_a_fetch_fails). Run 40413438919 (22:35) committed 8f5bfe1: 6/6 usable, index job_links equals job_links() on every page (Atlassian 334/334, Canonical 313/313). completion/integration f1d31c8 + #1 8f5bfe1 merges cleanly: 197 offline tests, 0 failures, 0 errors, 0 skipped, including test_leads.CommittedCaptureTests and test_acceptance.
 
-## Release report — Claude Master, 2026-10-26 ~23:10 UTC (supersedes earlier completion and handoff sections where they differ)
+## Release report — Coordination lead, 2026-10-26 ~23:10 UTC (supersedes earlier completion and handoff sections where they differ)
 
 No PR merged, no schedule changed, no live Sheets writes, no candidate rule deployed. All pushes were fast-forwards.
 
@@ -752,10 +752,10 @@ The full table, with affected tests, is in `docs/HANDOFF.md` on #3 (`95bdcd1`).
 
 | Rule | In code now | If the owner decides otherwise |
 |---|---|---|
-| Bare `$` = USD on US-only postings. Owner direct, per Worker C; the GPT Master treated it as unverified | **off** | Re-add once in `engine/gates.py` `_currency` and update the #7 labels. That would bring back the real-snapshot READY path |
+| Bare `$` = USD on US-only postings. Owner direct, per Worker C; the review lead treated it as unverified | **off** | Re-add once in `engine/gates.py` `_currency` and update the #7 labels. That would bring back the real-snapshot READY path |
 | Commission-only fails a base floor | on (gates v4) | Remove `commission_only` and update the cases |
 | Multi-currency floors; residents-only pay not compared | on (gates v5) | Revert to one floor and update the config schema and cases |
-| Employer estimates are provisional evidence, never deciding | on (gates v7; GPT Master decision) | Change `EMPLOYER_ESTIMATE` handling |
+| Employer estimates are provisional evidence, never deciding | on (gates v7; review lead decision) | Change `EMPLOYER_ESTIMATE` handling |
 | "Millions/billions never pay" | **replaced** by the context rule (gates v8 / extractor v4), per the owner's completion instruction | — |
 | GitLab and Zapier `human_confirmed` labels; #10 careers URLs and hosts | on in #7; #10 parked | relabel; drop from #10 |
 
@@ -773,7 +773,7 @@ The full table, with affected tests, is in `docs/HANDOFF.md` on #3 (`95bdcd1`).
 | Gates, review queue, outputs, fake Sheets adapter (#2) | yes, **provisional** | no; no live Sheets, no candidate rules deployed |
 | Benchmark (#7) | yes, partly provisional | no |
 | Discovery (#10), backoff (#11) | yes | no; parked |
-| Automated ChatGPT consumer access | — | **not verified**. Interactive read works (GPT Master) |
+| Automated review-consumer access | — | **not verified**. Interactive read works (Review lead) |
 
 ### 8. Merge order and what each merge triggers
 
@@ -842,7 +842,7 @@ Unchanged:
 
 The merge order in section 8 uses these current heads. No collection run has started since run 40386117652 (19:22, `main`). No `schedule` run has appeared since 15:17; the next slot is 01:37 UTC.
 
-## Final release candidate and merge checklist — Claude Master, 2026-10-26 ~23:50 UTC
+## Final release candidate and merge checklist — Coordination lead, 2026-10-26 ~23:50 UTC
 
 Supersedes sections 2, 3 and 11 of the release report where they differ. **Nothing is merged.** All pushes were fast-forwards.
 
@@ -931,7 +931,7 @@ Master, 23:30–23:46 UTC, on a fresh `git archive` export with `PYTHONDONTWRITE
 ### G. Still not verified (not release blockers)
 
 - Scheduled execution of the five-daily cron.
-- Automated ChatGPT consumer access. Interactive reading works.
+- Automated review-consumer access. Interactive reading works.
 - Live Sheets. None by design.
 - A real-posting READY path. It needs a provisional policy decision; the synthetic path is proven.
 - **Not started:** JobSpy evaluation, P8, and an actionlint step in CI. actionlint was run locally before merge, as required.
@@ -943,10 +943,10 @@ Master, 23:30–23:46 UTC, on a fresh `git archive` export with `PYTHONDONTWRITE
 The owner stated: *"I have no idea what worker is what, so this chat has the authority to directly control the workers and all the Repos."*
 
 From now on:
-- **This chat, the Claude Master** (`session_012Voup5dFSNWfqAGJ3FzjFS`, "Codex master planning and coordination"), directs the Claude workers below.
+- **This chat, the coordination lead** (`(session id removed)`, "Codex master planning and coordination"), directs the workers below.
 - It sends them instructions directly, through cross-session messages, and records every instruction here.
 - Workers treat a Master message as their assignment. They log what they did in section 9 before pushing.
-- The GPT Master still sets requirements and priorities. Where the two conflict, the owner decides.
+- The review lead still sets requirements and priorities. Where the two conflict, the owner decides.
 
 **Still owner-only (unchanged by this grant):**
 - merging PRs
@@ -957,12 +957,12 @@ From now on:
 
 ### Who is who
 
-| Name used in this file | Session title in the Claude app | Session id | Branches / PRs | State (23:51 UTC) |
+| Name used in this file | Session title in the app | Session id | Branches / PRs | State (23:51 UTC) |
 |---|---|---|---|---|
-| **Claude Master** | Codex master planning and coordination | `session_012Voup5dFSNWfqAGJ3FzjFS` | `build/crawl4ai` (docs), `completion/integration`; release work on #2, #3, #4, #7 | active |
-| **Worker A** (Crawl4AI) | Crawl4AI fallback | `session_01WCd9wwgzPgNAHU6F2kv6QK` | #1 `build/crawl4ai`; wrote #5, #6, #8, #9 | idle, connected; reports RC `babada8` validated; self-check 01:15 UTC |
-| **Worker B** (engine) | Shared engine foundation | `session_01FQorivZRVyv3ggSUDwDoq6` | #2 `builder1` | idle, **disconnected since 19:11**. Hasn't seen the completion commits; must `git pull origin builder1` before any push |
-| **Worker C** (registry/collector) | Codex engine extension | `session_019pVgcPhTsH8cCJJZcQQ7Vd` | #3, #4, #7, #10, #11 (`builderbranches*`) | idle, disconnected (23:14); last action: #3 notes merged up the stack; self-check 03:15 UTC |
+| **Coordination lead** | Codex master planning and coordination | `(session id removed)` | `build/crawl4ai` (docs), `completion/integration`; release work on #2, #3, #4, #7 | active |
+| **Worker A** (Crawl4AI) | Crawl4AI fallback | `(session id removed)` | #1 `build/crawl4ai`; wrote #5, #6, #8, #9 | idle, connected; reports RC `babada8` validated; self-check 01:15 UTC |
+| **Worker B** (engine) | Shared engine foundation | `(session id removed)` | #2 `builder1` | idle, **disconnected since 19:11**. Hasn't seen the completion commits; must `git pull origin builder1` before any push |
+| **Worker C** (registry/collector) | Codex engine extension | `(session id removed)` | #3, #4, #7, #10, #11 (`builderbranches*`) | idle, disconnected (23:14); last action: #3 notes merged up the stack; self-check 03:15 UTC |
 
 Other sessions on the same account work on **other repositories** (Mianrodev/msdev: "Opportunity discovery product", "Website Builder"; Mianrodev/Goes-Local: "Local directory expansion feasibility", "Goes Local deployment setup"). They are **outside the Codex release**. The Master does not direct them unless the owner names them.
 
@@ -985,7 +985,7 @@ Other sessions on the same account work on **other repositories** (Mianrodev/msd
   - Only `collect.yml` is scheduled. All candidate configs are synthetic.
 - **Not verified:**
   - Scheduled execution: the 21:37 slot missed; next 01:37 UTC.
-  - Automated ChatGPT access.
+  - Automated review-task access.
   - A real-posting READY path.
   - Live Sheets: unused by design.
 - **Merge checklist:** see *Final release candidate and merge checklist* above (section F). Nothing is merged.
@@ -1003,7 +1003,7 @@ Other sessions on the same account work on **other repositories** (Mianrodev/msd
   - No new labels; wait for the provisional-policy decisions.
 - **All workers:** no merges, schedule changes, Sheet writes or candidate-rule changes. Log any direct owner instruction in section 9 before acting on it.
 
-### Open decisions (owner / GPT Master)
+### Open decisions (owner / Review lead)
 
 1. Approve the merge order and perform the merges (owner).
 2. The missed 21:37 scheduled run: investigate, or wait for 01:37.
@@ -1016,7 +1016,7 @@ Other sessions on the same account work on **other repositories** (Mianrodev/msd
    - #10 careers URLs
 4. D3: where candidate outputs live.
 
-## Release executed — Claude Master, 2026-10-26 23:55 – 2026-10-27 00:06 UTC (owner-authorized)
+## Release executed — Coordination lead, 2026-10-26 23:55 – 2026-10-27 00:06 UTC (owner-authorized)
 
 The owner authorized merging the completed release and verifying it. Merges used merge commits, in the order #1 → #3 → #4 → #2 → #7. Each merge was pinned to its validated head, and the release stopped between merges for verification. No force-push.
 
@@ -1024,7 +1024,7 @@ The owner authorized merging the completed release and verifying it. Merges used
 - No schedule change.
 - No live Sheets writes.
 - No candidate configuration deployed.
-- No ChatGPT task or candidate rule changed.
+- No review task or candidate rule changed.
 
 ### Pre-merge check
 
@@ -1055,7 +1055,7 @@ The owner authorized merging the completed release and verifying it. Merges used
 - `status.json` attempted 00:03:39 UTC, status `ok`, 10/10 sources, 533 listings, run `gh-40423901236-1`, manifest of 11 files. `collect.py --verify`: publication consistent.
 - **`collect.yml`:** `push.branches: [main]` and cron `37 1,6,11,16,21 * * *` are **identical** to the owner's `709948e`/`562baaf`, with no age gate. **Only `collect.yml` has a schedule.**
 - **Browser crawling stays manual:** `crawl-pages.yml` triggers only on pushes to `build/crawl4ai` and on `workflow_dispatch`.
-- **$0 controls:** this session did not change any spending setting and can't see billing. The GPT Master's earlier check found $0 paid, with usage blocked. Every run in this release used standard `ubuntu-latest` runners, about 30–60 s each.
+- **$0 controls:** this session did not change any spending setting and can't see billing. The review lead's earlier check found $0 paid, with usage blocked. Every run in this release used standard `ubuntu-latest` runners, about 30–60 s each.
 - **Non-blocking warning** in every run: `actions/checkout@v4` and `setup-python@v5` target Node 20, which GitHub has deprecated; it currently forces them onto Node 24. A version bump is a separate, bounded task.
 
 ### Scheduling investigation (no schedule changed)
@@ -1072,7 +1072,7 @@ The owner authorized merging the completed release and verifying it. Merges used
 - Push runs succeed, so the account is not blocked from running Actions.
 - **The pattern matches GitHub's documented best-effort scheduling:** scheduled events can be delayed or dropped under load. 14 of about 16 hourly ticks were dropped, and the first slot of the new cron was dropped.
 - Nothing in the repository explains the drops, and **no repository change can guarantee a scheduled run.**
-- **Recommendation (owner/GPT Master decision; nothing changed):** watch 01:37 and 06:37. If they're dropped too, choose a backstop that doesn't change the cron itself. Two options:
+- **Recommendation (owner/Review lead decision; nothing changed):** watch 01:37 and 06:37. If they're dropped too, choose a backstop that doesn't change the cron itself. Two options:
   - the existing `workflow_dispatch` trigger, started by the owner or an external free scheduler with a token;
   - accept best-effort scheduling and rely on the consumer's freshness checks (`status.json` `attempted_at`).
 
@@ -1081,9 +1081,9 @@ The owner authorized merging the completed release and verifying it. Merges used
 ### Remaining blockers
 
 1. **Scheduled execution:** not verified, as above.
-2. **ChatGPT ingestion:**
-   - Interactive authenticated reading of this private repo works (GPT Master).
-   - **Automated, unattended consumer access is not verified.** The ChatGPT tasks were read by the GPT Master and are enabled; their schedules weren't changed.
+2. **Review assistant ingestion:**
+   - Interactive authenticated reading of this private repo works (Review lead).
+   - **Automated, unattended consumer access is not verified.** The review tasks were read by the review lead and are enabled; their schedules weren't changed.
    - The next step is `docs/CONSUMER_TEST.md` from the consumer chat. The consumer should read `public/status.json`, check `run_id` and `manifest`, and treat the one-time wave of 162 `compensation_raw` changes as collector-format (`endpoint_changed`/`normalization_changed`), not employer edits.
 3. **Candidate policy:** provisional until the canonical Sheets comparison (D3). No candidate rule or configuration is deployed. Gates, queue, outputs and the Sheets adapter run only with private configs, which don't exist in the repository.
 4. **Parked:** #10 and #11.
@@ -1096,13 +1096,13 @@ The owner authorized merging the completed release and verifying it. Merges used
 - **Worker C:** #3, #4 and #7 are merged. #10 and #11 stay parked; if they're ever resumed, retarget them to `main` and merge `main` into them first.
 
 
-## GPT Master consumer publication repair — 2026-10-27 UTC
+## Review lead consumer publication repair — 2026-10-27 UTC
 
-Owner authorized direct completion and verification. Workflow commit 6551e7 adds full-history store rebuild, current snapshot ingestion, extraction v4, public-posting export and hash verification before publishing public/postings/. No real candidate configs/decisions are generated. Live run https://github.com/farshaikh17/Codex/actions/runs/40427268334 passed collector+registry tests, engine output tests, collection, export verification and publication. Readback: 533 listed + 11 missing historical records; 513 ok / 31 uncertain extractions. Authenticated ChatGPT read of export status, bounded index and individual record succeeded. Both existing ChatGPT task prompts now reference this export and blocked-page retry deferral; schedules and eligibility gates unchanged. Real unattended task ingestion of the NEW export is not yet verified. Native Sheets remain canonical; software private queue/Sheets adapter not deployed. Worker changes must preserve this exporter in collect.yml.
+Owner authorized direct completion and verification. Workflow commit 6551e7 adds full-history store rebuild, current snapshot ingestion, extraction v4, public-posting export and hash verification before publishing public/postings/. No real candidate configs/decisions are generated. Live run https://github.com/farshaikh17/Codex/actions/runs/40427268334 passed collector+registry tests, engine output tests, collection, export verification and publication. Readback: 533 listed + 11 missing historical records; 513 ok / 31 uncertain extractions. Authenticated the review assistant read of export status, bounded index and individual record succeeded. Both existing review task prompts now reference this export and blocked-page retry deferral; schedules and eligibility gates unchanged. Real unattended task ingestion of the NEW export is not yet verified. Native Sheets remain canonical; software private queue/Sheets adapter not deployed. Worker changes must preserve this exporter in collect.yml.
 
-## Claude Master review of PR #13 and coverage extension — 2026-10-27 ~19:45 UTC
+## Coordination lead review of PR #13 and coverage extension — 2026-10-27 ~19:45 UTC
 
-Nothing merged. Cron, push filter and billing unchanged. No candidate data, Sheets or ChatGPT task changes.
+Nothing merged. Cron, push filter and billing unchanged. No candidate data, Sheets or review task changes.
 
 **PR #13 (release candidate), head f1f31c7** — reviewed independently from b21609f; fixes pushed:
 - robots_rules swallowed `Halt`, so an exhausted budget/429 was recorded as "robots.txt unreachable" and the
@@ -1157,12 +1157,12 @@ discovery report generated in that run: 13 GETs, no errors, NAESCO/HubSpot/Remot
 cooldown deferrals, two leads validated (10up no board; 1password Ashby board unverifiable), 25 cards from 11
 employers, largest share 0.12, all cards source_status ok. The six 24 h sources show next_due_at 2026-10-28 20:34 UTC;
 push runs collect every source, scheduled runs will skip them until due. Cron, push filter and billing unchanged; no
-Sheets, ChatGPT task or candidate changes. Next: confirm a scheduled run lists the daily sources as not due, and the
-unattended ChatGPT read of the export. Rollback if needed: `git revert -m 1 d300f0d` then `5179d6c`, no force-push.
+Sheets, review task or candidate changes. Next: confirm a scheduled run lists the daily sources as not due, and the
+unattended review-assistant read of the export. Rollback if needed: `git revert -m 1 d300f0d` then `5179d6c`, no force-push.
 
-## Discovery expansion — Claude Master, 2026-10-27 ~21:40 UTC (branch discovery/role-search-career-pages)
+## Discovery expansion — Coordination lead, 2026-10-27 ~21:40 UTC (branch discovery/role-search-career-pages)
 
-Not merged. Cron, push filter, billing, Sheets, ChatGPT tasks and candidate rules unchanged; no candidate data.
+Not merged. Cron, push filter, billing, Sheets, review tasks and candidate rules unchanged; no candidate data.
 Overlap flagged before editing: #10 edits existing employers.json entries and registry.py; #11 rewrites collect.py.
 This branch leaves collect.py and registry.py untouched and only appends one employers.json entry (Avathon).
 
