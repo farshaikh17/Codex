@@ -149,7 +149,7 @@ test('A4: reposting sites: at most 3 per tier; a repost of a direct posting in t
     row({ job_id: 'notdup', company: 'Jobgether', title: 'Implementation Lead', location: 'Remote - India', description: 'Another company entirely: onboard our SaaS customers and run their implementations from kickoff to go-live. '.repeat(2), score: 90 }),
     // tenth-man review: the reposter puts its own sentence first and the title says "(Remote)": still the same job
     row({ job_id: 'dup2', company: 'Jobgether', title: 'Implementation Lead (Remote)', location: 'India', description: 'This position is posted by Jobgether on behalf of a partner company. ' + D, score: 90 })];
-  for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', 'Paired'][i], score: 95 }));
+  for (let i = 0; i < 5; i++) pool.push(row({ job_id: 'rp' + i, company: ['Turing', 'Crossover', 'Braintrust', 'Pavago', '20four7VA'][i], score: 95 }));
   const t = tiers(sel(pool));
   assert.equal(t.dup, undefined, 'the duplicate is dropped');
   assert.equal(t.dup2, undefined, 'and the one with its own opening sentence and a (Remote) title');
