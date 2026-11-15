@@ -217,3 +217,38 @@ test('jobs QA 2, Sana: core thermal-plant posts rank higher; language-required j
   const study = evaluate({ ...sana, qualification_threshold: 60 }, { id: 'x', title: 'Power System Study Senior Expert', company: 'Acme', url: 'https://e.com/x', location: 'Mumbai, India', description: PLANT.repeat(3), remote: false });
   assert.ok(study.score <= 64 && study.status !== 'INELIGIBLE', String(study.score));
 });
+
+test('integration 15 Nov, Farhan: a "Remote" US-market text is ruled out; worldwide and India-remote operations roles stay', () => {
+  // invented number in the US format, as an employer's own contact line
+  const us = ev(farhan, 'Enterprise Implementation Manager', 'Remote', CRM + ' Questions about this offer? Call us at (555) 010-0199.', true);
+  assert.equal(us.eligibility, 'INELIGIBLE'); assert.match(us.reason, /another country only/);
+  const payroll = ev(farhan, 'Customer Operations & Automation Manager', 'Remote', CRM + ' 401(k) with company match. We participate in E-Verify.', true);
+  assert.equal(payroll.eligibility, 'INELIGIBLE');
+  // the same number format does not rule out a posting that hires from India or worldwide
+  assert.notEqual(ev(farhan, 'Implementation Manager', 'Remote', CRM + ' We hire worldwide. Call (555) 010-0199.', true).eligibility, 'INELIGIBLE');
+  // kept: a worldwide-remote head-of operations role (capped below his threshold, so Worth a try) and a remote-India sales & marketing ops manager
+  const head = evaluate({ ...farhan, qualification_threshold: 70 }, { id: 'x', title: 'Head of AI Native Operations', company: 'Acme', url: 'https://e.com/x', location: 'Remote, Global — Remote', remote: true,
+    description: CRM + ' Build the agent platform and the workflow automation that runs the company. '.repeat(2) });
+  assert.equal(head.eligibility, 'ELIGIBLE'); assert.ok(head.score >= 60 && head.score < 70, String(head.score));
+  const ops = ev(farhan, 'Sales & Marketing Operations Manager', 'India', 'Fully remote from India. ' + CRM + ' Own Salesforce and HubSpot.', true);
+  assert.equal(ops.eligibility, 'ELIGIBLE'); assert.equal(farhanTargetFit('Sales & Marketing Operations Manager', farhan.target_roles), 'word');
+  assert.ok(ops.score >= 60, String(ops.score));   // the live row (more CV skills named) scores 79
+});
+
+test('integration 15 Nov, Sana: relocation alone, or a sponsorship only "to be discussed", outside the Gulf is not ELIGIBLE; the Gulf keeps relocation', () => {
+  const ro = ev(sana, 'Senior Substation Primary Engineer', 'Bucharest, Romania', PLANT + ' Relocation to Romania is mandatory. Relocation assistance provided.');
+  assert.notEqual(ro.eligibility, 'ELIGIBLE'); assert.ok(ro.score <= VISA_UNLIKELY_CAP, String(ro.score));
+  const hedged = ev(sana, 'Senior Substation Primary Engineer', 'Bucharest, Romania', PLANT + ' International candidates: applications are welcome; relocation to Romania is mandatory. Visa sponsorship will be discussed after the first interview.');
+  assert.notEqual(hedged.eligibility, 'ELIGIBLE');
+  assert.equal(ev(sana, 'Reliability Engineer', 'Bucharest, Romania', PLANT + ' Visa sponsorship available.').eligibility, 'ELIGIBLE');
+  assert.equal(ev(sana, 'Reliability Engineer', 'Jubail, Saudi Arabia', PLANT + ' Relocation assistance provided.').eligibility, 'ELIGIBLE');
+  // marine / yacht / resort electrical and business / digital / enterprise architecture are not her plant work
+  for (const t of ['Marine Electrical Engineer', 'Yacht Electrical Engineer', 'Business Architect - Energy Resilience', 'Digital Architecture Manager', 'Enterprise Architect - Power'])
+    assert.ok(avoidedTitle('sana_ansari', t), t);
+});
+
+test('integration 15 Nov: 20four7VA is a reposter; Paired posts its own roles', async () => {
+  const { isReposter } = await import('../scripts/shortlist_select.mjs');
+  assert.equal(isReposter({ company: '20four7VA' }), true);
+  assert.equal(isReposter({ company: 'Paired' }), false);
+});

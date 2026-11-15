@@ -552,7 +552,10 @@ export function onsiteByText(description:string|null|undefined){
 const COUNTRY_TEXT=new RegExp('\\b401\\s?\\(?k\\)?(?![a-z])|\\be-?verify\\b|\\bform i-?9\\b|\\b(?:authori[sz]ed|eligible|legally (?:authori[sz]ed|able|permitted)) to work in the (?:us|u\\.s\\.?|united states)(?![a-z])'
  +'|\\b(?:remote|work|based|located|reside|resident|live|living) (?:anywhere )?(?:in|within|from) the (?:contiguous |continental )?(?:us|u\\.s\\.?|united states)(?![a-z])|\\bus[- ]based (?:candidates|applicants|remote|role|position|employees? only)\\b'
  +'|\\b(?:must|should|need to|required to|will need to) (?:be )?(?:based|located|resid(?:e|ent)|live|living) (?:in|within) (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
- +'|\\bright to work in (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,''),'gi');
+ +'|\\bright to work in (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
+ // Integration 15 Nov (Arcadia, US healthcare): the employer's own contact number in the US format, '(781) 202-3600', in a 'Remote' posting with no
+ // India / APAC / worldwide wording is a US-market job.
+ +'|\\(\\d{3}\\)\\s?\\d{3}-\\d{4}(?!\\d)','gi');
 export function remoteCountryByText(description:string|null|undefined){
  const d=String(description||'').toLowerCase();
  if(!d.trim()||/\b(?:india|apac|asia|worldwide|globally|anywhere in the world|any country)\b/.test(d))return false;
@@ -573,9 +576,12 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
+ // Integration 15 Nov (AECOM Bucharest: 'relocation to Romania is mandatory ... Visa sponsorship will be discussed after the first interview'): a
+ // sponsorship that is only to be discussed or considered case by case is not a stated route, so relocation is all that is left.
+ const VISA_HEDGED=/\bvisa sponsorship (?:will|may|can|could|might) be (?:discussed|considered|reviewed|evaluated|assessed)\b|\bsponsorship (?:is |will be |may be )?(?:considered |assessed |reviewed )?(?:on a )?case[- ]by[- ]case\b/i;
  // A visa route proper. "Relocation assistance" alone is usually a move within that country (a US posting), so for Sana it counts as a route
  // only in the Gulf, where her profile lists relocation and employers sponsor the work visa (owner review 2026-11-12, top-100 check).
- const visaRoute=/\b(visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit (?:support|sponsorship|provided)|international applicants welcome|employment visa (?:is |will be )?provided)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit|international applicants welcome|employment visa/);
+ const visaRoute=/\b(visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit (?:support|sponsorship|provided)|international applicants welcome|employment visa (?:is |will be )?provided)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|sponsor (?:your |a |the )?(?:work )?visa|work permit|international applicants welcome|employment visa/)&&!VISA_HEDGED.test(text);
  const gulf=gulfPlace(p.location);
  // Roles reserved for nationals of a Gulf country ("Electrical Technician (Saudi Nationals)", "UAE nationals only").
  const nationalsOnly=NATIONALS_TITLE.test(p.title||'')||NATIONALS_TEXT.test(p.description||'');

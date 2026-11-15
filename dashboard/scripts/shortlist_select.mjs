@@ -81,7 +81,8 @@ export function ranked(rows, now) {
 // ---- The rules (plan A4) ----------------------------------------------------------------------------------------------------------------
 // Sites that repost other employers' jobs (not agencyPosting(): an agency is still the employer's channel). At most 3 per tier (hard), and a repost
 // of a direct employer's row in the pool (same title, same place, same first 200 characters of description) is dropped (hard).
-export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peopleworth', 'pavago', 'paired', 'braintrust']);
+// Integration 15 Nov: 20four7VA (a VA staffing firm) reposts; Paired posts its own RevOps roles, so it is an employer, not a reposter.
+export const REPOSTERS = new Set(['jobgether', 'turing', 'crossover', 'peopleworth', 'pavago', 'braintrust', '20four7va']);
 export const REPOSTER_CAP = 3;
 export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
 export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
