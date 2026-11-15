@@ -1,6 +1,6 @@
 # Google Sheets ledger adapter (engine step 7)
 
-Status: interface implemented and tested offline against an in-memory fake. **No live Google client exists, and nothing here has touched a real spreadsheet, a ChatGPT task or a tracker.** *End-to-end tracker ingestion* is not verified. The engine is not proven end to end.
+Status: interface implemented and tested offline against an in-memory fake. **No live Google client exists, and nothing here has touched a real spreadsheet, a review task or a tracker.** *End-to-end tracker ingestion* is not verified. The engine is not proven end to end.
 
 New files only: `engine/sheets.py`, `engine/tests/test_sheets.py` and this document. The decision feed gained an optional `posting` block (title, employer, canonical URL, availability) as an additive field of `decision-feed-1`.
 

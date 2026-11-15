@@ -40,7 +40,7 @@ the existing candidate loader enforces that boundary for real configurations.
 
 This module performs **no web requests, reviews, eligibility changes, applications
 or Sheet writes**. It does not change the collector's schedule or existing queue
-claim order. Query/source planning is separate from qualification. Native ChatGPT
+claim order. Query/source planning is separate from qualification. Native assistant
 workers must use their canonical private Sheet strategies directly; they do not
 depend on a local Python process or this private software queue.
 

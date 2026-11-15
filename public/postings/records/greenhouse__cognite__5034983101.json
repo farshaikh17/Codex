@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "e32886cf9eb2d02af673e65cd0b24e475b9ca386268f91587f3111b59c169916",
+   "kind": "content_changed",
+   "to_hash": "6b3d8ca5db70a787ad2ae928814bb4f27c8d0f3d0ed8e56d9e13f7c0d0a56c51"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAt Cognite, the Global Value Delivery team leads software implementation, deployment & adoption for clients, and helps them accelerate their digital transformation efforts with Cognite’s product suite. We consist of people with diverse and high-performance backgrounds, ranging from Management Consulting, to Industry and Software development. We seek to continuously improve how we work with our clients, how we work together as a team, and how we develop as individuals.\n\nDo you see how data can be used, modeled and visualized in new ways to improve decisions in industrial engineering, but you experience that the tools and data availability is insufficient to create impact? If you want to change that, and take part in forming what the future of the industry will look like you should join our Cognite and become a part of the team responsible for delivering Cognite’s cutting edge industry solutions to our customers!\n\nAs a Data Engineer, located in Mexico City, Monterrey or Tijuana, Mexico you will design, develop and implement data infrastructure and best-in-class pipelines that collect, connect, centralize and curate data from various internal and external data sources. You will ensure that architectures support the needs of the business, and recommend ways to improve data reliability, efficiency. You are an experienced engineer with a passion for software development, hands-on in designing, implementing, and delivering features for flagship products.\n\nWe are proactively building out our talent pool in Mexico with the intention to have new hires start in Q1 2027\n\nWhat You'll Do\n\nPartner with Solution Architects to understand client requirements and define queries with subject matter experts\n\nDevelop custom extractors using backend technologies and languages i.e Python, Spark, Rest APIs\n\nCustomize existing extractors i.e. database extractor using SQL, event streaming using Kafka and deploy using Docker\n\nCreate custom data models for data discovery, mapping, and cleansing\n\nCollaborate with product development to turn customer needs into potential product offerings\n\nPrototype data visualization and dashboards\n\nThe Impact you bring to Cognite\n\nFully bilingual both verbal and written in English and Spanish is required\n\n7+ years of experience in a Data intense role\n\nExperience in O&G and/or Manufacturing is required\n\nBS or MS degree in computer science or related field\n\nLoves to code, passion for coding, and enjoys sharing that knowledge with others\n\nStrong understanding of data analysis or data science\n\nExperience working with data technologies, such as: ETL, SQL, Python\n\nAbility to work on both internal and external client-facing projects and communicate with key stakeholders\n\nAbility to travel onsite to meet with and engage with clients -- we don’t build solutions in isolation.\n\nRole based in Mexico City, Monterrey or Tijuana, Mexico\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAt Cognite, the Global Value Delivery team leads software implementation, deployment & adoption for clients, and helps them accelerate their digital transformation efforts with Cognite’s product suite. We consist of people with diverse and high-performance backgrounds, ranging from Management Consulting, to Industry and Software development. We seek to continuously improve how we work with our clients, how we work together as a team, and how we develop as individuals.\n\nDo you see how data can be used, modeled and visualized in new ways to improve decisions in industrial engineering, but you experience that the tools and data availability is insufficient to create impact? If you want to change that, and take part in forming what the future of the industry will look like you should join our Cognite and become a part of the team responsible for delivering Cognite’s cutting edge industry solutions to our customers!\n\nAs a Data Engineer, located in Mexico City, Monterrey or Tijuana, Mexico you will design, develop and implement data infrastructure and best-in-class pipelines that collect, connect, centralize and curate data from various internal and external data sources. You will ensure that architectures support the needs of the business, and recommend ways to improve data reliability, efficiency. You are an experienced engineer with a passion for software development, hands-on in designing, implementing, and delivering features for flagship products.\n\nWe are proactively building out our talent pool in Mexico with the intention to have new hires start in Q1 2027\n\nWhat You'll Do\n\nPartner with Solution Architects to understand client requirements and define queries with subject matter experts\n\nDevelop custom extractors using backend technologies and languages i.e Python, Spark, Rest APIs\n\nCustomize existing extractors i.e. database extractor using SQL, event streaming using Kafka and deploy using Docker\n\nCreate custom data models for data discovery, mapping, and cleansing\n\nCollaborate with product development to turn customer needs into potential product offerings\n\nPrototype data visualization and dashboards\n\nThe Impact you bring to Cognite\n\nFully bilingual both verbal and written in English and Spanish is required\n\n7+ years of experience in a Data intense role\n\nExperience in O&G and/or Manufacturing is required\n\nBS or MS degree in computer science or related field\n\nLoves to code, passion for coding, and enjoys sharing that knowledge with others\n\nStrong understanding of data analysis or data science\n\nExperience working with data technologies, such as: ETL, SQL, Python\n\nAbility to work on both internal and external client-facing projects and communicate with key stakeholders\n\nAbility to travel onsite to meet with and engage with clients -- we don’t build solutions in isolation.\n\nRole based in Mexico City, Monterrey or Tijuana, Mexico\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -51,8 +61,8 @@
   "title": "Data Engineer",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-12T16:29:27.514682+00:00",
- "content_hash": "e32886cf9eb2d02af673e65cd0b24e475b9ca386268f91587f3111b59c169916",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "6b3d8ca5db70a787ad2ae928814bb4f27c8d0f3d0ed8e56d9e13f7c0d0a56c51",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -71,7 +81,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Mexico City, Ciudad de México, Mexico",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      },
@@ -79,7 +89,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Monterrey, Nuevo León, Mexico",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      },
@@ -87,7 +97,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Tijuana, Baja California, Mexico",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      },
@@ -95,7 +105,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Mexico City)",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      },
@@ -103,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Monterrey)",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      },
@@ -111,7 +121,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Tijuana)",
-      "retrieved_at": "2026-11-12T16:29:27.514682+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034983101"
      }

@@ -39,7 +39,7 @@ Until that is confirmed, `engine.yml` stays manual.
 | Store ingest and extraction | Yes, after billing is verified | Public data only. The store (`state/engine.sqlite3`) would need a home: a cache or a committed file. That's an owner decision (D3). |
 | Public outputs (`write_postings`) | Yes, same condition | Public data only. |
 | Screening, review queue, decision feed, ledger sync | **No** | They need private candidate profiles and the private queue, which must never be in this repository or its Actions environment. They run where those files live (the owner's machine or the consumer side). |
-| Reviewer work (AI review of pending items) | No | Done by the consumer (ChatGPT task) through review batches; usage is recorded only as reported. |
+| Reviewer work (AI review of pending items) | No | Done by the consumer (review task) through review batches; usage is recorded only as reported. |
 
 A daily ingest and extraction step would add about 1 billable minute per run (extraction is incremental; a no-change run does no work). It should run after a collection, not on its own clock.
 
@@ -57,6 +57,6 @@ It uses a fixed clock and a temporary store and queue. It then makes a follow-up
 - **ledger** (fake Sheets client): crash mid-sync recovers to the clean result; rerun is a no-op; human columns untouched; no duplicates; READY reaches the ledger; the incremental sync after the follow-up moves the changed row to its newest state and deletes no row.
 - **outputs and measurement**: unchanged re-export rewrites nothing; `status.json` hashes verify; cursor pages cover every posting once; assessed, newly qualified and open READY are separate; AI usage is only what was reported.
 
-**It does not prove:** live collection against employer feeds, scheduled execution, live Google Sheets or tracker ingestion, ChatGPT access to this private repository, or outcomes for real candidates. Those need the consumer-side acceptance run.
+**It does not prove:** live collection against employer feeds, scheduled execution, live Google Sheets or tracker ingestion, review-task access to this private repository, or outcomes for real candidates. Those need the consumer-side acceptance run.
 
 The run found one real gap, now fixed: a posting with no recognised requirements section could never become READY, because the queue refused any `qualifications` finding. See docs/REVIEW_QUEUE.md.

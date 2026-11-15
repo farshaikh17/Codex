@@ -240,7 +240,7 @@ class CaptureTests(unittest.TestCase):
         index=json.loads((Path(__file__).resolve().parent/'public'/'pages'/'index.json').read_text())
         if index.get('schema')!=SCHEMA: self.skipTest('committed index predates %s'%SCHEMA)
         doc=(Path(__file__).resolve().parent/'OPERATIONS.md').read_text()
-        contract=doc[doc.index('### Consumer contract: '+SCHEMA):doc.index('### ChatGPT consumer instructions')]
+        contract=doc[doc.index('### Consumer contract: '+SCHEMA):doc.index('### Review consumer instructions')]
         documented=lambda title:[r.split('|')[1].strip() for r in contract.split(title)[1].split('\n\n')[1].splitlines()[2:] if r.startswith('|')]
         self.assertEqual(documented('Top level of public/pages/index.json'),list(index))
         self.assertEqual(documented('Page object:'),list(PAGE_KEYS))

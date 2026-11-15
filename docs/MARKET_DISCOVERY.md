@@ -89,7 +89,7 @@ first/last seen; never sources or ownership claims), `vacancies` (compact exact
 vacancy cards: identity, title, location text, URLs, published/observed times,
 provenance and the source's latest real status/checked_at), each card's
 `responsibility_signals` (public title keywords only), and `eligibility`, which is
-always "not_assessed": eligibility is decided only in the private ChatGPT/Sheet
+always "not_assessed": eligibility is decided only in the private Sheet
 review. Cards from a failed source are labelled last_known_good_after_failure;
 deferred targets/directories are listed with their reason and are never reported
 fresh. Software "site reliability" and "sales commission" titles are not counted
@@ -124,9 +124,9 @@ on its conservative Cloudflare-script marker. These limitations remain visible.
 
 The live trial preceded final registry onboarding and the final directory
 rotation/filter changes. Those changes have offline tests; their scheduled
-execution must still be checked after merge. Native ChatGPT web discovery can
+execution must still be checked after merge. Native assistant web discovery can
 supplement inaccessible directories and submit reviewed public employer seeds.
-GitHub Actions cannot invoke ChatGPT native search. No complete market coverage,
+GitHub Actions cannot invoke assistant native search. No complete market coverage,
 candidate counts or READY yield is promised.
 
 ### Independent review re-run (27 October 2026, scratch copy of main's public/)
@@ -155,7 +155,7 @@ due discovery rotation. GitHub Actions minutes are consumed; no paid service is
 introduced and this PR does not change billing controls.
 
 Candidate strategy allocations (70/20/10 and 50/30/20) remain in the private
-ChatGPT/Sheet workflow, not shared source configuration. Actual candidate-relevant
+Sheet workflow, not shared source configuration. Actual candidate-relevant
 yield must be measured there and returned as aggregated source-quality feedback.
 The code currently learns only public title-signal yield, freshness and failures;
 it does not claim a private relevance feedback integration.
@@ -229,7 +229,7 @@ a second hop, which is not implemented.
   (blocked). These are public title signals, not candidate relevance or eligibility.
 
 The candidate-relevant yield of these sources can only be measured in the private
-ChatGPT/Sheet review and returned as aggregate source-quality feedback; no such
+Sheet review and returned as aggregate source-quality feedback; no such
 feedback is integrated in the repository.
 
 ## Discovery expansion (role search, career pages, profile traversal) — 27 October 2026
@@ -336,7 +336,7 @@ without their own permitted feeds.
 
 ### Path into the private review
 
-GitHub publishes only public evidence. The private ChatGPT review tasks read
+GitHub publishes only public evidence. The private review tasks read
 `public/discovery/report.json` (authenticated private-repository access) after checking `generated_at`,
 `errors` and `deferred`, and then:
 
