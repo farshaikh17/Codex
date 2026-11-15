@@ -679,7 +679,11 @@ def shortlist_pool(local=None, per_candidate=300):
 
 def write_pool(path, local=None, per_candidate=300):
     """Writes the pool atomically (a temporary file renamed into place), so a failed export never leaves a partial pool for the selector."""
-    rows = with_names(shortlist_pool(local, per_candidate))
+    rows = shortlist_pool(local, per_candidate)
+    for r in rows:   # the name stored on the job: the selector's tenant test reads it, as the audit does (scripts/shortlist_select.mjs shortlistTenant)
+        if r.get('company'):
+            r['stored_company'] = r['company']
+    rows = with_names(rows)
     tmp = Path(str(path) + '.tmp')
     tmp.write_text(json.dumps({'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'rows': rows}))
     tmp.replace(path)
