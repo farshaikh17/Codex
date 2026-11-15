@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "36ea8e015bfa74a3e9f9fca5f1fcbb490327056f655bd75ea73ce4ae7ea89399",
+   "kind": "content_changed",
+   "to_hash": "97432aee2b663c64105cb89dee17a87cf5b5f2dda5bd052235d518d58197ad1d"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAt Cognite, the Global Value Delivery team leads software implementation, deployment & adoption for clients, and helps them accelerate their digital transformation efforts with Cognite’s product suite. We consist of people with diverse and high-performance backgrounds, ranging from Management Consulting, to Industry and Software development. We seek to continuously improve how we work with our clients, how we work together as a team, and how we develop as individuals.\n\nThe Senior Solutions Architect is responsible for the design of complex end to end solutions, merging our flagship products with the customer's portfolio, for both new and existing clients. You are a technical subject matter expert in all offerings across the professional and managed services catalog. From discovery through implementation, you will work closely with the sales team and the delivery teams, as well as our data scientists and customers to map out technical requirements and architect robust and familiar solutions.\n\nThrough your work with our strategic customers, you will identify opportunities for new products and features, and work with our product managers and tech leads to continuously improve Cognite's SaaS offering.\n\nThis role is a mix of consulting, architecture, and product development in a welcoming cross-functional team. Above all else, we strive to foster a supportive team environment where everyone is excited to share ideas, ask for help, and learn from each other.\n\nAs a Senior Solutions Architect, you will be an expert in how we implement our Cognite SaaS offerings and applications.\n\nYour primary responsibility will be to work with project teams to map requirements for a quality implementation ensuring that:\n\nThe right data visualization technology is used in the right way (E.g Power BI, Grafana, Plotly Dash)\n\nThe right data transformation technology is used in the right way (E.g Databricks, Azure, GCP, AWS)\n\nThe data is efficiently modeled and contextualized in Cognite Data Fusion (E.g graph and relational)\n\nIntegrations are well thought out and robustImportant quality criteria for the solution are met (E.g. CI/CD, logging, security)\n\nOperational responsibility and support agreements for the delivered solution are clearly defined\n\nDesign overall technical solution and ensure technical fit within the customer ecosystem and target architecture\n\nDesign integration and data model using Cognite data connectors, SQL, Python/Java and Rest APIs\n\nCredible advisor to our customers and partners on Cognite Data Fusion\n\nWe are proactively building out our talent pool in Mexico with the intention to have new hires start in Q1 2027\n\nThe Impact you bring to Cognite\n\nFully bilingual both verbal and written in English and Spanish is required\n\n5+ years experience as an application/data/solution/enterprise architect\n\n2+ years of experience from the heavy asset industry (Oil & Gas, Manufacturing or Pharmaceuticals) is required\n\nExperience with operational data and customer business drivers in the heavy asset industry\n\nBachelor's degree is required; Masters degree a plus\n\nConsulting experience that allows you to confidently negotiate requirements with customers and colleagues\n\nHave experience with enterprise integration, customer relationships or IT integration design\n\nData and analytics project experience and able to confidently lead an implementation\n\nBroad technical experience with data and analytics stacks\n\nFamiliarity with Business Intelligence tools and enterprise analytics stacks (Power BI or similar)\n\nFamiliarity with SQL and big data tooling (E.g Apache Spark ecosystem)\n\nExperience with a public cloud, preferably AWS, GCP or Azure, including familiarity with network security concepts, identity providers and application hosting\n\nExperience with operations, including support and change control, as well as experience architecting centralized monitoring, logging and reporting\n\nHave a DevOps mindset, and experience with Git, CI/CD, deployment environments\n\nTechnical background, willing and able to dive in and contribute code for advanced topics when needed\n\nHave architectural skills dealing with data modeling and infrastructure solutions, such as classical data warehousing and big data architectures\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAt Cognite, the Global Value Delivery team leads software implementation, deployment & adoption for clients, and helps them accelerate their digital transformation efforts with Cognite’s product suite. We consist of people with diverse and high-performance backgrounds, ranging from Management Consulting, to Industry and Software development. We seek to continuously improve how we work with our clients, how we work together as a team, and how we develop as individuals.\n\nThe Senior Solutions Architect is responsible for the design of complex end to end solutions, merging our flagship products with the customer's portfolio, for both new and existing clients. You are a technical subject matter expert in all offerings across the professional and managed services catalog. From discovery through implementation, you will work closely with the sales team and the delivery teams, as well as our data scientists and customers to map out technical requirements and architect robust and familiar solutions.\n\nThrough your work with our strategic customers, you will identify opportunities for new products and features, and work with our product managers and tech leads to continuously improve Cognite's SaaS offering.\n\nThis role is a mix of consulting, architecture, and product development in a welcoming cross-functional team. Above all else, we strive to foster a supportive team environment where everyone is excited to share ideas, ask for help, and learn from each other.\n\nAs a Senior Solutions Architect, you will be an expert in how we implement our Cognite SaaS offerings and applications.\n\nYour primary responsibility will be to work with project teams to map requirements for a quality implementation ensuring that:\n\nThe right data visualization technology is used in the right way (E.g Power BI, Grafana, Plotly Dash)\n\nThe right data transformation technology is used in the right way (E.g Databricks, Azure, GCP, AWS)\n\nThe data is efficiently modeled and contextualized in Cognite Data Fusion (E.g graph and relational)\n\nIntegrations are well thought out and robustImportant quality criteria for the solution are met (E.g. CI/CD, logging, security)\n\nOperational responsibility and support agreements for the delivered solution are clearly defined\n\nDesign overall technical solution and ensure technical fit within the customer ecosystem and target architecture\n\nDesign integration and data model using Cognite data connectors, SQL, Python/Java and Rest APIs\n\nCredible advisor to our customers and partners on Cognite Data Fusion\n\nWe are proactively building out our talent pool in Mexico with the intention to have new hires start in Q1 2027\n\nThe Impact you bring to Cognite\n\nFully bilingual both verbal and written in English and Spanish is required\n\n5+ years experience as an application/data/solution/enterprise architect\n\n2+ years of experience from the heavy asset industry (Oil & Gas, Manufacturing or Pharmaceuticals) is required\n\nExperience with operational data and customer business drivers in the heavy asset industry\n\nBachelor's degree is required; Masters degree a plus\n\nConsulting experience that allows you to confidently negotiate requirements with customers and colleagues\n\nHave experience with enterprise integration, customer relationships or IT integration design\n\nData and analytics project experience and able to confidently lead an implementation\n\nBroad technical experience with data and analytics stacks\n\nFamiliarity with Business Intelligence tools and enterprise analytics stacks (Power BI or similar)\n\nFamiliarity with SQL and big data tooling (E.g Apache Spark ecosystem)\n\nExperience with a public cloud, preferably AWS, GCP or Azure, including familiarity with network security concepts, identity providers and application hosting\n\nExperience with operations, including support and change control, as well as experience architecting centralized monitoring, logging and reporting\n\nHave a DevOps mindset, and experience with Git, CI/CD, deployment environments\n\nTechnical background, willing and able to dive in and contribute code for advanced topics when needed\n\nHave architectural skills dealing with data modeling and infrastructure solutions, such as classical data warehousing and big data architectures\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -51,8 +61,8 @@
   "title": "Senior Solution Architect",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-10T18:02:29.060196+00:00",
- "content_hash": "36ea8e015bfa74a3e9f9fca5f1fcbb490327056f655bd75ea73ce4ae7ea89399",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "97432aee2b663c64105cb89dee17a87cf5b5f2dda5bd052235d518d58197ad1d",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -71,7 +81,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Mexico City, Ciudad de México, Mexico",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      },
@@ -79,7 +89,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Monterrey, Nuevo León, Mexico",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      },
@@ -87,7 +97,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Tijuana, Baja California, Mexico",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      },
@@ -95,7 +105,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Mexico City)",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      },
@@ -103,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Monterrey)",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      },
@@ -111,7 +121,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Mexico (Tijuana)",
-      "retrieved_at": "2026-11-10T18:02:29.060196+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5031409101"
      }
