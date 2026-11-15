@@ -159,12 +159,15 @@ jobs:
         continue-on-error: true
         timeout-minutes: 5
         run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7 --budget-seconds 300
-      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna when its free keys are set)
+      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, UN Careers, EURES; Adzuna when its free keys are set)
         continue-on-error: true
         timeout-minutes: 22
         env:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          # api.adzuna.com's robots.txt disallows every agent: Adzuna is read only when the owner sets this repository variable to true
+          # (accepting that Adzuna's own API terms govern the keyed API). Settings > Secrets and variables > Actions > Variables.
+          ADZUNA_API_TERMS_ACCEPTED: ${{ vars.ADZUNA_API_TERMS_ACCEPTED }}
         run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30 --budget-seconds 1320
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
