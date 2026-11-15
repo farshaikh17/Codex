@@ -39,7 +39,7 @@ only that permission to the token in Cloudflare (My Profile -> API Tokens) and r
    verification from a clean checkout; the Cloudflare account and the D1 database id match `wrangler.toml`; the token can
    read the Worker, its deployments, D1 and Time Travel; `ADMIN_API_KEY` exists on the Worker (name only; a warning, not a
    failure, if absent); and it records the rollback points and the currently live version in the run summary.
-3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, apply migrations 0008-0022 (each
+3. **Release.** Same inputs with `mode = release`. Order of work: fingerprint protected records, apply migrations 0008-0022 and 0024 (each
    idempotent and replayed on every release; 0001-0007 are never replayed), optionally rotate the operator key, build and deploy with the
    commit recorded in the Worker, requeue, the owner-approved score correction, cache flush, public smoke test (including anonymous write
    attempts that must be refused), read-only real-browser check on desktop and 375 px mobile with no credentials (the job seeker's page for
