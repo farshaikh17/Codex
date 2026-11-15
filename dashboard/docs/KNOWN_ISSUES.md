@@ -85,8 +85,7 @@ Nothing below blocks the release. Each item says who decides or what would close
 
 ## Housekeeping
 
-* `legacy/` holds the original Windows-path scripts; they are not run by anything.
-* The collector's two Python tests of the importer live in `legacy/` because they need that repository's `engine/`.
+* `legacy/` (the original local Windows-path scripts, run by nothing) was deleted on 13 Nov.
 
 - **Ranking correction and job-board rows.** Job-board rows are stored with eligibility forced to UNKNOWN after scoring, so the script re-runs the Worker's own evaluate() on the stored posting (title, location, workplace type, description) to get the eligibility the score was computed with, and applies the same foreign-location rule. A row with no stored description is left unpenalised. The script only ever lowers scores and never changes status, lane, overrides, applications or history. Foreign-location detection is a text rule: 'Hyderabad, Pakistan' reads as Indian, and unusual exclusion wording may be misread; both err toward not penalising.
 

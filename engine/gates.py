@@ -23,7 +23,7 @@ from engine.places import covers,places
 #    limited to residents of places that exclude the candidate is not compared
 # 6: a range with one published bound is open-ended: 'at least X' can pass but never fail, 'up to Y' can fail but never
 #    pass; a missing bound is never copied from the other
-#    (7 also removes version 3's bare-'$' rule: it was not a verified owner instruction (GPT Master, 2026-10-26), so a bare
+#    (7 also removes version 3's bare-'$' rule: it was not a verified owner instruction (Review lead, 2026-10-26), so a bare
 #    '$' is again a currency only if the candidate's own assume_currency_for_symbol maps it)
 # 7: only third-party or salary-site pay is excluded; an employer-published estimate is compared and kept as evidence
 #    with its wording and an 'employer-published estimate' qualifier, but its result is provisional and never decides the gate

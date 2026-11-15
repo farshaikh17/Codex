@@ -1,7 +1,7 @@
 # Query cost, onboarding writes and outage recovery: assessment (2026-11-09)
 
 Evidence labels used throughout. **[docs]** Cloudflare documentation, read on 2026-11-09 through the Cloudflare docs search tool. **[local]** measured or modelled on a local SQLite stand-in
-(rows counted by instrumenting the query or reading its plan; NOT counted by D1). **[observed]** Cloudflare analytics as reported by GPT at 2026-11-09 21:36 UTC, aggregate only.
+(rows counted by instrumenting the query or reading its plan; NOT counted by D1). **[observed]** Cloudflare analytics as reported by the review lead at 2026-11-09 21:36 UTC, aggregate only.
 **[assumption]** stated plainly where used. Nothing here is a production per-request measurement; none could be taken (the sandbox cannot reach the live site or the analytics per query).
 
 ## 1. How D1 counts, and the day so far
@@ -19,7 +19,7 @@ Entries written per INSERT = 1 table row + 1 per index (the partial index `idx_c
 | `jobs` | 8 (`provenance`, `source_url`, `original_url`, `discovered_at`, `source_adapter`, `company`, `is_active`, primary key) | **9** |
 Consequences:
 * Screening one job for one candidate or client = 6 + 3 = **9 rows written**. A new job matched to both candidates in the daily import = 9 + 9 + 9 = **27**. With the 1,500-new-job cap a single import can write up to ~40,500 rows.
-* Onboarding a client = 9 x active jobs N: N = 3,000 -> 27,000; N = 5,000 -> 45,000; **N = 11,100 uses the whole day's allowance**. Production N is unknown (**blocker**: the live count could not be read); it is at least 2,462 (Sana's list total, GPT) -> at least ~22,000 writes.
+* Onboarding a client = 9 x active jobs N: N = 3,000 -> 27,000; N = 5,000 -> 45,000; **N = 11,100 uses the whole day's allowance**. Production N is unknown (**blocker**: the live count could not be read); it is at least 2,462 (Sana's list total, review lead) -> at least ~22,000 writes.
   **This corrects my earlier statement of "about two rows per job" (index entries were left out).**
 * An idle cron tick writes ~2 table rows (take and release the lease; measured locally 2, 3, 2, 2, 2, 2): ~1,600 a day at 720 ticks, a lower bound (index entries not counted; `cloud_automation` has only its integer key).
 * Re-scoring updates indexed columns (score; status and eligibility), so each re-scored row costs several index rows more than its table row (the re-score PR text said 6 to 10 rows per row; consistent).
@@ -37,7 +37,7 @@ The per-scanned-job factor (3 to 4) is an **[assumption]** about D1's accounting
 Regression tests pin the cost (`test/backfill_cost.test.mjs`); the old code fails the bound 23x on a 1,000-job fixture.
 ### 3b. List endpoints, uncached request  [local plans, assumption on accounting]
 Count query per qualification row: index entry + table row + jobs primary-key lookup (index + row) = ~4; page query (sorted by score): covering key entry + jobs (2) + score row (2) = ~5. **About 9 reads per qualification row per uncached (candidate, filter) view.**
-With Farhan's 1,408 and Sana's 2,462 qualification rows (GPT, historical): ~12,700 and ~22,200 reads per miss -> ~110 to 200 distinct uncached views a day inside the 2.5M public cap (cache TTL 30 minutes for visitors).
+With Farhan's 1,408 and Sana's 2,462 qualification rows (review lead, historical): ~12,700 and ~22,200 reads per miss -> ~110 to 200 distinct uncached views a day inside the 2.5M public cap (cache TTL 30 minutes for visitors).
 At 30,000 rows per candidate it would be ~270,000 per miss. **This revises my segment-2 figure of 150,000 upward because index entries are now counted.** Not changed in code; an early-stopping page query and separately cached counts remain an owner decision.
 ### 3c. Cron  [assumption]
 An idle tick reads a one-row lease and scans ~17 source rows: order of 10^4 reads a day. Not measured.

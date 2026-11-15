@@ -18,7 +18,6 @@ on:
 permissions:
   contents: read
   actions: read   # the recent-run guard reads this workflow's earlier runs
-  models: read   # the free AI review (engine/ai_triage.py) uses the workflow's own token
 
 concurrency:
   # Its own group (plan R6): sharing d1-collector-sync with the watchlist and collector sync meant a discovery run queued by the watchdog could be
@@ -208,25 +207,6 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler d1 execute career-job-engine --remote --file=../work/apply.sql > /dev/null
-      - name: Free AI review of the best new jobs (currently OFF - GitHub Models was retired on 30 Jul 2026; set repository variable AI_REVIEW to on once another free provider is wired in)
-        # The first production run (8 Nov) failed all 20 batches: the endpoint now answers HTTP 200 'OK' (text/plain) to every request,
-        # and GitHub's docs say the inference API is no longer available to any customer. Off by default so the run does not make
-        # pointless calls; the code and the probe workflow stay for the replacement provider.
-        if: ${{ vars.AI_REVIEW == 'on' && hashFiles('work/apply.top.json') != '' }}
-        continue-on-error: true
-        timeout-minutes: 12
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python engine/ai_triage.py --in work/apply.top.json --out work/triage.sql --max 100 | tee work/triage_report.json
-      - name: Write the AI review
-        if: ${{ hashFiles('work/triage.sql') != '' }}
-        continue-on-error: true
-        working-directory: dashboard
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          [ -s ../work/triage.sql ] && npx wrangler d1 execute career-job-engine --remote --file=../work/triage.sql > /dev/null || echo "no review to write"
       - name: Shortlist pool (plan A1; after today's import, before the still-open check, which verifies the pool first)
         id: pool
         continue-on-error: true   # no pool file: the shortlist selector does not run and the lists stay as they are
@@ -325,7 +305,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/triage_report.json work/liveness_report.json work/shortlist.report.json; do
+            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json work/shortlist.report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"
