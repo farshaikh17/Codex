@@ -52,7 +52,10 @@ check('S4 the counts on screen are the ones /api/today computes (one definition 
 check('S5 the status line has the date, new since the last visit, more good matches and the update time', /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} [A-Z][a-z]{2}\b/.test(await page.innerText('[data-testid="status-line"]')) && /new since your last visit/.test(t) && /(Updated \d{2}:\d{2}|Not updated today)/.test(t), await page.innerText('[data-testid="status-line"]'));
 const firstCard = await page.locator('[data-testid="job-card"]').first().boundingBox();
 check('S6 the first job starts within 200 px of the top', !!firstCard && firstCard.y <= 200, JSON.stringify(firstCard));
-check('S7 nothing operator-only is on the page', !OPERATOR.test(t), (t.match(OPERATOR) || [])[0]);
+// Job titles are data, not screen chrome ("Field Operator - Turbine" is a real posting): read the page without the job cards and the panel's job text.
+const chrome = async (sel) => (await page.evaluate((s) => { const b = document.querySelector(s).cloneNode(true); b.querySelectorAll('[data-testid="job-card"], [data-job-id], [role=dialog] h2, [data-testid="panel-why"]').forEach((e) => e.remove()); return b.textContent || ''; }, sel)).replace(/\s+/g, ' ');
+const chromeT = await chrome('body');
+check('S7 nothing operator-only is on the page', !OPERATOR.test(chromeT), (chromeT.match(OPERATOR) || [])[0]);
 check('S8 no sideways scrolling', (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
 const sizes = await page.evaluate(() => {
   const small = [], tiny = [], gaps = [];
@@ -159,7 +162,7 @@ check('S23 a job has its own address (#sana/job/<id>)', /^#sana\/job\/.+/.test(p
 const panelText = (await page.innerText('[role=dialog]')).replace(/\s+/g, ' ');
 check('S24 the panel speaks plainly: Open the posting, your progress, and the details folded under "How this was scored"',
   /Open the posting|No link available/.test(panelText) && /Where are you with this job\?/.test(panelText) && /How this was scored/.test(panelText)
-  && (await page.locator('[data-testid="how-scored"]').evaluate((d) => !d.open)) && !OPERATOR.test(panelText) && !/Explainable|ADAPTER|Pipeline/i.test(panelText), panelText.slice(0, 200));
+  && (await page.locator('[data-testid="how-scored"]').evaluate((d) => !d.open)) && !OPERATOR.test(await chrome('[role=dialog]')) && !/Explainable|ADAPTER|Pipeline/i.test(panelText), panelText.slice(0, 200));
 check('S25 the Good match button has aria-pressed', (await page.locator('[role=dialog] button[aria-pressed]').count()) >= 1);
 await page.reload({ waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 check('S26 a reload lands on the same job', (await page.evaluate(() => location.hash)) === panelHash && (await page.locator('[role=dialog]').count()) === 1);
