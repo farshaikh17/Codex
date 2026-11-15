@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "cognite",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-14T20:54:21.781335+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "0ee6297ce19aaca292f05b9624afe6a643799ee6d29e6d41b2d42821ce840ea8",
+   "kind": "content_changed",
+   "to_hash": "26ebcfbbdd81566326fc239f0e3597288e1a93d6355d6fc1ba7318a871f03cf0"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is: Relentless to achieve\n\nCognite operates at the forefront of industrial digitalization, building AI, and data solutions that solve the world’s hardest, highest-impact problems. With unmatched industrial heritage and a comprehensive suite of AI capabilities, including low-code AI agents, Cognite accelerates the digital transformation to drive operational improvements.\n\nWe thrive in challenges. We challenge assumptions. We execute with speed and ownership. If you view obstacles as signals to step forward - not backwards - you’ll feel right at home here.\n\nOur Moonshot is bold: Unlock $100B in customer value by 2035, and redefine how global industry works. Join us in this venture where AI and data meet ingenuity, and together, we will forge the path to a smarter, more connected industrial future.\n\nHow you’ll demonstrate Ownership\n\nAs a Strategic Account Manager, you will be the primary architect of Cognite’s relationship with our most high-value global Life Sciences and Pharmaceutical accounts. You won’t just manage a portfolio; you will act as a “CEO of the account,” fostering deep strategic partnerships and driving aggressive growth through a value-first mindset.\n\nStrategic Growth: Develop and execute comprehensive account strategies to drive value realization, double-digit ARR growth, and new opportunity capture.\n\nExecutive Sponsorship: Cultivate multi-level relationships across the client organization, including manufacturing, quality, IT, and digital leadership, acting as the primary point of contact and lead advocate for their success.\n\nTeam Orchestration: Lead a cross-functional “extended territory team” (including Tech Sales, Value Delivery, Product, Marketing, Partners) to ensure seamless execution.\n\nSales Excellence: Rigorously apply value-selling methodologies, specifically Command of the Message and MEDDPICC, to maintain high-quality sales cycles.\n\nValue Realization: Master Cognite’s solution suite to articulate how our technology uniquely solves complex manufacturing and operational challenges in regulated environments and drives ROI.\n\nCommercial Negotiation: Lead complex negotiations for large enterprise contracts, focusing on favorable business terms and value-based pricing.\n\nOperational Rigor: Maintain precise forecasts, pipeline data, and detailed account/close plans to provide actionable insights to corporate leadership.\n\nPresence: Engage directly with clients on-site (approx. 50% travel).\n\nThe Impact you bring to Cognite\n\nExperience: 5+ years of direct enterprise software/SaaS sales experience, consistently exceeding quotas in high-growth environments.\n\nDomain Expertise: Deep understanding of the Life Sciences, Pharmaceutical, or Biotech manufacturing industries, including the regulatory and quality context (e.g., GxP, validation requirements) that shapes how these customers buy and adopt technology.\n\nTechnical Literacy: High fluency in SaaS, Cloud, Big Data, and Generative AI; you should be comfortable discussing ARR, NRR, and TCV, and manage subscription pricing models and large service programs.\n\nPolitical Savvy: Strong relationship-building skills, focused on a high level of customer service; you can read and navigate organizational politics, including the interplay between Operations, Quality, and IT.\n\nMindset: A blend of high-energy ambition and “coachability.” You thrive in ambiguity and are proactive in resolving issues with minimal supervision.\n\nAnalytical Rigor: Skilled in building business cases and navigating complex Excel/PowerPoint deliverables.\n\nRequired Qualifications\n\nBachelor’s degree (Master’s preferred).\n\nProven track record of selling to C-Level stakeholders across both Business and IT.\n\nExcellent written and verbal communication skills, including good presentation skills.\n\nPreferred Experience\n\nPrevious training in Command of the Message or MEDDPICC is highly preferred.\n\nProficient in Salesforce and modern sales engagement stacks.\n\nLearn more about us\n\nImpact 2025\n\nCognite's Industrial AI: Moonshot\n\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAs a Strategic Account Manager, you will be the primary architect of Cognite’s relationship with our most high-value global Life Sciences and Pharmaceutical accounts. You won’t just manage a portfolio; you will act as a “CEO of the account,” fostering deep strategic partnerships and driving aggressive growth through a value-first mindset.\n\nStrategic Growth: Develop and execute comprehensive account strategies to drive value realization, double-digit ARR growth, and new opportunity capture.\n\nExecutive Sponsorship: Cultivate multi-level relationships across the client organization, including manufacturing, quality, IT, and digital leadership, acting as the primary point of contact and lead advocate for their success.\n\nTeam Orchestration: Lead a cross-functional “extended territory team” (including Tech Sales, Value Delivery, Product, Marketing, Partners) to ensure seamless execution.\n\nSales Excellence: Rigorously apply value-selling methodologies, specifically Command of the Message and MEDDPICC, to maintain high-quality sales cycles.\n\nValue Realization: Master Cognite’s solution suite to articulate how our technology uniquely solves complex manufacturing and operational challenges in regulated environments and drives ROI.\n\nCommercial Negotiation: Lead complex negotiations for large enterprise contracts, focusing on favorable business terms and value-based pricing.\n\nOperational Rigor: Maintain precise forecasts, pipeline data, and detailed account/close plans to provide actionable insights to corporate leadership.\n\nPresence: Engage directly with clients on-site (approx. 50% travel).\n\nThe Impact you bring to Cognite\n\nExperience: 5+ years of direct enterprise software/SaaS sales experience, consistently exceeding quotas in high-growth environments.\n\nDomain Expertise: Deep understanding of the Life Sciences, Pharmaceutical, or Biotech manufacturing industries, including the regulatory and quality context (e.g., GxP, validation requirements) that shapes how these customers buy and adopt technology.\n\nTechnical Literacy: High fluency in SaaS, Cloud, Big Data, and Generative AI; you should be comfortable discussing ARR, NRR, and TCV, and manage subscription pricing models and large service programs.\n\nPolitical Savvy: Strong relationship-building skills, focused on a high level of customer service; you can read and navigate organizational politics, including the interplay between Operations, Quality, and IT.\n\nMindset: A blend of high-energy ambition and “coachability.” You thrive in ambiguity and are proactive in resolving issues with minimal supervision.\n\nAnalytical Rigor: Skilled in building business cases and navigating complex Excel/PowerPoint deliverables.\n\nRequired Qualifications\n\nBachelor’s degree (Master’s preferred).\n\nProven track record of selling to C-Level stakeholders across both Business and IT.\n\nExcellent written and verbal communication skills, including good presentation skills.\n\nPreferred Experience\n\nPrevious training in Command of the Message or MEDDPICC is highly preferred.\n\nProficient in Salesforce and modern sales engagement stacks.\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -27,8 +37,8 @@
   "title": "Strategic Account Manager",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-29T01:11:58.821444+00:00",
- "content_hash": "0ee6297ce19aaca292f05b9624afe6a643799ee6d29e6d41b2d42821ce840ea8",
+ "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
+ "content_hash": "26ebcfbbdd81566326fc239f0e3597288e1a93d6355d6fc1ba7318a871f03cf0",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -47,7 +57,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "England, United Kingdom",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5015526101"
      },
@@ -55,7 +65,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "UK England",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5015526101"
      }
@@ -68,7 +78,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "Proven track record of selling to C-Level stakeholders across both Business and IT.\nExcellent written and verbal communication skills, including good presentation skills.",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5015526101"
      }
@@ -81,15 +91,15 @@
       "interpretation": null,
       "method": "inline_marker_in:Required Qualifications",
       "quote": "Bachelor’s degree (Master’s preferred).",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5015526101"
      },
      {
       "interpretation": null,
       "method": "description_section:Preferred Experience",
-      "quote": "Previous training in Command of the Message or MEDDPICC is highly preferred.\nProficient in Salesforce and modern sales engagement stacks.\nLearn more about us\nImpact 2025\nCognite's Industrial AI: Moonshot\nWe’re globally recognized domain experts with an international presence that spans Phoenix, Houston, Oslo Tokyo, Bengaluru, and Abu Dhabi.",
-      "retrieved_at": "2026-10-29T01:11:58.821444+00:00",
+      "quote": "Previous training in Command of the Message or MEDDPICC is highly preferred.\nProficient in Salesforce and modern sales engagement stacks.\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
+      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5015526101"
      }

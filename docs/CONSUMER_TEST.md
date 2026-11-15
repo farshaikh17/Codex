@@ -1,6 +1,6 @@
-# Consumer access test (for the original ChatGPT chat)
+# Consumer access test (for the original review chat)
 
-Goal: establish, with evidence, whether the ChatGPT task can read this private repository. This changes nothing in any live task or Sheet. Run it manually in a chat that has the GitHub connector enabled.
+Goal: establish, with evidence, whether the review task can read this private repository. This changes nothing in any live task or Sheet. Run it manually in a chat that has the GitHub connector enabled.
 
 1. Ask: "Using the GitHub connector, open `public/status.json` in `farshaikh17/Codex` on branch `main` and quote `schema`, `attempted_at` and `status` exactly."
    - Pass: the three values match the file on GitHub.
