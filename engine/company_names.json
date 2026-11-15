@@ -1,0 +1,30 @@
+{
+ "about": "Employer names for hiring-system tenant ids (plan B1). Keys are lower case, with '-' and ' ' alike. Read by engine/company_names.py (import naming) and by dashboard/scripts/shortlist_select.mjs (the shortlist's and the audit's shared tenant test), so both read one table.",
+ "sources": {
+  "hdga": "hdga.fa.em3.oraclecloud.com, site Lucyelectric (13 Nov 2026)",
+  "egup": "egup.fa.us2.oraclecloud.com, site CX (13 Nov 2026)",
+  "ekkh": "ekkh.fa.us2.oraclecloud.com: 'Hormel Foods Family of Companies' (13 Nov 2026)",
+  "fa espx saasfaprod1": "'Cummins Talent Acquisition' (13 Nov 2026)",
+  "fa emqh saasfaprod1": "'Kent Careers' (13 Nov 2026)",
+  "fa elxu saasfaprod1": "fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com: SVKM's career sites, CX_1001 'NMIMS', CX_1012 'SVKM Central Office', CX_1016 'SVKM' (14 Nov 2026); the dataset gives the site after the tenant id"
+ },
+ "names": {
+  "mdlz": "Mondelez International",
+  "aecom2": "AECOM",
+  "generalmotors": "General Motors",
+  "thermofisher": "Thermo Fisher Scientific",
+  "gohighlevel": "GoHighLevel",
+  "abb": "ABB",
+  "hdga": "Lucy Electric",
+  "egup": "Vertiv",
+  "ekkh": "Hormel Foods",
+  "fa espx saasfaprod1": "Cummins",
+  "fa emqh saasfaprod1": "Kent",
+  "fa exty saasfaprod1": "Howmet Aerospace",
+  "fa etqd saasfaprod1": "Perficient",
+  "fa elxu saasfaprod1 (cx_1001)": "NMIMS",
+  "fa elxu saasfaprod1 (cx_1012)": "SVKM",
+  "fa elxu saasfaprod1 (cx_1016)": "SVKM",
+  "fa elxu saasfaprod1": "SVKM"
+ }
+}
