@@ -93,6 +93,13 @@ await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
 await page.waitForSelector('[role=dialog][aria-label="Did you apply?"]', { timeout: 5000 }).catch(() => {});
 check('S14 coming back asks "Did you apply?" with the three answers', (await page.locator('[role=dialog][aria-label="Did you apply?"]').count()) === 1
   && /Yes, I applied/.test(await body()) && /Not yet \(keep saved\)/.test(await body()));
+{ // QA 16 Nov: focus starts on the first answer and Tab / Shift+Tab wrap inside "Did you apply?"
+  const label = () => page.evaluate(() => { const a = document.activeElement; return a && a.closest('[role=dialog][aria-label="Did you apply?"]') ? a.textContent.trim() : 'outside: ' + (a?.outerHTML || '').slice(0, 80); });
+  const onOpen = await label();
+  await page.keyboard.press('Shift+Tab'); const back = await label();
+  await page.keyboard.press('Tab'); const fwd = await label();
+  check('S14b "Did you apply?" takes focus, Shift+Tab wraps to the last answer and Tab back to the first', onOpen === 'Yes, I applied' && back === 'Not for me' && fwd === 'Yes, I applied', `${onOpen} | ${back} | ${fwd}`);
+}
 await clearToast();
 await page.getByRole('button', { name: 'Yes, I applied' }).click();
 const tst = await toast();
@@ -180,7 +187,7 @@ const inDialog = () => page.evaluate(() => !!document.activeElement && !!documen
 await page.locator('[role=dialog]').getByRole('button', { name: 'Close' }).focus();
 await page.keyboard.press('Shift+Tab');
 const afterShiftTab = await inDialog();
-const lastIsFocused = await page.evaluate(() => { const d = document.querySelector('[role=dialog]'); const f = [...d.querySelectorAll('a[href], details > summary, button:not([disabled]), select:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((e) => e.offsetParent !== null); return f[f.length - 1] === document.activeElement; });
+const lastIsFocused = await page.evaluate(() => { const d = document.querySelector('[role=dialog]'); const f = [...d.querySelectorAll('a[href], details > summary, button:not([disabled]), select:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((e) => e.offsetParent !== null && !(e.closest('details:not([open])') && !(e.tagName === 'SUMMARY' && !e.parentElement.parentElement.closest('details:not([open])')))); return f[f.length - 1] === document.activeElement; });
 check('S34a Shift+Tab from Close stays inside the job dialog (wraps to its last control)', afterShiftTab && lastIsFocused);
 await page.keyboard.press('Tab');
 const wrapped = await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Close' && !!document.activeElement.closest('[role=dialog]'));
