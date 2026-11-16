@@ -87,6 +87,72 @@ class PartialWrites(unittest.TestCase):
         self.assertFalse(rb.all_errored({}))
 
 
+class SourceOrderAndCaps(unittest.TestCase):
+    """QA 3 F2: small and high-priority sources run first, and each source has its own time cap, so a slow one cannot starve the rest."""
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        Path(self.d, 'profiles.json').write_text(json.dumps(PROFILES))
+        self.argv = ['x', '--profiles', str(Path(self.d, 'profiles.json')), '--out', self.d]
+
+    def test_watch_boards_first_big_readers_last(self):
+        names = ['workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards',
+                 'arbeitnow', 'uncareers', 'eures', 'adzuna']
+        got = list(ms.ordered({n: None for n in names + ['new_source']}))
+        self.assertEqual(got[0], 'watch_boards')
+        self.assertEqual(got[-4:], ['smartrecruiters', 'successfactors', 'workday', 'new_source'])
+        for cheap in ('arbeitnow', 'uncareers', 'eures', 'adzuna', 'jibe', 'oracle_hcm'):
+            self.assertLess(got.index(cheap), got.index('workday'), cheap)
+            self.assertLess(got.index(cheap), got.index('successfactors'), cheap)
+        self.assertEqual(sorted(got), sorted(names + ['new_source']), 'nothing lost or added')
+
+    def test_cap_is_a_weighted_share_of_the_time_left(self):
+        self.assertIsNone(ms.source_cap('workday', ['workday'], 0, 0, 0), 'no budget: no cap')
+        # 1000 s budget, 800 s window, at t=0: watch_boards (1) + workday (3) -> 200 s and 600 s.
+        self.assertAlmostEqual(ms.source_cap('watch_boards', ['watch_boards', 'workday'], 0, 0, 1000), 200)
+        self.assertAlmostEqual(ms.source_cap('workday', ['workday'], 100, 0, 1000), 700, msg='time left unused passes on')
+        self.assertEqual(ms.source_cap('workday', ['workday'], 900, 0, 1000), 0)
+        # the whole step budget is unchanged: the caps of all sources started at t=0 add up to the 80% window
+        names = list(ms.ORDER)
+        self.assertLessEqual(ms.source_cap(names[0], names, 0, 0, 1000) * sum(ms.WEIGHT.get(n, 1) for n in names) / ms.WEIGHT.get(names[0], 1), 800.0001)
+
+    def _run(self, slow_name, step=50.0):
+        """--fast run with a fake clock: `slow_name` yields postings forever, each costing `step` seconds; the others return one posting."""
+        clock = [0.0]
+
+        def slow():
+            i = 0
+            while True:
+                clock[0] += step
+                i += 1
+                yield rb.job(slow_name, f'https://example.com/{slow_name}/{i}', 'RevOps Manager', 'Acme', 'Remote', 'CRM', None)
+        fast = ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')
+        with contextlib.ExitStack() as stack:
+            for n in fast:
+                fn = slow if n == slow_name else one(n)
+                stack.enter_context(mock.patch.object(ms, n, (lambda f: (lambda *a: f()))(fn)))
+            stack.enter_context(mock.patch.object(ms, 'enrich_full_text', lambda *a: False))
+            stack.enter_context(mock.patch.object(ms.time, 'monotonic', lambda: clock[0]))
+            stack.enter_context(mock.patch('sys.argv', self.argv + ['--fast', '--budget-seconds', '1000']))
+            buf = __import__('io').StringIO()
+            with contextlib.redirect_stdout(buf):
+                self.assertEqual(ms.main(), 0)
+        return json.loads(Path(self.d, 'more_sources_report.json').read_text()), buf.getvalue()
+
+    def test_a_slow_source_is_stopped_at_its_cap_and_the_rest_still_run(self):
+        report, out = self._run('smartrecruiters')
+        self.assertEqual(report['smartrecruiters'].get('stopped'), 'time cap')
+        for n in ('successfactors', 'workday', 'watch_boards', 'oracle_hcm', 'jibe'):
+            self.assertNotIn('skipped', report[n], n)
+            self.assertEqual(report[n]['kept'], 1, n)
+        self.assertIn('::warning::more_sources: smartrecruiters was stopped at its time cap', out)
+
+    def test_a_source_skipped_for_time_is_reported_as_a_warning(self):
+        self.assertEqual(ms.time_warnings({'a': {'skipped': 'time budget', 'read': 0, 'kept': 0}, 'b': {'read': 3, 'kept': 1},
+                                           'c': {'stopped': 'time cap', 'cap_seconds': 120, 'read': 40, 'kept': 2}}),
+                         ['more_sources: a was skipped for time (no time left in the step budget)',
+                          'more_sources: c was stopped at its time cap (120 s) after reading 40'])
+
+
 class WatchlistFetchedNothing(unittest.TestCase):
     """The watchlist's last check: a run that read nothing fails (so the 7-hour guard does not count it as done)."""
     def run_check(self, reports):
