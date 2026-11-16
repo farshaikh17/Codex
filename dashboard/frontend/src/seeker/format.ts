@@ -1,5 +1,6 @@
 // Plain words for the job seeker's page (plan U9 and the rename table in section 12). No network, nothing stored.
 import type { Job, ApplicationStatus } from '../types';
+import { isReposterName } from '../../../shared/reposters';
 
 export type Person = 'farhan' | 'sana';
 export const PEOPLE: Person[] = ['farhan', 'sana'];
@@ -65,7 +66,8 @@ export function indiaWords(classification?: string | null): string {
 }
 
 /** Where the posting was found, in plain words. */
-export function sourceText(adapter?: string | null, provenance?: string | null): string {
+export function sourceText(adapter?: string | null, provenance?: string | null, company?: string | null): string {
+  if (isReposterName(company)) return 'From a reposting site, not the employer';   // Jobgether etc. arrive through an employer-style hiring system
   if (provenance === 'PUBLIC_FEED_UNVERIFIED') return 'From a job board (the employer is not confirmed)';
   const boards = ['indeed', 'linkedin', 'naukri', 'glassdoor', 'bayt', 'adzuna', 'remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'arbeitnow', 'getro', 'fourdayweek', 'realworkfromanywhere'];
   return boards.includes(String(adapter || '')) ? 'From a job board' : "From the employer's own site";

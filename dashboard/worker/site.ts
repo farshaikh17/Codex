@@ -255,7 +255,7 @@ ${st ? `<section class="stats" aria-label="Live figures"><div class="wrap">
 <div class="card"><div class="ico">⚑</div><h3>Picked by a stated rule</h3><p>A job reaches your best matches only when it scores at your level, its posting says it can hire someone where you live, and it was checked open in the last few days. Your own choices are never changed.</p></div>
 <div class="card"><div class="ico">↻</div><h3>New roles every day</h3><p>Employers' hiring systems are visited on a rolling schedule, so new postings reach your lists within days of going up, not weeks.</p></div>
 <div class="card"><div class="ico">▤</div><h3>Your pipeline in one place</h3><p>Saved, applied, interviewing, offer: your advisor keeps your applications up to date next to your matches.</p></div>
-<div class="card"><div class="ico">⇩</div><h3>Your data, exportable</h3><p>Download your list as a spreadsheet whenever you like. Your dashboard is private to you and anyone you share it with.</p></div>
+<div class="card"><div class="ico">⇩</div><h3>Your data, exportable</h3><p>Download your list as a spreadsheet whenever you like. Your client dashboard opens only from your private link and is not listed anywhere.</p></div>
 </div></div></section>
 <section class="sec"><div class="wrap"><div class="band"><div><h2>Ready to hand over the scrolling?</h2><p>Apply in two minutes. We set up your search and send you your private dashboard link.</p></div><a class="btn btn-coral btn-lg" href="/apply">Apply now</a></div></div></section>`;
 }
@@ -267,7 +267,7 @@ export function howPage(): string {
 <div class="card"><div class="num">2</div><h3>Postings come from the source</h3><p>The engine checks employers' own applicant-tracking systems and a few public job feeds on a rolling schedule. It stores each posting's full text, so every decision can be traced back to it.</p></div>
 <div class="card"><div class="num">3</div><h3>Every posting is screened for you</h3><p>The title against your role keywords; the location wording against your rule; security-clearance, citizenship or export-control requirements; sponsorship or worldwide-remote wording; your skills against the description. The result is a preliminary score and a status. Published pay is shown and can be filtered on.</p></div>
 <div class="card"><div class="num">4</div><h3>People make the final call</h3><p>Matches start as "needs review". A role becomes "ready" or "stretch" only after a person has looked at it, and the reason is written down. Decisions made by people (applied, dismissed, promoted) are never overwritten by the engine.</p></div>
-<div class="card"><div class="num">5</div><h3>Your private dashboard</h3><p>Ready, stretch and review lists, the posting evidence, filters by fit, role family and published pay, and the applications your advisor tracks for you. Open it with your private link from any device; it is read-only for you.</p></div>
+<div class="card"><div class="num">5</div><h3>Your private dashboard</h3><p>Ready, stretch and review lists, the posting evidence, filters by fit, role family and published pay, and the applications your advisor tracks for you. Open it with your private link from any device. It is read-only and not listed anywhere.</p></div>
 <div class="card"><div class="num">6</div><h3>Removed postings are closed</h3><p>When the engine fetches a posting and the employer's system reports it as removed, it is closed on our side, unless you have already applied, in which case it stays in your tracker. Check the posting before applying; some close without notice.</p></div>
 </div></section>
 <section class="sec sec-alt"><div class="wrap"><div class="sec-h"><h2>What the engine will not do</h2><p>Being clear about limits is part of the product.</p></div>
@@ -301,8 +301,9 @@ export function faqPage(): string {
     ['How do you decide whether I am eligible?', 'Only from what the posting says. A role counts as eligible for "fully remote from your country" only if the posting says that work from your country is supported. Requirements such as a security clearance, specific citizenship or export-control eligibility exclude it. If the posting is silent, it stays "unknown".'],
     ['Will the engine apply to jobs for me?', 'No. It finds and screens roles and tracks your applications. You decide and apply.'],
     ['What does "ready", "stretch" and "needs review" mean?', 'New matches start as "needs review". After a person has checked them, they become "ready" (a strong fit), "stretch" (worth a try) or are set aside. The screen never promotes a role on its own.'],
-    ['Who can see my dashboard?', 'Only you, anyone you share your private link with, and your advisor. Your dashboard is not listed publicly.'],
+    ['Who can see my dashboard?', 'Only you, anyone you share your private link with, and your advisor. Client dashboards are not listed anywhere.'],
     ['Can I update my applications myself?', 'Your link is read-only, so nothing can be changed by accident or by anyone you share it with. Tell your advisor what you applied to and they update your tracker.'],
+    ['What is the dashboard at /app?', 'The two built-in household dashboards. Unlike client dashboards they are public: anyone can open them, and their application tracker can be changed without signing in.'],
     ['Can I download my matches?', 'Yes. Every dashboard has an export button that downloads your list as a spreadsheet file.'],
     ['What if I lose my link?', 'Ask your advisor for a new one; the old link can be switched off at the same time.'],
     ['Which roles and countries do you cover?', 'The engine is strongest for roles posted on employers’ own hiring systems, which covers most technology, operations and many engineering roles. Tell us your target in the application and we will say honestly how well we can cover it.'],
@@ -372,7 +373,7 @@ export function privacyPage(s: Record<string, string>): string {
 <h2>What we collect</h2><p>When you apply: your name, email, optional phone number, location, the roles you are looking for, your work preferences, experience range, an optional profile link and anything you write in the message box. To protect the form from abuse we keep a keyed fingerprint of your network for at most a day, then erase it; we do not store your IP address.</p>
 <p>When you are a client: your search profile, the postings screened for you, the statuses decided for them and the applications you track.</p>
 <h2>Why</h2><p>Only to set up and run your job search and to contact you about it. We do not sell your data and do not use it for advertising.</p>
-<h2>Who can see it</h2><p>${brand} staff who run your search. Your dashboard is visible only to you and anyone you share your private link with. Job postings themselves are public information from employers.</p>
+<h2>Who can see it</h2><p>${brand} staff who run your search. A client dashboard is visible only to you and anyone you share your private link with, and it is not listed. The two built-in household dashboards at /app are public, and their tracker can be changed without signing in. Job postings themselves are public information from employers.</p>
 <h2>Where it is stored</h2><p>On Cloudflare's infrastructure (Workers and the D1 database). Pages load their typefaces from Google Fonts, which receives your IP address when it serves them.</p>
 <h2>Keeping and deleting</h2><p>We keep your details while you are a client and for as long as needed to answer your application. Ask us at ${mail} to receive a copy or to have everything deleted; we delete it from our database.</p>
 <h2>Cookies</h2><p>This site does not set tracking cookies. Your dashboard link is kept in your browser tab's own storage until you close it.</p>
@@ -384,7 +385,7 @@ export function termsPage(s: Record<string, string>): string {
 <section class="prose">
 <h2>The service</h2><p>${brand} finds and screens job postings against the search profile agreed with you, and gives you a private dashboard to review them and track applications. The plan you choose sets how much human review is included.</p>
 <h2>What it is not</h2><p>We do not apply for jobs on your behalf, do not represent you to employers and cannot guarantee interviews or offers. Automated screening is conservative and can miss or misjudge a posting; always read the posting before applying.</p>
-<h2>Your link</h2><p>Your dashboard link is private. Anyone who has it can view your dashboard, so share it only with people you trust; we can switch it off and issue a new one at any time.</p>
+<h2>Your link</h2><p>Your client dashboard link is private and read-only. Anyone who has it can view your dashboard, so share it only with people you trust; we can switch it off and issue a new one at any time.</p>
 <h2>Payment and cancellation</h2><p>Plans run month to month unless agreed otherwise in writing. You can cancel at any time; access ends at the end of the paid period, and you can export your list before then.</p>
 <h2>Postings</h2><p>Job postings belong to the employers that published them. Links on your dashboard go to the employer's own page; apply there.</p>
 <p style="color:var(--muted);font-size:13px">Last updated ${new Date().toISOString().slice(0, 10)}.</p></section>`;

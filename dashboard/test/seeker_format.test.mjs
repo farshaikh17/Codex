@@ -1,7 +1,7 @@
 // The job seeker's Today status line (QA 3: "Updated HH:MM" without a date made a stale page look fresh).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { updatedText } from '../frontend/src/seeker/format.ts';
+import { updatedText, sourceText } from '../frontend/src/seeker/format.ts';
 
 test('the update time has no date only when it was today in India time', () => {
   const now = new Date('2026-11-16T12:00:00Z');                                   // 17:30 IST, 16 Nov
@@ -13,4 +13,12 @@ test('the update time has no date only when it was today in India time', () => {
   assert.equal(updatedText('2026-11-15T18:30:00Z', now), 'Updated 00:00', 'the first minute of today in India');
   assert.equal(updatedText(null, now), 'Updated');
   assert.equal(updatedText('not a date', now), 'Updated');
+});
+
+test('a reposting site is never called the employer\'s own site (QA 16 Nov: Jobgether via a Lever tenant)', () => {
+  assert.equal(sourceText('lever', 'LIVE_PUBLIC', 'Jobgether'), 'From a reposting site, not the employer');
+  assert.equal(sourceText('workable', 'LIVE_PUBLIC', 'Turing.com'), 'From a reposting site, not the employer');
+  assert.equal(sourceText('lever', 'LIVE_PUBLIC', 'Turing Labs'), "From the employer's own site");
+  assert.equal(sourceText('greenhouse', 'LIVE_PUBLIC', 'Acme'), "From the employer's own site");
+  assert.equal(sourceText('indeed', 'LIVE_PUBLIC', 'Acme'), 'From a job board');
 });
