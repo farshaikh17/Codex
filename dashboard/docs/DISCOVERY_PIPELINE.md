@@ -9,8 +9,8 @@ This section is the current description; "Steps" below is the original one, kept
 
 **When it runs.** `discovery.yml` is triggered at 15:13, 17:13, 19:13 and 21:13 UTC (after the dataset refresh) and at 01:13 and 03:13 UTC
 (catch-up). Two guards decide whether the trigger does the work:
-- the **budget guard** reads the account's rows read today from Cloudflare analytics (no D1 read) and starts the run only below **2.0M** (the run
-  itself reads about 2.4M; the free limit is 5M). A due run it skips leaves a row `{skipped: "budget"}`, and the page shows "Not updated today";
+- the **budget guard** reads the account's rows read today from Cloudflare analytics (no D1 read) and starts the run only below **1.5M** (the run
+  itself reads about 2.4M; the free limit is 5M; lowered from 2.0M on 16 Nov to leave about 1.1M for site traffic, the watchlist and a release). A due run it skips leaves a row `{skipped: "budget"}`, and the page shows "Not updated today";
 - the **recent-run guard** lets one real run through per 20 hours (a manual run always goes).
 The **watchdog** (`discovery-watchdog.yml`, every 2 hours) starts a run when the last good one is over 24 hours old. Discovery has its own
 concurrency group, so the watchlist or the collector sync can never cancel a queued daily run.
