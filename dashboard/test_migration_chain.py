@@ -27,6 +27,7 @@ migrations = [
     '0022_history_client.sql',
     '0023_company_names_svkm.sql',
     '0024_drop_remotive_source.sql',
+    '0025_queue_404_gone.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -69,3 +70,24 @@ with open(os.path.join(base, '0009_response_cache.sql'), 'r', encoding='utf-8') 
     conn.executescript(f.read())
 print('0009 re-applied idempotently')
 assert conn.execute('SELECT generation FROM cache_state WHERE id = 1').fetchone() == (0,)
+
+# 0025: old FAILED queue rows with HTTP 404 become GONE; other failures and every other table are untouched; re-applying changes nothing
+src = conn.execute('SELECT id FROM cloud_sources LIMIT 1').fetchone()
+if src is None:
+    cols = [r for r in conn.execute('PRAGMA table_info(cloud_sources)').fetchall()]
+    names = [c[1] for c in cols if c[3] and c[4] is None and c[1] != 'id']
+    conn.execute(f"INSERT INTO cloud_sources(id{''.join(',' + n for n in names)}) VALUES ('t:src'{''.join(",'x'" for _ in names)})")
+    src = ('t:src',)
+conn.execute("INSERT INTO cloud_discovery_queue(id,source_id,posting_id,payload,state,last_error,updated_at) VALUES "
+             "('q404',?, 'p1','{}','FAILED','Source HTTP 404','2026-11-01'),('q500',?, 'p2','{}','FAILED','Source HTTP 500','2026-11-01'),"
+             "('qok',?, 'p3','{}','DONE',NULL,'2026-11-01')", (src[0], src[0], src[0]))
+with open(os.path.join(base, '0025_queue_404_gone.sql'), 'r', encoding='utf-8') as f:
+    m25 = f.read()
+conn.executescript(m25)
+states = dict(conn.execute("SELECT id, state FROM cloud_discovery_queue WHERE id IN ('q404','q500','qok')").fetchall())
+assert states == {'q404': 'GONE', 'q500': 'FAILED', 'qok': 'DONE'}, states
+stamp = conn.execute("SELECT updated_at FROM cloud_discovery_queue WHERE id='q404'").fetchone()
+conn.executescript(m25)
+assert conn.execute("SELECT updated_at FROM cloud_discovery_queue WHERE id='q404'").fetchone() == stamp, '0025 is not idempotent'
+assert 'UPDATE jobs' not in m25 and 'applications' not in m25.split('Idempotent')[1], '0025 must touch the queue table only'
+print('0025 converts old HTTP 404 queue rows to GONE, idempotently')

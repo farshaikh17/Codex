@@ -1070,7 +1070,7 @@ router.get('/api/candidates/:id/strategy', async (request, env, params) => {
     statusRows.forEach((r: any) => { statusMap[r.qualification_status] = r.cnt; });
 
     const appCount = await env.DB.prepare(`
-      SELECT COUNT(*) as records, SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as cnt FROM applications WHERE candidate_id = ?
+      SELECT COUNT(*) as records, SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as cnt FROM applications WHERE candidate_id = ? AND ${realApp('applications')}
     `).bind(candidateId).first<{ cnt: number; records: number }>();
 
     return jsonResponse({
@@ -1145,7 +1145,7 @@ router.get('/api/candidates/:id/dashboard', async (request, env, params) => {
     const { results: appCounts } = await env.DB.prepare(`
       SELECT status, COUNT(*) as count
       FROM applications
-      WHERE candidate_id = ?
+      WHERE candidate_id = ? AND ${realApp('applications')}
       GROUP BY status
     `).bind(candidateId).all<any>();
 
@@ -1202,7 +1202,7 @@ router.get('/api/dashboard/overview', async (request, env) => {
       GROUP BY q.candidate_id, q.qualification_status, q.strategy_lane`).bind(idsJson).all<any>();
     const { results: allApps } = await env.DB.prepare(`SELECT candidate_id, COUNT(*) as records,
       SUM(CASE WHEN status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) as applied
-      FROM applications WHERE candidate_id IN (SELECT value FROM json_each(?)) GROUP BY candidate_id`).bind(idsJson).all<any>();
+      FROM applications WHERE candidate_id IN (SELECT value FROM json_each(?)) AND ${realApp('applications')} GROUP BY candidate_id`).bind(idsJson).all<any>();
     let profRows: any[] = [];
     try { profRows = (await env.DB.prepare(`SELECT candidate_id, display_title, summary_line FROM client_profiles WHERE candidate_id IN (SELECT value FROM json_each(?))`).bind(idsJson).all<any>()).results || []; } catch {}
     const candBy = new Map((candRows || []).map((r: any) => [r.id, r]));
@@ -1378,6 +1378,10 @@ router.get('/api/candidates/:id/jobs', async (request, env, params, url) => {
 const sqlList = (xs: string[]) => xs.map((x) => `'${x}'`).join(', ');
 const JOB_SITE_ADAPTERS = sqlList(['indeed', 'linkedin', 'naukri', 'glassdoor', 'google', 'bayt', 'adzuna', 'ziprecruiter']);
 const BOARD_ADAPTERS = sqlList(['remoteok', 'weworkremotely', 'himalayas', 'workingnomads', 'hnhiring', 'hnjobs', 'jobicy', 'remotive', 'workable', 'arbeitnow', 'getro', 'uncareers', 'eures', 'fourdayweek', 'realworkfromanywhere']);
+// QA 16 Nov: test applications made while checking the tracker (24-27 Oct: synthetic fixture jobs, and rows whose note is the Playwright test
+// note) stay stored and listed, but no count or statistic includes them. Nothing is changed or deleted; `a` is the applications alias.
+const TEST_APP_NOTE = 'Playwright verified rejection test';
+const realApp = (a: string) => `NOT (COALESCE(${a}.notes, '') = '${TEST_APP_NOTE}' OR ${a}.job_id LIKE 'syn-%' OR ${a}.job_id IN (SELECT tj.id FROM jobs tj WHERE tj.source_adapter = 'fixture'))`;
 const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
 const JOB_COLUMNS = `
@@ -1690,7 +1694,7 @@ async function todayCounts(env: Env, candidateId: string) {
       SUM(CASE WHEN a.status IN ('APPLIED','SUBMITTED','SCREENING','INTERVIEWING','OFFER') THEN 1 ELSE 0 END) AS waiting,
       SUM(CASE WHEN a.status IN ('REJECTED','WITHDRAWN','ARCHIVED') THEN 1 ELSE 0 END) AS finished,
       COUNT(*) AS total
-    FROM applications a JOIN jobs j ON j.id = a.job_id WHERE a.candidate_id = ?`).bind(candidateId).first<any>();
+    FROM applications a JOIN jobs j ON j.id = a.job_id WHERE a.candidate_id = ? AND ${realApp('a')}`).bind(candidateId).first<any>();
   const today = new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);   // India time (UTC+5:30)
   let followupsDue = 0;
   try {
@@ -2380,7 +2384,7 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
         SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) as stretch_count,
         SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) as review_count,
         SUM(CASE WHEN q.qualification_status IN ('INELIGIBLE', 'HOLD') THEN 1 ELSE 0 END) as not_fit_count,
-        SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER')) THEN 1 ELSE 0 END) as applied_count
+        SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') AND ${realApp('a')}) THEN 1 ELSE 0 END) as applied_count
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
       WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1
@@ -2496,7 +2500,7 @@ router.get('/api/analytics', async (request, env, _params, url) => {
     const { results: appCounts } = await env.DB.prepare(`
       SELECT status, COUNT(*) as cnt
       FROM applications
-      WHERE candidate_id = ?
+      WHERE candidate_id = ? AND ${realApp('applications')}
       GROUP BY status
     `).bind(candidateId).all<any>();
 
@@ -2585,7 +2589,7 @@ router.get('/api/analytics/discovery', async (request, env, _params, url) => {
     const total = (rows || []).length;
 
     const { results: appRows } = await env.DB.prepare(
-      'SELECT status, COUNT(*) AS cnt FROM applications WHERE candidate_id = ? GROUP BY status'
+      `SELECT status, COUNT(*) AS cnt FROM applications WHERE candidate_id = ? AND ${realApp('applications')} GROUP BY status`
     ).bind(candidateId).all<any>();
     const breakdown: Record<string, number> = {};
     let appTotal = 0;
@@ -2888,7 +2892,7 @@ router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
     const lifetimeAppCounts = await env.DB.prepare(`
       SELECT status, COUNT(*) as cnt
       FROM applications
-      WHERE candidate_id = ?
+      WHERE candidate_id = ? AND ${realApp('applications')}
       GROUP BY status
     `).bind(candidateId).all<any>();
 
@@ -2928,7 +2932,7 @@ router.get('/api/cohorts/metrics', async (request, env, _params, url) => {
     const weeklyAppCounts = await env.DB.prepare(`
       SELECT status, COUNT(*) as cnt
       FROM applications
-      WHERE candidate_id = ?
+      WHERE candidate_id = ? AND ${realApp('applications')}
         AND ((unixepoch(created_at) >= unixepoch(?) AND unixepoch(created_at) <= unixepoch(?))
           OR (unixepoch(applied_at) >= unixepoch(?) AND unixepoch(applied_at) <= unixepoch(?)))
       GROUP BY status

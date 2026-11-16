@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import { indianPlace as namesIndia } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India (fitsStretchRule)
 import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 import { titleKey } from '../worker/twins.ts';
+import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
 
 export const MARK = 'Shortlisted automatically. ';
 export const TIER_SIZE = 25;
@@ -100,8 +101,7 @@ export const REPOSTER_CAP = 3;
 export const EMPLOYER_TIER_CAP = 2, EMPLOYER_SKILL_CAP = 5, EMPLOYER_BOTH_CAP = 4;
 export const employerKey = (r) => companyKey(r.company) || String(r.company || '').trim().toLowerCase();
 // By the whole name ('Turing Labs' is an employer, 'Turing' / 'Turing.com' the reposting site); not companyKey(), which drops 'labs', 'inc', 'io'.
-const REPOSTER_NAMES = new Set([...REPOSTERS, 'turingcom', 'jobgethercom', 'usebraintrust', 'braintrustnetwork', 'crossoverforwork']);
-export const isReposter = (r) => REPOSTER_NAMES.has(String(r.company || '').toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/(?:inc|llc|ltd)$/, ''));
+export const isReposter = (r) => isReposterName(r.company);   // dashboard/shared/reposters.ts
 // An employer shown by its hiring-system tenant id is not shortlisted until phase 4 (B1) gives it its real name; the audit (A8) treats one on the
 // shortlist as a broken hard rule. Tenant ids: 'Fa Espx Saasfaprod1' (also with its site, 'Fa Elxu Saasfaprod1 (CX_1001)'); an Oracle employer named
 // exactly like its oraclecloud.com tenant host ('Hdga' at hdga.fa.em3.oraclecloud.com); one short lower-case token from Workday or Oracle. Ids B1

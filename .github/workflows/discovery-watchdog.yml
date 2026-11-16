@@ -9,10 +9,13 @@ name: Discovery watchdog (restarts a missed daily discovery run)
 # fires a few times a day at most. So the watchdog also runs when one of the other scheduled workflows finishes (workflow_run, which does not go
 # through the scheduler): about 8-10 more checks a day, spread over the day. It reads the run list and at most starts one run; it never checks out
 # or runs code from the run that triggered it.
+# Budget guard (QA 16 Nov): a run the guard postponed in the evening is restarted on the next UTC day, as soon as a check runs after 00:00 UTC
+# (an extra trigger at 00:07), if the last real run is over 20 hours old; that run's own budget guard still checks today's reads.
 on:
   workflow_dispatch:
   schedule:
     - cron: '27 */2 * * *'
+    - cron: '7 0 * * *'   # just after the 00:00 UTC D1 read reset: restarts a daily run the budget guard postponed in the evening (QA 16 Nov)
   workflow_run:
     workflows:
       - 'Watchlist (priority employers and boards, three times a day)'

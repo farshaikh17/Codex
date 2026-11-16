@@ -483,3 +483,17 @@ test('U12: every count on the Today screen equals what the matching list returns
   assert.equal(today.json.worth_a_try[0].why_line, 'Energy and decarbonisation · remote, India · 3 of your skills · location not stated');
   assert.ok(!today.text.includes('PRIVATE-'), 'nothing private in the public answer');
 });
+
+// ---- QA 16 Nov: test applications stay stored but are left out of every count ------------------------------------------------------
+test('QA 16 Nov: test applications (fixture jobs, Playwright test note) are not counted, and stay stored unchanged', async () => {
+  const w = world();
+  w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    'syn-001', 'Staff Backend Engineer', 'Synthetic Test Employer', 'fixture', 'https://example.invalid/syn-001', 1, 'Remote - India', 'Test.', 'REMOTE', '2026-10-24T00:00:00Z', 'LIVE_PUBLIC');
+  w.run(`INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES ('t-a',?,?,'REJECTED','Playwright verified rejection test'),('t-b',?,?,'SAVED','Testing application save endpoint')`, F, 'k3', F, 'syn-001');
+  const before = w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all();
+  const today = await req(w.env, 'GET', `/api/today?candidate_id=${F}`, { key: null });
+  assert.equal(today.status, 200, today.text);
+  assert.deepEqual(today.json.counts.applications, { saved: 0, waiting: 1, finished: 0, total: 1 }, 'only the real application (a1) is counted');
+  assert.deepEqual(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all(), before, 'no application row changed');
+  assert.equal(w.sqlite.prepare(`SELECT COUNT(*) AS n FROM applications WHERE candidate_id = ?`).get(F).n, 3, 'the test rows are still stored');
+});

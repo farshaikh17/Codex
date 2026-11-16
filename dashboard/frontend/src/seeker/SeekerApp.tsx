@@ -8,6 +8,7 @@ import { Route, View, parseRoute, routeHash, rememberedPerson, rememberPerson, l
 import { TodayView, AllView, HiddenView, CardActions } from './Lists';
 import { ApplicationsView } from './ApplicationsView';
 import { JobPanel } from './JobPanel';
+import { useDialogFocus } from './useDialogFocus';
 import { btn, btnPlain, btnPrimary } from './JobCard';
 
 interface Toast { id: number; message: string; action?: { label: string; run: () => void } }
@@ -233,9 +234,9 @@ export const SeekerApp: React.FC = () => {
     body = <ApplicationsView candidateId={candidateId!} name={NAME[person]} refreshKey={refreshKey} todayIndia={counts?.today_india || new Date().toISOString().slice(0, 10)}
       onOpen={openJob} onPosting={onPosting} onStage={setStage} onRemove={remove} toast={say} busy={busy} />;
   } else if (['all', 'best', 'worth', 'good'].includes(route.view)) {
-    body = <AllView candidateId={candidateId!} which={route.view} total={0} actions={actions} refreshKey={refreshKey} />;
+    body = <AllView key={`${candidateId}:${route.view}`} candidateId={candidateId!} which={route.view} total={0} actions={actions} refreshKey={refreshKey} />;
   } else if (route.view === 'hidden') {
-    body = <HiddenView candidateId={candidateId!} actions={actions} onRestore={restore} refreshKey={refreshKey} />;
+    body = <HiddenView key={candidateId} candidateId={candidateId!} actions={actions} onRestore={restore} refreshKey={refreshKey} />;
   } else {
     body = !data ? <p className="text-base text-slate-600 pt-4">Loading {NAME[person]}'s jobs…</p>
       : <TodayView data={data} baseline={baseline.current[person]} lastRunAt={lastRunAt} actions={actions} go={(v) => go({ person, view: v, jobId: null })} />;
@@ -253,19 +254,7 @@ export const SeekerApp: React.FC = () => {
         <JobPanel job={panelJob} profileSkills={skills[candidateId!]} onClose={closeJob} onPosting={onPosting} onHide={hide} onGoodMatch={goodMatch}
           onStage={(job, status, notes, clear) => setStage(job, status, notes, clear)} busy={!!busy[panelJob.id]} />
       )}
-      {asking && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/40 flex items-end justify-center" onClick={() => setAsking(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Did you apply?" onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-3xl rounded-t-2xl p-4 pb-6 space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">Did you apply?</h2>
-            <p className="text-base text-slate-700 break-words">{asking.title}{asking.company ? ` · ${asking.company}` : ''}</p>
-            <div className="grid gap-3">
-              <button type="button" className={btnPrimary} onClick={() => answer('yes')}>Yes, I applied</button>
-              <button type="button" className={btnPlain} onClick={() => answer('later')}>Not yet (keep saved)</button>
-              <button type="button" className={btnPlain} onClick={() => answer('no')}>Not for me</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {asking && <AskDialog title={asking.title} company={asking.company} onClose={() => setAsking(null)} onAnswer={answer} />}
       {toast && (
         <div key={toast.id} role="status" aria-live="polite" data-testid="toast" className="fixed bottom-4 inset-x-4 z-[70] mx-auto max-w-md bg-slate-900 text-white rounded-2xl px-4 py-2 flex items-center justify-between gap-3 shadow-lg">
           <span className="text-base">{toast.message}</span>
@@ -280,3 +269,21 @@ export const SeekerApp: React.FC = () => {
 };
 
 const STAGE_SAY: Record<string, string> = { SAVED: 'saved', REVIEWING: 'preparing', APPLIED: 'you applied', SCREENING: 'first call', INTERVIEWING: 'interviews', OFFER: 'got an offer', REJECTED: "didn't work out", WITHDRAWN: 'you withdrew' };
+
+/** "Did you apply?" after opening a posting: focus stays inside it (Tab / Shift+Tab wrap), Escape or a tap outside closes it. */
+const AskDialog: React.FC<{ title: string; company?: string | null; onClose: () => void; onAnswer: (a: 'yes' | 'later' | 'no') => void }> = ({ title, company, onClose, onAnswer }) => {
+  const ref = useDialogFocus<HTMLDivElement>(onClose, true);
+  return (
+    <div className="fixed inset-0 z-[60] bg-slate-900/40 flex items-end justify-center" onClick={onClose}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Did you apply?" onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-3xl rounded-t-2xl p-4 pb-6 space-y-3 outline-none">
+        <h2 className="text-lg font-bold text-slate-900">Did you apply?</h2>
+        <p className="text-base text-slate-700 break-words">{title}{company ? ` · ${company}` : ''}</p>
+        <div className="grid gap-3">
+          <button type="button" className={btnPrimary} onClick={() => onAnswer('yes')}>Yes, I applied</button>
+          <button type="button" className={btnPlain} onClick={() => onAnswer('later')}>Not yet (keep saved)</button>
+          <button type="button" className={btnPlain} onClick={() => onAnswer('no')}>Not for me</button>
+        </div>
+      </div>
+    </div>
+  );
+};

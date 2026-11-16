@@ -226,3 +226,13 @@ test('the cron refreshes the site figures only when they are older than an hour'
   assert.equal(await refreshSiteStats(w.d1), false, 'fresh: left alone');
   assert.equal(await refreshSiteStats(w.d1, Date.now() + 2 * 3600_000), true, 'stale: recomputed');
 });
+
+test('QA 16 Nov: the wording matches reality: client links are private and read-only, the household dashboards at /app are public with an open tracker', async () => {
+  const w = world();
+  const faq = (await get(w.env, '/faq')).text, privacy = (await get(w.env, '/privacy')).text, terms = (await get(w.env, '/terms')).text;
+  assert.match(faq, /Client dashboards are not listed anywhere/);
+  assert.match(faq, /built-in household dashboards[^<]*public[^<]*changed without signing in/);
+  assert.match(privacy, /household dashboards at \/app are public, and their tracker can be changed without signing in/);
+  assert.match(terms, /client dashboard link is private and read-only/);
+  for (const t of [faq, privacy]) assert.ok(!/Your dashboard is (?:private to you|not listed publicly|visible only to you)/.test(t), 'no blanket "private" claim');
+});

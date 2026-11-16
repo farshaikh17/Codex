@@ -8,7 +8,7 @@ name: Dashboard release to production (manual)
 #   mode = diagnose            read-only incident check: D1 info and 24h usage (when the token can read it), one SELECT 1, and
 #                              the Worker's own error for one public request (wrangler tail, filtered). No fingerprint, no tests
 #                              against production beyond that single request.
-#   mode = release              preflight, fingerprint, migrations 0008-0024 (each idempotent; 0001-0007 are never replayed), deploy, requeue, the owner-approved score
+#   mode = release              preflight, fingerprint, migrations 0008-0025 (each idempotent; 0001-0007 are never replayed), deploy, requeue, the owner-approved score
 #                               correction (idempotent, capped writes), cache flush, public smoke test, real-browser check (desktop + 375px mobile),
 #                               fingerprint comparison (with the open tracker on, changes tagged as keyless tracker writes during the run are allowed).
 #
@@ -220,7 +220,7 @@ jobs:
         run: |
           echo "Preflight passed - token permissions, account, database and rollback records are in order. Run again with mode=release to deploy." | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Apply migrations 0008-0024 (each idempotent, replayed on every release; 0001-0007 are NOT replayed), then check the schema
+      - name: Apply migrations 0008-0025 (each idempotent, replayed on every release; 0001-0007 are NOT replayed), then check the schema
         if: ${{ inputs.mode == 'release' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -243,6 +243,7 @@ jobs:
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0022_history_client.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0023_company_names_svkm.sql
           npx wrangler d1 execute career-job-engine --remote --file=migrations/0024_drop_remotive_source.sql
+          npx wrangler d1 execute career-job-engine --remote --file=migrations/0025_queue_404_gone.sql
           # Stop before deploying if the cache tables do not have the shape this Worker expects (reads no rows).
           npx wrangler d1 execute career-job-engine --remote --command "SELECT key, body, created_at, generation FROM response_cache LIMIT 0; SELECT day, rows_read, public_misses, operator_misses, cache_writes FROM read_meter LIMIT 0; SELECT generation FROM cache_state LIMIT 0; SELECT candidate_id, visibility, search_profile FROM client_profiles LIMIT 0; SELECT token_hash, revoked_at FROM client_view_tokens LIMIT 0; SELECT id, status, source_hash FROM client_requests LIMIT 0; SELECT key, value FROM site_settings LIMIT 0; SELECT id, candidate_id, company, outcome, decided_on FROM past_applications LIMIT 0; SELECT candidate_id, job_id, follow_up_at, note FROM application_followups LIMIT 0; SELECT candidate_id, job_id, rating, notes FROM job_feedback LIMIT 0; SELECT history_table, history_id, client_hash, before_json FROM history_client LIMIT 0" > /dev/null
 

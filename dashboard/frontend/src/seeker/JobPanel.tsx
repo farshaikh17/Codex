@@ -1,6 +1,7 @@
 // Plan U9: one job, in plain words. On top what a person needs to decide (title, employer, place, why, Open the posting);
 // their own progress next; everything else folded under "How this was scored".
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDialogFocus } from './useDialogFocus';
 import { Job, ApplicationStatus } from '../types';
 import { fetchJobFeedback } from '../api';
 import { peopleSearchLinks, skillGaps, withoutAutoMark } from '../jobHelpers';
@@ -39,7 +40,7 @@ const levelText = (job: Job) => {
 // Tenth-man review: the stage saves the moment it is chosen (as in My applications; choosing "I applied" and closing used to save nothing),
 // an unsaved job says "Not saved yet", and a note being typed is never replaced by a reload.
 export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosting, onHide, onGoodMatch, onStage, busy = false }) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useDialogFocus<HTMLDivElement>(onClose);   // Tab / Shift+Tab stay inside; Escape closes
   const [good, setGood] = useState(false);
   const saved = (job.application?.status as ApplicationStatus) || '';
   const [stage, setStage] = useState<string>(saved);
@@ -58,13 +59,6 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
     fetchJobFeedback(job.id, job.candidate_id).then((f) => { if (live) setGood(f?.rating === 'UP'); }).catch(() => {});
     return () => { live = false; };
   }, [job.id, job.candidate_id]);
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
-    document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('keydown', onKey); previous?.focus?.(); };
-  }, [onClose]);
 
   const url = postingUrl(job);
   const gaps = skillGaps(job.description || '', profileSkills);
@@ -77,7 +71,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`Job: ${job.title}`} onClick={(e) => e.stopPropagation()}
         className="bg-white w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:rounded-2xl overflow-y-auto outline-none">
         <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-          <span className="text-sm text-slate-600">{sourceText(job.source_adapter, job.provenance)}</span>
+          <span className="text-sm text-slate-600">{sourceText(job.source_adapter, job.provenance, job.company)}</span>
           <button type="button" aria-label="Close" onClick={onClose} className={`${btnPlain} px-3`}>Close</button>
         </div>
         <div className="p-4 space-y-5">

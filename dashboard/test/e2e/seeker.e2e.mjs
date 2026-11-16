@@ -93,6 +93,13 @@ await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
 await page.waitForSelector('[role=dialog][aria-label="Did you apply?"]', { timeout: 5000 }).catch(() => {});
 check('S14 coming back asks "Did you apply?" with the three answers', (await page.locator('[role=dialog][aria-label="Did you apply?"]').count()) === 1
   && /Yes, I applied/.test(await body()) && /Not yet \(keep saved\)/.test(await body()));
+{ // QA 16 Nov: focus starts on the first answer and Tab / Shift+Tab wrap inside "Did you apply?"
+  const label = () => page.evaluate(() => { const a = document.activeElement; return a && a.closest('[role=dialog][aria-label="Did you apply?"]') ? a.textContent.trim() : 'outside: ' + (a?.outerHTML || '').slice(0, 80); });
+  const onOpen = await label();
+  await page.keyboard.press('Shift+Tab'); const back = await label();
+  await page.keyboard.press('Tab'); const fwd = await label();
+  check('S14b "Did you apply?" takes focus, Shift+Tab wraps to the last answer and Tab back to the first', onOpen === 'Yes, I applied' && back === 'Not for me' && fwd === 'Yes, I applied', `${onOpen} | ${back} | ${fwd}`);
+}
 await clearToast();
 await page.getByRole('button', { name: 'Yes, I applied' }).click();
 const tst = await toast();
@@ -172,6 +179,35 @@ await page.goBack(); await page.waitForTimeout(600);
 check('S27 Back closes the panel and stays on Today', (await page.locator('[role=dialog]').count()) === 0 && (await page.evaluate(() => location.hash)) === '#sana/today');
 await page.goto(BASE + '/app#sana/applications', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 check('S28 a bookmark of the applications opens them', /Sana's applications/.test(await body()));
+
+// ---- QA 16 Nov: keyboard focus stays inside the job dialog; lists start fresh for each person ----------------------------------------
+await page.goto(BASE + '/app#sana/today', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
+await page.locator('[data-testid="job-card"] h3 a').first().click(); await page.waitForSelector('[role=dialog]');
+const inDialog = () => page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('[role=dialog]'));
+await page.locator('[role=dialog]').getByRole('button', { name: 'Close' }).focus();
+await page.keyboard.press('Shift+Tab');
+const afterShiftTab = await inDialog();
+const lastIsFocused = await page.evaluate(() => { const d = document.querySelector('[role=dialog]'); const f = [...d.querySelectorAll('a[href], details > summary, button:not([disabled]), select:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((e) => e.offsetParent !== null && !(e.closest('details:not([open])') && !(e.tagName === 'SUMMARY' && !e.parentElement.parentElement.closest('details:not([open])')))); return f[f.length - 1] === document.activeElement; });
+check('S34a Shift+Tab from Close stays inside the job dialog (wraps to its last control)', afterShiftTab && lastIsFocused);
+await page.keyboard.press('Tab');
+const wrapped = await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Close' && !!document.activeElement.closest('[role=dialog]'));
+check('S34b Tab from the last control wraps to the first (Close)', wrapped, await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 120)));
+for (let i = 0; i < 25; i++) await page.keyboard.press('Tab');
+check('S34c many Tabs never leave the dialog', await inDialog());
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+check('S34d Escape closes it', (await page.locator('[role=dialog]').count()) === 0);
+await page.goto(BASE + '/app#farhan/all', { waitUntil: 'networkidle' }); await page.waitForTimeout(1000);
+const showGroup = page.locator('[role=group][aria-label="Show"]');
+await showGroup.getByRole('button', { name: 'Remote' }).click(); await page.waitForTimeout(800);
+const nextBtn = page.getByRole('button', { name: 'Next' });
+let onPage2 = false;
+if (await nextBtn.count() && await nextBtn.isEnabled()) { await nextBtn.click(); await page.waitForTimeout(800); onPage2 = /Page 2 of/.test(await body()); }
+const farhanSet = (await showGroup.getByRole('button', { name: 'Remote' }).getAttribute('aria-pressed')) === 'true';
+await page.locator('[role=group][aria-label="Whose jobs"]').getByRole('button', { name: 'Sana', exact: true }).click(); await page.waitForTimeout(1000);
+const sanaAll = (await showGroup.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')) === 'true';
+check('S35 switching Farhan -> Sana clears the filter and goes back to page 1', farhanSet && sanaAll && (await page.evaluate(() => location.hash)) === '#sana/all' && !/Page [2-9]\d* of/.test(await body()),
+  `farhanRemote=${farhanSet} page2=${onPage2} sanaAll=${sanaAll}`);
+if (!onPage2) console.log(`note [${mode}]: Farhan's Remote list has one page in this seed; checked from page 1`);
 
 // ---- remembered on the device; the operator screens are behind ?operator=1 -----------------------------------------------------------
 const again = await ctx.newPage();
