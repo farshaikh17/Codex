@@ -6,6 +6,7 @@
 import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_TICKS, backfillClient } from './discovery';
 import * as site from './site';
 import { whyLine } from './why';
+import { postingUrl } from './posting_url';
 import { collapseTwins, reviewKey, type Twins, type TwinRow } from './twins';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
@@ -1417,8 +1418,8 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         company_headquarters: r.company_headquarters,
         source_adapter: r.source_adapter,
         provenance: r.provenance,
-        source_url: r.source_url,
-        original_posting_url: r.original_posting_url,
+        source_url: postingUrl(r.source_url),   // an Oracle dataset address is served as the posting page (worker/posting_url.ts)
+        original_posting_url: postingUrl(r.original_posting_url),
         employment_type: r.employment_type || 'FULL_TIME',
         workplace_type: r.workplace_type,
         location_restrictions: r.location_restrictions,
@@ -1778,6 +1779,8 @@ router.get('/api/jobs/:id', async (request, env, params, url) => {
 
     const formatted = {
       ...job,
+      source_url: postingUrl(job.source_url),
+      original_posting_url: postingUrl(job.original_posting_url),
       candidate_id: candidateId,
       is_active: Boolean(job.is_active),
       score: {
@@ -1921,6 +1924,8 @@ router.post('/api/jobs/:id/feedback', async (request, env, params, url) => {
 
     const formattedJob = job ? {
       ...job,
+      source_url: postingUrl(job.source_url),
+      original_posting_url: postingUrl(job.original_posting_url),
       candidate_id: candidateId,
       is_active: Boolean(job.is_active),
       score: {
@@ -1993,7 +1998,7 @@ router.get('/api/candidates/:id/applications', async (request, env, params) => {
       ORDER BY a.updated_at DESC
     `).bind(candidateId).all<any>();
 
-    return jsonResponse(results, 200, corsHeaders(request, env));
+    return jsonResponse((results || []).map((r: any) => ({ ...r, source_url: postingUrl(r.source_url), original_posting_url: postingUrl(r.original_posting_url) })), 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
@@ -2035,6 +2040,8 @@ router.get('/api/applications', async (request, env, _params, url) => {
 
     const tracked = results.map((r: any) => ({
       ...r,
+      source_url: postingUrl(r.source_url),
+      original_posting_url: postingUrl(r.original_posting_url),
       is_active: Boolean(r.is_active),
       eligibility: {
         classification: r.eligibility_status || 'UNKNOWN',
@@ -2216,6 +2223,8 @@ async function handleApplicationSave(request: Request, env: Env, explicitCandida
 
     const formattedJob = jobRow ? {
       ...jobRow,
+      source_url: postingUrl(jobRow.source_url),
+      original_posting_url: postingUrl(jobRow.original_posting_url),
       candidate_id: candidateId,
       is_active: Boolean(jobRow.is_active),
       score: {
@@ -3371,7 +3380,7 @@ router.get('/api/export', async (request, env, _params, url) => {
     WHERE q.candidate_id = ? AND j.is_active = 1${where} ORDER BY COALESCE(s.overall_score, 0) DESC, j.discovered_at DESC, q.job_id LIMIT ${EXPORT_MAX}`)
     .bind(...(st === 'ALL' || st === 'APPLY_WORTHY' ? [id] : [id, st])).all<any>();
   const head = ['job_id', 'title', 'company', 'location', 'workplace', 'posting_url', 'qualification_status', 'eligibility', 'lane', 'preliminary_score', 'pay_published', 'pay_text', 'application_status', 'discovered_at'];
-  const lines = [csvRow(head), ...(results || []).map((r: any) => csvRow([r.id, r.title, r.company, r.location_restrictions, r.workplace_type, r.url, r.qualification_status,
+  const lines = [csvRow(head), ...(results || []).map((r: any) => csvRow([r.id, r.title, r.company, r.location_restrictions, r.workplace_type, postingUrl(r.url), r.qualification_status,
     r.eligibility_status, r.strategy_lane, r.overall_score ?? '', r.salary_published ? 'yes' : 'no', r.salary_published ? r.salary_raw_text : '', r.application_status || '', r.discovered_at]))];
   return new Response(lines.join('\r\n') + '\r\n', { status: 200, headers: { ...corsHeaders(request, env), 'Content-Type': 'text/csv; charset=utf-8',
     'Content-Disposition': `attachment; filename="${id}-jobs-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });

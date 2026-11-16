@@ -634,3 +634,18 @@ test('plan B3 (tenth-man review): two inputs adding cities to one row are combin
   assert.equal(w.sqlite.prepare(`SELECT location_restrictions l FROM jobs WHERE id='m1'`).get().l, 'Pune, India; Chennai, India; Hosur, India');
   assert.equal(JSON.parse(w.sqlite.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE job_id='m1'`).get().b)[DS_DISCOVERY.RULES_MARKER], undefined, 'marker removed: re-scored next run');
 });
+
+test('an Oracle dataset posting is stored with the career site posting page as its link and the dataset address as its identity (QA 3 F1)', () => {
+  const w = world();
+  const ds = 'https://hdga.fa.em3.oraclecloud.com/?keyword=&mode=jobs&lang=en&site_number=Lucyelectric#26296';
+  const m = JSON.parse(fs.readFileSync(path.join(w.dir, 'matches.json'), 'utf8'));
+  m.jobs.push({ ...m.jobs[1], id: 'ds:oracle:9', url: ds, apply_url: ds, ats_type: 'oracle', title: 'Maintenance Engineer II', location: 'Mumbai, India' });
+  fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify(m));
+  const { sql } = run(w.dir);
+  w.sqlite.exec(sql);
+  const row = w.sqlite.prepare(`SELECT source_url s, original_posting_url o FROM jobs WHERE id='ds:oracle:9'`).get();
+  assert.equal(row.s, ds, 'the dataset address stays the identity (duplicate test, closures)');
+  assert.equal(row.o, 'https://hdga.fa.em3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Lucyelectric/job/26296');
+  const gh = w.sqlite.prepare(`SELECT source_url s, original_posting_url o FROM jobs WHERE id='ds:greenhouse:2'`).get();
+  assert.equal(gh.o, gh.s, 'a non-Oracle posting is unchanged');
+});
