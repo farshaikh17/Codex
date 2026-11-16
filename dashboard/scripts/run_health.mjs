@@ -7,6 +7,7 @@
 //   - nothing was written (no new job, no new row, nothing re-scored) although the dataset was fresh;
 //   - the dataset snapshot was stale (over 48 hours; engine/dataset_discovery.py writes dataset_stale.txt), the download failed, or the manifest
 //     could not be read. A red health job does not make the guards re-run the day (they count the successful "discover" job).
+// A source skipped or stopped for time is a warning line (timeWarnings()), not a failure.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -29,6 +30,19 @@ export function decideHealth({ targets = null, liveness = null, sources = null, 
   return { healthy: reasons.length === 0, reasons };
 }
 
+/** Pure: warnings (never a failure) for the sources a step skipped or stopped for time (QA 3 F2: a source skipped every run is never read). */
+export function timeWarnings(...reports) {
+  const out = [];
+  for (const rep of reports) {
+    for (const [name, r] of Object.entries(rep && typeof rep === 'object' ? rep : {})) {
+      if (!r || typeof r !== 'object') continue;
+      if (r.skipped === 'time budget') out.push(`${name} was skipped for time`);
+      else if (r.stopped === 'time cap') out.push(`${name} was stopped at its time cap (${num(r.cap_seconds)} s, read ${num(r.read)})`);
+    }
+  }
+  return out;
+}
+
 const read = (dir, f) => { try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch { return null; } };
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -39,6 +53,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     boards: read(dir, 'boards_report.json'), apply: read(dir, 'apply.report.json'), dataset: read(dir, 'report.json'), stale: fs.existsSync(path.join(dir, 'dataset_stale.txt')) });
   console.log(`Run health: ${d.healthy ? 'ok' : 'FAILED - ' + d.reasons.join('; ')}`);
   for (const r of d.reasons) console.log(`::error title=Daily run health::${r}`);
+  const warn = timeWarnings(read(dir, 'more_sources_report.json'), read(dir, 'boards_report.json'));
+  for (const w of warn) console.log(`::warning title=Source skipped for time::${w}`);
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `healthy=${d.healthy}\nreasons=${d.reasons.join('; ').replace(/[\r\n]/g, ' ')}\n`);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `**Run health:** ${d.healthy ? 'ok' : 'failed - ' + d.reasons.join('; ')}\n`);
+  if (process.env.GITHUB_STEP_SUMMARY && warn.length) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `**Sources short of time:** ${warn.join('; ')}\n`);
 }

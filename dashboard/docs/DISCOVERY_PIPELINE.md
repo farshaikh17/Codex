@@ -23,7 +23,10 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
    marker (`RULES_MARKER` in `worker/discovery.ts`, now `profile_v17`).
 4. Job-site search, remote boards, more sources (Workable, Eightfold, Siemens Energy, SuccessFactors, Workday, Oracle, SmartRecruiters
    employers, Arbeitnow, Getro, UN Careers, EURES; Adzuna with its free keys). Each writes its file after every source and stops starting
-   sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. Employer career sites are stored as the
+   sources at 80% of its time budget; Workable skips a refused search term instead of losing the rest. More sources runs the watchlist
+   employers' boards first, then the cheap sources, and the big readers (SmartRecruiters, SuccessFactors, Workday) last; each source may use
+   only its weighted share of the time left (`source_cap()`), and a source skipped or stopped for time is a warning line in the step and in
+   the run health step. Employer career sites are stored as the
    employer's own posting (verified, normal eligibility); job boards stay "eligibility unknown".
 5. Duplicates against D1; employer names instead of hiring-system tenant ids (B1); the same job in several cities is stored once with the
    cities listed (B3).

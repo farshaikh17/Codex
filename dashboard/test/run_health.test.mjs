@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { decideHealth } from '../scripts/run_health.mjs';
+import { decideHealth, timeWarnings } from '../scripts/run_health.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const GOOD = {
@@ -82,4 +82,12 @@ test('tenth-man fixes: the guards read every completed run, so a red health job 
   const wf = fs.readFileSync(path.join(here, '..', '..', '.github', 'workflows', 'discovery.yml'), 'utf8');
   assert.match(wf, /a < max\(10, t \/\/ 5\)/, 'too few verified rows also use the relaxed demotion');
   assert.match(wf, /run_log\.mjs --work \.\.\/work --kind discovery --event "\$\{\{ github\.event_name \}\}" --status "\$\{\{ job\.status \}\}"/);
+});
+
+test('a source skipped or stopped for time is a warning, never a failure (QA 3 F2)', () => {
+  const sources = { watch_boards: { skipped: 'time budget', read: 0, kept: 0 }, workday: { stopped: 'time cap', cap_seconds: 300, read: 90, kept: 4 }, jibe: { read: 10, kept: 1 } };
+  assert.deepEqual(timeWarnings(sources, { remoteok: { skipped: 'time budget' } }),
+    ['watch_boards was skipped for time', 'workday was stopped at its time cap (300 s, read 90)', 'remoteok was skipped for time']);
+  assert.deepEqual(timeWarnings(null, undefined, { a: { read: 1 } }), []);
+  assert.equal(decideHealth({ ...GOOD, sources }).healthy, true);
 });

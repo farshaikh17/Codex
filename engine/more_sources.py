@@ -802,13 +802,50 @@ def enrich_full_text(j, name, used, spent):
     return True
 
 
+# QA 3 F2: the order sources run in, small and high-priority first. The watchlist employers' own boards come first, then the cheap aggregators and
+# single-employer sites; the big multi-employer readers (SmartRecruiters, SuccessFactors, Workday) run last, so a slow one can no longer leave the
+# others without time. A source not named here runs after these, in the order main() lists it.
+ORDER = ('watch_boards', 'arbeitnow', 'uncareers', 'eures', 'adzuna', 'jibe', 'oracle_hcm', 'workable', 'eightfold', 'siemens_energy',
+         'smartrecruiters', 'successfactors', 'workday')
+# Each source's share of the time still left (weights): the big readers get a larger share, but none can take the whole step.
+WEIGHT = {'smartrecruiters': 2, 'successfactors': 3, 'workday': 3}
+START_SHARE = 0.8   # as remote_boards.over_budget(): nothing starts, and every source stops, once 80% of --budget-seconds has passed
+
+
+def ordered(sources):
+    """The sources dict in ORDER (unknown names keep their place after the known ones)."""
+    rank = {n: i for i, n in enumerate(ORDER)}
+    return dict(sorted(sources.items(), key=lambda kv: rank.get(kv[0], len(ORDER))))
+
+
+def source_cap(name, remaining, now, started, budget_seconds):
+    """Seconds `name` may run: its weighted share of the time left before START_SHARE of the budget, split over itself and the sources still to
+    run (`remaining`, including `name`). Time a source leaves unused passes to the ones after it. None when there is no budget."""
+    if not budget_seconds:
+        return None
+    left = started + START_SHARE * budget_seconds - now
+    total = sum(WEIGHT.get(n, 1) for n in remaining) or 1
+    return max(0.0, left * WEIGHT.get(name, 1) / total)
+
+
+def time_warnings(report):
+    """One warning line per source that was skipped or stopped for time (printed as a workflow warning and kept in the report)."""
+    out = []
+    for name, r in report.items():
+        if isinstance(r, dict) and r.get('skipped') == 'time budget':
+            out.append(f'more_sources: {name} was skipped for time (no time left in the step budget)')
+        elif isinstance(r, dict) and r.get('stopped') == 'time cap':
+            out.append(f"more_sources: {name} was stopped at its time cap ({r.get('cap_seconds')} s) after reading {r.get('read', 0)}")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--profiles', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--days', type=int, default=30)
     ap.add_argument('--fast', action='store_true')
-    ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it")
+    ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it, and each source has its own share of it")
     a = ap.parse_args()
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
@@ -820,6 +857,7 @@ def main():
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
+    sources = ordered(sources)
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -829,14 +867,23 @@ def main():
     held = reposters.counts_in(merged['jobs'])   # reposting sites and VA staffing firms: at most REPOSTER_CAP each per run, every source together
     report = {}
     used, enriched, spent = {}, {}, [0.0]
-    for name, fn in sources.items():
-        if over_budget(started, a.budget_seconds):   # the step's time limit is near: what was fetched is kept, nothing new starts
+    names = list(sources)
+    for i, (name, fn) in enumerate(sources.items()):
+        if over_budget(started, a.budget_seconds, START_SHARE):   # the step's time limit is near: what was fetched is kept, nothing new starts
             report[name] = {'skipped': 'time budget', 'read': 0, 'kept': 0}
             continue
+        t0 = time.monotonic()
+        cap = source_cap(name, names[i:], t0, started, a.budget_seconds)   # this source's own share, so one slow source cannot starve the rest
+        stopped = False
         seen = kept = 0
         sent = REQUESTS[0]
+        it = None
         try:
-            for j in fn():
+            it = iter(fn())
+            for j in it:
+                if cap is not None and time.monotonic() - t0 > cap:
+                    stopped = True
+                    break
                 seen += 1
                 if not j['title'] or not j['company'] or not str(j['url']).startswith('https://'):
                     continue
@@ -855,13 +902,23 @@ def main():
                 if enrich_full_text(j, name, used, spent):
                     enriched[name] = enriched.get(name, 0) + 1
                 merged['jobs'].append(clean(j)); have.add(j['id']); kept += 1
-            report[name] = {'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent, **({'full_text': enriched[name]} if enriched.get(name) else {})}
+            report[name] = {'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent, **({'full_text': enriched[name]} if enriched.get(name) else {}),
+                            **({'stopped': 'time cap', 'cap_seconds': round(cap)} if stopped else {})}
         except Exception as e:   # one failing source is skipped (a robots.txt refusal is reported here as "robots.txt disallows ...")
             report[name] = {'error': str(e)[:160], 'read': seen, 'kept': kept, 'requests': REQUESTS[0] - sent}
+        finally:
+            close = getattr(it, 'close', None)
+            if close:   # a source stopped at its cap ends its generator now (no further request)
+                try:
+                    close()
+                except Exception:
+                    pass
         write_json(raw_path, merged)   # after every source: a step stopped at its time limit keeps what it fetched
         write_json(out / 'more_sources_report.json', report, indent=1)
     write_json(raw_path, merged)
     write_json(out / 'more_sources_report.json', report, indent=1)
+    for w in time_warnings(report):
+        print(f'::warning::{w}')
     print(json.dumps(report))
     if all_errored(report):
         print('every source failed', file=sys.stderr)
