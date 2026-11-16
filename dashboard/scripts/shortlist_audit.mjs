@@ -13,12 +13,14 @@
 //     --relaxed, the day the still-open check verified too few rows), or closed;
 //     A Stretch row that is a Gulf posting from a job board refusing the check, found in the last 2 days, passes (the selector's 'listed' rule;
 //     never on Ready);
+//   - the same employer and title twice on a person's two tiers (twinKey(), the selector's own key; 16 Nov: one remote job posted once per
+//     country filled Ready ten times); checked when the selector ran today, like the employer caps;
 //   - an employer shown by its hiring-system tenant id (until B1 names it; shortlistTenant(), the selector's own test: the stored name read through the names table);
 //   - a row with a manual override, or an application older than the change, that the daily run changed (a 'discovery' history row since the run
 //     started; an application made after that change is the person's own later choice). An automatic row
 //     a person later saved or applied to keeps its mark; that alone is a person's choice, not a broken rule, and is counted, not failed.
 import fs from 'node:fs';
-import { MARK, REPOSTER_CAP, EMPLOYER_TIER_CAP, EMPLOYER_SKILL_CAP, VERIFIED_DAYS, employerKey, isReposter, skillEmployer, skillsOf, shortlistTenant, when } from './shortlist_select.mjs';
+import { MARK, REPOSTER_CAP, EMPLOYER_TIER_CAP, EMPLOYER_SKILL_CAP, VERIFIED_DAYS, employerKey, isReposter, skillEmployer, skillsOf, shortlistTenant, twinGroups, when } from './shortlist_select.mjs';
 import { companyKey, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 
 const GRACE_MS = 3600000;
@@ -31,11 +33,11 @@ export function auditSql(since) {
   return `SELECT 'row' AS kind, q.candidate_id, q.job_id, q.qualification_status AS status, j.company, j.source_adapter AS source,
   CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url, j.last_verified_at, j.is_active AS active,
   CASE WHEN q.manual_override_status IS NOT NULL OR ${APPLIED('q')} THEN 1 ELSE 0 END AS decided,
-  j.location_restrictions AS location, j.discovered_at
+  j.location_restrictions AS location, j.discovered_at, j.title, j.workplace_type AS workplace
 FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
 WHERE q.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(q.qualification_reason, '') LIKE ${q(MARK + '%')}
 UNION ALL
-SELECT DISTINCT 'touched', h.candidate_id, h.job_id, h.new_status, NULL, NULL, NULL, h.changed_at, NULL, 1, NULL, NULL
+SELECT DISTINCT 'touched', h.candidate_id, h.job_id, h.new_status, NULL, NULL, NULL, h.changed_at, NULL, 1, NULL, NULL, NULL, NULL
 FROM qualification_history h JOIN candidate_qualifications q ON q.candidate_id = h.candidate_id AND q.job_id = h.job_id
 WHERE h.actor = 'discovery' AND h.changed_at >= ${q(String(since).replace('T', ' '))} AND (q.manual_override_status IS NOT NULL
   OR EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.created_at <= h.changed_at))`;
@@ -56,6 +58,12 @@ export function audit(rows, { candidates = [], report = null, relaxed = false, n
     else if (!relaxed && !(now - when(r.last_verified_at) <= VERIFIED_DAYS * 86400000 + GRACE_MS)
       && !(r.status === 'STRETCH_READY' && listedOnlyGulf(r.url, r.location) && now - when(r.discovered_at) <= LISTED_DAYS * 86400000 + GRACE_MS)) problems.push(`a row not verified open in ${VERIFIED_DAYS} days (${r.candidate_id} ${r.job_id})`);
     if (shortlistTenant(r)) problems.push(`a tenant-id employer is on the shortlist (${r.candidate_id} ${r.job_id})`);
+  }
+  if (report) {   // twins: across both tiers of one person (the selector's hard rule), only on a day the selector ran
+    const byCand = new Map();
+    for (const list of byTier.values()) for (const r of list) byCand.set(r.candidate_id, [...(byCand.get(r.candidate_id) || []), r]);
+    for (const [cid, list] of byCand) for (const g of twinGroups(list).values())
+      problems.push(`${g.length} rows of one employer and title (${employerKey(g[0]).slice(0, 40)}) on ${cid}'s shortlist (${g.map((r) => r.job_id).slice(0, 5).join(' ')})`);
   }
   for (const [k, list] of byTier) {
     const [cid, tier] = k.split('|');

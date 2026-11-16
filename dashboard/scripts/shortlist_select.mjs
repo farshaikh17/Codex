@@ -52,12 +52,30 @@ const shortlistable = (r) => (r.verified || r.listed) && (fitsReady(r) || fitsSt
 // "Maintenance Engineer - Jamnagar"), so the same job is not shown twice. titleKey() lives in worker/twins.ts, which the To review lists also use.
 export { titleKey };
 /** One posting per employer, title and (for an on-site job) city: the same title at two plants is two jobs (tenth-man review, phase 3); the employer caps
- *  keep one employer from filling a tier with them. A remote job has no city. */
+ *  keep one employer from filling a tier with them. A remote job has no city.
+ *  Live list 16 Nov: one employer posted the same remote job once per country (MonetizeMore 'Lead Solutions Engineer (Remote)': Brazil, Mexico,
+ *  Cambodia, 'Multiple Countries', 'Remote', ...), stored with workplace UNKNOWN, so each copy read as an on-site job in its own "city" and all ten
+ *  went on Ready. A city now counts only for a job stored as on-site or hybrid; any other row is one posting per employer and title. */
 export const twinKey = (r) => {
-  const onsite = !remoteFromStored(r.workplace, r.location);
+  const onsite = /^(?:ONSITE|ON_SITE|HYBRID)$/i.test(String(r.workplace || '').trim()) && !remoteFromStored(r.workplace, r.location);
   const city = onsite ? String(r.location || '').split(/[,;/|]/)[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() : '';
   return (companyKey(r.company) || String(r.company || '').trim().toLowerCase()) + '|' + titleKey(r.title) + '|' + city;
 };
+/** Which copy of a twin group stays (16 Nov): the best ranked (rankKey: score, the incumbent bonus, the age penalty), then one whose place names
+ *  India, then the newest, then the smallest job id. Pure; the selector and the audit share twinKey(). */
+export function keepTwins(rows, now) {
+  const best = new Map();
+  const better = (a, b) => rankKey(a, now) - rankKey(b, now) || Number(!!namesIndia(a.location)) - Number(!!namesIndia(b.location))
+    || String(a.discovered_at || '').localeCompare(String(b.discovered_at || '')) || (String(a.job_id) < String(b.job_id) ? 1 : String(a.job_id) > String(b.job_id) ? -1 : 0);
+  for (const r of rows) { const k = twinKey(r), cur = best.get(k); if (!cur || better(r, cur) > 0) best.set(k, r); }
+  return rows.filter((r) => best.get(twinKey(r)) === r);
+}
+/** Twin groups among rows (the audit's check): twinKey -> rows, only the keys with more than one row. */
+export function twinGroups(rows) {
+  const m = new Map();
+  for (const r of rows || []) { const k = twinKey(r); m.set(k, [...(m.get(k) || []), r]); }
+  return new Map([...m].filter(([, g]) => g.length > 1));
+}
 export const isAuto = (r) => TIERS.includes(r.status) && String(r.reason || '').startsWith(MARK);
 
 export const INCUMBENT_BONUS = 2;
@@ -170,7 +188,9 @@ function pickFor(rows, held, ctx) {
   const { now, size } = ctx;
   const rules = ctx.rules || softRules(ctx);
   const dupes = repostDuplicates(rows);
-  const usable = ranked(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now);
+  // 16 Nov: one copy per twin group before filling (keepTwins: the best ranked, then India-located, then newest), so the fill below never
+  // meets a second copy of the same employer and title.
+  const usable = ranked(keepTwins(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
   const lists = { READY: [], STRETCH_READY: [] };
