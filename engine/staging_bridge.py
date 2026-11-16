@@ -27,6 +27,8 @@ def normalize_posting_url(raw_url: str) -> str:
     return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, path.rstrip('/'), '', new_query, ''))
 
 import tempfile
+import sys
+import time
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Callable
 
@@ -232,6 +234,16 @@ def codex_to_d1_qualification(
     }
 
 
+# Waits (seconds) before each retry of a `wrangler d1 execute --file` import that failed for a transient Cloudflare reason.
+# Safe because every statement import_batch writes is an upsert (ON CONFLICT ... DO UPDATE with guarded, value-only SETs):
+# running the same file twice leaves D1 as running it once.
+D1_IMPORT_RETRY_WAITS = (25, 25)
+# Failures that may pass on their own: D1 import-API cancellations, timeouts, network resets and 5xx-type answers.
+D1_TRANSIENT = re.compile(r'no poll\(\) received|Cancelled due to|ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|EPIPE|socket hang up|'
+                          r'fetch failed|timed? ?out|internal server error|bad gateway|service unavailable|gateway time-?out|'
+                          r'temporarily unavailable|connection (was )?(lost|reset|closed)|(status|code)\W{0,3}5\d\d\b', re.I)
+
+
 class D1StagingBridge:
     def __init__(
         self,
@@ -267,9 +279,16 @@ class D1StagingBridge:
                 cmd.append("--local")
             cmd.extend([f"--file={temp_path}", "--json"])
 
-            res = subprocess.run(cmd, cwd=self.cwd, capture_output=True, text=True, encoding='utf-8', errors='replace', check=False)
-            if res.returncode != 0:
-                raise RuntimeError(f"D1 execute failed (code {res.returncode}): {res.stderr}\nSTDOUT: {res.stdout}")
+            for attempt in range(len(D1_IMPORT_RETRY_WAITS) + 1):
+                res = subprocess.run(cmd, cwd=self.cwd, capture_output=True, text=True, encoding='utf-8', errors='replace', check=False)
+                if res.returncode == 0:
+                    break
+                failure = f"D1 execute failed (code {res.returncode}): {res.stderr}\nSTDOUT: {res.stdout}"
+                if attempt == len(D1_IMPORT_RETRY_WAITS) or not D1_TRANSIENT.search(f"{res.stderr}\n{res.stdout}"):
+                    raise RuntimeError(failure)
+                wait = D1_IMPORT_RETRY_WAITS[attempt]
+                print(f"D1 import failed for a transient reason (attempt {attempt + 1}); retrying in {wait} s", file=sys.stderr)
+                time.sleep(wait)
 
             out = res.stdout.strip()
             start = out.find('[')
