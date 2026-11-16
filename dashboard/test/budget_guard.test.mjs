@@ -28,3 +28,16 @@ test('the guard line reports rows written as well as rows read, so a write-heavy
   assert.equal(stop.skip, true);
   assert.match(stop.reason, /rows written today 5 of 100,000/);
 });
+
+// QA 3 F4: the daily run (about 2.4M reads) may start only below 1.5M rows read that day, so about 1.1M of the 5M free limit stays for the
+// site, the watchlist and a release. The watchdog has no limit of its own: the run it starts passes this same guard.
+test('the daily discovery run starts only below 1.5M rows read', async () => {
+  const fs = await import('node:fs');
+  const wf = fs.readFileSync(new URL('../../.github/workflows/discovery.yml', import.meta.url), 'utf8');
+  const limits = [...wf.matchAll(/MAX_READS:\s*'(\d+)'/g)].map((m) => Number(m[1]));
+  assert.deepEqual(limits, [1500000]);
+  assert.equal(decide({ rows_read: 1499999, rows_written: 0 }, { maxReads: limits[0], event: 'workflow_dispatch' }).skip, false);
+  assert.equal(decide({ rows_read: 1500000, rows_written: 0 }, { maxReads: limits[0], event: 'workflow_dispatch' }).skip, true, 'a watchdog start passes the same guard');
+  const wd = fs.readFileSync(new URL('../../.github/workflows/discovery-watchdog.yml', import.meta.url), 'utf8');
+  assert.doesNotMatch(wd, /MAX_READS/, 'no second, looser limit in the watchdog');
+});
