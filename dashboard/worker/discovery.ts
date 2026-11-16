@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v16';
+export const RULES_MARKER = 'profile_v17';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -322,6 +322,9 @@ const DESIGN_TITLE = /\b(?:design|study|studies|simulation|modell?ing)\b/i, HAND
 const ELECTRICAL_TITLE = /\b(?:electrical|elektro\w*)\b/i, NON_ELECTRICAL_FIT = /mechanical|reliab|maintenance|rotating|turbine|boiler|plant|energy|efficiency|commission|operations?|process/i;
 const EU_ONLY = /\b(must (?:be |reside |live )?(?:based |located |resident )?in (?:the )?(?:eu|eea|european union|europe)|(?:eu|eea|european union)[- ]?(?:only|based only|residents? only|work (?:permit|authori[sz]ation) required)|right to work in the (?:eu|uk|eea|netherlands|germany) (?:is )?required|(?:eu|eea) citizens? only)\b/i;
 const TZ_RESTRICTED = /\b(?:(?:us|u\.s\.|north american?|eastern|pacific|central|est|pst|cst|cet|uk|european?) (?:time ?zones?|business hours|working hours|hours)|overlap with (?:us|u\.s\.|pacific|eastern|north american?|cet|european?) (?:time|hours|time ?zones?)|work(?:ing)? (?:us|u\.s\.|pst|est) hours|(?:between|within|at least) \d+ ?(?:hours?|hrs?) (?:of )?overlap)\b/i;
+// Farhan's foreign-place rule (jobs QA 13 Nov): place words that keep a foreign place open to India, and text that hires from India or APAC.
+const OPEN_PLACE_WORDS=/\b(?:india|apac|asia|worldwide|anywhere|global)\b/i;
+const INDIA_HIRING_TEXT=/\b(?:based|located|living|resid\w*|candidates?|applicants?|hiring|hire|work(?:ing)?|time ?zones?)\b[^.!?]{0,40}\b(?:india|apac|asia)\b/i;
 /** Where a remote posting really allows the person to be. Read from its own words only. */
 export function locationClass(text: string, location: string): 'worldwide' | 'india_ok' | 'us_only' | 'eu_only' | 'timezone' | 'unknown' {
   const t = `${location || ''} ${text || ''}`;
@@ -627,7 +630,14 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   else if(!explicitIndiaRemote&&!globalRemote&&locationClass(p.description||'',p.location||'')==='eu_only'){eligibility='INELIGIBLE';reason='Must be based in the EU or EEA (the posting says so).';}
   // Jobs QA 13 Nov: the owner's US-only rule, extended to every other country: 'Remote (United Kingdom)', 'Remote (Mexico)', 'Remote - EMEA'. Not when the
   // place or the text names India, Asia or APAC, the place also says worldwide / anywhere / global, or the text says worldwide (S5's readings win).
-  else if(!explicitIndiaRemote&&!globalRemote&&foreignLocation(p.location)&&!/\b(?:india|apac|asia|worldwide|anywhere|global)\b/i.test(p.location||'')&&!/\b(?:based|located|living|resid\w*|candidates?|applicants?|hiring|hire|work(?:ing)?|time ?zones?)\b[^.!?]{0,40}\b(?:india|apac|asia)\b/i.test(p.description||'')&&!['worldwide','india_ok'].includes(locationClass(p.description||'',p.location||''))){eligibility='INELIGIBLE';reason='Remote within another country or region only, not from India.';}
+  else if(!explicitIndiaRemote&&!globalRemote&&foreignLocation(p.location)&&!OPEN_PLACE_WORDS.test(p.location||'')&&!INDIA_HIRING_TEXT.test(p.description||'')&&!['worldwide','india_ok'].includes(locationClass(p.description||'',p.location||''))){eligibility='INELIGIBLE';reason='Remote within another country or region only, not from India.';}
+  // Live list 16 Nov (MonetizeMore 'Lead Solutions Engineer (Remote)', one copy per country): the text's 'work from anywhere in the world' is the
+  // employer's general line, while this copy's own place is one named country (Brazil, Mexico, Cambodia; 'Chile; Argentina; Peru'). A place naming
+  // only other countries wins over worldwide words in the text, unless the place itself says India, APAC, Asia, worldwide, anywhere or global, or
+  // the text hires from India or APAC. The two readings disagree, so it is not confirmed (UNKNOWN, not ruled out: 'Remote (Germany)' with 'remote
+  // worldwide, any time zone' stays a possible job, jobs QA 13 Nov); an unconfirmed Farhan row without India in its place is not shortlisted.
+  // 'Remote', 'Multiple Countries' and worldwide places are read as before (S5).
+  else if(!explicitIndiaRemote&&globalRemoteWords&&!worldLocation&&!asiaLocation&&foreignLocation(p.location)&&!OPEN_PLACE_WORDS.test(p.location||'')&&!INDIA_HIRING_TEXT.test(p.description||'')){reason='The text says work from anywhere, but this copy\'s place names only another country, so remote from India is not confirmed.';}
   // Live list review 13 Nov: a posting whose place is only 'Remote' but whose text keeps the job in one country (US payroll words such as 401(k),
   // E-Verify or Form I-9; 'must be based in Canada'; 'right to work in the UK') is the same case.
   else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&remoteCountryByText(p.description)){eligibility='INELIGIBLE';reason='Remote within another country only (the posting\'s text says so), not from India.';}
