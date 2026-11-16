@@ -4,11 +4,11 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v17';
+export const RULES_MARKER = 'profile_v18';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
-export type Posting = {id:string;title:string;url:string;location:string;description:string;remote:boolean;salary?:any;company?:string;board?:boolean;observedAt?:string;sourceLabel?:string};
+export type Posting = {id:string;title:string;url:string;location:string;description:string;remote:boolean;salary?:any;company?:string;board?:boolean;observedAt?:string;sourceLabel?:string;source?:string};
 const iso = () => new Date().toISOString();
 const epoch = () => Math.floor(Date.now()/1000);
 const plain = (s:any) => String(s || '').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
@@ -222,12 +222,35 @@ const FOREIGN_STATE_NAME=new RegExp(',\\s*(?:'+[
 // Jobs QA 13 Nov: the job-site feed (SuccessFactors, EURES) gives a bare country code as the whole location ('SE', 'EG', 'UZ', 'SA'). Exactly two capital
 // letters are a country abroad, except India's own code and the Indian state and union-territory codes (so 'MH', 'KA', 'TN' or 'GJ' stay Indian; the
 // country codes they share, such as BR, NL, CH or TR, are left unread rather than risk reading an Indian state as abroad).
-const BARE_CODE=/^\s*([A-Z]{2})\s*$/, INDIA_CODES=new Set(['IN','AN','AP','AR','AS','BR','CG','CH','CT','DD','DH','DL','DN','GA','GJ','HP','HR','JH','JK','KA','KL','LA','LD','MH','ML','MN','MP','MZ','NL','OD','OR','PB','PY','RJ','SK','TG','TN','TR','TS','UK','UP','UT','WB']);
+const BARE_CODE=/^\s*([A-Z]{2})\s*(?:\([^)]*\))?\s*$/, INDIA_CODES=new Set(['IN','AN','AP','AR','AS','BR','CG','CH','CT','DD','DH','DL','DN','GA','GJ','HP','HR','JH','JK','KA','KL','LA','LD','MH','ML','MN','MP','MZ','NL','OD','OR','PB','PY','RJ','SK','TG','TN','TR','TS','UK','UP','UT','WB']);
 export function bareForeignCode(location:string|null|undefined){const m=BARE_CODE.exec(location||'');return !!m&&!INDIA_CODES.has(m[1]);}
+// Jobs QA 3 (16 Nov): career sites write the country as an ISO code at the end of the place, often before a postcode ('Kabirwala, PK, 58150',
+// 'Docklands, VIC, au', 'Rojana Industrial Park, TH', 'Bandar Lampung, NULL, id'; 'SE (SE110)' for the bare code). Those places were read as no place
+// at all, so a job abroad escaped the visa-route cap that the same job written 'Turkey' or 'Australia' gets. Only codes that are not also an Indian
+// state code (so 'TR', 'BR', 'CH', 'NL' or 'AR' stay unread, as for the bare code above); 'IN' is India.
+const ABROAD_CODES=new Set(('AE AF AL AM AO AT AU AZ BA BD BE BG BH BO BW BY CA CD CL CM CN CO CR CU CY CZ DE DK DO DZ EC EE EG ES ET FI FJ FR GB GE GH GR GT HK HN HU ID IE IL IQ IR IS IT JM JO JP KE KG KH KR KW KZ LB LK LT LU LV LY MA MD ME MK MM MO MT MU MX MY NG NI NO NP NZ OM PA PE PG PH PK PL PR PT QA RO RS RU RW SA SE SG SI SN SV TH TT TW TZ UA UG US UY UZ VE VN ZA ZM ZW').split(' '));
+// Three-letter codes too ('Taber, AB, CAN (Plant)', 'Limerick, IRL'), read as their two-letter code.
+const ISO3:Record<string,string>={CAN:'CA',IRL:'IE',GBR:'GB',DEU:'DE',AUS:'AU',MEX:'MX',BRA:'BR',CHN:'CN',FRA:'FR',ESP:'ES',ITA:'IT',NLD:'NL',BEL:'BE',POL:'PL',SWE:'SE',NOR:'NO',DNK:'DK',FIN:'FI',AUT:'AT',CHE:'CH',PRT:'PT',CZE:'CZ',ROU:'RO',HUN:'HU',TUR:'TR',ZAF:'ZA',SGP:'SG',MYS:'MY',THA:'TH',IDN:'ID',PHL:'PH',VNM:'VN',JPN:'JP',KOR:'KR',NZL:'NZ',ARG:'AR',CHL:'CL',COL:'CO',PER:'PE',EGY:'EG',NGA:'NG',KEN:'KE',SAU:'SA',ARE:'AE',QAT:'QA',OMN:'OM',KWT:'KW',BHR:'BH',USA:'US'};
+const TRAILING_CODE=/,\s*([A-Za-z]{2,3})\s*(?:\([^)]*\))?\s*(?:,\s*\d[\dA-Za-z -]{2,9})?\s*$/;
+export function trailingCountryCode(location:string|null|undefined):string|null{const m=TRAILING_CODE.exec(location||'');if(!m)return null;const raw=m[1].toUpperCase(),c=raw.length===3?(ISO3[raw]||''):raw;return c&&(ABROAD_CODES.has(c)||(raw.length===3&&c!=='IN'))?c:null;}
+// A US site written 'City ST' with no comma, as Workday lists them ('Indianapolis IN', 'Cleburne TX', 'Waukesha WI; +1 more'): the whole place, or
+// the first of several. Upper-case state codes only, and not those that are also Indian state codes or common words.
+const US_SITE=/\b[A-Z][a-z]+ (?:AL|AK|AZ|CA|CO|DE|FL|HI|IA|ID|IL|KS|KY|MA|MD|ME|MI|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TX|VA|VT|WA|WI|WV|WY)\s*(?:;|$)/;
+// Other site formats of the same feeds: a country code first ('CN - Qingdao', 'CAN-Ontario-Guelph', 'US.NC.Raleigh'), a Canadian province code last
+// ('Milton, ON'), and a US state code after an Indian city's namesake ('Delhi, NY': New York). Codes shared with Indian states are left unread.
+const LEADING_CODE=/^\s*([A-Z]{2,3})\s*(?:-\s*|\s-\s+|\.)(?=[A-Z])/, PROVINCE_CODE=/,\s*(?:ON|BC|AB|QC|MB|NS|NB|PE)\s*$/;
+const US_STATE_LAST=/,\s*(?:AL|AK|AZ|CA|CO|DE|FL|HI|IA|ID|IL|KS|KY|MA|MD|ME|MI|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|PA|RI|SC|SD|TX|VA|VT|WA|WI|WV|WY)\s*(?:,\s*(?:US|USA))?\s*(?:\d{5})?\s*$/;
+// 'Remote - Colorado', 'Remote (Texas)': remote within a US state, Canadian province or Australian state named in full.
+const REMOTE_STATE_NAME=new RegExp(FOREIGN_STATE_NAME.source.replace(/^,\\s\*/,'\\bremote\\s*[-–(:]\\s*'),'i');
+export function codedForeignPlace(location:string|null|undefined){
+ const l=location||'';if(/\b(?:india|bharat)\b/i.test(l))return false;
+ const m=LEADING_CODE.exec(l);if(m){const raw=m[1],c=raw.length===3?(ISO3[raw]||''):raw;if(c&&c!=='IN'&&(ABROAD_CODES.has(c)||raw.length===3))return true;}
+ return PROVINCE_CODE.test(l)||US_STATE_LAST.test(l);
+}
 /** True when the only stated location is outside India. A location that also names an Indian place is never foreign. */
 export function foreignLocation(location:string){
  const l=(location||'').replace(EXCLUSION_PHRASE,' ');if(!l.trim()||indianPlace(l))return false;   // 'Remote, excluding the US' is not a US location
- return bareForeignCode(l)||FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l)||FOREIGN_STATE_NAME.test(l);
+ return bareForeignCode(l)||!!trailingCountryCode(l)||US_SITE.test(l)||codedForeignPlace(l)||REMOTE_STATE_NAME.test(l)||FOREIGN_NAME.test(l)||FOREIGN_US_DOTTED.test(l)||FOREIGN_US_BARE.test(l)||FOREIGN_STATE.test(l)||FOREIGN_STATE_NAME.test(l);
 }
 /** Plan B2: a location that gives no place ('3 Locations', or empty) and a description that names only places outside India and the Gulf is abroad
  *  for Sana's visa-route cap ('Maintenance Engineer, 4 Locations' whose text is all about sites in Texas). A description that also names an Indian or
@@ -252,10 +275,21 @@ export function remoteFromStored(workplaceType:string|null|undefined,location:st
 /** Skill-based preliminary score, exactly as evaluate() computes it for a role-matched posting. */
 export function roleScore(skills:number,eligible:boolean){return Math.min(90,40+skills*8+(eligible?10:0));}
 /** The Worker's own test for an Indian location in evaluate(): an Indian place (plan S1: states, cities and plant towns) or the country code 'IN' at the end. */
+// Jobs QA 3 (16 Nov): 'Lafayette, IN', 'Hammond, IN' and 'WOODBURN, IN' are Indiana, US sites (Workday), read as India because 'IN' is also India's
+// code ('Pithampur, IN', 'Patiala, IN' are Indian). A place that is only 'City, IN', with a city the rules do not know as Indian, is Indiana when the
+// posting's text reads American (Indiana, the United States, a 401(k), a dollar amount) or it comes from Workday (whose Indian sites are written
+// 'Pune, India' or 'IND - ...'; SuccessFactors writes the ISO code, 'Pithampur, IN'), and the text names no Indian place.
+const CITY_IN=/^[^,]+,\s*IN\s*$/;
+export function indianaPlace(location:string|null|undefined,description:string|null|undefined,source?:string|null,url?:string|null){
+ const l=location||'',d=String(description||'');
+ if(!CITY_IN.test(l)||indianPlace(l)||/\b(?:india|bharat)\b/i.test(d)||INDIA_PLACE.test(d))return false;
+ return /^workday$/i.test(String(source||'').trim())||/\.myworkdayjobs\.com\b/i.test(String(url||''))||/\bindiana\b|\b(?:united states|usa)\b|\bu\.s\.|\b401\s?\(?k\)?(?![a-z])|\$\s?\d/i.test(d);
+}
 export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return indianPlace(l)||/(?:^|, )in$/i.test(l);}
 /** True when the location names a place in India (and not only a neighbour's place of the same name). Also decides that a location is NOT foreign. */
 const INDIA_NAMESAKE=/\b(?:punjab|hyderabad|kochi|surat|kashmir|ncr)\b/gi;   // also places in Pakistan, Japan, Thailand and the Philippines (NCR = Metro Manila)
-export function indianPlace(location:string|null|undefined){const l=location||'';if(!INDIA_PLACE.test(l))return false;if(/\b(?:india|bharat)\b/i.test(l)||!FOREIGN_NAME.test(l))return true;return INDIA_PLACE.test(l.replace(INDIA_NAMESAKE,' '));}
+export function indianPlace(location:string|null|undefined){const l=location||'';if(!INDIA_PLACE.test(l))return false;if(!/\b(?:india|bharat)\b/i.test(l)&&(US_STATE_LAST.test(l)||PROVINCE_CODE.test(l)))return false;   // jobs QA 3: 'Delhi, NY'
+ if(/\b(?:india|bharat)\b/i.test(l)||!FOREIGN_NAME.test(l))return true;return INDIA_PLACE.test(l.replace(INDIA_NAMESAKE,' '));}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_INDIA_ONSITE_REASON='On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).';
 export const SANA_UNKNOWN_ACCESS_REASON='Located in an Indian city. Whether a commercial airport is within about 2 hours of where the candidate would be based is not verified, so accessibility is unknown.';
@@ -377,7 +411,7 @@ const GULF_PLACE=/\b(uae|united arab emirates|dubai|abu dhabi|sharjah|saudi|ksa|
 // ranked below every realistic role, and can never be shortlisted (owner review 2026-11-12: US maintenance jobs offering only
 // "relocation assistance" were reaching Ready). Was a fixed 15-point deduction.
 /** A place in the Gulf states (used by the screen's visa-route rule and, later, the shortlist's place bands). */
-export function gulfPlace(location:string|null|undefined){return GULF_PLACE.test(location||'')||GULF_CODE.test(location||'');}
+export function gulfPlace(location:string|null|undefined){return GULF_PLACE.test(location||'')||GULF_CODE.test(location||'')||(/[\u0600-\u06FF]/.test(location||'')&&['AE','QA','OM','KW','BH'].includes(trailingCountryCode(location)||''));}   // jobs QA 3: an Arabic place with its code ('مسقط, محافظة مسقط, om'); Latin-script codes stay upper case only, and 'SA' after a comma stays unread (South Australia)
 // Gap fix (13 Nov): job boards that refuse the daily still-open check (403 / 999 / timeouts), so their postings are almost never "verified open in
 // 4 days" (plan section 10, phase 3). Their job-site search (engine/jobsite_discovery.py) asks only for postings listed in the last 48 hours, so a
 // row found in the last LISTED_DAYS was in the board's own listing then. For a Gulf place only, the shortlist (scripts/shortlist_select.mjs) counts
@@ -553,7 +587,10 @@ export function onsiteByText(description:string|null|undefined){
 // work in <country>'. A text that also names India, APAC, Asia, worldwide or hiring globally, or a denied mention ('you do not need to be based in
 // the US'), does not count.
 const COUNTRY_TEXT=new RegExp('\\b401\\s?\\(?k\\)?(?![a-z])|\\be-?verify\\b|\\bform i-?9\\b|\\b(?:authori[sz]ed|eligible|legally (?:authori[sz]ed|able|permitted)) to work in the (?:us|u\\.s\\.?|united states)(?![a-z])'
- +'|\\b(?:remote|work|based|located|reside|resident|live|living) (?:anywhere )?(?:in|within|from) the (?:contiguous |continental )?(?:us|u\\.s\\.?|united states)(?![a-z])|\\bus[- ]based (?:candidates|applicants|remote|role|position|employees? only)\\b'
+ +'|\\b(?:remote(?:ly)?|work|based|located|reside|resident|live|living) (?:anywhere )?(?:in|within|from) the (?:contiguous |continental )?(?:us|u\\.s\\.?|united states)(?![a-z])'
+ // Jobs QA 3: 'based remotely within the US', 'work from anywhere within the UK': remote within another named country.
+ +'|\\b(?:remote(?:ly)?|anywhere) (?:in|within) (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
+ +'|\\bus[- ]based (?:candidates|applicants|remote|role|position|employees? only)\\b'
  +'|\\b(?:must|should|need to|required to|will need to) (?:be )?(?:based|located|resid(?:e|ent)|live|living) (?:in|within) (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
  +'|\\bright to work in (?:the )?'+FOREIGN_NAME.source.replace(/^\\b/,'')
  // Integration 15 Nov (Arcadia, US healthcare): the employer's own contact number in the US format, '(781) 202-3600', in a 'Remote' posting with no
@@ -566,19 +603,45 @@ export function remoteCountryByText(description:string|null|undefined){
  while((m=COUNTRY_TEXT.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|without|don't|do not|needn't)\b[^.!?]*$/.test(before))return true;}
  return false;
 }
+// Jobs QA 3 (16 Nov): the posting's own 'Location:' line, which many postings with a bare 'Remote' place carry ('Location: Remote – United States',
+// 'Location: United Kingdom', 'Location: Espoo, Finland', 'Location: India (remote)'). Only the words up to the next sentence or label are read.
+const LOCATION_LINE=/\blocation\s*\**\s*:\s*\**\s*([^*|\n]{2,80})/i, LOCATION_LINE_END=/[.?!;]|\s(?:about|who|department|reports?|type|salary|engagement|employment|job|role|we|our|the|this|compensation|shift|status|work(?:ing)? (?:hours|schedule)|overview|position|team|function)\b/i;
+export function textLocation(description:string|null|undefined){const m=LOCATION_LINE.exec(String(description||'').slice(0,3000));if(!m)return '';const v=m[1],e=v.search(LOCATION_LINE_END);return (e<0?v:v.slice(0,e)).trim();}
+// The place parts of a title: bracketed parts and the last part after a dash or slash ('(US or Canada)', '- US Remote', 'Dublin / US Remote', '(Mexico)').
+export function titlePlaces(title:string|null|undefined):string[]{
+ const t=String(title||''),out:string[]=[];let m:RegExpExecArray|null;const br=/\(([^)]*)\)|\[([^\]]*)\]/g;
+ while((m=br.exec(t)))out.push(m[1]??m[2]??'');
+ const last=t.replace(/\([^)]*\)|\[[^\]]*\]/g,' ').split(/\s[-–—|/]\s/);if(last.length>1)out.push(last[last.length-1]);
+ return out.map((x)=>x.trim()).filter(Boolean);
+}
+/** Jobs QA 3: the title or the text's Location line names only places outside India (no India, APAC, Asia, worldwide, anywhere or global). */
+export function foreignPlaceInPosting(title:string|null|undefined,description:string|null|undefined){
+ const open=(x:string)=>OPEN_PLACE_WORDS.test(x)||indianPlace(x);
+ const loc=textLocation(description);
+ return (!!loc&&!open(loc)&&foreignLocation(loc))||titlePlaces(title).some((x)=>!open(x)&&foreignLocation(x));
+}
+// Jobs QA 3: principal, director and vice-president titles are far above Farhan's level (owner brief: not principal/director-level). They stay in
+// To review below his Worth-a-try floor (threshold - 10), whatever their skills and taste. 'Head of' and 'general manager' keep plan S6 (threshold - 1).
+const FARHAN_FAR_ABOVE=/\b(?:director|principal|vp|svp|evp|vice[- ]president|chief(?! of staff))\b/i;
+export const FAR_ABOVE_GAP=16;   // 54 for him: below the floor of 60 even with the largest taste raise (+5, scripts/taste_rules.mjs)
+// Jobs QA 3: a remote job for Farhan that names no India, APAC, Asia, worldwide or anywhere wording at all (place 'Remote', a US or European
+// employer) is not ruled out, but it ranks below the remote jobs that do say they hire from India.
+export const INDIA_UNCONFIRMED_PENALTY=10;
+const HIRING_REACH=/\b(?:india|indian|apac|asia|asia[- ]pacific|worldwide|anywhere|global(?:ly)?|international(?:ly)?|any country|offshore|overseas)\b/i;
 const SANA_BELOW_LEVEL=/\btechnicians?\b|(?<!\b(?:system|grid|network|transmission|distribution|independent)\s)\boperators?\b|\bfield officers?\b/i;
 const SENIOR_TITLE=/\b(senior|sr|lead|principal|staff|head|manager|director)\b/i;
 const EXEC_TITLE=/\b(?:vp|svp|evp|vice[- ]president|chief(?! of staff)|plant head|(?<!assistant |deputy |asst\.? |dy\.? )general manager|head of)\b/i;   // AGM / DGM are mid-senior Indian grades   // plan S6 ('Chief of Staff' is a builder role, not an executive one)
 export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const text=`${p.title} ${p.location} ${p.description}`, lower=text.toLowerCase();
  const negated=(pattern:RegExp)=>{const g=new RegExp(pattern.source,pattern.flags.includes('g')?pattern.flags:pattern.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(lower))){const before=lower.slice(Math.max(0,m.index-55),m.index),after=lower.slice(m.index+m[0].length,m.index+m[0].length+45);if(/\b(no|not|without|unavailable|unable|never|cannot|can't|won't|isn't|aren't|doesn't|don't|no longer)\b[^.!?]*$/.test(before)||/^\s+(?:(?:is |are |will be )?(?:not|no longer|never|unavailable|unsupported)|isn't|aren't|won't be|will not be)\b/.test(after))return true;}return false};   // ANY denial of a sponsorship/relocation phrase wins over a welcoming one
- const india=sanaIndiaCity(p.location);
+ const indiana=indianaPlace(p.location,p.description,p.source,p.url), india=sanaIndiaCity(p.location)&&!indiana;
  const onsiteText=onsiteByText(p.description);
  const remote=(p.remote&&!onsiteText)||/\b(remote|work from home|telecommut)/i.test(p.location);
- const explicitIndiaRemote=india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
+ const locLine=textLocation(p.description), lineIndiaRemote=indianPlace(locLine)&&/\b(?:remote|work from home|wfh)\b/i.test(locLine);   // jobs QA 3: 'Location: India (remote)'
+ const explicitIndiaRemote=lineIndiaRemote||india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
- const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
+ const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!/\brelocation(?: assistance)?(?: provided| available| offered| eligible)?\s*[:\-–]\s*no\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
  // Integration 15 Nov (AECOM Bucharest: 'relocation to Romania is mandatory ... Visa sponsorship will be discussed after the first interview'): a
  // sponsorship that is only to be discussed or considered case by case is not a stated route, so relocation is all that is left.
  const VISA_HEDGED=/\bvisa sponsorship (?:will|may|can|could|might) be (?:discussed|considered|reviewed|evaluated|assessed)\b|\bsponsorship (?:is |will be |may be )?(?:considered |assessed |reviewed )?(?:on a )?case[- ]by[- ]case\b/i;
@@ -589,7 +652,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Roles reserved for nationals of a Gulf country ("Electrical Technician (Saudi Nationals)", "UAE nationals only").
  const nationalsOnly=NATIONALS_TITLE.test(p.title||'')||NATIONALS_TEXT.test(p.description||'');
  // The posting itself says it offers no visa route ("unable to provide visa sponsorship", "must be authorized to work in the US without current or future sponsorship").
- const noVisaWords=/\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)/i.test(text);
+ const noVisaWords=/\b(?:not|never|cannot|unable to)\b[^.!?]{0,60}\b(?:applicants?|candidates?|individuals?|anyone)\b[^.!?]{0,40}?\b(?:who|that)\s+(?:will\s+)?(?:now or in the future\s+)?(?:requires?|needs?)\s+(?:(?:visa|immigration|employment)\s+)?sponsorship|\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)/i.test(text);
  // Application-form style answers: 'Visa Sponsorship Available: No', 'Relocation eligible : No' (Black & Veatch, owner review 2026-11-12).
  const noVisaRoute=noVisaWords||/\b(?:visa\s+)?sponsorship(?:\s+(?:available|offered|provided))?\s*[:\-–]\s*no\b/i.test(text);
  const globalRemoteWords=/\bworldwide\W{0,6}remote|\bremote\W{0,6}worldwide|remote.?global|work from anywhere in the world/i.test(text);   // 'Remote - Worldwide' and 'Worldwide (Remote)' as well as 'worldwide remote'
@@ -640,6 +703,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   else if(!explicitIndiaRemote&&globalRemoteWords&&!worldLocation&&!asiaLocation&&foreignLocation(p.location)&&!OPEN_PLACE_WORDS.test(p.location||'')&&!INDIA_HIRING_TEXT.test(p.description||'')){reason='The text says work from anywhere, but this copy\'s place names only another country, so remote from India is not confirmed.';}
   // Live list review 13 Nov: a posting whose place is only 'Remote' but whose text keeps the job in one country (US payroll words such as 401(k),
   // E-Verify or Form I-9; 'must be based in Canada'; 'right to work in the UK') is the same case.
+  else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&foreignPlaceInPosting(p.title,p.description)&&!INDIA_HIRING_TEXT.test(p.description||'')){eligibility='INELIGIBLE';reason='Remote within another country only (the title or the posting\'s Location line names it), not from India.';}
   else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&remoteCountryByText(p.description)){eligibility='INELIGIBLE';reason='Remote within another country only (the posting\'s text says so), not from India.';}
   // (officeDays already ruled out hybrid and office days above; a passing 'on-site visit' or a denied 'not a hybrid role' no longer blocks, plan S8)
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site)\b/i.test(p.location||'')&&!/\b(not remote|no remote)\b/i.test(p.description||'')){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
@@ -721,7 +785,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // QA2 14 Nov: her core plant (thermal/captive power, turbine, boiler, coal handling) ranks above generic facility and agency maintenance posts; before every cap.
  const corePlant=candidate.id==='sana_ansari'&&!prof&&role&&!(DESIGN_TITLE.test(p.title||'')&&!HANDS_ON_TITLE.test(p.title||''))&&/\b(?:thermal|captive|coal[- ]fired|super ?critical)\s+power\b|\bpower (?:plant|station)s?\b|\bturbines?\b|\bboilers?\b|\bcoal handling\b|\bBTG\b/i.test((p.title||'')+' '+String(p.description||'').slice(0,2000));
  if(corePlant)score=Math.min(SCORE_CEILING,score+8);
- const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&(foreignLocation(p.location)||abroadByDescription(p.location,p.description)||(!!lang&&!india&&!indianPlace(p.location)))&&!gulf&&(!remote||(!explicitIndiaRemote&&!globalRemote));
+ const visaUnlikely=candidate.id==='sana_ansari'&&!prof&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&(foreignLocation(p.location)||indiana||abroadByDescription(p.location,p.description)||(!!lang&&!india&&!indianPlace(p.location)))&&!gulf&&(!remote||(!explicitIndiaRemote&&!globalRemote));
  if(visaUnlikely)score=Math.min(score,VISA_UNLIKELY_CAP);
  const nationalsPreferred=(!prof||String(prof.home_country||'').toLowerCase()==='india')&&NATIONALS_PREFERENCE.test(text);
  if(nationalsPreferred)score=Math.min(score,NATIONALS_PREFERENCE_CAP);
@@ -738,12 +802,18 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const execTitle=EXEC_TITLE.exec(p.title||''), execTarget=!!execTitle&&list(candidate.target_roles).some((t)=>new RegExp(`\\b${escRe(execTitle[0])}\\b`,'i').test(String(t)));
  const tooSenior=role&&!prof&&(overReach||(!!execTitle&&!execTarget));
  if(tooSenior)score=Math.min(score,threshold-1);
+ const farAbove=candidate.id==='farhan_shaikh'&&!prof&&role&&FARHAN_FAR_ABOVE.test(p.title||'')&&!list(candidate.target_roles).some((t)=>FARHAN_FAR_ABOVE.test(String(t)));
+ if(farAbove)score=Math.min(score,threshold-FAR_ABOVE_GAP);
+ const indiaUnconfirmed=candidate.id==='farhan_shaikh'&&!prof&&role&&eligibility==='UNKNOWN'&&!foreignLocation(p.location)&&!HIRING_REACH.test(text);
+ if(indiaUnconfirmed)score=Math.max(0,score-INDIA_UNCONFIRMED_PENALTY);
  // Jobs QA 2 (14 Nov): a design or study post also stays near her threshold whatever its skills (ETAP study expert at 68 after the -8): at most threshold + 4.
  if(designOnly)score=Math.min(score,threshold+DESIGN_ONLY_HEADROOM);
  if(foreignOnly)score=Math.max(0,score-FOREIGN_LOCATION_PENALTY);
  // The screen itself never returns READY. The daily run's shortlist step (scripts/dataset_apply.mjs) promotes the best screened rows by one stated rule.
  return {status:eligibility==='INELIGIBLE'?'INELIGIBLE':role?'NEEDS_REVIEW':'HOLD',lane:role?'STRONGEST_FIT':'UNASSIGNED',eligibility,reason,score,skills,target_fit:fit,target_exact:fit==='exact'&&exactWithQualifier(p.title||'',candidate.target_roles),qualification_reason:(role?'Cloud discovery match. Full requirements, pay and experience require review before READY.':'Outside candidate target role family; retained for review.')+(fit==='exact'?' Title is one of the candidate\'s target roles.':fit==='word'?' Title is close to one of the candidate\'s target roles.':'')+(atLevel?' Pitched at the candidate\'s level.':'')+(avoided?' Title is on the candidate\'s avoid list (score capped).':'')+(tooJunior?' Pitched well below the candidate\'s experience (score capped).':'')+(platform?` Built around ${platform}, which the profile does not list (score capped).`:'')+(foreignOnly?' Only stated location is outside India (score reduced).':'')+(visaUnlikely?' On-site abroad with no visa route from India stated (score capped).':'')+(nationalsPreferred?' Gives preference to the country\'s nationals (score capped).':'')+(overReach?` Asks for ${need}+ years (score reduced).`:meets?` Meets the stated ${need}+ years.`:'')
   +(tooSenior?' Pitched above the candidate\'s level (score capped below the shortlist).':'')
+  +(farAbove?' Principal, director or VP title, far above the candidate\'s level (kept off the shortlist).':'')
+  +(indiaUnconfirmed?' Remote, but nothing in the posting says it hires from India (score reduced).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
   +(rejectedOn?` Rejected by this employer before (${rejectedOn}).`:'')

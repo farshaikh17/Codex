@@ -23,7 +23,7 @@ export function posting(j) {
   const textOnsite = flagged && onsiteByText(description);
   const remote = (flagged && !textOnsite) || /\bremote\b/i.test(j.location || '');
   const onsite = j.is_remote === false || (textOnsite && !remote);
-  return { id: j.id, title: j.title, company: j.company || '', url: j.url, location: j.location || '', description, remote, onsite, repost: !!j.repost,
+  return { id: j.id, title: j.title, company: j.company || '', url: j.url, source: j.ats_type || '', location: j.location || '', description, remote, onsite, repost: !!j.repost,
     salary: { min: j.salary_min, max: j.salary_max, currency: j.salary_currency, period: j.salary_period } };
 }
 

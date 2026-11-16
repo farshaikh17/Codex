@@ -616,7 +616,8 @@ test('S5: plain worldwide-remote wording counts; Farhan also takes Remote - APAC
 
 test('S6: too senior is capped just below the threshold (never Ready); Chief of Staff and a target role naming the title are not', () => {
   const lvl = (who, t, loc, d) => p2eval(who, t, loc, d);
-  for (const [who, t, loc, d] of [[P2_FARHAN, 'VP, Implementation', 'Remote - India', P2_IMPL.replace('5+ years', '15+ years')], [P2_SANA, 'Plant Head', 'Pune, India', P2_PLANT.replace('8+ years', '20+ years')],
+  // Jobs QA 3: Farhan's VP, director and principal titles are capped lower still (FAR_ABOVE_GAP, test/jobs_qa3.test.mjs); Sana's VP keeps S6.
+  for (const [who, t, loc, d] of [[P2_SANA, 'VP, Maintenance', 'Pune, India', P2_PLANT], [P2_SANA, 'Plant Head', 'Pune, India', P2_PLANT.replace('8+ years', '20+ years')],
     [P2_FARHAN, 'Senior Implementation Manager', 'Remote - India', P2_IMPL.replace('5+ years', '12+ years') + ' Lead a team of 25.'], [P2_FARHAN, 'Head of Implementation', 'Remote - India', P2_IMPL],
     [P2_SANA, 'General Manager - Maintenance', 'Pune, India', P2_PLANT]]) {
     const r = lvl(who, t, loc, d);

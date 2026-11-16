@@ -281,7 +281,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
   for (const row of JSON.parse(fs.readFileSync(rescoreFile, 'utf8'))) {
     const cand = byId.get(row.candidate_id);
     if (!cand || !hasSkills(cand)) continue;   // nothing to re-score with yet
-    const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', location: row.location || '', description: plain(row.description), remote: storedRemote(row),
+    const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', source: row.source_adapter || '', location: row.location || '', description: plain(row.description), remote: storedRemote(row),
       salary: { min: row.salary_min, max: row.salary_max, currency: row.salary_currency, period: row.salary_period } };
     const r = evaluate(cand, posting, ctxFor.get(row.candidate_id));
     if (row.legacy) { rescreenLegacy(row, r); continue; }
