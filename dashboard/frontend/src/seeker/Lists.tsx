@@ -4,7 +4,7 @@ import { Job } from '../types';
 import { TodayData, fetchJobs, fetchHiddenJobs } from '../api';
 import { updatedNote } from '../jobHelpers';
 import { JobCard, btnPlain } from './JobCard';
-import { todayLabel, listedAt, timeIST } from './format';
+import { todayLabel, listedAt, updatedText } from './format';
 
 export interface CardActions {
   onOpen: (job: Job) => void;
@@ -42,7 +42,7 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
         <span> · </span><button type="button" onClick={() => go('good')} className="underline underline-offset-2 min-h-[44px] -my-3" data-testid="more-good">{c.more_good} more good match{c.more_good === 1 ? '' : 'es'}</button>
         {note && (note.stale
           ? <span> · <span role="status" className="rounded-full bg-amber-200 text-amber-950 px-2" data-testid="updated-note">{note.label}</span></span>
-          : <span data-testid="updated-note"> · Updated {lastRunAt ? timeIST(lastRunAt) : ''}</span>)}
+          : <span data-testid="updated-note"> · {updatedText(lastRunAt)}</span>)}
       </p>
       {c.followups_due > 0 && (
         <button type="button" onClick={() => go('applications')} data-testid="nudge" className="w-full min-h-[44px] rounded-xl bg-amber-100 text-amber-950 border border-amber-300 text-base font-semibold px-4 text-left">
