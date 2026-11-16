@@ -49,7 +49,7 @@ const t = await body();
 check('S4 the counts on screen are the ones /api/today computes (one definition per number)',
   t.includes(`Best matches (${today.counts.best})`) && t.includes(`Worth a try (${today.counts.worth_a_try})`) && t.includes(`Show everything else (${today.counts.everything - today.counts.best - today.counts.worth_a_try})`)
   && t.includes(`${today.counts.more_good} more good match`) && (await page.innerText('[data-testid="my-applications"]')).includes(`(${today.counts.applications.total})`), t.slice(0, 300));
-check('S5 the status line has the date, new since the last visit, more good matches and the update time', /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} [A-Z][a-z]{2}\b/.test(await page.innerText('[data-testid="status-line"]')) && /new since your last visit/.test(t) && /(Updated \d{2}:\d{2}|Not updated today)/.test(t), await page.innerText('[data-testid="status-line"]'));
+check('S5 the status line has the date, new since the last visit, more good matches and the update time', /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} [A-Z][a-z]{2}\b/.test(await page.innerText('[data-testid="status-line"]')) && /new since your last visit/.test(t) && /(Updated (\d{1,2} [A-Z][a-z]{2}, )?\d{2}:\d{2}|Not updated today)/.test(t), await page.innerText('[data-testid="status-line"]'));
 const firstCard = await page.locator('[data-testid="job-card"]').first().boundingBox();
 check('S6 the first job starts within 200 px of the top', !!firstCard && firstCard.y <= 200, JSON.stringify(firstCard));
 // Job titles are data, not screen chrome ("Field Operator - Turbine" is a real posting): read the page without the job cards and the panel's job text.

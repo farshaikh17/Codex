@@ -1,5 +1,5 @@
 // Plain words for the job seeker's page (plan U9 and the rename table in section 12). No network, nothing stored.
-import { Job, ApplicationStatus } from '../types';
+import type { Job, ApplicationStatus } from '../types';
 
 export type Person = 'farhan' | 'sana';
 export const PEOPLE: Person[] = ['farhan', 'sana'];
@@ -27,6 +27,14 @@ export function foundWhen(iso: string | null | undefined, now: Date = new Date()
 export const foundText = (iso: string | null | undefined) => { const w = foundWhen(iso); return w ? `Found ${w}` : ''; };
 /** "21:47" in India time. */
 export const timeIST = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { timeZone: IST, hour: '2-digit', minute: '2-digit', hour12: false });
+/** "Updated 21:47" when the last update was today (India time), else "Updated 15 Nov, 20:16", so an old page never reads as fresh. */
+export function updatedText(iso: string | null | undefined, now: Date = new Date()): string {
+  const t = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(t)) return 'Updated';
+  const d = new Date(t);
+  if (dayKey(d) === dayKey(now)) return `Updated ${timeIST(iso as string)}`;
+  return `Updated ${d.toLocaleDateString('en-GB', { timeZone: IST, day: 'numeric', month: 'short' })}, ${timeIST(iso as string)}`;
+}
 
 /** The first place named ("Pune, India"), or "Remote", short. */
 export function placeText(job: Pick<Job, 'location_restrictions' | 'workplace_type'>): string {
