@@ -12,6 +12,9 @@ export const postingUrl = (job: Job) => {
 export const btn = 'min-h-[44px] px-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-900';
 export const btnPrimary = `${btn} bg-slate-900 text-white hover:bg-slate-700`;
 export const btnPlain = `${btn} bg-white text-slate-800 border border-slate-300 hover:bg-slate-50`;
+// The chosen one of a row of plain buttons. Built from `btn`, not by adding colours to btnPlain: two Tailwind colour classes on one element are
+// decided by stylesheet order, and btnPlain's bg-white won, so the chosen "All" read white on white (live QA 17 Nov).
+export const btnChosen = `${btn} bg-slate-900 text-white border border-slate-900 hover:bg-slate-800`;
 
 interface Props {
   job: Job;

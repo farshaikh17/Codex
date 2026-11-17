@@ -41,3 +41,19 @@ export function collapseTwins(rows: TwinRow[]): Twins {
   }
   return { hidden, groups: byKey.size + single, places };
 }
+/** Today's sections in page order (Best matches, Worth a try, New good matches): a row is left out of a section when a twin (same reviewKey) is
+ *  already shown in an earlier section (live QA 17 Nov: one employer's opening in Best matches and again under the new good matches). Sections
+ *  listed in `collapse` also keep only their first row per key (the lists come best-scored first). Rows are only left out; nothing stored changes. */
+export function sectionsWithoutTwins<T extends { company?: string | null; title?: string | null }>(sections: T[][], collapse: boolean[] = []): T[][] {
+  const shown = new Set<string>();
+  return sections.map((rows, i) => {
+    const mine = new Set<string>(), kept: T[] = [];
+    for (const r of rows) {
+      const k = reviewKey(r.company, r.title);
+      if (shown.has(k) || (collapse[i] && mine.has(k))) continue;
+      mine.add(k); kept.push(r);
+    }
+    for (const k of mine) shown.add(k);
+    return kept;
+  });
+}

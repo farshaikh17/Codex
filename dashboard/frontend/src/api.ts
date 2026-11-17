@@ -186,8 +186,10 @@ function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<strin
   return headers;
 }
 
-export async function fetchApplications(candidateId?: string): Promise<Job[]> {
-  const url = candidateId ? `${API_BASE}/applications?candidate_id=${encodeURIComponent(candidateId)}` : `${API_BASE}/applications`;
+/** includeTest: the operator's screens also list the test applications (honoured only with the operator key); the job seeker's page does not. */
+export async function fetchApplications(candidateId?: string, includeTest = false): Promise<Job[]> {
+  const q = [candidateId ? `candidate_id=${encodeURIComponent(candidateId)}` : '', includeTest ? 'include_test=true' : ''].filter(Boolean).join('&');
+  const url = `${API_BASE}/applications${q ? '?' + q : ''}`;
   const res = await authedFetch(url);
   if (!res.ok) throw new Error('Unable to load tracker');
   return (await res.json()).applications;

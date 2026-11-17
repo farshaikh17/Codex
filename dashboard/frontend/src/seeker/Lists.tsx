@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Job } from '../types';
 import { TodayData, fetchJobs, fetchHiddenJobs } from '../api';
 import { updatedNote } from '../jobHelpers';
-import { JobCard, btnPlain } from './JobCard';
+import { JobCard, btnPlain, btnChosen } from './JobCard';
 import { todayLabel, listedAt, updatedText } from './format';
 
 export interface CardActions {
@@ -111,7 +111,7 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
         className="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base" />
       <div className="flex flex-wrap gap-3" role="group" aria-label="Show">
         {FILTERS.map(([k, l]) => <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}
-          className={filter === k ? `${btnPlain} bg-slate-900 text-white border-slate-900 hover:bg-slate-800` : btnPlain}>{l}</button>)}
+          className={filter === k ? btnChosen : btnPlain}>{l}</button>)}
         <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value)} className="min-h-[44px] rounded-xl border border-slate-300 px-3 text-sm bg-white">
           <option value="score_desc">Best match first</option><option value="date_desc">Newest first</option>
         </select>

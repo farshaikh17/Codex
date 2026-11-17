@@ -497,3 +497,59 @@ test('QA 16 Nov: test applications (fixture jobs, Playwright test note) are not 
   assert.deepEqual(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all(), before, 'no application row changed');
   assert.equal(w.sqlite.prepare(`SELECT COUNT(*) AS n FROM applications WHERE candidate_id = ?`).get(F).n, 3, 'the test rows are still stored');
 });
+
+// ---- live QA 17 Nov: one job is shown once on Today, and test applications are not listed on My applications ------------------------
+test('live QA 17 Nov: sectionsWithoutTwins drops a twin of an earlier section and collapses a section asked to', async () => {
+  const { sectionsWithoutTwins } = await import('../worker/twins.ts');
+  const r = (id, company, title) => ({ id, company, title });
+  const [best, worth, recent] = sectionsWithoutTwins([
+    [r('b1', 'MonetizeMore', 'Lead Solutions Engineer (Remote)'), r('b2', 'Acme', 'Data Analyst'), r('b3', 'Acme', 'Data Analyst - Pune')],
+    [r('w1', 'MonetizeMore Inc.', 'Lead Solutions Engineer'), r('w2', 'Beta', 'Energy Manager')],
+    [r('n1', 'MonetizeMore', 'Lead Solutions Engineer (Remote)'), r('n2', 'Beta', 'Energy Manager, Remote'), r('n3', 'Gamma', 'Shift Engineer'),
+      r('n4', 'Gamma', 'Shift Engineer (Hybrid)'), r('n5', 'Gamma', 'Senior Shift Engineer')],
+  ], [false, false, true]);
+  assert.deepEqual(best.map((x) => x.id), ['b1', 'b2', 'b3'], 'a section not asked to collapse keeps its rows');
+  assert.deepEqual(worth.map((x) => x.id), ['w2'], 'a twin of a Best match is not repeated in Worth a try');
+  assert.deepEqual(recent.map((x) => x.id), ['n3', 'n5'], 'New leaves out twins of earlier sections and keeps the first of its own twins');
+});
+
+test('live QA 17 Nov: /api/today shows a job once: a twin already in Best matches is not repeated under the new good matches', async () => {
+  const w = world();
+  const day = new Date(Date.now() - 86400000).toISOString().slice(0, 10) + 'T00:00:00Z';
+  const add = (id, title, status, score, o = {}) => {
+    w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      id, title, o.company || 'MonetizeMore', 'jazzhr', 'https://example.invalid/' + id, 1, 'Remote', 'Remote role.', 'REMOTE', day, 'LIVE_PUBLIC');
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason) VALUES (?,?,?,?,?)`, F, id, status, 'ELIGIBLE', 'Matches 3 skills.');
+    w.run(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score,score_breakdown) VALUES (?,?,?,?,?)`, F, id, score, 40, '{}');
+  };
+  add('m-ready', 'Lead Solutions Engineer (Remote)', 'READY', 80);
+  for (let i = 1; i <= 3; i++) add('m-copy' + i, 'Lead Solutions Engineer (Remote)', 'NEEDS_REVIEW', 75 - i);
+  add('o1', 'Implementation Manager', 'NEEDS_REVIEW', 70, { company: 'Other' }); add('o2', 'Implementation Manager - Remote', 'NEEDS_REVIEW', 65, { company: 'Other' });
+  const before = JSON.stringify(['jobs', 'candidate_qualifications', 'applications'].map((t) => w.sqlite.prepare(`SELECT * FROM ${t} ORDER BY 1`).all()));
+  const today = await req(w.env, 'GET', `/api/today?candidate_id=${F}`, { key: null });
+  assert.equal(today.status, 200, today.text);
+  assert.ok(today.json.best.some((j) => j.id === 'm-ready'));
+  assert.deepEqual(today.json.recent.map((j) => j.id), ['o1'], 'no MonetizeMore copy under the new good matches, and the Other twins once');
+  const shown = [...today.json.best, ...today.json.worth_a_try, ...today.json.recent];
+  const keys = shown.map((j) => `${j.company}|${j.title.replace(/\s*(\(Remote\)|- Remote)$/, '')}`);
+  assert.equal(new Set(keys).size, keys.length, 'no employer and title twice on Today: ' + keys.join(', '));
+  assert.equal(JSON.stringify(['jobs', 'candidate_qualifications', 'applications'].map((t) => w.sqlite.prepare(`SELECT * FROM ${t} ORDER BY 1`).all())), before, 'nothing stored changed');
+});
+
+test('live QA 17 Nov: My applications lists only real applications; the operator can still list the test rows; nothing stored changes', async () => {
+  const w = world();
+  w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    'syn-001', 'Staff Backend Engineer', 'Synthetic Test Employer', 'fixture', 'https://example.invalid/syn-001', 1, 'Remote - India', 'Test.', 'REMOTE', '2026-10-24T00:00:00Z', 'LIVE_PUBLIC');
+  w.run(`INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES ('t-a',?,?,'REJECTED','Playwright verified rejection test'),('t-b',?,?,'SAVED','Testing application save endpoint')`, F, 'k3', F, 'syn-001');
+  const snap = () => JSON.stringify(['applications', 'application_history', 'candidates'].map((t) => w.sqlite.prepare(`SELECT * FROM ${t} ORDER BY 1`).all()));
+  const before = snap();
+  const list = async (q, key) => { const r = await req(w.env, 'GET', `/api/applications?candidate_id=${F}${q}`, { key }); assert.equal(r.status, 200, r.text); return r.json.applications.map((a) => a.application.id).sort(); };
+  assert.deepEqual(await list('', null), ['a1'], 'the job seeker sees only the real application');
+  assert.deepEqual(await list('&include_test=true', null), ['a1'], 'include_test is ignored without the operator key');
+  assert.deepEqual(await list('', ADMIN_KEY), ['a1'], 'the operator key alone does not change the list');
+  assert.deepEqual(await list('&include_test=true', ADMIN_KEY), ['a1', 't-a', 't-b'], 'the operator screens still list the test rows');
+  assert.deepEqual(await list('&status=SAVED', null), [], 'a status filter leaves them out too');
+  const today = await req(w.env, 'GET', `/api/today?candidate_id=${F}`, { key: null });
+  assert.equal(today.json.counts.applications.total, (await list('', null)).length, 'the header count equals the list');
+  assert.equal(snap(), before, 'no application, history or candidate row changed');
+});
