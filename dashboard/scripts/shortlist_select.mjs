@@ -13,7 +13,7 @@
 // and keeps the guards: no manual override, no application, only rows the screen shortlisted (marked by their reason). Running the file twice
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
-import { indianPlace as namesIndia } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India (fitsStretchRule)
+import { indianPlace as namesIndia, worldwidePlace } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India or a worldwide place (fitsStretchRule)
 import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
 import { titleKey } from '../worker/twins.ts';
 import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
@@ -42,8 +42,9 @@ const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !
 /** Ready: score at the person's threshold and eligibility confirmed. */
 export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold) && r.eligibility === 'ELIGIBLE';
 /** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. Jobs QA 2 (14 Nov): for Farhan (remote from India
- *  only) an unconfirmed row also needs a place naming India ("Remote" alone was US-market jobs: Arcadia, SimpliGov). */
-export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location)))
+ *  only) an unconfirmed row also needs a place naming India ("Remote" alone was US-market jobs: Arcadia, SimpliGov). Jobs QA 4 (17 Nov): or a place that
+ *  is itself worldwide ('Anywhere in the World', 'Remote (Worldwide)'): job-board rows stay unconfirmed, and those were hidden although worldwide. */
+export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location) || worldwidePlace(r.location)))
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
 /** Gap fix: verified for Ready only by the still-open check; a 'listed' row (a Gulf job-board posting seen in the board's listing in 2 days) may go
  *  to Stretch. */
