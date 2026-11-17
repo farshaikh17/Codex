@@ -14,6 +14,15 @@
    "from_hash": "108183535a6fa4404d4ae8dafce1f498c1f6009ff48dadf307c296e7824ef620",
    "kind": "content_changed",
    "to_hash": "21c7a1c8aabccc4c202246eef871298356485ce5f3c61d00770e64eb366124ac"
+  },
+  {
+   "changed_at": "2026-11-17T23:38:01.366527+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "21c7a1c8aabccc4c202246eef871298356485ce5f3c61d00770e64eb366124ac",
+   "kind": "content_changed",
+   "to_hash": "a8e85880176193d23fccab2f176510f808f8b395f72fc0e24ad54c3cf0f552ba"
   }
  ],
  "content": {
@@ -26,15 +35,15 @@
    },
    {
     "source": "offices.name",
-    "text": "Remote - Ontario, Canada"
+    "text": "Remote - British Columbia, Canada"
    }
   ],
   "published": "2026-10-07T18:13:54-04:00",
   "title": "Program Manager, Carrier Operations & Governance",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-03T21:56:32.718709+00:00",
- "content_hash": "21c7a1c8aabccc4c202246eef871298356485ce5f3c61d00770e64eb366124ac",
+ "content_changed_at": "2026-11-17T23:38:01.366527+00:00",
+ "content_hash": "a8e85880176193d23fccab2f176510f808f8b395f72fc0e24ad54c3cf0f552ba",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,15 +62,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "quote": "Remote - British Columbia, Canada",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      },
@@ -69,7 +78,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in Ontario, British Columbia or Alberta, Canada.",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      }
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      },
@@ -90,7 +99,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "5+ years of experience in management consulting or as a Program Manager or Chief of Staff in telecom, RevOps, or strategy and operations.\nProven track record leading highly visible, cross-functional programs across business, technical, legal, and financial stakeholders.\nDemonstrated expertise driving end-to-end process improvements by integrating policies, business processes, IT/systems tools, and operational controls.\nDirect experience standing up operating models, team cadences, and operational documentation (runbooks, frameworks, ROEs).\nProven track record in designing enablement content and driving organizational change.\nExperience driving Run-the-Business (RTB) cadences, OKR tracking, and operational reporting.\nStrong capability in process mapping, business case writing, and translating complex operational needs into IT system specs.\nSharp written and verbal communication skills with experience presenting to executive leadership.\nStrong analytical proficiency using data tools (Excel/Google Sheets, SQL, or Looker) to measure performance and policy compliance.\nTeam player who thrives in a fast-paced environment.",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      }
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Background in management consulting, high-growth tech, or global telecom environments.\nSix Sigma or formal Program / Process Management / Prosci Change Management certification.\nOperational experience within commercial Deal Desks, supplier QBR management, or revenue assurance.\nDomain knowledge of A2P SMS, international voice/messaging, carrier billing, or AIT/IRSF fraud frameworks.\nFamiliarity with workflow and dashboarding tools (Airtable, Jira, Confluence) and operational automation (Python, Coefficient, AI tooling).",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      }
@@ -116,15 +125,15 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Canada",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      },
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-11-03T21:56:32.718709+00:00",
+      "quote": "Remote - British Columbia, Canada",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8263280"
      }
