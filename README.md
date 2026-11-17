@@ -1,12 +1,43 @@
-# Codex
+# Career Job Engine
+
+**A hyper-specialized job search engine, built around the person searching.**
+
+The goal is simple: help people find opportunities that fit their skills, experience, career goals, location and working preferences. The long-term vision is to make this kind of personalized job discovery accessible to anyone and everyone, across professions, industries and countries.
+
+This project began with two candidate profiles and is being developed in public. It already brings together job discovery, eligibility screening, ranking and a dashboard. Expanding it into a service that anyone can configure for their own search is the next direction—not a feature we claim is finished today.
+
+**Want to help make it better? You are welcome here.** Developers, designers, testers, job seekers and people with industry knowledge can all contribute. Ideas, bug reports, documentation improvements and pull requests are welcome, whether this is your first contribution or your hundredth.
+
+## Help shape what comes next
+
+- **Broader discovery:** more employer career pages, reliable public feeds, industries and regions.
+- **Better matching:** clearer eligibility checks and explanations for why a job may fit.
+- **An easier experience:** accessible mobile layouts, useful filters and simpler onboarding.
+- **Reliable, efficient operation:** fewer duplicate or stale postings, lower database usage and dependable automation.
+- **Personalization for more people:** configurable profiles and preferences, with appropriate privacy and access controls.
+
+These are development priorities, not promises of current coverage or availability. The project is a work in progress, and contributions that make existing features more reliable are just as valuable as new features.
+
+## Get involved
+
+1. Browse the [open issues](https://github.com/farshaikh17/Codex/issues) or open an issue describing a bug, idea or missing job source.
+2. For a substantial change, discuss the approach in an issue first so we can coordinate.
+3. Fork the repository, make a focused change and open a pull request explaining the problem, your solution and how you checked it.
+4. Use fictional candidate data for examples and tests. Keep CVs, contact details, credentials and personal application records out of public issues and commits.
+
+No coding experience is required to report confusing screens, suggest employers or improve the documentation. Please keep feedback constructive and respectful.
+
+The aim is to remain usable with free tools and within free hosting limits. **The engine helps people discover and review opportunities; it does not submit job applications automatically.** Each person stays in control of where they apply.
+
+Licensed under the [MIT License](LICENSE).
 
 ## Job collector
 
-Official public ATS feed collector, migrated into this private development repository. See OPERATIONS.md and MIGRATION.md. The collector has no candidate profiles or application data.
+Official public ATS feed collector, maintained in this public development repository. See OPERATIONS.md and MIGRATION.md. The collector has no candidate profiles or application data.
 
 Manual Crawl4AI fallback for allowlisted career pages without feeds: crawl_pages.py, pages.json, output under public/pages/. See OPERATIONS.md.
 
-# Career Job Engine (how the pieces fit)
+## How the pieces fit
 
 A free, manual-apply job-hunting engine for two candidates. It finds postings, screens and ranks them with one shared rule set, and shows the best ones on a public
 read-only dashboard. **Nothing is ever applied to automatically.**
@@ -28,7 +59,7 @@ then [`dashboard/docs/RELEASE.md`](dashboard/docs/RELEASE.md) and [`dashboard/do
 
 Tests: `cd dashboard && npm ci && npm run verify` (Node, migrations, bundle privacy) and `python3 -m unittest discover -s . -p 'test_*.py'` (Python, network disabled).
 
-# Candidate-specific discovery
+## Candidate-specific discovery
 
 Optional private discovery strategies allocate research effort independently of
 eligibility. See [docs/DISCOVERY.md](docs/DISCOVERY.md) for the planner, cooldowns,
