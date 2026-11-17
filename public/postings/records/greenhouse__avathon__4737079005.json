@@ -15,6 +15,15 @@
    "from_hash": "cef72174bfaaf7fee3edcdea80e675d517e4eb7b9ec389f6b88c1f1b31eda935",
    "kind": "content_changed",
    "to_hash": "790527797209390eca0dec1d8194846a0c6e996643b7fbe882833c27c2c6aa01"
+  },
+  {
+   "changed_at": "2026-11-17T00:53:41.055943+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "790527797209390eca0dec1d8194846a0c6e996643b7fbe882833c27c2c6aa01",
+   "kind": "content_changed",
+   "to_hash": "69d23005b75fa4c409c472109b215344ba57bdaecb80e27ae793d51231579236"
   }
  ],
  "content": {
@@ -35,11 +44,11 @@
    }
   ],
   "published": "2026-09-23T11:47:59-04:00",
-  "title": "Forward Deployed Design Lead — Product Lifecycle Management (PLM)",
+  "title": "Forward Deployed Design Lead — Product Lifecycle Management (PLM) (FDE Product Manager)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-12T20:24:03.675870+00:00",
- "content_hash": "790527797209390eca0dec1d8194846a0c6e996643b7fbe882833c27c2c6aa01",
+ "content_changed_at": "2026-11-17T00:53:41.055943+00:00",
+ "content_hash": "69d23005b75fa4c409c472109b215344ba57bdaecb80e27ae793d51231579236",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -67,7 +76,7 @@
       },
       "method": "description_section:Compensation & Benefits",
       "quote": "California Base Salary: $170,000 - $200,000\nEquity in the form of stock options\nComprehensive health, dental, and vision coverage\n401(k) participation\nGenerous PTO and company holidays\nAll travel expenses covered per Avathon policy\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -84,7 +93,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Pleasanton, California, United States",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      },
@@ -92,7 +101,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Pleasanton, CA (HQ)",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -105,7 +114,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Bachelor's degree in Engineering, Computer Science, Industrial Design, or a related technical field\nExperience working in or closely with industrial engineering environments — manufacturing, aerospace, automotive, energy, or defense — is highly valued\nWillingness and ability to travel up to 80%; based in Pleasanton, CA or Austin, TX\nMust be authorized to work in the United States without current or future company sponsorship",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }
@@ -118,7 +127,7 @@
       "interpretation": null,
       "method": "description_section:Preferred Qualifications",
       "quote": "6+ years of experience in PLM implementation, industrial systems delivery, or a UX/design role embedded in client-facing delivery — with hands-on configuration and deployment ownership across one or more major PLM platforms\nDeep functional knowledge of PLM processes: BOM management (eBOM/mBOM/sBOM), engineering change management (ECR/ECO/ECN), product configuration, effectivity management, and revision control\nProven ability to map as-is PLM workflows, facilitate cross-functional design sessions with engineering and manufacturing stakeholders, and produce implementation-ready specifications\nStrong UX and design execution skills — able to produce annotated wireframes, workflow diagrams, and dashboard layouts that engineering teams can build directly from (Figma preferred)\nExperience designing and delivering role-based training and onboarding programs for PLM users in manufacturing, aerospace, automotive, or defense environments — including hands-on working sessions\nFamiliarity with digital thread concepts — understanding how product data flows from engineering design through manufacturing, quality, maintenance, and end-of-life\nExperience with MBSE methodologies (SysML, Cameo, Rhapsody) is a plus, particularly for aerospace and defense engagements\nComfort with agile delivery rhythms: sprint planning, backlog grooming, and iterating rapidly based on user feedback in live client environments\nExcellent written communication — able to produce configuration documentation, integration specs, and training guides that engineering teams with varying technical backgrounds can follow independently",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005"
      }

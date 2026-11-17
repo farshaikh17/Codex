@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "avathon",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-17T00:53:41.055943+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "0d03e2714a02872db3cd56823417bc8a8084129c1ffff73b921e0657cffd096a",
+   "kind": "content_changed",
+   "to_hash": "8fdf5de5a3ec886a6f3060447b0e3739df277b7e044cf0db81f43a146af6c4de"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "Who We Are & Why Join Us\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries -- energy, mining, manufacturing, aerospace, defense, and logistics -- accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management. With capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nCutting-Edge AI Innovation -- Join a team at the forefront of AI, developing groundbreaking solutions that shape the future. High-Growth Environment -- Thrive in a fast-scaling startup where agility, collaboration, and rapid professional growth are the norm. Meaningful Impact -- Work on AI-driven projects that drive real change across industries and improve lives.\n\nLearn more at: avathon.com\n\nAbout Avathon\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries — energy, mining, manufacturing, aerospace, defense, and logistics — accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management.\n\nWith capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nAbout the Role\n\nThe Forward Deployed Design Lead — APM is embedded directly at customer sites as the primary experience and implementation owner for Avathon's Asset Performance Management deployments. You live at the intersection of industrial workflow knowledge and experience design, responsible for configuring, implementing, and continuously improving how operators, reliability engineers, and maintenance teams actually use Avathon's platform day to day.\n\nYou will spend Monday through Thursday on the plant floor, in control rooms, and in client working sessions — translating real operational workflows into configured APM solutions, designing the screens and interactions users will rely on in high-stakes environments, and driving adoption from go-live through steady-state operations. Fridays are typically remote for synthesis, documentation, and cross-team collaboration.\n\nKey Responsibilities\n\nAPM Implementation & Configuration\n\nOwn end-to-end implementation of Avathon's APM platform at client sites — configuring asset hierarchies, alert thresholds, health scoring models, and work order integration workflows to match each customer's operational context\n\nLead functional configuration of APM modules: predictive maintenance rule sets, condition monitoring dashboards, asset criticality rankings, and maintenance strategy mappings aligned to client RCM frameworks\n\nSet up and validate integrations between Avathon's platform and client CMMS/EAM systems (SAP PM, IBM Maximo, IFS, Infor EAM) — ensuring work orders, notifications, and asset master data flow accurately\n\nConfigure data pipelines from historian systems (OSIsoft PI, Aspen, Honeywell) and IoT/SCADA sources — validating signal quality, tag mappings, and anomaly detection thresholds in live operational environments\n\nConduct go-live readiness assessments — verifying system configuration, user access, data completeness, and integration health before each deployment milestone\n\nExperience Design & Workflow Mapping\n\nLead onsite discovery sessions — interviewing reliability engineers, maintenance planners, and operations supervisors to map as-is workflows and define the future-state experience on Avathon's platform\n\nProduce implementation-grade design artifacts: annotated screen flows, configured dashboard layouts, alert routing rules, and role-based view specifications — directly actionable by the engineering team\n\nDesign and validate the end-user experience within Avathon's APM product: asset hierarchy navigation, alert triage consoles, trend analysis views, and work order dispatch screens — optimized for control room and field environments\n\nFacilitate working sessions with client stakeholders to validate designs against real operational scenarios — iterating in real time based on operator feedback before configuration is finalized\n\nEnsure designs account for the physical realities of industrial use: screen size constraints, shift-change handoffs, noisy environments, and the cognitive load of operators managing hundreds of assets simultaneously\n\nUser Adoption & Change Management\n\nDesign and execute role-specific onboarding programs — building training plans, hands-on exercises, quick-reference guides, and SOPs tailored to how each user group (reliability engineer, maintenance planner, operations supervisor) will use Avathon daily\n\nConduct live training sessions and floor walk-throughs at client sites — coaching operators through the platform with patience, domain fluency, and credibility earned from understanding their workflows\n\nIdentify adoption barriers early — resistance to change, workflow mismatches, data trust issues — and develop targeted interventions in partnership with client champions and Avathon's FDE team\n\nTrack adoption metrics post-go-live (active users, feature utilization, alert response rates, work order completion) and use data to drive continuous improvement sprints with the client\n\nServe as the primary point of contact for end-user questions, configuration requests, and workflow adjustments during hypercare — escalating to engineering only when platform-level changes are required\n\nClient Engagement & Delivery\n\nAct as the day-to-day client contact for all design, configuration, and adoption activities — building trusted working relationships with operators, reliability leads, and plant management\n\nFacilitate weekly client working sessions, design reviews, and sprint demos that keep stakeholders aligned, engaged, and confident in the deployment's progress\n\nMaintain implementation documentation — configuration logs, integration specs, training materials, and acceptance test records — that serve as the client's operational handbook post go-live\n\nCapture field learnings and configuration patterns from each engagement and contribute them to Avathon's delivery playbooks, accelerating future APM implementations\n\nIdentify opportunities to expand Avathon's footprint within accounts — additional asset classes, new user populations, or adjacent modules — and surface them to the engagement director\n\nPreferred Qualifications\n\n5+ years of experience in enterprise software implementation, industrial systems delivery, or a UX/design role embedded in client-facing delivery — with hands-on configuration and deployment ownership\n\nDemonstrated APM domain knowledge: predictive maintenance workflows, condition monitoring, reliability-centered maintenance (RCM), FMEA, P-F interval, OEE, and asset criticality frameworks\n\nHands-on experience implementing or configuring enterprise asset management platforms: IBM Maximo, SAP EAM/PM, Oracle eAM, IFS, Infor EAM, Hexagon EAM, or similar\n\nFamiliarity with industrial data sources: historian systems (AVEVA PI, Aspen IP.21, Honeywell Uniformance), OPC-UA/MQTT, and IoT sensor integration in plant environments\n\nStrong UX and design execution skills — able to produce annotated wireframes, dashboard layouts, and workflow diagrams that engineering teams can build directly from (Figma preferred)\n\nProven ability to facilitate discovery sessions and working meetings with mixed audiences of operators, engineers, and plant management — translating operational complexity into clear, actionable design decisions\n\nExperience designing and delivering end-user training programs for enterprise software in industrial or operational environments — including hands-on floor training\n\nComfort with agile delivery rhythms: sprint planning, backlog grooming, and iterating rapidly based on user feedback in live client environments\n\nExcellent written communication — able to produce configuration documentation, SOPs, and training guides that operators with varying technical backgrounds can follow independently\n\nQualifications\n\nBachelor's degree in Engineering, Computer Science, Industrial Design, or a related technical field\n\nExperience working in or closely with industrial environments — power plants, manufacturing facilities, refineries, or mining operations — is highly valued\n\nWillingness and ability to travel up to 80%; based in Pleasanton, CA or Austin, TX\n\nMust be authorized to work in the United States without current or future company sponsorship\n\nCompensation & Benefits\n\nCalifornia Base Salary: $130,000 - $155,000\n\nEquity in the form of stock options\n\nComprehensive health, dental, and vision coverage\n\n401(k) participation\n\nGenerous PTO and company holidays\n\nAll travel expenses covered per Avathon policy\n\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\n\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
@@ -28,11 +38,11 @@
    }
   ],
   "published": "2026-09-23T11:44:53-04:00",
-  "title": "Forward Deployed Design Lead — Asset Performance Management",
+  "title": "Forward Deployed Design Lead — Asset Performance Management (FDE Product Manager)",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-31T00:48:39.757986+00:00",
- "content_hash": "0d03e2714a02872db3cd56823417bc8a8084129c1ffff73b921e0657cffd096a",
+ "content_changed_at": "2026-11-17T00:53:41.055943+00:00",
+ "content_hash": "8fdf5de5a3ec886a6f3060447b0e3739df277b7e044cf0db81f43a146af6c4de",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -60,7 +70,7 @@
       },
       "method": "description_section:Compensation & Benefits",
       "quote": "California Base Salary: $130,000 - $155,000\nEquity in the form of stock options\nComprehensive health, dental, and vision coverage\n401(k) participation\nGenerous PTO and company holidays\nAll travel expenses covered per Avathon policy\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      }
@@ -77,7 +87,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Austin, Texas, United States",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      },
@@ -85,7 +95,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Pleasanton, California, United States",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      },
@@ -93,7 +103,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Pleasanton, CA (HQ)",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      }
@@ -106,7 +116,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Bachelor's degree in Engineering, Computer Science, Industrial Design, or a related technical field\nExperience working in or closely with industrial environments — power plants, manufacturing facilities, refineries, or mining operations — is highly valued\nWillingness and ability to travel up to 80%; based in Pleasanton, CA or Austin, TX\nMust be authorized to work in the United States without current or future company sponsorship",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      }
@@ -119,7 +129,7 @@
       "interpretation": null,
       "method": "description_section:Preferred Qualifications",
       "quote": "5+ years of experience in enterprise software implementation, industrial systems delivery, or a UX/design role embedded in client-facing delivery — with hands-on configuration and deployment ownership\nDemonstrated APM domain knowledge: predictive maintenance workflows, condition monitoring, reliability-centered maintenance (RCM), FMEA, P-F interval, OEE, and asset criticality frameworks\nHands-on experience implementing or configuring enterprise asset management platforms: IBM Maximo, SAP EAM/PM, Oracle eAM, IFS, Infor EAM, Hexagon EAM, or similar\nFamiliarity with industrial data sources: historian systems (AVEVA PI, Aspen IP.21, Honeywell Uniformance), OPC-UA/MQTT, and IoT sensor integration in plant environments\nStrong UX and design execution skills — able to produce annotated wireframes, dashboard layouts, and workflow diagrams that engineering teams can build directly from (Figma preferred)\nProven ability to facilitate discovery sessions and working meetings with mixed audiences of operators, engineers, and plant management — translating operational complexity into clear, actionable design decisions\nExperience designing and delivering end-user training programs for enterprise software in industrial or operational environments — including hands-on floor training\nComfort with agile delivery rhythms: sprint planning, backlog grooming, and iterating rapidly based on user feedback in live client environments\nExcellent written communication — able to produce configuration documentation, SOPs, and training guides that operators with varying technical backgrounds can follow independently",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737078005"
      }
