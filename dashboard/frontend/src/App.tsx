@@ -164,7 +164,7 @@ export const App: React.FC = () => {
         }),
         fetchProfile(candidateForFetch),
         fetchAnalytics(candidateForFetch), 
-        fetchApplications(candidateForFetch),
+        fetchApplications(candidateForFetch, true),
         fetchWeeklyMetrics(candidateForFetch).catch(() => null),
         fetchIndiaRemoteSummary(candidateForFetch).catch(() => null)
       ]);

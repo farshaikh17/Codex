@@ -205,6 +205,10 @@ if (await nextBtn.count() && await nextBtn.isEnabled()) { await nextBtn.click();
 const farhanSet = (await showGroup.getByRole('button', { name: 'Remote' }).getAttribute('aria-pressed')) === 'true';
 await page.locator('[role=group][aria-label="Whose jobs"]').getByRole('button', { name: 'Sana', exact: true }).click(); await page.waitForTimeout(1000);
 const sanaAll = (await showGroup.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')) === 'true';
+// live QA 17 Nov: the chosen filter button read white on white (btnPlain's bg-white beat the chosen colours); its label must be readable
+const chosenColours = await showGroup.locator('button[aria-pressed="true"]').evaluateAll((bs) => bs.map((b) => { const c = getComputedStyle(b); return [b.textContent, c.backgroundColor, c.color]; }));
+check('S36 the chosen filter button ("All") has a background different from its text colour', chosenColours.length === 1 && chosenColours[0][0] === 'All' && chosenColours[0][1] !== chosenColours[0][2]
+  && !/^rgba?\(255, 255, 255/.test(chosenColours[0][1]), JSON.stringify(chosenColours));
 check('S35 switching Farhan -> Sana clears the filter and goes back to page 1', farhanSet && sanaAll && (await page.evaluate(() => location.hash)) === '#sana/all' && !/Page [2-9]\d* of/.test(await body()),
   `farhanRemote=${farhanSet} page2=${onPage2} sanaAll=${sanaAll}`);
 if (!onPage2) console.log(`note [${mode}]: Farhan's Remote list has one page in this seed; checked from page 1`);

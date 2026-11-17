@@ -7,7 +7,7 @@ import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_
 import * as site from './site';
 import { whyLine } from './why';
 import { postingUrl } from './posting_url';
-import { collapseTwins, reviewKey, type Twins, type TwinRow } from './twins';
+import { collapseTwins, sectionsWithoutTwins, type Twins, type TwinRow } from './twins';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -229,13 +229,14 @@ const CACHE_VALUES: Record<string, (v: string) => boolean> = {
   exclude_applied: enumOf('true', 'false'), exclude_dismissed: enumOf('true', 'false'), hidden: enumOf('true', 'false'), new_within: enumOf('1', '7'),
   limit: intIn(1, 100), offset: intIn(0, 1000, 5), min_score: intIn(0, 100, 5),
   search: (v) => /^[a-z0-9][a-z0-9 .+#-]{0,28}[a-z0-9.+#]$/i.test(v),
+  include_test: enumOf('true', 'false'),
 };
 const CANDIDATE_ONLY = ['candidate_id'];
 const CACHE_PARAMS: [RegExp, string[]][] = [
   [/^\/api\/jobs$/, ['candidate_id', 'eligibility', 'exclude_applied', 'exclude_dismissed', 'found_on', 'hidden', 'limit', 'min_score', 'new_within', 'offset', 'qualification_status', 'search', 'sort_by', 'source_adapter', 'strategy_lane', 'workplace_type', 'farhan_fit', 'pay_filter']],
   [/^\/api\/india-remote\/jobs$/, ['candidate_id', 'exclude_applied', 'farhan_fit', 'limit', 'offset', 'pay_filter', 'role_family', 'search', 'sort_by']],
   [/^\/api\/candidates\/[^/]+\/jobs$/, ['lane', 'limit', 'offset', 'status']],
-  [/^\/api\/applications$/, ['candidate_id', 'status']],
+  [/^\/api\/applications$/, ['candidate_id', 'include_test', 'status']],
   [/^\/api\/(today|jobs\/[^/]+(\/explanation)?|india-remote\/summary|analytics(\/(discovery|sources-effectiveness))?|qualification\/metrics|cohorts\/metrics|profile)$/, CANDIDATE_ONLY],
 ];
 // Nothing is excluded from the cache by path any more: /api/india-remote/jobs has its own query and its own key (every filter it honours is in CACHE_PARAMS).
@@ -1743,9 +1744,10 @@ router.get('/api/today', async (request, env, _params, url) => {
       for (const r of full || []) byId.set(r.id, shapeJob(r, candidateId, threshold));
     }
     const pick = (list: string[]) => list.map((id) => byId.get(id)).filter(Boolean);
-    // the good matches found lately are To review rows: one per employer and title (the best-scored first), as in the lists (jobs QA 13 Nov)
-    const seen = new Set<string>(), recentOnce = pick(recent).filter((j: any) => { const k = reviewKey(j.company, j.title); if (seen.has(k)) return false; seen.add(k); return true; });
-    return jsonResponse({ candidate_id: candidateId, counts, best: pick(best), worth_a_try: pick(worth), recent: recentOnce }, 200, corsHeaders(request, env));
+    // the good matches found lately are To review rows: one per employer and title (the best-scored first), as in the lists (jobs QA 13 Nov);
+    // and no section repeats a job (same employer and title) already shown in an earlier one (live QA 17 Nov: one opening in Best matches and in New)
+    const [bestRows, worthRows, recentRows] = sectionsWithoutTwins([pick(best), pick(worth), pick(recent)], [false, false, true]);
+    return jsonResponse({ candidate_id: candidateId, counts, best: bestRows, worth_a_try: worthRows, recent: recentRows }, 200, corsHeaders(request, env));
   } catch (err: any) {
     return jsonResponse({ error: err.message }, 500, corsHeaders(request, env));
   }
@@ -2013,6 +2015,9 @@ router.get('/api/applications', async (request, env, _params, url) => {
   const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   const filterStatus = url.searchParams.get('status');
+  // Live QA 17 Nov: test applications (realApp) are counted nowhere since QA 16 Nov but were still listed on the job seeker's My applications.
+  // They stay stored; the list leaves them out unless the operator's screens ask for them (include_test=true, honoured only with the operator key).
+  const withTest = isOperatorRequest(request) && url.searchParams.get('include_test') === 'true';
 
   try {
     let query = `
@@ -2028,7 +2033,7 @@ router.get('/api/applications', async (request, env, _params, url) => {
       JOIN jobs j ON a.job_id = j.id
       LEFT JOIN candidate_qualifications q ON a.candidate_id = q.candidate_id AND a.job_id = q.job_id
       LEFT JOIN candidate_job_scores s ON a.candidate_id = s.candidate_id AND a.job_id = s.job_id
-      WHERE a.candidate_id = ?
+      WHERE a.candidate_id = ?${withTest ? '' : ` AND ${realApp('a')}`}
     `;
 
     const sqlParams: any[] = [candidateId];
