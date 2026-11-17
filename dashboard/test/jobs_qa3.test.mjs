@@ -16,11 +16,11 @@ const PLANT = 'Preventive maintenance, reliability and root cause analysis of bo
 const ev = (cand, title, location, description = '', remote = /remote/i.test(location), extra = {}) =>
   evaluate(cand, { id: 'x', title, company: 'Acme', url: 'https://e.com/x', location, description, remote, ...extra });
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v18)', () => {
-  assert.equal(RULES_MARKER, 'profile_v18');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v18, bumped again by later rule changes)', () => {
+  assert.match(RULES_MARKER, /^profile_v(?:1[89]|[2-9]\d)$/);
 });
 
-test('Farhan: director, principal and VP titles stay below his Worth-a-try floor; manager, lead, head of and chief of staff are not touched', () => {
+test('Farhan: director, principal and VP titles stay below his Worth-a-try floor; manager, lead and chief of staff are not touched', () => {
   const floor = farhan.qualification_threshold - FAR_ABOVE_GAP;
   for (const t of ['Director, Professional Services', 'Principal Technical Program Manager', 'Senior Director, Revenue Operations', 'VP, Implementation',
     'Associate Director - Business Systems', 'Director of Business Operations and Systems'])
