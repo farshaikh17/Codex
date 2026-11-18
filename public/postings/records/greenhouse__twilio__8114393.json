@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "be04f7db3f098afc31be9f440850f6550e275f8d50886eb0d7ee1448d6a6f033",
+   "kind": "content_changed",
+   "to_hash": "dc41bc29d7bbb5e98163eaa44ad87b59bb82db962eb352391adcc4eb9041df0b"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next Solutions Engineer for our Twilio Communications APJ team.\n\nAbout the job\n\nThe Twilio Solutions Engineer is both highly technical and a skilled executive relationship builder. They are comfortable showing an engaging communications experience to a CEO or sketching out a flow on a whiteboard with technical decision makers.\n\nThis role sits at the intersection of communications, AI, and experience design. You will help customers across APJ — design and build next-generation customer engagement experiences powered by Twilio’s Customer Engagement Platform. These experiences increasingly blend voice, messaging, autonomous and human-assisted agents, and intelligent workflows to create interactions that feel natural, trusted, and brand-aligned.\n\nAs a Solutions Engineer, you lead the technical and experiential win: shaping how customers think about conversations, designing intelligent flows, prototyping solutions, and translating business intent into scalable architectures. You will guide customers not just on what to build with Twilio, but how those experiences should behave when humans and AI work together.\n\nResponsibilities\n\nIn this role, you’ll:\n\nDiscovery & Scoping: Lead client discovery sessions to identify business challenges, goals, and core value drivers.\n\nSolution Design: Translate complex customer requirements into high-level future-state architecture and implementation roadmaps.\n\nProduct Demonstrations: Deliver customized software demos, presentations, and proof-of-concepts (POCs) for audiences ranging from front-line staff to C-level executives.\n\nSales Support: Address technical objections, respond to RFPs/RFIs, and partner closely with Account Executives to accelerate deal closures.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\nTechnical Knowledge: Understanding of cloud computing, cPaaS, AI.\n\nSoft Skills: Exceptional public speaking, storytelling, interpersonal, and consensus-building capabilities.\n\nCurious of technology and willingness to learn new technology\n\nLocation\n\nThis role will be remotely based in Australia/Singapore/Japan\n\nTravel\n\nWe prioritise connection and opportunities to build relationships with our customers and each other. For this role, approximately 35% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next Solutions Engineer for our Twilio Communications APJ team.\n\nAbout the job\n\nThe Twilio Solutions Engineer is both highly technical and a skilled executive relationship builder. They are comfortable showing an engaging communications experience to a CEO or sketching out a flow on a whiteboard with technical decision makers.\n\nThis role sits at the intersection of communications, AI, and experience design. You will help customers across APJ — design and build next-generation customer engagement experiences powered by Twilio’s Customer Engagement Platform. These experiences increasingly blend voice, messaging, autonomous and human-assisted agents, and intelligent workflows to create interactions that feel natural, trusted, and brand-aligned.\n\nAs a Solutions Engineer, you lead the technical and experiential win: shaping how customers think about conversations, designing intelligent flows, prototyping solutions, and translating business intent into scalable architectures. You will guide customers not just on what to build with Twilio, but how those experiences should behave when humans and AI work together.\n\nResponsibilities\n\nIn this role, you’ll:\n\nDiscovery & Scoping: Lead client discovery sessions to identify business challenges, goals, and core value drivers.\n\nSolution Design: Translate complex customer requirements into high-level future-state architecture and implementation roadmaps.\n\nProduct Demonstrations: Deliver customized software demos, presentations, and proof-of-concepts (POCs) for audiences ranging from front-line staff to C-level executives.\n\nSales Support: Address technical objections, respond to RFPs/RFIs, and partner closely with Account Executives to accelerate deal closures.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\nTechnical Knowledge: Understanding of cloud computing, cPaaS, AI.\n\nSoft Skills: Exceptional public speaking, storytelling, interpersonal, and consensus-building capabilities.\n\nCurious of technology and willingness to learn new technology\n\nLocation\n\nThis role will be remotely based in Australia/Singapore/Japan\n\nTravel\n\nWe prioritise connection and opportunities to build relationships with our customers and each other. For this role, approximately 35% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +33,8 @@
   "title": "Solution Engineer",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "be04f7db3f098afc31be9f440850f6550e275f8d50886eb0d7ee1448d6a6f033",
+ "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
+ "content_hash": "dc41bc29d7bbb5e98163eaa44ad87b59bb82db962eb352391adcc4eb9041df0b",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Singapore",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8114393"
      },
@@ -51,7 +61,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remotely based in Australia/Singapore/Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8114393"
      }
@@ -64,7 +74,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8114393"
      },
@@ -72,7 +82,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "Technical Knowledge: Understanding of cloud computing, cPaaS, AI.\nSoft Skills: Exceptional public speaking, storytelling, interpersonal, and consensus-building capabilities.\nCurious of technology and willingness to learn new technology",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8114393"
      }
@@ -89,7 +99,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Singapore",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8114393"
      }

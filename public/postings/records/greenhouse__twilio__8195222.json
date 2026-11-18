@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "9e5e66abb2b92737d6b487adbe5a4ae954e8353bf7d285d61403949232d19f37",
+   "kind": "content_changed",
+   "to_hash": "2322258a85c17785f38f1a112c69d32b7f07dc7757f535288f173fc315049ee3"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Director, Supplier Relations APAC\n\nAbout the job\n\nTwilio is seeking an experienced Director, Supplier Relations to execute our supply strategy, manage regional vendor and carrier partnerships, and lead a team of supplier relations specialists across Asia-Pacific (APAC). In this role, you will translate regional connectivity strategy into operational execution, optimizing COGS, route quality, and direct supplier partnerships. Working closely with cross-functional partners in Sales, Product, Legal, and Operations, you will ensure Twilio's infrastructure reliably aligns with rapid enterprise growth across diverse APAC markets.\n\nResponsibilities\n\nTeam Leadership & Development: Direct, mentor, and manage a team of supplier relations specialists and analysts, fostering operational excellence and regional alignment across APAC.\n\nSupplier Procurement & Negotiations: Lead commercial negotiations with regional telecommunications carriers, messaging aggregators, and OTT suppliers to secure competitive unit economics (COGS) and expand direct connectivity.\n\nGTM & Product Alignment: Partner with APAC Sales and Product teams to analyze market demand, forecast capacity needs, and support localized go-to-market strategies for key growth countries.\n\nRoute Quality & Analytics: Continuously monitor supplier performance, route latency, delivery success rates, and margins, using data-driven insights to optimize traffic allocation.\n\nRegulatory & Compliance Execution: Operationalize regional telecommunications mandates, local sender ID registries, and anti-spam regulations across APAC markets in coordination with Legal and Regulatory teams.\n\nOperational Escalations: Serve as the primary escalation point for supplier SLA breaches, network disruptions, and service degradations to maintain high platform uptime.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\nMinimum of 7 years in the telecommunications or CPaaS industry, with at least 3 years in a leadership or senior supplier/carrier management role.\n\nDeep understanding of APAC telecommunications ecosystems, messaging aggregators, and regional market dynamics.\n\nProven track record of negotiating commercial supplier agreements and driving unit economics (COGS) optimization.\n\nExperience collaborating with Sales, Product, and Operations to translate revenue demand into supplier capacity.\n\nStrong analytical skills with experience leveraging performance metrics and data tools for route optimization.\n\nDesired:\n\nProfessional fluency in English and an additional APAC language (e.g., Japanese, Mandarin, or Bahasa).\n\nBachelor's degree in Telecommunications, Business, or a related field.\n\nTechnical understanding of core communications protocols and standards (e.g., SMPP, SIP, REST APIs, A2P/P2P messaging).\n\nLocation\n\nThis role will be remote based in key APAC locations (Australia or Japan).\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 20% to 25% regional travel anticipated for supplier engagements and internal team alignment.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Director, Supplier Relations APAC\n\nAbout the job\n\nTwilio is seeking an experienced Director, Supplier Relations to execute our supply strategy, manage regional vendor and carrier partnerships, and lead a team of supplier relations specialists across Asia-Pacific (APAC). In this role, you will translate regional connectivity strategy into operational execution, optimizing COGS, route quality, and direct supplier partnerships. Working closely with cross-functional partners in Sales, Product, Legal, and Operations, you will ensure Twilio's infrastructure reliably aligns with rapid enterprise growth across diverse APAC markets.\n\nResponsibilities\n\nTeam Leadership & Development: Direct, mentor, and manage a team of supplier relations specialists and analysts, fostering operational excellence and regional alignment across APAC.\n\nSupplier Procurement & Negotiations: Lead commercial negotiations with regional telecommunications carriers, messaging aggregators, and OTT suppliers to secure competitive unit economics (COGS) and expand direct connectivity.\n\nGTM & Product Alignment: Partner with APAC Sales and Product teams to analyze market demand, forecast capacity needs, and support localized go-to-market strategies for key growth countries.\n\nRoute Quality & Analytics: Continuously monitor supplier performance, route latency, delivery success rates, and margins, using data-driven insights to optimize traffic allocation.\n\nRegulatory & Compliance Execution: Operationalize regional telecommunications mandates, local sender ID registries, and anti-spam regulations across APAC markets in coordination with Legal and Regulatory teams.\n\nOperational Escalations: Serve as the primary escalation point for supplier SLA breaches, network disruptions, and service degradations to maintain high platform uptime.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\nMinimum of 7 years in the telecommunications or CPaaS industry, with at least 3 years in a leadership or senior supplier/carrier management role.\n\nDeep understanding of APAC telecommunications ecosystems, messaging aggregators, and regional market dynamics.\n\nProven track record of negotiating commercial supplier agreements and driving unit economics (COGS) optimization.\n\nExperience collaborating with Sales, Product, and Operations to translate revenue demand into supplier capacity.\n\nStrong analytical skills with experience leveraging performance metrics and data tools for route optimization.\n\nDesired:\n\nProfessional fluency in English and an additional APAC language (e.g., Japanese, Mandarin, or Bahasa).\n\nBachelor's degree in Telecommunications, Business, or a related field.\n\nTechnical understanding of core communications protocols and standards (e.g., SMPP, SIP, REST APIs, A2P/P2P messaging).\n\nLocation\n\nThis role will be remote based in key APAC locations (Australia or Japan).\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 20% to 25% regional travel anticipated for supplier engagements and internal team alignment.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -27,8 +37,8 @@
   "title": "Director, Supplier Relations APAC",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "9e5e66abb2b92737d6b487adbe5a4ae954e8353bf7d285d61403949232d19f37",
+ "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
+ "content_hash": "2322258a85c17785f38f1a112c69d32b7f07dc7757f535288f173fc315049ee3",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -47,7 +57,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Australia",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      },
@@ -55,7 +65,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      },
@@ -63,7 +73,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote based in key APAC locations (Australia or Japan).",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      }
@@ -76,7 +86,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      },
@@ -84,7 +94,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "Minimum of 7 years in the telecommunications or CPaaS industry, with at least 3 years in a leadership or senior supplier/carrier management role.\nDeep understanding of APAC telecommunications ecosystems, messaging aggregators, and regional market dynamics.\nProven track record of negotiating commercial supplier agreements and driving unit economics (COGS) optimization.\nExperience collaborating with Sales, Product, and Operations to translate revenue demand into supplier capacity.\nStrong analytical skills with experience leveraging performance metrics and data tools for route optimization.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      }
@@ -97,7 +107,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Professional fluency in English and an additional APAC language (e.g., Japanese, Mandarin, or Bahasa).\nBachelor's degree in Telecommunications, Business, or a related field.\nTechnical understanding of core communications protocols and standards (e.g., SMPP, SIP, REST APIs, A2P/P2P messaging).",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      }
@@ -110,7 +120,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Australia",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      },
@@ -118,7 +128,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8195222"
      }
