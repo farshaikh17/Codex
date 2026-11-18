@@ -30,15 +30,19 @@ PER_CANDIDATE = 75
 AUTO = "x.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(x.qualification_reason,'') LIKE 'Shortlisted automatically.%'"
 DECIDED = f"(x.manual_override_status IS NOT NULL OR (x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD') AND NOT ({AUTO})))"
 UA = 'Mozilla/5.0 (compatible; career-job-engine/1.0; private job search)'
-EXPORT_SQL = f"""SELECT id, url FROM (
+EXPORT_SQL = f"""WITH protected_jobs AS (
+  SELECT job_id FROM applications WHERE job_id IS NOT NULL
+  UNION
+  SELECT x.job_id FROM candidate_qualifications x WHERE x.job_id IS NOT NULL AND {DECIDED}
+)
+SELECT id, url FROM (
   SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
          ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY q.qualification_status IN ('READY','STRETCH_READY') DESC, s.overall_score DESC, j.discovered_at DESC) AS rk
   FROM candidate_job_scores s
   JOIN jobs j ON j.id = s.job_id
   JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
   WHERE j.is_active = 1
-    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
-    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id AND {DECIDED})
+    AND j.id NOT IN (SELECT job_id FROM protected_jobs)
     AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
 ) WHERE rk <= {PER_CANDIDATE}"""
 

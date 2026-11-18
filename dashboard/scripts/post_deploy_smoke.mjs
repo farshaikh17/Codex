@@ -38,7 +38,7 @@ const PRIVATE_TEXT = /RRVUNL|Mianro|Chhabra|1,?20,?000|[\w.+-]+@[\w-]+\.[a-z]{2,
 // commit and the release was marked failed although the deploy had succeeded). Ask again a few times before calling it a mismatch.
 let v = await (await get('/api/version')).json().catch(() => ({}));
 for (let i = 0; EXPECT && v.commit !== EXPECT && i < 5; i++) { await sleep(4000); v = await (await get('/api/version')).json().catch(() => ({})); }
-check('health is public', (await get('/api/health')).status === 200);
+check('both candidate feeds are ready', (await get('/api/health?feeds=1')).status === 200);
 check('version is public', !!v.version, JSON.stringify(v));
 const OPEN = v.open_tracker === true;
 if (OPEN) { console.log('INFO  open tracker: tracker actions answer without a key'); PRIVATE_KEYS = /"(error_message|cover_letter_path|actor|cash_floor_inr_monthly|cash_floor_inr_annual|min_acceptable_salary_usd|pay_line|employment_history|location_preferences)"/; }
