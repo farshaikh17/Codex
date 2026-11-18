@@ -928,6 +928,15 @@ router.get('/api/version', async (request, env) => {
 
 router.get('/api/health', async (request, env) => {
   try {
+    // A minimal DB lookup can succeed while the actual candidate feeds are unavailable.
+    if (new URL(request.url).searchParams.get('feeds') === '1') {
+      for (const id of ['farhan_shaikh', 'sana_ansari']) {
+        const feed = new URL('/api/today', request.url);
+        feed.searchParams.set('candidate_id', id);
+        const response = await router.handle(new Request(feed), env);
+        if (!response.ok) return jsonResponse({ status: 'degraded', component: 'today' }, 503, corsHeaders(request, env));
+      }
+    }
     const metaRes = await env.DB.prepare('SELECT value FROM app_meta WHERE key = ?').bind('stage').first<{ value: string }>();
     return jsonResponse({
       status: 'healthy',

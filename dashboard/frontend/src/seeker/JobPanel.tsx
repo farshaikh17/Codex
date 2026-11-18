@@ -139,7 +139,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
                   </ul>
                 </div>
               )}
-              {job.description && <div><h4 className="font-semibold">The posting</h4><p className="whitespace-pre-line break-words">{job.description}</p></div>}
+              {job.description?.trim() ? <div><h4 className="font-semibold">The posting</h4><p className="whitespace-pre-line break-words">{job.description}</p></div> : <p>The source provided no job description.{url ? ' Open the employer posting to check the requirements.' : ''}</p>}
             </div>
           </details>
         </div>

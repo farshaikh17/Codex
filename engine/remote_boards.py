@@ -78,9 +78,12 @@ def when(value):
             return datetime.fromtimestamp(value / 1000 if value > 1e11 else value, timezone.utc)
         v = str(value)
         try:
-            return datetime.fromisoformat(v.replace('Z', '+00:00')).astimezone(timezone.utc)
+            parsed = datetime.fromisoformat(v.replace('Z', '+00:00'))
         except ValueError:
-            return parsedate_to_datetime(v).astimezone(timezone.utc)
+            parsed = parsedate_to_datetime(v)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
     except Exception:
         return None
 
