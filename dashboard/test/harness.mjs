@@ -36,7 +36,8 @@ export async function loadWorker() {
 
 export function makeEnv(d1, extra = {}) {
   // Most tests change rows directly between calls, so the response cache is off unless a test turns it on.
-  return { DB: d1, ENVIRONMENT: 'test', ADMIN_API_KEY: ADMIN_KEY, RESPONSE_CACHE: 'off', ...extra };
+  // The edge layer in front of it (Cache API + isolate memory) is off too unless a test turns it on (test/edge_cache.test.mjs).
+  return { DB: d1, ENVIRONMENT: 'test', ADMIN_API_KEY: ADMIN_KEY, RESPONSE_CACHE: 'off', EDGE_CACHE: 'off', ...extra };
 }
 
 export async function call(worker, env, method, urlPath, { body, key = ADMIN_KEY } = {}) {

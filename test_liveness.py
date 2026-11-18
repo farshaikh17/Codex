@@ -16,6 +16,50 @@ from engine import liveness
 CODES = {'/ok': 200, '/gone': 404, '/removed': 410, '/blocked': 403, '/busy': 429, '/err': 500}
 
 
+def _reader(db):
+    db.row_factory = sqlite3.Row
+    return lambda sql: [dict(r) for r in db.execute(sql).fetchall()]
+
+
+# The single window query the export used before the per-person queries (kept here as the reference the new export must agree with).
+OLD_EXPORT_SQL = f"""SELECT id, url FROM (
+  SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
+         ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY q.qualification_status IN ('READY','STRETCH_READY') DESC, s.overall_score DESC, j.discovered_at DESC) AS rk
+  FROM candidate_job_scores s JOIN jobs j ON j.id = s.job_id JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
+  WHERE j.is_active = 1 AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
+    AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id AND {liveness.DECIDED})
+    AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
+) WHERE rk <= {liveness.PER_CANDIDATE}"""
+
+
+class ExportEquivalence(unittest.TestCase):
+    def test_per_person_export_selects_the_same_jobs_as_the_old_window_query(self):
+        import random
+        rnd = random.Random(5)
+        db = sqlite3.connect(':memory:')
+        for f in sorted((Path(__file__).parent / 'dashboard' / 'migrations').glob('*.sql')):
+            db.executescript(f.read_text())
+        db.executescript("INSERT INTO candidates(id, full_name) VALUES ('a','A'),('b','B'),('c','C');")
+        scores = rnd.sample(range(100000), 3000)
+        for i in range(1000):
+            db.execute('INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at) VALUES (?,?,?,?,?,?,?)',
+                       (f'j{i}', 't', 'c', 'x', f'https://e.com/{i}' if i % 13 else 'nan', 1 if i % 9 else 0, f'2026-11-{1 + i % 28:02d}'))
+            for k, cid in enumerate('abc'):
+                if (i + k) % 4 == 0:
+                    continue
+                st = rnd.choice(['NEEDS_REVIEW'] * 6 + ['HOLD', 'INELIGIBLE', 'READY', 'STRETCH_READY'])
+                reason = 'Shortlisted automatically. x' if st in ('READY', 'STRETCH_READY') and rnd.random() < 0.7 else 'r'
+                override = 'READY' if rnd.random() < 0.02 else None
+                db.execute('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?)', (cid, f'j{i}', st, reason, override))
+                db.execute('INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score) VALUES (?,?,?)', (cid, f'j{i}', scores[i * 3 + k]))   # distinct, so both orders are total
+        for i in range(0, 1000, 37):
+            db.execute('INSERT INTO applications(id,candidate_id,job_id) VALUES (?,?,?)', (f'a{i}', 'a', f'j{i}'))
+        old = sorted(r[0] for r in db.execute(OLD_EXPORT_SQL).fetchall())
+        new = sorted(r['id'] for r in liveness.export_rows(_reader(db)))
+        self.assertEqual(new, old)
+        self.assertEqual(len(new), 3 * liveness.PER_CANDIDATE)
+
+
 def fake_urlopen(req, timeout=20):
     url = req.full_url
     path = '/' + url.split('/', 3)[-1] if url.count('/') >= 3 else '/'
@@ -96,11 +140,12 @@ class Liveness(unittest.TestCase):
           CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, overall_score INT);
           CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
           CREATE TABLE applications(job_id TEXT);
+          CREATE TABLE candidates(id TEXT PRIMARY KEY); INSERT INTO candidates VALUES ('farhan');
           INSERT INTO jobs VALUES ('j','nan','https://example.com/job',1,'2026-11-09');
           INSERT INTO candidate_job_scores VALUES ('farhan','j',80);
           INSERT INTO candidate_qualifications VALUES ('farhan','j',NULL,'NEEDS_REVIEW',NULL);
         """)
-        self.assertEqual(db.execute(liveness.EXPORT_SQL).fetchall(), [('j','https://example.com/job')])
+        self.assertEqual([(r['id'], r['url']) for r in liveness.export_rows(_reader(db))], [('j','https://example.com/job')])
 
     def test_export_checks_automatic_shortlist_first_and_never_a_decided_row(self):
         db = sqlite3.connect(':memory:')
@@ -109,6 +154,7 @@ class Liveness(unittest.TestCase):
           CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, overall_score INT);
           CREATE TABLE candidate_qualifications(candidate_id TEXT, job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
           CREATE TABLE applications(job_id TEXT);
+          CREATE TABLE candidates(id TEXT PRIMARY KEY); INSERT INTO candidates VALUES ('farhan');
           INSERT INTO jobs VALUES ('review',NULL,'https://example.com/1',1,'2026-11-09'),('auto',NULL,'https://example.com/2',1,'2026-11-09'),
             ('import',NULL,'https://example.com/3',1,'2026-11-09'),('person',NULL,'https://example.com/4',1,'2026-11-09');
           INSERT INTO candidate_job_scores VALUES ('farhan','review',95),('farhan','auto',70),('farhan','import',61),('farhan','person',80);
@@ -117,7 +163,7 @@ class Liveness(unittest.TestCase):
             ('farhan','import',NULL,'READY','Strongest Fit verified match (61%)'),
             ('farhan','person','READY','READY','Shortlisted automatically. x');
         """)
-        self.assertEqual([r[0] for r in db.execute(liveness.EXPORT_SQL).fetchall()], ['auto', 'review'])
+        self.assertEqual([r['id'] for r in liveness.export_rows(_reader(db))], ['auto', 'review'])
 
 
 class SlowServer(unittest.TestCase):

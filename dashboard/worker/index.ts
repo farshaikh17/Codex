@@ -19,6 +19,8 @@ export interface Env {
   ADMIN_API_KEY?: string;
   /** 'off' disables the response cache (unit tests that change rows directly between calls) */
   RESPONSE_CACHE?: string;
+  /** 'off' disables only the edge layer in front of it (Cache API + isolate memory; see edgeKey) */
+  EDGE_CACHE?: string;
   /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
   GIT_COMMIT?: string;
   DEPLOYED_AT?: string;
@@ -326,6 +328,79 @@ async function invalidateResponseCache(env: Env, retried = false): Promise<void>
     if (/no such table/i.test(String(e?.message))) return;          // cache not installed: nothing to invalidate
     if (!retried) return invalidateResponseCache(env, true);
     throw e;                                                        // never carry on as if the cache were coherent
+  }
+}
+
+// ---- Edge cache in front of the D1 response cache (D1 read diet, 17 Nov) ----
+// Even a D1 cache hit reads D1 (the registry's generation, the cache generation and the entry), and every UTC day's reads are capped at
+// 5,000,000 on the free plan. Public answers that are the same for every visitor are therefore also kept outside D1, for EDGE_TTL_SECONDS:
+// in Cloudflare's Cache API (caches.default: free, per data centre; Cloudflare documents it as inactive on *.workers.dev hostnames, where it
+// stores nothing) and in this isolate's memory (works on any hostname). A hit there reads nothing from D1 (X-Cache: EDGE).
+// * Only for anonymous public reads: never with an Authorization header (operator key), a share link (X-View-Token), include_test, a
+//   client that is not one of the two built-in public candidates, or a request that asks for a fresh answer (Cache-Control: no-cache /
+//   no-store / max-age=0, Pragma: no-cache: the seeker's own page sends that for a few minutes after its own change, see frontend/src/api.ts).
+// * Keyed like the D1 entry (code version + commit, path, the allowed query parameters only), plus an edge generation.
+// * Only a 200 JSON answer the D1 path would itself store is kept (never an error, a 503, a STALE answer or the outage backup).
+// * Invalidation: every operator change and tracker action raises the edge generation before and after it (in this isolate and, where the
+//   Cache API works, in this data centre). A release changes the commit, so nothing from the previous code is ever served. Data imports
+//   (daily run, watchlist, collector sync, cron) are not seen here: their answers appear when the entry expires (at most EDGE_TTL_SECONDS),
+//   and the same holds for other data centres and isolates after a change made elsewhere.
+const EDGE_TTL_SECONDS = 300;
+const EDGE_MEMORY_MAX_ENTRIES = 300, EDGE_MEMORY_MAX_BYTES = 16_000_000;
+const edgeMemory = new Map<string, { body: string; at: number }>();
+let edgeMemoryBytes = 0;
+let edgeGenerationLocal = 0;
+const edgeCacheStore = (): any => (globalThis as any).caches?.default || null;
+const EDGE_FRESH_REQUEST = /no-cache|no-store|max-age=0/i;
+/** The edge key for a request, or null when the request must not use the edge cache at all. */
+function edgeKey(request: Request, env: Env, url: URL): string | null {
+  if (env.RESPONSE_CACHE === 'off' || env.EDGE_CACHE === 'off' || request.method !== 'GET') return null;
+  if (!isPublicRead('GET', url.pathname) || PUBLIC_API_PATHS.has(url.pathname)) return null;
+  const h = request.headers;
+  if (h.has('Authorization') || h.has('X-View-Token') || url.searchParams.has('include_test')) return null;
+  if (EDGE_FRESH_REQUEST.test(h.get('Cache-Control') || '') || /no-cache/i.test(h.get('Pragma') || '')) return null;
+  if (referencedCandidates(url).some((cid) => !BUILTIN_IDS.includes(cid) || PRIVATE_IDS.has(cid))) return null;
+  return responseCacheKey('public', url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`)?.key ?? null;
+}
+const edgeGenerationUrl = (url: URL) => `${url.origin}/__edge-cache/generation`;
+const edgeEntryUrl = (url: URL, key: string, gen: number) => `${url.origin}/__edge-cache/${gen}/${encodeURIComponent(key)}`;
+async function edgeGeneration(url: URL): Promise<number> {
+  const c = edgeCacheStore();
+  if (c) {
+    try { const hit = await c.match(edgeGenerationUrl(url)); if (hit) edgeGenerationLocal = Math.max(edgeGenerationLocal, Number(await hit.text()) || 0); } catch { /* best effort */ }
+  }
+  return edgeGenerationLocal;
+}
+async function bumpEdgeGeneration(env: Env, url: URL): Promise<void> {
+  edgeGenerationLocal = Math.max(Date.now(), edgeGenerationLocal + 1);
+  edgeMemory.clear(); edgeMemoryBytes = 0;
+  const c = env.RESPONSE_CACHE === 'off' || env.EDGE_CACHE === 'off' ? null : edgeCacheStore();
+  if (c) {
+    try { await c.put(edgeGenerationUrl(url), new Response(String(edgeGenerationLocal), { headers: { 'Cache-Control': 'public, max-age=86400' } })); } catch { /* best effort */ }
+  }
+}
+async function edgeLookup(url: URL, key: string, gen: number): Promise<string | null> {
+  const m = edgeMemory.get(`${gen}|${key}`);
+  if (m) {
+    if (Date.now() - m.at < EDGE_TTL_SECONDS * 1000) return m.body;
+    edgeMemory.delete(`${gen}|${key}`); edgeMemoryBytes -= m.body.length;
+  }
+  const c = edgeCacheStore();
+  if (!c) return null;
+  try { const hit = await c.match(edgeEntryUrl(url, key, gen)); return hit ? await hit.text() : null; } catch { return null; }
+}
+async function edgePut(url: URL, key: string, gen: number, body: string): Promise<void> {
+  if (body.length > CACHE_MAX_BYTES || gen !== edgeGenerationLocal) return;   // a change happened while this answer was computed: not kept
+  const k = `${gen}|${key}`;
+  const old = edgeMemory.get(k); if (old) { edgeMemory.delete(k); edgeMemoryBytes -= old.body.length; }
+  edgeMemory.set(k, { body, at: Date.now() }); edgeMemoryBytes += body.length;
+  for (const [ok, ov] of edgeMemory) {   // oldest first
+    if (edgeMemory.size <= EDGE_MEMORY_MAX_ENTRIES && edgeMemoryBytes <= EDGE_MEMORY_MAX_BYTES) break;
+    edgeMemory.delete(ok); edgeMemoryBytes -= ov.body.length;
+  }
+  const c = edgeCacheStore();
+  if (c) {
+    try { await c.put(edgeEntryUrl(url, key, gen), new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${EDGE_TTL_SECONDS}` } })); } catch { /* best effort */ }
   }
 }
 
@@ -676,6 +751,15 @@ class WorkerRouter {
       });
     }
 
+    // Edge cache (see edgeKey): an anonymous public read answered from Cloudflare's cache or this isolate's memory reads nothing from D1,
+    // so it is looked up before the registry, the key check and the D1 cache.
+    const edge = edgeKey(request, env, url);
+    const edgeGen = edge ? await edgeGeneration(url) : 0;
+    if (edge) {
+      const body = await edgeLookup(url, edge, edgeGen);
+      if (body != null) return new Response(body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': 'EDGE' } });
+    }
+
     // Every /api route except the public ones below requires the operator key (Authorization: Bearer <key>).
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
     const isApi = pathname.startsWith('/api/');
@@ -731,7 +815,10 @@ class WorkerRouter {
         const now = Math.floor(Date.now() / 1000);
         if (cacheKey) {
           lookup = await lookupResponseCache(env, cacheKey);
-          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) return cachedResponse(lookup, request, env, 'HIT');
+          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) {
+            if (edge && level === 'public' && edge === cacheKey) await edgePut(url, edge, edgeGen, lookup.body);
+            return cachedResponse(lookup, request, env, 'HIT');
+          }
         }
         if (metered) {
           if (level === 'public' && (await meterToday(env)).rows_read >= PUBLIC_DAILY_READ_BUDGET) {
@@ -745,7 +832,7 @@ class WorkerRouter {
         }
         // A tracker action for one known person clears only that person's answers (see invalidateCandidateCache).
         const trackerFor = operatorChange && isTrackerRoute(request.method, pathname) ? await openTrackerCandidate(request, url) : null;
-        const invalidate = () => (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env));
+        const invalidate = async () => { await bumpEdgeGeneration(env, url); await (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env)); };
         if (operatorChange) await invalidate();   // before: if this fails the change is refused
         let res: Response;
         try {
@@ -765,6 +852,7 @@ class WorkerRouter {
         if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
           if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now);
+          if (edge && level === 'public' && edge === cacheKey) await edgePut(url, edge, edgeGen, body);
           await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });

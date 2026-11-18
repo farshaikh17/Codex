@@ -29,6 +29,18 @@ Nothing below blocks the release. Each item says who decides or what would close
 * **Cached answers.** Dashboard reads are cached in D1: up to 30 minutes for visitors and 10 minutes for the operator.
   An operator change clears the cache at once; new postings from the cron or the collector sync appear when an entry
   expires. Answers carry `X-Cache: HIT`, `MISS` or `STALE`.
+* **Edge copy of public answers (read diet, 18 Nov).** In front of the D1 cache, anonymous public answers are also kept for 5 minutes
+  outside D1 (`X-Cache: EDGE`, no D1 read): in the Worker instance's memory, and in Cloudflare's Cache API. The Cache API part works only
+  on a custom domain; on the current `workers.dev` address only the in-memory copy works (per Worker instance). Never used with the
+  operator key, a share link, `include_test`, or a request that asks for a fresh answer. A change made through the site (tracker action,
+  operator edit) drops the copies where it was made, and the seeker's own page asks for fresh answers for 5.5 minutes after its own change,
+  so it always sees it; other visitors, other Worker instances and data imports (daily run, watchlist, collector sync, cron) can show the
+  previous answer for up to 5 minutes. A release never serves the previous code's copies. Turn it off with the variable `EDGE_CACHE = "off"`.
+* **A cache miss is still expensive.** On a production-size local copy (30,000 jobs, 34,500 screening rows) one uncached Today page costs
+  about 94,000 rows read and one uncached list about 103,000, per person; a tracker action makes that person's next page view a miss.
+  The daily run no longer needs most of the day (section 6 of COST_MODEL_2026-11-09.md), so there is room for about 40 such misses a day
+  over the background, but a long QA session with many different filters can still use it up. Cheaper count and list queries are the
+  next step (not in this change).
 * **Daily public read cap.** After 2,500,000 rows read by visitor cache misses in a UTC day, visitors see the last cached
   answer (`X-Cache: STALE`) or a 503 until midnight UTC. Operator reads are never blocked. Anyone can still spend that
   public share by requesting many different filter combinations; the cap only guarantees it cannot take the whole
@@ -100,6 +112,11 @@ Nothing below blocks the release. Each item says who decides or what would close
 - **Skill matching (changed 2026-11-06).** A skill used to count only when its exact phrase appeared in a posting, which phrases such as "CRM Configuration" almost never do. A skill now also counts when every one of its key words appears as a whole word; a multi-word skill needs at least two key words, so a lone generic word ("workflows") is not enough. This only ever adds matches. Rows already stored keep their scores until the owner-approved re-score (run by the daily discovery pipeline) updates the screen's own rows.
 - **Daily discovery pipeline.** See DISCOVERY_PIPELINE.md. The dataset is a third-party open dataset (MIT); if it disappears, the pipeline finds nothing new and closes nothing (closures need a full-size snapshot), and the Worker's own discovery keeps running.
 
+* **Tidy-up of old screening rows.** Jobs that closed 45+ days ago, or that every person's screen calls ineligible, lose their screening,
+  score and pipeline-history rows (`scripts/tidy_jobs.mjs`, daily run, at most 500 jobs). The job row stays. Totals that counted every
+  screening row ever stored (for example a lifetime "screened" figure) fall by those rows; Ready / Stretch / Applied rows, decisions,
+  applications and their history are never removed. Exact duplicates are already refused at import (same id, URL, or employer + title +
+  place), so the tidy-up removes no "duplicates" (deciding between two near-duplicate postings is a person's call).
 * **Outage backup needs a custom domain.** The edge-cache copy of public answers (`backupStore`/`backupServe`, `X-Cache: STALE-OUTAGE`)
   relies on the Workers Cache API, which Cloudflare documents as not active on `*.workers.dev` hostnames. On the current
   `workers.dev` address it most likely stores nothing, so visitors still see the 503 during a D1 outage. It starts working once the

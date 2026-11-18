@@ -30,17 +30,41 @@ PER_CANDIDATE = 75
 AUTO = "x.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(x.qualification_reason,'') LIKE 'Shortlisted automatically.%'"
 DECIDED = f"(x.manual_override_status IS NOT NULL OR (x.qualification_status NOT IN ('NEEDS_REVIEW','HOLD') AND NOT ({AUTO})))"
 UA = 'Mozilla/5.0 (compatible; career-job-engine/1.0; private job search)'
-EXPORT_SQL = f"""SELECT id, url FROM (
-  SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url,
-         ROW_NUMBER() OVER (PARTITION BY s.candidate_id ORDER BY q.qualification_status IN ('READY','STRETCH_READY') DESC, s.overall_score DESC, j.discovered_at DESC) AS rk
-  FROM candidate_job_scores s
-  JOIN jobs j ON j.id = s.job_id
-  JOIN candidate_qualifications q ON q.candidate_id = s.candidate_id AND q.job_id = s.job_id
-  WHERE j.is_active = 1
+# Per person, the PER_CANDIDATE best undecided rows: the automatic shortlist first, then by score, then newest (the order the single window query
+# over every score row used to give). D1 bills every row a query steps over, and that query read every score row of every person, each with a
+# scan of the applications table (no index on job_id): about 2.1 million rows a day on a local copy of production size (dashboard/docs/
+# COST_MODEL_2026-11-09.md section 6). Now two small queries per person: the shortlist rows through the (candidate, status) index, then the rest
+# walking the (candidate, score) index and stopping after PER_CANDIDATE rows (CROSS JOIN fixes that join order); a few hundred rows read each.
+_EXPORT_COLS = "SELECT j.id, CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url"
+_EXPORT_OPEN = f"""j.is_active = 1
     AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
     AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = j.id AND {DECIDED})
-    AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')
-) WHERE rk <= {PER_CANDIDATE}"""
+    AND (j.original_posting_url LIKE 'https://%' OR j.source_url LIKE 'https://%')"""
+SHORTLISTED = "('READY','STRETCH_READY')"
+
+
+def export_sql(candidate_id, shortlisted, limit=PER_CANDIDATE):
+    """One person's targets: shortlisted=True the Ready / Stretch rows (only automatic ones pass the decided test), False every other row."""
+    cid = q(candidate_id)
+    if shortlisted:
+        return f"""{_EXPORT_COLS} FROM candidate_qualifications q CROSS JOIN candidate_job_scores s CROSS JOIN jobs j
+  WHERE q.candidate_id = {cid} AND q.qualification_status IN {SHORTLISTED} AND s.candidate_id = q.candidate_id AND s.job_id = q.job_id AND j.id = q.job_id
+    AND {_EXPORT_OPEN}
+  ORDER BY s.overall_score DESC, j.discovered_at DESC LIMIT {int(limit)}"""
+    return f"""{_EXPORT_COLS} FROM candidate_job_scores s CROSS JOIN candidate_qualifications q CROSS JOIN jobs j
+  WHERE s.candidate_id = {cid} AND q.candidate_id = s.candidate_id AND q.job_id = s.job_id AND q.qualification_status NOT IN {SHORTLISTED} AND j.id = s.job_id
+    AND {_EXPORT_OPEN}
+  ORDER BY s.overall_score DESC, j.discovered_at DESC LIMIT {int(limit)}"""
+
+
+def export_rows(read, per_candidate=PER_CANDIDATE):
+    """The usual targets, per person in id order. read(sql) -> rows (dicts with id and url)."""
+    out = []
+    for c in read('SELECT id FROM candidates ORDER BY id'):
+        first = list(read(export_sql(c['id'], True, per_candidate)))
+        rest = list(read(export_sql(c['id'], False, per_candidate - len(first)))) if len(first) < per_candidate else []
+        out += [{'id': r['id'], 'url': r['url']} for r in first + rest]
+    return out
 
 
 POOL_PER_CANDIDATE = 150
@@ -170,13 +194,14 @@ def q(v):
 
 
 def to_sql(result, now=None):
+    # "+is_active": find the listed ids by key; with the bare column D1's planner walked every active job instead (about 25,000 rows read).
     now = now or datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     guard = ("AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) "
              f"AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND {DECIDED})")
     lines = []
     for i in range(0, len(result['dead']), 100):
         ids = json.dumps(result['dead'][i:i + 100])
-        lines.append(f"UPDATE jobs SET is_active = 0, expired_at = {q(now)} WHERE id IN (SELECT value FROM json_each({q(ids)})) AND is_active = 1 {guard};")
+        lines.append(f"UPDATE jobs SET is_active = 0, expired_at = {q(now)} WHERE id IN (SELECT value FROM json_each({q(ids)})) AND +is_active = 1 {guard};")
     for i in range(0, len(result['alive']), 100):
         ids = json.dumps(result['alive'][i:i + 100])
         lines.append(f"UPDATE jobs SET last_verified_at = {q(now)} WHERE id IN (SELECT value FROM json_each({q(ids)}));")
@@ -201,7 +226,7 @@ def main():
                 first = pool_targets(json.loads(Path(a.pool).read_text()))
             except ValueError:
                 first = []   # an unreadable pool: the usual targets only (the selector does not run without a pool)
-        rows = merge_targets(first, d1(EXPORT_SQL))
+        rows = merge_targets(first, export_rows(d1))
         Path(a.export).write_text(json.dumps(rows))
         print(json.dumps({'targets': len(rows), 'pool_targets': len(first)}))
     elif a.check:

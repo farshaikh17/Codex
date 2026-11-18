@@ -163,11 +163,11 @@ for (const file of many('--in')) {
 const guarded = `AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = jobs.id) AND NOT EXISTS (SELECT 1 FROM candidate_qualifications x WHERE x.job_id = jobs.id AND x.manual_override_status IS NOT NULL)`;
 const inList = (ids) => `(SELECT value FROM json_each(${q(JSON.stringify(ids))}))`;
 for (let i = 0; i < reopen.length; i += 200)   // a dataset job that came back after being closed
-  out.push(`UPDATE jobs SET is_active = 1, expired_at = NULL, last_verified_at = ${q(now)} WHERE id IN ${inList(reopen.slice(i, i + 200))} AND source_channel = 'ATS_DATASET' AND is_active = 0;`);
+  out.push(`UPDATE jobs SET is_active = 1, expired_at = NULL, last_verified_at = ${q(now)} WHERE id IN ${inList(reopen.slice(i, i + 200))} AND source_channel = 'ATS_DATASET' AND +is_active = 0;`);   // +: by id, not by walking every closed job
 const toClose = [...closed].slice(0, MAX_CLOSE);   // missing from two consecutive full snapshots, ATS count healthy
 for (let i = 0; i < toClose.length; i += 200) {
   const part = toClose.slice(i, i + 200);
-  out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN ${inList(part)} AND source_channel = 'ATS_DATASET' AND is_active = 1 ${guarded};`);
+  out.push(`UPDATE jobs SET is_active = 0, expired_at = ${q(now)} WHERE id IN ${inList(part)} AND source_channel = 'ATS_DATASET' AND +is_active = 1 ${guarded};`);   // +: by id, not by walking every open job
   out.push(`DELETE FROM discovery_missing WHERE job_id IN ${inList(part)};`);
 }
 for (let i = 0; i < missingMark.length; i += 200) out.push(`INSERT OR IGNORE INTO discovery_missing(job_id, first_missing_at) SELECT value, ${q(now)} FROM json_each(${q(JSON.stringify(missingMark.slice(i, i + 200)))});`);
@@ -376,7 +376,9 @@ function shortlistSql() {
   if (ids) {
     const LOW = 45, HOLD_MARK = 'Held automatically (low match). ';
     const undecidedQ = `q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)`;
-    const scored = (cmp) => `EXISTS (SELECT 1 FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id AND s.score_breakdown LIKE ${MARKED} AND s.overall_score ${cmp})`;
+    // +s.overall_score: look the row up by its key. With the bare column, D1's planner walked the (candidate, score) index per row instead,
+    // reading every higher-scored row of the person for each one (the "match improved" statement ran past a minute on a production-size copy).
+    const scored = (cmp) => `EXISTS (SELECT 1 FROM candidate_job_scores s WHERE s.candidate_id = q.candidate_id AND s.job_id = q.job_id AND s.score_breakdown LIKE ${MARKED} AND +s.overall_score ${cmp})`;
     const low = `(candidate_id, job_id) IN (SELECT q.candidate_id, q.job_id FROM candidate_qualifications q WHERE q.candidate_id IN (${ids}) AND q.qualification_status = 'NEEDS_REVIEW' AND ${undecidedQ} AND ${scored('<= ' + LOW)})`;
     const back = `(candidate_id, job_id) IN (SELECT q.candidate_id, q.job_id FROM candidate_qualifications q WHERE q.candidate_id IN (${ids}) AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE ${q(HOLD_MARK + '%')} AND ${undecidedQ} AND ${scored('> ' + LOW)})`;
     sl.push(`INSERT INTO qualification_history(candidate_id, job_id, previous_status, new_status, reason, actor)
