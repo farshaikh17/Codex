@@ -14,6 +14,15 @@
    "from_hash": "a6a55d78c2e41993a9a34b6b00ea50b87f3782b4ee2ee489e3ff396f2a1ffcec",
    "kind": "content_changed",
    "to_hash": "d44d28def185ae673396b88f0829880df854a5049bd77dd9257968c6008c47dc"
+  },
+  {
+   "changed_at": "2026-11-18T09:03:12.504185+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "d44d28def185ae673396b88f0829880df854a5049bd77dd9257968c6008c47dc",
+   "kind": "content_changed",
+   "to_hash": "1fcd8e0f0ae458202b87b171ac676b83b668dca76535bf4ec3a35be3dff90b97"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-11-04T15:19:39-05:00",
-  "title": "Cognite Academy Engineer",
+  "title": "Cognite Academy Engineer (Corporate Technical Trainer)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
- "content_hash": "d44d28def185ae673396b88f0829880df854a5049bd77dd9257968c6008c47dc",
+ "content_changed_at": "2026-11-18T09:03:12.504185+00:00",
+ "content_hash": "1fcd8e0f0ae458202b87b171ac676b83b668dca76535bf4ec3a35be3dff90b97",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "USA (Phoenix)",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-18T09:03:12.504185+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5026096101"
      }

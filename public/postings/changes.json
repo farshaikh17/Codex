@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T16:50:41.877596+00:00|greenhouse:twilio:8071710",
+ "cursor_to": "pc1|2026-10-27T20:29:45.949737+00:00|greenhouse:gitlab:8687926002",
  "entries": [
   {
    "availability": "listed",
@@ -108,14 +108,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "0dbbc52a7aab72685b5f78837516c0b7480295b61d8cbebc40dfa5fcd5e5f8c3",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:weave:2518c1b8-3ffc-40e5-a968-c013e760c3f5",
-   "record": "records/ashby__weave__2518c1b8-3ffc-40e5-a968-c013e760c3f5.json",
-   "record_sha256": "94a3f8ca53e2a133541023a1b0ecf0a43c8d4d4244a11508c9384ab3ad1b9079"
-  },
-  {
-   "availability": "listed",
    "content_hash": "6056c7a5e538252514eddf8d1fdda5006efd9c3bbe47c6bd2efeaa0479abdfc3",
    "last_change": "2026-10-25T21:53:38.150524+00:00",
    "posting_id": "ashby:weave:3fef281a-0bd6-4b18-9259-e3a81ba4023a",
@@ -172,14 +164,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "10c6e550b5bdc3d7defe434c462d02234dbcd27a6e5e2ab82b0b2ed434f1e1a1",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:weave:be890e53-b0fc-42a8-b148-6f9e4e6053d4",
-   "record": "records/ashby__weave__be890e53-b0fc-42a8-b148-6f9e4e6053d4.json",
-   "record_sha256": "74d1d2611c02033d2185f30119a6e3050b7d561b4bd367d9a0a8718e9748b2b4"
-  },
-  {
-   "availability": "listed",
    "content_hash": "443fd0e8b2ff5b2983e8cb8c3cc3a89e6ce93ffc2da6e381c1e2c68b7b3a74d9",
    "last_change": "2026-10-25T21:53:38.150524+00:00",
    "posting_id": "ashby:weave:ce79425d-20fc-4c15-841f-3445b86b05b5",
@@ -225,14 +209,6 @@
    "posting_id": "greenhouse:gitlab:8640151002",
    "record": "records/greenhouse__gitlab__8640151002.json",
    "record_sha256": "c609864f52165b94ddfc731364470f7c387dbc4676a659d3c0e797e46c5fa278"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "f3e2a6303eee8e3b68d476b1f9fe8979a41beba4c41e596c0b1c764729526cc3",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8648304002",
-   "record": "records/greenhouse__gitlab__8648304002.json",
-   "record_sha256": "c017a7a8f3db3bd79ba06c3d5a5bb1a97ac17c7dbc0918c9f7d60404b926eac5"
   },
   {
    "availability": "listed",
@@ -1460,14 +1436,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "5a938d567f02a260dfda02f4ad1a6f8a84462788d606e61a5ed9e19051d793cf",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8871820002",
-   "record": "records/greenhouse__gitlab__8871820002.json",
-   "record_sha256": "94c5f84b85f95d50ead4bc60b11880daa70379465683717152532e9c6bbf7a0e"
-  },
-  {
-   "availability": "listed",
    "content_hash": "44145613e11d2464d5e03c82d4e92adcd68e31cd3e22eea3949d80e8413c7c6e",
    "last_change": "2026-10-26T23:58:52.793071+00:00",
    "posting_id": "greenhouse:gitlab:8877510002",
@@ -1601,6 +1569,38 @@
    "posting_id": "greenhouse:twilio:8071710",
    "record": "records/greenhouse__twilio__8071710.json",
    "record_sha256": "7454600a6f8e8aba31a4e5ccf6c23ce8aa5da9d8fa33b78e501ff7bc0e00f5d4"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "100f78d74fb646bde8f302e17f4e10c7ec5fbd60ea61a4a23cddd2979e13a0e8",
+   "last_change": "2026-10-27T16:50:41.877596+00:00",
+   "posting_id": "greenhouse:twilio:8112239",
+   "record": "records/greenhouse__twilio__8112239.json",
+   "record_sha256": "5e5b9df0389f292325777c7933a91b225cca52c2105c7995bc7c36b45d2a0239"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "fe616e019628029334268653d4c0037c26fa95d7a966f2e6e83fbb9aef956c22",
+   "last_change": "2026-10-27T16:50:41.877596+00:00",
+   "posting_id": "greenhouse:twilio:8207696",
+   "record": "records/greenhouse__twilio__8207696.json",
+   "record_sha256": "2063165fc60c17d5316e782c8d8c4671983af7b5b74bc3b525fcf7ccb4409ff6"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "6503a5d57caa4dc2942c80374fad43c56fc9e006660936f9cdd277456398c31e",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "ashby:weave:296c554d-b2b9-428f-9635-77532cafdacb",
+   "record": "records/ashby__weave__296c554d-b2b9-428f-9635-77532cafdacb.json",
+   "record_sha256": "3f3ef944fda7613b1c826704fb03e7e95f3ad9397c36454169f2d44092b1ce67"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "4fbc792ef4e62a933cec29d2befea8190fcaf65be6e606ec8cc4ce94f29c261a",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "greenhouse:gitlab:8687926002",
+   "record": "records/greenhouse__gitlab__8687926002.json",
+   "record_sha256": "19a98af3aea7091059ed57cafbe83e5c00adb5dc49be1a3731973cb5c0e1172a"
   }
  ],
  "has_more": true,
