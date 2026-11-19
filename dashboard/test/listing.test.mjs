@@ -65,6 +65,21 @@ test('role families come from the title only, in rule order; an unmatched title 
   assert.equal(fitOf('READY_HIGH'), 'READY'); assert.equal(fitOf('HOLD'), 'NOT_FIT'); assert.equal(fitOf('CLOSED'), 'NOT_FIT'); assert.equal(fitOf(undefined), 'NOT_FIT');
 });
 
+test('software site reliability titles do not enter the plant reliability filter or its counts', async () => {
+  const w = world();
+  for (const [id, title] of [
+    ['software', 'Site Reliability Engineer - India'], ['gitops', 'Senior Site Reliability / GitOps Engineer'],
+    ['network', 'Network Reliability Engineer'], ['sre', 'SRE - Software Reliability Engineer'],
+    ['plant', 'Plant Reliability Engineer'], ['equipment', 'Rotating Equipment Reliability Engineer'],
+    ['refinery', 'Site Reliability Engineer - Refinery'],
+  ]) w.add(S, id, title);
+  const plant = await get(w, IR('role_family=RELIABILITY_MAINTENANCE', S), null);
+  assert.deepEqual(ids(plant).sort(), ['equipment', 'plant', 'refinery']);
+  const other = await get(w, IR('role_family=UNCLASSIFIED', S), null);
+  assert.deepEqual(ids(other).sort(), ['gitops', 'network', 'software', 'sre']);
+  assert.equal(other.json.facets.role_family.find(f => f.key === 'RELIABILITY_MAINTENANCE').count, 3);
+});
+
 test('India Remote: the unfiltered list is exactly the ELIGIBLE active jobs of the candidate, best score first', async () => {
   const w = world(); farhanSet(w);
   const r = await get(w, IR(''));
