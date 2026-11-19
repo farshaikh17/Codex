@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T20:29:45.949737+00:00|lever:gohighlevel:ff1b1484-a414-4d3a-9a94-d1a542eb7c08",
+ "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|greenhouse:celigo:8119133",
  "entries": [
   {
    "availability": "listed",
@@ -57,14 +57,6 @@
    "posting_id": "ashby:oyster:9069b5af-0e3e-412c-b665-41c0fc4aef44",
    "record": "records/ashby__oyster__9069b5af-0e3e-412c-b665-41c0fc4aef44.json",
    "record_sha256": "6d0ddb7a14a124fd03932c9915319a18c06c2018817ce8fcd6c3200f800afc7b"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "690481570caea66c02c8f32e15ff330ab4f38a26aeb8cc78fc2f4c624fc138a3",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:oyster:fe7c660d-9a43-434b-b4ca-adb48bd1d4df",
-   "record": "records/ashby__oyster__fe7c660d-9a43-434b-b4ca-adb48bd1d4df.json",
-   "record_sha256": "4b331a49ab797b6d3054f9f6dab56c59337a5324f6162ca7d3353b62127c9d50"
   },
   {
    "availability": "listed",
@@ -900,14 +892,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "066aabab730def5de5f6f6d92e5abf0bf03f3a9c2e665bde229c0f3f8266221f",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8845483002",
-   "record": "records/greenhouse__gitlab__8845483002.json",
-   "record_sha256": "c4d9eff12f1bda7685ab27b2ccabe86badae324f5e6c9354eb16df7d524d2a2b"
-  },
-  {
-   "availability": "listed",
    "content_hash": "bd2ad4a87edea1b0c41a34a50c76e940fa2dcb08f9bf527fadb1c61f9273a6d4",
    "last_change": "2026-10-26T23:58:52.793071+00:00",
    "posting_id": "greenhouse:gitlab:8846304002",
@@ -1115,14 +1099,6 @@
    "record_sha256": "2063165fc60c17d5316e782c8d8c4671983af7b5b74bc3b525fcf7ccb4409ff6"
   },
   {
-   "availability": "listed",
-   "content_hash": "6503a5d57caa4dc2942c80374fad43c56fc9e006660936f9cdd277456398c31e",
-   "last_change": "2026-10-27T20:29:45.949737+00:00",
-   "posting_id": "ashby:weave:296c554d-b2b9-428f-9635-77532cafdacb",
-   "record": "records/ashby__weave__296c554d-b2b9-428f-9635-77532cafdacb.json",
-   "record_sha256": "3f3ef944fda7613b1c826704fb03e7e95f3ad9397c36454169f2d44092b1ce67"
-  },
-  {
    "availability": "missing",
    "content_hash": "4fbc792ef4e62a933cec29d2befea8190fcaf65be6e606ec8cc4ce94f29c261a",
    "last_change": "2026-10-27T20:29:45.949737+00:00",
@@ -1169,14 +1145,6 @@
    "posting_id": "lever:gohighlevel:13cbdf7e-ec82-4a0f-aec1-3bc55add776d",
    "record": "records/lever__gohighlevel__13cbdf7e-ec82-4a0f-aec1-3bc55add776d.json",
    "record_sha256": "0e27277d075b2cb3f22d94dd08ef46968bd52452ddbf442163fbd0fa8f4631e8"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "fda06765a28ea1a983eecef09b79f21f67c81314628c2ed974262a5f674d40a9",
-   "last_change": "2026-10-27T20:29:45.949737+00:00",
-   "posting_id": "lever:gohighlevel:15571618-d0c5-4c01-89a8-07c07649bbf7",
-   "record": "records/lever__gohighlevel__15571618-d0c5-4c01-89a8-07c07649bbf7.json",
-   "record_sha256": "e3d091c1536e7ac96edcccdcff8de254d286cf1fe5da2fa6a65dc35ef8efc221"
   },
   {
    "availability": "listed",
@@ -1601,6 +1569,38 @@
    "posting_id": "lever:gohighlevel:ff1b1484-a414-4d3a-9a94-d1a542eb7c08",
    "record": "records/lever__gohighlevel__ff1b1484-a414-4d3a-9a94-d1a542eb7c08.json",
    "record_sha256": "c7c12157c17048ea29a36c03b1414047e667046ec1e8e50c30e5f93f9440a41d"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "88c6b6c5f6982cb7432e73e1a8a381796633410b45220cd6f7216b562085b7b7",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "lever:gohighlevel:ff29a1fa-05bb-49b4-b945-23a63d9a4110",
+   "record": "records/lever__gohighlevel__ff29a1fa-05bb-49b4-b945-23a63d9a4110.json",
+   "record_sha256": "382743e1049e75cc57f39472a21cba74823b796eaf53c4fb952714f4e819587a"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "1fe2c752e54e7b75d891ab598bca07fc8e277bcb1355d681973ce7d7cde7dee8",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "lever:gohighlevel:ffc2572e-12ce-4ad2-a0cd-7e8eca60a185",
+   "record": "records/lever__gohighlevel__ffc2572e-12ce-4ad2-a0cd-7e8eca60a185.json",
+   "record_sha256": "aba6b8205a084e1f6f116dd51b1b30a5add4ad564c445deb1706e88b48fc27d0"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "01b5f515d7d2e46e067496d54fec27ba780bf1e7cbbe50d21bc806ffcccac70a",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "greenhouse:celigo:8109445",
+   "record": "records/greenhouse__celigo__8109445.json",
+   "record_sha256": "102af4d4057a42c75bb285438987f27d2f6f0780d56edb4e61b9fd72fce94ca3"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "4cb8e2927264879254338bb977c43c98b2ffac2ace9253b375749a06c434a273",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "greenhouse:celigo:8119133",
+   "record": "records/greenhouse__celigo__8119133.json",
+   "record_sha256": "8ffd94462194b1d60f736b35f1b6d0169c1bd5bb4261903c2977956b3d2e28e0"
   }
  ],
  "has_more": true,
