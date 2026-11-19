@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDb, loadWorker, makeEnv, call } from './harness.mjs';
+import { seekerLists } from '../frontend/src/seeker/listFilters.ts';
 import { roleFamilyOf, fitOf, assessmentConflict, ROLE_FAMILIES } from '../worker/listing.ts';
 
 const worker = await loadWorker();
@@ -320,4 +321,21 @@ test('listings never write: applications, history, qualifications and scores are
   for (const q of ['', 'farhan_fit=READY', 'role_family=SOLUTIONS&pay_filter=PUBLISHED', 'exclude_applied=true&limit=2&offset=2', 'search=analyst']) { await get(w, IR(q)); await get(w, IR(q, S)); await get(w, IR(q), null); }
   await get(w, JOBS('qualification_status=READY&limit=100')); await get(w, JOBS('farhan_fit=READY&pay_filter=PUBLISHED'), null);
   assert.equal(snap(), before);
+});
+
+test('Best matches opens every READY and READY_HIGH job counted on Today', async () => {
+  const w = world();
+  w.add(S, 'ordinary', 'Planner', { status: 'READY' });
+  w.add(S, 'high', 'Reliability Engineer', { status: 'READY_HIGH' });
+  w.add(S, 'applied', 'Senior Planner', { status: 'READY_HIGH', app: 'APPLIED' });
+  w.add(S, 'stretch', 'Lead Engineer', { status: 'STRETCH_READY' });
+  w.add(F, 'other', 'Operations Lead', { status: 'READY_HIGH' });
+  const today = await get(w, '/api/today?candidate_id=' + S, null);
+  const query = new URLSearchParams(seekerLists.best.filters);
+  const list = await get(w, JOBS(query + '&exclude_applied=true&exclude_dismissed=true', S), null);
+  assert.equal(today.status, 200);
+  assert.equal(list.status, 200);
+  assert.equal(today.json.counts.best, 2);
+  assert.equal(list.json.total, today.json.counts.best);
+  assert.deepEqual(ids(list).sort(), ['high', 'ordinary']);
 });
