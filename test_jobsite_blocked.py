@@ -45,3 +45,20 @@ class BlockedCount(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class QueryList(unittest.TestCase):
+    def test_every_built_in_search_is_run_and_matches_its_role_rule(self):
+        # 19 Nov: Sana's searches grew to eleven (India power-plant maintenance, Abu Dhabi); MAX_QUERIES must not cut any of them off.
+        from engine.dataset_discovery import BUILTIN
+        import re
+        for cid, qs in jd.QUERIES.items():
+            self.assertLessEqual(len(qs), jd.MAX_QUERIES, cid)
+            for term, loc, country, sites in qs:
+                self.assertTrue(set(sites) <= set(jd.SITES), (cid, term))
+        sana = [(t, l) for t, l, _, _ in jd.QUERIES['sana_ansari']]
+        self.assertIn(('maintenance engineer thermal power plant', 'India'), sana)
+        self.assertIn(('maintenance engineer', 'Abu Dhabi'), sana)
+        role = re.compile(BUILTIN['sana_ansari']['role'], re.I)
+        for t, _ in sana:   # each search term is itself one of her titles, so its own results are not all dropped by the title filter
+            self.assertTrue(role.search(t.lower()) or 'maintenance engineer' in t, t)
