@@ -5,14 +5,24 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-19T16:00:23.452573+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "0b2427b81400a68344d1bb8b006199d61fa446760ecefba57af0a569dd4a3ad6",
+   "kind": "content_changed",
+   "to_hash": "3e21e333e0bd9f3b795109f6ec287d8305c666f923b3bebb56f7554aed977050"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nReports to: Manager, Renewals\n\nThis is an individual-contributor, tactical role focused on timely, accurate execution rather than strategic decision-making. The Associate Renewals Manager works under the general direction of Senior Renewals Managers and their manager, following specific instructions and frameworks in day-to-day work. Solutions and outputs are reviewed by more senior team members and/or the direct manager.\n\nWhat You’ll Do\n\nManage an assigned portfolio of customer renewals tracking key dates and driving them to on-time closure.\n\nHave real, consultative conversations with customers throughout the renewal cycle to understand how they're actually using the product and where they're headed next.\n\nIdentify and surface expansion opportunities — additional seats, tiers, or modules — that come out of those conversations.\n\nProbe for new use cases and unmet needs within existing accounts, connecting what customers describe to relevant GitLab capabilities they aren't yet using.\n\nPrepare and send renewal quotes, order forms, and related documentation accurately and on schedule, structuring them to reflect any expansion identified.\n\nPrepare and send renewal quotes, order forms, and related documentation accurately and on schedule.\n\nAnalyze moderately complex renewal situations (usage trends, contract terms, pricing) by reviewing existing account factors, escalating anything unusual to a senior team member or manager and helping to mitigate any risk identified.\n\nExplain moderately complex renewal terms and issues to customers and internal stakeholders, working to build alignment.\n\nCollaborate with Sales, Customer Success, and Finance to help identify expansion opportunities, resolve blockers and keep renewals moving.\n\nCommunicate proactively and transparently with customers and internal stakeholders, adapting to GitLab's communication framework.\n\nMaintain accurate, up-to-date records in the CRM/renewals system for forecasting and reporting.\n\nPrioritize tasks with guidance from more senior team members to drive quality, timely results.\n\nContribute to team goals by working collaboratively with peer RM’s.\n\nWhat You’ll Bring\n\nCan execute basic renewal processes independently (\"basic knots\") and has been introduced to more advanced scenarios (\"complex knots\") such as multi-year deals, upsell-attached renewals, or non-standard terms.\n\nDeveloping understanding of GitLab's way of working, values, and high-performance culture.\n\nAwareness of GitLab's remote work best practices.\n\nGrowth mindset and sense of ownership — proactively seeks out ways to learn and improve, and takes action rather than waiting for direction.\n\nStrong attention to detail and organizational skills; comfortable managing many renewals at once.\n\nClear written and verbal communication skills.\n\nAbility to follow defined processes and frameworks while flagging exceptions appropriately.\n\nCollaborative mindset and openness to feedback and coaching from senior teammates and manager.\n\nThe ability to travel for events such as trainings, team offsites, customer meetings, etc.\n\nAbout the team\n\nThe Renewals team focuses on protecting and growing GitLab's recurring revenue by managing the full contract lifecycle for our subscription customers. As a Renewal Manager, you'll be part of a quota-carrying team that works closely with Sales, Customer Success, Finance, and Legal to ensure timely, accurate renewals and strong customer retention across regions in an all-remote, asynchronous environment. The team is responsible for forecasting renewal outcomes, identifying and addressing churn risk, and uncovering opportunities to expand GitLab adoption, while continuously improving processes and best practices that support predictable, sustainable growth.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote"
+    "text": "Remote Ireland"
    },
    {
     "source": "offices.name",
@@ -23,8 +33,8 @@
   "title": "Renewals Manager - Italy/ Spain",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-13T13:16:28.012538+00:00",
- "content_hash": "0b2427b81400a68344d1bb8b006199d61fa446760ecefba57af0a569dd4a3ad6",
+ "content_changed_at": "2026-11-19T16:00:23.452573+00:00",
+ "content_hash": "3e21e333e0bd9f3b795109f6ec287d8305c666f923b3bebb56f7554aed977050",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -42,8 +52,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote",
-      "retrieved_at": "2026-11-13T13:16:28.012538+00:00",
+      "quote": "Remote Ireland",
+      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      },
@@ -51,7 +61,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Ireland",
-      "retrieved_at": "2026-11-13T13:16:28.012538+00:00",
+      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }
@@ -64,7 +74,7 @@
       "interpretation": null,
       "method": "description_section:What You’ll Bring",
       "quote": "Can execute basic renewal processes independently (\"basic knots\") and has been introduced to more advanced scenarios (\"complex knots\") such as multi-year deals, upsell-attached renewals, or non-standard terms.\nDeveloping understanding of GitLab's way of working, values, and high-performance culture.\nAwareness of GitLab's remote work best practices.\nGrowth mindset and sense of ownership — proactively seeks out ways to learn and improve, and takes action rather than waiting for direction.\nStrong attention to detail and organizational skills; comfortable managing many renewals at once.\nClear written and verbal communication skills.\nAbility to follow defined processes and frameworks while flagging exceptions appropriately.\nCollaborative mindset and openness to feedback and coaching from senior teammates and manager.\nThe ability to travel for events such as trainings, team offsites, customer meetings, etc.",
-      "retrieved_at": "2026-11-13T13:16:28.012538+00:00",
+      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }
@@ -80,8 +90,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote",
-      "retrieved_at": "2026-11-13T13:16:28.012538+00:00",
+      "quote": "Remote Ireland",
+      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }
