@@ -16,21 +16,19 @@ const PENDING_KEY = 'seeker:asked-apply';
 
 export const SeekerApp: React.FC = () => {
   const [route, setRoute] = useState<Route>(() => {
-    const r = parseRoute(window.location.hash);
+    const r = parseRoute(window.location.hash, window.history.state?.seekerFromView);
     if (r.person) return r;
     const p = rememberedPerson();
     return p ? { person: p, view: 'today', jobId: null } : r;
   });
   const underneath = useRef<View>(route.view);
-  const pushedPanel = useRef(false);
   // Plan U11: the address follows the screen; Back closes the panel; a reload lands on the same place.
   useEffect(() => {
     const want = routeHash(route);
     if (want && window.location.hash !== want) window.history.replaceState(null, '', window.location.pathname + window.location.search + want);
     const onHash = () => {
-      const r = parseRoute(window.location.hash, underneath.current);
+      const r = parseRoute(window.location.hash, window.history.state?.seekerFromView ?? underneath.current);
       if (!r.jobId) underneath.current = r.view;
-      if (!r.jobId) pushedPanel.current = false;
       setRoute(r);
     };
     window.addEventListener('hashchange', onHash);
@@ -96,12 +94,24 @@ export const SeekerApp: React.FC = () => {
     if (!skills[candidateId]) fetchProfile(candidateId).then((p) => setSkills((s) => ({ ...s, [candidateId]: p.primary_skills || [] }))).catch(() => {});
     return () => { live = false; };
   }, [ready, candidateId, route.jobId, refreshKey]);   // eslint-disable-line react-hooks/exhaustive-deps
-  const openJob = useCallback((job: Job) => { if (!person) return; pushedPanel.current = true; go({ person, view: underneath.current, jobId: job.id }); }, [person, go]);
+  const openJob = useCallback((job: Job) => {
+    if (!person) return;
+    const next = { person, view: underneath.current, jobId: job.id };
+    // Store the origin on this history entry so Forward and reload retain its close behaviour.
+    window.history.pushState({ seekerFromView: next.view }, '', routeHash(next));
+    setRoute(next);
+  }, [person]);
   const closeJob = useCallback(() => {
     if (!person) return;
-    if (pushedPanel.current) window.history.back();
-    else go({ person, view: underneath.current, jobId: null });
-  }, [person, go]);
+    if (window.history.state?.seekerFromView) {
+      window.history.back();
+      return;
+    }
+    // A bookmarked panel has no in-app predecessor. Replace it so Back still leaves the dashboard.
+    const next = { person, view: underneath.current, jobId: null };
+    window.history.replaceState(null, '', routeHash(next));
+    setRoute(next);
+  }, [person]);
 
   // Plan U7: after "Open posting", coming back to the tab asks "Did you apply?"
   const [asking, setAsking] = useState<Job | null>(null);
