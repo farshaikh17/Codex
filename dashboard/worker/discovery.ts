@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v19';
+export const RULES_MARKER = 'profile_v20';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -608,6 +608,40 @@ export function remoteCountryByText(description:string|null|undefined){
  while((m=COUNTRY_TEXT.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|without|don't|do not|needn't)\b[^.!?]*$/.test(before))return true;}
  return false;
 }
+// Jobs QA 5 (19 Nov, enspired 'Senior Virtual Power Plant Operations Expert', place 'Remote job': 'We can only consider candidates based in Austria,
+// Belgium, Germany, the Netherlands, Slovakia, Spain, and the UK ... provided the candidate holds the right to work'): the posting admits only people
+// who already live in, or may already work in, named countries. A requirement ('only consider candidates based in', 'must be based in', 'must have
+// the right to work in', 'must hold a valid work permit for', 'must be eligible to work in <country> without sponsorship', 'EU work authorisation
+// required') followed, in the same sentence, by places abroad and none in India. A denied one ('you do not need to be based in the UK'), 'eligible
+// to work in India', the employer's own duties ('we must ensure our staff have the right to work') and a bare 'right to work' do not count. Gulf
+// places count only when gulfOk is false (Farhan: remote from India only); for Sana a Gulf requirement is her own route.
+const RTW_LEAD=new RegExp([
+ '\\bonly\\b[^.!?;]{0,40}?\\b(?:candidates?|applicants?|applications|individuals|people|residents|talent|those)\\b(?: who (?:are|currently))?[^.!?;]{0,15}?\\b(?:based|located|resid\\w*|living|who live|who reside) (?:in|within)\\b',
+ '\\b(?:candidates?|applicants?)\\b[^.!?;]{0,20}?\\b(?:based|located|resid\\w*|living) (?:in|within)\\b[^.!?;]{1,120}?\\bonly\\b',
+ '\\b(?:must|need to|needs to|required to|will need to|should) (?:already )?(?:be )?(?:currently )?(?:based|located|resid(?:e|ent)|live|living) (?:in|within)\\b',
+ '\\b(?:must|need to|needs to|required to|will need to) (?:already )?(?:have|hold|possess) (?:the |a |an |full |valid |existing |current |unrestricted |legal |permanent )*(?:right to (?:live and )?work|work(?:ing)? (?:permit|authori[sz]ation|visa)|permission to work|eligibility to work)(?: in| for| within)\\b',
+ // the country before the permit: 'must hold a valid Guernsey employment permit', 'must have a Swiss work permit'
+ '\\b(?:must|need to|needs to|required to|will need to) (?:already )?(?:have|hold|possess) (?:a |an |the )?(?:valid |current |existing )?(?=[a-z]+(?: [a-z]+)? (?:employment|work|residence) (?:permit|visa|authori[sz]ation)\\b)',
+ '\\b(?:must|need to|needs to|required to) (?:already )?(?:be )?(?:legally )?(?:eligible|authori[sz]ed|entitled|permitted) to (?:live and )?work (?:in|within|for)\\b',
+ '\\b(?:the )?(?:full |valid |existing |unrestricted |legal )*(?:right to work|work (?:permit|authori[sz]ation)) (?:in|for|within)\\b(?=[^.!?;]{1,80}?\\b(?:is |are )?(?:required|essential|mandatory|a must|needed)\\b)',
+].join('|'),'gi');
+const RTW_REGION=/\b(?:(?:eu|eea|uk|us|u\.s\.|european union|schengen|swiss|australian|canadian|british|german|dutch) (?:work (?:permit|authori[sz]ation|visa)|right to work|citizenship|passport|residency)(?: holders?)?(?: is| are)? (?:required|essential|mandatory|needed|a must|only))\b/i;
+const RTW_FOREIGN=new RegExp(FOREIGN_NAME.source+'|\\b(?:eu|eea|schengen|european union|guernsey|isle of man|channel islands|swiss|british|german|dutch|australian|canadian)\\b|^\\s*(?:the\\s+)?(?:u\\.s\\.?|us)\\b','i');
+export function rightToWorkAbroad(description:string|null|undefined,opts:{gulfOk?:boolean}={}){
+ const d=String(description||'').toLowerCase().replace(/\]\([^)]*\)/g,' ').replace(/[*\[\]`#]+/g,' ').replace(/\s+/g,' ');if(!d.trim())return false;   // markdown emphasis and links read as plain words
+ const denied=(i:number)=>/\b(?:no|not|never|without|don't|do not|doesn't|does not|needn't|isn't|aren't)\b[^.!?;]*$/.test(d.slice(Math.max(0,i-40),i));
+ const m0=RTW_REGION.exec(d);if(m0&&!denied(m0.index))return true;
+ RTW_LEAD.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=RTW_LEAD.exec(d))){
+  if(denied(m.index))continue;
+  const after=d.slice(m.index+m[0].length,m.index+m[0].length+160),cut=after.search(/[!?;]|\.(?:\s|$)(?<!\bu\.s\.(?:\s|$))/);
+  const span=/\bonly\b/.test(m[0])&&/^\b(?:candidates?|applicants?)/.test(m[0])?m[0]:(cut<0?after:after.slice(0,cut));
+  if(/\b(?:indian?|bharat)\b/.test(span)||INDIA_PLACE.test(span))continue;
+  if(opts.gulfOk&&GULF_PLACE.test(span))continue;
+  if(RTW_FOREIGN.test(span))return true;
+ }
+ return false;
+}
 // Jobs QA 3 (16 Nov): the posting's own 'Location:' line, which many postings with a bare 'Remote' place carry ('Location: Remote – United States',
 // 'Location: United Kingdom', 'Location: Espoo, Finland', 'Location: India (remote)'). Only the words up to the next sentence or label are read.
 const LOCATION_LINE=/\blocation\s*\**\s*:\s*\**\s*([^*|\n]{2,80})/i, LOCATION_LINE_END=/[.?!;]|\s(?:about|who|department|reports?|type|salary|engagement|employment|job|role|we|our|the|this|compensation|shift|status|work(?:ing)? (?:hours|schedule)|overview|position|team|function)\b/i;
@@ -805,6 +839,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   // E-Verify or Form I-9; 'must be based in Canada'; 'right to work in the UK') is the same case.
   else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&foreignPlaceInPosting(p.title,p.description)&&!INDIA_HIRING_TEXT.test(p.description||'')){eligibility='INELIGIBLE';reason='Remote within another country only (the title or the posting\'s Location line names it), not from India.';}
   else if(!explicitIndiaRemote&&!globalRemote&&!foreignLocation(p.location)&&remoteCountryByText(p.description)){eligibility='INELIGIBLE';reason='Remote within another country only (the posting\'s text says so), not from India.';}
+  // Jobs QA 5: the text admits only people based in, or already allowed to work in, other countries ('only consider candidates based in Germany or
+  // Spain', 'must hold the right to work in the UK'), whatever the place says.
+  else if(!explicitIndiaRemote&&!globalRemote&&!INDIA_HIRING_TEXT.test(p.description||'')&&rightToWorkAbroad(p.description)){eligibility='INELIGIBLE';reason='Open only to people based in or allowed to work in another country (the posting says so), not from India.';}
   // (officeDays already ruled out hybrid and office days above; a passing 'on-site visit' or a denied 'not a hybrid role' no longer blocks, plan S8)
   else if(explicitIndiaRemote&&!/\b(hybrid|on[- ]site)\b/i.test(p.location||'')&&!/\b(not remote|no remote)\b/i.test(p.description||'')){eligibility='ELIGIBLE';reason='Posting explicitly supports fully remote work from India.';}
   else if(globalRemote){eligibility='ELIGIBLE';reason='Posting explicitly advertises worldwide remote work.';}
@@ -918,6 +955,11 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const sanaPlaceUnworkable=candidate.id==='sana_ansari'&&!prof&&!visaUnlikely&&!(visaRoute&&!noVisaRoute)&&!ukSponsor&&!gulf&&!india
   &&((remote&&!explicitIndiaRemote&&!globalRemote&&!SANA_REMOTE_REACH.test(text))||(!remote&&unreadPlace&&(usOnlyLocation(p.location)||abroadByDescription('',p.description))));
  if(sanaPlaceUnworkable)score=Math.min(score,VISA_UNLIKELY_CAP);
+ // Jobs QA 5: the text admits only people based in, or already allowed to work in, countries other than India and the Gulf, and offers no visa or
+ // relocation route: the same cap as an on-site job abroad with no visa route.
+ const rightToWorkElsewhere=candidate.id==='sana_ansari'&&!prof&&!india&&!indianPlace(p.location)&&!gulf&&!explicitIndiaRemote&&!((visaRoute||sponsorship)&&!noVisaRoute)
+  &&rightToWorkAbroad(p.description,{gulfOk:true});
+ if(rightToWorkElsewhere)score=Math.min(score,VISA_UNLIKELY_CAP);
  const indiaUnconfirmed=candidate.id==='farhan_shaikh'&&!prof&&role&&eligibility==='UNKNOWN'&&!foreignLocation(p.location)&&!HIRING_REACH.test(text);
  if(indiaUnconfirmed)score=Math.max(0,score-INDIA_UNCONFIRMED_PENALTY);
  // Jobs QA 2 (14 Nov): a design or study post also stays near her threshold whatever its skills (ETAP study expert at 68 after the -8): at most threshold + 4.
@@ -931,6 +973,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(gig?' Part-time, freelance or contractor engagement (score capped).':'')
   +(langHard?` Requires ${langHard} (kept off the shortlist).`:'')
   +(sanaPlaceUnworkable?' Remote or abroad with nothing showing it is open to someone in India (score capped).':'')
+  +(rightToWorkElsewhere?' Open only to people based in or allowed to work in another country, with no visa route (score capped).':'')
   +(indiaUnconfirmed?' Remote, but nothing in the posting says it hires from India (score reduced).':'')
   +(belowFloor?` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${lakhMonth(floor)} floor (score reduced).`:preferredPay?` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).`:'')
   +(globalHirer?' Employer is listed publicly as hiring worldwide; confirm India is included.':'')
