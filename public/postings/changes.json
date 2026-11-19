@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T20:29:45.949737+00:00|lever:gohighlevel:a718fab2-3fc6-4acd-b364-883f5fc59cac",
+ "cursor_to": "pc1|2026-10-27T20:29:45.949737+00:00|lever:gohighlevel:afea98b1-aede-481c-b27d-2cb88dc325b4",
  "entries": [
   {
    "availability": "listed",
@@ -209,14 +209,6 @@
    "posting_id": "greenhouse:gitlab:8640151002",
    "record": "records/greenhouse__gitlab__8640151002.json",
    "record_sha256": "c609864f52165b94ddfc731364470f7c387dbc4676a659d3c0e797e46c5fa278"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "71c8539da23b31746af9fbf77f4f33d7cb46a7c3fdbe25b390149de0fa15d6d7",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8658878002",
-   "record": "records/greenhouse__gitlab__8658878002.json",
-   "record_sha256": "12a7321044a766336aeec1db1dee78b71423cc5d5531405ad8c2175c9bae5370"
   },
   {
    "availability": "listed",
@@ -1044,14 +1036,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "4a1ad64890280eb8141193ab3b57f7cdb93425a578aab54c6f3b03c5cb678cc6",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8857185002",
-   "record": "records/greenhouse__gitlab__8857185002.json",
-   "record_sha256": "673500716725245d5148c52f7c774724972f8839828b094451549485ea23b9da"
-  },
-  {
-   "availability": "listed",
    "content_hash": "697f5192ea4ae645ac52629ff8db83779f6a15d2ff557b314205238aa4d0b418",
    "last_change": "2026-10-26T23:58:52.793071+00:00",
    "posting_id": "greenhouse:gitlab:8858174002",
@@ -1201,14 +1185,6 @@
    "posting_id": "greenhouse:gitlab:8909618002",
    "record": "records/greenhouse__gitlab__8909618002.json",
    "record_sha256": "033fd242d92779f1e35fd650f206dd4140e9d74c62c13b01ec5ad4f6ed7a099f"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "0e85adf3b06f6048de847342c4edfc1378ec4d9755a117800f1d40ac3d238e3f",
-   "last_change": "2026-10-27T16:50:41.877596+00:00",
-   "posting_id": "ashby:clipboard:b2dd9381-765e-4633-bd64-087551a7bfea",
-   "record": "records/ashby__clipboard__b2dd9381-765e-4633-bd64-087551a7bfea.json",
-   "record_sha256": "80246dce1639ba63ed0620edc54952666c2e4f7861985436cdc15b519b726204"
   },
   {
    "availability": "missing",
@@ -1601,6 +1577,30 @@
    "posting_id": "lever:gohighlevel:a718fab2-3fc6-4acd-b364-883f5fc59cac",
    "record": "records/lever__gohighlevel__a718fab2-3fc6-4acd-b364-883f5fc59cac.json",
    "record_sha256": "cfdd83fa5e5beb13b219293faa7ac5c4230170a5969759f1602a2584b29afd6e"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "a8154235bd875e4607027e09b7aa4dc9029ca8a4256a6fac8051f4cb79c7a166",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "lever:gohighlevel:ab0b9373-1219-4194-ae9a-6bdf50891749",
+   "record": "records/lever__gohighlevel__ab0b9373-1219-4194-ae9a-6bdf50891749.json",
+   "record_sha256": "55a3e14363284142b3a19047bc4a9f334048d29952820b3e9b057380eb9a2567"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "f2d423fe3115db18d5022733dd99dc25e483d64ef1a829cb828f89e291486e2f",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "lever:gohighlevel:ae2b4f94-c5be-4345-b3b0-da87da14cf57",
+   "record": "records/lever__gohighlevel__ae2b4f94-c5be-4345-b3b0-da87da14cf57.json",
+   "record_sha256": "b5305f4bdc003890a24978363e38ab27befbeff4e28b3cdd959e0a021e0996fe"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "cc2681f3e9a6638e73baa54984bf4626bfc9f44d013db3610ee010e493138c37",
+   "last_change": "2026-10-27T20:29:45.949737+00:00",
+   "posting_id": "lever:gohighlevel:afea98b1-aede-481c-b27d-2cb88dc325b4",
+   "record": "records/lever__gohighlevel__afea98b1-aede-481c-b27d-2cb88dc325b4.json",
+   "record_sha256": "e09ff48b398366b0ae3f1acb679db4616a829aaf1cf9cdfab1dfd053f0a3bec6"
   }
  ],
  "has_more": true,

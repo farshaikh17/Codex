@@ -23,10 +23,19 @@
    "from_hash": "2e3f0fd2c5f650e93da1d26c415197c4bb1e3668f844ebb3c246afbe22aa130a",
    "kind": "content_changed",
    "to_hash": "4b1dc0f3a575cfc61b9b0ae7a7e4ff1e7773701b11106ab44bb4ee7635b72f69"
+  },
+  {
+   "changed_at": "2026-11-19T00:16:26.514970+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "4b1dc0f3a575cfc61b9b0ae7a7e4ff1e7773701b11106ab44bb4ee7635b72f69",
+   "kind": "content_changed",
+   "to_hash": "017026a5a3d1ba809fd7dbf33e3f161b9fffd7d6e49c7ef7c83aa5314062e448"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"US $174.2K – $261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"US $174.2K – $261.2K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}]},{\"title\":\"Canada\",\"summary\":\"CA$174.2K – CA$261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"US $174.2K – $261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"US $174.2K – $261.2K\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Canada\",\"summary\":\"CA$174.2K – CA$261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}]}]}",
   "description": "AI AT ZAPIER\n\nAt Zapier https://zapier.com/about, we build and use automation every day to make work more efficient, creative, and human. So if you’re using AI tools while applying here - that’s great! We just ask that you use them responsibly and transparently.\n\nCheck out our guidance on How to Collaborate with AI During Zapier’s Hiring Process https://zapier.com/l/jobs/ai-at-zapier, including how to use AI tools like ChatGPT, Claude, Gemini, or others during our hiring process - and when not to.\n\nJob Posted: 2026-10-06\n\nLocation: Remote (US)\n\nHi there!\n\nWe're looking for a Sr. Product Marketing Manager. Enterprise to build enterprise GTM for Zapier's next chapter. Your first priorities include standing up enterprise GTM for Sidekick (our newest product), shaping our governance narrative, and equipping Sales to win on technical differentiators. As product and market signals evolve, you'll own positioning and packaging wherever Zapier Enterprise needs the most leverage. You'll report to Jane Zhang, Director of Product Marketing, and partner closely with Sales, Product, and Marketing leaders to bring enterprise Zapier to market.\n\n- Our Commitment to Applicants https://zapier.com/jobs/our-commitment-to-applicants/\n\n- Culture and Values at Zapier https://zapier.com/jobs/culture-and-values-at-zapier/\n\n- Zapier Guide to Remote Work https://zapier.com/learn/remote-work/\n\n- Zapier Code of Conduct https://zapier.com/jobs/zapier-code-of-conduct/\n\n- Diversity and Inclusivity at Zapier https://zapier.com/jobs/working-on-diversity-and-inclusivity/\n\nABOUT YOU\n\n- You've landed product-market fit for a new product before, turning pricing and packaging experiments into a repeatable motion that reached real customers and closed revenue\n\n- You bring deep product and technical depth - you understand how an MCP or agent-based workflow works and can explain it in plain language for a C-level buyer\n\n- You have 8+ years in product marketing with meaningful time supporting enterprise sales\n\n- You're entrepreneurial at enterprise scale - you move quickly with the rigor enterprise deals require, and stay close to what buyers actually need\n\n- You use data to form strong opinions from customer conversations, deal feedback, and packaging experiments, then bring a clear point of view into the room to drive decisions\n\n- You're comfortable collaborating async, with clear written updates, tight docs, and strong follow-through\n\n- You actively use AI tools to work more efficiently - ideally you've built automations yourself\n\n- You're comfortable with enterprise buyers: shaping proposals, supporting demos, and turning customer feedback into product and GTM inputs - credible with both executives and end-users\n\nTHINGS YOU’LL DO\n\n- Lead enterprise GTM strategy for new products like Sidekick, defining commercial packaging from design partnerships through to GA\n\n- Help shape our enterprise ICP and motion into a focused, repeatable GTM\n\n- Own our Governance story: how we position things like secure auths, identity management, and safety with agent use\n\n- Shape our talk track around Zapier's differentiators like fluid determinism, and how they show up in the product\n\n- Work with our customer advocacy team on case studies and proof points that make the platform tangible for enterprise buyers\n\n- Bring product-level depth to competitive deals, grounding \"why Zapier wins\" in specific workflows and features\n\n- Collaborate with PMMs across narrative and product on positioning, launches, and the stories that support enterprise deals\n\n- Partner with product and sales to shape and close enterprise opportunities on new platform capabilities\n\n- Translate product updates into field-ready materials with revenue enablement, and feed deal feedback back to product on commercial readiness\n\nHOW TO APPLY\n\nAt Zapier, we believe that diverse perspectives and experiences make us better, which is why we have a non-standard application process designed to promote inclusion and equity. We're looking for the best fit for each of our roles, regardless of the type of companies in your background, so we encourage you to apply even if your skills and experiences don’t exactly match the job description. All we ask is that you answer a few in-depth questions in our application that would typically be asked at the start of an interview process. This helps speed things up by letting us get to know you and your skillset a bit better right out of the gate. Please be sure to answer each question; the resume and CV fields are optional.\n\nEducation is not a requirement for our roles; however, if you receive an offer, you will need to include your most recent educational experience as part of our background check process.\n\nAfter you apply, you are going to hear back from us—even if we don’t see an immediate fit with our team. In fact, throughout the process, we strive to never go more than seven days without letting you know the status of your application. We know we’ll make mistakes from time to time, so if you ever have questions about where you stand or about the process, just ask your recruiter!\n\nZapier is an equal-opportunity employer and we're excited to work with talented and empathetic people of all identities. Zapier does not discriminate based on someone's identity in any aspect of hiring or employment as required by law and in line with our commitment to Diversity, Inclusion, Belonging and Equity. Our code of conduct https://zapier.com/jobs/zapier-code-of-conduct provides a beacon for the kind of company we strive to be, and we celebrate our differences because those differences are what allow us to make a product that serves a global user base. Zapier will consider all qualified applicants, including those with criminal histories, consistent with applicable laws.\n\nZapier prioritizes the security of our customers' information and is dedicated to adhering to all applicable data privacy laws. You can review our privacy policy here https://zapier.com/legal/data-privacy.\n\nZapier is committed to inclusion. As part of this commitment, Zapier welcomes applications from individuals with disabilities and will work to provide reasonable accommodations. If reasonable accommodations are needed to participate in the job application or interview process, please contact jobs@zapier.com.\n\nAPPLICATION DEADLINE:\n\nThe anticipated application window is 30 days from the date job is posted, unless the number of applicants requires it to close sooner or later, or if the position is filled.\n\nEven though we’re an all-remote company, we still need to be thoughtful about where we have Zapiens working. Check out this resource https://docs.google.com/spreadsheets/d/1_lXQvKwuU4xXEbye7EW_En8iv1ZIMlQNmT7B2Mzbo24/edit?gid=0#gid=0 for a list of countries where we currently cannot have Zapiens permanently working.",
   "locations": [
    {
@@ -42,8 +51,8 @@
   "title": "Sr. Product Marketing Manager, Enterprise",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-11T08:19:00.739617+00:00",
- "content_hash": "4b1dc0f3a575cfc61b9b0ae7a7e4ff1e7773701b11106ab44bb4ee7635b72f69",
+ "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
+ "content_hash": "017026a5a3d1ba809fd7dbf33e3f161b9fffd7d6e49c7ef7c83aa5314062e448",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -74,27 +83,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"US $174.2K – $261.2K\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
-     },
-     {
-      "interpretation": {
-       "amount_unit": "percent",
-       "basis": "equity",
-       "component_type": "EquityPercentage",
-       "equity_mentioned": true,
-       "estimated": false,
-       "interval_raw": "NONE",
-       "label": "United States",
-       "multiple_ranges": true,
-       "period": null,
-       "ranges": [],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
@@ -114,27 +103,27 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
      {
       "interpretation": {
-       "amount_unit": null,
-       "basis": "variable",
-       "component_type": "Bonus",
-       "equity_mentioned": false,
+       "amount_unit": "percent",
+       "basis": "equity",
+       "component_type": "EquityPercentage",
+       "equity_mentioned": true,
        "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "Canada",
+       "interval_raw": "NONE",
+       "label": "United States",
        "multiple_ranges": true,
-       "period": "year",
+       "period": null,
        "ranges": [],
-       "variable_mentioned": true
+       "variable_mentioned": false
       },
       "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
@@ -154,7 +143,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
@@ -182,7 +171,27 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"}",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
+     },
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "variable",
+       "component_type": "Bonus",
+       "equity_mentioned": false,
+       "estimated": false,
+       "interval_raw": "1 YEAR",
+       "label": "Canada",
+       "multiple_ranges": true,
+       "period": "year",
+       "ranges": [],
+       "variable_mentioned": true
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      }
@@ -199,7 +208,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "NAMER",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
@@ -207,7 +216,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      }
@@ -220,7 +229,7 @@
       "interpretation": null,
       "method": "description_section:ABOUT YOU",
       "quote": "- You've landed product-market fit for a new product before, turning pricing and packaging experiments into a repeatable motion that reached real customers and closed revenue\n- You bring deep product and technical depth - you understand how an MCP or agent-based workflow works and can explain it in plain language for a C-level buyer\n- You have 8+ years in product marketing with meaningful time supporting enterprise sales\n- You're entrepreneurial at enterprise scale - you move quickly with the rigor enterprise deals require, and stay close to what buyers actually need\n- You use data to form strong opinions from customer conversations, deal feedback, and packaging experiments, then bring a clear point of view into the room to drive decisions\n- You're comfortable collaborating async, with clear written updates, tight docs, and strong follow-through",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      },
@@ -228,7 +237,7 @@
       "interpretation": null,
       "method": "description_section:ABOUT YOU",
       "quote": "- You're comfortable with enterprise buyers: shaping proposals, supporting demos, and turning customer feedback into product and GTM inputs - credible with both executives and end-users",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      }
@@ -241,7 +250,7 @@
       "interpretation": null,
       "method": "inline_marker_in:ABOUT YOU",
       "quote": "- You actively use AI tools to work more efficiently - ideally you've built automations yourself",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      }
@@ -254,7 +263,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-11T08:19:00.739617+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/1e5d20ae-d2ce-4924-9957-73a8c7c17654"
      }

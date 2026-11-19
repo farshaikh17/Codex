@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "cagents",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-19T00:16:26.514970+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "2591d7038a5643da78caedf048a1a35c07dc815e8623c430899c6981e1905241",
+   "kind": "content_changed",
+   "to_hash": "160bf55fa55de8f16920cc4b6f36e8d56aad38e6a43aa19c0589b5e99510d680"
+  }
+ ],
  "content": {
   "compensation_raw": "Average base salary range.",
   "description": "Are You Ready?\n\nCAI is a professional services company established in 1996 that has grown year over year to nearly 750 people worldwide. For Life Sciences and Mission Critical industries that need to deliver critical solutions in high-stakes environments, we provide accelerated operational readiness and unparalleled performance at the highest standard through our rigorous approach, field-tested processes, and elite expertise developed over 30 years.\nOur approach is simple because our purpose informs everything we do:\n\nWe exist to be the trusted solution for our clients as they strive to build a better working world and improve human experience.\n\nAt CAI, we are committed to living our Foundational Principles, both professionally and personally:\n\nWe act with integrity\nWe serve each other\nWe serve society\nWe work for our future\n\nAt CAI, we believe in a relentless dedication to excellence, pushing boundaries, and surpassing expectations. From the beginning, we’ve challenged ourselves to do what others wouldn’t. Not just setting industry standards but redefining them entirely. We are bold in our thinking and creative in our approach. We operate at the intersection of wisdom and technology and thrive when they come together with humanity. For us, operational readiness isn’t simply a goal. It’s a way of life. Because tomorrow demands to be at the forefront of today. We do this through tireless effort, precision, efficiency, and an unwavering belief that there is always room for advancement. We’re not interested in how it used to be done. We’re obsessed with how it will be done.\n\nWe are seeking an experienced Recruiter to join our People Solutions Team and support our Life Sciences hiring in the Asia Pacific region. In this role, you will focus on sourcing, attracting, and hiring top talent for engineering roles within the life sciences and biotechnology spaces. The ideal candidate has experience recruiting in fast-paced, high-demand industries and understands the unique requirements of biotech environments. This role is a one year contract position.\n\nKey Responsibilities:\nManage full-cycle recruitment across APAC (sourcing, screening, interviewing, offer negotiation, and onboarding support) with an emphasis in recruiting and hiring in Australia\nPartner with hiring managers in Life Sciences and Data Center teams to understand workforce needs and develop effective hiring strategies\nSource niche talent for roles such as:\nBiotech manufacturing (process engineers, validation engineers, QA/QC, MSAT, etc.)\nData center commissioning (Cx engineers, MEP specialists, commissioning managers, etc.)\nBuild and maintain strong pipelines of passive candidates using job boards, LinkedIn, referrals, and market mapping\nDevelop regional market intelligence on talent availability, salary benchmarks, and competitor activity\nEnsure a high-quality candidate experience across all touchpoints\nCoordinate interviews across multiple time zones and stakeholders\nMaintain accurate data in the applicant tracking system (ATS) and generate recruiting reports\nSupport employer branding and diversity hiring initiatives across APAC\n\nQualifications:\n3–7+ years of recruiting experience, preferably in technical or engineering hiring\nProven experience recruiting in at least one of the following:\nLife Sciences / Biotech Manufacturing\nData Center / Mission Critical Infrastructure\nExperience supporting hiring across Australia and APAC regions (e.g., Singapore, Australia, Japan, South Korea, India, etc.)\nStrong sourcing skills with experience identifying hard-to-find talent\nAbility to manage multiple requisitions in a fast-paced environment\nExcellent communication and stakeholder management skills\nFamiliarity with the ATS system Lever and recruiting tools (e.g., LinkedIn Recruiter)\nPreferred Qualifications:\nExperience recruiting for commissioning or validation roles\nUnderstanding of GMP environments and/or mission-critical facility operations\nExperience working in a global or matrixed organization\nAbility to work flexible hours to support multiple time zones\n\n#LI-MV1\nWe are an equal opportunity employer; we are proud to employ veterans and promote diversity and inclusion in our workplace. Diversity is a strength for our global company. We pledge that CAI will be operated in a way that is fair and equitable to all – our employees, our customers, and the broader society.\n\nThis job description is not all inclusive and you may be asked to do other duties. CAI will also consider for employment qualified applicants with criminal histories in a manner consistent with the requirements of the Fair Chance Act (FCA) / Fair Chance Ordinance (FCO).",
@@ -20,11 +30,11 @@
    }
   ],
   "published": "2026-10-29T20:31:18.912000+00:00",
-  "title": "Contract Recruiter",
+  "title": "APAC Talent Lead",
   "workplace_type": "remote"
  },
- "content_changed_at": "2026-10-31T00:48:39.757986+00:00",
- "content_hash": "2591d7038a5643da78caedf048a1a35c07dc815e8623c430899c6981e1905241",
+ "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
+ "content_hash": "160bf55fa55de8f16920cc4b6f36e8d56aad38e6a43aa19c0589b5e99510d680",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -35,7 +45,7 @@
       "interpretation": null,
       "method": "ats_field:compensation",
       "quote": "Average base salary range.",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }
@@ -46,17 +56,9 @@
     "items": [
      {
       "interpretation": "contract",
-      "method": "title",
-      "quote": "Contract Recruiter",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
-     },
-     {
-      "interpretation": "contract",
       "method": "description_text",
       "quote": "We are seeking an experienced Recruiter to join our People Solutions Team and support our Life Sciences hiring in the Asia Pacific region. In this role, you will focus on sourcing, attracting, and hiring top talent for engineering roles within the life sciences and biotechnology spaces. The ideal candidate has experience recruiting in fast-paced, high-demand industries and understands the unique requirements of biotech environments. This role is a one year contract position.",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }
@@ -69,7 +71,7 @@
       "interpretation": null,
       "method": "ats_field:categories.location",
       "quote": "Australia",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      },
@@ -77,7 +79,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Coordinate interviews across multiple time zones and stakeholders",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      },
@@ -85,7 +87,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Ability to work flexible hours to support multiple time zones",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }
@@ -98,7 +100,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications:",
       "quote": "3–7+ years of recruiting experience, preferably in technical or engineering hiring\nProven experience recruiting in at least one of the following:\nLife Sciences / Biotech Manufacturing\nData Center / Mission Critical Infrastructure\nExperience supporting hiring across Australia and APAC regions (e.g., Singapore, Australia, Japan, South Korea, India, etc.)\nStrong sourcing skills with experience identifying hard-to-find talent\nAbility to manage multiple requisitions in a fast-paced environment\nExcellent communication and stakeholder management skills\nFamiliarity with the ATS system Lever and recruiting tools (e.g., LinkedIn Recruiter)",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }
@@ -111,7 +113,7 @@
       "interpretation": null,
       "method": "description_section:Preferred Qualifications:",
       "quote": "Experience recruiting for commissioning or validation roles\nUnderstanding of GMP environments and/or mission-critical facility operations\nExperience working in a global or matrixed organization\nAbility to work flexible hours to support multiple time zones\n#LI-MV1\nWe are an equal opportunity employer; we are proud to employ veterans and promote diversity and inclusion in our workplace. Diversity is a strength for our global company. We pledge that CAI will be operated in a way that is fair and equitable to all – our employees, our customers, and the broader society.\nThis job description is not all inclusive and you may be asked to do other duties. CAI will also consider for employment qualified applicants with criminal histories in a manner consistent with the requirements of the Fair Chance Act (FCA) / Fair Chance Ordinance (FCO).",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }
@@ -124,7 +126,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "remote",
-      "retrieved_at": "2026-10-31T00:48:39.757986+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.lever.co/cagents/d35ab26f-90b7-49af-bbaa-3342b5925898"
      }

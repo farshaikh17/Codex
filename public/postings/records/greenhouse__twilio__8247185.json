@@ -14,11 +14,20 @@
    "from_hash": "d8ee458b82480a33ca8b8d3bbb86c52da9d12bbd4a48a90011c507f8b4562c36",
    "kind": "content_changed",
    "to_hash": "cb426fe861a74dc267cc0828d2e14417475971cba83228c84c18a9f06fc9aac3"
+  },
+  {
+   "changed_at": "2026-11-19T00:16:26.514970+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "cb426fe861a74dc267cc0828d2e14417475971cba83228c84c18a9f06fc9aac3",
+   "kind": "content_changed",
+   "to_hash": "539671fe7da8d34790410b3f70567c0d3b247c7932ee8c93d348691a18b5080e"
   }
  ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next Product Manager on Twilio’s Onboarding and Compliance product team.\n\nAbout the job\n\nTwilio is looking for a highly skilled and motivated Product Manager to join our Onboarding and Compliance product team to manage Porting, Hosting, and ShortCodes. In this role, you will lead the product strategy, roadmap, and delivery for the core capabilities that allow customers to onboard, migrate, and maintain their numbers globally. You will focus on scaling automated self-service workflows, strengthening fraud and regulatory compliance guardrails, and migrating legacy capabilities onto modern platform architectures.\n\nResponsibilities\n\nIn this role, you’ll:\n\nOwn and execute the product vision, roadmap, and quarterly planning for Hosting, Porting, and ShortCodes product suites.\n\nTranslate complex operational, regulatory, and technical requirements into PRDs for engineering teams.\n\nDevelop, communicate, generate excitement for and obtain buy-in of the product vision, strategy, and roadmap.\n\nPartner with GTM to launch products and enable sales and marketing teams to obtain product adoption and growth.\n\nConduct regular data-driven business reviews that analyze product execution and revenue/market accomplishments.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\n4+ years of product management experience delivering scalable SaaS, PaaS, or IaaS products\n\nProven track record of leading successful product launches and driving product strategies\n\nCommand of analytical thinking skills with the ability to use quantitative and qualitative data to make product decisions, get executive buy-in, and drive towards measurable outcomes\n\nExcellent communication and interpersonal skills, with the ability to influence and collaborate at all levels and present effectively to internal and external stakeholders\n\nStrong technical, analytical, and UI/UX design understanding and the ability to dive deep while also keeping perspective on the big picture goals\n\nInitiative, ownership, and accountability to decode vague priorities, manage conflicting inputs, and drive initiatives forward against ambiguous and complex challenges\n\nBachelor in Computer Science, Engineering, or equivalent practical experience\n\nDesired:\n\nExperience building products/services related to APIs, developer experience\n\nExperience working in a regulated ecosystem\n\nLocation\n\nThis role will be remote and based in the United States, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location. Based on role, employees may also be eligible for additional compensation and benefits, including but not limited to incentive programs, commissions, equity grants, health and wellness benefits, retirement contributions, and paid time off.\n\nCompensation\n\n*Please note this role is open to candidates outside of California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State. The information below is provided for candidates hired in those locations only.\n\nThe estimated pay ranges for this role are as follows:\n\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $128,560 - $160,700\n\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $136,000 - $170,000\n\nBased in the San Francisco Bay area, California: $151,120 - $188,900.\n\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplications for this role are intended to be accepted until 10/26/2026, but may change based on business needs.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next Product Manager on Twilio’s Onboarding and Compliance product team.\n\nAbout the job\n\nTwilio is looking for a highly skilled and motivated Product Manager to join our Onboarding and Compliance product team to manage Porting, Hosting, and ShortCodes. In this role, you will lead the product strategy, roadmap, and delivery for the core capabilities that allow customers to onboard, migrate, and maintain their numbers globally. You will focus on scaling automated self-service workflows, strengthening fraud and regulatory compliance guardrails, and migrating legacy capabilities onto modern platform architectures.\n\nResponsibilities\n\nIn this role, you’ll:\n\nOwn and execute the product vision, roadmap, and quarterly planning for Hosting, Porting, and ShortCodes product suites.\n\nTranslate complex operational, regulatory, and technical requirements into PRDs for engineering teams.\n\nDevelop, communicate, generate excitement for and obtain buy-in of the product vision, strategy, and roadmap.\n\nPartner with GTM to launch products and enable sales and marketing teams to obtain product adoption and growth.\n\nConduct regular data-driven business reviews that analyze product execution and revenue/market accomplishments.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\n4+ years of product management experience delivering scalable SaaS, PaaS, or IaaS products\n\nProven track record of leading successful product launches and driving product strategies\n\nCommand of analytical thinking skills with the ability to use quantitative and qualitative data to make product decisions, get executive buy-in, and drive towards measurable outcomes\n\nExcellent communication and interpersonal skills, with the ability to influence and collaborate at all levels and present effectively to internal and external stakeholders\n\nStrong technical, analytical, and UI/UX design understanding and the ability to dive deep while also keeping perspective on the big picture goals\n\nInitiative, ownership, and accountability to decode vague priorities, manage conflicting inputs, and drive initiatives forward against ambiguous and complex challenges\n\nBachelor in Computer Science, Engineering, or equivalent practical experience\n\nDesired:\n\nExperience building products/services related to APIs, developer experience\n\nExperience working in a regulated ecosystem\n\nLocation\n\nThis role will be remote and based in the United States, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location. Based on role, employees may also be eligible for additional compensation and benefits, including but not limited to incentive programs, commissions, equity grants, health and wellness benefits, retirement contributions, and paid time off.\n\nCompensation\n\n*Please note this role is open to candidates outside of California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State. The information below is provided for candidates hired in those locations only.\n\nThe estimated pay ranges for this role are as follows:\n\nTier 3: Based in Colorado, Hawaii, Illinois, Maryland (outside of the DC area), Massachusetts, Minnesota, or Vermont: $131,440 (Developing Minimum for Tier 3) – $164,300 (Mid for Tier 3)\n\nTier 2: Based in New York (outside of the NYC area), New Jersey (outside of the NYC area), Washington State (outside of the Seattle area), Washington D.C., Washington D.C. area, Maryland, or California (outside of the San Francisco Bay area): $139.200 (Developing Minimum for Tier 2) – $174,000(Mid for Tier 2)\n\nTier 1: Based in California (within the San Francisco Bay area), New York (within the NYC area), New Jersey (within the NYC area), or Washington State (within the Seattle area): $154,640 (Developing Minimum for Tier 1) – $193,300 (Mid for Tier 1)\n\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplications for this role are intended to be accepted until 10/26/2026, but may change based on business needs.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -33,8 +42,8 @@
   "title": "Senior Product Manager",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
- "content_hash": "cb426fe861a74dc267cc0828d2e14417475971cba83228c84c18a9f06fc9aac3",
+ "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
+ "content_hash": "539671fe7da8d34790410b3f70567c0d3b247c7932ee8c93d348691a18b5080e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,30 +62,51 @@
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 160700.0,
-         "min": 128560.0,
-         "text": "$128,560 - $160,700"
+         "max": 131440.0,
+         "min": 131440.0,
+         "text": "$131,440"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 170000.0,
-         "min": 136000.0,
-         "text": "$136,000 - $170,000"
+         "max": 164300.0,
+         "min": 164300.0,
+         "text": "$164,300"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 188900.0,
-         "min": 151120.0,
-         "text": "$151,120 - $188,900"
+         "max": 139200.0,
+         "min": 139200.0,
+         "text": "$139.200"
+        },
+        {
+         "currency": null,
+         "currency_symbol": "$",
+         "max": 174000.0,
+         "min": 174000.0,
+         "text": "$174,000"
+        },
+        {
+         "currency": null,
+         "currency_symbol": "$",
+         "max": 154640.0,
+         "min": 154640.0,
+         "text": "$154,640"
+        },
+        {
+         "currency": null,
+         "currency_symbol": "$",
+         "max": 193300.0,
+         "min": 193300.0,
+         "text": "$193,300"
         }
        ],
        "variable_mentioned": true
       },
       "method": "description_section:Compensation",
-      "quote": "*Please note this role is open to candidates outside of California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State. The information below is provided for candidates hired in those locations only.\nThe estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $128,560 - $160,700\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $136,000 - $170,000\nBased in the San Francisco Bay area, California: $151,120 - $188,900.\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\nApplications for this role are intended to be accepted until 10/26/2026, but may change based on business needs.\n.",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "quote": "*Please note this role is open to candidates outside of California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State. The information below is provided for candidates hired in those locations only.\nThe estimated pay ranges for this role are as follows:\nTier 3: Based in Colorado, Hawaii, Illinois, Maryland (outside of the DC area), Massachusetts, Minnesota, or Vermont: $131,440 (Developing Minimum for Tier 3) – $164,300 (Mid for Tier 3)\nTier 2: Based in New York (outside of the NYC area), New Jersey (outside of the NYC area), Washington State (outside of the Seattle area), Washington D.C., Washington D.C. area, Maryland, or California (outside of the San Francisco Bay area): $139.200 (Developing Minimum for Tier 2) – $174,000(Mid for Tier 2)\nTier 1: Based in California (within the San Francisco Bay area), New York (within the NYC area), New Jersey (within the NYC area), or Washington State (within the Seattle area): $154,640 (Developing Minimum for Tier 1) – $193,300 (Mid for Tier 1)\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\nApplications for this role are intended to be accepted until 10/26/2026, but may change based on business needs.\n.",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      }
@@ -93,7 +123,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      },
@@ -101,7 +131,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in the United States, but is not eligible to be hired in CA, CT, NJ, NY, PA, WA.",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      }
@@ -114,7 +144,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      },
@@ -122,7 +152,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "4+ years of product management experience delivering scalable SaaS, PaaS, or IaaS products\nProven track record of leading successful product launches and driving product strategies\nCommand of analytical thinking skills with the ability to use quantitative and qualitative data to make product decisions, get executive buy-in, and drive towards measurable outcomes\nExcellent communication and interpersonal skills, with the ability to influence and collaborate at all levels and present effectively to internal and external stakeholders\nStrong technical, analytical, and UI/UX design understanding and the ability to dive deep while also keeping perspective on the big picture goals\nInitiative, ownership, and accountability to decode vague priorities, manage conflicting inputs, and drive initiatives forward against ambiguous and complex challenges\nBachelor in Computer Science, Engineering, or equivalent practical experience",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      }
@@ -135,7 +165,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Experience building products/services related to APIs, developer experience\nExperience working in a regulated ecosystem",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      }
@@ -148,7 +178,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8247185"
      }
