@@ -1645,9 +1645,9 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (hiddenOnly) baseWhere += ` AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`;
     if (search) {
       // % and _ in what was typed are literal characters, not wildcards (as in the India Remote search)
-      baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
+      baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.location_restrictions LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
       const term = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
-      baseParams.push(term, term, term);
+      baseParams.push(term, term, term, term);
     }
     if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
     if (minScore > 0) { baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`; baseParams.push(minScore); }
