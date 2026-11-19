@@ -39,9 +39,17 @@ QUERIES = {
     'sana_ansari': [('electrical maintenance engineer', 'India', 'India', INDIA_SITES), ('reliability engineer', 'India', 'India', INDIA_SITES),
                     ('energy efficiency engineer', 'India', 'India', INDIA_SITES),
                     ('power plant engineer', 'Dubai', 'United Arab Emirates', GULF_SITES), ('maintenance engineer power plant', 'Riyadh', 'Saudi Arabia', GULF_SITES),
-                    ('electrical maintenance engineer', 'Doha', 'Qatar', GULF_SITES), ('power plant engineer', 'Muscat', 'Oman', GULF_SITES)],
+                    ('electrical maintenance engineer', 'Doha', 'Qatar', GULF_SITES), ('power plant engineer', 'Muscat', 'Oman', GULF_SITES),
+                    # 19 Nov: kept where a live read (Indeed and LinkedIn, last 48 hours) found rows the searches above missed that score at or above
+                    # her threshold: thermal power plant 4 (boiler maintenance at power stations), mechanical maintenance 3, O&M power plant 1,
+                    # Abu Dhabi 1. Utilities engineer (India), O&M engineer (Saudi Arabia) and maintenance engineer (Kuwait) found none and were left out.
+                    ('maintenance engineer thermal power plant', 'India', 'India', INDIA_SITES), ('mechanical maintenance engineer', 'India', 'India', INDIA_SITES),
+                    ('O&M engineer power plant', 'India', 'India', INDIA_SITES), ('maintenance engineer', 'Abu Dhabi', 'United Arab Emirates', GULF_SITES)],
 }
-MAX_QUERIES = 7
+# Farhan's searches stay at five: on 19 Nov revenue operations, marketing operations, HubSpot, GoHighLevel, automation specialist, solutions
+# consultant and customer onboarding (remote, India) found 22 new title matches and none at or above his threshold (the job-site rows carry
+# little text, and most were on site or limited to other countries).
+MAX_QUERIES = 11
 
 
 BLOCK_WORDS = re.compile(r'\b(403|429)\b|forbidden|too many requests|rate.?limit|captcha|access denied|blocked', re.I)

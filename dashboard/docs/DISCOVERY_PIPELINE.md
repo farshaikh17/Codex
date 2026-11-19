@@ -281,6 +281,31 @@ repository secrets `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` (Settings > Secrets and 
 disallows every agent, the reader also needs the repository variable `ADZUNA_API_TERMS_ACCEPTED` set to `true` (the owner accepting that
 the keyed API's own terms govern). It then makes 10 requests a day (7 for Sana, 3 for Farhan).
 
+### Time spent where the open dataset has nothing, 19 Nov 2026 (both; live reads scored with `evaluate()` via `scripts/prescore.mjs`)
+
+The run logs of 19 Nov showed `more_sources.py` stopping EURES, Oracle, Siemens Energy and SuccessFactors at their time caps, in the
+daily run and in all three watchlist runs. A check against the open dataset's own company lists (`jobs/v1/<ats>/companies.csv`) showed that
+every Workday, Oracle and SmartRecruiters employer read here, six of the eight SuccessFactors sites and EURES are already in the dataset the
+daily run reads in full, while Workable search, Schneider (Jibe), Eightfold, Siemens Energy, ReNew and Tata Power are not. ENGIE (about
+1,700 postings, in the dataset) was the first SuccessFactors site and filled the source's cap, so ReNew, last, was never read.
+
+| Change | Live read on 19 Nov | Sana (60+, not ineligible) | Farhan (70+, not ineligible) |
+|---|---|---|---|
+| Source order: the sources outside the dataset first; EURES, Oracle, SmartRecruiters, Workday take the time left | (order only) | | |
+| SuccessFactors order: ReNew, Tata Power, ACWA Power, EGA first; ENGIE last | ReNew: 21 read, 41 s | 14 (wind and solar O&M, SCADA; 11 ELIGIBLE) | 0 |
+| `workable_places`: Workable search by place (Sana: 7 terms in India, Saudi Arabia and the UAE, one in Qatar, Oman, Kuwait, Bahrain; Farhan: 4 terms, remote, India); `jobs.workable.com` paced at 1.2 s (it answered 429 at 0.6 s) | 994 read, 74 requests, 117 s | 22 different jobs (17 not found by the worldwide terms) | 5 (1 new) |
+| Workable worldwide terms: `marketing operations` (Farhan), `boiler` (Sana) | 40 + 40 read | 2 | 3 |
+| JobSpy: 4 more searches for Sana (thermal power plant maintenance, mechanical maintenance and O&M power plant in India; maintenance engineer in Abu Dhabi); `MAX_QUERIES` 7 to 11 | Indeed + LinkedIn, last 48 h | 10 not found by her other searches (Adani Power boiler maintenance, PPN Power, L&T) | - |
+
+Left out after measuring: more Workable worldwide terms (HubSpot, Zapier, n8n, workflow automation, customer onboarding, Salesforce
+consultant, technical project manager, sales operations, integration specialist; maintenance manager, turbine, asset integrity, substation,
+field service engineer, solar O&M: 0 rows at the threshold), Farhan's JobSpy searches for RevOps, marketing operations, HubSpot, GoHighLevel,
+automation specialist, solutions consultant and customer onboarding (22 new title matches, none at his threshold), and new public ATS
+boards: the SaaS and automation employers checked (Zapier, n8n, Workato, HubSpot, Freshworks, Deel, Oyster, Toptal, Gong, Postman, Intercom,
+Airtable, Notion and others) and the energy and plant employers found on a public ATS (RWE, Nordex, Wärtsilä, Sulzer, Alstom, Voith, Vestas, Uniper, SABIC,
+QatarEnergy LNG, Nesma, Alfanar, Adani, Thermax, Suzlon, Avaada, Sembcorp) are already in the open dataset. Siemens Energy's feed ignores the
+page offset when it is searched, so it stays a newest-first read.
+
 ## The ten additions of 2026-11-07 (owner-approved)
 
 1. **Location class.** Each posting's own words put it in one of: work from anywhere, India named, US only, EU only, or restricted to another region's hours. For Farhan, EU-only is ineligible and another region's hours costs 10 points. The class is said in the note.

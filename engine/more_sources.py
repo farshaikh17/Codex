@@ -6,7 +6,8 @@ Results merge into work/jobsite_raw.json. Aggregators (Workable, Arbeitnow, UN C
 (the screen never takes eligibility from them). Employer career sites (EMPLOYER_SITES: Workday, Oracle, SuccessFactors, SmartRecruiters,
 Siemens Energy, Eightfold) carry board=False: stored verified, with normal eligibility and provenance LIVE_PUBLIC.
 
-  * Workable job search      jobs.workable.com/api/v1/jobs: every Workable employer (not in the open dataset)
+  * Workable job search      jobs.workable.com/api/v1/jobs: every Workable employer (not in the open dataset); workable_places searches
+                             the same API by place (Sana: India and the Gulf on site; Farhan: remote jobs placed in India)
   * Eightfold career sites   Fluor, NEOM, TAQA (energy and Gulf employers not in the open dataset)
   * Siemens Energy (Avature) the public jobs RSS feed
   * SuccessFactors           ENGIE, ACWA Power, Tata Power, ReNew and others: the /search/ result pages or the sitemap plus job pages
@@ -54,13 +55,30 @@ QUERIES = {
                       'chief of staff', 'founder office', 'solutions engineer', 'technical operations', 'gtm engineer',
                       # plan D1 (13 Nov): kept only where a live Workable read returned mostly his roles (implementation 20 of 20, solutions consultant
                       # 16 of 20); onboarding (HR onboarding), technical account manager, customer engineer and business systems returned few and were left out
-                      'implementation', 'solutions consultant'],
+                      'implementation', 'solutions consultant',
+                      # 19 Nov: a live read returned 14 of his titles in 39 postings and 3 new rows at or above his threshold
+                      'marketing operations'],
     'sana_ansari': ['power plant', 'reliability engineer', 'maintenance engineer', 'electrical engineer', 'energy efficiency',
                     'commissioning engineer', 'operations engineer', 'decarbonization',
                     # plan D1 (13 Nov): her non-maintenance roles, kept where a live Workable read returned mostly her field (utilities engineer 17 of 20,
                     # energy manager 18, plant engineer 13, O&M engineer 8); asset performance returned finance roles only and was left out
-                    'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer'],
+                    'utilities engineer', 'energy manager', 'plant engineer', 'O&M engineer',
+                    # 19 Nov: 11 of her titles in 39 postings, 2 new rows at or above her threshold
+                    'boiler'],
 }
+# 19 Nov: Workable's search also takes a place (location=...). The worldwide reads above are newest-first and mostly land in the US and
+# Europe, so Sana's on-site places are searched on their own (Qatar, Oman, Kuwait and Bahrain list few Workable jobs: one broad term each),
+# and Farhan's remote jobs placed in India. A live read that day (74 requests, about 2 minutes) found 22 different jobs at or above Sana's
+# threshold (17 that the worldwide terms did not find) and 5 at or above Farhan's (1 new). (search term, remote only, place).
+WORKABLE_PLACE_TERMS = ['maintenance', 'reliability', 'energy', 'electrical engineer', 'mechanical engineer', 'commissioning', 'utilities']
+WORKABLE_PLACES = {
+    'sana_ansari': [(q, False, place) for place in ('India', 'Saudi Arabia', 'United Arab Emirates') for q in WORKABLE_PLACE_TERMS]
+                   + [('engineer', False, place) for place in ('Qatar', 'Oman', 'Kuwait', 'Bahrain')],
+    'farhan_shaikh': [(q, True, 'India') for q in ('operations', 'implementation', 'automation', 'marketing operations')],
+}
+# Seconds between two requests to one host when longer than PAUSE: jobs.workable.com answered 429 (too many requests) to about one request
+# in fifteen at PAUSE in a live read on 19 Nov.
+HOST_PAUSE = {'jobs.workable.com': 1.2}
 # Owner default 14 Nov: engineering facilities roles (plant-room and utilities work in buildings and campuses) are searched on JLL's
 # Workday board (FM_TERMS) and accepted at the source by FM_ROLE below. They are not Workable search terms yet: the Worker's role rule
 # (dashboard/worker/discovery.ts, test S2) does not name "chief engineer" or "technical supervisor", so that rule must learn them first.
@@ -86,13 +104,17 @@ def title_candidates(title, rules):
     return out
 EIGHTFOLD = [('Fluor', 'careers.fluor.com', 'fluor.com'), ('NEOM', 'careers.neom.com', 'neom.com'), ('TAQA', 'careers.taqa.com', 'taqa.com')]
 # (display name, host, options): iso=True maps a trailing two-letter country ("Riyadh, SA") to its name on sites outside the US.
-SUCCESSFACTORS = [('ENGIE', 'jobs.engie.com', {}), ('ACWA Power', 'careers.acwapower.com', {'iso': True}), ('Tata Power', 'careers.tatapower.com', {'iso': True}),
-                  ('Emirates Global Aluminium', 'careers.ega.ae', {'iso': True}), ('Black & Veatch', 'careers.bv.com', {}),
+# 19 Nov: read in this order, smallest and India / Gulf first. The source stops at its time cap, and ENGIE (about 1,700 postings worldwide)
+# used to be read first and fill it, so ReNew, last in the list, was never read (14 rows at or above Sana's threshold in a live read on
+# 19 Nov). ReNew and Tata Power are not in the open ATS dataset; the six after them are (the daily run reads them there too).
+SUCCESSFACTORS = [# 14 Nov: ReNew (wind and solar O&M in India); its /search/ page has another template, so it is read from its sitemap
+                  ('ReNew', 'careers.renew.com', {'iso': True}),
+                  ('Tata Power', 'careers.tatapower.com', {'iso': True}), ('ACWA Power', 'careers.acwapower.com', {'iso': True}),
+                  ('Emirates Global Aluminium', 'careers.ega.ae', {'iso': True}),
+                  ('Tata Motors', 'careers.tatamotors.com', {'iso': True}),   # added 2026-11-12, live that day (India plants)
                   # jobs.doosan.com serves the whole Doosan group; Bobcat (vehicles) postings are skipped, Enerbility / Skoda Power / Fuel Cell are kept
                   ('Doosan', 'jobs.doosan.com', {'skip': ('/bobcat/', 'Bobcat')}),
-                  ('Tata Motors', 'careers.tatamotors.com', {'iso': True}),   # added 2026-11-12, live that day (India plants)
-                  # 14 Nov: ReNew (wind and solar O&M in India); its /search/ page has another template, so it is read from its sitemap
-                  ('ReNew', 'careers.renew.com', {'iso': True})]
+                  ('Black & Veatch', 'careers.bv.com', {}), ('ENGIE', 'jobs.engie.com', {})]
 # Workday public career-site JSON (no key). (display name, tenant, data-centre prefix, site id); all three answered on a live read.
 WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi'),
            # Added 2026-11-12 (Sana: plant, utilities and energy employers with large India and Gulf operations); each answered a live read that day.
@@ -144,7 +166,7 @@ def http(url, data=None, headers=None, timeout=40, robots_ok=False):
     if not robots_ok:
         robots.check(url)
     host = urlsplit(url).netloc
-    wait = max(PAUSE, robots.crawl_delay(url)) - (time.monotonic() - _LAST.get(host, -1e9))
+    wait = max(PAUSE, HOST_PAUSE.get(host, 0), robots.crawl_delay(url)) - (time.monotonic() - _LAST.get(host, -1e9))
     if wait > 0:
         time.sleep(wait)
     h = {'User-Agent': UA, 'Accept': 'application/json, application/rss+xml, */*'}
@@ -161,13 +183,15 @@ def http(url, data=None, headers=None, timeout=40, robots_ok=False):
         REQUESTS[0] += 1
 
 
-def workable(queries):
+def workable(queries, pages=2):
+    """Workable's job search. queries: (term, remote only) or (term, remote only, place); `pages` pages of 20 a query."""
     seen = set()
     failed, last_error = 0, None
-    for q, remote_only in queries:
+    for q, remote_only, *where in queries:
         token = None
-        for _ in range(2):   # two pages a query
-            url = 'https://jobs.workable.com/api/v1/jobs?' + urllib.parse.urlencode({'query': q, **({'workplace': 'remote'} if remote_only else {}), **({'pageToken': token} if token else {})})
+        for _ in range(pages):
+            url = 'https://jobs.workable.com/api/v1/jobs?' + urllib.parse.urlencode({'query': q, **({'location': where[0]} if where else {}),
+                                                                                    **({'workplace': 'remote'} if remote_only else {}), **({'pageToken': token} if token else {})})
             # Phase 6 tenth man: one refused page (a 429, a timeout) used to end the whole source, losing every later search term. Now that
             # term is skipped after one retry, and the source fails only when every term failed.
             d = None
@@ -805,10 +829,15 @@ def enrich_full_text(j, name, used, spent):
 # QA 3 F2: the order sources run in, small and high-priority first. The watchlist employers' own boards come first, then the cheap aggregators and
 # single-employer sites; the big multi-employer readers (SmartRecruiters, SuccessFactors, Workday) run last, so a slow one can no longer leave the
 # others without time. A source not named here runs after these, in the order main() lists it.
-ORDER = ('watch_boards', 'arbeitnow', 'uncareers', 'eures', 'adzuna', 'jibe', 'oracle_hcm', 'workable', 'eightfold', 'siemens_energy',
-         'smartrecruiters', 'successfactors', 'workday')
+# 19 Nov: the sources whose postings are not in the open ATS dataset run first (Workable search, Schneider's Jibe site, Eightfold, Siemens
+# Energy, ReNew / Tata Power on SuccessFactors); EURES and the Oracle, SmartRecruiters and Workday employers are all in that dataset, which
+# the daily run reads in full, so they take the time left. Before, EURES and Oracle ran early and stopped at their caps, and SuccessFactors
+# and Siemens Energy were stopped at theirs.
+ORDER = ('watch_boards', 'arbeitnow', 'uncareers', 'jibe', 'workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors',
+         'adzuna', 'eures', 'oracle_hcm', 'smartrecruiters', 'workday')
 # Each source's share of the time still left (weights): the big readers get a larger share, but none can take the whole step.
-WEIGHT = {'smartrecruiters': 2, 'successfactors': 3, 'workday': 3}
+WEIGHT = {'smartrecruiters': 2, 'successfactors': 3, 'workday': 3, 'workable_places': 2}   # workable_places: 74 requests at HOST_PAUSE, about 2 minutes (19 Nov)
+ID_NAME = {'workable_places': 'workable'}   # one Workable posting found by both searches gets one id (the second is skipped as already had)
 START_SHARE = 0.8   # as remote_boards.over_budget(): nothing starts, and every source stops, once 80% of --budget-seconds has passed
 
 
@@ -852,11 +881,12 @@ def main():
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     SF_ROLE_FILTER[:] = list(rules.values()) + ([(FM_ROLE, FM_EXCLUDE)] if any(c in rules for c in FM_CANDIDATES) else [])
     wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    sources = {'workable': lambda: workable(wq), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe, 'watch_boards': watch_boards,
+    pq = [q for cid in profs for q in WORKABLE_PLACES.get(cid, [])]
+    sources = {'workable': lambda: workable(wq), 'workable_places': lambda: workable(pq, pages=3), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe, 'watch_boards': watch_boards,
                'arbeitnow': arbeitnow, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
-        sources = {k: v for k, v in sources.items() if k in ('workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
+        sources = {k: v for k, v in sources.items() if k in ('workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
     sources = ordered(sources)
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness
@@ -892,7 +922,7 @@ def main():
                 cands = title_candidates(j['title'], rules)
                 if not cands:
                     continue
-                j['id'] = f"js:{name}:{hashlib.sha1(j['url'].encode()).hexdigest()[:20]}"
+                j['id'] = f"js:{ID_NAME.get(name, name)}:{hashlib.sha1(j['url'].encode()).hexdigest()[:20]}"
                 if j['id'] in have:
                     continue
                 if not reposters.admit(j, held):

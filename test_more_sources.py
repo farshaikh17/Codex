@@ -98,6 +98,43 @@ class MoreSources(unittest.TestCase):
         names = [c[0] for c in ms.SUCCESSFACTORS]
         for n in ('Emirates Global Aluminium', 'Black & Veatch', 'ACWA Power', 'ReNew'):
             self.assertIn(n, names)
+        # 19 Nov: ENGIE (about 1,700 postings, in the open dataset) filled the source's time cap when read first, so ReNew (last) was never read
+        self.assertEqual(names[:2], ['ReNew', 'Tata Power'], 'the employers outside the open dataset are read first')
+        self.assertEqual(names[-1], 'ENGIE')
+
+    def test_workable_places_searches_by_place_and_shares_one_id(self):
+        urls = []
+        def rec(url, data=None, headers=None, timeout=40):
+            urls.append(url)
+            return fake_http(url)
+        with mock.patch.object(ms, 'http', rec):
+            list(ms.workable([('maintenance', False, 'Saudi Arabia'), ('operations', True, 'India'), ('revops', True)], pages=3))
+        self.assertIn('location=Saudi+Arabia', urls[0]); self.assertNotIn('workplace', urls[0], 'Sana: on-site jobs in the place')
+        self.assertIn('location=India', urls[1]); self.assertIn('workplace=remote', urls[1], 'Farhan: remote jobs placed in India')
+        self.assertNotIn('location', urls[2], 'a query without a place is searched worldwide, as before')
+        sana = ms.WORKABLE_PLACES['sana_ansari']
+        self.assertTrue(all(not remote for _, remote, _ in sana), 'Sana works on site')
+        self.assertTrue({'India', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Oman', 'Kuwait', 'Bahrain'} <= {p for _, _, p in sana})
+        self.assertTrue(all(remote and place == 'India' for _, remote, place in ms.WORKABLE_PLACES['farhan_shaikh']), 'Farhan: remote from India only')
+        self.assertEqual(ms.ID_NAME['workable_places'], 'workable', 'a posting found by both Workable searches gets one id')
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'revops', 'exclude': ''}}))
+            with mock.patch.object(ms, 'http', fake_http), mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'profiles.json')), '--out', d, '--fast']):
+                ms.main()
+            jobs = json.loads(Path(d, 'jobsite_raw.json').read_text())['jobs']
+            self.assertEqual([j['id'][:12] for j in jobs if j['ats_type'] == 'workable'], ['js:workable:'], 'the same posting from both searches is kept once')
+            report = json.loads(Path(d, 'more_sources_report.json').read_text())
+            self.assertIn('workable_places', report, 'the watchlist run (--fast) reads it too')
+
+    def test_workable_host_is_paced_longer(self):
+        waits = []
+        with mock.patch.object(ms.time, 'sleep', waits.append), mock.patch.object(ms.robots, 'check'), mock.patch.object(ms.robots, 'crawl_delay', lambda u: 0), \
+                mock.patch.object(ms.robots, 'urlopen', mock.MagicMock()), mock.patch.dict(ms._LAST, {}, clear=True):
+            ms.http('https://jobs.workable.com/api/v1/jobs?query=a'); ms.http('https://jobs.workable.com/api/v1/jobs?query=b')
+            ms.http('https://www.arbeitnow.com/api/job-board-api'); ms.http('https://www.arbeitnow.com/api/job-board-api?page=2')
+        self.assertEqual(len(waits), 2)
+        self.assertGreater(waits[0], ms.PAUSE, 'jobs.workable.com: HOST_PAUSE'); self.assertLessEqual(waits[0], ms.HOST_PAUSE['jobs.workable.com'])
+        self.assertLessEqual(waits[1], ms.PAUSE, 'other hosts keep PAUSE')
 
     def test_successfactors_reads_allowed_search_pages_not_the_rss(self):
         calls = []
