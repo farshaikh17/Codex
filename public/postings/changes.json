@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|greenhouse:celigo:8119133",
+ "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|greenhouse:energyhub:8715174002",
  "entries": [
   {
    "availability": "listed",
@@ -516,14 +516,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "dc78a04820e27aef5ba3c6bb1760e487c7f289b587c620e2e7a709a095e03bed",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8907130002",
-   "record": "records/greenhouse__gitlab__8907130002.json",
-   "record_sha256": "9caf64dcc836dde816f17b2e1fb77b421d908552e558990d88c8e53292e11b1f"
-  },
-  {
-   "availability": "listed",
    "content_hash": "8d6b9fba7d828fe2f5d23709c218bccef46d24e19b30ed4b11a79d69c542ca39",
    "last_change": "2026-10-25T21:53:38.150524+00:00",
    "posting_id": "greenhouse:remote:4622190",
@@ -796,14 +788,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "8c5b7fe8e2a765e52b1dea576f88381deba25021c858cde718e87ed94e9f3a0a",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8691770002",
-   "record": "records/greenhouse__gitlab__8691770002.json",
-   "record_sha256": "cf4226bfbf8dbbcc3d644dbc79deae7293e22625a66cee435394200b192de08f"
-  },
-  {
-   "availability": "listed",
    "content_hash": "25653a543191146d139ac8b52198b9acb6145a2b80a1add49aa7ccc45dfec338",
    "last_change": "2026-10-26T23:58:52.793071+00:00",
    "posting_id": "greenhouse:gitlab:8706202002",
@@ -1001,14 +985,6 @@
    "posting_id": "greenhouse:gitlab:8895451002",
    "record": "records/greenhouse__gitlab__8895451002.json",
    "record_sha256": "6c5884ab61234e3bf5f2090e2463915331e5aa36ac6d1d80af5f2811fe78da72"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "ddb10a4d616aaaa61216d70c5eeb7a3a5622630232afd3dbc12419fb71553e02",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8895511002",
-   "record": "records/greenhouse__gitlab__8895511002.json",
-   "record_sha256": "c8dcac81852eeb4d235b943a78d880ede4ba64f30351394538b74acef6f39670"
   },
   {
    "availability": "listed",
@@ -1601,6 +1577,30 @@
    "posting_id": "greenhouse:celigo:8119133",
    "record": "records/greenhouse__celigo__8119133.json",
    "record_sha256": "8ffd94462194b1d60f736b35f1b6d0169c1bd5bb4261903c2977956b3d2e28e0"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "c20164bd1bbf1f8b4c61f64a7ae693f68b5360e550a4d34f16d60521503265ab",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "greenhouse:energyhub:8652307002",
+   "record": "records/greenhouse__energyhub__8652307002.json",
+   "record_sha256": "0dc33cafe675e5e5e9cbe58e8d3ba132b13038cddf97483f0008ff78934a5e5c"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "8acccb24ad55299f62da10bca959fe4ba7fe7842939b2c066d7f72889db2e27f",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "greenhouse:energyhub:8659800002",
+   "record": "records/greenhouse__energyhub__8659800002.json",
+   "record_sha256": "5e290d706ad0fb01e66e27aae7c090d7eb16092325070da57c8f08d12cb42eef"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "4a20d659e9e25cffbc9f35f1705ae42180814b11d59bd735ef6d06490f2153d4",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "greenhouse:energyhub:8715174002",
+   "record": "records/greenhouse__energyhub__8715174002.json",
+   "record_sha256": "cacbcaaa3712dac41031e2f2d5c4a5c2e3c5ca5d0bc9142cc4df8373f8be6b4a"
   }
  ],
  "has_more": true,
