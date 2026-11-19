@@ -284,7 +284,8 @@ the keyed API's own terms govern). It then makes 10 requests a day (7 for Sana, 
 ### Time spent where the open dataset has nothing, 19 Nov 2026 (both; live reads scored with `evaluate()` via `scripts/prescore.mjs`)
 
 The run logs of 19 Nov showed `more_sources.py` stopping EURES, Oracle, Siemens Energy and SuccessFactors at their time caps, in the
-daily run and in all three watchlist runs. A check against the open dataset's own company lists (`jobs/v1/<ats>/companies.csv`) showed that
+daily run and in all three watchlist runs. (A local run of the watchlist step after this change, 900 s budget, stopped Workable and the place searches at their caps at weight 1, so
+both Workable sources now have weight 2.) A check against the open dataset's own company lists (`jobs/v1/<ats>/companies.csv`) showed that
 every Workday, Oracle and SmartRecruiters employer read here, six of the eight SuccessFactors sites and EURES are already in the dataset the
 daily run reads in full, while Workable search, Schneider (Jibe), Eightfold, Siemens Energy, ReNew and Tata Power are not. ENGIE (about
 1,700 postings, in the dataset) was the first SuccessFactors site and filled the source's cap, so ReNew, last, was never read.
@@ -293,8 +294,8 @@ daily run reads in full, while Workable search, Schneider (Jibe), Eightfold, Sie
 |---|---|---|---|
 | Source order: the sources outside the dataset first; EURES, Oracle, SmartRecruiters, Workday take the time left | (order only) | | |
 | SuccessFactors order: ReNew, Tata Power, ACWA Power, EGA first; ENGIE last | ReNew: 21 read, 41 s | 14 (wind and solar O&M, SCADA; 11 ELIGIBLE) | 0 |
-| `workable_places`: Workable search by place (Sana: 7 terms in India, Saudi Arabia and the UAE, one in Qatar, Oman, Kuwait, Bahrain; Farhan: 4 terms, remote, India); `jobs.workable.com` paced at 1.2 s (it answered 429 at 0.6 s) | 994 read, 74 requests, 117 s | 22 different jobs (17 not found by the worldwide terms) | 5 (1 new) |
-| Workable worldwide terms: `marketing operations` (Farhan), `boiler` (Sana) | 40 + 40 read | 2 | 3 |
+| `workable_places`: Workable search by place (Sana: 7 terms in India, Saudi Arabia and the UAE, one in Qatar, Oman, Kuwait, Bahrain); `jobs.workable.com` paced at 1.2 s (it answered 429 at 0.6 s); Workable sources weight 2 | about 900 read, about 60 requests, under 2 min | 22 different jobs, 9 posted in the last 30 days (the run's cutoff), 7 of those not found by the worldwide terms | not searched: his India-remote place searches found none in 30 days the worldwide terms missed |
+| Workable worldwide terms: `marketing operations` (Farhan), `boiler` (Sana) | 40 + 40 read | 2 (before the 30-day cutoff) | 3 (before the 30-day cutoff) |
 | JobSpy: 4 more searches for Sana (thermal power plant maintenance, mechanical maintenance and O&M power plant in India; maintenance engineer in Abu Dhabi); `MAX_QUERIES` 7 to 11 | Indeed + LinkedIn, last 48 h | 10 not found by her other searches (Adani Power boiler maintenance, PPN Power, L&T) | - |
 
 Left out after measuring: more Workable worldwide terms (HubSpot, Zapier, n8n, workflow automation, customer onboarding, Salesforce

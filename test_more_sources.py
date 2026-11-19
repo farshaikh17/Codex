@@ -115,16 +115,22 @@ class MoreSources(unittest.TestCase):
         sana = ms.WORKABLE_PLACES['sana_ansari']
         self.assertTrue(all(not remote for _, remote, _ in sana), 'Sana works on site')
         self.assertTrue({'India', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Oman', 'Kuwait', 'Bahrain'} <= {p for _, _, p in sana})
-        self.assertTrue(all(remote and place == 'India' for _, remote, place in ms.WORKABLE_PLACES['farhan_shaikh']), 'Farhan: remote from India only')
+        for _, remote, place in ms.WORKABLE_PLACES.get('farhan_shaikh', []):
+            self.assertTrue(remote and place == 'India', 'Farhan: remote from India only')
         self.assertEqual(ms.ID_NAME['workable_places'], 'workable', 'a posting found by both Workable searches gets one id')
         with tempfile.TemporaryDirectory() as d:
-            Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'revops', 'exclude': ''}}))
+            Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'revops', 'exclude': ''}, 'sana_ansari': {'role': 'revops', 'exclude': ''}}))
             with mock.patch.object(ms, 'http', fake_http), mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'profiles.json')), '--out', d, '--fast']):
                 ms.main()
             jobs = json.loads(Path(d, 'jobsite_raw.json').read_text())['jobs']
             self.assertEqual([j['id'][:12] for j in jobs if j['ats_type'] == 'workable'], ['js:workable:'], 'the same posting from both searches is kept once')
             report = json.loads(Path(d, 'more_sources_report.json').read_text())
             self.assertIn('workable_places', report, 'the watchlist run (--fast) reads it too')
+        with tempfile.TemporaryDirectory() as d:   # no profile with place searches: the source is not listed at all
+            Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'revops', 'exclude': ''}}))
+            with mock.patch.object(ms, 'http', fake_http), mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'profiles.json')), '--out', d, '--fast']):
+                ms.main()
+            self.assertNotIn('workable_places', json.loads(Path(d, 'more_sources_report.json').read_text()))
 
     def test_workable_host_is_paced_longer(self):
         waits = []

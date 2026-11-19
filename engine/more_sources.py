@@ -7,7 +7,7 @@ Results merge into work/jobsite_raw.json. Aggregators (Workable, Arbeitnow, UN C
 Siemens Energy, Eightfold) carry board=False: stored verified, with normal eligibility and provenance LIVE_PUBLIC.
 
   * Workable job search      jobs.workable.com/api/v1/jobs: every Workable employer (not in the open dataset); workable_places searches
-                             the same API by place (Sana: India and the Gulf on site; Farhan: remote jobs placed in India)
+                             the same API by place (Sana: India and the Gulf, on site)
   * Eightfold career sites   Fluor, NEOM, TAQA (energy and Gulf employers not in the open dataset)
   * Siemens Energy (Avature) the public jobs RSS feed
   * SuccessFactors           ENGIE, ACWA Power, Tata Power, ReNew and others: the /search/ result pages or the sitemap plus job pages
@@ -66,15 +66,16 @@ QUERIES = {
                     # 19 Nov: 11 of her titles in 39 postings, 2 new rows at or above her threshold
                     'boiler'],
 }
-# 19 Nov: Workable's search also takes a place (location=...). The worldwide reads above are newest-first and mostly land in the US and
-# Europe, so Sana's on-site places are searched on their own (Qatar, Oman, Kuwait and Bahrain list few Workable jobs: one broad term each),
-# and Farhan's remote jobs placed in India. A live read that day (74 requests, about 2 minutes) found 22 different jobs at or above Sana's
-# threshold (17 that the worldwide terms did not find) and 5 at or above Farhan's (1 new). (search term, remote only, place).
+# 19 Nov: Workable's search also takes a place (location=...). The worldwide reads above mostly land in the US and Europe, so Sana's
+# on-site places are searched on their own (Qatar, Oman, Kuwait and Bahrain list few Workable jobs: one broad term each). A place search
+# is ordered by relevance, not date, so many rows are older than the run's --days cutoff. A live read that day (about 60 requests, under
+# 2 minutes) found 22 different jobs at or above her threshold, 9 of them posted in the last 30 days (7 that the worldwide terms did not
+# find). Farhan's remote jobs placed in India found none in 30 days that the worldwide terms missed, so he has no place searches.
+# (search term, remote only, place).
 WORKABLE_PLACE_TERMS = ['maintenance', 'reliability', 'energy', 'electrical engineer', 'mechanical engineer', 'commissioning', 'utilities']
 WORKABLE_PLACES = {
     'sana_ansari': [(q, False, place) for place in ('India', 'Saudi Arabia', 'United Arab Emirates') for q in WORKABLE_PLACE_TERMS]
                    + [('engineer', False, place) for place in ('Qatar', 'Oman', 'Kuwait', 'Bahrain')],
-    'farhan_shaikh': [(q, True, 'India') for q in ('operations', 'implementation', 'automation', 'marketing operations')],
 }
 # Seconds between two requests to one host when longer than PAUSE: jobs.workable.com answered 429 (too many requests) to about one request
 # in fifteen at PAUSE in a live read on 19 Nov.
@@ -836,7 +837,8 @@ def enrich_full_text(j, name, used, spent):
 ORDER = ('watch_boards', 'arbeitnow', 'uncareers', 'jibe', 'workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors',
          'adzuna', 'eures', 'oracle_hcm', 'smartrecruiters', 'workday')
 # Each source's share of the time still left (weights): the big readers get a larger share, but none can take the whole step.
-WEIGHT = {'smartrecruiters': 2, 'successfactors': 3, 'workday': 3, 'workable_places': 2}   # workable_places: 74 requests at HOST_PAUSE, about 2 minutes (19 Nov)
+# workable and workable_places: 33 + about 60 requests at HOST_PAUSE (19 Nov); at weight 1 a watchlist run stopped both at their caps.
+WEIGHT = {'smartrecruiters': 2, 'successfactors': 3, 'workday': 3, 'workable': 2, 'workable_places': 2}
 ID_NAME = {'workable_places': 'workable'}   # one Workable posting found by both searches gets one id (the second is skipped as already had)
 START_SHARE = 0.8   # as remote_boards.over_budget(): nothing starts, and every source stops, once 80% of --budget-seconds has passed
 
@@ -885,6 +887,8 @@ def main():
     sources = {'workable': lambda: workable(wq), 'workable_places': lambda: workable(pq, pages=3), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe, 'watch_boards': watch_boards,
                'arbeitnow': arbeitnow, 'uncareers': un_careers,
                'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
+    if not pq:   # no profile has place searches (Farhan alone): the source is not listed, rather than reported as an empty read
+        del sources['workable_places']
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
     sources = ordered(sources)
