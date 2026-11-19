@@ -53,3 +53,11 @@ test('prescore: the shared posting keeps the jobs QA remote rules (an Oracle / W
   assert.equal(office.remote, false); assert.equal(office.onsite, true);
   assert.equal(posting(row({ is_remote: false })).onsite, true);
 });
+
+test('Ashby dataset: a remote flag shared by hybrid roles cannot alone confirm remote India', () => {
+  for (const location of ['Bengaluru Office', 'New Delhi', 'Remote - India']) {
+    const p = posting(row({ ats_type: 'ashby', is_remote: true, title: 'Implementation Manager', location, description: 'Configure CRM workflows.' }));
+    assert.equal(p.remote, location === 'Remote - India');
+    assert.equal(evaluate(farhan, p).eligibility === 'ELIGIBLE', location === 'Remote - India');
+  }
+});

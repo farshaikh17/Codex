@@ -573,7 +573,8 @@ export function mixedTitle(title:string|null|undefined):[string,string]|null{
 const ONSITE_TEXT=/\bposition is based (?:in|at|out of)\b|#li[-_ ]?(?:onsite|on-site|hybrid)\b|\b(?:\d|one|two|three|four)\s*(?:-\s*(?:\d|two|three|four|five)\s*)?days?\s+(?:a|per|each)\s+week\s+(?:in|from|at)\s+(?:the|our)\s+(?:[\w-]+\s+){0,3}office/gi;
 // Jobs QA 2 (14 Nov): Oracle, Workday and SuccessFactors set the dataset's remote flag on on-site postings (Mashreq, Bengaluru: nothing in the text
 // says remote). For those sources the flag counts only when the text or the place also says remote.
-const FLAG_DOUBTFUL_SOURCE=/^(?:oracle|oracle_?hcm|workday|successfactors)$/i, REMOTE_WORDS=/\b(?:remote(?:ly)?|work from home|wfh|home[- ]based|telecommut\w*)\b/i;
+// Ashby also sets isRemote on Hybrid postings. Dataset rows carry only that boolean.
+const FLAG_DOUBTFUL_SOURCE=/^(?:ashby|oracle|oracle_?hcm|workday|successfactors)$/i, REMOTE_WORDS=/\b(?:remote(?:ly)?|work from home|wfh|home[- ]based|telecommut\w*)\b/i;
 export function remoteFlagTrusted(source:string|null|undefined,description:string|null|undefined,location:string|null|undefined){
  return !FLAG_DOUBTFUL_SOURCE.test(String(source||'').trim())||REMOTE_WORDS.test(String(description||''))||REMOTE_WORDS.test(String(location||''));
 }
@@ -773,7 +774,8 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Jobs QA 4: a remote posting whose title names India among its places ('Marketing Automation Manager - Canada, Spain, India') hires from India.
  const titleIndiaRemote=remote&&titlePlaces(p.title).some((x)=>indianPlace(x));
  const explicitIndiaRemote=lineIndiaRemote||titleIndiaRemote||india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
- const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
+ const usRemotePosition = /(?:^|[.!?]\s+|\blocation\s*[:–-]?\s+)remote (?:position|role|job) within (?:the )?(?:United States|USA|US)\b(?=\s*(?:$|[.!?](?:\s|$)|,\s*with\b))/i.test(p.description || '');
+ const blocked=usRemotePosition||/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  const sponsorship=/\b(visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome)\b/i.test(text)&&!/\brelocation(?: assistance)?(?: provided| available| offered| eligible)?\s*[:\-–]\s*no\b/i.test(text)&&!negated(/visa sponsorship|sponsorship available|relocation assistance|relocation provided|international applicants welcome/);
  // Integration 15 Nov (AECOM Bucharest: 'relocation to Romania is mandatory ... Visa sponsorship will be discussed after the first interview'): a
