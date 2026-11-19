@@ -28,6 +28,7 @@ migrations = [
     '0023_company_names_svkm.sql',
     '0024_drop_remotive_source.sql',
     '0025_queue_404_gone.sql',
+    '0026_read_diet.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -91,3 +92,14 @@ conn.executescript(m25)
 assert conn.execute("SELECT updated_at FROM cloud_discovery_queue WHERE id='q404'").fetchone() == stamp, '0025 is not idempotent'
 assert 'UPDATE jobs' not in m25 and 'applications' not in m25.split('Idempotent')[1], '0025 must touch the queue table only'
 print('0025 converts old HTTP 404 queue rows to GONE, idempotently')
+
+# 0026: indexes only (no row of any table changes); re-applying changes nothing
+with open(os.path.join(base, '0026_read_diet.sql'), 'r', encoding='utf-8') as f:
+    m26 = f.read()
+idx = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+assert {'idx_app_job', 'idx_jobs_channel_active_disc', 'idx_cq_override', 'idx_jobs_closed_at'} <= idx, idx
+body = '\n'.join(l for l in m26.splitlines() if not l.startswith('--'))
+for word in ('UPDATE', 'DELETE', 'INSERT', 'DROP', 'ALTER', 'CREATE TABLE'):
+    assert word not in body.upper(), f'0026 must only add indexes ({word})'
+conn.executescript(m26)
+print('0026 adds the read-diet indexes, idempotently')

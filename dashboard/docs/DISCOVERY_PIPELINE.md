@@ -48,6 +48,9 @@ concurrency group, so the watchlist or the collector sync can never cancel a que
 10. Audit (A8) of the stored lists' hard rules; run log row (counts only: new, re-scored, closed, sources, the shortlist report with families,
     bands and per-source counts, `d1_rows`); run health (R8). A run that did nothing useful, or whose audit failed, turns red in the separate
     `health` job, so the guards still count the day's run.
+    After the audit, the tidy-up (read diet, `scripts/tidy_jobs.mjs`): the screening, score and pipeline-history rows of jobs that closed 45 to 52 days ago, or that
+    every person's screen calls ineligible 45 to 47 days after they were found, are deleted, at most 500 jobs a run, never a job anyone
+    applied to, saved, rated, followed up or decided on. The job row stays (the duplicate check still knows it). See COST_MODEL_2026-11-09.md section 6.
 11. The **daily phone message** (G1, `message` job): one line per linked person, also when the run failed, did nothing or was postponed. Off until
     the owner adds `TELEGRAM_BOT_TOKEN` (see `RELEASE.md`).
 
