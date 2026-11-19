@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-05T22:13:41.942088+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-17T23:38:01.366527+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "zapier",
  "changes": [
@@ -14,11 +14,22 @@
    "from_hash": "cc746925370870064e6ecba1283d5712d612dffdcedcd1757ff5f6f05d0d139b",
    "kind": "compensation_source_added",
    "to_hash": "e38e36f1813e17d4fa87ca3fbf8e67dc82928accb6e83dfd6e4664bd0f810df2"
+  },
+  {
+   "changed_at": "2026-11-17T23:38:01.366527+00:00",
+   "fields": [
+    "compensation_raw",
+    "description",
+    "title"
+   ],
+   "from_hash": "e38e36f1813e17d4fa87ca3fbf8e67dc82928accb6e83dfd6e4664bd0f810df2",
+   "kind": "content_changed",
+   "to_hash": "3ae333b044dd0259eeaaec09a30aaee6ae43bda870bc0dff52a4a2cc6d5d3d50"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$174.2K – $261.3K • Offers Equity • Offers Bonus\",\"tiers\":[{\"title\":\"USA\",\"summary\":\"USA $174.2K – $261.3K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261300,\"summary\":\"USA $174.2K – $261.3K\"}]}]}",
-  "description": "AI AT ZAPIER\n\nAt Zapier https://zapier.com/about, we build and use automation every day to make work more efficient, creative, and human. So if you’re using AI tools while applying here - that’s great! We just ask that you use them responsibly and transparently.\n\nCheck out our guidance on How to Collaborate with AI During Zapier’s Hiring Process https://zapier.com/l/jobs/ai-at-zapier, including how to use AI tools like ChatGPT, Claude, Gemini, or others during our hiring process - and when not to.\n\nJob Posted: September 2026\n\nRemote - United States of America\n\nHi there!\n\nWe’re looking for a sharp, practical, and technology-forward lawyer who thinks like a business operator and is eager to develop across a broad range of legal and business problems. This is a hands-on role anchored in procurement and mid-market commercial work, with opportunities to expand into new areas while rethinking how legal work gets done through AI, automation, and systems thinking. The right person will bring a strong analytical and problem-solving mindset, be eager to learn new areas, and thrive in a fast-paced, technology-forward, and intellectually challenging environment. This position provides a great opportunity to lead efforts to incorporate technology, like automation and AI, into legal operations and practice. You will serve as the team’s day-to-day point person for improving our existing automation and AI workflows and helping build the next ones, working closely with the General Counsel and the rest of the legal team. You will be a member of our legal team and report to the General Counsel https://www.linkedin.com/in/chadatlas/.\n\nIf you want to advance your career at a fast-growing, profitable, impact-driven company, read on…\n\nOur Commitment to Applicants https://zapier.com/jobs/our-commitment-to-applicants/\n\nCulture and Values at Zapier https://zapier.com/jobs/culture-and-values-at-zapier/\n\nZapier Guide to Remote Work https://zapier.com/learn/remote-work/\n\nZapier Code of Conduct https://zapier.com/jobs/zapier-code-of-conduct/\n\nDiversity and Inclusivity at Zapier https://zapier.com/jobs/working-on-diversity-and-inclusivity/\n\nABOUT YOU:\n\n- You have exceptional drafting and negotiation skills. You are experienced at drafting and negotiating a range of inbound and outbound commercial contracts, including technology/cloud agreements, SaaS service agreements, contractor/consulting agreements, events-related agreements, and other business agreements.\n\n- You can research an unfamiliar regulation and apply strong business judgment to turn it into a practical recommendation. You have a knack for analyzing and assessing laws, regulations, and policies across multiple jurisdictions to extract the most relevant provisions for the business. You are comfortable with assessing risk and proposing solutions that balance risk with business goals.\n\n- You love new challenges. You have experience with, and an enthusiasm and intellectual curiosity for new legal issues. You are a creative thinker who is comfortable with change and ambiguity, and excited to learn areas of the law that may be new to you.\n\n- You think of yourself as a builder in legal practice. You see AI not as a one-off tool or a collection of isolated use cases, but as a new way of working. You are excited to integrate AI throughout your day-to-day practice, use it to process and analyze information, and help build and continually improve the systems and workflows through which legal work gets done.\n\n- You are self-aware and have a high EQ. You have a positive attitude with a solution-oriented mindset. You work effectively across teams and have strong listening and interpersonal skills.\n\n- You’re solid at time management. You are successful at working independently and have a proven track record of prioritizing and managing multiple matters simultaneously in a fast-paced, dynamic, and highly engaged environment. You also recognize when to ask for help or escalate issues.\n\n- You're a skilled communicator. You can take legalese and make it easy to read for a diverse workforce spanning the globe. Zapier is a 100% remote team and writing is our primary means of communication.\n\nQUALIFICATIONS & EXPERIENCE\n\n- Juris Doctor degree\n\n- Admitted to practice and in good standing with one or more state bars in the US\n\n- 4-8 years of legal experience across commercial, operational, or general corporate matters\n\n- Combined law firm and in-house experience at a SaaS/technology company preferred, but not required.\n\nTHINGS YOU’LL DO:\n\n- Lead responses to legal tickets from teams across Zapier, including from sales, procurement, and HR teams, and escalate to subject matter experts to resolve, as needed.\n\n- Own legal support for procurement, NDAs, and vendor contracts, including intake through Zip and Ironclad. Partner with the procurement team and stakeholder teams across Zapier to draft, review, and negotiate inbound SaaS, service, and consultant/contractor agreements of all types.\n\n- Own day-to-day legal support for mid-market sales deals, including order forms, DPAs, and MSA redlines. Collaborate with Zapier’s commercial counsel on providing effective and efficient legal support to close sales deals.\n\n- Serve as the day-to-day point person for extending the legal team’s existing automations, including NDA and vendor contract review workflows, legal ticketing workflows, and Zip and Ironclad intake. Work closely with the General Counsel and the rest of the legal team to implement technology to improve the quality, efficiency, and effectiveness of our work.\n\n- Support the legal team on other matters as needs arise, including partnering with our employment counsel on personnel-related questions and helping monitor legal developments affecting Zapier, in coordination with internal and external subject-matter experts.\n\n- Advocate for finding and implementing the “right” solution, which is one that is compliant and meets business goals, while remaining committed to our customers, our people, and Zapier’s core values.\n\n- Understand company-wide goals to develop systems, processes, and metrics that support Zapier’s growth.\n\n- Other duties as needed to meet the ongoing needs of the legal team at Zapier.\n\nHOW TO APPLY\n\nAt Zapier, we believe that diverse perspectives and experiences make us better, which is why we have a non-standard application process designed to promote inclusion and equity. We're looking for the best fit for each of our roles, regardless of the type of companies in your background, so we encourage you to apply even if your skills and experiences don’t exactly match the job description. All we ask is that you answer a few in-depth questions in our application that would typically be asked at the start of an interview process. This helps speed things up by letting us get to know you and your skillset a bit better right out of the gate. Please be sure to answer each question; the resume and CV fields are optional.\n\nEducation is not a requirement for our roles; however, if you receive an offer, you will need to include your most recent educational experience as part of our background check process.\n\nAfter you apply, you are going to hear back from us—even if we don’t see an immediate fit with our team. In fact, throughout the process, we strive to never go more than seven days without letting you know the status of your application. We know we’ll make mistakes from time to time, so if you ever have questions about where you stand or about the process, just ask your recruiter!\n\nZapier is an equal-opportunity employer and we're excited to work with talented and empathetic people of all identities. Zapier does not discriminate based on someone's identity in any aspect of hiring or employment as required by law and in line with our commitment to Diversity, Inclusion, Belonging and Equity. Our code of conduct https://zapier.com/jobs/zapier-code-of-conduct provides a beacon for the kind of company we strive to be, and we celebrate our differences because those differences are what allow us to make a product that serves a global user base. Zapier will consider all qualified applicants, including those with criminal histories, consistent with applicable laws.\n\nZapier prioritizes the security of our customers' information and is dedicated to adhering to all applicable data privacy laws. You can review our privacy policy here https://zapier.com/legal/data-privacy.\n\nZapier is committed to inclusion. As part of this commitment, Zapier welcomes applications from individuals with disabilities and will work to provide reasonable accommodations. If reasonable accommodations are needed to participate in the job application or interview process, please contact jobs@zapier.com.\n\nAPPLICATION DEADLINE:\n\nThe anticipated application window is 30 days from the date job is posted, unless the number of applicants requires it to close sooner or later, or if the position is filled.\n\nEven though we’re an all-remote company, we still need to be thoughtful about where we have Zapiens working. Check out this resource https://docs.google.com/spreadsheets/d/1_lXQvKwuU4xXEbye7EW_En8iv1ZIMlQNmT7B2Mzbo24/edit?gid=0#gid=0 for a list of countries where we currently cannot have Zapiens permanently working.",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$210K – $316K • Offers Equity • Offers Bonus\",\"tiers\":[{\"title\":\"USA\",\"summary\":\"USA $210K – $316K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":210000,\"maxValue\":316000,\"summary\":\"USA $210K – $316K\"}]}]}",
+  "description": "AI AT ZAPIER\n\nAt Zapier https://zapier.com/about, we build and use automation every day to make work more efficient, creative, and human. So if you’re using AI tools while applying here - that’s great! We just ask that you use them responsibly and transparently.\n\nCheck out our guidance on How to Collaborate with AI During Zapier’s Hiring Process https://zapier.com/l/jobs/ai-at-zapier, including how to use AI tools like ChatGPT, Claude, Gemini, or others during our hiring process - and when not to.\n\nJob Posted: November 2026\n\nRemote - United States of America\n\nHi there!\n\nWe're looking for a lawyer who builds. Zapier's Legal team is small, strong, and moving toward an AI-native way of working, and we want someone to help lead that change: building the systems through which our legal work gets done, practicing law with them, and helping the team and the company do the same. Building isn't a side project here; it's foundational, and you'll always be building alongside the work. You’ll work closely with and report to the General Counsel https://www.linkedin.com/in/chadatlas/.\n\nIf you want to advance your career at a fast-growing, profitable, impact-driven company, read on…\n\nOur Commitment to Applicants https://zapier.com/jobs/our-commitment-to-applicants/\n\nCulture and Values at Zapier https://zapier.com/jobs/culture-and-values-at-zapier/\n\nZapier Guide to Remote Work https://zapier.com/learn/remote-work/\n\nZapier Code of Conduct https://zapier.com/jobs/zapier-code-of-conduct/\n\nDiversity and Inclusivity at Zapier https://zapier.com/jobs/working-on-diversity-and-inclusivity/\n\nABOUT YOU:\n\n- You build at the frontier. You haven't just built a tool once; you keep testing what new models can do, retire what they make obsolete, and rebuild. You treat AI as a new way of working, not a set of isolated use cases, and you can show us what you've built.\n\n- You're a practicing lawyer. You have sound commercial and legal judgment and want to keep doing real legal work. That's how you know what to build, and it's what makes what you build credible.\n\n- You can turn the unfamiliar into a practical recommendation. You research a new regulation or contract issue and land on advice that balances risk with business goals.\n\n- You love new challenges. You're comfortable with change and ambiguity and excited to learn areas of law that are new to you.\n\n- You're self-aware and have a high EQ. You bring people along, inside Legal and across teams, rather than mandating change.\n\n- You're a skilled communicator. You make legal and technical ideas easy to follow for a global, fully remote team that works mostly in writing, and you can explain what you've built to lawyers outside Zapier.\n\nQUALIFICATIONS & EXPERIENCE\n\n- Juris Doctor degree\n\n- Admitted to practice and in good standing with one or more state bars in the US\n\n- 6 to 10+ years of legal experience across commercial, product, or general corporate matters\n\n- Demonstrated, current hands-on building with AI tools (a portfolio we can look at)\n\n- In-house experience at a SaaS or technology company preferred, but not required\n\nTHINGS YOU’LL DO:\n\n- Lead AI transformation for the Legal team: build and improve our legal operating system (shared context, decision records, and the loops that check both the work and what the system learns from it), and help each lawyer build workflows that fit how they work.\n\n- Rebuild how routine legal work gets done, starting with NDAs and procurement review, so less of it needs a lawyer's time.\n\n- Do real legal work alongside the building: commercial contracts, product questions, and day-to-day matters as the team needs, including procurement and mid-market coverage when it's needed.\n\n- Dogfood Zapier's own products (Next-Gen Zaps, Zapier MCP) for legal workflows, and give product teams feedback on what legal teams need.\n\n- Partner with Zapier's AI transformation team on patterns that help beyond Legal.\n\n- Help test a go-to-market experiment: share what we build with legal builder communities and connect interested legal teams with our sales team.\n\n- Other duties as needed to meet the ongoing needs of the legal team at Zapier.\n\nHOW TO APPLY\n\nAt Zapier, we believe that diverse perspectives and experiences make us better, which is why we have a non-standard application process designed to promote inclusion and equity. We're looking for the best fit for each of our roles, regardless of the type of companies in your background, so we encourage you to apply even if your skills and experiences don’t exactly match the job description. All we ask is that you answer a few in-depth questions in our application that would typically be asked at the start of an interview process. This helps speed things up by letting us get to know you and your skillset a bit better right out of the gate. Please be sure to answer each question; the resume and CV fields are optional.\n\nEducation is not a requirement for our roles; however, if you receive an offer, you will need to include your most recent educational experience as part of our background check process.\n\nAfter you apply, you are going to hear back from us—even if we don’t see an immediate fit with our team. In fact, throughout the process, we strive to never go more than seven days without letting you know the status of your application. We know we’ll make mistakes from time to time, so if you ever have questions about where you stand or about the process, just ask your recruiter!\n\nZapier is an equal-opportunity employer and we're excited to work with talented and empathetic people of all identities. Zapier does not discriminate based on someone's identity in any aspect of hiring or employment as required by law and in line with our commitment to Diversity, Inclusion, Belonging and Equity. Our code of conduct https://zapier.com/jobs/zapier-code-of-conduct provides a beacon for the kind of company we strive to be, and we celebrate our differences because those differences are what allow us to make a product that serves a global user base. Zapier will consider all qualified applicants, including those with criminal histories, consistent with applicable laws.\n\nZapier prioritizes the security of our customers' information and is dedicated to adhering to all applicable data privacy laws. You can review our privacy policy here https://zapier.com/legal/data-privacy.\n\nZapier is committed to inclusion. As part of this commitment, Zapier welcomes applications from individuals with disabilities and will work to provide reasonable accommodations. If reasonable accommodations are needed to participate in the job application or interview process, please contact jobs@zapier.com.\n\nAPPLICATION DEADLINE:\n\nThe anticipated application window is 30 days from the date job is posted, unless the number of applicants requires it to close sooner or later, or if the position is filled.\n\nEven though we’re an all-remote company, we still need to be thoughtful about where we have Zapiens working. Check out this resource https://docs.google.com/spreadsheets/d/1_lXQvKwuU4xXEbye7EW_En8iv1ZIMlQNmT7B2Mzbo24/edit?gid=0#gid=0 for a list of countries where we currently cannot have Zapiens permanently working.",
   "locations": [
    {
     "source": "location",
@@ -29,12 +40,12 @@
     "text": "United States"
    }
   ],
-  "published": "2026-09-18T02:48:49.079000+00:00",
-  "title": "Legal Counsel",
+  "published": "2026-11-17T21:29:42.403000+00:00",
+  "title": "Legal Counsel, AI & Legal Engineering",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "e38e36f1813e17d4fa87ca3fbf8e67dc82928accb6e83dfd6e4664bd0f810df2",
+ "content_changed_at": "2026-11-17T23:38:01.366527+00:00",
+ "content_hash": "3ae333b044dd0259eeaaec09a30aaee6ae43bda870bc0dff52a4a2cc6d5d3d50",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -57,7 +68,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      },
@@ -77,7 +88,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      },
@@ -96,16 +107,16 @@
         {
          "currency": "USD",
          "currency_symbol": null,
-         "max": 261300,
-         "min": 174200,
-         "text": "USA $174.2K – $261.3K"
+         "max": 316000,
+         "min": 210000,
+         "text": "USA $210K – $316K"
         }
        ],
        "variable_mentioned": false
       },
       "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261300,\"summary\":\"USA $174.2K – $261.3K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":210000,\"maxValue\":316000,\"summary\":\"USA $210K – $316K\"}",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      }
@@ -122,7 +133,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "NAMER",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      },
@@ -130,7 +141,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      }
@@ -142,8 +153,8 @@
      {
       "interpretation": null,
       "method": "description_section:ABOUT YOU:",
-      "quote": "- You have exceptional drafting and negotiation skills. You are experienced at drafting and negotiating a range of inbound and outbound commercial contracts, including technology/cloud agreements, SaaS service agreements, contractor/consulting agreements, events-related agreements, and other business agreements.\n- You can research an unfamiliar regulation and apply strong business judgment to turn it into a practical recommendation. You have a knack for analyzing and assessing laws, regulations, and policies across multiple jurisdictions to extract the most relevant provisions for the business. You are comfortable with assessing risk and proposing solutions that balance risk with business goals.\n- You love new challenges. You have experience with, and an enthusiasm and intellectual curiosity for new legal issues. You are a creative thinker who is comfortable with change and ambiguity, and excited to learn areas of the law that may be new to you.\n- You think of yourself as a builder in legal practice. You see AI not as a one-off tool or a collection of isolated use cases, but as a new way of working. You are excited to integrate AI throughout your day-to-day practice, use it to process and analyze information, and help build and continually improve the systems and workflows through which legal work gets done.\n- You are self-aware and have a high EQ. You have a positive attitude with a solution-oriented mindset. You work effectively across teams and have strong listening and interpersonal skills.\n- You’re solid at time management. You are successful at working independently and have a proven track record of prioritizing and managing multiple matters simultaneously in a fast-paced, dynamic, and highly engaged environment. You also recognize when to ask for help or escalate issues.\n- You're a skilled communicator. You can take legalese and make it easy to read for a diverse workforce spanning the globe. Zapier is a 100% remote team and writing is our primary means of communication.\nQUALIFICATIONS & EXPERIENCE\n- Juris Doctor degree\n- Admitted to practice and in good standing with one or more state bars in the US\n- 4-8 years of legal experience across commercial, operational, or general corporate matters",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "- You build at the frontier. You haven't just built a tool once; you keep testing what new models can do, retire what they make obsolete, and rebuild. You treat AI as a new way of working, not a set of isolated use cases, and you can show us what you've built.\n- You're a practicing lawyer. You have sound commercial and legal judgment and want to keep doing real legal work. That's how you know what to build, and it's what makes what you build credible.\n- You can turn the unfamiliar into a practical recommendation. You research a new regulation or contract issue and land on advice that balances risk with business goals.\n- You love new challenges. You're comfortable with change and ambiguity and excited to learn areas of law that are new to you.\n- You're self-aware and have a high EQ. You bring people along, inside Legal and across teams, rather than mandating change.\n- You're a skilled communicator. You make legal and technical ideas easy to follow for a global, fully remote team that works mostly in writing, and you can explain what you've built to lawyers outside Zapier.\nQUALIFICATIONS & EXPERIENCE\n- Juris Doctor degree\n- Admitted to practice and in good standing with one or more state bars in the US\n- 6 to 10+ years of legal experience across commercial, product, or general corporate matters\n- Demonstrated, current hands-on building with AI tools (a portfolio we can look at)",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      }
@@ -155,8 +166,8 @@
      {
       "interpretation": null,
       "method": "inline_marker_in:ABOUT YOU:",
-      "quote": "- Combined law firm and in-house experience at a SaaS/technology company preferred, but not required.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "- In-house experience at a SaaS or technology company preferred, but not required",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      }
@@ -169,15 +180,15 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      },
      {
       "interpretation": "remote",
       "method": "description_text",
-      "quote": "- You're a skilled communicator. You can take legalese and make it easy to read for a diverse workforce spanning the globe. Zapier is a 100% remote team and writing is our primary means of communication.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "- You're a skilled communicator. You make legal and technical ideas easy to follow for a global, fully remote team that works mostly in writing, and you can explain what you've built to lawyers outside Zapier.",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/04838dc8-0efa-4fe5-b705-c99f6b3f17c6"
      }

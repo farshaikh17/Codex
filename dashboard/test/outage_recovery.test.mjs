@@ -84,3 +84,18 @@ test('the outage copy is keyed by the commit too: after a release the old Worker
     assert.equal(sameRelease.status, 200); assert.equal(sameRelease.xcache, 'STALE-OUTAGE', 'the release that stored it still serves it');
   } finally { delete globalThis.caches; }
 });
+
+test('feed readiness reports a failure even when the metadata lookup succeeds', async () => {
+  const { sqlite, d1 } = createDb();
+  seed(sqlite);
+  const env = makeEnv({
+    prepare(sql) {
+      if (sql.includes('candidate_qualifications')) throw new Error(LIMIT);
+      return d1.prepare(sql);
+    },
+    batch: (statements) => d1.batch(statements),
+  });
+  assert.equal((await get(env, '/api/health')).status, 200);
+  assert.equal((await get(env, '/api/health?feeds=1')).status, 503);
+  assert.equal((await get(makeEnv(d1), '/api/health?feeds=1')).status, 200);
+});

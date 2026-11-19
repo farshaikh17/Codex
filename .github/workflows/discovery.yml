@@ -145,11 +145,11 @@ jobs:
           DOWNLOAD: ${{ steps.download.outcome }}
         run: |
           if [ "$DOWNLOAD" = "success" ] && [ -s work/all.parquet ]; then
-            python engine/dataset_discovery.py --out work --dataset work/all.parquet --select-read-budget 150000 --rescore-export --rescore-per-candidate 800
+            python engine/dataset_discovery.py --out work --dataset work/all.parquet --select-read-budget 150000 --rescore-export --rescore-per-candidate 200
           else
             echo "::warning::The dataset download failed: continuing with an empty dataset result (boards, other sources, re-score, still-open check and shortlist still run)"
             rm -f work/all.parquet
-            python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 800
+            python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 200
           fi
       - name: Light job-site search (no credentials; a blocked site is skipped)
         if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}

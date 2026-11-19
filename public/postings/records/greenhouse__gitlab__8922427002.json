@@ -14,6 +14,15 @@
    "from_hash": "fdb02847c6eca7a379e973a17fe1d9e65a0a186c0fbe8e419198218e9fe219fc",
    "kind": "content_changed",
    "to_hash": "3414ce74e0c4b0e7107dc94dc239c36b0cda469aed699eeff29a5506e4611fdd"
+  },
+  {
+   "changed_at": "2026-11-17T23:38:01.366527+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "3414ce74e0c4b0e7107dc94dc239c36b0cda469aed699eeff29a5506e4611fdd",
+   "kind": "content_changed",
+   "to_hash": "84f130869d7775fecad122e7fb0fda1181638963d76ffe4b0d2d9bd7b47715f9"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-10-29T15:54:13-04:00",
-  "title": "Backend Engineer, Source Code: Repository Services (Ruby)",
+  "title": "Fullstack Engineer, Source Code: Repository Services (Ruby)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-06T08:28:12.366993+00:00",
- "content_hash": "3414ce74e0c4b0e7107dc94dc239c36b0cda469aed699eeff29a5506e4611fdd",
+ "content_changed_at": "2026-11-17T23:38:01.366527+00:00",
+ "content_hash": "84f130869d7775fecad122e7fb0fda1181638963d76ffe4b0d2d9bd7b47715f9",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8922427002"
      },
@@ -61,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Canada",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8922427002"
      }
@@ -74,7 +83,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Backend Fundamentals: Professional experience building and shipping production backend applications, with strong programming, API, database, testing, debugging, and performance fundamentals.\nAdaptability: Experience with Ruby/Rails, Go, or any other modern backend language. We value the ability to learn and adapt over mastery of a single language.\nFeature Ownership: The ability to take a feature from clarification through delivery and follow-up, working independently while seeking input at the right time.\nPractical Judgment: Sound instincts about security, reliability, performance, maintainability, and operational risk, plus an understanding of modular backend boundaries and the consequences of coupling.\nClear Communication: Strong written communication and effective collaboration in a remote, asynchronous environment.\nAI Fluency: Practical experience with AI coding tools, including the ability to review and correct what they generate.",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8922427002"
      }
@@ -87,7 +96,7 @@
       "interpretation": null,
       "method": "description_section:Helpful experience",
       "quote": "Production Go services, APIs, concurrency, profiling, or gRPC.\nDocker, Kubernetes, Helm, CI/CD, or cloud deployment.\nRust, particularly for systems, security, performance, or platform work.\nPostgreSQL, schema evolution, caching, queues, messaging, or event-driven workflows.\nObservability using metrics, logs, traces, dashboards, and alerts.\nContributing to a modular monolith, bounded context, shared component, or independently operated service.\nRemote-Global",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8922427002"
      }
@@ -100,7 +109,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-06T08:28:12.366993+00:00",
+      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8922427002"
      }
