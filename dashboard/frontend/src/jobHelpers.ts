@@ -1,3 +1,36 @@
+import type { Job } from './types';
+
+export function indiaRemotePayText(job: Pick<Job, 'salary_currency' | 'salary_min' | 'salary_max' | 'salary_period' | 'salary_raw_text'>): string {
+  const { salary_min: min, salary_max: max, salary_currency, salary_period } = job;
+  const format = (amount: number) => amount.toLocaleString(salary_currency === 'INR' ? 'en-IN' : 'en-US');
+  if (min != null || max != null) {
+    let range: string;
+    if (min != null && max != null) range = min === max ? format(min) : `${format(min)} – ${format(max)}`;
+    else if (min != null) range = `from ${format(min)}`;
+    else range = `up to ${format(max!)}`;
+    return [salary_currency, range, salary_period].filter(Boolean).join(' ');
+  }
+  const raw = job.salary_raw_text?.trim();
+  if (raw?.startsWith('{')) {
+    try {
+      const metadata = JSON.parse(raw);
+      if (Array.isArray(metadata?.tiers)) {
+        const regions: string[] = [];
+        for (const tier of metadata.tiers) {
+          if (typeof tier?.title === 'string' && typeof tier?.summary === 'string' && tier.summary.trim()) {
+            regions.push([tier.title.trim(), tier.summary.trim()].filter(Boolean).join(': '));
+          }
+        }
+        if (regions.length) return regions.join(' · ');
+      }
+      const summary = metadata?.summary;
+      if (typeof summary === 'string' && summary.trim()) return summary.trim();
+    } catch { /* A source may supply incomplete compensation metadata. */ }
+    return 'Salary published';
+  }
+  return raw || 'Salary published';
+}
+
 // Small deterministic helpers for the job inspection panel. No network, no AI, nothing stored.
 
 /** Links that open ready-made people searches for an employer. The candidate contacts people themselves; nothing is sent from here. */

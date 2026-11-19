@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Job, IndiaRemoteResult } from '../types';
+import { indiaRemotePayText } from '../jobHelpers';
 import { fetchIndiaRemoteJobs, updateApplication, unsaveJob } from '../api';
 import {
   Globe2,
@@ -11,7 +12,6 @@ import {
   Sparkles,
   RotateCcw,
   Building,
-  DollarSign,
   AlertCircle
 } from 'lucide-react';
 
@@ -483,8 +483,7 @@ export const IndiaRemoteView: React.FC<IndiaRemoteViewProps> = ({ candidateId = 
                     <div className="flex items-center gap-3 text-slate-500">
                       {job.salary_published ? (
                         <span className="font-semibold text-emerald-700 flex items-center gap-1">
-                          <DollarSign className="w-3.5 h-3.5" />
-                          {[job.salary_currency, job.salary_min?.toLocaleString(), job.salary_max != null ? `- ${job.salary_max.toLocaleString()}` : '', job.salary_period].filter(Boolean).join(' ')}
+                          {indiaRemotePayText(job)}
                         </span>
                       ) : (
                         <span className="text-slate-400">Salary not published</span>
