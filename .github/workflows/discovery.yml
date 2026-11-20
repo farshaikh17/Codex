@@ -113,8 +113,8 @@ jobs:
           python-version: '3.12'
       - name: Built-in search profiles (from the code; no database)
         run: mkdir -p work && python engine/dataset_discovery.py --builtin-profiles work/profiles.json
-      - name: Job-site search (JobSpy; a blocked site is skipped)
-        if: ${{ matrix.part.kind == 'jobsites' }}
+      - name: Job-site search (JobSpy; a blocked site is skipped; off when a manual run sets job_sites=false)
+        if: ${{ matrix.part.kind == 'jobsites' && (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
         timeout-minutes: 42
         env:
           MINUTES: ${{ matrix.part.minutes }}
@@ -226,18 +226,38 @@ jobs:
         with:
           pattern: collect-*
           path: parts
+      - name: Client profiles? (the collector parts had only the built-in ones)
+        id: clients
+        run: |
+          python3 -c "import json,sys;from pathlib import Path;sys.exit(0 if any(k not in ('farhan_shaikh','sana_ansari') for k in json.loads(Path('work/profiles.json').read_text())) else 1)" \
+            && echo "any=true" >> "$GITHUB_OUTPUT" || echo "No client profiles: no client pass"
       - name: Clients' own job-site searches (their stored role keywords; no credentials)
+        if: ${{ steps.clients.outputs.any == 'true' && (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
         continue-on-error: true
         timeout-minutes: 10
         run: |
-          if python3 -c "import json,sys;from pathlib import Path;sys.exit(0 if any(k not in ('farhan_shaikh','sana_ansari') for k in json.loads(Path('work/profiles.json').read_text())) else 1)"; then
-            python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
-            /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out parts/collect-clients --results 200 --hours 48 --shard clients
-          else
-            echo "no client profiles: nothing to search"
-          fi
+          python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
+          /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out parts/collect-clients --results 100 --hours 48 --shard clients --budget-seconds 480
+      # The boards and more sources matched titles against the built-in rules only, so a client's role keywords never saw what they read. With
+      # client profiles, both read again here with every profile (their writes go to the merge, which keeps each posting once).
+      - name: Clients' matches on the remote boards and more sources (every profile's role rule; no credentials)
+        if: ${{ steps.clients.outputs.any == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 25
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          ADZUNA_API_TERMS_ACCEPTED: ${{ vars.ADZUNA_API_TERMS_ACCEPTED }}
+        run: |
+          python engine/remote_boards.py --profiles work/profiles.json --out parts/collect-clients-more --days 7 --budget-seconds 240
+          python engine/more_sources.py --profiles work/profiles.json --out parts/collect-clients-more --days 30 --budget-seconds 1080
       - name: Merge the collector results (each posting once; clients matched by their own role rules)
-        run: python engine/merge_collect.py --out work --profiles work/profiles.json $(ls -d parts/collect-* 2>/dev/null | sort)
+        env:
+          JOB_SITES: ${{ (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
+        run: |
+          EXPECT=boards,more-employers,more-workable,more-successfactors,more-big
+          [ "$JOB_SITES" = "true" ] && EXPECT="$EXPECT,jobsites-farhan,jobsites-sana-india,jobsites-sana-gulf"
+          python engine/merge_collect.py --out work --profiles work/profiles.json --expect "$EXPECT" $(ls -d parts/collect-* 2>/dev/null | sort)
       - name: Pre-screen with the Worker's screen (only rows that can reach a list go to the duplicate check; no database)
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         continue-on-error: true   # without it every row goes to the duplicate check, as before

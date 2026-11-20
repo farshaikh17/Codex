@@ -24,7 +24,7 @@ except ImportError:   # pragma: no cover
 
 # The order one sequential run read them in (job sites, remote boards, more sources), so the reposter cap admits the same postings.
 KIND_ORDER = ('jobsites', 'clients', 'boards', 'more')
-SUM_KEYS = ('searches', 'blocked', 'skipped_after_refusals', 'returned', 'selected')
+SUM_KEYS = ('searches', 'blocked', 'skipped_after_refusals', 'skipped_for_time', 'returned', 'selected')
 
 
 def _read(path):
@@ -97,7 +97,7 @@ def merge_jobsite_reports(reports):
     return out
 
 
-def merge(part_dirs, out_dir, profs=None):
+def merge(part_dirs, out_dir, profs=None, expected=()):
     out_dir = Path(out_dir)
     part_dirs = sorted(part_dirs, key=part_rank)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -122,6 +122,8 @@ def merge(part_dirs, out_dir, profs=None):
         (out_dir / 'more_sources_report.json').write_text(json.dumps(more, indent=1))
     if boards:
         (out_dir / 'boards_report.json').write_text(json.dumps(boards, indent=1))
+    for name in expected:   # a part whose job uploaded nothing at all has no folder: still reported
+        parts.setdefault(name if name.startswith('collect-') else f'collect-{name}', 'missing')
     summary = {'parts': parts, 'jobs_in': sum(len(x) for x in jobs), 'jobs': len(merged), 'people_added_by_role_rule': added}
     (out_dir / 'collect_parts.json').write_text(json.dumps(summary, indent=1))
     return summary
@@ -131,10 +133,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', required=True)
     ap.add_argument('--profiles', default=None, help="the run's search profiles (work/profiles.json, with the clients)")
+    ap.add_argument('--expect', default='', help='comma-separated part names the run should have (the matrix); an absent one is reported missing')
     ap.add_argument('parts', nargs='*')
     a = ap.parse_args()
     profs = _read(a.profiles) if a.profiles else None
-    summary = merge(a.parts, a.out, profs)
+    summary = merge(a.parts, a.out, profs, [x.strip() for x in a.expect.split(',') if x.strip()])
     for name, state in summary['parts'].items():
         if state != 'ok':
             print(f'::warning::collector part {name} uploaded no results (its job failed or ran out of time); the run goes on without it')

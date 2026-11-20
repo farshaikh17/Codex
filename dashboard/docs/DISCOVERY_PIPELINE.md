@@ -350,7 +350,11 @@ Checked and not added: Naukri (terms), Glassdoor, Bayt and Google through JobSpy
 `guard` -> `collect` (8 parallel parts, no credentials, built-in profiles from the code: `dataset_discovery.py --builtin-profiles`; JobSpy
 Farhan, Sana India, Sana Gulf; remote boards; more sources in 4 groups, `more_sources.py --only`) -> `discover` (dataset download and
 selection, the clients' own job-site searches, `merge_collect.py` (each posting once, reposters capped across parts, every person whose role
-rule matches the title added), `prescreen.py`, duplicate check, one import, then everything as before). Collector artifacts hold public
+rule matches the title added), `prescreen.py`, duplicate check, one import, then everything as before). When any client profile exists,
+the discover job also runs the clients' JobSpy searches (480 s budget) and a second pass of the remote boards and more sources with every
+profile (the collector parts match titles against the built-in rules only, so a client's keywords would otherwise never see those rows).
+A manual run with `job_sites=false` skips every JobSpy search, as before. The job-site search writes its results after every search, so a
+part stopped by its time limit still uploads what it found; the merge reports any expected part that uploaded nothing. Collector artifacts hold public
 postings and counts only (this repository and its artifacts are public); candidates, profiles of clients and decisions never leave the
 discover job. The guards read up to 50 jobs a run (a run now has about 16). The dataset address is the canonical `jobs/v1` (the manifest lists
 `jobhive/v1` as deprecated); the file is now 3.9 GB.

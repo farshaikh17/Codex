@@ -147,6 +147,22 @@ def run_search(site, term, location, results, hours, country='India', remote=Fal
     return [] if df is None else df.to_dict('records')
 
 
+def write_out(out, raw_name, shard, found, log, robots_status):
+    """Writes the results so far and the report. Called after every search, so a step stopped by its time limit keeps what it found
+    (the collector job uploads whatever is there)."""
+    jobs = [clean(dict(j)) for j in found.values()]
+    out.mkdir(parents=True, exist_ok=True)
+    report = {'shard': shard, 'searches': sum(1 for x in log if 'skipped' not in x), 'blocked': sum(1 for x in log if 'error' in x),
+              'skipped_after_refusals': sum(1 for x in log if x.get('skipped', '').startswith('site refused')),
+              'skipped_for_time': sum(1 for x in log if x.get('skipped') == 'time budget'), 'returned': sum(x.get('returned', 0) for x in log), 'selected': len(jobs),
+              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}, 'robots': robots_status}
+    for name, body in ((raw_name, json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str)), ('jobsite_report.json', json.dumps({**report, 'log': log}, indent=1, default=str))):
+        tmp = out / (name + '.tmp')
+        tmp.write_text(body)
+        tmp.replace(out / name)   # never a half-written file if the step is stopped mid-write
+    return report
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', required=True)
@@ -222,16 +238,9 @@ def main():
                         j['candidates'].append(cid)
                     kept += 1
                 log.append({'site': site, 'term': term, 'country': country, 'returned': len(rows), 'kept': kept})
-    jobs = [clean(j) for j in found.values()]
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    report = {'shard': a.shard, 'searches': sum(1 for x in log if 'skipped' not in x), 'blocked': sum(1 for x in log if 'error' in x),
-              'skipped_after_refusals': sum(1 for x in log if x.get('skipped', '').startswith('site refused')),
-              'skipped_for_time': sum(1 for x in log if x.get('skipped') == 'time budget'), 'returned': sum(x.get('returned', 0) for x in log), 'selected': len(jobs),
-              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}, 'robots': robots_status}
-    (out / a.raw_name).write_text(json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str))
-    (out / 'jobsite_report.json').write_text(json.dumps({**report, 'log': log}, indent=1, default=str))
+                write_out(Path(a.out), a.raw_name, a.shard, found, log, robots_status)
+    report = write_out(Path(a.out), a.raw_name, a.shard, found, log, robots_status)
     print(json.dumps(report))
-
 
 if __name__ == '__main__':
     sys.exit(main())

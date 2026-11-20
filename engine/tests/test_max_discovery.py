@@ -85,6 +85,14 @@ class Merge(unittest.TestCase):
             self.assertEqual(summary['parts']['collect-more-successfactors'], 'missing')
             self.assertEqual(summary['jobs'], 3)
 
+    def test_a_part_that_uploaded_nothing_is_reported_missing(self):
+        with tempfile.TemporaryDirectory() as root:
+            a = self.write(root, 'collect-boards', [job(1)], jobsite_report={'searches': 1, 'skipped_for_time': 2})
+            summary = mc.merge([a], Path(root, 'w'), expected=['boards', 'more-big'])
+            rep = json.loads(Path(root, 'w', 'jobsite_report.json').read_text())
+        self.assertEqual(summary['parts'], {'collect-boards': 'ok', 'collect-more-big': 'missing'})
+        self.assertEqual(rep['skipped_for_time'], 2)
+
     def test_reposters_are_capped_across_parts(self):
         n = reposters.REPOSTER_CAP
         with tempfile.TemporaryDirectory() as root:
@@ -102,6 +110,25 @@ class Merge(unittest.TestCase):
         jobs = [job(1, title='Plant Engineer'), job(2, title='Implementation Manager', cands=()), job(3, title='Software Engineer', cands=())]
         self.assertEqual(mc.attribute(jobs, profs), 2)
         self.assertEqual([sorted(j['candidates']) for j in jobs], [['client_1', 'sana_ansari'], ['farhan_shaikh'], []])
+
+
+class JobSitesWriteAsTheyGo(unittest.TestCase):
+    def test_results_are_on_disk_after_each_search(self):
+        from engine import jobsite_discovery as jd
+        seen = []
+        with tempfile.TemporaryDirectory() as d:
+            raw = Path(d, 'jobsite_raw.json')
+
+            def search(site, term, loc, results, hours, country='India', remote=False):
+                seen.append(len(json.loads(raw.read_text())['jobs']) if raw.exists() else None)
+                return [{'title': term, 'job_url': f'https://x.example/{term}', 'company': 'Acme'}]
+            Path(d, 'p.json').write_text(json.dumps({'sana_ansari': {'home': 'india', 'role': 'engineer', 'keywords': []}}))
+            q = {'sana_ansari': [(f'engineer {i}', 'India', 'India', ['indeed']) for i in range(3)]}
+            with mock.patch.object(jd, 'QUERIES', q), mock.patch.object(jd, 'run_search', search), mock.patch.object(jd.robots, 'allowed', lambda u: True), \
+                    mock.patch('sys.argv', ['x', '--profiles', str(Path(d, 'p.json')), '--out', d]):
+                jd.main()
+            self.assertTrue(Path(d, 'jobsite_report.json').exists())
+        self.assertEqual(seen, [None, 1, 2], 'a step stopped after any search keeps the earlier ones')
 
 
 class MoreSourcesOnly(unittest.TestCase):
@@ -168,8 +195,29 @@ class Workflow(unittest.TestCase):
         self.assertLess(at('merge_collect.py'), at('engine/prescreen.py'))
         self.assertLess(at('engine/prescreen.py'), at('--dedupe work/jobsite_raw.json'))
         self.assertEqual(d.count('--file=../work/apply.sql'), 1, 'one all-or-nothing import')
-        self.assertNotIn('more_sources.py', d, 'the collectors moved to the parallel parts')
-        self.assertIn('--shard clients', d)
+        self.assertEqual(d.count('more_sources.py'), 1, 'the collectors moved to the parallel parts; only the client pass reads here')
+        client_pass = d[d.index("Clients' matches on the remote boards"):]
+        client_pass = client_pass[:client_pass.index('\n      - name:')]
+        self.assertIn("steps.clients.outputs.any == 'true'", client_pass)
+        self.assertIn('--profiles work/profiles.json', client_pass, 'the full profiles, clients included')
+        self.assertIn('remote_boards.py', client_pass)
+        js = d[d.index("Clients' own job-site searches"):]
+        js = js[:js.index('\n      - name:')]
+        self.assertIn('--shard clients', js)
+        self.assertRegex(js, r'--budget-seconds \d+', 'a step timeout must not lose the searches already done')
+        self.assertIn("inputs.job_sites != 'false'", js)
+
+    def test_job_sites_input_still_switches_the_job_site_searches_off(self):
+        c = self.job('collect')
+        step = c[c.index('- name: Job-site search'):]
+        self.assertIn("matrix.part.kind == 'jobsites' && (github.event_name == 'schedule' || inputs.job_sites != 'false')", step.split('\n')[1])
+
+    def test_the_merge_expects_every_matrix_part(self):
+        names = set(re.findall(r"- \{ name: ([a-z-]+), kind:", self.job('collect')))
+        d = self.job('discover')
+        line = d[d.index('EXPECT=boards'):]
+        listed = set(re.findall(r'EXPECT=([a-z,-]+)', line)[0].split(',')) | set(re.findall(r'EXPECT="\$EXPECT,([a-z,-]+)"', line)[0].split(','))
+        self.assertEqual(listed, names)
 
     def test_guards_find_the_discover_job_among_all_the_jobs(self):
         for f in ('recent_run_guard.mjs', 'discovery_watchdog.mjs'):
