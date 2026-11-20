@@ -63,6 +63,13 @@ export const twinKey = (r) => {
   const city = onsite ? String(r.location || '').split(/[,;/|]/)[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() : '';
   return (companyKey(r.company) || String(r.company || '').trim().toLowerCase()) + '|' + titleKey(r.title) + '|' + city;
 };
+// SuccessFactors exposes the same numeric posting under employer and RSS labels.
+function postingKey(row) {
+  if (row.source !== 'successfactors' || !URL.canParse(row.url)) return null;
+  const url = new URL(row.url);
+  const match = url.pathname.match(/^(.*)\/job\/[^/]+\/(\d+)\/?$/i);
+  return match ? `${url.origin}${match[1]}/job/${match[2]}` : null;
+}
 /** Which copy of a twin group stays (16 Nov): the best ranked (rankKey: score, the incumbent bonus, the age penalty), then one whose place names
  *  India, then the newest, then the smallest job id. Pure; the selector and the audit share twinKey(). */
 export function keepTwins(rows, now) {
@@ -194,14 +201,17 @@ function pickFor(rows, held, ctx) {
   const usable = ranked(keepTwins(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
   const heldKeys = new Set(held.map(twinKey));
+  const postingKeys = new Map([...usable, ...held].map((r) => [r, postingKey(r)]));
+  const heldPostings = new Set(held.map((r) => postingKeys.get(r)).filter(Boolean));
   const lists = { READY: [], STRETCH_READY: [] };
   const tierOf = new Map();
   const qualifies = (r, tier) => (tier === 'READY' ? readyOk(r) : fitsReady(r) || fitsStretchRule(r));
   // Hard rules: one posting per employer and title across both tiers and the rows a person holds; and those of ctx.hard (plan A4).
   const hardOk = (r, tier, without = null) => {
     const k = twinKey(r);
-    if (heldKeys.has(k)) return false;
-    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && twinKey(x) === k) return false;
+    const posting = postingKeys.get(r);
+    if (heldKeys.has(k) || heldPostings.has(posting)) return false;
+    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && (twinKey(x) === k || (posting && postingKeys.get(x) === posting))) return false;
     return (ctx.hard || HARD_RULES).every((h) => h(r, tier, lists, without, ctx));
   };
   const fill = (tier, candidates) => {

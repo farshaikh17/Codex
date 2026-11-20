@@ -376,3 +376,12 @@ test('gap fix: a Gulf posting from a job board that refuses the check, found in 
   // the same rows verified by the check go to Ready as before
   assert.equal(tiers(sel(pool.map((r) => ({ ...r, last_verified_at: iso(0) })), { dead: ['dead'] })).ready_q, 'READY');
 });
+
+test('one SuccessFactors posting across tracking links and employer aliases', () => {
+  const common = { source: 'successfactors', location: 'Bap, India', title: 'Solar Asset Manager', workplace: 'ONSITE' };
+  const a = row({ ...common, job_id: 'a', company: 'Energy Services', url: 'https://example.org/job/Solar-Lead/12345/', score: 91 });
+  const b = row({ ...common, job_id: 'b', company: 'Energy Group', url: a.url + '?feedId=null&utm_source=rss', score: 90 });
+  const other = row({ ...common, job_id: 'c', company: 'Another Employer', url: 'https://other.example/job/Solar-Lead/12345/' });
+  assert.deepEqual(tiers(sel([b, other, a])), { a: 'READY', c: 'READY' });
+  assert.deepEqual(tiers(sel([{ ...a, kind: 'held' }, b, other])), { c: 'READY' });
+});
