@@ -553,3 +553,25 @@ test('live QA 17 Nov: My applications lists only real applications; the operator
   assert.equal(today.json.counts.applications.total, (await list('', null)).length, 'the header count equals the list');
   assert.equal(snap(), before, 'no application, history or candidate row changed');
 });
+
+test('due count and follow-up list exclude each synthetic marker while keeping reminders stored', async () => {
+  const w = world();
+  w.run("UPDATE jobs SET source_adapter = 'fixture' WHERE id = 'k2'");
+  w.run("UPDATE jobs SET id = 'syn-k4' WHERE id = 'k4'");
+  for (const [id, note] of [['k2', null], ['k3', 'Playwright verified rejection test'], ['syn-k4', null]]) {
+    w.run("INSERT INTO applications(id,candidate_id,job_id,status,notes) VALUES (?,?,?,'SAVED',?)", 'a-' + id, F, id, note);
+  }
+  for (const id of ['k1', 'k2', 'k3', 'syn-k4']) {
+    w.run("INSERT INTO application_followups(candidate_id,job_id,follow_up_at) VALUES (?,?,'2001-01-01')", F, id);
+  }
+  const stored = () => ['applications', 'application_history', 'application_followups'].map(table =>
+    w.sqlite.prepare('SELECT * FROM ' + table + ' ORDER BY rowid').all());
+  const before = stored();
+  const today = await req(w.env, 'GET', '/api/today?candidate_id=' + F, { key: null });
+  const list = await req(w.env, 'GET', '/api/follow-ups?candidate_id=' + F);
+  assert.equal(today.status, 200);
+  assert.equal(list.status, 200);
+  assert.deepEqual({ due: today.json.counts.followups_due, jobs: list.json.items.map(item => item.job_id) },
+    { due: 1, jobs: ['k1'] });
+  assert.deepEqual(stored(), before);
+});
