@@ -166,6 +166,8 @@ test('review: one strong exclusion (data centre, pipeline, building services) re
     assert.deepEqual(sanaCommissioningSkills('Commissioning Engineer', d), [], d.slice(0, 50));
   const e = evS('Commissioning Engineer', 'Riyadh, Saudi Arabia', pad('Commissioning of UPS and MV switchgear for hyperscale data centres; generators and transformers.'));
   assert.ok(!e.skills.includes('Plant Commissioning'));
+  // a business 'pipeline of projects' is not a pipeline
+  assert.ok(sanaCommissioningSkills('Senior Engineer - Wind O & M', pad('O&M of our wind farms and a growing pipeline of projects: turbines, transformers and substation availability.')).length >= 1);
   // a refinery and a power plant outweigh one HVAC mention
   assert.ok(sanaCommissioningSkills('Commissioning Engineer', pad('Commissioning of the refinery utilities and the captive power plant: turbines, boilers and the HVAC of the control room.')).length >= 1);
 });
