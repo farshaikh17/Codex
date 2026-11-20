@@ -94,6 +94,25 @@ class Liveness(unittest.TestCase):
         for p in ('/blocked', '/busy', '/err', '/timeout'):
             self.assertEqual(st(p), 'unknown', p)
 
+    def test_workday_page_needs_a_job_title_before_refreshing_verification(self):
+        url = 'https://example.wd1.myworkdayjobs.com/site/job/City/Role_REQ123'
+        for body, expected in [
+            (b'<title></title><meta name="title" property="og:title">', 'unknown'),
+            (b'<title>Careers</title>', 'unknown'),
+            (b'<meta property="og:title" content="Field Service Engineer">', 'alive'),
+            (b'<title>Field Service Engineer</title>', 'alive'),
+        ]:
+            with self.subTest(body=body):
+                response = fake_urlopen(urllib.request.Request(url))
+                response.read.return_value = body
+                with mock.patch.object(liveness.urllib.request, 'urlopen', return_value=response):
+                    result = liveness.check([{'id': 'sample', 'url': url}], pause=0)
+                self.assertEqual(result['alive'], ['sample'] if expected == 'alive' else [])
+                self.assertEqual(result['dead'], [])
+                if expected == 'unknown':
+                    self.assertEqual(result['unknown'], 1)
+                    self.assertEqual(liveness.to_sql(result).strip(), '')
+
     def test_check_and_sql(self):
         b = 'https://jobs.example'
         t = [{'id': 'a', 'url': b + '/ok'}, {'id': 'b', 'url': b + '/gone'}, {'id': 'c', 'url': b + '/blocked'},

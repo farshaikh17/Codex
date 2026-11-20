@@ -19,6 +19,7 @@ from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -98,19 +99,54 @@ TIMEOUT = 8           # seconds per request
 DEADLINE = 8 * 60     # seconds: the workflow step stops at 10 minutes, so the check returns what it has well before that
 
 
+class _WorkdayTitles(HTMLParser):
+    """Read title metadata from the bounded HTML already fetched by the probe."""
+
+    def __init__(self):
+        super().__init__()
+        self.in_title = False
+        self.title = []
+        self.metadata = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'title':
+            self.in_title = True
+        elif tag == 'meta':
+            fields = dict(attrs)
+            if fields.get('property') == 'og:title':
+                self.metadata.append(fields.get('content') or '')
+
+    def handle_endtag(self, tag):
+        if tag == 'title':
+            self.in_title = False
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.title.append(data)
+
+    def has_job_title(self):
+        generic = {'', 'careers', 'jobs', 'search for jobs', 'workday'}
+        return any(title.strip().casefold() not in generic for title in [*self.metadata, ''.join(self.title)])
+
+
 def probe(url, timeout=TIMEOUT):
     """('dead'|'alive'|'unknown', detail)."""
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.5'})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (URLs from our own database, https only)
             final = r.geturl()
-            r.read(65536)
+            body = r.read(65536)
             if 'greenhouse.io' in final and 'error=true' in final:
                 return 'dead', 'greenhouse error redirect'
             initial_url, final_url = urlsplit(url), urlsplit(final)
             # A generic homepage after a redirect does not prove that a specific posting remains open.
             if initial_url.path.strip('/') and not final_url.path.strip('/'):
                 return 'unknown', 'redirected to homepage'
+            if (final_url.hostname or '').endswith('.myworkdayjobs.com') and '/job/' in final_url.path:
+                titles = _WorkdayTitles()
+                titles.feed(body.decode('utf-8', errors='replace'))
+                if not titles.has_job_title():
+                    return 'unknown', 'Workday page did not identify a job'
             return 'alive', str(r.status)
     except urllib.error.HTTPError as e:
         return ('dead' if e.code in (404, 410) else 'unknown'), str(e.code)
