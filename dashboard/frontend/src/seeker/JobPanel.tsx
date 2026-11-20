@@ -20,7 +20,7 @@ interface Props {
   busy?: boolean;   // a write for this job is on its way: the controls wait
 }
 
-onst levelText = (job: Job) => {
+const levelText = (job: Job) => {
   const s = job.score?.breakdown?.seniority_assessment;
   if (!s || !s.job_seniority || !s.candidate_seniority) return null;
   if (s.job_seniority === s.candidate_seniority) return 'Level: at your level';
