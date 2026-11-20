@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v20';
+export const RULES_MARKER = 'profile_v21';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -755,6 +755,40 @@ export function farhanOffField(title:string|null|undefined,description:string|nu
  if(/\bai\b[^,;|]*\bengineer\b/i.test(ti)&&distinct(FARHAN_AI_BUILD,d)>=2)return 'AI software engineering';
  return null;
 }
+// Jobs QA 6 (20 Nov, owner feedback: a 'GoHighLevel (GHL) Specialist — Automation & Customer Support (Gym Business)' on Farhan's Best matches,
+// posted by a firm that 'places AI-fluent virtual assistants with growing businesses', hiring 'on behalf of our client, a US-based gym business',
+// reporting to the gym owner and giving 'first-line support to the gym owner and staff'). A virtual-assistant placement, or a hands-on support or
+// assistant post for one small business, is a gig below a 9-year technical operations lead (brief: VA gig = wrong type), whatever its tool words.
+// Read as any of:
+//   a virtual-assistant firm (by name or by its own words: 'places virtual assistants') hiring for an assistant or support post (assistant / VA /
+//   front desk / receptionist / customer support in the title, first-line or front-desk support, assisting the owner) or one asking at most 3 years;
+//   any firm hiring 'on behalf of our client' for such an assistant or support post;
+//   first-line, front-desk or assistant support of the owner of a single small business (gym, clinic, salon, spa, studio, dental or medical practice,
+//   coaching business);
+//   an assistant or VA title asking at most 3 years.
+// Not when the title is a senior, lead or manager post ('Senior Implementation Manager' through a staffing agency, 'Assistant Project Manager') and
+// not an assistant one.
+const VA_FIRM_NAME=/\bvirtual (?:assistants?|staff(?:ing)?)\b|\bva (?:staffing|services|agency)\b|\d+\s*va\b/i;
+const VA_FIRM_TEXT=/\b(?:place|places|placing|match|matches|matching|provide|provides|providing|connect|connects|supply|supplies)\s+(?:(?!(?:to|for|with|by|from|of)\s)[\w-]+\s+){0,3}?(?:virtual assistants?|remote assistants?|vas)\b|\bvirtual (?:assistant|staffing) (?:agency|company|firm|services|placement|provider)\b|\bva (?:agency|placement|staffing)\b/i;
+const CLIENT_HIRE=/\bon behalf of (?:our|a) client\b|\bfor (?:one of )?our clients?, an?\b|\bour client,? an? [\w-]+(?: [\w-]+){0,3} (?:business|company|practice|clinic|gym|agency|brand)\b/i;
+const ASSIST_TITLE=/\bassistants?\b|\bfront[- ]desk\b|\breceptionist\b|\bcustomer (?:support|service)\b|\bsupport (?:agent|representative|rep|specialist)\b|\bhelp ?desk\b/i;
+const ASSIST_TEXT=/\bfirst[- ]line (?:[\w-]+ ){0,2}support\b|\bfront[- ]desk\b|\breceptionist\b|\b(?:virtual|administrative|admin|executive|personal) assistant\b|\b(?:support|assist)(?:s|ing)? (?:to )?the (?:[\w-]+ )?owners?\b|\breports? (?:directly )?to\s*:?\s*(?:the )?(?:[\w-]+ )?owner\b/i;
+const SMALL_BUSINESS=/\b(?:gym|fitness (?:studio|business|cent(?:er|re)|club)|clinic|salon|(?:med|day)?\s?spa|(?:yoga|pilates|dance|martial arts|tattoo) studio|dental (?:office|practice)|medical practice|chiropract\w*|coaching (?:business|company|practice)|boutique)\b/i;
+const OWNER_SUPPORT=/\b(?:support|assist)(?:s|ing)? (?:to )?the (?:[\w-]+ )?owners?\b|\breports? (?:directly )?to\s*:?\s*(?:the )?(?:[\w-]+ )?owner\b|\b(?:the )?(?:gym|clinic|salon|spa|studio|practice|business) owner and (?:the )?(?:front[- ]desk|staff|team)\b/i;
+const ASSIST_SENIOR=/\b(?:senior|sr|lead|principal|head|manager|director)\b/i;
+const ASSIST_ROLE_WORD=/\bassistants?\b(?![^,;|()]{0,40}\b(?:manager|director|vice[- ]president)\b)/i;   // 'Assistant Project Manager' and 'Assistant Manager' are manager grades
+const assistRole=(ti:string)=>ASSIST_ROLE_WORD.test(ti)||/\bVA\b/.test(ti);
+export function farhanAssistantGig(title:string|null|undefined,description:string|null|undefined,company:string|null|undefined=''):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' '),co=String(company||'');
+ if(ASSIST_SENIOR.test(ti)&&!assistRole(ti))return null;
+ const years=yearsRequired(d),fewYears=years>0&&years<=3;
+ const assist=ASSIST_TITLE.test(ti)||/\bVA\b/.test(ti)||ASSIST_TEXT.test(d);
+ const vaFirm=VA_FIRM_NAME.test(co)||VA_FIRM_TEXT.test(d);
+ if((vaFirm&&(assist||fewYears))||(CLIENT_HIRE.test(d)&&assist))return 'a virtual-assistant or staffing placement';
+ if(SMALL_BUSINESS.test(`${ti} ${d}`)&&OWNER_SUPPORT.test(d)&&assist)return 'hands-on support for one small business';
+ if(assistRole(ti)&&fewYears)return 'a hands-on assistant post';
+ return null;
+}
 // Sana's place (brief: a remote role is hers only when it is open to India). A remote posting that names no India, APAC, Asia, worldwide or
 // anywhere wording at all ('Remote/Traveling (For Corporate Use Only)' for a US contractor) is capped like an on-site job abroad with no visa route.
 // A place the rules cannot read ('Noble Voyager', 'Paul Robbins Plant', 'Winona') whose text names only places outside India and the Gulf, or that
@@ -947,6 +981,9 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(offField)score=Math.min(score,AVOID_TITLE_CAP);
  const gig=!prof&&role&&gigEngagement(p.title,p.description);
  if(gig)score=Math.min(score,AVOID_TITLE_CAP);
+ // Jobs QA 6: a virtual-assistant placement or a hands-on support / assistant post for one small business is capped like a gig.
+ const assistantGig=candidate.id==='farhan_shaikh'&&!prof&&role?farhanAssistantGig(p.title,p.description,p.company):null;
+ if(assistantGig)score=Math.min(score,AVOID_TITLE_CAP);
  const langHard=!prof&&role?languageHardRequired(p.title,p.description):null;
  if(langHard)score=Math.min(score,threshold-LANGUAGE_HARD_GAP);
  // Jobs QA 4 (Sana's place): remote with no India, APAC, Asia, worldwide or anywhere wording, or an unread place whose text names only places
@@ -971,6 +1008,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(farAbove?' Principal, director, VP or head-of title, far above the candidate\'s level (kept off the shortlist).':'')
   +(offField?` Reads as ${offField} work, not the candidate's field (score capped).`:'')
   +(gig?' Part-time, freelance or contractor engagement (score capped).':'')
+  +(assistantGig?` Reads as ${assistantGig}, below the candidate's level (score capped).`:'')
   +(langHard?` Requires ${langHard} (kept off the shortlist).`:'')
   +(sanaPlaceUnworkable?' Remote or abroad with nothing showing it is open to someone in India (score capped).':'')
   +(rightToWorkElsewhere?' Open only to people based in or allowed to work in another country, with no visa route (score capped).':'')
