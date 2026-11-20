@@ -193,3 +193,59 @@ test('cheap views: SQLite BINARY order for ids and dates', () => {
   const sqliteOrder = createDb().sqlite.prepare(`SELECT value FROM json_each(?) ORDER BY value`).all(JSON.stringify(xs)).map((r) => r.value);
   assert.deepEqual([...xs].sort(cmpBin), sqliteOrder);
 });
+
+test('cheap views (review 1): a correction landing between this request\'s two reads never leaves it with the old copy and no mark', async () => {
+  const { sqlite, d1 } = fixture(200, 19);
+  const v = { version: 'test-v', maxAge: 1800 };
+  await seekerSnapshot(d1, F, v);
+  const job = sqlite.prepare(`SELECT id FROM (SELECT q.job_id AS id FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id WHERE q.candidate_id = ? AND j.is_active = 1
+    AND q.qualification_status = 'NEEDS_REVIEW' AND COALESCE(q.manual_override_status, '') = '' AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)) LIMIT 1`).get(F).id;
+  // a tracker action: the job leaves the list (Not for me), with its dirty mark
+  sqlite.prepare(`UPDATE candidate_qualifications SET qualification_status = 'HOLD', qualification_reason = 'You marked this Not for me.' WHERE candidate_id = ? AND job_id = ?`).run(F, job);
+  sqlite.prepare(`INSERT INTO seeker_dirty(candidate_id, job_id, at) VALUES (?, ?, 1)`).run(F, job);
+  // another request corrects the copy (and removes the mark) right after this request's first read
+  let fired = false;
+  const spy = { ...d1, batch: (st) => d1.batch(st), prepare: (sql) => {
+    const st = d1.prepare(sql);
+    if (fired || !/FROM seeker_dirty WHERE candidate_id|LEFT JOIN seeker_snapshot/.test(sql)) return st;
+    return { bind: (...a) => { st.bind(...a); return { all: async () => { const r = await st.all(); fired = true; await seekerSnapshot(d1, F, v); return r; } }; } };
+  } };
+  const s = await seekerSnapshot(spy, F, v);
+  assert.ok(fired);
+  assert.ok(!s.rows.some((r) => r.id === job), 'the job marked Not for me is not back on the list');
+  assert.ok(s.hidden.some((r) => r.id === job));
+});
+
+test('cheap views (review 2): an answer from the copy is cached with the copy\'s build time, so copy and entry together stay within one limit', async () => {
+  const { sqlite, d1 } = fixture(150, 23);
+  const env = makeEnv(d1, { RESPONSE_CACHE: 'on', SEEKER_SNAPSHOT: 'on' });
+  const path = `/api/today?candidate_id=${F}`;
+  await call(worker, env, 'GET', path, { key: null });   // builds the copy
+  sqlite.exec('DELETE FROM response_cache; UPDATE seeker_snapshot SET built_at = built_at - 1500');
+  const r = await call(worker, env, 'GET', path, { key: null });
+  assert.equal(r.status, 200);
+  const row = sqlite.prepare(`SELECT created_at FROM response_cache WHERE key LIKE '%/api/today%'`).get();
+  const built = sqlite.prepare(`SELECT built_at FROM seeker_snapshot WHERE candidate_id = ? AND part = 0`).get(F).built_at;
+  assert.equal(row.created_at, built, 'stored with the copy\'s time, not now');
+  assert.ok(Math.floor(Date.now() / 1000) - row.created_at >= 1500);
+});
+
+test('cheap views (review 3): if the dirty mark cannot be written after a tracker write, the person\'s copy is dropped, never left stale', async () => {
+  const { sqlite, d1 } = fixture(200, 29);
+  const env0 = on(d1);
+  await call(worker, env0, 'GET', `/api/today?candidate_id=${F}`);
+  const job = sqlite.prepare(`SELECT q.job_id AS id FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id WHERE q.candidate_id = ? AND j.is_active = 1
+    AND q.qualification_status = 'NEEDS_REVIEW' AND q.manual_override_status IS NULL AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id) LIMIT 1`).get(F).id;
+  // after the handler's write, every dirty-mark write and every generation bump fails
+  let armed = false;
+  const broken = { run: async () => { throw new Error('D1_ERROR: simulated write failure'); } };
+  const spy = { ...d1, batch: (st) => d1.batch(st), exec: (x) => d1.exec(x), prepare: (sql) => {
+    if (/INSERT OR REPLACE INTO applications/.test(sql)) armed = true;
+    if (armed && /INTO seeker_dirty|SET generation = generation \+ 1/.test(sql)) return { bind: () => broken, ...broken };
+    return d1.prepare(sql);
+  } };
+  const w = await call(worker, makeEnv(spy, { SEEKER_SNAPSHOT: 'on' }), 'POST', '/api/applications', { body: { candidate_id: F, job_id: job, status: 'APPLIED' } });
+  assert.ok(w.status < 300, JSON.stringify(w.json));
+  assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM seeker_snapshot WHERE candidate_id = ?').get(F).n, 0, 'the copy was dropped');
+  for (const p of SEEKER_LISTS(F)) await same(d1, p, null);
+});

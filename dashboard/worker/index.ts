@@ -193,6 +193,15 @@ async function openTrackerCandidate(request: Request, url: URL): Promise<string 
   return CANDIDATE_IDS.has(id) && !PRIVATE_IDS.has(id) ? id : null;
 }
 
+/** Marks a tracker action's job in that person's stored list copy (worker/snapshot.ts). Retried once; if the mark still cannot be written, the
+ *  person's copy is deleted (rebuilt on the next read), and failing that the cache generation is raised (every copy and answer dropped). Only
+ *  if all of that fails does this throw, so an action can never be silently missing from the copy until it expires. */
+async function markCopy(env: Env, candidateId: string, jobId: string | null): Promise<void> {
+  for (let i = 0; i < 2; i++) { try { await seekerTouched(env.DB, candidateId, jobId); return; } catch { /* retried, then dropped below */ } }
+  try { await seekerTouched(env.DB, candidateId, null); return; } catch { /* then the generation */ }
+  await invalidateResponseCache(env);
+}
+
 /** The job a tracker write is about: the path's job (/api/jobs/:id/..., /api/applications/:id...) or the body's job_id. */
 async function trackerJobOf(request: Request, pathname: string): Promise<string | null> {
   const m = pathname.match(/^\/api\/(?:jobs|applications)\/([^/]+)(?:\/|$)/);
@@ -302,12 +311,15 @@ async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup |
 const TRACKER_CHANGE_KEY = '~tracker-change';
 /** readStart: when this request looked the entry up (seconds). The answer is not stored if a tracker action cleared answers since then
  *  (it may have been computed from the rows before that action); a few seconds of margin cover clock differences between isolates. */
-async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number): Promise<void> {
+/** bornAt: when the data the answer was made from was read, if earlier than now (an answer from a stored list copy is as old as the copy):
+ *  the entry is stored with that time, so the copy's age and the entry's together stay within one cache time limit. */
+async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number, bornAt?: number): Promise<void> {
   if (new TextEncoder().encode(body).length > CACHE_MAX_BYTES) return;
   try {
     const now = Math.floor(Date.now() / 1000);
+    const created = bornAt != null && bornAt < now ? bornAt : now;
     await env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) SELECT ?, ?, ?, ?
-      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, now, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
+      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, created, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
     meterAdd(utcDay(), { cache_writes: 1 });
     // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
@@ -848,8 +860,10 @@ class WorkerRouter {
         const trackerJob = trackerFor ? await trackerJobOf(request, pathname) : null;
         const invalidate = async () => {
           await bumpEdgeGeneration(env, url);
-          if (trackerFor) { try { await seekerTouched(env.DB, trackerFor, trackerJob); } catch { await invalidateResponseCache(env); } }
+          let copyFailed: unknown = null;
+          if (trackerFor) { try { await markCopy(env, trackerFor, trackerJob); } catch (e) { copyFailed = e; } }
           await (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env));
+          if (copyFailed) throw copyFailed;
         };
         if (operatorChange) await invalidate();   // before: if this fails the change is refused
         let res: Response;
@@ -863,13 +877,14 @@ class WorkerRouter {
             if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
           }
           if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
-            try { await invalidate(); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
+            try { await invalidate(); }
+            catch { try { await invalidate(); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); } }   // one retry
           }
         }
         const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
         if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now, copyBuiltAt.get(request));
           if (edge && level === 'public' && edge === cacheKey) await edgePut(url, edge, edgeGen, body);
           await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
@@ -1621,9 +1636,15 @@ async function candidateThreshold(env: Env, candidateId: string): Promise<number
 // The person's stored list copy (migration 0027, worker/snapshot.ts), or null to answer from the full queries. It is a cache like the response
 // cache: off where that is off (unit tests that change rows directly), unless SEEKER_SNAPSHOT says otherwise; never older than that cache's
 // own time limit for this request's level.
+// The answer's response-cache entry is then stored with the copy's build time (copyBuiltAt, read by the router), so a copy near its limit
+// does not start a fresh 30 minutes of caching: copy and entry together are never older than one cache time limit, as before.
+const copyBuiltAt = new WeakMap<Request, number>();
+const SEARCH_IDS_PER_STATEMENT = 1000;   // about 30 KB of ids per statement (D1 keeps statements under 100 KB)
 async function listSnapshot(request: Request, env: Env, candidateId: string): Promise<Snapshot | null> {
   if (env.SEEKER_SNAPSHOT === 'off' || (env.SEEKER_SNAPSHOT !== 'on' && env.RESPONSE_CACHE === 'off')) return null;
-  return seekerSnapshot(env.DB, candidateId, { version: `${SNAPSHOT_VERSION}:${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`, maxAge: CACHE_TTL_SECONDS[isOperatorRequest(request) ? 'operator' : 'public'] });
+  const snap = await seekerSnapshot(env.DB, candidateId, { version: `${SNAPSHOT_VERSION}:${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`, maxAge: CACHE_TTL_SECONDS[isOperatorRequest(request) ? 'operator' : 'public'] });
+  if (snap) copyBuiltAt.set(request, Math.min(snap.builtAt, copyBuiltAt.get(request) ?? Infinity));
+  return snap;
 }
 
 router.get('/api/jobs', async (request, env, _params, url) => {
@@ -1711,12 +1732,16 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (snap) {
       let rows = universe === 'hidden' ? snap.hidden : snap.rows;
       if (search) {
-        const statuses = [...new Set(rows.map((r) => r.st))];
+        // Which of the copy's jobs contain the text: the same LIKE as the full query, asked of exactly those jobs by key (in groups, so each
+        // statement stays small), whatever their status.
         const term = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
-        const found = statuses.length ? ((await env.DB.prepare(`SELECT q.job_id AS id FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-          WHERE q.candidate_id = ? AND q.qualification_status IN (SELECT value FROM json_each(?))
-            AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`).bind(candidateId, JSON.stringify(statuses), term, term, term).all<any>()).results || []) : [];
-        const hit = new Set(found.map((r: any) => r.id));
+        const hit = new Set<string>();
+        for (let i = 0; i < rows.length; i += SEARCH_IDS_PER_STATEMENT) {
+          const ids = JSON.stringify(rows.slice(i, i + SEARCH_IDS_PER_STATEMENT).map((r) => r.id));
+          const found = (await env.DB.prepare(`SELECT j.id FROM json_each(?) x CROSS JOIN jobs j ON j.id = x.value
+            WHERE (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`).bind(ids, term, term, term).all<any>()).results || [];
+          for (const r of found) hit.add(r.id);
+        }
         rows = rows.filter((r) => hit.has(r.id));
       }
       if (eligibility && eligibility !== 'ALL') rows = rows.filter((r) => r.el === eligibility);

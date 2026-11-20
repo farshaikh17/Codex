@@ -145,7 +145,7 @@ Worker, response cache off (every request uncached), D1's own `meta.rows_read` p
 | All jobs, To review, best first (`/api/jobs ... collapse_twins`) | 92,679 / 83,817 | **157 / 154** | about 21,000 |
 | All jobs, page 2 / newest first / Remote / 60+ | 84,000 to 101,000 | **157 / 154** | about 21,000 |
 | All jobs, Says it hires in India | 41,890 / 37,794 | **32 / 29** | about 21,000 |
-| All jobs, search | 85,059 / 76,890 | 11,059 / 10,061 | about 32,000 |
+| All jobs, search | 85,059 / 76,890 | 8,784 / 7,973 | about 30,000 |
 | Best matches / Worth a try lists | 47,000 / 43,000 | **87 to 154** | about 21,000 |
 | Hidden jobs | 15,269 / 13,819 | **32 / 29** | about 21,000 |
 | My applications (`/api/applications`, `/api/follow-ups`) | 306 / 197 | 306 / 197 | - |
@@ -159,13 +159,17 @@ What changed:
   julianday, screening time's julianday, eligibility, work mode, unscreened flag, employer-and-title key, place), as JSON in parts of at most
   60 KB (about 25 parts at this size). Counts, facets, filters (status, India, Remote, 60+), both orders, pages and the twin grouping are
   computed from it with the same functions and the same order rules (SQLite's BINARY order, its own julianday values); only the 25 to 75 rows
-  shown are read live, by id. Search still asks D1 which of the person's rows contain the text (about 11,000 rows; was 85,000).
+  shown are read live, by id. Search still asks D1 which of the copy's jobs contain the text, by key in groups of 1,000 ids (about
+  8,800 rows; was 85,000).
 * **When the copy is used**: built under the current cache generation (every import, run, release and operator change raises it), by the
   same code version (`SNAPSHOT_VERSION` + commit), and less than the response cache's own limit ago (30 minutes for visitors, 10 for the
-  operator). So it is never staler than a cached answer was: Worker cron and collector writes appear when it expires, as before.
+  operator). An answer made from it is stored in the response cache with the copy's build time, not the time of the answer, so copy and
+  cached answer together are never older than one limit: never staler than a cached answer was. Worker cron and collector writes appear
+  when it expires, as before.
 * **Tracker actions** mark (person, job) in `seeker_dirty` before and after their write; the next read re-reads those jobs by key (a few
   rows) and corrects the stored parts it touches (one or two part rows written). An action therefore no longer makes the next view cost a
-  full recomputation.
+  full recomputation. The marks are read before the copy (a correction made between the two reads cannot be missed). If a mark cannot be
+  written after the action (retried once), the person's copy is deleted, and failing that the cache generation is raised.
 * Concurrency: each write of the copy is one D1 batch that applies only while part 0 still has the token the request read; a dirty mark is
   removed only with the exact value the request saw. A losing request still answers correctly; its copy is just not stored.
 * Build query: "status not INELIGIBLE / CLOSED / HOLD" as four ranges of the (candidate, status) index (20,700 rows instead of 51,500 for
@@ -180,3 +184,7 @@ What changed:
 two dirty marks, the corrected part). **Reads, worst case**: a build costs about 20,000 rows and happens at most once per person per
 30 minutes plus once per generation bump (about 42,000 per person per hour of continuous use, 2 x 48 x 21,000 = 2.0M for both people in
 an unbroken 24 hours); every other uncached view costs 150 to 500 rows. Before, each uncached view cost 85,000 to 100,000.
+**Known cost, not removed**: requests that arrive together when the copy is missing or expired each build it (no build lease): N people
+opening the page in the same second after a run or an expiry cost N x about 20,000 rows once (5 at once: about 100,000). The first stored
+build ends it; later requests use the copy. A lease would make the others wait or fall back to the full queries (about 94,000 each), so it
+was left out.

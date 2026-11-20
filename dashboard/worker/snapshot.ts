@@ -21,7 +21,8 @@ import { reviewKey } from './twins';
 
 type DB = any;
 export type SnapRow = { id: string; st: string; sc: number; f: string; fj: number | null; qj: number | null; el: string; wt: string | null; u: number; k: string; l: string | null; h: number };
-export interface Snapshot { rows: SnapRow[]; hidden: SnapRow[]; state: 'built' | 'kept' | 'patched' }
+/** builtAt: when the copy's rows were read (seconds); an answer made from it is as old as that (the response cache stores it with that time). */
+export interface Snapshot { rows: SnapRow[]; hidden: SnapRow[]; state: 'built' | 'kept' | 'patched'; builtAt: number }
 
 export const SNAPSHOT_VERSION = 's1';
 const CHUNK_TARGET = 30_000, CHUNK_MAX = 60_000, DIRTY_MAX = 400;
@@ -123,25 +124,28 @@ async function persist(db: DB, cid: string, rows: SnapRow[], s: { generation: nu
 export async function seekerSnapshot(db: DB, cid: string, opts: { version: string; maxAge: number }): Promise<Snapshot | null> {
   const now = Math.floor(Date.now() / 1000);
   try {
+    // The dirty marks are read BEFORE the copy: a request that corrects the copy removes the marks it used in the same transaction, so a mark
+    // read here either is still needed or was already folded into the copy read next (re-reading that job is then harmless). Read the
+    // other way round, a correction landing between the two reads would leave this request with the old copy and no mark.
+    const { results: dirty } = await db.prepare('SELECT job_id, at FROM seeker_dirty WHERE candidate_id = ?').bind(cid).all();
     const { results: parts } = await db.prepare(`SELECT s.generation AS cur, p.part, p.generation, p.version, p.built_at, p.token, p.parts, p.body
       FROM cache_state s LEFT JOIN seeker_snapshot p ON p.candidate_id = ? WHERE s.id = 1 ORDER BY p.part`).bind(cid).all();
     if (!parts?.length) return null;
     const cur = Number(parts[0].cur);
-    const { results: dirty } = await db.prepare('SELECT job_id, at FROM seeker_dirty WHERE candidate_id = ?').bind(cid).all();
     const meta = parts.find((p: any) => p.part === 0) || null;
     const chunks = parts.filter((p: any) => p.part != null && p.part > 0);
     const valid = !!meta && meta.version === opts.version && meta.generation === cur && now - Number(meta.built_at) < opts.maxAge
       && meta.parts === chunks.length && chunks.every((c: any, i: number) => c.part === i + 1) && (dirty || []).length <= DIRTY_MAX;
     if (valid) {
       let all: SnapRow[] = chunks.flatMap((c: any) => (JSON.parse(c.body) as any[][]).map(dec));
-      if (!dirty?.length) return { ...split(all), state: 'kept' };
+      if (!dirty?.length) return { ...split(all), state: 'kept', builtAt: Number(meta.built_at) };
       const ids = [...new Set(dirty.map((d: any) => String(d.job_id)))];
       const { results } = await db.prepare(BY_IDS_SQL).bind(cid, JSON.stringify(ids)).all();
       const drop = new Set(ids);
       all = all.filter((r) => !drop.has(r.id)).concat((results || []).map(fromSql));
       try { await persist(db, cid, all, { generation: meta.generation, version: meta.version, builtAt: Number(meta.built_at), token: meta.token, dirty, old: { parts: meta.parts, bodies: chunks.map((c: any) => c.body) } }); }
       catch { /* not stored: the next read patches again */ }
-      return { ...split(all), state: 'patched' };
+      return { ...split(all), state: 'patched', builtAt: Number(meta.built_at) };
     }
     // Rebuild. With no part 0 yet, one is written first, before the rows are read, so that a write made meanwhile is either seen by the
     // read below or leaves a dirty mark this request does not remove.
@@ -158,7 +162,7 @@ export async function seekerSnapshot(db: DB, cid: string, opts: { version: strin
       try { await persist(db, cid, all, { generation: cur, version: opts.version, builtAt: now, token, dirty: dirty || [] }); }
       catch { /* not stored: the next read rebuilds */ }
     }
-    return { ...split(all), state: 'built' };
+    return { ...split(all), state: 'built', builtAt: now };
   } catch (e: any) {
     if (!missingTable(e)) console.warn(JSON.stringify({ event: 'seeker_snapshot', status: 'FALLBACK', error: String(e?.message || e).slice(0, 200) }));
     return null;
