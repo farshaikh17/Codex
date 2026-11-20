@@ -20,7 +20,8 @@ const evS = (title, location, description, o = {}) => evaluate(sana, { id: 'x', 
 const FLOOR_F = farhan.qualification_threshold - 10, FLOOR_S = sana.qualification_threshold - 10;
 
 test('marker: the rules changed, so every stored row is re-scored once (profile_v22, bumped again by later rule changes)', () => {
-  assert.match(RULES_MARKER, /^profile_v(?:2[2-9]|[3-9]\d)$/);
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 22, RULES_MARKER);
 });
 
 test('both: a posting open only to the employer\'s own staff is ruled out; an open call is not', () => {

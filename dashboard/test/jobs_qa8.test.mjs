@@ -3,7 +3,7 @@
 // Invented postings only.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, foreignLocation, indianPlace, placeBand, SANA_ROLE, sanaCommissioningSkills, sanaPowerFieldService, sanaElectricalMaintenance,
+import { evaluate, foreignLocation, indianPlace, placeBand, SANA_ROLE, sanaRoleTitle, sanaCommissioningSkills, sanaPowerFieldService, sanaElectricalMaintenance,
   PLATFORM_GAP_CAP, VISA_UNLIKELY_CAP, RULES_MARKER } from '../worker/discovery.ts';
 
 const farhan = { id: 'farhan_shaikh', qualification_threshold: 70, total_years_experience: 9,
@@ -139,4 +139,47 @@ test('both: a visa refusal with an example list in brackets is read as no visa r
 test('Farhan: the Zoho / HubSpot / Salesforce platform-gap cap is unchanged (owner decision 20 Nov)', () => {
   const d = pad('Build Zoho CRM and Zoho Creator automations, integrations and low-code AI agents for our clients. This is a fully remote role open to candidates based in India.');
   assert.ok(evF('Senior AI & Zoho Automation Engineer', 'Remote - India', d).score <= PLATFORM_GAP_CAP);
+});
+
+// Review of the first version (PR #241): each loophole has its own case.
+test('review: thermal imaging, diagnostics, an HV laboratory or a data-centre client do not rule out a power-equipment field service engineer', () => {
+  const SUB = pad('Field service at customer substations: diagnostics and thermal imaging of power transformers, testing in our HV laboratory, and service of switchgear for utilities and data centre clients.');
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'Hitachi Energy', SUB), true);
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'Acme Grid Services', pad('Service gas turbines and generators at power plants; diagnostics, thermal imaging and boiler inspections at substations.')), true);
+  // medical imaging and lab instruments still rule it out
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'Siemens', pad('Service medical imaging systems and MRI scanners in hospitals; check power supplies.')), false);
+});
+
+test('review: a bare "power" or "energy" in the text is not power-equipment work for a maker such as ABB', () => {
+  const ROBOT = pad('Install and service industrial robots and robot controllers at automotive plants; check power supplies, replace drives and teach robot programs. Energy-efficient travel policy.');
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'ABB', ROBOT), false);
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'ABB', pad('Check the power supplies and energy meters of our packaging machines.')), false);
+  assert.equal(sanaPowerFieldService('Field Service Engineer', 'ABB', pad('Service medium voltage switchgear and circuit breakers at customer substations.')), true);
+  const e = evS('Field Service Engineer', 'Pune, India', ROBOT, { company: 'ABB' });
+  assert.equal(e.status, 'HOLD');
+});
+
+test('review: one strong exclusion (data centre, pipeline, building services) rejects commissioning unless plant evidence clearly dominates', () => {
+  for (const d of [pad('Commissioning of UPS and MV switchgear for hyperscale data centres; generators and transformers in a mission critical environment.'),
+    pad('Commissioning of compressor stations and pumps along the export pipeline.'),
+    pad('Commissioning of MEP systems, switchgear and generators for a new tower.')])
+    assert.deepEqual(sanaCommissioningSkills('Commissioning Engineer', d), [], d.slice(0, 50));
+  const e = evS('Commissioning Engineer', 'Riyadh, Saudi Arabia', pad('Commissioning of UPS and MV switchgear for hyperscale data centres; generators and transformers.'));
+  assert.ok(!e.skills.includes('Plant Commissioning'));
+  // a refinery and a power plant outweigh one HVAC mention
+  assert.ok(sanaCommissioningSkills('Commissioning Engineer', pad('Commissioning of the refinery utilities and the captive power plant: turbines, boilers and the HVAC of the control room.')).length >= 1);
+});
+
+test('review: the plant-discipline role branch excludes sales, design, procurement and HVAC titles', () => {
+  for (const t of ['Manager - Instrumentation Sales', 'Engineer - Mechanical (HVAC Design)', 'Manager - Mechanical Procurement', 'Executive - Instrumentation Design', 'Asic&I Manager'])
+    assert.equal(sanaRoleTitle(t), false, t);
+  for (const t of ['Deputy Manager - Mechanical', 'Sr. Manager (C&I)', 'Manager - Instrumentation', 'C&I Manager'])
+    assert.equal(sanaRoleTitle(t), true, t);
+  // a title her core role words already cover keeps its role match whatever else it says
+  assert.equal(sanaRoleTitle('Electrical Design Engineer'), true);
+});
+
+test('review: GIS mapping, lower-case mv / hv and bare "utilities" are not plant evidence', () => {
+  assert.deepEqual(sanaCommissioningSkills('O&M Engineer', pad('O&M of GIS mapping systems for utilities; keep the plants list up to date. Our mv and hv teams share an office.')), []);
+  assert.ok(sanaCommissioningSkills('O&M Engineer', pad('O&M of 132 kV GIS substations and MV switchgear for the utility.')).length >= 1);
 });
