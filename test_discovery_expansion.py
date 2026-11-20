@@ -99,6 +99,19 @@ class SignalAndRotationTests(unittest.TestCase):
         self.assertEqual(signals.geography([{"text":"Remote - APAC"},{"text":"Worldwide"}])["class"],"remote_or_region_only")
         self.assertEqual(signals.geography([{"text":"Mumbai"}])["india_terms"],["mumbai"])
 
+    def test_remote_geography_preserves_named_locations(self):
+        for label in ('Remote - United Kingdom', 'Remote, UAE', 'Remote - Singapore', 'Norway (remote)'):
+            with self.subTest(label=label):
+                self.assertEqual(signals.geography([{'text':label}])['class'], 'other_locations')
+        for label in ('Worldwide', 'Remote - APAC', 'Remote, North America', 'Europe'):
+            self.assertEqual(signals.geography([{'text':label}])['class'], 'remote_or_region_only')
+        for labels, expected in [
+            (['Remote - EMEA', 'Remote - Poland'], 'other_locations'),
+            (['Remote', 'Remote - India'], 'india_explicit'),
+            ([' ', ''], 'unstated'),
+        ]:
+            self.assertEqual(signals.geography([{'text':x} for x in labels])['class'], expected)
+
     def test_rotation_shows_unseen_cards_before_repeating(self):
         jobs=[{"key":"k%d"%i,"employer":"a","title":"Implementation Manager %s"%chr(65+i)} for i in range(6)]
         history={}
