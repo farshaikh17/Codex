@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v22';
+export const RULES_MARKER = 'profile_v23';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -78,10 +78,11 @@ const FARHAN_TARGET_WORDS=/\b(implementation|solutions?|onboarding|integrations?
 // and Chief of Staff, in any industry.
 // Plan S2 (phase 2): every title the daily searches fetch is recognised (delivery/program/project managers, professional services, technical account
 // managers, customer engineers, GoHighLevel and tech-ops titles for Farhan; O&M, shift in-charge, rotating and static equipment, mechanical, thermal,
-// solar, hydro, substation, switchgear, energy manager, operations engineer, transmission and renewables for Sana). test/discovery.test.mjs checks
+// solar, hydro, substation, switchgear, energy manager, operations engineer, transmission and renewables for Sana; jobs QA 8: a manager, engineer or
+// executive of a plant discipline, 'Deputy Manager - Mechanical', 'Sr. Manager (C&I)', 'Instrumentation Executive'). test/discovery.test.mjs checks
 // every search term against these rules.
 export const FARHAN_ROLE=/operations|implementation|integration|automation|business systems|crm|revops|sales ops|marketing ops|systems architect|onboarding|solutions|technical delivery|chief of staff|founder'?s? (?:office|associate)|founding (?:operations|ops|generalist)|gtm engineer|go[- ]to[- ]market engineer|ai (?:ops|operations|workflow|implementation)|(?:technical )?(?:delivery|program|project) manager|professional services|technical account manager|customer engineer|gohighlevel|tech ops/i;
-export const SANA_ROLE=/electrical|power|energy|turbine|boiler|(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)\W+(?:\w+\W+){0,3}field service|field service engineer\W+(?:\w+\W+){0,3}(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro|betriebsingenieur|zuverl.ssigkeit|anlagen|ing.nieur|centrale|onderhoud|elektrotechnisch|energiebesparing|energieeffizienz|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult|o ?& ?m\b|operations (?:and|&) maintenance|shift (?:in[- ]?charge|engineer)|rotating (?:equipment|machinery)|static equipment|mechanical (?:engineer|maintenance)|thermal (?:power|plant|station)|\(thermal\)|solar|\bhydro(?:gen|power|electric)?\b|substation|switchgear|energy manager|operations engineer|transmission (?:line|engineer|system|network|project)|renewable/i;
+export const SANA_ROLE=/electrical|power|energy|turbine|boiler|(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)\W+(?:\w+\W+){0,3}field service|field service engineer\W+(?:\w+\W+){0,3}(?:power|energy|turbine|hvdc|wind|solar|grid|substation|generator|boiler|plant)|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro|betriebsingenieur|zuverl.ssigkeit|anlagen|ing.nieur|centrale|onderhoud|elektrotechnisch|energiebesparing|energieeffizienz|reliability|maintenance|plant|commissioning|utilities|asset performance|decarboni[sz]|sustainab|clean ?tech|efficiency|net[- ]zero|emissions|(?:technical|engineering) consult|o ?& ?m\b|operations (?:and|&) maintenance|shift (?:in[- ]?charge|engineer)|rotating (?:equipment|machinery)|static equipment|mechanical (?:engineer|maintenance)|thermal (?:power|plant|station)|\(thermal\)|solar|\bhydro(?:gen|power|electric)?\b|substation|switchgear|energy manager|operations engineer|transmission (?:line|engineer|system|network|project)|renewable|(?:manager|engineer|executive)\W+(?:mechanical|c ?& ?i\b|instrumentation)|(?:mechanical|c ?& ?i|instrumentation)\W+(?:manager|executive|in[- ]?charge)/i;
 // Employers the owner asked to skip (2026-11-07).
 const FARHAN_SKIP_EMPLOYER=/^\s*ajaia\b/i;
 // A location that names only the United States (owner rule 2026-11-07: US-only remote roles are rejected for Farhan).
@@ -293,7 +294,12 @@ export function indianaPlace(location:string|null|undefined,description:string|n
 export function sanaIndiaCity(location:string|null|undefined){const l=location||'';return indianPlace(l)||/(?:^|, )in$/i.test(l)||sanaIndiaPin(l);}   // jobs QA 4: 'Bap, IN, 342301'
 /** True when the location names a place in India (and not only a neighbour's place of the same name). Also decides that a location is NOT foreign. */
 const INDIA_NAMESAKE=/\b(?:punjab|hyderabad|kochi|surat|kashmir|ncr)\b/gi;   // also places in Pakistan, Japan, Thailand and the Philippines (NCR = Metro Manila)
-export function indianPlace(location:string|null|undefined){const l=location||'';if(!INDIA_PLACE.test(l))return false;if(!/\b(?:india|bharat)\b/i.test(l)&&(US_STATE_LAST.test(l)||PROVINCE_CODE.test(l)))return false;   // jobs QA 3: 'Delhi, NY'
+// Jobs QA 8 (recall audit): career sites write an Indian town the rules do not list as 'Town, <state code>, IN[, PIN]' ('Cuddalore, TN, IN',
+// 'Sriperumbudur, TN, IN, 602105'); the state code was read as a US state (TN), so the job got the visa cap. A state code followed by the country
+// code IN is India. 'Little India' is a district of Singapore, not India.
+export const INDIA_STATE_CODED=/,\s*(?:AN|AP|AR|AS|BR|CG|CH|CT|DD|DL|DN|GA|GJ|HP|HR|JH|JK|KA|KL|LA|LD|MH|ML|MN|MP|MZ|NL|OD|OR|PB|PY|RJ|SK|TG|TN|TR|TS|UK|UP|UT|WB)\s*,\s*IN\s*(?:,\s*\d{3}\s?\d{3})?\s*$/i;
+const LITTLE_INDIA=/\blittle\s+india\b/gi;
+export function indianPlace(location:string|null|undefined){const l=String(location||'').replace(LITTLE_INDIA,' ');if(INDIA_STATE_CODED.test(l))return true;if(!INDIA_PLACE.test(l))return false;if(!/\b(?:india|bharat)\b/i.test(l)&&(US_STATE_LAST.test(l)||PROVINCE_CODE.test(l)))return false;   // jobs QA 3: 'Delhi, NY'
  if(/\b(?:india|bharat)\b/i.test(l)||!FOREIGN_NAME.test(l))return true;return INDIA_PLACE.test(l.replace(INDIA_NAMESAKE,' '));}
 export const SANA_OLD_ACCESS_REASON='Posting is in an accessible Indian location.';
 export const SANA_INDIA_ONSITE_REASON='On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).';
@@ -714,6 +720,56 @@ export function sanaOffField(title:string|null|undefined,description:string|null
 const SANA_TRADE_TITLE=/\b(?:charge ?m[ae]n|charge-?hand|fore(?:m[ae]n|person)|fitters?|mechanics?|electricians?|artisans?|boiler ?makers?|welders?|grinders?|plumbers?|wiremen|wireman|linem[ae]n|handym[ae]n|lead worker|craftsm[ae]n|tech)\b/i;
 const SANA_TRADE_EXEMPT=/\b(?:engineers?|engineering|manager|supervisor|specialist)\b/i;
 export function sanaTradeTitle(title:string|null|undefined){const t=String(title||'');return SANA_TRADE_TITLE.test(t)&&!SANA_TRADE_EXEMPT.test(t);}
+// Jobs QA 8 (recall audit, 20 Nov): commissioning, testing and O&M of plant equipment is her work, but her CV skills and target roles never say so, so
+// Gulf and India commissioning and O&M posts scored 43-55 ('Senior Testing & Commissioning Engineer, Medium Voltage', 'Instrument Engineer (Pre
+// Commissioning Field)', 'Senior Manager O&M'). A commissioning, testing-and-commissioning or O&M title whose title or text names plant equipment or a plant
+// counts up to two of these as skills. Not pipeline, telecom or network, building / MEP / data-centre / HVAC, software or computer-system
+// commissioning, nor commissioning of services (an NHS 'People Commissioning' post).
+const SANA_COMMISSION_TITLE=/\b(?:pre-?\s?)?commissioning\b|\btesting\s*(?:&|and)\s*commissioning\b|\bo\s?&\s?m\b|\boperations?\s+(?:and|&)\s+maintenance\b/i;
+const SANA_COMMISSION_NOT=/\bpipelines?\b|\btelecom\w*|\bfib(?:re|er)\b|\b(?:5g|lte|ran|rf|bts|ftth)\b|\bnetworks?\b(?!\s+(?:protection|substations?))|\bbuildings?\b|\bmep\b|\bbms\b|\bbuilding management\b|\bhvac\b|\bfire (?:alarm|protection|fighting)\b|\bfit-?out\b|\bdata ?cent(?:er|re)s?\b|\bmission critical\b|\bsoftware\b|\bcomputer systems?\b|\bcsv\b|\bcqv\b|\bit systems?\b|\bpeople\b|\bservices? commissioning\b|\bcommissioning (?:of )?(?:health|care|social)\b|\bnhs\b|\bclinical\b|\bfacilities management\b|\blifts?\b|\belevators?\b/i;
+const SANA_COMMISSION_TEXT_NOT=[/\bpipelines?\b/i,/\btelecom\w*|\bfib(?:re|er) optic|\bFTTH\b|\b5G\b|\bBTS\b/i,/\bMEP\b/,/\bBMS\b|\bbuilding management\b/i,/\bHVAC\b/i,/\bfit-?out\b/i,/\bdata ?cent(?:er|re)s?\b|\bmission critical\b/i,
+ /\bsoftware\b/i,/\bcomputer systems?\b|\bCSV\b|\bCQV\b/,/\bcommercial buildings?\b|\bhospitals?\b|\bhotels?\b|\bmalls?\b/i,/\bfire (?:alarm|protection|fighting)\b/i];
+const SANA_COMMISSION_PLANT=[/\bpower (?:plants?|stations?|generation)\b|\bthermal\b|\bccgt\b|\bcombined cycle\b/i,/\bsubstations?\b|\bswitchgear\b|\btransformers?\b|\b(?:medium|high|low) voltage\b|\b[MH]V\b|\bGIS\b|\bcircuit breakers?\b|\brelays?\b/i,
+ /\bturbines?\b|\bgenerators?\b|\bboilers?\b|\bcompressors?\b|\bpumps?\b|\brotating equipment\b|\bheat exchangers?\b/i,/\brefiner(?:y|ies)\b|\bpetrochemical\b|\bprocess plants?\b|\bgas (?:plants?|processing)\b|\bLNG\b|\boil (?:&|and) gas\b|\bupstream\b|\bdesalination\b|\bwater treatment\b|\bEPC\b/i,
+ /\binstrument(?:s|ation)?\b|\banaly[sz]ers?\b|\bDCS\b|\bPLC\b|\bloop (?:checks?|tests?)\b|\bcontrol systems?\b/i,/\bsolar (?:plants?|farms?|parks?|pv)\b|\bwind (?:farms?|turbines?)\b|\brenewables?\b|\butilities\b|\bplants?\b/i];
+/** Jobs QA 8: the commissioning / O&M skills a Sana posting earns (none unless the title is a commissioning or O&M title and the work is plant work). */
+export function sanaCommissioningSkills(title:string|null|undefined,description:string|null|undefined,have:string[]=[]):string[]{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' '),t=`${ti} ${d}`;
+ if(!SANA_COMMISSION_TITLE.test(ti)||SANA_COMMISSION_NOT.test(ti))return [];
+ // the title or text names plant equipment or a plant, and the text at most one kind of pipeline, telecom, building-services or software wording
+ if(!distinct(SANA_COMMISSION_PLANT,t)||distinct(SANA_COMMISSION_TEXT_NOT,d)>=2)return [];
+ const mine=have.map((h)=>String(h).toLowerCase()),out:string[]=[];
+ if(/commission/i.test(t)&&!mine.some((h)=>h.includes('commissioning')))out.push('Plant Commissioning');
+ if(/\bo\s?&\s?m\b|\boperations?\s+(?:and|&)\s+maintenance\b/i.test(t)&&!mine.some((h)=>h==='o&m'))out.push('O&M');
+ if(out.length<2&&/\btesting\b|\bpre-?\s?commissioning\b|\bstart-?up\b|\benergi[sz]ation\b|\bloop (?:checks?|tests?)\b|\bpunch ?lists?\b/i.test(t))out.push('Testing & Start-up');
+ return out.slice(0,TARGET_SKILL_MAX);
+}
+// Jobs QA 8: a 'Field Service Engineer' title alone is also a lab, medical or IT-hardware post (Waters, Bruker, a scanner maker), so it is hers only
+// for a maker of power equipment (Hitachi Energy, GE Vernova, Siemens Energy, ABB, BHEL...) whose text names power equipment, or when the text is about
+// power-plant equipment itself (three distinct plant phrases and a plant or substation).
+const POWER_OEM=/\b(?:hitachi(?: energy)?|ge vernova|gevernova|ge (?:power|renewable|grid)|siemens energy|siemens gamesa|abb|schneider(?: electric)?|doosan|bhel|bharat heavy electricals|mitsubishi (?:power|heavy)|ansaldo|w(?:a|ä)rtsil(?:a|ä)|man energy|solar turbines|baker hughes|thermax|isgec|triveni|kirloskar|vestas|nordex|suzlon|inox|enercon|alstom|hyosung|toshiba|voith|andritz|cg power|crompton greaves|tbea|aggreko|cummins|caterpillar)\b/i;
+const POWER_OEM_NAMED=/\b(?:hitachi energy|siemens energy|siemens gamesa|ge vernova|ge (?:power|renewable|grid|gas power)|mitsubishi power|doosan (?:enerbility|power)|bhel|bharat heavy electricals|abb|schneider electric|energy|power)\b/i;
+const FSE_NOT_POWER=/\blaborator(?:y|ies)\b|\blab instruments?\b|\bmedical (?:devices?|equipment|imaging|systems?|technology|technologies)\b|\bclinical\b|\bhospitals?\b|\bdiagnostic\w*|\bimaging\b|\bultrasound\b|\bMRI\b|\bmass spectromet\w*|\bchromatograph\w*|\bmicroscop\w*|\blife sciences?\b|\bsemiconductor\b|\bwafer\b|\bservers?\b|\bstorage arrays?\b|\bdata cent(?:er|re)s?\b|\bprinters?\b|\bATMs?\b/i;
+export function sanaPowerFieldService(title:string|null|undefined,company:string|null|undefined,description:string|null|undefined):boolean{
+ const ti=String(title||''),d=String(description||'');
+ if(!/\bfield service (?:engineer|specialist)s?\b/i.test(ti)||FSE_NOT_POWER.test(`${ti} ${d}`))return false;
+ const power=distinct(SANA_COMMISSION_PLANT.slice(0,3),`${ti} ${d}`);
+ if(POWER_OEM.test(String(company||''))&&(power>=1||POWER_OEM_NAMED.test(`${company||''} ${d}`)))return true;   // 'Hitachi' with 'HITACHI ENERGY INDIA LIMITED' in the text
+ return power>=3&&/\bpower (?:plants?|stations?)\b|\bsubstations?\b/i.test(d);
+}
+// Jobs QA 8 (owner decision 20 Nov): the electrical-only reduction is for electrical design, studies, protection and switchgear sales. An electrical
+// post whose text is hands-on maintenance of a plant, port, terminal or utility ('preventive and breakdown maintenance of port equipment', a power-plant
+// electrical maintenance engineer) scores like any other maintenance post.
+const ELECTRICAL_NOT_MAINTENANCE=/\bdesign\w*|\bcontrols?\b|\bautomation\b|\bintegration\b|\bavionics\b|\bharness\b|\bsystems? engineer\b|\bprotection\b|\brelay\b|\bstud(?:y|ies)\b|\bestimat\w*|\btender\w*|\bproposals?\b|\bsales\b|\bapplications?\b|\bpre-?sales\b|\bbid\b|\bdraught\w*|\bdraft\w*|\bcad\b|\bsubstation engineer\b|\bproduct\b|\bR&D\b/i;
+const ELECTRICAL_MAINTENANCE_WORK=[/\bpreventi?ve\b|\bpreventative\b/i,/\bbreakdowns?\b/i,/\bcorrective\b/i,/\bpredictive\b|\bcondition monitoring\b/i,/\broutine (?:maintenance|inspections?)\b|\binspections?\b/i,
+ /\bfault (?:diagnosis|finding|rectification)\b|\btroubleshoot/i,/\bshutdowns?\b|\boverhaul/i,/\bspare parts?\b|\bspares\b/i,/\bcmms\b|\bsap[- ]pm\b|\bmaximo\b/i,/\bdowntime\b|\buptime\b|\bMTBF\b|\bMTTR\b/i];
+export function sanaElectricalMaintenance(title:string|null|undefined,description:string|null|undefined):boolean{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(ELECTRICAL_NOT_MAINTENANCE.test(ti)||!/\b(?:engineer\w*|manager|executive|officer|lead|specialist|planner|in[- ]?charge)\b/i.test(ti)||/\b(?:supervisor|technici?an|foreman|electrician)\b/i.test(ti))return false;   // her level: an engineer, executive or manager post
+ if(!/\bplants?\b|\bports?\b|\bterminals?\b|\butilit(?:y|ies)\b|\bfactory\b|\bfactories\b|\bmanufactur\w*|\brefiner(?:y|ies)\b|\bpower (?:plants?|stations?)\b|\bsubstations?\b|\bproduction\b|\bmills?\b/i.test(d))return false;
+ const hands=distinct(ELECTRICAL_MAINTENANCE_WORK,d),design=distinct(SANA_DESIGN_WORK,d);
+ return hands>=2&&/\bmaintenance\b/i.test(d)&&hands>design;
+}
 // Both: a language other than English (or Hindi) that the posting requires in so many words ('native or professional fluency in Portuguese is
 // required', 'communication skills in both Turkish and English', 'Fluent Serbian'). A language only welcomed ('is a plus', 'an advantage',
 // 'preferred') is not read. Hard-ish: the score stays below the person's Worth-a-try floor.
@@ -977,7 +1033,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Roles reserved for nationals of a Gulf country ("Electrical Technician (Saudi Nationals)", "UAE nationals only").
  const nationalsOnly=NATIONALS_TITLE.test(p.title||'')||NATIONALS_TEXT.test(p.description||'');
  // The posting itself says it offers no visa route ("unable to provide visa sponsorship", "must be authorized to work in the US without current or future sponsorship").
- const noVisaWords=/\b(?:not|never|cannot|unable to)\b[^.!?]{0,60}\b(?:applicants?|candidates?|individuals?|anyone)\b[^.!?]{0,40}?\b(?:who|that)\s+(?:will\s+)?(?:now or in the future\s+)?(?:requires?|needs?)\s+(?:(?:visa|immigration|employment)\s+)?sponsorship|\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)/i.test(text);
+ const noVisaWords=/\b(?:not|never|cannot|unable to)\b[^.!?]{0,60}\b(?:applicants?|candidates?|individuals?|anyone)\b[^.!?]{0,40}?\b(?:who|that)\s+(?:will\s+)?(?:now or in the future\s+)?(?:requires?|needs?)\s+(?:(?:visa|immigration|employment)\s+)?sponsorship|\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)|\bsponsorship\b(?:\s*\([^)]{0,80}\))?\s+(?:is|will)\s+not\s+(?:be\s+)?(?:available|offered|provided)/i.test(text);   // jobs QA 8: 'U.S. work visa sponsorship (such as TN, O-1, H-1B, etc.) is not available'
  // Application-form style answers: 'Visa Sponsorship Available: No', 'Relocation eligible : No' (Black & Veatch, owner review 2026-11-12).
  const noVisaRoute=noVisaWords||/\b(?:visa\s+)?sponsorship(?:\s+(?:available|offered|provided))?\s*[:\-–]\s*no\b/i.test(text);
  const globalRemoteWords=/\bworldwide\W{0,6}remote|\bremote\W{0,6}worldwide|remote.?global|work from anywhere in the world/i.test(text);   // 'Remote - Worldwide' and 'Worldwide (Remote)' as well as 'worldwide remote'
@@ -1052,7 +1108,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  else if(!blocked&&(((visaRoute||(sponsorship&&gulf))&&!noVisaRoute)||globalRemote)){eligibility='ELIGIBLE';reason=(visaRoute||sponsorship)&&!noVisaRoute?'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.':'Posting explicitly advertises worldwide remote work.';}
  else if(!blocked&&sponsorship&&!noVisaRoute)reason='Offers relocation, but no visa route from India is stated. '+reason;
  if(noVisaRoute&&eligibility==='UNKNOWN')reason='Posting says it offers no visa sponsorship, so nothing here shows the candidate may work at this location. '+reason;
- const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?FARHAN_ROLE.test(p.title||''):SANA_ROLE.test(p.title||'');
+ const role=prof?!!phraseRegex(prof.role_keywords)?.test(p.title||''):candidate.id==='farhan_shaikh'?FARHAN_ROLE.test(p.title||''):(SANA_ROLE.test(p.title||'')||sanaPowerFieldService(p.title,p.company,p.description));   // jobs QA 8: a power-equipment field service engineer
  const skills=list(candidate.primary_skills).filter(s=>skillFound(s,lower)||!!SKILL_ALIAS[String(s).toLowerCase()]?.test(lower));
  // Plan S11: Sana's other target roles can score. The distinctive part of each of her target roles ('Energy Efficiency', 'Decarbonization', 'Asset
  // Performance', 'Power Plant Operations') counts as a skill when the posting names it, at most twice, so a role outside maintenance is not scored as if
@@ -1062,6 +1118,10 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // description, or one too short to judge (DUTY_NONE_TEXT, 600 characters: Adani's two-sentence summaries), the phrases of her field in the title
  // count as skills, at most TARGET_SKILL_MAX.
  if(candidate.id==='sana_ansari'&&!prof&&String(p.description||'').trim().length<=DUTY_NONE_TEXT)skills.push(...sanaTitleSkills(p.title||'',skills).slice(0,TARGET_SKILL_MAX));
+ // Jobs QA 8: plant commissioning, testing and O&M (a commissioning or O&M title over plant work) count as up to two skills of hers.
+ if(candidate.id==='sana_ansari'&&!prof&&role)skills.push(...sanaCommissioningSkills(p.title,p.description,skills));
+ // Jobs QA 8: a power-equipment field service engineer (whose title alone did not pass the role test) has that field work as one skill.
+ if(candidate.id==='sana_ansari'&&!prof&&role&&!SANA_ROLE.test(p.title||'')&&sanaPowerFieldService(p.title,p.company,p.description))skills.push('Power Equipment Field Service');
  let score=role?Math.min(90,40+skills.length*8+(eligibility==='ELIGIBLE'?10:0)):Math.min(35,skills.length*5);
  // Fit to experience (owner goal 2026-11-07: put first the roles where the candidate is an easy yes). A posting asking for more than
  // two years beyond the candidate's own experience loses points; one whose stated requirement the candidate meets gains a little.
@@ -1125,7 +1185,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(visaUnlikely)score=Math.min(score,VISA_UNLIKELY_CAP);
  const nationalsPreferred=(!prof||String(prof.home_country||'').toLowerCase()==='india')&&NATIONALS_PREFERENCE.test(text);
  if(nationalsPreferred)score=Math.min(score,NATIONALS_PREFERENCE_CAP);
- const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'');
+ const electricalOnly=candidate.id==='sana_ansari'&&!prof&&role&&ELECTRICAL_TITLE.test(p.title||'')&&!NON_ELECTRICAL_FIT.test(p.title||'')&&!sanaElectricalMaintenance(p.title,p.description);   // jobs QA 8: not electrical maintenance of a plant, port or utility
  if(electricalOnly)score=Math.max(0,score-ELECTRICAL_ONLY_PENALTY);
  const designOnly=candidate.id==='sana_ansari'&&!prof&&role&&DESIGN_TITLE.test(p.title||'')&&!HANDS_ON_TITLE.test(p.title||'');
  if(designOnly)score=Math.max(0,score-DESIGN_ONLY_PENALTY);

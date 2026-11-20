@@ -19,8 +19,8 @@ const evF = (title, location, description, o = {}) => evaluate(farhan, { id: 'x'
 const evS = (title, location, description, o = {}) => evaluate(sana, { id: 'x', title, company: o.company || 'Acme Power', url: 'https://e.com/x', location, description, remote: false, source: o.source || 'successfactors', board: o.board });
 const FLOOR_F = farhan.qualification_threshold - 10, FLOOR_S = sana.qualification_threshold - 10;
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v22)', () => {
-  assert.equal(RULES_MARKER, 'profile_v22');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v22, bumped again by later rule changes)', () => {
+  assert.match(RULES_MARKER, /^profile_v(?:2[2-9]|[3-9]\d)$/);
 });
 
 test('both: a posting open only to the employer\'s own staff is ruled out; an open call is not', () => {
