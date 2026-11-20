@@ -14,7 +14,8 @@
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
 import { indianPlace as namesIndia, worldwidePlace } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India or a worldwide place (fitsStretchRule)
-import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey } from '../worker/discovery.ts';
+import { companyKey, familyOf, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey } from '../worker/discovery.ts';
+import { bandFor, registerCandidates, shortlistSettings } from '../worker/profiles/dispatch.ts';   // per-person settings from a profile config (MULTI_CANDIDATE.md)
 import { titleKey } from '../worker/twins.ts';
 import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
 
@@ -44,7 +45,7 @@ export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold
 /** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. Jobs QA 2 (14 Nov): for Farhan (remote from India
  *  only) an unconfirmed row also needs a place naming India ("Remote" alone was US-market jobs: Arcadia, SimpliGov). Jobs QA 4 (17 Nov): or a place that
  *  is itself worldwide ('Anywhere in the World', 'Remote (Worldwide)'): job-board rows stay unconfirmed, and those were hidden although worldwide. */
-export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location) || worldwidePlace(r.location)))
+export const fitsStretchRule = (r) => base(r) && ((Number(r.score) >= Number(r.threshold) && r.eligibility === 'UNKNOWN' && (r.place_ok ?? (r.candidate_id !== 'farhan_shaikh' || namesIndia(r.location) || worldwidePlace(r.location))))
   || (r.eligibility === 'ELIGIBLE' && Number(r.score) >= Number(r.threshold) - 10 && Number(r.score) < Number(r.threshold)));
 /** Gap fix: verified for Ready only by the still-open check; a 'listed' row (a Gulf job-board posting seen in the board's listing in 2 days) may go
  *  to Stretch. */
@@ -174,6 +175,8 @@ const familyRule = { name: 'family_share', tiers: TIERS,
   breakers: (lists, tier) => [...famGroups(lists[tier]).values()].filter((g) => g.length > familyCap(lists[tier].length)).flat() };
 
 // Plan A6: place-band minimums per person and tier (soft; only by a swap, with the score floor).
+/** A profile person's band minimums (their config), else the built-in table below. */
+export const bandMinimumsOf = (cid) => shortlistSettings(cid).bandMinimums ?? BAND_MINIMUMS[cid] ?? {};
 export const BAND_MINIMUMS = {
   sana_ansari: { READY: { remote: 2 }, STRETCH_READY: { gulf: 5, remote: 2 } },
   farhan_shaikh: { READY: { remote_global: 3 } },
@@ -182,7 +185,7 @@ const bandRule = (tier, band, min) => ({ name: `band_${band}_min_${min}`, tiers:
   count: (lists) => Math.max(0, min - lists[tier].filter((r) => r.band === band).length),
   breakers: (lists, t) => (t === tier && lists[tier].filter((r) => r.band === band).length < min ? lists[tier].filter((r) => r.band !== band) : []) });
 export function bandRules(candidateId) {
-  return Object.entries(BAND_MINIMUMS[candidateId] || {}).flatMap(([tier, mins]) => Object.entries(mins).map(([band, min]) => bandRule(tier, band, min)));
+  return Object.entries(bandMinimumsOf(candidateId)).flatMap(([tier, mins]) => Object.entries(mins).map(([band, min]) => bandRule(tier, band, min)));
 }
 
 /** The soft rules in the order they are tried (the both-tiers cap last). A soft rule counts how far the lists break it; a swap may fix it (A3.4). */
@@ -292,7 +295,7 @@ function pickFor(rows, held, ctx) {
     report[t].bands = {}; for (const r of lists[t]) report[t].bands[r.band || 'other'] = (report[t].bands[r.band || 'other'] || 0) + 1;
     report[t].sources = sourceCounts(lists[t]);   // plan D1: which sources the tier's rows came from
     // band minimums not met: reported as "pool too small" (no swap candidate within the score floor)
-    report[t].band_shortfall = Object.fromEntries(Object.entries((BAND_MINIMUMS[ctx.candidateId] || {})[t] || {}).map(([b, m]) => [b, Math.max(0, m - (report[t].bands[b] || 0))]).filter(([, v]) => v > 0));
+    report[t].band_shortfall = Object.fromEntries(Object.entries(bandMinimumsOf(ctx.candidateId)[t] || {}).map(([b, m]) => [b, Math.max(0, m - (report[t].bands[b] || 0))]).filter(([, v]) => v > 0));
   }
   return { lists, tierOf, report };
 }
@@ -323,6 +326,7 @@ export function notRemoteFromIndia(f) {
 export function selectShortlist(pool, opts = {}) {
   const now = opts.now ?? Date.now();
   const size = opts.tierSize ?? TIER_SIZE;
+  registerCandidates(opts.candidates || []);
   const alive = new Set(opts.alive || []), dead = new Set(opts.dead || []);
   const byCand = new Map();
   for (const r0 of pool || []) {
@@ -335,7 +339,9 @@ export function selectShortlist(pool, opts = {}) {
     const r = { ...r0, dead: dead.has(r0.job_id), placeOut: r0.candidate_id === 'farhan_shaikh' && !!opts.facts?.[r0.job_id] && notRemoteFromIndia(opts.facts[r0.job_id]) };
     r.auto = isAuto(r);
     r.family = familyOf(r0.candidate_id, r0.title);
-    r.band = placeBand(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
+    r.band = bandFor(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
+    const set = shortlistSettings(r0.candidate_id);
+    if (set.homePlaceOk) r.place_ok = set.homePlaceOk(r0.location);
     r.verified = alive.has(r.job_id) || now - when(r.last_verified_at) <= VERIFIED_DAYS * DAY || (!!opts.relaxed && r.auto);
     r.listed = listedOnlyGulf(r0.url, r0.location) && now - when(r0.discovered_at) <= LISTED_DAYS * DAY;
     c.rows.push(r);
@@ -345,7 +351,7 @@ export function selectShortlist(pool, opts = {}) {
     const { rows, held } = byCand.get(cid);
     const threshold = Number(rows.find((r) => r.threshold !== undefined && r.threshold !== null)?.threshold ?? 60);
     const skillKeys = new Set(skillsOf(opts.candidates, cid).map(companyKey).filter(Boolean));
-    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size, threshold, candidateId: cid, skillKeys, rules: opts.rules, hard: opts.hard, different: opts.different });
+    const { lists, tierOf, report: rep } = pickFor(rows, held, { now, size: opts.tierSize ?? shortlistSettings(cid).tierSize ?? size, threshold, candidateId: cid, skillKeys, rules: opts.rules, hard: opts.hard, different: opts.different });
     for (const r of [...rows].sort((a, b) => (String(a.job_id) < String(b.job_id) ? -1 : 1))) {
       const to = tierOf.get(r.job_id) || 'NEEDS_REVIEW';
       if (r.auto) {

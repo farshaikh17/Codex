@@ -150,7 +150,7 @@ const FAMILIES:Record<string,[string,RegExp][]>={
  ],
 };
 export function familyOf(candidateId:string,title:string):string{
- for(const [key,re] of FAMILIES[candidateId]||[])if(re.test(title||''))return key;
+ for(const [key,re] of FAMILIES[candidateId]||EXTRA_FAMILIES.get(candidateId)||[])if(re.test(title||''))return key;   // EXTRA_FAMILIES: a profile config's families (worker/profiles)
  return 'unclassified';
 }
 // Plan A6: place bands for the shortlist's variety rules (scripts/shortlist_select.mjs), built on S1 (Indian places), S5 (worldwide wording) and S9
@@ -1338,12 +1338,12 @@ export async function persist(db:DB,s:Source,p:Posting,now=iso()) {
    VALUES(?,?,?,?,?,?,'FULL_TIME',?,?,?,'[]',?,?,1,?,?,?,?)
    ON CONFLICT(id) DO UPDATE SET title=excluded.title,company=excluded.company,location_restrictions=excluded.location_restrictions,description=excluded.description,workplace_type=excluded.workplace_type,last_verified_at=excluded.last_verified_at,content_sha256=excluded.content_sha256,is_active=1,expired_at=NULL
    WHERE excluded.provenance='LIVE_PUBLIC' OR jobs.provenance='PUBLIC_FEED_UNVERIFIED'`).bind(jobId,p.title,p.company||s.name,s.kind,p.url,p.url,p.remote?'REMOTE_RESTRICTED':p.board?'UNKNOWN':'ONSITE',p.location,p.description,now,p.board?null:now,fingerprint,s.id,p.board?'PUBLIC_JOB_BOARD':'PUBLIC_ATS',p.board?'PUBLIC_FEED_UNVERIFIED':'LIVE_PUBLIC'));
-  const candidates=await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id').all<any>();
+  const candidates=await db.prepare('SELECT c.*, p.search_profile, pc.config AS profile_config FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id LEFT JOIN candidate_profile_configs pc ON pc.candidate_id = c.id').all<any>();
   if(p.board&&p.salary){const min=Number.isFinite(p.salary.min)?p.salary.min:null,max=Number.isFinite(p.salary.max)?p.salary.max:null;
    statements.push(db.prepare(`UPDATE jobs SET salary_published=?,salary_min=?,salary_max=?,salary_currency=?,salary_period=?,salary_raw_text=? WHERE id=? AND provenance='PUBLIC_FEED_UNVERIFIED'`).bind(min!==null||max!==null||p.salary.text?1:0,min,max,p.salary.currency||null,p.salary.period||null,p.salary.text||null,jobId));
   }
   for(const candidate of candidates.results){
-   const result=evaluate(candidate,p);
+   const result=(PROFILE_SCORER||evaluate)(candidate,p);   // a profile-config person: worker/profiles (MULTI_CANDIDATE.md)
    if(p.board){result.eligibility='UNKNOWN';result.reason=`Reported by ${p.sourceLabel}; employer availability and eligibility are unverified.`;result.status=result.status==='HOLD'?'HOLD':'NEEDS_REVIEW';result.qualification_reason='Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.';}
    // Existing candidate decisions are preserved; cloud refresh never demotes/promotes them silently.
    statements.push(db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at)
@@ -1415,7 +1415,7 @@ export const BACKFILL_SELECT = `SELECT j.rowid AS rid, j.id, j.title, j.location
    AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ? AND a.job_id = j.id)
   ORDER BY j.rowid DESC LIMIT ?`;
 export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_MAX, now=iso(), cursor:number|null=null) {
- const cand = await db.prepare('SELECT c.*, p.search_profile FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
+ const cand = await db.prepare('SELECT c.*, p.search_profile, pc.config AS profile_config FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id LEFT JOIN candidate_profile_configs pc ON pc.candidate_id = c.id WHERE c.id = ?').bind(candidateId).first<any>();
  if (!cand) return { inserted: 0, more: false, by_status: {} as Record<string, number>, next_cursor: null as number | null };
  const n = Math.max(1, Math.min(BACKFILL_MAX, limit));
  const before = cursor !== null && Number.isSafeInteger(cursor) && cursor > 0 ? cursor : Number.MAX_SAFE_INTEGER;   // no cursor: start from the newest job
@@ -1424,7 +1424,7 @@ export async function backfillClient(db:DB, candidateId:string, limit=BACKFILL_M
  const statements: D1PreparedStatement[] = []; const byStatus: Record<string, number> = {};
  for (const r of rows) {
   const posting: Posting = { id: r.id, title: r.title || '', url: '', location: r.location || '', description: plain(r.description), remote: /^REMOTE/i.test(r.workplace_type || '') };
-  const result = evaluate(cand, posting);
+  const result = (PROFILE_SCORER || evaluate)(cand, posting);
   if (r.provenance === 'PUBLIC_FEED_UNVERIFIED') { result.eligibility = 'UNKNOWN'; result.reason = `Reported by a public job board (${r.source_adapter || 'unknown'}); employer availability and eligibility are unverified.`; result.status = result.status === 'HOLD' ? 'HOLD' : 'NEEDS_REVIEW'; result.qualification_reason = 'Cloud discovery match. Public job-board/startup announcement; employer verification, full requirements and compensation review pending.'; }
   byStatus[result.status] = (byStatus[result.status] || 0) + 1;
   statements.push(db.prepare(`INSERT OR IGNORE INTO candidate_qualifications(candidate_id,job_id,qualification_status,strategy_lane,eligibility_status,eligibility_reason,qualification_reason,last_reverified_at)
@@ -1528,3 +1528,15 @@ export async function automationStatus(db:DB) {
  return {coverage,config:{id:1,is_enabled:enabled,interval_seconds:120,verify_urls:false,reverify_inventory:false,last_run_at:latest?.started_at||null,next_run_at:enabled?new Date(Math.ceil(Date.now()/120000)*120000).toISOString():null,status:enabled?'ACTIVE':'PAUSED',updated_at:config?.updated_at||null},is_active:enabled,automation_state:enabled?'CLOUD DISCOVERY ACTIVE':'CLOUD DISCOVERY PAUSED',latest_run:latest,last_discovery_run:latest,last_successful_run:lastSuccess,next_scheduled_discovery:enabled?'Every 2 minutes; one bounded work unit per tick (UTC)':'Paused',last_weekly_refresh:null,current_run_status:latest?.status||'NEVER_RUN',last_error:config?.last_error||null,pending_jobs:pending?.count||0,source_count:sources?.count||0,daily_budgets:{posting_attempts:DAY_JOBS,source_pages:DAY_SOURCES},today:{day:config?.day,posting_attempts:config?.jobs_today||0,source_pages:config?.sources_today||0},qualification_mode:'conservative_review',schedules:{discovery:'Cloudflare cron: every 2 minutes',weekly_refresh:'Continuous rotating source refresh; no separate weekly bulk scan',server_startup:'Cloudflare managed; PC not required'}};
 }
 
+// ---- Multi-candidate base (dashboard/docs/MULTI_CANDIDATE.md) ------------------------------------------------------------------------
+// Role families of people scored from a profile config (worker/profiles/dispatch.ts registers them), read by familyOf() after FAMILIES.
+export const EXTRA_FAMILIES=new Map<string,[string,RegExp][]>();
+// The profile scorer (worker/profiles/dispatch.ts scoreCandidate, set when that module loads): persist() and backfillClient() use it, so a person
+// with a profile config is screened by their packs; with no config it is evaluate() itself. Set by registration, so this module imports nothing new.
+let PROFILE_SCORER:((candidate:any,p:Posting,ctx?:EvalContext)=>ReturnType<typeof evaluate>)|null=null;
+export function setProfileScorer(f:typeof PROFILE_SCORER){PROFILE_SCORER=f;}
+// The rule parts the profile packs (worker/profiles/*.ts) reuse, so a pack and evaluate() read a posting with the same expressions.
+// test/profiles_equivalence.test.mjs checks that the two built-in people's packs reproduce evaluate() exactly.
+export const RULE_PARTS={FARHAN_SKIP_EMPLOYER,OPEN_PLACE_WORDS,INDIA_HIRING_TEXT,HIRING_REACH,SANA_BELOW_LEVEL,SENIOR_TITLE,EXEC_TITLE,FARHAN_FAR_ABOVE,
+ ELECTRICAL_TITLE,NON_ELECTRICAL_FIT,DESIGN_TITLE,HANDS_ON_TITLE,NATIONALS_PREFERENCE,NATIONALS_TITLE,NATIONALS_TEXT,SANA_REMOTE_REACH,SKILL_ALIAS,
+ GULF_PLACE,INDIA_PLACE,FAMILIES,JUNIOR_TITLE,GENERIC_TITLE_WORDS,EMPTY_FORM_FIELD};

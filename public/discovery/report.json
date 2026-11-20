@@ -1,8 +1,8 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed; a healthy collection is not candidate relevance.",
-  "generated_at": "2026-11-20T22:19:58.210946+00:00",
-  "requests": 5,
+  "generated_at": "2026-11-20T21:00:41.563051+00:00",
+  "requests": 1,
   "halted": "HTTP 429; stop run",
   "employer_leads": [
     {
@@ -7947,7 +7947,7 @@
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-11-20T22:19:58.210946+00:00",
+    "run_at": "2026-11-20T21:00:41.563051+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -7968,7 +7968,7 @@
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-11-20T22:19:58.210946+00:00",
+    "run_at": "2026-11-20T21:00:41.563051+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -8046,6 +8046,11 @@
       "retry_after": "2026-11-21T09:07:15.748855+00:00"
     },
     {
+      "source": "query:salesforce-admin-india",
+      "reason": "cooldown",
+      "retry_after": "2026-11-20T21:53:17.975538+00:00"
+    },
+    {
       "source": "query:automation-india",
       "reason": "cooldown",
       "retry_after": "2026-11-21T09:07:15.748855+00:00"
@@ -8056,6 +8061,11 @@
       "retry_after": "2026-11-21T09:07:15.748855+00:00"
     },
     {
+      "source": "query:ai-implementation-india",
+      "reason": "cooldown",
+      "retry_after": "2026-11-20T21:53:17.975538+00:00"
+    },
+    {
       "source": "query:energy-india",
       "reason": "cooldown",
       "retry_after": "2026-11-21T19:14:57.502861+00:00"
@@ -8064,6 +8074,11 @@
       "source": "query:electrical-india",
       "reason": "cooldown",
       "retry_after": "2026-11-21T18:28:36.432404+00:00"
+    },
+    {
+      "source": "query:reliability-india",
+      "reason": "cooldown",
+      "retry_after": "2026-11-20T21:53:17.975538+00:00"
     },
     {
       "source": "career:siemens-energy",
@@ -8121,6 +8136,51 @@
   "validated_feeds": [],
   "vacancies": [
     {
+      "key": "greenhouse:twilio:8405805",
+      "req_id": "8405805",
+      "title": "Senior Engineer, Security Automation",
+      "locations": [
+        {
+          "text": "Remote - US",
+          "source": "location.name"
+        },
+        {
+          "text": "Remote - US",
+          "source": "offices.name"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
+      "apply_url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
+      "published": "2026-11-20T14:23:22-05:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
+      "employer": "twilio",
+      "source_id": "twilio-greenhouse",
+      "provenance": "boards/twilio-greenhouse.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
+      "discovery": {
+        "method": "configured_feed"
+      },
+      "stage": "exact_vacancy_unreviewed",
+      "responsibility_signals": [
+        "business-systems-automation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "remote_or_region_only",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
       "key": "greenhouse:avathon:4757047005",
       "req_id": "4757047005",
       "title": "Forward Deployed AI Scientist",
@@ -8142,14 +8202,14 @@
       "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4757047005",
       "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4757047005",
       "published": "2026-11-19T16:32:34-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8187,14 +8247,14 @@
       "url": "https://jobs.lever.co/cagents/41504d88-cb92-40df-9059-9aecdac69013",
       "apply_url": "https://jobs.lever.co/cagents/41504d88-cb92-40df-9059-9aecdac69013/apply",
       "published": "2026-11-19T14:31:52.440000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8244,14 +8304,14 @@
       "url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
       "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
       "published": "2026-08-05T15:55:02-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "celigo",
       "source_id": "celigo-greenhouse",
       "provenance": "boards/celigo-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8293,14 +8353,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/86679ead-020d-4a8c-a205-d8300a64188e",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/86679ead-020d-4a8c-a205-d8300a64188e/application",
       "published": "2026-11-17T19:40:34.120000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8359,14 +8419,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034372101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034372101",
       "published": "2026-11-18T12:35:24-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8387,9 +8447,9 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:drivetrain:edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
-      "req_id": "edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
-      "title": "Quality Assurance Engineering (QAE) - Intern",
+      "key": "lever:drivetrain:6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
+      "req_id": "6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
+      "title": "SDE (Automation & Quality Focus)",
       "locations": [
         {
           "text": "India",
@@ -8401,27 +8461,27 @@
         }
       ],
       "workplace_type": "remote",
-      "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
-      "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
-      "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
+      "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
+      "published": "2024-07-21T17:30:24.682000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "crm-implementation"
+        "business-systems-automation"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "no concrete role noun"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -8455,14 +8515,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8928138002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8928138002",
       "published": "2026-11-12T10:33:25-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8483,37 +8543,37 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8730125002",
-      "req_id": "8730125002",
-      "title": "Release Engineer, Salesforce",
+      "key": "greenhouse:gitlab:8945942002",
+      "req_id": "8945942002",
+      "title": "Revenue Operations Manager",
       "locations": [
         {
-          "text": "Bangalore, India",
+          "text": "Remote, United States",
           "source": "location.name"
         },
         {
-          "text": "India",
+          "text": "United States of America",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
-      "published": "2026-09-03T13:40:13-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002",
+      "published": "2026-11-19T17:56:45-05:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "crm-implementation"
+        "business-systems-automation"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -8521,11 +8581,8 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "bangalore",
-          "india"
-        ]
+        "class": "other_locations",
+        "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": []
@@ -8548,14 +8605,14 @@
       "url": "https://jobs.lever.co/gohighlevel/0c2b2992-ffe4-4663-8d5d-6edc3ed9bfe6",
       "apply_url": "https://jobs.lever.co/gohighlevel/0c2b2992-ffe4-4663-8d5d-6edc3ed9bfe6/apply",
       "published": "2026-11-20T15:44:19.958000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8617,14 +8674,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/f5291a09-f28c-45b1-9bf9-eebb50c712da",
       "apply_url": "https://jobs.ashbyhq.com/oyster/f5291a09-f28c-45b1-9bf9-eebb50c712da/application",
       "published": "2026-11-19T18:32:19.234000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8751,51 +8808,6 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:twilio:8405805",
-      "req_id": "8405805",
-      "title": "Senior Engineer, Security Automation",
-      "locations": [
-        {
-          "text": "Remote - US",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote - US",
-          "source": "offices.name"
-        }
-      ],
-      "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
-      "apply_url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
-      "published": "2026-11-20T14:23:22-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
-      "employer": "twilio",
-      "source_id": "twilio-greenhouse",
-      "provenance": "boards/twilio-greenhouse.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
-      "discovery": {
-        "method": "configured_feed"
-      },
-      "stage": "exact_vacancy_unreviewed",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "remote_or_region_only",
-        "india_terms": []
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
       "key": "lever:voltus:9714394d-00dc-43a0-b9c1-c79f95375c4f",
       "req_id": "9714394d-00dc-43a0-b9c1-c79f95375c4f",
       "title": "Senior Energy Markets Analyst, PJM",
@@ -8813,14 +8825,14 @@
       "url": "https://jobs.lever.co/voltus/9714394d-00dc-43a0-b9c1-c79f95375c4f",
       "apply_url": "https://jobs.lever.co/voltus/9714394d-00dc-43a0-b9c1-c79f95375c4f/apply",
       "published": "2026-11-17T15:32:09.010000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "voltus",
       "source_id": "voltus-lever",
       "provenance": "boards/voltus-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8858,14 +8870,14 @@
       "url": "https://jobs.ashbyhq.com/weave/ec210370-9770-45ec-b067-47a36e5f0ce6",
       "apply_url": "https://jobs.ashbyhq.com/weave/ec210370-9770-45ec-b067-47a36e5f0ce6/application",
       "published": "2026-11-18T19:42:18.106000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "weave",
       "source_id": "weave-ashby",
       "provenance": "boards/weave-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8903,14 +8915,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8952,14 +8964,14 @@
       "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
       "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
       "published": "2026-11-13T18:02:11-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8980,70 +8992,53 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:cagents:96991d39-e099-4dc1-ab27-d31514c8d750",
-      "req_id": "96991d39-e099-4dc1-ab27-d31514c8d750",
-      "title": "Building Commissioning Project Manager",
+      "key": "lever:cagents:75102a0c-6820-40ec-b6d8-2920ff3d7901",
+      "req_id": "75102a0c-6820-40ec-b6d8-2920ff3d7901",
+      "title": "Building Commissioning Engineer",
       "locations": [
         {
-          "text": "Houston, Texas",
+          "text": "Raleigh, North Carolina",
           "source": "categories.location"
         },
         {
-          "text": "Houston, Texas",
+          "text": "Raleigh, North Carolina",
           "source": "categories.allLocations"
         },
         {
-          "text": "Dallas, Texas",
+          "text": "Boston, Massachusetts",
           "source": "categories.allLocations"
         },
         {
-          "text": "Conroe, Texas",
+          "text": "Bridgewater, New Jersey",
           "source": "categories.allLocations"
         },
         {
-          "text": "Coppell, Texas",
+          "text": "Princeton, New Jersey",
           "source": "categories.allLocations"
         },
         {
-          "text": "Milwaukee, WI",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "Nashville, TN",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "San Diego, California",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "San Francisco, California",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "Seattle, Washington",
+          "text": "Philadelphia, Pennsylvania",
           "source": "categories.allLocations"
         }
       ],
       "workplace_type": "hybrid",
-      "url": "https://jobs.lever.co/cagents/96991d39-e099-4dc1-ab27-d31514c8d750",
-      "apply_url": "https://jobs.lever.co/cagents/96991d39-e099-4dc1-ab27-d31514c8d750/apply",
-      "published": "2026-06-02T18:27:56.169000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://jobs.lever.co/cagents/75102a0c-6820-40ec-b6d8-2920ff3d7901",
+      "apply_url": "https://jobs.lever.co/cagents/75102a0c-6820-40ec-b6d8-2920ff3d7901/apply",
+      "published": "2025-02-28T21:26:08.847000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "asset-reliability-maintenance",
-        "delivery-coordination"
+        "asset-reliability-maintenance"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -9057,14 +9052,14 @@
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": [
         {
-          "key": "lever:cagents:a87f27a6-9391-4d71-9978-23508dfbb75f",
-          "req_id": "a87f27a6-9391-4d71-9978-23508dfbb75f",
-          "url": "https://jobs.lever.co/cagents/a87f27a6-9391-4d71-9978-23508dfbb75f",
+          "key": "lever:cagents:ee202bc2-7710-44ca-bdf8-785afb12430c",
+          "req_id": "ee202bc2-7710-44ca-bdf8-785afb12430c",
+          "url": "https://jobs.lever.co/cagents/ee202bc2-7710-44ca-bdf8-785afb12430c",
           "provenance": "boards/cai-lever.json",
           "locations": [
-            "Raleigh, North Carolina",
-            "Raleigh, North Carolina",
-            "Boston, Massachusetts"
+            "Houston, Texas",
+            "Houston, Texas",
+            "Dallas, Texas"
           ]
         }
       ]
@@ -9087,14 +9082,14 @@
       "url": "https://job-boards.greenhouse.io/celigo/jobs/8221306",
       "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8221306",
       "published": "2026-09-25T18:14:08-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "celigo",
       "source_id": "celigo-greenhouse",
       "provenance": "boards/celigo-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9132,14 +9127,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/afc2bd1e-e406-404e-a75d-cd9771fff5df",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/afc2bd1e-e406-404e-a75d-cd9771fff5df/application",
       "published": "2026-11-02T22:32:39.764000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9177,14 +9172,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913079101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913079101",
       "published": "2026-08-18T08:09:56-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9205,51 +9200,80 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:drivetrain:6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
-      "req_id": "6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
-      "title": "SDE (Automation & Quality Focus)",
+      "key": "lever:drivetrain:0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "req_id": "0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "title": "Solutions Consultant - FP&A (Product Implementation)",
       "locations": [
         {
-          "text": "India",
+          "text": "Europe",
           "source": "categories.location"
         },
         {
-          "text": "India",
+          "text": "Europe",
           "source": "categories.allLocations"
         }
       ],
       "workplace_type": "remote",
-      "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
-      "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
-      "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
+      "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
+      "published": "2026-02-05T05:55:59.879000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "business-systems-automation"
+        "crm-implementation"
       ],
-      "signal_strength": "weak",
+      "signal_strength": "strong",
       "signal_notes": [
-        "no concrete role noun"
+        "title keywords only; fit not assessed"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
+        "class": "other_locations",
+        "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
+      "same_title_elsewhere": [
+        {
+          "key": "lever:drivetrain:438b9c83-5a4d-4774-aebe-29a75c29351c",
+          "req_id": "438b9c83-5a4d-4774-aebe-29a75c29351c",
+          "url": "https://jobs.lever.co/drivetrain/438b9c83-5a4d-4774-aebe-29a75c29351c",
+          "provenance": "boards/drivetrain-lever.json",
+          "locations": [
+            "United States",
+            "United States"
+          ]
+        },
+        {
+          "key": "lever:drivetrain:ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+          "req_id": "ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+          "url": "https://jobs.lever.co/drivetrain/ad7869b5-1d27-4ed6-87c3-5b540bd57214",
+          "provenance": "boards/drivetrain-lever.json",
+          "locations": [
+            "India",
+            "India"
+          ]
+        },
+        {
+          "key": "lever:drivetrain:c414068b-9874-4276-bd23-e30273e0d52f",
+          "req_id": "c414068b-9874-4276-bd23-e30273e0d52f",
+          "url": "https://jobs.lever.co/drivetrain/c414068b-9874-4276-bd23-e30273e0d52f",
+          "provenance": "boards/drivetrain-lever.json",
+          "locations": [
+            "Canada",
+            "Canada"
+          ]
+        }
+      ]
     },
     {
       "key": "greenhouse:energyhub:8747080002",
@@ -9273,14 +9297,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "published": "2026-08-31T13:59:29-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9301,9 +9325,9 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8916232002",
-      "req_id": "8916232002",
-      "title": "Software Engineer, Delivery : Release",
+      "key": "greenhouse:gitlab:8730125002",
+      "req_id": "8730125002",
+      "title": "Release Engineer, Salesforce",
       "locations": [
         {
           "text": "Bangalore, India",
@@ -9315,27 +9339,27 @@
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8916232002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916232002",
-      "published": "2026-10-28T00:26:37-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
+      "published": "2026-09-03T13:40:13-04:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "delivery-coordination"
+        "crm-implementation"
       ],
-      "signal_strength": "weak",
+      "signal_strength": "strong",
       "signal_notes": [
-        "specialist software title"
+        "title keywords only; fit not assessed"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -9349,59 +9373,62 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:gohighlevel:e748460e-6da2-48f5-b927-30caf0d1634d",
-      "req_id": "e748460e-6da2-48f5-b927-30caf0d1634d",
-      "title": "Senior Software Development Engineer (Social Planner- AI)",
+      "key": "lever:gohighlevel:67018376-b4a5-43e0-90d9-f3d4b359ae5e",
+      "req_id": "67018376-b4a5-43e0-90d9-f3d4b359ae5e",
+      "title": "Events Operations Coordinator",
       "locations": [
         {
-          "text": "India",
+          "text": "Texas",
           "source": "categories.location"
         },
         {
-          "text": "India",
+          "text": "Texas",
           "source": "categories.allLocations"
         }
       ],
-      "workplace_type": "remote",
-      "url": "https://jobs.lever.co/gohighlevel/e748460e-6da2-48f5-b927-30caf0d1634d",
-      "apply_url": "https://jobs.lever.co/gohighlevel/e748460e-6da2-48f5-b927-30caf0d1634d/apply",
-      "published": "2025-09-19T07:27:58.841000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "workplace_type": "hybrid",
+      "url": "https://jobs.lever.co/gohighlevel/67018376-b4a5-43e0-90d9-f3d4b359ae5e",
+      "apply_url": "https://jobs.lever.co/gohighlevel/67018376-b4a5-43e0-90d9-f3d4b359ae5e/apply",
+      "published": "2026-10-26T14:29:21.654000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "asset-reliability-maintenance"
+        "delivery-coordination"
       ],
-      "signal_strength": "weak",
+      "signal_strength": "strong",
       "signal_notes": [
-        "specialist software title"
+        "title keywords only; fit not assessed"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
+        "class": "other_locations",
+        "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": []
     },
     {
-      "key": "rss:siemens-energy:284284",
-      "req_id": "284284",
-      "title": "Commercial Project Manager (Finance Controller)",
-      "locations": [],
-      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Commercial-Project-Manager-Finance-Controller/284284",
-      "published": "Wed, 12 Nov 2025 00:00:00 +0000",
+      "key": "rss:siemens-energy:305510",
+      "req_id": "305510",
+      "title": "Chapter Lead for Integration Digital Consulting",
+      "locations": [
+        {
+          "source": "rss.description (unlabelled; may be location)",
+          "text": "India"
+        }
+      ],
+      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Chapter-Lead-for-Integration-Digital-Consulting/305510",
+      "published": "Thu, 30 Oct 2025 00:00:00 +0000",
       "observed_at": "2026-11-20T09:07:15.748855+00:00",
       "employer": "siemens-energy",
       "provenance": {
@@ -9417,13 +9444,12 @@
       "extraction": {
         "method": "rss",
         "uncertainty": [
-          "identifier taken from the official URL",
-          "no location wording"
+          "identifier taken from the official URL"
         ]
       },
       "checked_at": "2026-11-20T09:07:15.748855+00:00",
       "responsibility_signals": [
-        "delivery-coordination"
+        "crm-implementation"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -9431,8 +9457,10 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "unstated",
-        "india_terms": []
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": []
@@ -9455,14 +9483,14 @@
       "url": "https://jobs.ashbyhq.com/weave/5648ae73-a63c-4918-9929-293f9d0fb44b",
       "apply_url": "https://jobs.ashbyhq.com/weave/5648ae73-a63c-4918-9929-293f9d0fb44b/application",
       "published": "2026-11-06T18:41:32.742000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "weave",
       "source_id": "weave-ashby",
       "provenance": "boards/weave-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9483,9 +9511,9 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:avathon:4736336005",
-      "req_id": "4736336005",
-      "title": "Product Manager, Energy and Critical Resources",
+      "key": "greenhouse:avathon:4745060005",
+      "req_id": "4745060005",
+      "title": "AI Scientist, Product Lifecycle Management (PLM)",
       "locations": [
         {
           "text": "Pleasanton, California, United States",
@@ -9501,27 +9529,27 @@
         }
       ],
       "workplace_type": null,
-      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4736336005",
-      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4736336005",
-      "published": "2026-09-21T14:12:55-04:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4745060005",
+      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4745060005",
+      "published": "2026-10-19T12:19:37-04:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "power-utilities-energy"
+        "ai-implementation"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "no concrete role noun"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -9532,31 +9560,79 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:cagents:b000aaef-abb0-4be4-8771-008e30b8a5c0",
-      "req_id": "b000aaef-abb0-4be4-8771-008e30b8a5c0",
-      "title": "Reliability Field Engineer",
+      "key": "lever:cagents:83c6890e-d553-4c8f-8516-e6d57221c061",
+      "req_id": "83c6890e-d553-4c8f-8516-e6d57221c061",
+      "title": "Senior Data Center Services Mechanical Commissioning Engineer",
       "locations": [
         {
-          "text": "Indianapolis, Indiana",
+          "text": "Phoenix, Arizona",
           "source": "categories.location"
         },
         {
-          "text": "Indianapolis, Indiana",
+          "text": "Phoenix, Arizona",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Reno, Nevada",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Austin, Texas",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Des Moines, Iowa",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Atlanta, Georgia",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Raleigh, North Carolina",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Miami, Florida",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Chicago, Illinois",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "South Bend, IN",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Columbus, Ohio",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Charlotte, North Carolina",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Ashburn, Virginia",
           "source": "categories.allLocations"
         }
       ],
-      "workplace_type": "onsite",
-      "url": "https://jobs.lever.co/cagents/b000aaef-abb0-4be4-8771-008e30b8a5c0",
-      "apply_url": "https://jobs.lever.co/cagents/b000aaef-abb0-4be4-8771-008e30b8a5c0/apply",
-      "published": "2025-04-18T16:09:36.257000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "workplace_type": "hybrid",
+      "url": "https://jobs.lever.co/cagents/83c6890e-d553-4c8f-8516-e6d57221c061",
+      "apply_url": "https://jobs.lever.co/cagents/83c6890e-d553-4c8f-8516-e6d57221c061/apply",
+      "published": "2023-12-12T19:13:10.768000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9574,18 +9650,7 @@
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": [
-        {
-          "key": "lever:cagents:cc226e00-f733-4a64-944f-959a66cf72af",
-          "req_id": "cc226e00-f733-4a64-944f-959a66cf72af",
-          "url": "https://jobs.lever.co/cagents/cc226e00-f733-4a64-944f-959a66cf72af",
-          "provenance": "boards/cai-lever.json",
-          "locations": [
-            "Raleigh, North Carolina",
-            "Raleigh, North Carolina"
-          ]
-        }
-      ]
+      "same_title_elsewhere": []
     },
     {
       "key": "ashby:clipboard:82df7116-0720-4434-a330-ca7e0389dc60",
@@ -9609,14 +9674,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9682,14 +9747,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5036085101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5036085101",
       "published": "2026-11-13T11:36:55-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9711,31 +9776,119 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:drivetrain:0d26b224-9643-4be7-aade-7fa2e0e53ec1",
-      "req_id": "0d26b224-9643-4be7-aade-7fa2e0e53ec1",
-      "title": "Solutions Consultant - FP&A (Product Implementation)",
+      "key": "lever:drivetrain:47a21fb7-a1fa-4852-ba68-57bd5ba47be0",
+      "req_id": "47a21fb7-a1fa-4852-ba68-57bd5ba47be0",
+      "title": "Program Manager - Founders Office",
       "locations": [
         {
-          "text": "Europe",
+          "text": "India",
           "source": "categories.location"
         },
         {
-          "text": "Europe",
+          "text": "India",
           "source": "categories.allLocations"
         }
       ],
       "workplace_type": "remote",
-      "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
-      "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
-      "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
+      "url": "https://jobs.lever.co/drivetrain/47a21fb7-a1fa-4852-ba68-57bd5ba47be0",
+      "apply_url": "https://jobs.lever.co/drivetrain/47a21fb7-a1fa-4852-ba68-57bd5ba47be0/apply",
+      "published": "2025-08-05T09:02:34.132000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
+      "discovery": {
+        "method": "configured_feed"
+      },
+      "stage": "exact_vacancy_unreviewed",
+      "responsibility_signals": [
+        "delivery-coordination"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "greenhouse:gitlab:8806017002",
+      "req_id": "8806017002",
+      "title": "Director of Product Management, Agentic Software Delivery",
+      "locations": [
+        {
+          "text": "Remote, United States",
+          "source": "location.name"
+        }
+      ],
+      "workplace_type": null,
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002",
+      "published": "2026-09-14T12:37:57-04:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
+      "employer": "gitlab",
+      "source_id": "gitlab-greenhouse",
+      "provenance": "boards/gitlab-greenhouse.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
+      "discovery": {
+        "method": "configured_feed"
+      },
+      "stage": "exact_vacancy_unreviewed",
+      "responsibility_signals": [
+        "delivery-coordination"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "no concrete role noun"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "remote_or_region_only",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "lever:gohighlevel:ffc2572e-12ce-4ad2-a0cd-7e8eca60a185",
+      "req_id": "ffc2572e-12ce-4ad2-a0cd-7e8eca60a185",
+      "title": "Sr. Product Manager - Custom Objects & CRM Data Platform",
+      "locations": [
+        {
+          "text": "India",
+          "source": "categories.location"
+        },
+        {
+          "text": "India",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/gohighlevel/ffc2572e-12ce-4ad2-a0cd-7e8eca60a185",
+      "apply_url": "https://jobs.lever.co/gohighlevel/ffc2572e-12ce-4ad2-a0cd-7e8eca60a185/apply",
+      "published": "2026-09-10T10:57:47.856000+00:00",
+      "observed_at": "2026-11-20T20:59:55.183220+00:00",
+      "employer": "highlevel",
+      "source_id": "highlevel-lever",
+      "provenance": "boards/highlevel-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-11-20T20:59:55.183220+00:00",
+      "source_last_success_at": "2026-11-20T20:59:55.183220+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9749,156 +9902,6 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "other_locations",
-        "india_terms": []
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": [
-        {
-          "key": "lever:drivetrain:438b9c83-5a4d-4774-aebe-29a75c29351c",
-          "req_id": "438b9c83-5a4d-4774-aebe-29a75c29351c",
-          "url": "https://jobs.lever.co/drivetrain/438b9c83-5a4d-4774-aebe-29a75c29351c",
-          "provenance": "boards/drivetrain-lever.json",
-          "locations": [
-            "United States",
-            "United States"
-          ]
-        },
-        {
-          "key": "lever:drivetrain:ad7869b5-1d27-4ed6-87c3-5b540bd57214",
-          "req_id": "ad7869b5-1d27-4ed6-87c3-5b540bd57214",
-          "url": "https://jobs.lever.co/drivetrain/ad7869b5-1d27-4ed6-87c3-5b540bd57214",
-          "provenance": "boards/drivetrain-lever.json",
-          "locations": [
-            "India",
-            "India"
-          ]
-        },
-        {
-          "key": "lever:drivetrain:c414068b-9874-4276-bd23-e30273e0d52f",
-          "req_id": "c414068b-9874-4276-bd23-e30273e0d52f",
-          "url": "https://jobs.lever.co/drivetrain/c414068b-9874-4276-bd23-e30273e0d52f",
-          "provenance": "boards/drivetrain-lever.json",
-          "locations": [
-            "Canada",
-            "Canada"
-          ]
-        }
-      ]
-    },
-    {
-      "key": "greenhouse:gitlab:8936153002",
-      "req_id": "8936153002",
-      "title": "Staff Forward Deployed Engineer, EMEA",
-      "locations": [
-        {
-          "text": "Remote Ireland",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, Austria",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, France",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, Germany",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, Netherlands",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, Spain",
-          "source": "location.name"
-        },
-        {
-          "text": "Remote, United Kingdom",
-          "source": "location.name"
-        },
-        {
-          "text": "Turkey",
-          "source": "offices.location"
-        },
-        {
-          "text": "EMEA",
-          "source": "offices.name"
-        }
-      ],
-      "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002",
-      "published": "2026-11-12T09:31:21-05:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
-      "employer": "gitlab",
-      "source_id": "gitlab-greenhouse",
-      "provenance": "boards/gitlab-greenhouse.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
-      "discovery": {
-        "method": "configured_feed"
-      },
-      "stage": "exact_vacancy_unreviewed",
-      "responsibility_signals": [
-        "ai-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "other_locations",
-        "india_terms": []
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "lever:gohighlevel:4eb09872-4256-45b7-b754-634ba1a2f0c7",
-      "req_id": "4eb09872-4256-45b7-b754-634ba1a2f0c7",
-      "title": "Staff Engineer - CRM & Automation",
-      "locations": [
-        {
-          "text": "India",
-          "source": "categories.location"
-        },
-        {
-          "text": "India",
-          "source": "categories.allLocations"
-        }
-      ],
-      "workplace_type": "remote",
-      "url": "https://jobs.lever.co/gohighlevel/4eb09872-4256-45b7-b754-634ba1a2f0c7",
-      "apply_url": "https://jobs.lever.co/gohighlevel/4eb09872-4256-45b7-b754-634ba1a2f0c7/apply",
-      "published": "2026-09-25T16:27:52.647000+00:00",
-      "observed_at": "2026-11-20T22:19:12.259913+00:00",
-      "employer": "highlevel",
-      "source_id": "highlevel-lever",
-      "provenance": "boards/highlevel-lever.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-11-20T22:19:12.259913+00:00",
-      "source_last_success_at": "2026-11-20T22:19:12.259913+00:00",
-      "discovery": {
-        "method": "configured_feed"
-      },
-      "stage": "exact_vacancy_unreviewed",
-      "responsibility_signals": [
-        "crm-implementation",
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
         "class": "india_explicit",
         "india_terms": [
           "india"
@@ -9908,12 +9911,12 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "rss:siemens-energy:287248",
-      "req_id": "287248",
-      "title": "Cost Engineer - Power Supplies & Storage",
+      "key": "rss:siemens-energy:284638",
+      "req_id": "284638",
+      "title": "Field Service Representative",
       "locations": [],
-      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Cost-Engineer-Power-Supplies-Storage/287248",
-      "published": "Wed, 17 Dec 2025 00:00:00 +0000",
+      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Field-Service-Representative/284638",
+      "published": "Tue, 20 Jan 2026 00:00:00 +0000",
       "observed_at": "2026-11-20T09:07:15.748855+00:00",
       "employer": "siemens-energy",
       "provenance": {
@@ -9935,11 +9938,11 @@
       },
       "checked_at": "2026-11-20T09:07:15.748855+00:00",
       "responsibility_signals": [
-        "power-utilities-energy"
+        "asset-reliability-maintenance"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "no concrete role noun"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -9952,343 +9955,36 @@
   ],
   "provisional_cards": [
     {
-      "key": "himalayas:vertex-inc/jobs/project-manager",
-      "req_id": null,
-      "title": "Project Manager",
+      "key": "himalayas:aviso-ai/jobs/implementation-engineer-python-6244376074",
+      "title": "Implementation Engineer - Python",
       "locations": [
         {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/vertex-inc/jobs/project-manager",
-      "apply_url": "https://himalayas.app/companies/vertex-inc/jobs/project-manager?utm_source=api",
-      "published": "2026-11-20T05:01:20+00:00",
-      "valid_through": "2027-01-19T05:01:20+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:vertex-inc",
-      "employer_name": "Vertex Inc.",
-      "salary": null,
+      "url": "https://himalayas.app/companies/aviso-ai/jobs/implementation-engineer-python-6244376074",
+      "apply_url": "https://himalayas.app/companies/aviso-ai/jobs/implementation-engineer-python-6244376074?utm_source=api",
+      "published": "2026-11-19T18:00:09+00:00",
+      "valid_through": "2026-11-22T07:18:48+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:aviso-ai",
+      "employer_name": "Aviso AI",
+      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
-        "method": "role_search",
         "channel": "himalayas",
+        "method": "role_search",
         "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Project-Manager",
-        "Software-Implementation-Project-Manager",
-        "Technical-Project-Manager",
-        "Implementation-Consultant"
-      ],
-      "responsibility_signals": [
-        "delivery-coordination"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:axiomlaw/jobs/legal-consultant-energy-oil-gas",
-      "title": "Legal Consultant - Energy / Oil & Gas",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "American Samoa"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Australia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Bangladesh"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Bhutan"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "British Indian Ocean Territory"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Brunei Darussalam"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Cambodia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "China"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Christmas Island"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Cocos (Keeling) Islands"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Fiji"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "French Polynesia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Guam"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Hong Kong"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Indonesia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Japan"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Kiribati"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Lao People's Democratic Republic"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Macao"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Malaysia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Maldives"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Marshall Islands"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Micronesia, Federated States of"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Mongolia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Myanmar"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Nauru"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Nepal"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "New Caledonia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "New Zealand"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Niue"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Norfolk Island"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Northern Mariana Islands"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Pakistan"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Palau"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Papua New Guinea"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Philippines"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Pitcairn"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Russian Federation"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Samoa"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Singapore"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Solomon Islands"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "South Korea"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Sri Lanka"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Taiwan"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Thailand"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Timor-Leste"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Tokelau"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Tonga"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Tuvalu"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "United States Minor Outlying Islands"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Vanuatu"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Vietnam"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Wallis and Futuna"
-        }
-      ],
-      "url": "https://himalayas.app/companies/axiomlaw/jobs/legal-consultant-energy-oil-gas",
-      "apply_url": "https://himalayas.app/companies/axiomlaw/jobs/legal-consultant-energy-oil-gas?utm_source=api",
-      "published": "2026-11-01T13:17:59+00:00",
-      "valid_through": "2026-12-01T08:58:49+00:00",
-      "observed_at": "2026-11-20T19:14:57.502861+00:00",
-      "employer": "aggregator:axiomlaw",
-      "employer_name": "Axiom",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "energy",
         "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "checked_at": "2026-11-20T19:14:57.502861+00:00",
-      "responsibility_signals": [
-        "power-utilities-energy"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:burhani/jobs/zoho-development-implementation-engineer",
-      "title": "Zoho Development & Implementation Engineer",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/burhani/jobs/zoho-development-implementation-engineer",
-      "apply_url": "https://himalayas.app/companies/burhani/jobs/zoho-development-implementation-engineer?utm_source=api",
-      "published": "2026-11-19T17:58:04+00:00",
-      "valid_through": "2026-12-01T04:13:35+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:burhani",
-      "employer_name": "Burhani",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "specialist software title"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -10301,392 +9997,33 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:datahash/jobs/revenue-operations-and-ai-systems-engineer",
-      "title": "Revenue Operations and AI Systems Engineer",
+      "key": "himalayas:bayapps-inc/jobs/salesforce-developer-5-8-years-of-experience-work-from-home",
+      "title": "Salesforce  Developer 5-8 years of experience, Work from Home",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/datahash/jobs/revenue-operations-and-ai-systems-engineer",
-      "apply_url": "https://himalayas.app/companies/datahash/jobs/revenue-operations-and-ai-systems-engineer?utm_source=api",
-      "published": "2026-11-19T17:49:11+00:00",
-      "valid_through": "2026-12-02T03:01:24+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:datahash",
-      "employer_name": "Datahash",
+      "url": "https://himalayas.app/companies/bayapps-inc/jobs/salesforce-developer-5-8-years-of-experience-work-from-home",
+      "apply_url": "https://himalayas.app/companies/bayapps-inc/jobs/salesforce-developer-5-8-years-of-experience-work-from-home?utm_source=api",
+      "published": "2026-11-19T18:14:07+00:00",
+      "valid_through": "2026-12-30T16:53:22+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:bayapps-inc",
+      "employer_name": "BayApps, Inc.",
       "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
         "channel": "himalayas",
         "method": "role_search",
-        "query": "business systems",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:drivetrain/jobs/solutions-consultant-fp-a-product-implementation-2308052247",
-      "title": "Solutions Consultant - FP&A (Product Implementation)",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/drivetrain/jobs/solutions-consultant-fp-a-product-implementation-2308052247",
-      "apply_url": "https://himalayas.app/companies/drivetrain/jobs/solutions-consultant-fp-a-product-implementation-2308052247?utm_source=api",
-      "published": "2026-11-18T17:12:44+00:00",
-      "valid_through": "2027-01-17T17:12:44+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:drivetrain",
-      "employer_name": "Drivetrain",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "official_evidence": {
-        "employer": "drivetrain",
-        "official_keys": [
-          "lever:drivetrain:0d26b224-9643-4be7-aade-7fa2e0e53ec1",
-          "lever:drivetrain:438b9c83-5a4d-4774-aebe-29a75c29351c",
-          "lever:drivetrain:ad7869b5-1d27-4ed6-87c3-5b540bd57214",
-          "lever:drivetrain:c414068b-9874-4276-bd23-e30273e0d52f"
-        ],
-        "status": "official_title_match"
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:eton-technologies-private-limited/jobs/sage-intacct-implementation-functional-consultant",
-      "title": "Sage Intacct Implementation Functional Consultant",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/eton-technologies-private-limited/jobs/sage-intacct-implementation-functional-consultant",
-      "apply_url": "https://himalayas.app/companies/eton-technologies-private-limited/jobs/sage-intacct-implementation-functional-consultant?utm_source=api",
-      "published": "2026-11-19T17:35:45+00:00",
-      "valid_through": "2026-12-08T03:04:26+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:eton-technologies-private-limited",
-      "employer_name": "Eton Technologies Private Limited",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:first-advantage/jobs/salesforce-data-quality-manager",
-      "req_id": null,
-      "title": "Salesforce Data Quality Manager",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/first-advantage/jobs/salesforce-data-quality-manager",
-      "apply_url": "https://himalayas.app/companies/first-advantage/jobs/salesforce-data-quality-manager?utm_source=api",
-      "published": "2026-09-30T21:03:29+00:00",
-      "valid_through": "2026-11-29T21:03:28+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:first-advantage",
-      "employer_name": "First Advantage",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
         "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "official_evidence": null,
-      "categories": [
-        "Data-Quality-Manager",
-        "Salesforce-Administrator",
-        "Data-Operations-Manager",
-        "CRM-Manager",
-        "Data-Steward",
-        "Data-Quality-Management",
-        "Salesforce-Manager"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:gitlab-com/jobs/staff-site-reliability-engineer-environment-automation",
-      "req_id": null,
-      "title": "Staff Site Reliability Engineer, Environment Automation",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/gitlab-com/jobs/staff-site-reliability-engineer-environment-automation",
-      "apply_url": "https://himalayas.app/companies/gitlab-com/jobs/staff-site-reliability-engineer-environment-automation?utm_source=api",
-      "published": "2026-11-19T16:59:37+00:00",
-      "valid_through": "2026-12-31T04:37:41+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:gitlab-com",
-      "employer_name": "GitLab",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "reliability engineer",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "asset-reliability-maintenance"
-        ]
-      },
-      "official_evidence": {
-        "employer": "gitlab",
-        "status": "official_title_match",
-        "official_keys": [
-          "greenhouse:gitlab:8800489002"
-        ]
-      },
-      "categories": [
-        "Staff-Site-Reliability-Engineer",
-        "Site-Reliability-Engineer",
-        "Infrastructure-Automation-Engineer",
-        "DevOps-Engineer",
-        "Cloud-Infrastructure-Engineer"
-      ],
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "software reliability or sales commission, not asset work",
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:granicus/jobs/senior-program-manager",
-      "req_id": null,
-      "title": "Senior Program Manager",
-      "locations": [
-        {
-          "text": "Australia",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "Canada",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "New Zealand",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "United Kingdom",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "United States",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/granicus/jobs/senior-program-manager",
-      "apply_url": "https://himalayas.app/companies/granicus/jobs/senior-program-manager?utm_source=api",
-      "published": "2026-11-19T17:55:05+00:00",
-      "valid_through": "2026-11-30T19:47:15+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:granicus",
-      "employer_name": "Granicus",
-      "salary": {
-        "min": 73800,
-        "max": 134800,
-        "currency": "USD",
-        "unit": "annual",
-        "provenance": "Himalayas listing (aggregator, not employer-confirmed)"
-      },
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Program-Manager",
-        "Technical-Program-Manager",
-        "Product-Operations-Manager",
-        "AI-Product-Manager",
-        "Senior-Programs-Manager",
-        "Senior-Program-Management",
-        "Senior-Programme-Manager",
-        "Senior-Program-Director",
-        "Senior-Global-Program-Manager",
-        "Senior-Enterprise-Program-Manager"
-      ],
-      "responsibility_signals": [
-        "delivery-coordination"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:holistic-ai/jobs/forward-deployed-engineer-bangalore-india-7884264484",
-      "req_id": null,
-      "title": "Forward Deployed Engineer – Bangalore, India",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/holistic-ai/jobs/forward-deployed-engineer-bangalore-india-7884264484",
-      "apply_url": "https://himalayas.app/companies/holistic-ai/jobs/forward-deployed-engineer-bangalore-india-7884264484?utm_source=api",
-      "published": "2026-11-19T17:05:58+00:00",
-      "valid_through": "2026-12-23T12:48:31+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:holistic-ai",
-      "employer_name": "Holistic AI",
-      "salary": {
-        "min": 50000,
-        "max": 50000,
-        "currency": "USD",
-        "unit": "annual",
-        "provenance": "Himalayas listing (aggregator, not employer-confirmed)"
-      },
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Forward-Deployed-Engineer",
-        "Solutions-Engineer",
-        "Implementation-Engineer",
-        "Deployment-Engineer",
-        "Customer-Facing-Engineering",
-        "Mid-Level-Forward-Deployed-Engineer",
-        "Forward-Deployment-Engineer",
-        "Forward-Deploy-Engineer"
-      ],
-      "responsibility_signals": [
-        "ai-implementation"
-      ],
       "signal_strength": "weak",
       "signal_notes": [
         "specialist software title"
@@ -10702,246 +10039,36 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:huzzle/jobs/automation-engineer-gohighlevel-specialist",
-      "title": "Automation Engineer - GoHighLevel Specialist",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Philippines"
-        }
-      ],
-      "url": "https://himalayas.app/companies/huzzle/jobs/automation-engineer-gohighlevel-specialist",
-      "apply_url": "https://himalayas.app/companies/huzzle/jobs/automation-engineer-gohighlevel-specialist?utm_source=api",
-      "published": "2026-11-19T17:17:32+00:00",
-      "valid_through": "2026-12-16T16:29:56+00:00",
-      "observed_at": "2026-11-20T18:28:36.432404+00:00",
-      "employer": "aggregator:huzzle",
-      "employer_name": "Huzzle",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "GoHighLevel",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T18:28:36.432404+00:00",
-      "responsibility_signals": [
-        "crm-implementation",
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "other_locations",
-        "india_terms": []
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:insidea/jobs/crm-ai-solutions-specialist",
-      "title": "CRM & AI Solutions Specialist",
+      "key": "himalayas:clanx/jobs/salesforce-developer-us-shift-remote",
+      "title": "Salesforce Developer(US Shift)  - Remote",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/insidea/jobs/crm-ai-solutions-specialist",
-      "apply_url": "https://himalayas.app/companies/insidea/jobs/crm-ai-solutions-specialist?utm_source=api",
-      "published": "2026-11-19T17:02:03+00:00",
-      "valid_through": "2026-12-28T17:30:44+00:00",
-      "observed_at": "2026-11-20T18:28:36.432404+00:00",
-      "employer": "aggregator:insidea",
-      "employer_name": "Insidea",
+      "url": "https://himalayas.app/companies/clanx/jobs/salesforce-developer-us-shift-remote",
+      "apply_url": "https://himalayas.app/companies/clanx/jobs/salesforce-developer-us-shift-remote?utm_source=api",
+      "published": "2026-11-19T16:42:08+00:00",
+      "valid_through": "2027-01-13T17:23:21+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:clanx",
+      "employer_name": "ClanX",
       "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
         "channel": "himalayas",
         "method": "role_search",
-        "query": "HubSpot",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T18:28:36.432404+00:00",
-      "responsibility_signals": [
-        "crm-implementation",
-        "ai-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:inv/jobs/implementations-operations-agent-3910240196",
-      "title": "Implementations Operations Agent",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Australia"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Japan"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "New Zealand"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Singapore"
-        },
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "South Korea"
-        }
-      ],
-      "url": "https://himalayas.app/companies/inv/jobs/implementations-operations-agent-3910240196",
-      "apply_url": "https://himalayas.app/companies/inv/jobs/implementations-operations-agent-3910240196?utm_source=api",
-      "published": "2026-11-19T18:08:42+00:00",
-      "valid_through": "2026-12-14T03:02:55+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:inv",
-      "employer_name": "Invisible Technologies",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:ithr-technologies-consulting-llc/jobs/senior-automation-test-specialist",
-      "title": "Senior Automation Test Specialist",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/ithr-technologies-consulting-llc/jobs/senior-automation-test-specialist",
-      "apply_url": "https://himalayas.app/companies/ithr-technologies-consulting-llc/jobs/senior-automation-test-specialist?utm_source=api",
-      "published": "2026-10-10T04:35:07+00:00",
-      "valid_through": "2026-12-09T04:35:06+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:ithr-technologies-consulting-llc",
-      "employer_name": "ITHR Technologies Consulting LLC",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "automation specialist",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:jobskeyconsultancy/jobs/permanent-remote-salesforce-technical-lead-architect",
-      "req_id": null,
-      "title": "Permanent Remote Salesforce Technical Lead/Architect",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/jobskeyconsultancy/jobs/permanent-remote-salesforce-technical-lead-architect",
-      "apply_url": "https://himalayas.app/companies/jobskeyconsultancy/jobs/permanent-remote-salesforce-technical-lead-architect?utm_source=api",
-      "published": "2026-10-04T02:43:03+00:00",
-      "valid_through": "2026-12-03T02:43:02+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:jobskeyconsultancy",
-      "employer_name": "Jobskey Consultancy",
-      "salary": {
-        "min": 2000000,
-        "max": 2900000,
-        "currency": "INR",
-        "unit": "annual",
-        "provenance": "Himalayas listing (aggregator, not employer-confirmed)"
-      },
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
         "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Developer",
-        "Salesforce-Architect",
-        "Salesforce-Technical-Lead",
-        "Technical-Lead",
-        "Solutions-Architect",
-        "Remote-Salesforce-Technical-Lead",
-        "Senior-Salesforce-Technical-Lead",
-        "Lead-Salesforce-Architect",
-        "Salesforce-Technical-Architect"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "specialist software title"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -10951,241 +10078,50 @@
         ]
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
+      "same_title_elsewhere": [
+        {
+          "key": "himalayas:clanx/jobs/salesforce-developer-us-shift-remote-6384036196",
+          "req_id": null,
+          "url": "https://himalayas.app/companies/clanx/jobs/salesforce-developer-us-shift-remote-6384036196",
+          "provenance": null,
+          "locations": [
+            "India"
+          ]
+        }
+      ]
     },
     {
-      "key": "himalayas:kline-company/jobs/senior-consultant-energy",
-      "title": "Senior Consultant - Energy",
+      "key": "himalayas:clean-energy-associates/jobs/electrical-team-leader",
+      "title": "Electrical Team Leader",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/kline-company/jobs/senior-consultant-energy",
-      "apply_url": "https://himalayas.app/companies/kline-company/jobs/senior-consultant-energy?utm_source=api",
-      "published": "2026-11-19T17:57:04+00:00",
-      "valid_through": "2026-11-26T15:23:24+00:00",
-      "observed_at": "2026-11-20T19:14:57.502861+00:00",
-      "employer": "aggregator:kline-company",
-      "employer_name": "Kline & Company",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "energy",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T19:14:57.502861+00:00",
-      "responsibility_signals": [
-        "power-utilities-energy"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:level-9-virtual/jobs/seo-specialist-with-gohighlevel-ghl-experience-project-based-5750830097",
-      "title": "SEO Specialist with GoHighLevel (GHL) Experience | Project-Based",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "Philippines"
-        }
-      ],
-      "url": "https://himalayas.app/companies/level-9-virtual/jobs/seo-specialist-with-gohighlevel-ghl-experience-project-based-5750830097",
-      "apply_url": "https://himalayas.app/companies/level-9-virtual/jobs/seo-specialist-with-gohighlevel-ghl-experience-project-based-5750830097?utm_source=api",
-      "published": "2026-11-19T17:07:40+00:00",
-      "valid_through": "2026-12-22T19:14:49+00:00",
+      "url": "https://himalayas.app/companies/clean-energy-associates/jobs/electrical-team-leader",
+      "apply_url": "https://himalayas.app/companies/clean-energy-associates/jobs/electrical-team-leader?utm_source=api",
+      "published": "2026-11-19T17:04:47+00:00",
+      "valid_through": "2026-12-24T03:41:13+00:00",
       "observed_at": "2026-11-20T18:28:36.432404+00:00",
-      "employer": "aggregator:level-9-virtual",
-      "employer_name": "Level 9 Virtual",
+      "employer": "aggregator:clean-energy-associates",
+      "employer_name": "Clean Energy Associates",
       "freshness": "cached_from_last_check",
+      "salary": {
+        "currency": "USD",
+        "max": 2300,
+        "min": 1800,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "monthly"
+      },
       "stage": "aggregator_listing_provisional",
       "discovery": {
         "channel": "himalayas",
         "method": "role_search",
-        "query": "GoHighLevel",
+        "query": "electrical engineer",
         "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
       "checked_at": "2026-11-20T18:28:36.432404+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "other_locations",
-        "india_terms": []
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:level-ai/jobs/forward-deployed-engineer-agents-3750075229",
-      "req_id": null,
-      "title": "Forward Deployed Engineer - Agents",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/level-ai/jobs/forward-deployed-engineer-agents-3750075229",
-      "apply_url": "https://himalayas.app/companies/level-ai/jobs/forward-deployed-engineer-agents-3750075229?utm_source=api",
-      "published": "2026-10-21T05:28:14+00:00",
-      "valid_through": "2026-12-20T05:28:14+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:level-ai",
-      "employer_name": "Level AI",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Forward-Deployed-Engineer",
-        "Solutions-Engineer",
-        "Implementation-Engineer",
-        "AI-Engineering",
-        "Customer-Engineering",
-        "Forward-Deployed-Engineering",
-        "Forward-Deployment-Engineer",
-        "Forward-Deployed-AI-Engineering",
-        "Forward-Deployed-AI-Engineer"
-      ],
-      "responsibility_signals": [
-        "ai-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:mintskill-hr-solutions-llp/jobs/software-engineer-zoho-applications",
-      "title": "Software Engineer - Zoho Applications",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/mintskill-hr-solutions-llp/jobs/software-engineer-zoho-applications",
-      "apply_url": "https://himalayas.app/companies/mintskill-hr-solutions-llp/jobs/software-engineer-zoho-applications?utm_source=api",
-      "published": "2026-11-19T17:26:37+00:00",
-      "valid_through": "2026-12-13T21:48:09+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:mintskill-hr-solutions-llp",
-      "employer_name": "Mintskill HR Solutions LLP",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:neuron7/jobs/architect-forward-deployment-ai-field-services-solution-architecture-usa",
-      "req_id": null,
-      "title": "Architect – Forward Deployment (AI Field Services/ Solution Architecture) | USA ",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        },
-        {
-          "text": "United States",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/neuron7/jobs/architect-forward-deployment-ai-field-services-solution-architecture-usa",
-      "apply_url": "https://himalayas.app/companies/neuron7/jobs/architect-forward-deployment-ai-field-services-solution-architecture-usa?utm_source=api",
-      "published": "2026-11-19T17:59:43+00:00",
-      "valid_through": "2026-11-21T19:10:01+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:neuron7",
-      "employer_name": "Neuron7",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Solutions-Architect",
-        "AI-Field-Services",
-        "Enterprise-Architecture",
-        "Technical-Consulting",
-        "AI-ML-Consulting",
-        "AI-Solution-Architecture",
-        "Enterprise-AI-Implementation",
-        "Field-Service-Management",
-        "Principal-AI-Solutions-Architect",
-        "AI-Solutions-Architect",
-        "AI-Solution-Architect",
-        "Field-Solutions-Architect",
-        "Enterprise-AI-Solutions-Architect",
-        "Senior-AI-Architect",
-        "AI-ML-Solutions-Architect"
-      ],
       "responsibility_signals": [
         "asset-reliability-maintenance"
       ],
@@ -11204,64 +10140,29 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:northbay-solutions/jobs/functional-lead-microsoft-dynamics-365-4527417365",
-      "title": "Functional Lead - Microsoft Dynamics 365",
+      "key": "himalayas:coinbase/jobs/senior-it-automation-engineer",
+      "title": "Senior IT Automation Engineer",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/northbay-solutions/jobs/functional-lead-microsoft-dynamics-365-4527417365",
-      "apply_url": "https://himalayas.app/companies/northbay-solutions/jobs/functional-lead-microsoft-dynamics-365-4527417365?utm_source=api",
-      "published": "2026-10-18T09:06:08+00:00",
-      "valid_through": "2026-12-17T09:06:07+00:00",
+      "url": "https://himalayas.app/companies/coinbase/jobs/senior-it-automation-engineer",
+      "apply_url": "https://himalayas.app/companies/coinbase/jobs/senior-it-automation-engineer?utm_source=api",
+      "published": "2026-11-19T17:45:45+00:00",
+      "valid_through": "2026-12-05T17:55:49+00:00",
       "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:northbay-solutions",
-      "employer_name": "NorthBay Solutions",
+      "employer": "aggregator:coinbase",
+      "employer_name": "Coinbase",
       "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      "salary": {
+        "currency": "INR",
+        "max": 3419600,
+        "min": 3419600,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "annual"
       },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:nttdata/jobs/devops-automation-specialist",
-      "title": "DevOps Automation Specialist",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/nttdata/jobs/devops-automation-specialist",
-      "apply_url": "https://himalayas.app/companies/nttdata/jobs/devops-automation-specialist?utm_source=api",
-      "published": "2026-10-13T09:08:14+00:00",
-      "valid_through": "2026-12-12T09:08:14+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:nttdata",
-      "employer_name": "NTT DATA",
-      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
         "channel": "himalayas",
@@ -11288,189 +10189,30 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:onesolve/jobs/salesforce-developer",
-      "req_id": null,
-      "title": "Salesforce Developer",
+      "key": "himalayas:cprime/jobs/salesforce-operations-data-quality-specialist",
+      "title": "Salesforce Operations & Data Quality Specialist",
       "locations": [
         {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/onesolve/jobs/salesforce-developer",
-      "apply_url": "https://himalayas.app/companies/onesolve/jobs/salesforce-developer?utm_source=api",
-      "published": "2026-11-19T17:16:46+00:00",
-      "valid_through": "2026-12-17T11:39:21+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:onesolve",
-      "employer_name": "OneSolve",
-      "salary": null,
+      "url": "https://himalayas.app/companies/cprime/jobs/salesforce-operations-data-quality-specialist",
+      "apply_url": "https://himalayas.app/companies/cprime/jobs/salesforce-operations-data-quality-specialist?utm_source=api",
+      "published": "2026-11-19T17:04:05+00:00",
+      "valid_through": "2026-12-24T05:15:34+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:cprime",
+      "employer_name": "Cprime",
+      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
-        "method": "role_search",
         "channel": "himalayas",
+        "method": "role_search",
         "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Developer",
-        "Apex-Developer",
-        "Lightning-Developer",
-        "CRM-Developer",
-        "Salesforce-Administrator",
-        "Salesforce-CRM-Developer",
-        "Salesforce-Application-Developer",
-        "Salesforce-Sales-Cloud-Developer",
-        "Salesforce-Development",
-        "Salesforce-Solutions-Developer",
-        "Salesforce-Platform-Developer",
-        "Salesforce-Apex-Developer",
-        "Force.Com-Developer"
-      ],
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:outreach-io/jobs/senior-forward-deployed-engineer-managed-services",
-      "title": "Senior Forward Deployed Engineer,  Managed Services",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/outreach-io/jobs/senior-forward-deployed-engineer-managed-services",
-      "apply_url": "https://himalayas.app/companies/outreach-io/jobs/senior-forward-deployed-engineer-managed-services?utm_source=api",
-      "published": "2026-11-19T17:34:28+00:00",
-      "valid_through": "2026-12-08T23:57:46+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:outreach-io",
-      "employer_name": "Outreach.io",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
         "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "ai-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:ovation-law-firm/jobs/business-systems-implementation-manager-remote-india",
-      "title": "Business Systems & Implementation Manager (Remote - India)",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/ovation-law-firm/jobs/business-systems-implementation-manager-remote-india",
-      "apply_url": "https://himalayas.app/companies/ovation-law-firm/jobs/business-systems-implementation-manager-remote-india?utm_source=api",
-      "published": "2026-11-19T17:56:16+00:00",
-      "valid_through": "2026-11-26T18:51:12+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:ovation-law-firm",
-      "employer_name": "Ovation Law Firm",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "CRM implementation",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation",
-        "business-systems-automation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:parexel/jobs/senior-salesforce-functional-analyst-ba",
-      "req_id": null,
-      "title": "Senior Salesforce Functional Analyst(BA)",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/parexel/jobs/senior-salesforce-functional-analyst-ba",
-      "apply_url": "https://himalayas.app/companies/parexel/jobs/senior-salesforce-functional-analyst-ba?utm_source=api",
-      "published": "2026-11-19T14:27:29+00:00",
-      "valid_through": "2027-01-18T14:27:29+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:parexel",
-      "employer_name": "Parexel",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Business-Analyst",
-        "Salesforce-Analyst",
-        "Business-Analyst",
-        "Salesforce-Consultant",
-        "Salesforce-Administrator"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
@@ -11489,249 +10231,21 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:pavago/jobs/ai-engineer-ai-automation-specialist",
-      "title": "AI Engineer / AI Automation Specialist",
+      "key": "himalayas:efficiently/jobs/bim-electrical-engineer-374641389",
+      "title": "BIM Electrical Engineer",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/pavago/jobs/ai-engineer-ai-automation-specialist",
-      "apply_url": "https://himalayas.app/companies/pavago/jobs/ai-engineer-ai-automation-specialist?utm_source=api",
-      "published": "2026-11-20T08:53:49+00:00",
-      "valid_through": "2027-01-19T08:53:48+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:pavago",
-      "employer_name": "Pavago",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "automation specialist",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer",
-      "title": "Senior QA Automation Engineer",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer",
-      "apply_url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer?utm_source=api",
-      "published": "2026-09-30T22:27:12+00:00",
-      "valid_through": "2026-11-29T22:27:11+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:pradeepit-consulting-services-pvt-ltd",
-      "employer_name": "PradeepIT Consulting Services Pvt Ltd",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "automation specialist",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation",
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:resideo/jobs/sr-systems-integration-analyst",
-      "title": "Sr Systems Integration Analyst",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/resideo/jobs/sr-systems-integration-analyst",
-      "apply_url": "https://himalayas.app/companies/resideo/jobs/sr-systems-integration-analyst?utm_source=api",
-      "published": "2026-11-19T16:38:41+00:00",
-      "valid_through": "2027-01-18T04:53:59+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:resideo",
-      "employer_name": "Resideo",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "business systems",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:rxcloud/jobs/automation-tester",
-      "title": "Automation Tester",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/rxcloud/jobs/automation-tester",
-      "apply_url": "https://himalayas.app/companies/rxcloud/jobs/automation-tester?utm_source=api",
-      "published": "2026-09-30T21:07:37+00:00",
-      "valid_through": "2026-11-29T21:07:36+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
-      "employer": "aggregator:rxcloud",
-      "employer_name": "RxCloud",
-      "freshness": "cached_from_last_check",
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "channel": "himalayas",
-        "method": "role_search",
-        "query": "automation specialist",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
-      },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:snapscale/jobs/senior-salesforce-administrator-remote-india-3335056131",
-      "req_id": null,
-      "title": "Senior Salesforce Administrator (Remote- India)",
-      "locations": [
-        {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
-        }
-      ],
-      "url": "https://himalayas.app/companies/snapscale/jobs/senior-salesforce-administrator-remote-india-3335056131",
-      "apply_url": "https://himalayas.app/companies/snapscale/jobs/senior-salesforce-administrator-remote-india-3335056131?utm_source=api",
-      "published": "2026-10-31T19:30:13+00:00",
-      "valid_through": "2026-11-30T01:09:17+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
-      "employer": "aggregator:snapscale",
-      "employer_name": "Snapscale",
-      "salary": null,
-      "stage": "aggregator_listing_provisional",
-      "discovery": {
-        "method": "role_search",
-        "channel": "himalayas",
-        "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
-      },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Administrator",
-        "Sales-Cloud-Administrator",
-        "Service-Cloud-Administrator",
-        "CRM-Administration",
-        "Sales-Operations",
-        "Remote-Salesforce-Administrator",
-        "Senior-Salesforce-CRM-Engineer",
-        "Salesforce-Administrator-Team-Lead",
-        "Salesforce-Support-Administrator",
-        "Salesforce-Administration-Manager"
-      ],
-      "responsibility_signals": [
-        "crm-implementation"
-      ],
-      "signal_strength": "strong",
-      "signal_notes": [
-        "title keywords only; fit not assessed"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "himalayas:speedcast/jobs/project-engineer",
-      "title": "Project Engineer",
-      "locations": [
-        {
-          "source": "himalayas.locationRestrictions",
-          "text": "India"
-        }
-      ],
-      "url": "https://himalayas.app/companies/speedcast/jobs/project-engineer",
-      "apply_url": "https://himalayas.app/companies/speedcast/jobs/project-engineer?utm_source=api",
-      "published": "2026-11-16T17:08:07+00:00",
-      "valid_through": "2027-01-15T17:08:07+00:00",
+      "url": "https://himalayas.app/companies/efficiently/jobs/bim-electrical-engineer-374641389",
+      "apply_url": "https://himalayas.app/companies/efficiently/jobs/bim-electrical-engineer-374641389?utm_source=api",
+      "published": "2026-11-19T16:48:53+00:00",
+      "valid_through": "2027-01-10T21:16:39+00:00",
       "observed_at": "2026-11-20T18:28:36.432404+00:00",
-      "employer": "aggregator:speedcast",
-      "employer_name": "Speedcast",
+      "employer": "aggregator:efficiently",
+      "employer_name": "efficiently",
       "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
@@ -11742,7 +10256,1295 @@
       },
       "checked_at": "2026-11-20T18:28:36.432404+00:00",
       "responsibility_signals": [
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:express-chipping/jobs/gohighlevel-business-automation-specialist-187098463",
+      "title": "GoHighLevel & Business Automation Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Argentina"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Brazil"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Chile"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Colombia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Costa Rica"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Dominican Republic"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Ecuador"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "El Salvador"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Guatemala"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Honduras"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Mexico"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Panama"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Paraguay"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Puerto Rico"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Venezuela"
+        }
+      ],
+      "url": "https://himalayas.app/companies/express-chipping/jobs/gohighlevel-business-automation-specialist-187098463",
+      "apply_url": "https://himalayas.app/companies/express-chipping/jobs/gohighlevel-business-automation-specialist-187098463?utm_source=api",
+      "published": "2026-11-19T18:00:09+00:00",
+      "valid_through": "2026-11-22T09:30:04+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:express-chipping",
+      "employer_name": "Express Chipping",
+      "freshness": "cached_from_last_check",
+      "salary": {
+        "currency": "USD",
+        "max": 2000,
+        "min": 1800,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "monthly"
+      },
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "GoHighLevel",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation",
+        "business-systems-automation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "other_locations",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:gentaskglobal/jobs/gohighlevel-specialist-social-media-coordinator",
+      "title": "GoHighLevel Specialist & Social Media Coordinator",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Australia"
+        }
+      ],
+      "url": "https://himalayas.app/companies/gentaskglobal/jobs/gohighlevel-specialist-social-media-coordinator",
+      "apply_url": "https://himalayas.app/companies/gentaskglobal/jobs/gohighlevel-specialist-social-media-coordinator?utm_source=api",
+      "published": "2026-10-18T23:06:13+00:00",
+      "valid_through": "2026-12-17T23:06:12+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:gentaskglobal",
+      "employer_name": "GENTASK Virtual Assistance Services",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "GoHighLevel",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation",
         "delivery-coordination"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "other_locations",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:greengen/jobs/assistant-energy-analyst",
+      "title": "Assistant Energy Analyst",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/greengen/jobs/assistant-energy-analyst",
+      "apply_url": "https://himalayas.app/companies/greengen/jobs/assistant-energy-analyst?utm_source=api",
+      "published": "2026-11-19T16:50:58+00:00",
+      "valid_through": "2027-01-08T08:28:57+00:00",
+      "observed_at": "2026-11-20T19:14:57.502861+00:00",
+      "employer": "aggregator:greengen",
+      "employer_name": "GreenGen",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "energy",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T19:14:57.502861+00:00",
+      "responsibility_signals": [
+        "power-utilities-energy"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:grip/jobs/delivery-operations-specialist-philippines",
+      "title": "Delivery Operations Specialist, Philippines",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Afghanistan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Armenia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Azerbaijan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Bahrain"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Bangladesh"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Bhutan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Brunei Darussalam"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Cambodia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "China"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Georgia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Hong Kong"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Indonesia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Iran"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Iraq"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Israel"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Japan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Jordan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Kazakhstan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Kuwait"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Kyrgyzstan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Lao People's Democratic Republic"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Lebanon"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Macao"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Malaysia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Maldives"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Mongolia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Myanmar"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Nepal"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Oman"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Pakistan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Palestine, State of"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Philippines"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Qatar"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Russian Federation"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Saudi Arabia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Singapore"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "South Korea"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Sri Lanka"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Syrian Arab Republic"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Taiwan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Tajikistan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Thailand"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Timor-Leste"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Turkey"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Turkmenistan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "United Arab Emirates"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Uzbekistan"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Vietnam"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Yemen"
+        }
+      ],
+      "url": "https://himalayas.app/companies/grip/jobs/delivery-operations-specialist-philippines",
+      "apply_url": "https://himalayas.app/companies/grip/jobs/delivery-operations-specialist-philippines?utm_source=api",
+      "published": "2026-11-19T17:52:43+00:00",
+      "valid_through": "2026-11-30T05:58:33+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:grip",
+      "employer_name": "Grip",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "delivery-coordination"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:healthhue/jobs/implementation-specialist",
+      "title": "Implementation Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "no location restriction stated"
+        }
+      ],
+      "url": "https://himalayas.app/companies/healthhue/jobs/implementation-specialist",
+      "apply_url": "https://himalayas.app/companies/healthhue/jobs/implementation-specialist?utm_source=api",
+      "published": "2026-11-08T04:22:21+00:00",
+      "valid_through": "2026-12-07T15:56:46+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:healthhue",
+      "employer_name": "Health Hue Digital",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "CRM implementation",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "remote_or_region_only",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:hyre/jobs/automations-data-analytics-specialist-7386483940",
+      "title": "Automations & Data Analytics Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/hyre/jobs/automations-data-analytics-specialist-7386483940",
+      "apply_url": "https://himalayas.app/companies/hyre/jobs/automations-data-analytics-specialist-7386483940?utm_source=api",
+      "published": "2026-11-19T16:52:13+00:00",
+      "valid_through": "2027-01-06T18:28:54+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:hyre",
+      "employer_name": "Hyre",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "automation specialist",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "business-systems-automation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:international-institute-for-sustainable-development/jobs/senior-communications-officer-india-energy-program",
+      "title": "Senior Communications Officer- India Energy Program",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/international-institute-for-sustainable-development/jobs/senior-communications-officer-india-energy-program",
+      "apply_url": "https://himalayas.app/companies/international-institute-for-sustainable-development/jobs/senior-communications-officer-india-energy-program?utm_source=api",
+      "published": "2026-11-19T16:42:27+00:00",
+      "valid_through": "2027-01-13T03:36:47+00:00",
+      "observed_at": "2026-11-20T19:14:57.502861+00:00",
+      "employer": "aggregator:international-institute-for-sustainable-development",
+      "employer_name": "International Institute for Sustainable Development",
+      "freshness": "cached_from_last_check",
+      "salary": {
+        "currency": "INR",
+        "max": 2866624,
+        "min": 1949304,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "annual"
+      },
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "energy",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T19:14:57.502861+00:00",
+      "responsibility_signals": [
+        "power-utilities-energy"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "no concrete role noun"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:mercor/jobs/electrical-test-automation-engineer-1320544702",
+      "title": "Electrical Test Automation Engineer",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/mercor/jobs/electrical-test-automation-engineer-1320544702",
+      "apply_url": "https://himalayas.app/companies/mercor/jobs/electrical-test-automation-engineer-1320544702?utm_source=api",
+      "published": "2026-11-09T18:12:34+00:00",
+      "valid_through": "2027-01-08T18:12:34+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:mercor",
+      "employer_name": "mercor",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "electrical engineer",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "business-systems-automation",
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "specialist software title"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:nexcess-com/jobs/reliability-operations-specialist",
+      "title": "Reliability Operations Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/nexcess-com/jobs/reliability-operations-specialist",
+      "apply_url": "https://himalayas.app/companies/nexcess-com/jobs/reliability-operations-specialist?utm_source=api",
+      "published": "2026-11-19T17:56:16+00:00",
+      "valid_through": "2026-11-26T14:22:19+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:nexcess-com",
+      "employer_name": "Nexcess",
+      "freshness": "cached_from_last_check",
+      "salary": {
+        "currency": "USD",
+        "max": 100000,
+        "min": 85000,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "annual"
+      },
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "reliability engineer",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
+      "responsibility_signals": [
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:peoplepartners-inc/jobs/project-coordinator-clickup-gohighlevel-zr_1346_job",
+      "title": "Project Coordinator (ClickUp & GoHighLevel) | ZR_1346_JOB",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Canada"
+        }
+      ],
+      "url": "https://himalayas.app/companies/peoplepartners-inc/jobs/project-coordinator-clickup-gohighlevel-zr_1346_job",
+      "apply_url": "https://himalayas.app/companies/peoplepartners-inc/jobs/project-coordinator-clickup-gohighlevel-zr_1346_job?utm_source=api",
+      "published": "2026-11-19T18:10:38+00:00",
+      "valid_through": "2027-01-08T18:11:29+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:peoplepartners-inc",
+      "employer_name": "PeoplePartners Inc.",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "GoHighLevel",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation",
+        "delivery-coordination"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "other_locations",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:quantumloopai/jobs/hubspot-crm-implementation-assistant-india-remote",
+      "title": "HubSpot CRM Implementation Assistant - India Remote",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/quantumloopai/jobs/hubspot-crm-implementation-assistant-india-remote",
+      "apply_url": "https://himalayas.app/companies/quantumloopai/jobs/hubspot-crm-implementation-assistant-india-remote?utm_source=api",
+      "published": "2026-11-19T16:53:26+00:00",
+      "valid_through": "2027-01-05T05:05:40+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:quantumloopai",
+      "employer_name": "QuantumLoopAI",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:revvity/jobs/sr-software-qa-automation-engineer",
+      "title": "Sr. Software QA Automation Engineer",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/revvity/jobs/sr-software-qa-automation-engineer",
+      "apply_url": "https://himalayas.app/companies/revvity/jobs/sr-software-qa-automation-engineer?utm_source=api",
+      "published": "2026-10-25T04:26:31+00:00",
+      "valid_through": "2026-12-24T04:26:30+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:revvity",
+      "employer_name": "Revvity",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "automation specialist",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "crm-implementation",
+        "business-systems-automation"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "specialist software title"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:scale-ir/jobs/hubspot-business-analyst",
+      "title": "HubSpot Business Analyst",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/scale-ir/jobs/hubspot-business-analyst",
+      "apply_url": "https://himalayas.app/companies/scale-ir/jobs/hubspot-business-analyst?utm_source=api",
+      "published": "2026-11-02T03:34:20+00:00",
+      "valid_through": "2027-01-01T03:34:19+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:scale-ir",
+      "employer_name": "Scale IR",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:seamless-assist/jobs/automation-ai-developer",
+      "title": "Automation & AI Developer",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/seamless-assist/jobs/automation-ai-developer",
+      "apply_url": "https://himalayas.app/companies/seamless-assist/jobs/automation-ai-developer?utm_source=api",
+      "published": "2026-10-24T03:40:59+00:00",
+      "valid_through": "2026-12-23T03:40:57+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:seamless-assist",
+      "employer_name": "Seamless Assist",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "automation specialist",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "business-systems-automation"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "specialist software title"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:simpletiger/jobs/web-developer-wordpress-hubspot-u-s-based-remote-contractor",
+      "title": "Web Developer: WordPress & HubSpot (U.S. Based, Remote Contractor)",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "no location restriction stated"
+        }
+      ],
+      "url": "https://himalayas.app/companies/simpletiger/jobs/web-developer-wordpress-hubspot-u-s-based-remote-contractor",
+      "apply_url": "https://himalayas.app/companies/simpletiger/jobs/web-developer-wordpress-hubspot-u-s-based-remote-contractor?utm_source=api",
+      "published": "2026-10-29T01:49:10+00:00",
+      "valid_through": "2026-11-27T17:03:45+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:simpletiger",
+      "employer_name": "SimpleTiger",
+      "freshness": "cached_from_last_check",
+      "salary": {
+        "currency": "USD",
+        "max": 30,
+        "min": 20,
+        "provenance": "Himalayas listing (aggregator, not employer-confirmed)",
+        "unit": "hourly"
+      },
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "specialist software title"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "remote_or_region_only",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:sphere-rocket-va/jobs/gohighlevel-ghl-specialist",
+      "title": "GoHighLevel (GHL) Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "United States"
+        }
+      ],
+      "url": "https://himalayas.app/companies/sphere-rocket-va/jobs/gohighlevel-ghl-specialist",
+      "apply_url": "https://himalayas.app/companies/sphere-rocket-va/jobs/gohighlevel-ghl-specialist?utm_source=api",
+      "published": "2026-10-08T04:28:44+00:00",
+      "valid_through": "2026-12-07T04:28:43+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:sphere-rocket-va",
+      "employer_name": "Sphere Rocket VA",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "GoHighLevel",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "other_locations",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:technopals-pte-ltd/jobs/ai-reliability-red-teaming-engineer",
+      "title": "AI Reliability & Red Teaming Engineer",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/technopals-pte-ltd/jobs/ai-reliability-red-teaming-engineer",
+      "apply_url": "https://himalayas.app/companies/technopals-pte-ltd/jobs/ai-reliability-red-teaming-engineer?utm_source=api",
+      "published": "2026-11-19T17:29:58+00:00",
+      "valid_through": "2026-12-11T12:46:56+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
+      "employer": "aggregator:technopals-pte-ltd",
+      "employer_name": "Technopals Pte.Ltd.",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "reliability engineer",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
+      "responsibility_signals": [
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:tejjy-inc/jobs/electrical-bim-modeler",
+      "title": "Electrical BIM Modeler",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "United States"
+        }
+      ],
+      "url": "https://himalayas.app/companies/tejjy-inc/jobs/electrical-bim-modeler",
+      "apply_url": "https://himalayas.app/companies/tejjy-inc/jobs/electrical-bim-modeler?utm_source=api",
+      "published": "2026-11-19T18:04:48+00:00",
+      "valid_through": "2027-01-17T17:00:39+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:tejjy-inc",
+      "employer_name": "Tejjy Inc.",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "electrical engineer",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "no concrete role noun"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:thehivecareers/jobs/remote-industrial-automation-consultant-3294868463",
+      "title": "Remote Industrial Automation Consultant",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/thehivecareers/jobs/remote-industrial-automation-consultant-3294868463",
+      "apply_url": "https://himalayas.app/companies/thehivecareers/jobs/remote-industrial-automation-consultant-3294868463?utm_source=api",
+      "published": "2026-10-10T12:07:50+00:00",
+      "valid_through": "2026-12-09T12:07:49+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:thehivecareers",
+      "employer_name": "TheHiveCareers",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "automation specialist",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "business-systems-automation",
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:transaction-network-services/jobs/senior-business-systems-analyst-billing-quote-to-cash",
+      "title": "Senior Business Systems Analyst – Billing & Quote to Cash",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Brazil"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/transaction-network-services/jobs/senior-business-systems-analyst-billing-quote-to-cash",
+      "apply_url": "https://himalayas.app/companies/transaction-network-services/jobs/senior-business-systems-analyst-billing-quote-to-cash?utm_source=api",
+      "published": "2026-11-19T16:55:29+00:00",
+      "valid_through": "2027-01-05T04:02:30+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:transaction-network-services",
+      "employer_name": "Transaction Network Services",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "business systems",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "business-systems-automation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:united-field-services-inc/jobs/hubspot-expert-hubspot-specialist",
+      "title": "HubSpot Expert / HubSpot Specialist",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/united-field-services-inc/jobs/hubspot-expert-hubspot-specialist",
+      "apply_url": "https://himalayas.app/companies/united-field-services-inc/jobs/hubspot-expert-hubspot-specialist?utm_source=api",
+      "published": "2026-11-19T16:59:56+00:00",
+      "valid_through": "2026-12-30T13:30:44+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:united-field-services-inc",
+      "employer_name": "United Field Services, Inc.",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:virtual-assist/jobs/gohighlevel-specialist-virtual-assistant",
+      "title": "GoHighLevel Specialist - Virtual Assistant",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Philippines"
+        }
+      ],
+      "url": "https://himalayas.app/companies/virtual-assist/jobs/gohighlevel-specialist-virtual-assistant",
+      "apply_url": "https://himalayas.app/companies/virtual-assist/jobs/gohighlevel-specialist-virtual-assistant?utm_source=api",
+      "published": "2026-11-20T16:52:38+00:00",
+      "valid_through": "2027-01-19T16:52:38+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:virtual-assist",
+      "employer_name": "Virtual Assist",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "GoHighLevel",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "other_locations",
+        "india_terms": []
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:ycp/jobs/india-management-services-division-renewable-energy",
+      "title": "INDIA - Management Services Division- Renewable Energy",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/ycp/jobs/india-management-services-division-renewable-energy",
+      "apply_url": "https://himalayas.app/companies/ycp/jobs/india-management-services-division-renewable-energy?utm_source=api",
+      "published": "2026-11-01T11:45:14+00:00",
+      "valid_through": "2026-12-25T10:52:13+00:00",
+      "observed_at": "2026-11-20T19:14:57.502861+00:00",
+      "employer": "aggregator:ycp",
+      "employer_name": "YCP",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "energy",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T19:14:57.502861+00:00",
+      "responsibility_signals": [
+        "power-utilities-energy"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "no concrete role noun"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:zscaler/jobs/staff-business-systems-analyst",
+      "title": "Staff Business Systems Analyst",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        }
+      ],
+      "url": "https://himalayas.app/companies/zscaler/jobs/staff-business-systems-analyst",
+      "apply_url": "https://himalayas.app/companies/zscaler/jobs/staff-business-systems-analyst?utm_source=api",
+      "published": "2026-11-19T18:07:17+00:00",
+      "valid_through": "2027-01-16T17:21:27+00:00",
+      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "employer": "aggregator:zscaler",
+      "employer_name": "Zscaler",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "CRM implementation",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "responsibility_signals": [
+        "business-systems-automation"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -11847,44 +11649,29 @@
     },
     {
       "key": "himalayas:abn-innovations/jobs/salesforce-developer-experience-cloud",
-      "req_id": null,
       "title": "Salesforce Developer - Experience Cloud",
       "locations": [
         {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
         }
       ],
       "url": "https://himalayas.app/companies/abn-innovations/jobs/salesforce-developer-experience-cloud",
       "apply_url": "https://himalayas.app/companies/abn-innovations/jobs/salesforce-developer-experience-cloud?utm_source=api",
       "published": "2026-11-19T18:20:14+00:00",
       "valid_through": "2026-12-05T16:45:19+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
       "employer": "aggregator:abn-innovations",
       "employer_name": "ABN Innovations",
-      "salary": null,
+      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
-        "method": "role_search",
         "channel": "himalayas",
+        "method": "role_search",
         "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Developer",
-        "Experience-Cloud-Developer",
-        "Salesforce-CRM-Developer",
-        "Lightning-Web-Components-Developer",
-        "CRM-Developer",
-        "Salesforce-Experience-Cloud-Developer",
-        "Salesforce-Experience-Cloud",
-        "Salesforce-Experience-Cloud-Engineer"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
@@ -11944,50 +11731,29 @@
     },
     {
       "key": "himalayas:ahead/jobs/team-lead-salesforce",
-      "req_id": null,
       "title": "Team Lead - Salesforce",
       "locations": [
         {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
         }
       ],
       "url": "https://himalayas.app/companies/ahead/jobs/team-lead-salesforce",
       "apply_url": "https://himalayas.app/companies/ahead/jobs/team-lead-salesforce?utm_source=api",
       "published": "2026-11-19T17:50:47+00:00",
       "valid_through": "2026-12-01T07:32:24+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
       "employer": "aggregator:ahead",
       "employer_name": "AHEAD",
-      "salary": null,
+      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
-        "method": "role_search",
         "channel": "himalayas",
+        "method": "role_search",
         "query": "Salesforce administrator",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "crm-implementation"
-        ]
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "official_evidence": null,
-      "categories": [
-        "Salesforce-Administrator",
-        "Salesforce-Lead",
-        "Team-Lead",
-        "CRM-Administrator",
-        "Salesforce-Manager",
-        "Salesforce-Team-Lead",
-        "Salesforce-Administrator-Team-Lead",
-        "Salesforce-Developer-Lead",
-        "Salesforce-Development-Lead",
-        "Salesforce-Technical-Lead",
-        "Salesforce-Project-Lead",
-        "Salesforce-Technology-Lead",
-        "Lead-Salesforce-Engineer",
-        "Salesforce-Delivery-Lead"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation"
       ],
@@ -12007,118 +11773,105 @@
     },
     {
       "key": "himalayas:allshore-talent/jobs/principal-program-manager-generative-ai-implementation-100-remote",
-      "req_id": null,
       "title": "Principal Program Manager - Generative AI Implementation (100% Remote)",
       "locations": [
         {
-          "text": "Argentina",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Argentina"
         },
         {
-          "text": "Bolivia",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Bolivia"
         },
         {
-          "text": "Brazil",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Brazil"
         },
         {
-          "text": "Chile",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Chile"
         },
         {
-          "text": "Colombia",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Colombia"
         },
         {
-          "text": "Costa Rica",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Costa Rica"
         },
         {
-          "text": "Dominican Republic",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Dominican Republic"
         },
         {
-          "text": "Ecuador",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Ecuador"
         },
         {
-          "text": "El Salvador",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "El Salvador"
         },
         {
-          "text": "Guatemala",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Guatemala"
         },
         {
-          "text": "Honduras",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Honduras"
         },
         {
-          "text": "India",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
         },
         {
-          "text": "Mexico",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Mexico"
         },
         {
-          "text": "Nicaragua",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Nicaragua"
         },
         {
-          "text": "Pakistan",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Pakistan"
         },
         {
-          "text": "Panama",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Panama"
         },
         {
-          "text": "Paraguay",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Paraguay"
         },
         {
-          "text": "Peru",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Peru"
         },
         {
-          "text": "Uruguay",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Uruguay"
         },
         {
-          "text": "Venezuela",
-          "source": "himalayas.locationRestrictions"
+          "source": "himalayas.locationRestrictions",
+          "text": "Venezuela"
         }
       ],
       "url": "https://himalayas.app/companies/allshore-talent/jobs/principal-program-manager-generative-ai-implementation-100-remote",
       "apply_url": "https://himalayas.app/companies/allshore-talent/jobs/principal-program-manager-generative-ai-implementation-100-remote?utm_source=api",
       "published": "2026-11-19T17:08:50+00:00",
       "valid_through": "2026-12-22T03:09:55+00:00",
-      "observed_at": "2026-11-20T22:19:58.210946+00:00",
+      "observed_at": "2026-11-19T21:53:17.975538+00:00",
       "employer": "aggregator:allshore-talent",
       "employer_name": "Allshore Talent",
-      "salary": null,
+      "freshness": "cached_from_last_check",
       "stage": "aggregator_listing_provisional",
       "discovery": {
-        "method": "role_search",
         "channel": "himalayas",
+        "method": "role_search",
         "query": "AI implementation",
-        "country_filter": "India",
-        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink.",
-        "families_sought": [
-          "ai-implementation"
-        ]
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "official_evidence": null,
-      "categories": [
-        "Program-Manager",
-        "AI-Implementation-Manager",
-        "Digital-Transformation-Program-Manager",
-        "AI-Program-Manager",
-        "Senior-AI-Program-Manager",
-        "AI-Transformation-Program-Manager"
-      ],
+      "checked_at": "2026-11-19T21:53:17.975538+00:00",
       "responsibility_signals": [
         "crm-implementation",
         "ai-implementation",
@@ -12221,17 +11974,71 @@
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": []
+    },
+    {
+      "key": "himalayas:asiaverify/jobs/crm-reporting-analyst-hubspot",
+      "title": "CRM & Reporting Analyst (HubSpot)",
+      "locations": [
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "India"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Malaysia"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "Singapore"
+        },
+        {
+          "source": "himalayas.locationRestrictions",
+          "text": "United Kingdom"
+        }
+      ],
+      "url": "https://himalayas.app/companies/asiaverify/jobs/crm-reporting-analyst-hubspot",
+      "apply_url": "https://himalayas.app/companies/asiaverify/jobs/crm-reporting-analyst-hubspot?utm_source=api",
+      "published": "2026-11-19T23:56:40+00:00",
+      "valid_through": "2027-01-18T23:56:39+00:00",
+      "observed_at": "2026-11-20T18:28:36.432404+00:00",
+      "employer": "aggregator:asiaverify",
+      "employer_name": "AsiaVerify",
+      "freshness": "cached_from_last_check",
+      "stage": "aggregator_listing_provisional",
+      "discovery": {
+        "channel": "himalayas",
+        "method": "role_search",
+        "query": "HubSpot",
+        "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
+      },
+      "checked_at": "2026-11-20T18:28:36.432404+00:00",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
     }
   ],
   "metrics": {
-    "exact_identities": 899,
-    "plausible_title_identities": 143,
-    "fresh_feed_identities": 859,
+    "exact_identities": 902,
+    "plausible_title_identities": 144,
+    "fresh_feed_identities": 862,
     "stale_or_unreported_identities": 40,
-    "cached_identities": 172,
+    "cached_identities": 226,
     "provisional_identities": 186,
-    "new_identities_since_last_run": 1,
-    "repeated_identities": 1084,
+    "new_identities_since_last_run": 7,
+    "repeated_identities": 1081,
     "review_batch": 35,
     "review_employers": 16,
     "largest_employer_share": 0.086,
@@ -12244,24 +12051,24 @@
         "ai-implementation": 5,
         "asset-reliability-maintenance": 39,
         "power-utilities-energy": 7,
-        "business-systems-automation": 6,
+        "business-systems-automation": 7,
         "delivery-coordination": 37,
         "crm-implementation": 21
       },
       "signal_strength": {
-        "none": 756,
+        "none": 758,
         "weak": 28,
-        "strong": 105,
+        "strong": 106,
         "excluded": 10
       },
       "geography": {
-        "other_locations": 539,
+        "other_locations": 537,
         "india_explicit": 186,
-        "remote_or_region_only": 139,
+        "remote_or_region_only": 144,
         "unstated": 35
       },
       "by_method": {
-        "configured_feed": 859,
+        "configured_feed": 862,
         "career_rss": 40
       }
     },
@@ -12269,15 +12076,15 @@
       "strong_by_family": {
         "crm-implementation": 42,
         "ai-implementation": 4,
-        "delivery-coordination": 7,
+        "delivery-coordination": 6,
         "business-systems-automation": 14,
         "asset-reliability-maintenance": 11,
         "power-utilities-energy": 3
       },
       "signal_strength": {
         "weak": 38,
-        "none": 72,
-        "strong": 69,
+        "none": 73,
+        "strong": 68,
         "excluded": 21
       },
       "geography": {
@@ -12318,9 +12125,9 @@
       "ai-implementation-india": {
         "status": "ok",
         "results": 20,
-        "strong": 8,
+        "strong": 7,
         "india_explicit": 20,
-        "strong_rate": 0.4,
+        "strong_rate": 0.35,
         "consecutive_failures": 0
       },
       "automation-india": {
@@ -12397,8 +12204,8 @@
       }
     },
     "cost": {
-      "requests": 5,
-      "seconds": 5.31,
+      "requests": 1,
+      "seconds": 0.34,
       "by_method": {
         "directories": {
           "requests": 0,
@@ -12409,8 +12216,8 @@
           "seconds": 0.0
         },
         "role_search": {
-          "requests": 4,
-          "seconds": 4.89
+          "requests": 0,
+          "seconds": 0.0
         },
         "career_pages": {
           "requests": 0,
@@ -12422,7 +12229,7 @@
         },
         "lead_validation": {
           "requests": 1,
-          "seconds": 0.28
+          "seconds": 0.2
         }
       }
     },

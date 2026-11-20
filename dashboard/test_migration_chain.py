@@ -30,6 +30,7 @@ migrations = [
     '0025_queue_404_gone.sql',
     '0026_read_diet.sql',
     '0027_cheap_views.sql',
+    '0028_profile_configs.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -64,6 +65,7 @@ print('cloud_job_evidence columns:', cols_evi)
 
 assert 'history_client' in tables, 'migration 0022 missing'
 assert 'auth_failures' in tables and 'candidate_qualifications' in tables, 'migration chain is incomplete'
+assert 'candidate_profile_configs' in tables, 'migration 0028 missing'
 print('migration chain OK')
 
 # 0009 is additive: the read cache and meter tables exist, and applying it twice changes nothing
@@ -121,3 +123,16 @@ conn.executescript(m27)
 assert conn.execute('SELECT COUNT(*) FROM seeker_dirty').fetchone() == (1,), '0027 is not idempotent'
 conn.execute('DELETE FROM seeker_dirty')
 print('0027 adds the stored list copy tables and the Not-for-me index, idempotently')
+
+# 0028: the profile config table is additive and replays without change
+with open(os.path.join(base, '0028_profile_configs.sql'), 'r', encoding='utf-8') as f:
+    m28 = f.read()
+conn.execute("INSERT INTO candidate_profile_configs(candidate_id, config) VALUES ('example_x', '{\"schema\":1}')")
+conn.executescript(m28)
+assert conn.execute('SELECT count(*) FROM candidate_profile_configs').fetchone() == (1,)
+try:
+    conn.execute("INSERT INTO candidate_profile_configs(candidate_id, config) VALUES ('too_big', ?)", ('x' * 16385,))
+    raise AssertionError('a config over 16 KB was accepted')
+except sqlite3.IntegrityError:
+    pass
+print('0028 re-applied idempotently; size check holds')
