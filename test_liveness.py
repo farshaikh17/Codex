@@ -215,6 +215,151 @@ class SlowServer(unittest.TestCase):
             self.assertIn('last_verified_at', sql, 'the verified rows are written even though the check stopped early')
 
 
+# ---- Jobs QA 7: the employer's own record of a posting's place, and Workday postings taken down -------------------------------------------------
+WD = 'https://acme.wd3.myworkdayjobs.com/Acme_Careers/job/India-Remote/Marketing-Ops-Lead_R123'
+WD_RECORD = {'jobPostingInfo': {'location': 'IND-Hyderabad-Tech Park', 'remoteType': 'Hybrid: Work in Office Part-Time', 'country': {'descriptor': 'India'}}}
+ASHBY_HTML = ('<script>window.__appData = {"posting":{"locationName":"Bengaluru Office","workplaceType":"Hybrid","isRemote":true}}</script>'
+              '<script type="application/ld+json">{"jobLocationType":"TELECOMMUTE","applicantLocationRequirements":{"@type":"Country","name":"India"}}</script>')
+
+
+def ats_urlopen(routes):
+    """routes: url -> (status, body). Anything else answers 200 with an empty page."""
+    def opener(req, timeout=20):
+        url = req.full_url
+        status, body = routes.get(url, (200, b''))
+        if isinstance(body, (dict, list)):
+            body = json.dumps(body).encode()
+        if status >= 400:
+            import io
+            raise urllib.error.HTTPError(url, status, 'x', {}, io.BytesIO(body))
+        r = mock.MagicMock()
+        r.__enter__.return_value = r
+        r.geturl.return_value = url
+        r.status = status
+        r.read.return_value = body
+        return r
+    return opener
+
+
+class EmployerRecord(unittest.TestCase):
+    def run_probe(self, url, routes):
+        facts = {}
+        with mock.patch.object(liveness.urllib.request, 'urlopen', ats_urlopen(routes)):
+            state, _ = liveness.probe(url, facts=facts)
+        return state, facts
+
+    def test_workday_record_gives_the_remote_type_and_country_and_says_when_a_posting_was_taken_down(self):
+        rec = liveness.workday_record_url(WD)
+        self.assertEqual(rec, 'https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/Acme_Careers/job/India-Remote/Marketing-Ops-Lead_R123')
+        self.assertEqual(liveness.workday_record_url('https://acme.wd3.myworkdayjobs.com/en-US/Acme_Careers/job/X_R1'),
+                         'https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/Acme_Careers/job/X_R1', 'a locale segment is not the site')
+        self.assertEqual(self.run_probe(WD, {rec: (200, WD_RECORD)}), ('alive', {'workplace': 'HYBRID', 'location': 'IND-Hyderabad-Tech Park', 'countries': ['India']}))
+        self.assertEqual(self.run_probe(WD, {rec: (404, {'errorCode': 'S21', 'httpStatus': 404})})[0], 'dead', 'not found')
+        # review of PR #238: a 404 that is not Workday's own 'not found' answer (a record URL built wrongly, a proxy page) never closes the job
+        self.assertEqual(self.run_probe(WD, {rec: (404, b'<html>Not Found</html>'), WD: (200, b'')})[0], 'alive')
+        self.assertEqual(self.run_probe(WD, {rec: (404, b'<html>Not Found</html>'), WD: (403, b'')})[0], 'unknown')
+        self.assertEqual(self.run_probe(WD, {rec: (403, {'errorCode': 'S22', 'httpStatus': 403, 'message': 'permission denied'})})[0], 'dead', 'no longer public')
+        # near misses: a bare 403, a 5xx or a 429 from the record falls back to the page, which never closes on a guess
+        self.assertEqual(self.run_probe(WD, {rec: (403, b'<html>blocked</html>'), WD: (200, b'')})[0], 'alive')
+        self.assertEqual(self.run_probe(WD, {rec: (503, b''), WD: (404, b'')})[0], 'dead')
+        self.assertEqual(self.run_probe(WD, {rec: (429, b''), WD: (200, b'')})[0], 'alive', 'any other error falls back to the page')
+        self.assertEqual(self.run_probe(WD, {rec: (429, b''), WD: (429, b'')})[0], 'unknown')
+        self.assertIsNone(liveness.workday_record_url('https://jobs.lever.co/acme/1'))
+
+    def test_ashby_greenhouse_and_lever_records(self):
+        url = 'https://jobs.ashbyhq.com/acme/3cbddc0b-20b7-4eb1-8eb7-989ebf62f2f7'
+        self.assertEqual(self.run_probe(url, {url: (200, ASHBY_HTML.encode())}),
+                         ('alive', {'workplace': 'HYBRID', 'location': 'Bengaluru Office', 'countries': ['India']}), "Ashby's workplace type wins over its TELECOMMUTE tag")
+        gh = 'https://job-boards.greenhouse.io/acme/jobs/5295050007'
+        st, f = self.run_probe(gh, {'https://boards-api.greenhouse.io/v1/boards/acme/jobs/5295050007': (200, {'location': {'name': 'Remote US'}})})
+        self.assertEqual((st, f), ('alive', {'workplace': 'REMOTE', 'location': 'Remote US', 'countries': ['United States']}))
+        self.assertTrue(liveness.not_remote_from_india(f))
+        lv = 'https://jobs.lever.co/acme/ac0a4a5e-3139-4862-a554-3bba3f10dfe9/apply'
+        st, f = self.run_probe(lv, {'https://api.lever.co/v0/postings/acme/ac0a4a5e-3139-4862-a554-3bba3f10dfe9':
+                                    (200, {'workplaceType': 'remote', 'country': 'IN', 'categories': {'location': 'India'}})})
+        self.assertEqual(f, {'workplace': 'REMOTE', 'location': 'India', 'countries': ['India']})
+        self.assertFalse(liveness.not_remote_from_india(f))
+        # a failing record adds nothing and never decides open or closed
+        self.assertEqual(self.run_probe(lv, {'https://api.lever.co/v0/postings/acme/ac0a4a5e-3139-4862-a554-3bba3f10dfe9': (404, b'')}), ('alive', {}))
+
+    def test_check_keeps_the_records_and_the_sql_writes_contradictions_once(self):
+        rec = liveness.workday_record_url(WD)
+        gh = 'https://job-boards.greenhouse.io/acme/jobs/1'
+        routes = {rec: (200, WD_RECORD), 'https://boards-api.greenhouse.io/v1/boards/acme/jobs/1': (200, {'location': {'name': 'Remote US'}})}
+        with mock.patch.object(liveness.urllib.request, 'urlopen', ats_urlopen(routes)), mock.patch.object(liveness.time, 'sleep', lambda *_: None):
+            res = liveness.check([{'id': 'wd', 'url': WD}, {'id': 'gh', 'url': gh}, {'id': 'plain', 'url': 'https://jobs.example/ok'}], pause=0)
+        self.assertEqual(sorted(res['alive']), ['gh', 'plain', 'wd'])
+        self.assertEqual(sorted(res['facts']), ['gh', 'wd'])
+        res['facts']['it'] = {'workplace': 'ONSITE', 'location': 'Pessione', 'countries': ['Italy']}
+        res['facts']['in'] = {'workplace': 'ONSITE', 'location': 'Pune', 'countries': ['India']}
+        res['alive'] += ['it', 'in']
+        db = sqlite3.connect(':memory:')
+        db.executescript("""CREATE TABLE jobs(id TEXT PRIMARY KEY, is_active INT, expired_at TEXT, last_verified_at TEXT, workplace_type TEXT, location_restrictions TEXT);
+          CREATE TABLE applications(job_id TEXT); CREATE TABLE candidate_qualifications(job_id TEXT, manual_override_status TEXT, qualification_status TEXT, qualification_reason TEXT);
+          CREATE TABLE candidate_job_scores(candidate_id TEXT, job_id TEXT, score_breakdown TEXT);
+          CREATE TABLE cache_state(id INT, generation INT); INSERT INTO cache_state VALUES (1, 0);
+          INSERT INTO jobs(id, is_active, workplace_type, location_restrictions) VALUES ('wd',1,'REMOTE_RESTRICTED','IND - India Remote Office'),
+            ('gh',1,'REMOTE_RESTRICTED','Remote, India'),('plain',1,'REMOTE','Remote'),('it',1,'UNKNOWN','Pessione'),('in',1,'UNKNOWN','Pune');""")
+        m = liveness._marker()
+        for j in ('wd', 'gh', 'plain', 'it', 'in'):
+            db.execute('INSERT INTO candidate_job_scores VALUES (?,?,?)', ('farhan_shaikh', j, json.dumps({'preliminary': True, m: True}, separators=(',', ':'))))   # stored as JSON.stringify writes it
+        sql = liveness.to_sql(res, now='2026-11-20T00:00:00Z')
+        db.executescript(sql)
+        rows = {r[0]: r[1:] for r in db.execute('SELECT id, workplace_type, location_restrictions FROM jobs')}
+        self.assertEqual(rows['wd'], ('HYBRID', 'IND-Hyderabad-Tech Park (Hybrid)'))
+        self.assertEqual(rows['gh'], ('REMOTE_RESTRICTED', 'Remote US (United States)'))
+        self.assertEqual(rows['it'], ('UNKNOWN', 'Pessione, Italy'))
+        self.assertEqual(rows['plain'], ('REMOTE', 'Remote'))
+        self.assertEqual(rows['in'], ('UNKNOWN', 'Pune'), 'an Indian on-site record changes nothing')
+        tagged = {r[0]: json.loads(r[1]).get(m) for r in db.execute('SELECT job_id, score_breakdown FROM candidate_job_scores')}
+        self.assertEqual(tagged, {'wd': False, 'gh': False, 'it': False, 'plain': True, 'in': True}, 'only a changed job is re-scored')
+        db.executescript("UPDATE candidate_job_scores SET score_breakdown = replace(score_breakdown, 'false', 'true');")
+        db.executescript(sql)   # the next run: nothing contradicts any more
+        self.assertEqual({r[0]: r[1:] for r in db.execute('SELECT id, workplace_type, location_restrictions FROM jobs')}, rows)
+        self.assertTrue(all(json.loads(r[0]).get(m) for r in db.execute('SELECT score_breakdown FROM candidate_job_scores')), 'a second run marks nothing again')
+
+
+class EmployerRecordReview(unittest.TestCase):
+    """Review of PR #238."""
+    def test_an_application_link_is_read_as_its_posting(self):
+        base = 'https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/Careers/job/Pune/Engineer_R1'
+        for u in ('https://acme.wd3.myworkdayjobs.com/Careers/job/Pune/Engineer_R1/apply', 'https://acme.wd3.myworkdayjobs.com/Careers/job/Pune/Engineer_R1/apply/applyManually',
+                  'https://acme.wd3.myworkdayjobs.com/en-US/Careers/job/Pune/Engineer_R1/'):
+            self.assertEqual(liveness.workday_record_url(u), base, u)
+
+    def test_remote_and_home_office_are_read_before_office(self):
+        self.assertEqual(liveness._workplace('Remote: Home Office'), 'REMOTE')
+        self.assertEqual(liveness._workplace('Work from home'), 'REMOTE')
+        self.assertEqual(liveness._workplace('Hybrid: Work in Office Part-Time'), 'HYBRID')
+        self.assertEqual(liveness._workplace('On Site'), 'ONSITE')
+        self.assertEqual(liveness._workplace('Office based'), 'ONSITE')
+        self.assertIsNone(liveness._workplace('Flexible'))
+
+    def test_page_size_and_record_requests_near_the_deadline(self):
+        sizes, asked = [], []
+
+        def opener(req, timeout=20):
+            asked.append(req.full_url)
+            r = mock.MagicMock()
+            r.__enter__.return_value = r
+            r.geturl.return_value = req.full_url
+            r.status = 200
+            r.read.side_effect = lambda n=-1: (sizes.append(n), json.dumps({'location': {'name': 'Remote US'}}).encode() if 'boards-api' in req.full_url else b'')[1]
+            return r
+        with mock.patch.object(liveness.urllib.request, 'urlopen', opener):
+            liveness.probe('https://jobs.example/ok', facts={})
+            liveness.probe('https://jobs.ashbyhq.com/acme/1', facts={})
+            self.assertEqual(sizes[:2], [65536, liveness.ASHBY_PAGE_BYTES], 'only an Ashby page is read past 64 KB')
+            f = {}
+            liveness.probe('https://job-boards.greenhouse.io/acme/jobs/1', facts=f, records=False)
+            self.assertEqual(f, {})
+            self.assertFalse(any('boards-api' in u for u in asked), 'no record request near the deadline')
+            state, f = liveness._one('https://job-boards.greenhouse.io/acme/jobs/1', 0, records_until=0)
+            self.assertEqual((state, f), ('alive', {}))
+            state, f = liveness._one('https://job-boards.greenhouse.io/acme/jobs/1', 0, records_until=time.monotonic() + 100)
+            self.assertEqual(f.get('location'), 'Remote US')
+
+
 if __name__ == '__main__':
     unittest.main()
 
