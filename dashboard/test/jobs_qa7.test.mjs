@@ -214,3 +214,60 @@ test('selector: the employer\'s own record from today\'s still-open check keeps 
   const facts = { f1: { workplace: 'HYBRID', location: 'Bengaluru Office', countries: ['India'] }, f2: { workplace: 'REMOTE', countries: ['India'] }, s1: { workplace: 'ONSITE', countries: ['India'] } };
   assert.deepEqual(picked([f('f1'), f('f2'), pool('s1', { url: 'https://e.com/s1' })], { facts }), ['f2', 's1']);
 });
+
+// ---- review of PR #238 ----------------------------------------------------------------------------------------------------------------------
+test('review: a folded place still reads as abroad ("España", "Österreich"), and accents are not needed', () => {
+  for (const l of ['Madrid, España', 'Wien, Österreich', 'Espana', 'Osterreich', 'Türkiye']) assert.ok(foreignLocation(l), l);
+  assert.equal(foreignLocation('Pune, India'), false);
+});
+
+test('review: "US" in US pay and benefits words is read in capitals only ("Why Join Us Benefits" is not a US package)', () => {
+  assert.equal(usRemoteByText(CRM + 'Why Join Us Benefits: health cover and learning budget.'), false);
+  assert.equal(usRemoteByText(CRM + 'Join us! Benefits for all.'), false);
+  assert.ok(usRemoteByText(CRM + 'Benefits: a comprehensive US benefits package.'));
+  assert.ok(usRemoteByText(CRM + 'The U.S. base salary range is $100K-$150K.'));
+});
+
+test('review: an employer named after a city or a word is not abroad; a recruiter or job board named for a country is', () => {
+  for (const co of ['Phoenix Contact', 'Jordan Valves', 'Perth Engineering', 'Charlotte Systems', 'Austin Engineering', 'Georgia-Pacific'])
+    assert.equal(sanaAbroadUnread('', PLANT, co, 'manatal'), false, co);
+  for (const co of ['WorkNigeria', 'Jobs Kenya', 'Ghana Careers', 'Work in UK']) assert.ok(sanaAbroadUnread('', PLANT, co, 'manatal'), co);
+  assert.ok(evS('Maintenance Manager', 'Chakan', PLANT, { company: 'Phoenix Contact' }).score > VISA_UNLIKELY_CAP, 'Phoenix Contact in India is not capped');
+});
+
+test('review: a remote or home-office place is not an office ("Remote: Home Office"); hybrid or on-site words still are', () => {
+  assert.notEqual(evF('Implementation Manager', 'Remote: Home Office, India', CRM + INDIA).eligibility, 'INELIGIBLE');
+  assert.notEqual(evF('Implementation Manager', 'India (work from home office)', CRM + INDIA).eligibility, 'INELIGIBLE');
+  assert.equal(evF('Implementation Manager', 'Remote / Hybrid - Pune office, India', CRM + INDIA).eligibility, 'INELIGIBLE');
+  assert.equal(evF('Implementation Manager', 'Pune Office', CRM + INDIA).eligibility, 'INELIGIBLE');
+});
+
+test('review: an internal-applicant instruction inside an open posting is not internal-only', () => {
+  assert.equal(internalOnly('Internal applicants only need to notify their manager before applying.'), false);
+  assert.equal(internalOnly('Internal candidates only have to submit a short form.'), false);
+  assert.ok(internalOnly('Internal applicants only.'));
+  assert.ok(internalOnly('This posting is for internal applicants only, as part of our talent programme.'));
+});
+
+test('review: an empty application-form label offers no visa route (MSD: "Relocation: VISA Sponsorship: Travel Requirements:"); a filled one still does', () => {
+  const form = PLANT + 'Employee Status: Regular Relocation: VISA Sponsorship: Travel Requirements: Flexible Work Arrangements: Not Applicable';
+  const r = evS('Plant Utilities Engineer', 'USA - New Jersey - Rahway', form);
+  assert.notEqual(r.eligibility, 'ELIGIBLE');
+  assert.ok(r.score <= VISA_UNLIKELY_CAP, `${r.score}`);
+  assert.equal(evS('Plant Utilities Engineer', 'USA - New Jersey - Rahway', PLANT + 'Visa sponsorship available for this role.').eligibility, 'ELIGIBLE');
+});
+
+test('review: a US operating or stationary engineer is a licensed shift operator\'s trade, below her level; a plant or shift engineer is not', () => {
+  for (const t of ['Power Plant - Operating Engineer I', 'Stationary Engineer, Plant Maintenance'])
+    assert.ok(evS(t, 'Pune, India', PLANT).score <= UNDER_LEVEL_CAP, t);
+  for (const t of ['Shift Engineer', 'Plant Operations Engineer', 'Operations & Maintenance Engineer'])
+    assert.ok(evS(t, 'Pune, India', PLANT).score > UNDER_LEVEL_CAP, t);
+});
+
+test('review: power-system studies for a consultancy are design work, not plant O&M; a commissioning or maintenance title is not', () => {
+  const studies = 'Perform steady-state and dynamic power system studies: load flow, short-circuit and voltage stability studies in PSS/E and DIgSILENT PowerFactory.';
+  assert.equal(sanaOtherProfession('Senior Power Systems Engineer (APAC)', studies), 'design, product or consultancy');
+  assert.ok(evS('Senior Power Systems Engineer', 'Noida, India', PLANT + studies).score <= AVOID_TITLE_CAP);
+  assert.equal(sanaOtherProfession('Commissioning Engineer - Substations', studies), null);
+  assert.equal(sanaOtherProfession('Electrical Maintenance Engineer', 'Carry out load flow checks with the grid operator.'), null);
+});

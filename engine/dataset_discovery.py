@@ -392,14 +392,15 @@ TRACKING_PARAM = re.compile(r'^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|refer
 
 def clean_posting_url(url):
     """The URL without tracking parameters (scheme, host, path and fragment as written)."""
-    from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+    from urllib.parse import urlsplit, urlunsplit, unquote_plus
     try:
         u = urlsplit(str(url or '').strip())
     except ValueError:
         return str(url or '')
     if u.scheme not in ('http', 'https'):
         return str(url or '')
-    query = urlencode([(k, v) for k, v in parse_qsl(u.query, keep_blank_values=True) if not TRACKING_PARAM.match(k)])
+    # the tracking pairs are dropped from the query as written; every other pair is kept byte for byte ('jobid', '%20', '+' unchanged)
+    query = '&'.join(p for p in u.query.split('&') if p and not TRACKING_PARAM.match(unquote_plus(p.split('=', 1)[0])))
     return urlunsplit((u.scheme, u.netloc, u.path, query, u.fragment))   # a fragment can be the job ('...oraclecloud.com/?site_number=CX#26081')
 
 
@@ -603,6 +604,7 @@ def split_new(jobs, local=None, merges=None, snapshot=None, cache=None):
     for j in jobs:   # duplicates inside one run (same company, title and location; jobs QA 7: or the same posting URL, tracking parameters aside)
         k = (norm(j['company']), norm(j['title']), norm(j.get('location')))
         u = posting_url_key(j.get('url'))
+        u = (u, norm(j['title'])) if u else None   # with the title: a careers page URL shared by several jobs is not one job (urlTwinKey)
         if k not in seen and not (u and u in seen_urls):
             seen.add(k); unique.append(j)
             if u:

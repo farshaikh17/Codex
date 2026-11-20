@@ -118,13 +118,22 @@ US_WORDS = re.compile(r'(?<![A-Za-z])(?:US|USA|U\.S\.?)(?![A-Za-z])|\bunited sta
 
 
 def workday_record_url(url):
+    """The cxs record of a Workday posting URL ('.../job/<path>', without the '/apply' or '/apply/applyManually' of an application link)."""
     m = WORKDAY_URL.match(str(url or ''))
-    return f"https://{m.group(1)}.{m.group(2)}.myworkdayjobs.com/wday/cxs/{m.group(1)}/{m.group(3)}/job/{m.group(4)}" if m else None
+    if not m:
+        return None
+    path = re.sub(r'/apply(?:/applyManually)?/?$', '', m.group(4).rstrip('/'), flags=re.I)
+    return f"https://{m.group(1)}.{m.group(2)}.myworkdayjobs.com/wday/cxs/{m.group(1)}/{m.group(3)}/job/{path}"
 
 
 def _workplace(text):
+    """Hybrid first, then remote ('Remote: Home Office', 'Work from home' are remote), then an office or on-site place."""
     t = str(text or '').lower()
-    return 'HYBRID' if 'hybrid' in t else 'ONSITE' if re.search(r'on[- ]?site|in[- ]office|office', t) else 'REMOTE' if 'remote' in t else None
+    if 'hybrid' in t:
+        return 'HYBRID'
+    if re.search(r'\bremote\b|\bhome[- ]office\b|\bwork(?:ing)? from home\b|\bwfh\b|\btelecommut', t):
+        return 'REMOTE'
+    return 'ONSITE' if re.search(r'on[- ]?site|in[- ]office|\boffice\b', t) else None
 
 
 def workday_facts(record):
@@ -155,10 +164,15 @@ def lever_facts(record):
     return {k: v for k, v in {'workplace': wp, 'location': (r.get('categories') or {}).get('location'), 'countries': [COUNTRY_CODES[code]] if code in COUNTRY_CODES else []}.items() if v}
 
 
+RECORD_BYTES = 131072   # a posting record is small; the description inside it is the bulk
+ASHBY_PAGE_BYTES = 262144   # an Ashby page carries its data after the scripts; other pages are read to 64 KB as before
+RECORD_RESERVE = 60     # seconds: with less than this left before the deadline, the extra Greenhouse / Lever record request is skipped
+
+
 def _get_json(url, timeout):
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
     with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (built from our own https posting URLs)
-        return json.loads(r.read(262144).decode('utf-8', 'replace'))
+        return json.loads(r.read(RECORD_BYTES).decode('utf-8', 'replace'))
 
 
 def _record_facts(url, timeout, facts):
@@ -175,8 +189,9 @@ def _record_facts(url, timeout, facts):
         pass
 
 
-def probe(url, timeout=TIMEOUT, facts=None):
-    """('dead'|'alive'|'unknown', detail). With a `facts` dict, the employer's own record of the posting's place is added to it (jobs QA 7)."""
+def probe(url, timeout=TIMEOUT, facts=None, records=True):
+    """('dead'|'alive'|'unknown', detail). With a `facts` dict, the employer's own record of the posting's place is added to it (jobs QA 7);
+    records=False skips the extra Greenhouse / Lever record request (near the deadline)."""
     rec = workday_record_url(url)
     if rec:   # Workday: the posting record itself. Not found (S21) or no longer public (S22) is a closed posting; anything else falls back to the page
         try:
@@ -190,18 +205,19 @@ def probe(url, timeout=TIMEOUT, facts=None):
                 body = e.read(4096).decode('utf-8', 'replace')
             except Exception:   # noqa: BLE001
                 pass
-            if e.code == 404 or (e.code == 403 and '"S22"' in body):
+            # only Workday's own answers close a posting: not found (S21) or no longer public (S22). Any other error (a 404 page from a
+            # record URL we built wrongly, a block, throttling) falls back to the page below, which never closes on a guess.
+            if (e.code == 404 and '"S21"' in body) or (e.code == 403 and '"S22"' in body):
                 return 'dead', f'workday record {e.code}'
-            if e.code == 429:   # the site is throttling us: a second request to its page now would only add load
-                return 'unknown', '429'
         except Exception:   # noqa: BLE001 - timeouts, unreadable JSON: the page below decides
             pass
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.5'})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (URLs from our own database, https only)
             final = r.geturl()
-            body = r.read(262144)
-            if facts is not None and ASHBY_URL.match(final or url):
+            ashby = facts is not None and bool(ASHBY_URL.match(final or url))
+            body = r.read(ASHBY_PAGE_BYTES if ashby else 65536)
+            if ashby:
                 facts.update(ashby_facts(body.decode('utf-8', 'replace') if isinstance(body, bytes) else body))
             if 'greenhouse.io' in final and 'error=true' in final:
                 return 'dead', 'greenhouse error redirect'
@@ -209,7 +225,7 @@ def probe(url, timeout=TIMEOUT, facts=None):
             # A generic homepage after a redirect does not prove that a specific posting remains open.
             if initial_url.path.strip('/') and not final_url.path.strip('/'):
                 return 'unknown', 'redirected to homepage'
-            if facts is not None:
+            if facts is not None and records:
                 _record_facts(url, timeout, facts)
             return 'alive', str(r.status)
     except urllib.error.HTTPError as e:
@@ -218,13 +234,14 @@ def probe(url, timeout=TIMEOUT, facts=None):
         return 'unknown', type(e).__name__
 
 
-def _one(url, pause):
+def _one(url, pause, records_until=None):
+    records = lambda: records_until is None or time.monotonic() < records_until   # noqa: E731
     facts = {}
-    state, _ = probe(url, facts=facts)
+    state, _ = probe(url, facts=facts, records=records())
     if state == 'dead':   # a second look before anything is closed
         time.sleep(1)
         facts = {}
-        state, _ = probe(url, facts=facts)
+        state, _ = probe(url, facts=facts, records=records())
     if pause:
         time.sleep(pause)
     return state, facts
@@ -254,7 +271,7 @@ def check(targets, pause=0.3, workers=None, deadline=None):
             if left() <= 0:
                 out['unchecked'] += len(todo) - n
                 break
-            futures[pool.submit(_one, t['url'], pause)] = t['id']
+            futures[pool.submit(_one, t['url'], pause, stop_at - RECORD_RESERVE)] = t['id']
         done, not_done = wait(list(futures), timeout=left())
         for f in done:
             _record(out, futures.pop(f), f)

@@ -45,6 +45,20 @@ class TrackingParameters(unittest.TestCase):
         self.assertEqual(dd.clean_posting_url('https://e.com/job-detail?gh_jid=6234311004&utm_source=x'), 'https://e.com/job-detail?gh_jid=6234311004')
         self.assertNotEqual(dd.posting_url_key('https://e.com/job?gh_jid=1'), dd.posting_url_key('https://e.com/job?gh_jid=2'))
         self.assertNotEqual(dd.posting_url_key('https://t.fa.em2.oraclecloud.com/?site_number=CX#1'), dd.posting_url_key('https://t.fa.em2.oraclecloud.com/?site_number=CX#2'))
+        # review of PR #238: every other parameter is kept byte for byte
+        self.assertEqual(dd.clean_posting_url('https://e.com/j?jobid&x=a%20b+c&utm_source=z&feedId=1#f'), 'https://e.com/j?jobid&x=a%20b+c#f')
+        self.assertEqual(dd.clean_posting_url('https://e.com/j?utm_medium=rss'), 'https://e.com/j')
+
+    def test_a_careers_page_url_shared_by_two_jobs_keeps_both(self):
+        def d1(sql, local=None):
+            return []
+        jobs = [{'id': 'js:a', 'url': 'https://e.com/careers?utm_source=x', 'company': 'Acme', 'title': 'Maintenance Engineer', 'location': 'Pune'},
+                {'id': 'js:b', 'url': 'https://e.com/careers', 'company': 'Acme', 'title': 'Reliability Engineer', 'location': 'Pune, India'},
+                {'id': 'js:c', 'url': 'https://e.com/careers/', 'company': 'Acme Ltd', 'title': 'Reliability  engineer', 'location': 'Pune, MH'}]
+        with mock.patch.object(dd, 'd1', d1):
+            fresh, _, dropped = dd.split_new(jobs)
+        self.assertEqual([j['id'] for j in fresh], ['js:a', 'js:b'], 'the same URL and title is one job; another title is another job')
+        self.assertEqual(dropped, 1)
 
     def test_a_stored_url_without_tracking_parameters_drops_the_copy(self):
         stored_url = 'https://jobs.engie.com/job/1376676255/'
