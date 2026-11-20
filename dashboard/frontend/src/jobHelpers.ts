@@ -1,3 +1,16 @@
+import type { Job } from './types';
+
+export function postingUrl(job: Pick<Job, 'original_posting_url' | 'source_url'>): string | null {
+  for (const [value, allowHttp] of [[job.original_posting_url, false], [job.source_url, true]] as const) {
+    if (!value || !/^https?:\/\//i.test(value)) continue;
+    try {
+      const url = new URL(value);
+      if (!url.username && !url.password && (url.protocol === 'https:' || allowHttp)) return value;
+    } catch { /* Try the source when the preferred posting address is incomplete. */ }
+  }
+  return null;
+}
+
 // Small deterministic helpers for the job inspection panel. No network, no AI, nothing stored.
 
 /** Links that open ready-made people searches for an employer. The candidate contacts people themselves; nothing is sent from here. */
