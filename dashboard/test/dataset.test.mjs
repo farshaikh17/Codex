@@ -169,10 +169,10 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const desc = pick(DESC), st = pick(STATUS), ov = rnd() < 0.15 ? pick(['READY', 'INELIGIBLE']) : null, tagged = rnd() < 0.2, app = rnd() < 0.15;
     insJob.run(job, title, 'Co', 'lever', 1, '2026-11-01', desc, loc, 'REMOTE');
     insQ.run(cid, job, st, ov, 'UNKNOWN', 'orig-reason', 'orig-qual');
-    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v20":true}' : '{"preliminary":true}');
+    insS.run(cid, job, 50, tagged ? '{"preliminary":true,"profile_v21":true}' : '{"preliminary":true}');
     if (app) insA.run(`a${i}`, cid, job, 'APPLIED');
     // an application by the OTHER candidate on the same job must not protect this row's score
-    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v20":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
+    rows.push({ candidate_id: cid, job_id: job, title, location: loc, description: desc, workplace_type: 'REMOTE', score_breakdown: tagged ? '{"preliminary":true,"profile_v21":true}' : '{"preliminary":true}', _st: st, _ov: ov, _tagged: tagged, _app: app });
   }
   const snap = () => ({ q: w.sqlite.prepare(`SELECT * FROM candidate_qualifications ORDER BY 1,2`).all(), s: w.sqlite.prepare(`SELECT * FROM candidate_job_scores ORDER BY 1,2`).all(),
     jobs: JSON.stringify(w.sqlite.prepare(`SELECT * FROM jobs ORDER BY id`).all()), apps: JSON.stringify(w.sqlite.prepare(`SELECT * FROM applications ORDER BY id`).all()) });
@@ -192,7 +192,7 @@ test('re-score property: 400 random rows; applied, overridden, non-review and al
     const protectedRow = r._app || r._ov !== null || !['NEEDS_REVIEW', 'HOLD'].includes(r._st);
     if (protectedRow) { assert.deepEqual(q1, q0, `qualification row must not change: ${k} ${JSON.stringify({ app: r._app, ov: r._ov, st: r._st })}`); assert.deepEqual(s1, s0, `score row must not change: ${k}`); continue; }
     if (r._tagged) { assert.deepEqual(s1, s0, `already-tagged score must not change: ${k}`); }
-    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v20, true, `re-scored row carries the marker: ${k}`); changedScores++; }
+    else { assert.equal(JSON.parse(s1.score_breakdown).profile_v21, true, `re-scored row carries the marker: ${k}`); changedScores++; }
     if (JSON.stringify(q1) !== JSON.stringify(q0)) {
       changedQuals++;
       assert.ok(['NEEDS_REVIEW', 'HOLD'].includes(q0.qualification_status) && q0.manual_override_status === null, `only undecided review rows may change: ${k}`);
@@ -278,7 +278,7 @@ test('automatic shortlist: tiers, the cap of 25, stale and unscreened rows stay 
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V8 = '{"preliminary":true,"profile_v20":true}';
+  const V8 = '{"preliminary":true,"profile_v21":true}';
   const add = (id, score, elig, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? NOW);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', elig, o.reason ?? 'Cloud discovery match.', o.override || null);
@@ -345,7 +345,7 @@ test('low matches leave To review with a mark and come back when the score rises
   const w = world();
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
-  const V = '{"preliminary":true,"profile_v20":true}';
+  const V = '{"preliminary":true,"profile_v21":true}';
   const add = (id, score, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at) VALUES (?,?,?,?,?,1,'2026-11-01')`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id);
     db.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason,manual_override_status) VALUES (?,?,?,?,?,?)`).run(F, id, o.status || 'NEEDS_REVIEW', 'UNKNOWN', o.reason ?? 'Cloud discovery match.', o.override || null);
@@ -380,7 +380,7 @@ test('re-score covers the automatic shortlist: a shortlisted row gets the new ru
   db.exec(run(w.dir, ['--rescore', path.join(w.dir, 'rescore.json')]).sql);
   selectInto(db);
   const s = (id) => db.prepare(`SELECT s.overall_score o, s.score_breakdown b, q.qualification_status st, q.qualification_reason r FROM candidate_job_scores s JOIN candidate_qualifications q USING(candidate_id, job_id) WHERE s.job_id = ?`).get(id);
-  assert.ok(s('a1').o <= 40 && /profile_v20/.test(s('a1').b), `the shortlisted row is re-scored under the new rules (${s('a1').o})`);
+  assert.ok(s('a1').o <= 40 && /profile_v21/.test(s('a1').b), `the shortlisted row is re-scored under the new rules (${s('a1').o})`);
   assert.notEqual(s('a1').st, 'READY', 'and leaves the shortlist in the same run');
   assert.deepEqual([s('a2').o, s('a2').st], [70, 'READY'], 'a person\'s Ready row is untouched');
 });
@@ -390,7 +390,7 @@ test('a day whose still-open check verified nothing does not empty the shortlist
   const db = w.sqlite;
   fs.writeFileSync(path.join(w.dir, 'matches.json'), JSON.stringify({ jobs: [], closed: [] }));
   const NOW = new Date().toISOString(), OLD = new Date(Date.now() - 6 * 86400000).toISOString();
-  const V = '{"preliminary":true,"profile_v20":true}';
+  const V = '{"preliminary":true,"profile_v21":true}';
   const MARK = 'Shortlisted automatically. Cloud discovery match.';
   const add = (id, score, o = {}) => {
     db.prepare(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,discovered_at,last_verified_at) VALUES (?,?,?,?,?,?,?,?)`).run(id, 'T ' + id, 'Acme', 'ashby', 'https://jobs.example/' + id, o.active ?? 1, OLD, o.verified ?? OLD);

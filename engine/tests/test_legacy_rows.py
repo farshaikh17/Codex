@@ -36,7 +36,7 @@ class LegacyRows(unittest.TestCase):
         self.add('e_override', override='NEEDS_REVIEW')
         self.add('f_applied', app=True)
         self.add('g_ready', status='READY', score=61, breakdown='{"old":1}')   # first-import Ready, never re-checked: exported
-        self.add('g2_auto', status='READY', score=70, breakdown='{"preliminary":true,"profile_v20":true}')   # shortlisted by the current screen: not legacy
+        self.add('g2_auto', status='READY', score=70, breakdown='{"preliminary":true,"profile_v21":true}')   # shortlisted by the current screen: not legacy
         self.add('g3_decided', status='READY', score=61, breakdown='{"old":1}', override='READY')            # a person's Ready: never
         self.add('h_collector', reason='[GITHUB_COLLECTOR] Unassessed public ATS posting from acme; review pending.', score=0, breakdown='{"state":"UNASSESSED"}')
         self.add('i_closed', active=0)
