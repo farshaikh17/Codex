@@ -1,0 +1,96 @@
+{
+ "schema": 1,
+ "candidate_id": "example_data_analyst_remote_eu",
+ "judged_on": "2026-11-20",
+ "_comment": "Synthetic postings and verdicts for the synthetic example profile (tests only; no real person or posting).",
+ "rows": [
+  {
+   "id": "j1",
+   "title": "Senior Data Analyst",
+   "location": "Remote - Netherlands",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team.",
+   "verdict": "RIGHT",
+   "note": "remote from the Netherlands, own field",
+   "company": "Synthetic Employer j1",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j2",
+   "title": "Product Analyst",
+   "location": "Berlin, Germany",
+   "remote": false,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team.",
+   "verdict": "RIGHT",
+   "note": "on site in a listed country",
+   "company": "Synthetic Employer j2",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j3",
+   "title": "Data Engineer",
+   "location": "Remote - Netherlands",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team. Build Spark and Airflow pipelines.",
+   "verdict": "WRONG",
+   "note": "excluded family",
+   "company": "Synthetic Employer j3",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j4",
+   "title": "Junior Data Analyst",
+   "location": "Remote - Netherlands",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team.",
+   "verdict": "WRONG",
+   "note": "below level",
+   "company": "Synthetic Employer j4",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j5",
+   "title": "Data Analyst",
+   "location": "Remote - US",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a team. Must be located in the US.",
+   "verdict": "WRONG",
+   "note": "US only",
+   "company": "Synthetic Employer j5",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j6",
+   "title": "Data Analyst",
+   "location": "Remote - Netherlands",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team. Fluent German is required.",
+   "verdict": "WRONG",
+   "note": "language not spoken",
+   "company": "Synthetic Employer j6",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j7",
+   "title": "Account Executive",
+   "location": "Amsterdam, Netherlands",
+   "remote": false,
+   "description": "Quota-carrying sales role, prospecting and closing.",
+   "verdict": "WRONG",
+   "note": "other field",
+   "company": "Synthetic Employer j7",
+   "source": "greenhouse"
+  },
+  {
+   "id": "j8",
+   "title": "BI Analyst",
+   "location": "Anywhere in the World",
+   "remote": true,
+   "description": "You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. Data quality and reporting are yours. 4+ years of experience as an analyst. We are a fully remote team. We hire worldwide, work from anywhere in the world.",
+   "verdict": "RIGHT",
+   "note": "worldwide remote",
+   "company": "Synthetic Employer j8",
+   "source": "greenhouse"
+  }
+ ]
+}

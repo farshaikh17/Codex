@@ -7,6 +7,7 @@ import { runDiscovery, automationStatus, sourceURL, assessBacklog, ASSESS_EVERY_
 import * as site from './site';
 import { whyLine } from './why';
 import { postingUrl } from './posting_url';
+import './profiles/dispatch';   // registers the profile scorer with discovery.ts (dashboard/docs/MULTI_CANDIDATE.md)
 import { collapseTwins, sectionsWithoutTwins, type Twins, type TwinRow } from './twins';
 import { seekerSnapshot, seekerTouched, SNAPSHOT_VERSION, byScore, byDate, byScoreId, cmpBin, twinRows, type Snapshot } from './snapshot';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
@@ -3559,7 +3560,7 @@ router.delete('/api/clients/:id/share-links/:link', async (request, env, params)
 // candidates cannot be removed. Shared job postings stay; what is removed is every row tied to this client, their application record (name, e-mail, phone)
 // and any cached answers that mention the client.
 const CLIENT_DATA_TABLES = ['candidate_job_scores', 'candidate_qualifications', 'qualification_history', 'application_history', 'application_followups', 'job_feedback', 'applications', 'past_applications',
-  'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests'] as const;
+  'candidate_strategy', 'client_view_tokens', 'client_profiles', 'client_requests', 'candidate_profile_configs'] as const;
 router.delete('/api/clients/:id', async (request, env, params) => {
   const id = knownCandidate(params.id);
   if (!id) return badCandidate(request, env, params.id);

@@ -882,11 +882,15 @@ def main():
     profs = json.loads(Path(a.profiles).read_text())
     rules = {cid: (re.compile(p['role'], re.I), re.compile(p['exclude'], re.I) if p.get('exclude') else None) for cid, p in profs.items()}
     SF_ROLE_FILTER[:] = list(rules.values()) + ([(FM_ROLE, FM_EXCLUDE)] if any(c in rules for c in FM_CANDIDATES) else [])
-    wq = [(q, cid == 'farhan_shaikh') for cid in profs for q in QUERIES.get(cid, [])]
-    pq = [q for cid in profs for q in WORKABLE_PLACES.get(cid, [])]
+    # a profile config's own terms (engine/profile_plan.py: bounded per person) when the person has no table entry here
+    wq = [(q, cid == 'farhan_shaikh' or bool(p.get('remote_only'))) for cid, p in profs.items() for q in (QUERIES.get(cid) or p.get('workable') or [])]
+    pq = [tuple(q) for cid, p in profs.items() for q in (WORKABLE_PLACES.get(cid) or p.get('workable_places') or [])]
+    eures_terms = {c: EURES_TERMS.get(c) or profs[c].get('eures') for c in profs if EURES_TERMS.get(c) or profs[c].get('eures')}
+    adzuna_terms = {c: ADZUNA.get(c) or [tuple(x) for x in profs[c].get('adzuna') or []] for c in profs if ADZUNA.get(c) or profs[c].get('adzuna')}
+    WATCH.extend((b['slug'], b['kind'], b['slug']) for p in profs.values() for b in p.get('boards') or [] if (b['slug'], b['kind'], b['slug']) not in WATCH)
     sources = {'workable': lambda: workable(wq), 'workable_places': lambda: workable(pq, pages=3), 'eightfold': eightfold, 'siemens_energy': siemens_energy, 'successfactors': successfactors, 'smartrecruiters': smartrecruiters, 'workday': workday, 'oracle_hcm': oracle_hcm, 'jibe': jibe, 'watch_boards': watch_boards,
                'arbeitnow': arbeitnow, 'uncareers': un_careers,
-               'eures': lambda: eures({c: t for c, t in EURES_TERMS.items() if c in profs}), 'adzuna': lambda: adzuna({c: t for c, t in ADZUNA.items() if c in profs})}
+               'eures': lambda: eures(eures_terms), 'adzuna': lambda: adzuna(adzuna_terms)}
     if not pq:   # no profile has place searches (Farhan alone): the source is not listed, rather than reported as an empty read
         del sources['workable_places']
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only

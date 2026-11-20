@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "display_name": "Example Analyst (synthetic test profile, not a real person)",
+  "field": {
+    "packs": ["keyword"],
+    "role_families": ["data_analytics"],
+    "excluded_families": ["data_engineering", "software_engineering"],
+    "title": { "should": ["analytics"], "avoid": ["intern", "working student"] },
+    "skills": { "required": ["sql"], "positive": ["SQL", "Tableau", "Python", "dbt", "A/B testing", "Stakeholder reporting"] },
+    "target_roles": ["Data Analyst", "Product Analyst", "BI Analyst"]
+  },
+  "level": { "years": 5, "min": "mid", "max": "lead" },
+  "place": [
+    { "policy": "remote_from_country", "country": "NL", "remote_only": false, "worldwide_ok": true },
+    { "policy": "onsite_in", "countries": ["NL", "DE"] }
+  ],
+  "employment_types": ["FULL_TIME", "CONTRACT"],
+  "language": { "spoken": ["English", "Dutch"] },
+  "salary": { "floor": { "amount": 50000, "currency": "EUR", "period": "year" } },
+  "thresholds": { "qualify": 65, "tier_size": 10 },
+  "shortlist": { "band_minimums": { "READY": { "remote": 2 } } },
+  "discovery": { "search_terms": ["data analyst", "product analyst", "bi analyst"], "countries": ["NL", "DE"], "jobspy_sites": ["indeed", "linkedin"],
+    "employer_boards": [{ "kind": "greenhouse", "slug": "exampleco" }], "max_rows": 5000, "max_selected": 200 }
+}

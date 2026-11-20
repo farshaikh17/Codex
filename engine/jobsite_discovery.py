@@ -110,7 +110,8 @@ def main():
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
         home = p['home'].title()
-        queries = QUERIES.get(cid) or [(w, home, home, INDIA_SITES if home == 'India' else ['indeed', 'linkedin']) for w in p.get('keywords', [])]
+        # a profile config's own searches (engine/profile_plan.py, at most 5): [term, location, country, sites]
+        queries = QUERIES.get(cid) or [tuple(q) for q in p.get('jobspy') or []] or [(w, home, home, INDIA_SITES if home == 'India' else ['indeed', 'linkedin']) for w in p.get('keywords', [])]
         role = re.compile(p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
         for term, loc, country, sites in queries[:MAX_QUERIES]:
             for site in sites:

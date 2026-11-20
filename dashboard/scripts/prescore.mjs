@@ -8,7 +8,8 @@
 // Output: one line per input line {k, cid, score, status, eligibility, band}. A candidate that is not in candidates.json gets status 'UNKNOWN_CANDIDATE'.
 import fs from 'node:fs';
 import readline from 'node:readline';
-import { evaluate, placeBand, companyKey, onsiteByText, remoteFlagTrusted } from '../worker/discovery.ts';
+import { companyKey, onsiteByText, remoteFlagTrusted } from '../worker/discovery.ts';
+import { scoreCandidate, bandFor, registerCandidates } from '../worker/profiles/dispatch.ts';   // the old evaluate() unless the person has a profile config
 
 export const plain = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
 
@@ -38,8 +39,9 @@ export function contextFor(c) {
 
 export function prescore(cand, ctx, row) {
   const p = posting(row);
-  const r = evaluate(cand, p, ctx);
-  return { score: r.score, status: r.status, eligibility: r.eligibility, band: placeBand(cand.id, p.location, null, p.remote, p.description) };
+  registerCandidates([cand]);
+  const r = scoreCandidate(cand, p, ctx);
+  return { score: r.score, status: r.status, eligibility: r.eligibility, band: bandFor(cand.id, p.location, null, p.remote, p.description) };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

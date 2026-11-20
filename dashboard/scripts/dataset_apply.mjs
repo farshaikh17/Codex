@@ -13,6 +13,7 @@ import { evaluate, RULE_VERSION, RULES_MARKER, companyKey, remoteFlagTrusted } f
 import { safeApplicationUrl } from './posting_urls.mjs';
 import { buildMarks, tasteAdjust, withTasteSentence } from './taste_rules.mjs';
 import { posting as postingOf } from './prescore.mjs';
+import { scoreCandidate, registerCandidates } from '../worker/profiles/dispatch.ts';   // profile-config people: their packs (MULTI_CANDIDATE.md)
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
@@ -35,6 +36,7 @@ const num = (v) => (v === null || v === undefined || v === '' || !Number.isFinit
 
 const candidates = JSON.parse(fs.readFileSync(opt('--candidates'), 'utf8'));   // [{ id, primary_skills, search_profile }]
 const byId = new Map(candidates.map((c) => [c.id, c]));
+registerCandidates(candidates);   // a profile person's role families for the taste rules
 // Daily-discovery context: employers listed publicly as hiring worldwide (engine/global_hirers.py, no credentials) and, per
 // candidate, employers that rejected them before (dashboard applications marked REJECTED and past applications entered by hand).
 const hirersFile = opt('--global-hirers');
@@ -76,7 +78,7 @@ for (const file of many('--in')) {
     for (const cid of j.candidates || []) {
       const cand = byId.get(cid);
       if (!cand) continue;
-      const r = evaluate(cand, posting, ctxFor.get(cid));
+      const r = scoreCandidate(cand, posting, ctxFor.get(cid));
       // A board posting whose own text rules the candidate out (not remote, US only, clearance...) is not stored. Only a
       // positive eligibility claim is never taken from a board.
       if (board && r.status === 'INELIGIBLE') { report.skipped_ineligible++; continue; }
@@ -283,7 +285,7 @@ if (rescoreFile && fs.existsSync(rescoreFile)) {
     if (!cand || !hasSkills(cand)) continue;   // nothing to re-score with yet
     const posting = { id: row.job_id, title: row.title || '', company: row.company || '', url: '', source: row.source_adapter || '', location: row.location || '', description: plain(row.description), remote: storedRemote(row), board: row.provenance === 'PUBLIC_FEED_UNVERIFIED',
       salary: { min: row.salary_min, max: row.salary_max, currency: row.salary_currency, period: row.salary_period } };
-    const r = evaluate(cand, posting, ctxFor.get(row.candidate_id));
+    const r = scoreCandidate(cand, posting, ctxFor.get(row.candidate_id));
     if (row.legacy) { rescreenLegacy(row, r); continue; }
     let bd = {}; try { bd = JSON.parse(row.score_breakdown || '{}') || {}; } catch {}
     // The re-scored base plus the current taste (stored as taste_adj, so the taste pass below never adds it twice).
