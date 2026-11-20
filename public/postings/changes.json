@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|lever:voltus:e6e12da1-116e-4fa9-bb36-a6d224aaee4f",
+ "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|lever:voltus:e966b65f-09d3-48e1-b96f-508be800ec4f",
  "entries": [
   {
    "availability": "listed",
@@ -785,14 +785,6 @@
    "posting_id": "greenhouse:gitlab:8742248002",
    "record": "records/greenhouse__gitlab__8742248002.json",
    "record_sha256": "fc8c4d276498ddf02044d4a224d513b19b43eec25d17dfe4558b00eb04eea739"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "f4fc1d8845d2ebe7355666d323436e9fcd1a74eb1181755334e2ff2dfd5ba730",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8770661002",
-   "record": "records/greenhouse__gitlab__8770661002.json",
-   "record_sha256": "8d0759a530fc42084fcdc34151547c27f33bc5e77091963c6d387a1cfe21f2a7"
   },
   {
    "availability": "listed",
@@ -1601,6 +1593,14 @@
    "posting_id": "lever:voltus:e6e12da1-116e-4fa9-bb36-a6d224aaee4f",
    "record": "records/lever__voltus__e6e12da1-116e-4fa9-bb36-a6d224aaee4f.json",
    "record_sha256": "f93ffb2a64a6f0e27b85a0744aa6d9e3fdc092ad21a2e777f7bd7cab4560e1c3"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "7ad44ed2226c7a897d452e8434475e6142fdcbe31c4b412c837d31ed333a685b",
+   "last_change": "2026-10-27T20:34:22.271289+00:00",
+   "posting_id": "lever:voltus:e966b65f-09d3-48e1-b96f-508be800ec4f",
+   "record": "records/lever__voltus__e966b65f-09d3-48e1-b96f-508be800ec4f.json",
+   "record_sha256": "92ba135fd0c6b451ad3b06f98336bf47f86159d1144e84390abcabfb56a3a421"
   }
  ],
  "has_more": true,
