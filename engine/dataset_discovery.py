@@ -455,6 +455,51 @@ def job_id(ats, url):
     return f"ds:{ats or 'ats'}:{hashlib.sha1(url.encode()).hexdigest()[:20]}"
 
 
+# Jobs QA 7 (ENGIE 'Solar Asset Manager- State Lead' shown twice: the dataset's copy and a job-site copy whose URL only adds
+# '?feedId=null&utm_source=J2WRSS&utm_medium=rss&utm_campaign=J2W_RSS'): a posting URL is compared without its tracking parameters. Other parameters
+# stay (on many career sites they are the job: '?gh_jid=6173440004', 'default.aspx?c=apply&lJobID=560804'). The same reading as postingUrlKey() in
+# dashboard/worker/discovery.ts.
+TRACKING_PARAM = re.compile(r'^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|referrer|lever-[a-z_-]*|fbclid|gclid|mc_[a-z]+|trk|rss)$', re.I)
+
+
+def clean_posting_url(url):
+    """The URL without tracking parameters (scheme, host, path and fragment as written)."""
+    from urllib.parse import urlsplit, urlunsplit, unquote_plus
+    try:
+        u = urlsplit(str(url or '').strip())
+    except ValueError:
+        return str(url or '')
+    if u.scheme not in ('http', 'https'):
+        return str(url or '')
+    # the tracking pairs are dropped from the query as written; every other pair is kept byte for byte ('jobid', '%20', '+' unchanged)
+    query = '&'.join(p for p in u.query.split('&') if p and not TRACKING_PARAM.match(unquote_plus(p.split('=', 1)[0])))
+    return urlunsplit((u.scheme, u.netloc, u.path, query, u.fragment))   # a fragment can be the job ('...oraclecloud.com/?site_number=CX#26081')
+
+
+def url_variants(url):
+    """The stored forms one posting URL may have: as given, without tracking parameters, and either with or without a trailing slash."""
+    raw, clean = str(url or ''), clean_posting_url(url)
+    out = {raw, clean}
+    if '?' not in clean and '#' not in clean:
+        out |= {clean.rstrip('/'), clean.rstrip('/') + '/'}
+    return {v for v in out if v}
+
+
+def posting_url_key(url):
+    """One key per posting across sources: lower-case host without 'www.', path without trailing slash, the remaining parameters sorted."""
+    from urllib.parse import urlsplit, parse_qsl, urlencode
+    try:
+        u = urlsplit(clean_posting_url(url))
+    except ValueError:
+        return ''
+    if u.scheme not in ('http', 'https'):
+        return ''
+    host = (u.hostname or '').lower()
+    host = host[4:] if host.startswith('www.') else host
+    q = urlencode(sorted(parse_qsl(u.query, keep_blank_values=True)))
+    return host + u.path.rstrip('/') + ('?' + q if q else '') + ('#' + u.fragment if u.fragment else '')
+
+
 def adapter(s):
     return re.sub(r'[^a-z]', '', str(s or 'ats').lower())[:20] or 'ats'
 
@@ -513,7 +558,7 @@ def existing(jobs, local=None, snapshot=None, cache=None):
             ids[r['id']] = r
         # The URL matters only for a posting whose id is not stored (a stored id is never inserted again): most of a day's selection is
         # already stored, so this halves the duplicate check's reads.
-        url_list = json.dumps([j['url'] for j in part if j['id'] not in ids])
+        url_list = json.dumps(sorted({v for j in part if j['id'] not in ids for v in url_variants(j['url'])}))   # jobs QA 7: tracking parameters aside
         if url_list == '[]':
             continue
         for r in d1(f"SELECT source_url u FROM jobs WHERE source_url IN (SELECT value FROM json_each({sql_str(url_list)})) "
@@ -627,14 +672,18 @@ def split_new(jobs, local=None, merges=None, snapshot=None, cache=None):
     Plan B3: a new posting with the same employer and title as a stored active one (or an earlier one in this run), differing only by city, is
     stored once: its city is added to the other's location ("Pune; Chennai; +3 more"). For a stored row the change is appended to `merges`
     ('stored': [{id, old, new}], dataset_apply.mjs writes it, guarded); stored duplicates are not merged with each other."""
-    seen, unique = set(), []
-    for j in jobs:   # duplicates inside one run (same company, title and location)
+    seen, unique, seen_urls = set(), [], set()
+    for j in jobs:   # duplicates inside one run (same company, title and location; jobs QA 7: or the same posting URL, tracking parameters aside)
         k = (norm(j['company']), norm(j['title']), norm(j.get('location')))
-        if k not in seen:
+        u = posting_url_key(j.get('url'))
+        u = (u, norm(j['title'])) if u else None   # with the title: a careers page URL shared by several jobs is not one job (urlTwinKey)
+        if k not in seen and not (u and u in seen_urls):
             seen.add(k); unique.append(j)
+            if u:
+                seen_urls.add(u)
     ids, urls, pairs, closed, stored = existing(unique, local, snapshot, cache) if unique else ({}, set(), set(), set(), {})
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
-    fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
+    fresh = [j for j in unique if j['id'] not in ids and not (url_variants(j['url']) & urls) and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
     # Plan B3. A failure here never stops the run (tenth-man review): every posting is then inserted as before.
     try:
         part = {}
