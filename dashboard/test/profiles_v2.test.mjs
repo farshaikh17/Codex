@@ -174,7 +174,7 @@ test('re-score v5: a row scored on the old profile is corrected and tagged; a ro
   sqlite.exec(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('${S}','s1','NEEDS_REVIEW',NULL),('${S}','s2','NEEDS_REVIEW',NULL)`);
   sqlite.exec(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES
     ('${S}','s1',77,'{"preliminary":true,"profile_v3":true,"matched_skills":["Electrical Maintenance","Reliability"]}'),
-    ('${S}','s2',77,'{"preliminary":true,"profile_v3":true,"profile_v21":true,"matched_skills":["KEEP"]}')`);
+    ('${S}','s2',77,'{"preliminary":true,"profile_v3":true,"profile_v22":true,"matched_skills":["KEEP"]}')`);
   const rows = ['s1', 's2'].map((id) => ({ candidate_id: S, job_id: id, title: 'Reliability Engineer', company: 'X', location: 'Dubai, UAE', description: 'Preventive Maintenance and Reliability work.', workplace_type: 'ONSITE',
     score_breakdown: sqlite.prepare('SELECT score_breakdown b FROM candidate_job_scores WHERE job_id=?').get(id).b }));
   fs.writeFileSync(path.join(dir, 'rescore.json'), JSON.stringify(rows));
@@ -184,7 +184,7 @@ test('re-score v5: a row scored on the old profile is corrected and tagged; a ro
     '--rescore', path.join(dir, 'rescore.json'), '--out', path.join(dir, 'a.sql')], { cwd: root });
   sqlite.exec(fs.readFileSync(path.join(dir, 'a.sql'), 'utf8'));
   const bd = (id) => JSON.parse(sqlite.prepare(`SELECT score_breakdown b FROM candidate_job_scores WHERE candidate_id='${S}' AND job_id=?`).get(id).b);
-  assert.equal(bd('s1').profile_v21, true, 'tagged so it is not redone');
+  assert.equal(bd('s1').profile_v22, true, 'tagged so it is not redone');
   assert.ok(!bd('s1').matched_skills.includes('Electrical Maintenance'), 'a skill she no longer claims is gone from the match list');
   assert.ok(bd('s1').matched_skills.includes('Reliability') && bd('s1').matched_skills.includes('Preventive Maintenance'));
   assert.deepEqual(bd('s2').matched_skills, ['KEEP'], 'a row already on the current profile is untouched');

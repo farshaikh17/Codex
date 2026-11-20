@@ -4,15 +4,19 @@ Three steps, so credentials never reach the step that visits third-party website
   --export OUT   (D1 credentials) the 75 best-scored undecided jobs per candidate, with their posting URL; with --pool (plan A1) the shortlist
                  pool's rows come first: the automatic shortlist, then the pool by score, up to 150 per person
   --check  IN    (no credentials) one GET per URL (8 at a time, 8 s each; after 8 minutes it stops and keeps what it has); a job is dead only on HTTP 404/410 twice, or when a known hiring system
-                 says so (a Greenhouse redirect carrying error=true, a Lever 404); 403/429/5xx/timeouts prove nothing
+                 says so (a Greenhouse redirect carrying error=true, a Lever 404, a Workday posting record that is not found or no longer public);
+                 403/429/5xx/timeouts prove nothing. Jobs QA 7: the employer's own record of the posting's place is read on the way (Workday's
+                 remote type and country, Ashby's workplace type and applicant country, the Greenhouse and Lever posting records) and kept as 'facts'
   --sql    IN    writes SQL: dead jobs are closed (never one with an application or a human decision), live ones get
-                 last_verified_at = now
+                 last_verified_at = now; a place the employer's record contradicts (hybrid or on-site where the job is stored remote; remote only
+                 from another country) is written to the job and its scores are marked for re-scoring under the current rules
 Usage: python engine/liveness.py --export work/liveness_targets.json [--pool work/shortlist_pool.json]
        python engine/liveness.py --check work/liveness_targets.json --out work/liveness_result.json
        python engine/liveness.py --sql work/liveness_result.json --out work/liveness.sql
 """
 import argparse
 import json
+import re
 import sys
 import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
@@ -98,19 +102,115 @@ TIMEOUT = 8           # seconds per request
 DEADLINE = 8 * 60     # seconds: the workflow step stops at 10 minutes, so the check returns what it has well before that
 
 
-def probe(url, timeout=TIMEOUT):
-    """('dead'|'alive'|'unknown', detail)."""
+# ---- Jobs QA 7: the employer's own record of a posting's place -----------------------------------------------------------------------------
+# Job boards and the open dataset tag places their own way ('Remote, India' on Indeed for a Greenhouse 'Remote US' posting; 'India Remote Office'
+# for a Workday 'Hybrid: Work in Office Part-Time' one; an Ashby 'Hybrid' posting flagged remote). The hiring system's own fields win. Read while the
+# still-open check is fetching the posting anyway: Workday's posting record (the cxs JSON of the same URL, which also says when a posting was taken
+# down: 'not found' or 'permission denied'), the Ashby page's own data, and the Greenhouse and Lever posting records (one small request each).
+WORKDAY_URL = re.compile(r'^https://([a-z0-9-]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)/job/([^?#]+)', re.I)
+GREENHOUSE_URL = re.compile(r'^https://(?:boards|job-boards)(?:\.eu)?\.greenhouse\.io/([^/?#]+)/jobs/(\d+)', re.I)
+LEVER_URL = re.compile(r'^https://jobs\.(eu\.)?lever\.co/([^/?#]+)/([0-9a-f-]{36})', re.I)
+ASHBY_URL = re.compile(r'^https://jobs\.ashbyhq\.com/', re.I)
+COUNTRY_CODES = {'IN': 'India', 'US': 'United States', 'GB': 'United Kingdom', 'UK': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia', 'DE': 'Germany',
+                 'FR': 'France', 'ES': 'Spain', 'IT': 'Italy', 'NL': 'Netherlands', 'IE': 'Ireland', 'PL': 'Poland', 'PT': 'Portugal', 'BR': 'Brazil',
+                 'MX': 'Mexico', 'SG': 'Singapore', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'PH': 'Philippines', 'BG': 'Bulgaria', 'RO': 'Romania'}
+US_WORDS = re.compile(r'(?<![A-Za-z])(?:US|USA|U\.S\.?)(?![A-Za-z])|\bunited states\b', re.I)
+
+
+def workday_record_url(url):
+    m = WORKDAY_URL.match(str(url or ''))
+    return f"https://{m.group(1)}.{m.group(2)}.myworkdayjobs.com/wday/cxs/{m.group(1)}/{m.group(3)}/job/{m.group(4)}" if m else None
+
+
+def _workplace(text):
+    t = str(text or '').lower()
+    return 'HYBRID' if 'hybrid' in t else 'ONSITE' if re.search(r'on[- ]?site|in[- ]office|office', t) else 'REMOTE' if 'remote' in t else None
+
+
+def workday_facts(record):
+    info = (record or {}).get('jobPostingInfo') or {}
+    country = (info.get('country') or {}).get('descriptor')
+    return {k: v for k, v in {'workplace': _workplace(info.get('remoteType')), 'location': info.get('location'), 'countries': [country] if country else []}.items() if v}
+
+
+def ashby_facts(html):
+    h = str(html or '')
+    wp = re.search(r'"workplaceType"\s*:\s*"([A-Za-z]+)"', h)
+    loc = re.search(r'"locationName"\s*:\s*"([^"]{1,120})"', h)
+    req = re.search(r'"applicantLocationRequirements"\s*:\s*(\{[^{}]*\}|\[[^\]]*\])', h)
+    countries = re.findall(r'"name"\s*:\s*"([^"]{2,60})"', req.group(1)) if req else []
+    return {k: v for k, v in {'workplace': _workplace(wp.group(1)) if wp else None, 'location': loc.group(1) if loc else None, 'countries': countries}.items() if v}
+
+
+def greenhouse_facts(record):
+    name = ((record or {}).get('location') or {}).get('name') or ''
+    countries = ['India'] if re.search(r'\bindia\b', name, re.I) else ['United States'] if US_WORDS.search(name) else []
+    return {k: v for k, v in {'workplace': 'REMOTE' if re.search(r'\bremote\b', name, re.I) else None, 'location': name, 'countries': countries}.items() if v}
+
+
+def lever_facts(record):
+    r = record or {}
+    code = str(r.get('country') or '').upper()
+    wp = {'remote': 'REMOTE', 'hybrid': 'HYBRID', 'onsite': 'ONSITE', 'on-site': 'ONSITE'}.get(str(r.get('workplaceType') or '').lower())
+    return {k: v for k, v in {'workplace': wp, 'location': (r.get('categories') or {}).get('location'), 'countries': [COUNTRY_CODES[code]] if code in COUNTRY_CODES else []}.items() if v}
+
+
+def _get_json(url, timeout):
+    req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
+    with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (built from our own https posting URLs)
+        return json.loads(r.read(262144).decode('utf-8', 'replace'))
+
+
+def _record_facts(url, timeout, facts):
+    """Greenhouse and Lever: the posting record's place, added to `facts` (a failure adds nothing; it never decides open or closed)."""
+    try:
+        m = GREENHOUSE_URL.match(url)
+        if m:
+            facts.update(greenhouse_facts(_get_json(f'https://boards-api.greenhouse.io/v1/boards/{m.group(1)}/jobs/{m.group(2)}', timeout)))
+            return
+        m = LEVER_URL.match(url)
+        if m:
+            facts.update(lever_facts(_get_json(f"https://api.{m.group(1) or ''}lever.co/v0/postings/{m.group(2)}/{m.group(3)}", timeout)))
+    except Exception:   # noqa: BLE001
+        pass
+
+
+def probe(url, timeout=TIMEOUT, facts=None):
+    """('dead'|'alive'|'unknown', detail). With a `facts` dict, the employer's own record of the posting's place is added to it (jobs QA 7)."""
+    rec = workday_record_url(url)
+    if rec:   # Workday: the posting record itself. Not found (S21) or no longer public (S22) is a closed posting; anything else falls back to the page
+        try:
+            record = _get_json(rec, timeout)
+            if facts is not None:
+                facts.update(workday_facts(record))
+            return 'alive', 'workday record'
+        except urllib.error.HTTPError as e:
+            body = ''
+            try:
+                body = e.read(4096).decode('utf-8', 'replace')
+            except Exception:   # noqa: BLE001
+                pass
+            if e.code == 404 or (e.code == 403 and '"S22"' in body):
+                return 'dead', f'workday record {e.code}'
+            if e.code == 429:   # the site is throttling us: a second request to its page now would only add load
+                return 'unknown', '429'
+        except Exception:   # noqa: BLE001 - timeouts, unreadable JSON: the page below decides
+            pass
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.5'})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (URLs from our own database, https only)
             final = r.geturl()
-            r.read(65536)
+            body = r.read(262144)
+            if facts is not None and ASHBY_URL.match(final or url):
+                facts.update(ashby_facts(body.decode('utf-8', 'replace') if isinstance(body, bytes) else body))
             if 'greenhouse.io' in final and 'error=true' in final:
                 return 'dead', 'greenhouse error redirect'
             initial_url, final_url = urlsplit(url), urlsplit(final)
             # A generic homepage after a redirect does not prove that a specific posting remains open.
             if initial_url.path.strip('/') and not final_url.path.strip('/'):
                 return 'unknown', 'redirected to homepage'
+            if facts is not None:
+                _record_facts(url, timeout, facts)
             return 'alive', str(r.status)
     except urllib.error.HTTPError as e:
         return ('dead' if e.code in (404, 410) else 'unknown'), str(e.code)
@@ -119,13 +219,15 @@ def probe(url, timeout=TIMEOUT):
 
 
 def _one(url, pause):
-    state, _ = probe(url)
+    facts = {}
+    state, _ = probe(url, facts=facts)
     if state == 'dead':   # a second look before anything is closed
         time.sleep(1)
-        state, _ = probe(url)
+        facts = {}
+        state, _ = probe(url, facts=facts)
     if pause:
         time.sleep(pause)
-    return state
+    return state, facts
 
 
 def check(targets, pause=0.3, workers=None, deadline=None):
@@ -133,7 +235,7 @@ def check(targets, pause=0.3, workers=None, deadline=None):
     so a slow day still writes what it verified instead of nothing. Targets not reached are counted in 'unchecked'."""
     workers = workers or WORKERS
     deadline = DEADLINE if deadline is None else deadline
-    out = {'dead': [], 'alive': [], 'unknown': 0, 'unchecked': 0}
+    out = {'dead': [], 'alive': [], 'unknown': 0, 'unchecked': 0, 'facts': {}}
     todo, seen = [], set()
     for t in targets:
         if t['id'] not in seen:
@@ -164,13 +266,16 @@ def check(targets, pause=0.3, workers=None, deadline=None):
 
 def _record(out, job_id, fut):
     try:
-        state = fut.result()
+        res = fut.result()
     except Exception:   # noqa: BLE001 - a probe that raised proves nothing
-        state = 'unknown'
+        res = 'unknown'
+    state, facts = res if isinstance(res, tuple) else (res, {})
     if state == 'dead':
         out['dead'].append(job_id)
     elif state == 'alive':
         out['alive'].append(job_id)
+        if facts:
+            out.setdefault('facts', {})[job_id] = facts
     else:
         out['unknown'] += 1
 
@@ -193,6 +298,48 @@ def q(v):
     return "'" + str(v).replace("'", "''") + "'"
 
 
+def not_remote_from_india(facts):
+    """Jobs QA 7: the employer's record says the job is hybrid or on site, or remote only from a country other than India (the selector keeps such
+    a row off Farhan's lists the same day; to_sql() writes it to the job for the next re-score)."""
+    f = facts or {}
+    countries = [str(c) for c in f.get('countries') or [] if c]
+    return f.get('workplace') in ('HYBRID', 'ONSITE') or (bool(countries) and not any(c.lower() == 'india' for c in countries))
+
+
+def place_sql(job_id, facts, marker):
+    """Jobs QA 7: SQL writing the employer's own place where it contradicts the stored one, each write guarded by the contradiction itself, so a
+    second run changes nothing. The scores of a changed job lose the rules marker first, so the next run re-scores them (rescore_rows)."""
+    f = facts or {}
+    wp, loc = f.get('workplace'), str(f.get('location') or '').strip()
+    countries = [str(c).strip() for c in f.get('countries') or [] if str(c).strip()]
+    abroad = bool(countries) and not any(c.lower() == 'india' for c in countries)
+    writes = []
+    if wp in ('HYBRID', 'ONSITE'):   # stored remote, the employer says hybrid or on site: both the flag and the place say so ('IND-Pune (Hybrid)')
+        word = 'Hybrid' if wp == 'HYBRID' else 'On-site'
+        place = f"{q(loc + ' (' + word + ')')}" if loc else f"COALESCE(NULLIF(location_restrictions, '') || ' ', '') || {q('(' + word + ')')}"
+        writes.append((f"workplace_type LIKE 'REMOTE%'", f"workplace_type = {q(wp)}, location_restrictions = CASE WHEN lower(COALESCE(location_restrictions, '')) "
+                       f"NOT LIKE '%hybrid%' AND lower(COALESCE(location_restrictions, '')) NOT LIKE '%on-site%' THEN {place} ELSE location_restrictions END"))
+    if abroad:
+        named = ' OR '.join(f"instr(lower(COALESCE(location_restrictions, '')), {q(c.lower())}) > 0" for c in countries)
+        if wp in (None, 'REMOTE'):   # remote only from that country: the employer's place, with its country
+            new = loc if any(c.lower() in loc.lower() for c in countries) else (f"{loc} ({', '.join(countries)})" if loc else ', '.join(countries))
+            writes.append((f'NOT ({named})', f'location_restrictions = {q(new)}'))
+        else:   # an office abroad whose city the rules may not know ('Pessione'): the country is added
+            writes.append((f"NOT ({named}) AND lower(COALESCE(location_restrictions, '')) NOT LIKE '%india%'",
+                           f"location_restrictions = COALESCE(NULLIF(location_restrictions, '') || ', ', '') || {q(countries[0])}"))
+    out = []
+    for guard, change in writes:
+        where = f'id = {q(job_id)} AND {guard}'
+        out.append(f"""UPDATE candidate_job_scores SET score_breakdown = replace(score_breakdown, {q('"' + marker + '":true')}, {q('"' + marker + '":false')}) WHERE job_id IN (SELECT id FROM jobs WHERE {where});""")
+        out.append(f'UPDATE jobs SET {change} WHERE {where};')
+    return out
+
+
+def _marker():
+    from engine.dataset_discovery import RULES_MARKER
+    return RULES_MARKER
+
+
 def to_sql(result, now=None):
     # "+is_active": find the listed ids by key; with the bare column D1's planner walked every active job instead (about 25,000 rows read).
     now = now or datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -205,7 +352,11 @@ def to_sql(result, now=None):
     for i in range(0, len(result['alive']), 100):
         ids = json.dumps(result['alive'][i:i + 100])
         lines.append(f"UPDATE jobs SET last_verified_at = {q(now)} WHERE id IN (SELECT value FROM json_each({q(ids)}));")
-    if result['dead']:
+    facts = {k: v for k, v in (result.get('facts') or {}).items() if k not in set(result['dead'])}
+    marker = _marker() if facts else None
+    places = [s for job_id, f in sorted(facts.items()) for s in place_sql(job_id, f, marker)]
+    lines += places
+    if result['dead'] or places:
         lines.append('UPDATE cache_state SET generation = generation + 1 WHERE id = 1;')
     return '\n'.join(lines) + '\n'
 
@@ -233,7 +384,8 @@ def main():
         targets = json.loads(Path(a.check).read_text())
         res = check(targets)
         Path(a.out).write_text(json.dumps(res))
-        print(json.dumps({'targets': len(targets), 'dead': len(res['dead']), 'alive': len(res['alive']),
+        print(json.dumps({'targets': len(targets), 'dead': len(res['dead']), 'alive': len(res['alive']), 'place_records': len(res.get('facts') or {}),
+                          'not_remote_from_india': sum(1 for f in (res.get('facts') or {}).values() if not_remote_from_india(f)),
                           'unknown': res['unknown'], 'unchecked': res['unchecked'], 'not_verified_by_host': not_verified_by_host(targets, res)}))
     elif a.sql:
         Path(a.out).write_text(to_sql(json.loads(Path(a.sql).read_text())))

@@ -35,6 +35,35 @@ class SplitNew(unittest.TestCase):
         self.assertEqual(dropped_in_run, 1, 'job 3 is the same as job 1 once normalised: one copy dropped inside the run')
 
 
+class TrackingParameters(unittest.TestCase):
+    """Jobs QA 7: a job-site copy whose URL only adds tracking parameters is the stored posting, not a new job."""
+    def test_url_variants_and_key(self):
+        a = 'https://jobs.engie.com/job/Bap-Solar-Asset-Manager-State-Lead-342301/1376676255/'
+        b = a + '?feedId=null&utm_source=J2WRSS&utm_medium=rss&utm_campaign=J2W_RSS'
+        self.assertIn(a, dd.url_variants(b))
+        self.assertEqual(dd.posting_url_key(a), dd.posting_url_key(b))
+        self.assertEqual(dd.clean_posting_url('https://e.com/job-detail?gh_jid=6234311004&utm_source=x'), 'https://e.com/job-detail?gh_jid=6234311004')
+        self.assertNotEqual(dd.posting_url_key('https://e.com/job?gh_jid=1'), dd.posting_url_key('https://e.com/job?gh_jid=2'))
+        self.assertNotEqual(dd.posting_url_key('https://t.fa.em2.oraclecloud.com/?site_number=CX#1'), dd.posting_url_key('https://t.fa.em2.oraclecloud.com/?site_number=CX#2'))
+
+    def test_a_stored_url_without_tracking_parameters_drops_the_copy(self):
+        stored_url = 'https://jobs.engie.com/job/1376676255/'
+        asked = []
+
+        def d1(sql, local=None):
+            if 'source_url u' in sql:
+                asked.append(sql)
+                return [{'u': stored_url}] if stored_url in sql else []
+            return []
+        jobs = [{'id': 'js:sf:1', 'url': stored_url + '?feedId=null&utm_source=J2WRSS', 'company': 'ENGIE', 'title': 'Solar Asset Manager', 'location': 'Bap, IN, 342301'},
+                {'id': 'js:sf:2', 'url': 'https://jobs.engie.com/job/999/?utm_source=x', 'company': 'ENGIE', 'title': 'O&M Engineer', 'location': 'Bap, IN'},
+                {'id': 'js:sf:3', 'url': 'https://jobs.engie.com/job/999/?utm_source=y', 'company': 'ENGIE SA', 'title': 'O&M Engineer', 'location': 'Bap, IN'}]
+        with mock.patch.object(dd, 'd1', d1):
+            fresh, reopen, dropped = dd.split_new(jobs)
+        self.assertEqual([j['id'] for j in fresh], ['js:sf:2'], 'the stored posting and the second copy inside the run are dropped')
+        self.assertEqual(dropped, 1)
+
+
 TEXT = ('We are hiring a Maintenance Engineer for our {city} plant. You will lead preventive maintenance of rotating equipment, run root cause '
         'analysis on breakdowns, plan shutdowns and overhauls, and keep the utilities running. Five or more years in a process plant. ') * 2
 
