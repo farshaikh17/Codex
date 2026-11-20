@@ -8,7 +8,8 @@ Nothing here decides fit, eligibility or READY.
 import html,json,re
 # 2: 'advantage'/'beneficial' wording is preferred; 'this role is based in X' is a location statement
 # 3: Ashby compensationTiers parsed per tier and component; Greenhouse pay labels converted from HTML to text
-EXTRACTOR_VERSION=5  # 5: Ashby 'Salary' components summarised as OTE are basis ote; 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
+# 6: quote role-specific remote geography and explicit work-authorization wording.
+EXTRACTOR_VERSION=6  # 5: Ashby 'Salary' components summarised as OTE are basis ote; 4: K/M/B suffixes, coded dollars (US$, CA$...), '/hr' between range amounts, company figures are not pay; 3: Ashby tiers
 EVIDENCE_SCHEMA='evidence-1'
 FIELDS=('location','workplace','employment_type','compensation','requirements_mandatory','requirements_preferred')
 THIN_WORDS=80
@@ -58,6 +59,10 @@ WORKPLACE_TEXT=((r'\b(?:fully remote|100% remote|this (?:role|position) is (?:fu
                 (r'\b(?:on-?site (?:role|position)|in[- ]office (?:role|position)|this (?:role|position) is (?:on-?site|in[- ]office))\b','onsite'))
 RESTRICTION=re.compile(r"\b((?:must|need to|needs to|required to|should) (?:be )?(?:located|based|reside|live|work from)|eligible to work|"
                        r"(?:role|position|job|you) (?:is|are|will be) (?:remote(?:ly)?,? (?:and )?)?(?:based|located) in|"
+                       r"(?:role|position|job) (?:is|will be) remote (?:from|within|in)\b|"
+                       r"(?:role|position|job) can be based in\b|"
+                       r"open to (?:candidates|applicants) (?:outside of|outside|anywhere in|based in|in)\b|"
+                       r"authori[sz]ed to work (?:in|from|where)\b|"
                        r"work(?:ing)? authori[sz]ation|right to work|(?:visa|immigration) sponsorship|sponsor (?:a |your )?(?:visa|work permit)|(?:only|unable to) (?:hire|consider|accept)|"
                        r"(?:candidates|applicants) (?:must be|located|based) in|time ?zones?\b|overlap with|\b(?:utc|gmt)\s?[+±-])",re.I)
 TITLE_TYPE=((r'\bpart[- ]time\b','part_time'),(r'\b(?:contract|contractor|freelance)\b','contract'),(r'\bintern(?:ship)?\b','internship'),

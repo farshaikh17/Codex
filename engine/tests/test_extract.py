@@ -187,6 +187,27 @@ class WorkplaceAndTypeTests(unittest.TestCase):
         restriction=[i for i in r['fields']['location']['items'] if i['method']=='description_text']
         self.assertEqual([i['quote'] for i in restriction],['Candidates must be located in the EU and have the right to work there.'])
         self.assertIsNone(restriction[0]['interpretation'])
+    def test_remote_residence_and_authorization_wording(self):
+        locations = [
+            'This role will be remote from Ireland.',
+            'This role is remote within North America.',
+            'This position can be based in Sydney, Melbourne or Brisbane.',
+            'This role is open to candidates outside of California and Colorado.',
+            'This job is open to candidates anywhere in the United States.',
+            'You must be authorised to work in the UK.',
+            'Applicants must be authorized to work from their home location.',
+            'You can work from anywhere if authorized to work where you live.',
+        ]
+        controls = ['We are open to candidates of all experience levels.',
+                    'Our customers monitor remote equipment from Dublin.',
+                    'You will be authorized to work on confidential projects.']
+        source = 'https://example.invalid/posting'
+        record = extract(version('\n'.join(locations + controls), locations=[]), source)
+        evidence = record['fields']['location']['items']
+        self.assertEqual([item['quote'] for item in evidence], locations)
+        self.assertTrue(all(item['source_url'] == source and item['interpretation'] is None
+                            for item in evidence))
+
 class QualityTests(unittest.TestCase):
     def test_empty_description_is_not_retrieved_everywhere(self):
         r=extract(version('',locations=[]))
