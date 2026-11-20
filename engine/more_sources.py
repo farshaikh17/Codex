@@ -42,6 +42,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from adapters import ashby_workplace  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 from engine.multi_place import from_count, places_text  # noqa: E402
 from engine import reposters, robots  # noqa: E402
@@ -613,7 +614,8 @@ def watch_board(company, kind, board):
         for r in json.loads(http(f'https://api.ashbyhq.com/posting-api/job-board/{urllib.parse.quote(board)}')).get('jobs') or []:
             if r.get('isListed') is False:
                 continue
-            remote = bool(r.get('isRemote')) or str(r.get('workplaceType') or '').lower() == 'remote'
+            remote_flag, _ = ashby_workplace(r)
+            remote = remote_flag is True
             places = [text(r.get('location'))] + [text(x.get('location')) for x in r.get('secondaryLocations') or [] if isinstance(x, dict)]
             yield job('watch_boards', r.get('jobUrl') or '', text(r.get('title')), company, _remote_place('; '.join(x for x in places if x), remote),
                       text(r.get('descriptionPlain') or r.get('descriptionHtml')), when(r.get('publishedAt')), board=False), remote
