@@ -121,8 +121,16 @@ def _d1_once(sql, local):
         raise D1Error(f'D1 query timed out after {e.timeout} s', True) from e
     text = out.stdout or ''
     if out.returncode != 0 or '[' not in text:
-        msg = (out.stderr or text)[-400:]
-        raise D1Error(f'D1 query failed: {msg}', bool(TRANSIENT.search(msg)))
+        # With --json, Wrangler can send the actual error to stdout and an unrelated CLI warning to stderr.
+        try:
+            payload = json.loads(text)
+        except ValueError:
+            payload = None
+        error = payload.get('error') if isinstance(payload, dict) else None
+        detail = error.get('text') if isinstance(error, dict) else None
+        msg = detail if isinstance(detail, str) and detail else (out.stderr or text)
+        permanent = re.search(r'\bSQLITE_ERROR\b|free tier daily row (?:read|write) limit|authentication error', msg, re.I)
+        raise D1Error(f'D1 query failed: {msg[-400:]}', not permanent and bool(TRANSIENT.search(msg)))
     return json.loads(text[text.index('['):])[0]['results']
 
 
