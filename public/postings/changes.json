@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-27T20:34:22.271289+00:00|lever:voltus:e966b65f-09d3-48e1-b96f-508be800ec4f",
+ "cursor_to": "pc1|2026-10-28T00:42:44.013366+00:00|ashby:weave:cf9c971d-b348-4929-ac3d-412f11d48673",
  "entries": [
   {
    "availability": "listed",
@@ -593,14 +593,6 @@
    "posting_id": "ashby:clipboard:2ca7fa94-6b57-4358-9105-857b911c15f7",
    "record": "records/ashby__clipboard__2ca7fa94-6b57-4358-9105-857b911c15f7.json",
    "record_sha256": "14e363fbe5e71aef2bd36c9be0fc7ac005c65b8d62ee74813c1b7e1fefc85a60"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "5e800ef4c5ea94cd95a168c22352ca94d9f4157702fa86931fa4d418d2d0d9a8",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "ashby:clipboard:64ac2f12-3cfc-4a7e-bb0d-1c97ffcb83a5",
-   "record": "records/ashby__clipboard__64ac2f12-3cfc-4a7e-bb0d-1c97ffcb83a5.json",
-   "record_sha256": "82baa3c6455fd7d1d60f08abcf86f1e3f5929462eab7969d2f69fbe9d7f0f587"
   },
   {
    "availability": "listed",
@@ -1601,6 +1593,14 @@
    "posting_id": "lever:voltus:e966b65f-09d3-48e1-b96f-508be800ec4f",
    "record": "records/lever__voltus__e966b65f-09d3-48e1-b96f-508be800ec4f.json",
    "record_sha256": "92ba135fd0c6b451ad3b06f98336bf47f86159d1144e84390abcabfb56a3a421"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "dc7b9597a0f910e99c5bb8d9c5719cda3b9dcb997a95f3ba4d41837b7b95a754",
+   "last_change": "2026-10-28T00:42:44.013366+00:00",
+   "posting_id": "ashby:weave:cf9c971d-b348-4929-ac3d-412f11d48673",
+   "record": "records/ashby__weave__cf9c971d-b348-4929-ac3d-412f11d48673.json",
+   "record_sha256": "06b6f0072a4d367eefdd60b6302bf4d811448a001fc3ee26dea9d1fb0c139875"
   }
  ],
  "has_more": true,
