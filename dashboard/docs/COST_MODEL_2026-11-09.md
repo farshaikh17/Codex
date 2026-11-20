@@ -134,3 +134,49 @@ the Cache API stores nothing, so the edge copy there is the Worker instance's me
 normal day, so a release with QA browsing (each distinct uncached view ~0.1M) reached 5M. After: run ~0.25M (0.35M on a rules-bump day) +
 watchlist ~0.1M + background ~0.7M = about **1.0-1.1M** on a normal day, leaving about 4M (about 40 uncached person-views) for a heavy day.
 The guards' thresholds (`MAX_READS`, public budget) are unchanged.
+
+## 7. Cheap views (20 Nov, before the 22 Nov multi-person test)  [local, measured with D1's own rows_read]
+Same local D1 copy as section 6 (30,000 jobs, 23,800 active, about 18,000 screening rows for one person and 16,400 for the other), the real
+Worker, response cache off (every request uncached), D1's own `meta.rows_read` per request. Rows per request, Farhan / Sana.
+
+| View (requests) | Before | After (copy kept) | After (first view that builds the copy) |
+|---|---:|---:|---:|
+| Today page load (`/api/version`, `/api/discovery/daily`, `/api/today`) | 93,672 / 84,758 | **475 / 430** | 21,217 / 19,267 |
+| All jobs, To review, best first (`/api/jobs ... collapse_twins`) | 92,679 / 83,817 | **157 / 154** | about 21,000 |
+| All jobs, page 2 / newest first / Remote / 60+ | 84,000 to 101,000 | **157 / 154** | about 21,000 |
+| All jobs, Says it hires in India | 41,890 / 37,794 | **32 / 29** | about 21,000 |
+| All jobs, search | 85,059 / 76,890 | 11,059 / 10,061 | about 32,000 |
+| Best matches / Worth a try lists | 47,000 / 43,000 | **87 to 154** | about 21,000 |
+| Hidden jobs | 15,269 / 13,819 | **32 / 29** | about 21,000 |
+| My applications (`/api/applications`, `/api/follow-ups`) | 306 / 197 | 306 / 197 | - |
+| Open a job (`/api/jobs/:id`, `/api/profile`, feedback) | 11 | 11 | - |
+| India Remote jobs (operator screen) | 18,330 / 16,530 | **220 / 220** | - |
+| Next Today view after a tracker action (Save, Not for me) | 93,687 / 84,773 | **495 / 451** | - |
+
+What changed:
+* **The person's list as a stored copy** (`worker/snapshot.ts`, tables `seeker_snapshot` and `seeker_dirty`, migration 0027). Every row of
+  the list (the `exclude_applied` + `exclude_dismissed` predicate) and of Hidden jobs, a few fields each (status, score, found time and its
+  julianday, screening time's julianday, eligibility, work mode, unscreened flag, employer-and-title key, place), as JSON in parts of at most
+  60 KB (about 25 parts at this size). Counts, facets, filters (status, India, Remote, 60+), both orders, pages and the twin grouping are
+  computed from it with the same functions and the same order rules (SQLite's BINARY order, its own julianday values); only the 25 to 75 rows
+  shown are read live, by id. Search still asks D1 which of the person's rows contain the text (about 11,000 rows; was 85,000).
+* **When the copy is used**: built under the current cache generation (every import, run, release and operator change raises it), by the
+  same code version (`SNAPSHOT_VERSION` + commit), and less than the response cache's own limit ago (30 minutes for visitors, 10 for the
+  operator). So it is never staler than a cached answer was: Worker cron and collector writes appear when it expires, as before.
+* **Tracker actions** mark (person, job) in `seeker_dirty` before and after their write; the next read re-reads those jobs by key (a few
+  rows) and corrects the stored parts it touches (one or two part rows written). An action therefore no longer makes the next view cost a
+  full recomputation.
+* Concurrency: each write of the copy is one D1 batch that applies only while part 0 still has the token the request read; a dirty mark is
+  removed only with the exact value the request saw. A losing request still answers correctly; its copy is just not stored.
+* Build query: "status not INELIGIBLE / CLOSED / HOLD" as four ranges of the (candidate, status) index (20,700 rows instead of 51,500 for
+  the plain NOT IN); Hidden rows through the new partial index `idx_cq_not_for_me` (rows read: twice the number of hidden jobs).
+* `/api/india-remote/jobs`: `ORDER BY +q.job_id` (same order) stops the planner walking every row of the person by key to skip a sort.
+* Equivalence: `test/snapshot.test.mjs` compares every seeker list, count and facet and 160 random filter combinations (4,500 locally with
+  other seeds) from the copy with the full queries on a random fixture, and again after each kind of tracker action; `npm test` also runs
+  the list test files a second time with the copy on (`TEST_SEEKER_SNAPSHOT=on`). On the production-size copy every response body of the
+  views above was identical before and after (only random application ids differ).
+
+**Writes**: a build writes about 55 rows per person (once per generation bump or expiry); a tracker action about 3 more than before (the
+two dirty marks, the corrected part). **Reads, worst case**: a build costs about 20,000 rows and happens at most once per person per
+30 minutes plus once per generation bump (about 42,000 per person per hour of continuous use, 2 x 48 x 21,000 = 2.0M for both people in
+an unbroken 24 hours); every other uncached view costs 150 to 500 rows. Before, each uncached view cost 85,000 to 100,000.
