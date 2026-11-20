@@ -4,6 +4,7 @@
 // from the candidate row unless the config adds to them.
 import { LEGACY_CONFIGS } from './legacy.ts';
 import { COUNTRY_NAMES } from './countries.ts';
+import { FAMILY_CATALOG } from './families.ts';
 
 export const MAX_CONFIG_BYTES = 16384;
 export const FIELD_PACK_KEYS = ['revops_automation', 'plant_maintenance', 'keyword'] as const;
@@ -21,6 +22,8 @@ export type PlacePolicy =
 export type Money = { amount: number; currency: string; period: string };
 export type ProfileConfig = {
   schema: 1;
+  /** written by scripts/profile_config.mjs: the stored config is already merged (extends) and validated; both scorer and discovery read only such configs */
+  resolved?: boolean;
   extends?: string;
   engine?: 'profile' | 'legacy';
   display_name?: string;
@@ -75,6 +78,7 @@ export function parseProfileConfig(raw: unknown): { ok: true; config: ProfileCon
   if (c.engine !== undefined && c.engine !== 'profile' && c.engine !== 'legacy') errors.push('engine must be "profile" or "legacy"');
   const out: ProfileConfig = { schema: 1 };
   if (c.extends) out.extends = String(c.extends);
+  if (c.resolved === true) out.resolved = true;
   if (c.engine) out.engine = c.engine;
   if (c.display_name !== undefined) out.display_name = String(c.display_name).slice(0, 80);
   const f = c.field || {};
@@ -99,7 +103,8 @@ export function parseProfileConfig(raw: unknown): { ok: true; config: ProfileCon
         const country = code(p.country); if (!isCode(country)) errors.push(`${w}.country must be an ISO code`);
         return { policy: p.policy, country, remote_only: p.remote_only !== false, worldwide_ok: p.worldwide_ok !== false, apac_ok: !!p.apac_ok,
           skip_employers: phrases(p.skip_employers, `${w}.skip_employers`, errors, 20), global_hirer_bonus: !!p.global_hirer_bonus, timezone_penalty: p.timezone_penalty !== false,
-          foreign_penalty: p.foreign_penalty !== false, unconfirmed_penalty: p.unconfirmed_penalty !== false, place_words: phrases(p.place_words, `${w}.place_words`, errors, 30) };
+          foreign_penalty: p.foreign_penalty !== false, unconfirmed_penalty: p.unconfirmed_penalty !== false, place_words: phrases(p.place_words, `${w}.place_words`, errors, 30),
+          ...(p.legacy_skip === true ? { legacy_skip: true } : {}) };
       }
       if (p?.policy === 'onsite_in') {
         const countries = (Array.isArray(p.countries) ? p.countries : []).map(code);
@@ -118,11 +123,17 @@ export function parseProfileConfig(raw: unknown): { ok: true; config: ProfileCon
   }
   if (c.type !== undefined) out.type = { no_va_placements: !!c.type?.no_va_placements };
   if (c.language !== undefined) out.language = { spoken: phrases(c.language?.spoken, 'language.spoken', errors, 10).map((x) => x.replace(/\b\w/g, (ch) => ch.toUpperCase())) };
-  if (c.salary !== undefined) out.salary = { floor: money(c.salary?.floor, 'salary.floor', errors), preferred: money(c.salary?.preferred, 'salary.preferred', errors) };
+  if (c.salary !== undefined) {
+    const inr = (v: any, what: string) => { if (v === undefined) return undefined; const n = Number(v); if (!(n > 0 && n < 1e8)) { errors.push(`${what} must be a positive number`); return undefined; } return n; };
+    out.salary = { floor: money(c.salary?.floor, 'salary.floor', errors), preferred: money(c.salary?.preferred, 'salary.preferred', errors),
+      default_floor_inr_monthly: inr(c.salary?.default_floor_inr_monthly, 'salary.default_floor_inr_monthly'), preferred_inr_monthly: inr(c.salary?.preferred_inr_monthly, 'salary.preferred_inr_monthly') };
+  }
   if (c.thresholds !== undefined) {
     const q = c.thresholds?.qualify;
     if (q !== undefined && !(Number(q) >= 40 && Number(q) <= 95)) errors.push('thresholds.qualify must be 40 to 95');
-    out.thresholds = { qualify: q === undefined ? undefined : Number(q), tier_size: int(c.thresholds?.tier_size, 5, 50) };
+    const dflt = c.thresholds?.default;
+    if (dflt !== undefined && !(Number(dflt) >= 40 && Number(dflt) <= 95)) errors.push('thresholds.default must be 40 to 95');
+    out.thresholds = { qualify: q === undefined ? undefined : Number(q), default: dflt === undefined ? undefined : Number(dflt), tier_size: int(c.thresholds?.tier_size, 5, 50) };
   }
   if (c.shortlist !== undefined) {
     const bm: Record<string, Record<string, number>> = {};
@@ -130,7 +141,7 @@ export function parseProfileConfig(raw: unknown): { ok: true; config: ProfileCon
       if (tier !== 'READY' && tier !== 'STRETCH_READY') { errors.push('shortlist.band_minimums: tiers are READY and STRETCH_READY'); continue; }
       bm[tier] = {}; for (const [b, n] of Object.entries(bands as any)) bm[tier][String(b).slice(0, 30)] = int(n, 0, 10)!;
     }
-    out.shortlist = { band_minimums: bm };
+    out.shortlist = { band_minimums: bm, ...(typeof c.shortlist?.stretch_needs_home_place === 'boolean' ? { stretch_needs_home_place: c.shortlist.stretch_needs_home_place } : {}) };
   }
   if (c.discovery !== undefined) {
     const d = c.discovery || {};
@@ -142,16 +153,31 @@ export function parseProfileConfig(raw: unknown): { ok: true; config: ProfileCon
     out.discovery = { search_terms: phrases(d.search_terms, 'discovery.search_terms', errors, 12), countries, employer_boards: boards, jobspy_sites: sites,
       max_rows: int(d.max_rows, 100, 50000), max_selected: int(d.max_selected, 10, 1500) };
   }
+  for (const k of [...(out.field.role_families || []), ...(out.field.excluded_families || [])]) if (!FAMILY_CATALOG[k]) errors.push(`field: unknown role family "${k}" (shared/role_families.json)`);
+  // a person must have a role rule: a field pack of the built-in fields, role families, title.must or target roles (the dataset prefilter needs it)
+  const packsUsed = out.field.packs?.length ? out.field.packs : (out.extends ? ['(extends)'] : ['keyword']);
+  if (packsUsed.every((k) => k === 'keyword') && !out.field.role_families?.length && !out.field.title?.must?.length && !out.field.target_roles?.length)
+    errors.push('the keyword pack needs role_families, field.title.must or field.target_roles (the role rule of the person)');
   for (const p of out.place || []) for (const cc of (p as any).countries || [(p as any).country]) if (cc && !COUNTRY_NAMES[cc] && !((p as any).place_words || []).length) errors.push(`place: ${cc} has no built-in names; give place_words`);
   return errors.length ? { ok: false, errors } : { ok: true, config: out };
 }
 
-/** The effective config: a built-in base (extends) with the person's own fields on top. Lists add up; a scalar or a whole section replaces. */
+/** The effective config: a built-in base (extends) with the person's own fields on top. Field lists add up; the sections level, type, language,
+ *  salary, thresholds, shortlist and discovery merge key by key (a key the person sets wins); place and employment_types replace as a whole.
+ *  Idempotent: merging an already merged config changes nothing (lists are de-duplicated). */
 export function mergedConfig(cfg: ProfileConfig): ProfileConfig {
   const base = cfg.extends ? LEGACY_CONFIGS[cfg.extends] : null;
   if (!base) return cfg;
-  const has = (o: any) => o && Object.values(o).some((v) => (Array.isArray(v) ? v.length : v !== undefined && v !== null && !(typeof v === 'object' && !Object.keys(v).length)));
-  const out: any = { ...base, ...Object.fromEntries(Object.entries(cfg).filter(([k, v]) => k !== 'field' && v !== undefined && (typeof v !== 'object' || Array.isArray(v) || has(v)))) };
+  const defined = (o: any) => Object.fromEntries(Object.entries(o || {}).filter(([, v]) => v !== undefined && v !== null));
+  const out: any = { ...base };
+  for (const [k, v] of Object.entries(cfg)) {
+    if (k === 'field' || v === undefined) continue;
+    if (['level', 'type', 'language', 'salary', 'thresholds', 'shortlist', 'discovery'].includes(k) && v && typeof v === 'object' && !Array.isArray(v)) {
+      const own = defined(v); if (k === 'language' && !(own as any).spoken?.length) delete (own as any).spoken;
+      if (k === 'shortlist' && !Object.keys((own as any).band_minimums || {}).length) delete (own as any).band_minimums;
+      out[k] = { ...(base as any)[k], ...own };
+    } else if (Array.isArray(v) ? v.length : true) out[k] = v;
+  }
   const bf: any = base.field || {}, cf: any = cfg.field || {};
   const cat = (a: any, b: any) => [...(a || []), ...(b || []).filter((x: string) => !(a || []).includes(x))];
   out.field = { ...bf, packs: cf.packs?.length ? cf.packs : bf.packs, role_families: cat(bf.role_families, cf.role_families), excluded_families: cat(bf.excluded_families, cf.excluded_families),

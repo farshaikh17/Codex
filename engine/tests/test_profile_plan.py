@@ -1,6 +1,8 @@
 """Discovery from a profile config (dashboard/docs/MULTI_CANDIDATE.md section 6): engine/profile_plan.py builds a person's searches from their
 config, dataset_discovery.profiles() writes them into work/profiles.json, and a database without the 0028 table reads as no configs.
 The config is the synthetic example profile (tests only; no real person)."""
+import contextlib
+import io
 import json
 import re
 import unittest
@@ -44,16 +46,21 @@ class Plan(unittest.TestCase):
         self.assertEqual(p['max_selected'], pp.DEFAULT_MAX_SELECTED)
 
     def test_engine_rule_matches_the_worker(self):
-        self.assertIsNone(pp.engine_config('{"schema":1,"extends":"legacy:farhan_shaikh"}', 'farhan_shaikh'))
-        self.assertIsNotNone(pp.engine_config('{"schema":1,"extends":"legacy:farhan_shaikh","engine":"profile"}', 'farhan_shaikh'))
-        self.assertIsNotNone(pp.engine_config('{"schema":1}', 'someone_new'))
-        self.assertIsNone(pp.engine_config('{"schema":1,"engine":"legacy"}', 'someone_new'))
+        R = '"resolved":true'
+        self.assertIsNone(pp.engine_config('{"schema":1,"extends":"legacy:farhan_shaikh",%s}' % R, 'farhan_shaikh'))
+        self.assertIsNotNone(pp.engine_config('{"schema":1,"extends":"legacy:farhan_shaikh","engine":"profile",%s}' % R, 'farhan_shaikh'))
+        self.assertIsNotNone(pp.engine_config('{"schema":1,%s}' % R, 'someone_new'))
+        self.assertIsNone(pp.engine_config('{"schema":1,"engine":"legacy",%s}' % R, 'someone_new'))
+        # review 4/8: a config not written by profile_config.mjs (not resolved), or a built-in id without its own base, is not used
+        self.assertIsNone(pp.engine_config('{"schema":1}', 'someone_new'))
+        self.assertIsNone(pp.engine_config('{"schema":1,"engine":"profile",%s}' % R, 'farhan_shaikh'))
+        self.assertIsNone(pp.engine_config('{"schema":1,"extends":"legacy:sana_ansari","engine":"profile",%s}' % R, 'farhan_shaikh'))
         self.assertIsNone(pp.engine_config('{not json', 'someone_new'))
 
 
 class Profiles(unittest.TestCase):
     def test_profiles_json_gets_the_config_searches(self):
-        cfg = EXAMPLE.read_text()
+        cfg = json.dumps({**json.loads(EXAMPLE.read_text()), 'resolved': True})
 
         def d1(sql, local=None):
             if 'candidate_profile_configs' in sql:
@@ -65,6 +72,43 @@ class Profiles(unittest.TestCase):
         self.assertTrue(profs['example_x']['profile_engine'])
         self.assertEqual(profs['example_x']['jobspy'][0][0], 'data analyst')
         self.assertEqual(profs['farhan_shaikh']['role'], dd.BUILTIN['farhan_shaikh']['role'], 'the built-in people keep their tables')
+
+    def test_a_config_without_a_role_rule_is_skipped_with_a_warning(self):
+        # review 3: plan() returns None, profiles() skips that person and the others still get their entries
+        self.assertIsNone(pp.plan({'schema': 1, 'field': {'packs': ['keyword']}}, {'target_roles': '[]'}, dd.BUILTIN))
+        bad = json.dumps({'schema': 1, 'resolved': True, 'field': {'packs': ['keyword']}})
+        good = json.dumps({**json.loads(EXAMPLE.read_text()), 'resolved': True})
+
+        def d1(sql, local=None):
+            if 'candidate_profile_configs' in sql:
+                return [{'candidate_id': 'bad_one', 'config': bad}, {'candidate_id': 'good_one', 'config': good}]
+            return [{'id': 'bad_one', 'primary_skills': '[]', 'target_roles': '[]', 'search_profile': None, 'visibility': 'private'},
+                    {'id': 'good_one', 'primary_skills': '[]', 'target_roles': '[]', 'search_profile': None, 'visibility': 'private'}]
+        err = io.StringIO()
+        with mock.patch.object(dd, 'd1', d1), contextlib.redirect_stderr(err):
+            profs = dd.profiles()
+        self.assertNotIn('bad_one', profs)
+        self.assertIn('good_one', profs)
+        self.assertIn('Profile config of bad_one skipped', err.getvalue())
+        for p in profs.values():
+            re.compile(p['role'])   # what the discovery steps do with every entry
+
+    def test_config_threshold_and_caps_reach_the_selection(self):
+        # review 2: the fit floor uses the config's own cut-off; review 5: the row cap keeps dated rows first (undated last)
+        p = pp.plan({'schema': 1, 'field': {'role_families': ['data_analytics']}, 'thresholds': {'qualify': 62}}, {'qualification_threshold': 80}, dd.BUILTIN)
+        self.assertEqual(p['threshold'], 62)
+        seen = {}
+
+        class Con:
+            def execute(self, sql, params):
+                seen['sql'] = sql
+                return mock.Mock(description=[], fetchall=lambda: [])
+        dd.candidate_rows(Con(), 'x.parquet', {**p, 'max_rows': 10}, 45)
+        self.assertIn('ORDER BY posted_at DESC NULLS LAST LIMIT 10', seen['sql'])
+        rows = [{'_pre': {'score': 60, 'status': 'NEEDS_REVIEW', 'eligibility': 'ELIGIBLE', 'band': 'remote'}, 'posted_at': '2026-11-19'}]
+        with mock.patch.object(dd, 'candidate_rows', lambda *a: [dict(r) for r in rows]):
+            out = dd.select_wide(None, 'x', {'example_thr': p}, [{'id': 'example_thr', 'qualification_threshold': 80}], 45, scorer=lambda items: [r['_pre'] for _, r in items])
+        self.assertEqual(len(out['example_thr']), 1, 'a score of 60 passes the fit floor of the config threshold 62 (47); the stored 80 would need 65')
 
     def test_missing_table_reads_as_no_configs(self):
         def d1(sql, local=None):

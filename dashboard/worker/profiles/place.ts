@@ -12,11 +12,14 @@ import type { Profile } from './resolve.ts';
 import type { PlacePolicy } from './schema.ts';
 import { COUNTRY_NAMES, EU_CODES, GULF_CODES, countryName, placeRegex } from './countries.ts';
 
+/** The places of the old "X only" list as ISO codes ('EU' for the EU / Europe), compared with the person's home country. */
+export const BLOCK_ISO: Record<string, string> = { us: 'US', usa: 'US', 'u.s.': 'US', 'united states': 'US', uk: 'GB', 'united kingdom': 'GB', canada: 'CA', europe: 'EU', eu: 'EU', germany: 'DE', australia: 'AU' };
 const cap1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** Readings of the posting against one home country (not India). */
 function home(s: Signals, code: string, extra: string[] = []) {
   const re = placeRegex([...(COUNTRY_NAMES[code]?.words || []), ...extra]);
-  const named = (x: string) => !!re && re.test(x || '');
+  // 'US' / 'USA' in capitals only (the word 'us' in a sentence is not the country)
+  const named = (x: string) => (!!re && re.test(x || '')) || (code === 'US' && /(?:^|[^A-Za-z0-9.])(?:US|USA)(?![A-Za-z0-9.])/.test(x || ''));
   const loc = s.p.location || '';
   const codeAt = (trailingCountryCode(loc) === code) || (bareForeignCode(loc) && loc.trim().slice(0, 2).toUpperCase() === code);
   const inHome = named(loc) || codeAt;
@@ -28,7 +31,7 @@ function home(s: Signals, code: string, extra: string[] = []) {
   // the old "X only" list, minus the home country itself
   let blocked = false; const g = new RegExp(/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(us|usa|united states|uk|europe)/.source, 'gi');
   let m: RegExpExecArray | null;
-  while ((m = g.exec(s.text))) { const w = (m[1] || m[2] || '').toLowerCase(); const homeEu = EU_CODES.has(code) && /^(?:eu|europe)$/.test(w); if (!named(w) && !homeEu) { blocked = true; break; } }
+  while ((m = g.exec(s.text))) { const iso = BLOCK_ISO[(m[1] || m[2] || '').toLowerCase()] || ''; const mine = iso === code || (iso === 'EU' && (EU_CODES.has(code) || code === 'GB' || code === 'CH')); if (!mine) { blocked = true; break; } }
   if (!blocked && !!words && new RegExp(`not hiring (?:in|from) (?:${words})|excluding (?:${words})|except (?:${words})`, 'i').test(s.text)) blocked = true;
   const reach = new RegExp(`\\b(?:worldwide|anywhere|global(?:ly)?|international(?:ly)?|any country${words ? '|' + words : ''})\\b`, 'i');
   return { named, inHome, foreignFor, textHome, explicitRemote, blocked, reach, name: countryName(code) };

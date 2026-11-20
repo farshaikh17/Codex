@@ -342,6 +342,7 @@ export function selectShortlist(pool, opts = {}) {
     r.band = bandFor(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
     const set = shortlistSettings(r0.candidate_id);
     if (set.homePlaceOk) r.place_ok = set.homePlaceOk(r0.location);
+    if (set.threshold !== undefined) r.threshold = set.threshold;   // a profile config's cut-off (the same as its score's)
     r.verified = alive.has(r.job_id) || now - when(r.last_verified_at) <= VERIFIED_DAYS * DAY || (!!opts.relaxed && r.auto);
     r.listed = listedOnlyGulf(r0.url, r0.location) && now - when(r0.discovered_at) <= LISTED_DAYS * DAY;
     c.rows.push(r);

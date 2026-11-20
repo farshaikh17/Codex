@@ -155,13 +155,22 @@ def kw_regex(words):
 
 
 def profiles(local=None):
-    rows = d1("SELECT c.id, c.primary_skills, c.target_roles, p.search_profile, p.visibility FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id", local)
+    rows = d1("SELECT c.id, c.primary_skills, c.target_roles, c.qualification_threshold, p.search_profile, p.visibility FROM candidates c LEFT JOIN client_profiles p ON p.candidate_id = c.id", local)
     configs = profile_configs(local)
     out = {}
     for r in rows:
         cfg = profile_plan.engine_config(configs.get(r['id']), r['id'])
         if cfg and r['id'] not in BUILTIN:   # a profile config (MULTI_CANDIDATE.md section 6): searches from the config; the built-in people keep their tables
-            out[r['id']] = {**profile_plan.plan(cfg, r, BUILTIN), 'public': r.get('visibility') == 'public'}
+            try:
+                entry = profile_plan.plan(cfg, r, BUILTIN)
+            except Exception as e:   # noqa: BLE001 - one person's config never stops the run for the others
+                entry, why = None, f'{type(e).__name__}: {str(e)[:120]}'
+            else:
+                why = 'no role rule (no families, title words or target roles)'
+            if not entry:
+                print(f"::warning::Profile config of {r['id']} skipped: {why}", file=sys.stderr)
+                continue
+            out[r['id']] = {**entry, 'public': r.get('visibility') == 'public'}
             continue
         if r['id'] in BUILTIN:
             out[r['id']] = dict(BUILTIN[r['id']])
@@ -303,7 +312,7 @@ def fit_floor(threshold):
 def candidate_rows(con, src, p, max_days):
     """Every row whose title passes the person's role rule, in any place, posted in the last max_days or undated."""
     # a profile-config person's pre-score is bounded (max_rows, newest first); the built-in people and clients read every match as before
-    limit = f" ORDER BY posted_at DESC NULLS FIRST LIMIT {int(p['max_rows'])}" if p.get('max_rows') else ''
+    limit = f" ORDER BY posted_at DESC NULLS LAST LIMIT {int(p['max_rows'])}" if p.get('max_rows') else ''
     cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON}{limit}",
                       {k: v for k, v in {**_params(p, max_days), 'src': src}.items() if k in ('role', 'exclude', 'since', 'src')})
     cols = [d[0] for d in cur.description]
@@ -377,7 +386,7 @@ def select_wide(con, src, profs, cands, max_days, read_budget=SELECT_READ_BUDGET
     per_person = cap_total // max(1, len(profs))
     out = {}
     for cid, rows in by_cid.items():
-        t = thresholds.get(cid) or (70 if cid == 'farhan_shaikh' else 60)
+        t = profs[cid].get('threshold') or thresholds.get(cid) or (70 if cid == 'farhan_shaikh' else 60)   # a profile config's own cut-off first
         ok = [r for r in rows if r['_pre']['status'] not in ('INELIGIBLE', 'UNKNOWN_CANDIDATE') and r['_pre']['score'] >= fit_floor(t)]
         out[cid] = pick(ok, min(per_person, int(profs[cid].get('max_selected') or per_person)), PLACE_SETS.get(cid, ()))
         if stats is not None:

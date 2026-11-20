@@ -130,7 +130,11 @@ export function evaluateWithProfile(prof: Profile, p: Posting, ctx: EvalContext 
   const requiredMissing = role && !!requiredRe && !requiredRe.test(lower) && !prof.required.some((r) => skillFound(r, lower));
   if (requiredMissing) score = Math.min(score, threshold - REQUIRED_SKILL_GAP);
   const homeName = pa.homeName, from = pa.from;
-  const floorText = prof.cfg.salary?.floor && prof.cfg.salary.floor.currency !== 'INR' ? `${prof.cfg.salary.floor.amount} ${prof.cfg.salary.floor.currency} a ${prof.cfg.salary.floor.period}` : lakhMonth(floor);
+  // pay in the floor's own currency and period when the config gives a floor in another currency (a rupee floor keeps the old rupee-a-month text)
+  const fl = prof.cfg.salary?.floor && prof.cfg.salary.floor.currency !== 'INR' ? prof.cfg.salary.floor : null;
+  const inFloor = (inrMonth: number) => `${Math.round((inrMonth / floor) * fl!.amount).toLocaleString('en-GB')} ${fl!.currency} a ${fl!.period}`;
+  const floorText = fl ? `${fl.amount.toLocaleString('en-GB')} ${fl.currency} a ${fl.period}` : lakhMonth(floor);
+  const payText = (inrMonth: number) => (fl ? inFloor(inrMonth) : lakhMonth(inrMonth));
   return {
     status: eligibility === 'INELIGIBLE' ? 'INELIGIBLE' : role ? 'NEEDS_REVIEW' : 'HOLD', lane: role ? 'STRONGEST_FIT' : 'UNASSIGNED', eligibility, reason, score, skills, target_fit: fit,
     target_exact: fit === 'exact' && exactWithQualifier(p.title || '', prof.targets),
@@ -150,7 +154,7 @@ export function evaluateWithProfile(prof: Profile, p: Posting, ctx: EvalContext 
       + (rightToWorkElsewhere ? ' Open only to people based in or allowed to work in another country, with no visa route (score capped).' : '')
       + (unconfirmed ? ` Remote, but nothing in the posting says it hires from ${homeName} (score reduced).` : '')
       + (requiredMissing ? ' Names none of the required skills (kept off the shortlist).' : '')
-      + (belowFloor ? ` Published pay (up to ${lakhMonth(pay!.hi)}) is below the ${floorText} floor (score reduced).` : preferredPay ? ` Published pay reaches the preferred level (up to ${lakhMonth(pay!.hi)}).` : '')
+      + (belowFloor ? ` Published pay (up to ${payText(pay!.hi)}) is below the ${floorText} floor (score reduced).` : preferredPay ? ` Published pay reaches the preferred level (up to ${payText(pay!.hi)}).` : '')
       + (globalHirer ? ` Employer is listed publicly as hiring worldwide; confirm ${homeName} is included.` : '')
       + (rejectedOn ? ` Rejected by this employer before (${rejectedOn}).` : '')
       + (ycBatch ? ` Y Combinator company (${ycBatch}), currently hiring.` : '')

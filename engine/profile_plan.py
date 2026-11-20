@@ -54,6 +54,8 @@ def homes(cfg):
 def plan(cfg, candidate=None, builtin=None):
     """The profiles.json entry for one person. `candidate` is their candidates row (target roles are the fallback search), `builtin` the
     dataset_discovery.BUILTIN table (a config using the built-in field packs reuses their dataset role rule)."""
+    # None when the config gives no role rule (no families, title words, built-in field pack or target roles): the caller skips that person
+    # with a warning; the run never stops for one person's config.
     candidate, builtin = candidate or {}, builtin or {}
     field = cfg.get('field') or {}
     fams = [k for k in field.get('role_families') or [] if k in FAMILIES]
@@ -81,8 +83,16 @@ def plan(cfg, candidate=None, builtin=None):
         jobspy.append([f'{term} remote' if remote_only else term, name, name, sites + (['bayt'] if c in GULF and 'bayt' not in sites else [])])
     onsite = [c for p in places if p.get('policy') == 'onsite_in' for c in p.get('countries') or []]
     workable_places = [[t, False, JOBSPY_COUNTRY.get(c, c)] for c in onsite[:2] for t in terms[:3]][:MAX_WORKABLE_PLACES] if not remote_only else []
+    role = '|'.join(r for r in roles if r)
+    if not role:
+        return None
+    try:
+        re.compile(role)
+    except re.error:
+        return None
+    th = (cfg.get('thresholds') or {})
     return {
-        'role': '|'.join(r for r in roles if r) or None, 'exclude': phrase_regex(avoid) or '',
+        'role': role, 'exclude': phrase_regex(avoid) or '',
         'countries': countries, 'mode': 'REMOTE_FROM_HOME' if remote_only else 'HOME_OR_RELOCATE', 'home': JOBSPY_COUNTRY.get(hs[0], hs[0]).lower(),
         'keywords': terms[:MAX_JOBSPY], 'public': False, 'profile_engine': True, 'remote_only': remote_only,
         'jobspy': jobspy, 'workable': terms[:MAX_WORKABLE], 'workable_places': workable_places,
@@ -90,16 +100,22 @@ def plan(cfg, candidate=None, builtin=None):
         'adzuna': [[c.lower(), t] for c in countries if c in ADZUNA_COUNTRIES for t in terms][:MAX_ADZUNA],
         'boards': [b for b in (disc.get('employer_boards') or []) if b.get('kind') in ('greenhouse', 'lever', 'ashby', 'workable', 'jazzhr')][:MAX_BOARDS],
         'max_rows': int(disc.get('max_rows') or DEFAULT_MAX_ROWS), 'max_selected': int(disc.get('max_selected') or DEFAULT_MAX_SELECTED),
+        # the cut-off the config scores against (worker/profiles/resolve.ts: qualify, else the candidate row, else the base's default)
+        'threshold': th.get('qualify') or candidate.get('qualification_threshold') or th.get('default'),
     }
 
 
 def engine_config(raw, candidate_id, legacy_ids=('farhan_shaikh', 'sana_ansari')):
-    """The config when it asks for the profile engine (the same rule as worker/profiles/dispatch.ts engineConfig()), else None."""
+    """The config when it asks for the profile engine (the same rule as worker/profiles/dispatch.ts engineConfig()), else None. Only a resolved
+    config (merged with its built-in base and validated by dashboard/scripts/profile_config.mjs, marked "resolved": true) is used, so this side
+    reads exactly the config the scorer reads; a built-in id needs its own legacy base."""
     try:
         cfg = json.loads(raw) if isinstance(raw, str) else raw
-    except ValueError:
+    except (ValueError, TypeError):
         return None
-    if not isinstance(cfg, dict) or cfg.get('schema') != 1:
+    if not isinstance(cfg, dict) or cfg.get('schema') != 1 or cfg.get('resolved') is not True:
+        return None
+    if candidate_id in legacy_ids and cfg.get('extends') != f'legacy:{candidate_id}':
         return None
     engine = cfg.get('engine') or ('legacy' if candidate_id in legacy_ids else 'profile')
     return cfg if engine == 'profile' else None

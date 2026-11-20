@@ -14,11 +14,14 @@ import { audit } from '../scripts/shortlist_audit.mjs';
 import { buildMarks, tasteAdjust } from '../scripts/taste_rules.mjs';
 import { onboardingAudit, auditMarkdown } from '../scripts/quality/onboarding_audit.mjs';
 import { runJudged, checkJudged, regressions } from '../scripts/quality/judged_harness.mjs';
-import { configSql } from '../scripts/profile_config.mjs';
+import { configSql, storedConfig } from '../scripts/profile_config.mjs';
 
 const dir = path.dirname(new URL(import.meta.url).pathname), root = path.join(dir, '..', '..');
 const CONFIG_FILE = path.join(dir, 'profiles', 'example_data_analyst_remote_eu.json');
-const CONFIG = fs.readFileSync(CONFIG_FILE, 'utf8');
+const CONFIG_INPUT = fs.readFileSync(CONFIG_FILE, 'utf8');
+// what scripts/profile_config.mjs stores (merged, validated, resolved): the only kind of config the scorer and discovery use
+const stored = (id, cfg) => { const r = storedConfig(id, cfg); if (!r.ok) throw new Error(r.errors.join('; ')); return JSON.stringify(r.config); };
+const CONFIG = stored('example_data_analyst_remote_eu', CONFIG_INPUT);
 const ID = 'example_data_analyst_remote_eu';
 const CAND = { id: ID, total_years_experience: 5, qualification_threshold: 65, primary_skills: JSON.stringify(['Looker']), target_roles: JSON.stringify([]), profile_config: CONFIG };
 const DESC = 'You will own SQL models and Tableau dashboards for product and marketing KPIs, run A/B test reporting with Python and dbt, and present insights to stakeholders. '
@@ -32,7 +35,7 @@ test('the synthetic config is valid, and bad configs are refused with a reason',
     { schema: 1, place: [{ policy: 'onsite_in', countries: ['ZZ'] }] }, { schema: 1, field: { title: { must: ['x'.repeat(80)] } } }, 'x'.repeat(17000)]) {
     const r = parseProfileConfig(bad); assert.equal(r.ok, false, JSON.stringify(bad).slice(0, 60)); assert.ok(r.errors.length);
   }
-  const sql = configSql(ID, CONFIG);
+  const sql = configSql(ID, CONFIG_INPUT);
   assert.equal(sql.ok, true); assert.equal(sql.summary.engine, 'profile'); assert.match(sql.sql, /ON CONFLICT\(candidate_id\)/);
   assert.equal(configSql('farhan_shaikh', JSON.stringify({ schema: 1, extends: 'legacy:farhan_shaikh' })).summary.engine, 'legacy', 'a built-in id stays on the old path unless it says profile');
 });
@@ -76,7 +79,7 @@ test('config -> scoring: the packs score the new person (no scoring code of thei
   // type: a part-time gig is capped; pay below the EUR floor loses points
   assert.ok(scoreCandidate(CAND, post('a11', 'Part-time Data Analyst', 'Remote - Netherlands')).score <= 40);
   const low = scoreCandidate(CAND, post('a12', 'Data Analyst', 'Remote - Netherlands', DESC, true, { salary: { min: 20000, max: 30000, currency: 'EUR', period: 'year' } }));
-  assert.match(low.qualification_reason, /below the 50000 EUR a year floor/);
+  assert.match(low.qualification_reason, /below the 50,000 EUR a year floor/);
   // remote limited to another country is not confirmed for someone in the Netherlands; hygiene applies to everyone
   assert.notEqual(scoreCandidate(CAND, post('a13', 'Data Analyst', 'Remote - US', DESC.replace('fully remote team', 'team. Must be located in the US'))).eligibility, 'ELIGIBLE');
   assert.equal(scoreCandidate(CAND, post('a14', 'Data Analyst', 'Remote', DESC + ' Active secret clearance required.')).status, 'INELIGIBLE');
@@ -113,7 +116,7 @@ test('scoring -> shortlist -> audit for the new person, with their own tier size
   assert.ok(rep.rows.find((r) => r.job_id === 'thin').flags.includes('reposter'));
   assert.match(auditMarkdown(rep), /Onboarding audit: example_data_analyst_remote_eu/);
   // an unconfirmed Worth-a-try row of a remote-only profile needs a home or worldwide place (the built-in rule, from the config)
-  const remoteOnly = { ...CAND, id: 'example_remote_only', profile_config: JSON.stringify({ schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'remote_from_country', country: 'NL' }] }) };
+  const remoteOnly = { ...CAND, id: 'example_remote_only', profile_config: stored('example_remote_only', { schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'remote_from_country', country: 'NL' }] }) };
   registerCandidates([remoteOnly]);
   const r0 = { candidate_id: 'example_remote_only', active: 1, marked: 1, skill_score: 40, score: 70, threshold: 65, eligibility: 'UNKNOWN', description: DESC };
   assert.equal(fitsStretchRule({ ...r0, place_ok: shortlistSettings('example_remote_only').homePlaceOk('Remote - Austin, Texas') }), false);
@@ -152,4 +155,74 @@ test('the Worker screens a new person with their packs: the onboarding backfill 
   const q = sqlite.prepare(`SELECT eligibility_status AS e, eligibility_reason AS why FROM candidate_qualifications WHERE candidate_id = ? AND job_id = 'wj1'`).get(ID);
   assert.equal(q.e, 'ELIGIBLE');
   assert.match(q.why, /Netherlands/, 'the profile place policy decided, not the old default');
+});
+
+// ---- code review of #242: one test per finding --------------------------------------------------------------------------------------
+const P = (id, title, location, description, remote = true, extra = {}) => ({ id, title, company: 'Synthetic Co', url: '', source: 'greenhouse', location, description, remote, ...extra });
+const person = (id, cfg, row = {}) => ({ id, total_years_experience: 6, qualification_threshold: 60, primary_skills: JSON.stringify(['SQL', 'Tableau']), target_roles: '[]', profile_config: stored(id, cfg), ...row });
+
+test('review 1: an "X only" or "must be based in X" restriction does not block a person whose home is X', () => {
+  const us = person('example_us_home', { schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'remote_from_country', country: 'US' }] });
+  const r = scoreCandidate(us, P('u1', 'Data Analyst', 'Remote - US', DESC + ' US residents only. Must be based in the US.'));
+  assert.notEqual(r.eligibility, 'INELIGIBLE', r.reason);
+  assert.equal(r.eligibility, 'ELIGIBLE', r.reason);
+  const uk = person('example_uk_home', { schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'remote_from_country', country: 'GB' }] });
+  assert.equal(scoreCandidate(uk, P('u2', 'Data Analyst', 'Remote - United Kingdom', DESC + ' UK residents only.')).eligibility, 'ELIGIBLE');
+  assert.equal(scoreCandidate(uk, P('u3', 'Data Analyst', 'Remote', DESC + ' US residents only.')).eligibility, 'INELIGIBLE', 'another country still blocks');
+  // the EU covers an EU home
+  const nl = person('example_nl_home', { schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'remote_from_country', country: 'NL' }] });
+  assert.notEqual(scoreCandidate(nl, P('u4', 'Data Analyst', 'Remote - Netherlands', DESC + ' EU residents only.')).eligibility, 'INELIGIBLE');
+});
+
+test('review 2: the config threshold is the shortlist cut-off too (pool rows carry the stored one), and the SQL stores it', () => {
+  const c = person('example_thr', { schema: 1, field: { role_families: ['data_analytics'] }, place: [{ policy: 'onsite_in', countries: ['NL'] }], thresholds: { qualify: 62 } }, { qualification_threshold: 80 });
+  registerCandidates([c]);
+  assert.equal(shortlistSettings('example_thr').threshold, 62);
+  const row = { kind: 'pool', marked: 1, active: 1, candidate_id: 'example_thr', job_id: 't1', title: 'Data Analyst', company: 'A', stored_company: 'A', location: 'Amsterdam, Netherlands', workplace: 'ONSITE',
+    source: 'greenhouse', discovered_at: '2026-11-18T00:00:00Z', last_verified_at: '2026-11-19T00:00:00Z', url: '', description: DESC, score: 70, skill_score: 40, eligibility: 'ELIGIBLE', status: 'NEEDS_REVIEW', reason: '', threshold: 80, target_exact: 0 };
+  const { changes } = selectShortlist([row], { now: Date.parse('2026-11-20T12:00:00Z'), candidates: [c] });
+  assert.equal(changes[0]?.to, 'READY', 'score 70 is at the config threshold 62, though the stored row says 80');
+  assert.match(configSql('example_thr', { schema: 1, field: { role_families: ['data_analytics'] }, thresholds: { qualify: 62 } }).sql, /UPDATE candidates SET qualification_threshold = 62 WHERE id = 'example_thr'/);
+});
+
+test('review 3/4/8: configs without a role rule, unknown families, or not resolved are refused (the run never meets them)', () => {
+  for (const bad of [{ schema: 1 }, { schema: 1, field: { packs: ['keyword'] } }, { schema: 1, field: { role_families: ['astronomy'] } }]) assert.equal(storedConfig('example_bad', bad).ok, false, JSON.stringify(bad));
+  assert.equal(storedConfig('example_ok', { schema: 1, field: { target_roles: ['Data Analyst'] } }).ok, true, 'target roles are a role rule');
+  // a valid config that was not written by profile_config.mjs is not used by the scorer
+  const unresolved = { id: 'example_unresolved', primary_skills: '[]', profile_config: JSON.stringify({ schema: 1, field: { role_families: ['data_analytics'] } }) };
+  assert.equal(profileOf(unresolved), null);
+});
+
+test('review 6: a changed or removed config does not leave the old families or settings behind', () => {
+  const c = person('example_change', { schema: 1, field: { role_families: ['nursing'] }, place: [{ policy: 'onsite_in', countries: ['GB'] }], thresholds: { qualify: 61, tier_size: 7 } });
+  registerCandidates([c]);
+  assert.equal(familyOf('example_change', 'Staff Nurse'), 'nursing');
+  const changed = { ...c, profile_config: stored('example_change', { schema: 1, field: { role_families: ['teaching'] }, place: [{ policy: 'onsite_in', countries: ['GB'] }] }) };
+  registerCandidates([changed]);
+  assert.equal(familyOf('example_change', 'Staff Nurse'), 'unclassified');
+  assert.equal(familyOf('example_change', 'Maths Teacher'), 'teaching');
+  // the same row object with its config edited in place is re-read too
+  changed.profile_config = null;
+  registerCandidates([changed]);
+  assert.equal(familyOf('example_change', 'Maths Teacher'), 'unclassified');
+  assert.deepEqual(shortlistSettings('example_change'), {});
+});
+
+test('review 7: parsing keeps the built-in keys, and extends merges thresholds / shortlist / salary key by key', () => {
+  const st = storedConfig('sana_ansari', { schema: 1, engine: 'profile', thresholds: { tier_size: 20 }, shortlist: { stretch_needs_home_place: true } });
+  assert.equal(st.ok, true, st.errors?.join('; '));
+  assert.equal(st.config.thresholds.default, 60, 'the base default stays');
+  assert.equal(st.config.thresholds.tier_size, 20);
+  assert.deepEqual(st.config.shortlist.band_minimums, { READY: { remote: 2 }, STRETCH_READY: { gulf: 5, remote: 2 } }, 'the base band minimums stay');
+  assert.equal(st.config.shortlist.stretch_needs_home_place, true);
+  const f = storedConfig('farhan_shaikh', { schema: 1, engine: 'profile', salary: { floor: { amount: 150000, currency: 'INR', period: 'month' } } });
+  assert.equal(f.config.salary.preferred_inr_monthly, 2500000 / 12, 'the base preferred pay stays');
+  assert.equal(f.config.place[0].legacy_skip, true, 'the built-in employer skip is kept through parsing');
+  assert.equal(parseProfileConfig({ schema: 1, field: { target_roles: ['x y'] }, shortlist: { stretch_needs_home_place: false } }).config.shortlist.stretch_needs_home_place, false);
+});
+
+test('review 9: a floor in another currency reads the posting pay in that currency', () => {
+  const low = scoreCandidate(CAND, post('m1', 'Data Analyst', 'Remote - Netherlands', DESC, true, { salary: { min: 20000, max: 30000, currency: 'EUR', period: 'year' } }));
+  assert.match(low.qualification_reason, /Published pay \(up to 30,000 EUR a year\) is below the 50,000 EUR a year floor/);
+  assert.doesNotMatch(low.qualification_reason, /₹/);
 });

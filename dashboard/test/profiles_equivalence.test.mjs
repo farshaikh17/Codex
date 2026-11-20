@@ -9,6 +9,8 @@ import { evaluateWithProfile } from '../worker/profiles/evaluate.ts';
 import { LEGACY_CONFIGS } from '../worker/profiles/legacy.ts';
 import { scoreCandidate } from '../worker/profiles/dispatch.ts';
 import { compare } from '../scripts/quality/equivalence.mjs';
+import { storedConfig } from '../scripts/profile_config.mjs';
+import { profileOf } from '../worker/profiles/dispatch.ts';
 
 // Candidate shapes like the stored rows (test values, not the real profiles).
 export const FARHAN = { id: 'farhan_shaikh', total_years_experience: 9, qualification_threshold: 70,
@@ -102,10 +104,19 @@ test('the old path stays the default: no config, an engine "legacy" config, or t
   assert.deepEqual(scoreCandidate({ ...FARHAN, profile_config: JSON.stringify({ schema: 1, extends: 'legacy:farhan_shaikh' }) }, p, {}), want);
   // an invalid config is ignored
   assert.deepEqual(scoreCandidate({ ...FARHAN, profile_config: '{not json' }, p, {}), want);
-  // flipped explicitly: the packs, with the same result
-  assert.deepEqual(scoreCandidate({ ...FARHAN, profile_config: JSON.stringify({ schema: 1, extends: 'legacy:farhan_shaikh', engine: 'profile' }) }, p, {}), want);
+  // a config not written by scripts/profile_config.mjs (not resolved) is not used, even with engine "profile"
+  const raw = { ...FARHAN, profile_config: JSON.stringify({ schema: 1, extends: 'legacy:farhan_shaikh', engine: 'profile' }) };
+  assert.equal(profileOf(raw), null);
+  // a built-in id on the profile engine without its own base is refused (fix 8); profile_config.mjs adds the base itself
+  assert.equal(profileOf({ ...FARHAN, profile_config: JSON.stringify({ schema: 1, resolved: true, engine: 'profile', field: { packs: ['keyword'], role_families: ['implementation'] } }) }), null);
+  const st = storedConfig('farhan_shaikh', { schema: 1, engine: 'profile' });
+  assert.equal(st.ok, true); assert.equal(st.config.extends, 'legacy:farhan_shaikh'); assert.equal(st.config.resolved, true);
+  assert.equal(storedConfig('farhan_shaikh', { schema: 1, extends: 'legacy:sana_ansari', engine: 'profile' }).ok, false);
+  // flipped through the stored (resolved) config: the packs, with the same result
+  const flipped = { ...FARHAN, profile_config: JSON.stringify(st.config) };
+  assert.ok(profileOf(flipped)); assert.deepEqual(scoreCandidate(flipped, p, {}), want);
   process.env.PROFILE_ENGINE = 'off';
-  try { assert.deepEqual(scoreCandidate({ id: 'newbie', profile_config: JSON.stringify({ schema: 1, field: { title: { must: ['implementation'] } } }) }, p, {}), evaluate({ id: 'newbie' }, p, {})); }
+  try { assert.deepEqual(scoreCandidate({ id: 'newbie', profile_config: JSON.stringify({ schema: 1, resolved: true, field: { title: { must: ['implementation'] } } }) }, p, {}), evaluate({ id: 'newbie' }, p, {})); }
   finally { delete process.env.PROFILE_ENGINE; }
 });
 
@@ -116,4 +127,15 @@ test('the equivalence script reads stored rows (the hand-judged set format) and 
   const res = compare(rows, cands);
   assert.equal(res.compared, 400);
   assert.equal(res.mismatches, 0, JSON.stringify(res.list.slice(0, 2)));
+});
+
+test('the stored (resolved) configs of the built-in people reproduce evaluate() too (what a flip would store)', () => {
+  for (const cand of [FARHAN, SANA]) {
+    const st = storedConfig(cand.id, { schema: 1, engine: 'profile' });
+    assert.equal(st.ok, true, st.errors?.join('; '));
+    const row = { ...cand, profile_config: JSON.stringify(st.config) };
+    let bad = 0, n = 0;
+    for (const p of corpus()) { n++; if (JSON.stringify(scoreCandidate(row, p, ctx)) !== JSON.stringify(evaluate(cand, p, ctx))) bad++; }
+    assert.equal(bad, 0, `${cand.id}: ${bad} of ${n} differ through the stored config`);
+  }
 });

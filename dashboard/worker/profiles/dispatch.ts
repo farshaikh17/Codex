@@ -12,28 +12,40 @@ import { indianPlace, gulfPlace, remoteFromStored, locationClass } from '../disc
 import { COUNTRY_NAMES, placeRegex } from './countries.ts';
 
 const off = () => { try { return (globalThis as any).process?.env?.PROFILE_ENGINE === 'off'; } catch { return false; } };
-const memo = new WeakMap<object, Profile | null>();
+const memo = new WeakMap<object, { text: string; prof: Profile | null }>();
 const byId = new Map<string, Profile>();
 
-/** The person's config when it is valid and asks for the profile engine; null otherwise (the old path). */
+/** The person's config when it is valid, was written by scripts/profile_config.mjs (resolved: merged and validated, so the discovery side
+ *  reads the same config) and asks for the profile engine; null otherwise (the old path). A built-in id needs "extends" its own legacy base. */
 export function engineConfig(cand: any): ProfileConfig | null {
   if (!cand || off() || cand.profile_config == null || cand.profile_config === '') return null;
   const r = parseProfileConfig(cand.profile_config);
-  if (!r.ok) return null;
-  const engine = r.config.engine ?? (LEGACY_IDS.has(String(cand.id)) ? 'legacy' : 'profile');
+  if (!r.ok || r.config.resolved !== true) return null;
+  const id = String(cand.id);
+  if (LEGACY_IDS.has(id) && r.config.extends !== 'legacy:' + id) return null;
+  const engine = r.config.engine ?? (LEGACY_IDS.has(id) ? 'legacy' : 'profile');
   return engine === 'profile' ? r.config : null;
 }
-/** The resolved profile of a candidate row on the profile engine (memoised per row object), or null. */
+/** The resolved profile of a candidate row on the profile engine, or null. Memoised per row object and config text; the id registry (families for
+ *  familyOf(), shortlist settings) follows the latest row seen, and a row with no usable config any more removes the person from it. */
 export function profileOf(cand: any): Profile | null {
   if (!cand || typeof cand !== 'object') return null;
-  if (memo.has(cand)) return memo.get(cand)!;
+  const text = cand.profile_config == null ? '' : typeof cand.profile_config === 'string' ? cand.profile_config : JSON.stringify(cand.profile_config);
+  const hit = memo.get(cand);
+  if (hit && hit.text === text) return hit.prof;
   const cfg = engineConfig(cand), prof = cfg ? resolveProfile(cand, cfg) : null;
-  memo.set(cand, prof);
-  if (prof) { byId.set(prof.id, prof); const fam = familiesOf(prof); if (fam.length) EXTRA_FAMILIES.set(prof.id, fam); }
+  memo.set(cand, { text, prof });
+  const id = String(cand.id || '');
+  if (prof) { byId.set(id, prof); const fam = familiesOf(prof); if (fam.length) EXTRA_FAMILIES.set(id, fam); else EXTRA_FAMILIES.delete(id); }
+  else { byId.delete(id); EXTRA_FAMILIES.delete(id); }
   return prof;
 }
 /** Registers every profile-engine person in a candidates list (families for familyOf(): shortlist variety and taste). Returns their ids. */
-export function registerCandidates(cands: any[]): string[] { return (cands || []).map(profileOf).filter(Boolean).map((p) => p!.id); }
+export function registerCandidates(cands: any[]): string[] {
+  const list = cands || [], ids = new Set(list.map((c) => String(c?.id || '')));
+  if (list.length > 1) for (const id of [...byId.keys()]) if (!ids.has(id)) { byId.delete(id); EXTRA_FAMILIES.delete(id); }   // a full list: people no longer in it leave
+  return list.map(profileOf).filter(Boolean).map((p) => p!.id);
+}
 export const registeredProfile = (id: string) => byId.get(id) || null;
 
 /** The scorer every caller uses: the profile packs for a person on the profile engine, otherwise the old evaluate(). */

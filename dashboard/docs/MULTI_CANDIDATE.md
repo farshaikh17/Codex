@@ -35,13 +35,17 @@ candidate row (skills, target roles, years, threshold)  +  candidate_profile_con
 Stored as JSON text in `candidate_profile_configs(candidate_id, config, updated_at)` (migration 0028; a table, not a column, because
 migrations are replayed on every release and `ALTER TABLE ADD COLUMN` is not idempotent). At most 16 KB. Every pattern is a **plain
 phrase**, never a regular expression (the same rule as client search profiles), so a config cannot cause a slow match. Validated by
-`parseProfileConfig()` (`worker/profiles/schema.ts`); an invalid config is ignored (the person stays on the old path) and the validator
-script says why.
+`parseProfileConfig()` (`worker/profiles/schema.ts`): unknown packs, policies, levels, families or countries, and a config with no role rule
+(no built-in field pack, families, `title.must` or target roles) are refused with the reasons. Only `scripts/profile_config.mjs` writes a
+stored config: it merges `extends`, validates the result again, marks it `resolved` and also stores `thresholds.qualify` as the candidate
+row's threshold (so the shortlist pool, the lists and Today use the cut-off the score uses). Any other stored config is ignored by both
+sides (the person stays on the old path); a config that still has no role rule is skipped by discovery with a warning, never a failed run.
 
 | Field | Meaning | Default |
 |---|---|---|
 | `schema` | 1 | required |
-| `extends` | `legacy:farhan_shaikh` or `legacy:sana_ansari`: start from a built-in pack set (section 5) | none |
+| `extends` | `legacy:farhan_shaikh` or `legacy:sana_ansari`: start from a built-in pack set (section 5). Field lists add up; `level`, `type`, `language`, `salary`, `thresholds`, `shortlist` and `discovery` merge key by key; `place` and `employment_types` replace | none (a built-in id always extends its own base) |
+| `resolved` | set by `scripts/profile_config.mjs` only: the stored config is merged and validated. The scorer and discovery use **only** resolved configs, so both read the same config | - |
 | `engine` | `profile` (score with the packs) or `legacy` (the old `evaluate()`) | `profile`; a built-in id needs `profile` explicitly |
 | `display_name` | shown in reports | candidate row |
 | `field.packs` | field packs: `revops_automation`, `plant_maintenance`, `keyword` | `["keyword"]` |
@@ -68,7 +72,7 @@ script says why.
 | `discovery.countries` | ISO codes searched on job sites | from the place policies |
 | `discovery.employer_boards` | `[{kind: greenhouse/lever/ashby/workable/jazzhr, slug}]` read for this person | `[]` |
 | `discovery.jobspy_sites` | `indeed linkedin glassdoor google bayt` | `indeed linkedin` |
-| `discovery.max_rows` | dataset rows pre-scored for this person per run | 20,000 |
+| `discovery.max_rows` | dataset rows pre-scored for this person per run (newest dated first, undated last) | 20,000 |
 | `discovery.max_selected` | dataset rows this person may send to the import per run | 400 |
 
 A synthetic example is `dashboard/test/profiles/example_data_analyst_remote_eu.json` (tests only; never seeded).
