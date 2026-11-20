@@ -129,7 +129,10 @@ def ashby_compensation(c):
 def normalize(provider, board, j):
     if not isinstance(j, dict):
         raise Skip('not_object', 'job entry is not an object')
-    req = _s(j.get('id'))
+    raw_id = j.get('id')
+    if raw_id is not None and (isinstance(raw_id, bool) or not isinstance(raw_id, (str, int))):
+        raise Skip('invalid_id', 'requisition id must be a string or integer')
+    req = _s(raw_id)
     if not req:
         raise Skip('missing_id', 'job has empty or missing id (title=%r); not deduplicated by title' % _s(j.get('title') or j.get('text')))
     if provider == 'greenhouse':

@@ -35,6 +35,15 @@ def setp(o, p, v):
 
 
 class AdapterFaultInjection(unittest.TestCase):
+    def test_requisition_keys_use_only_source_identifiers(self):
+        for provider, base in SAMPLES.items():
+            for invalid in (True, False, [], {}, 1.5):
+                with self.subTest(provider=provider, invalid=invalid), self.assertRaises(Skip):
+                    adapters.normalize(provider, 'board', dict(base, id=invalid))
+            for value, expected in [(123, '123'), (' 00123 ', '00123')]:
+                rec = adapters.normalize(provider, 'board', dict(base, id=value))
+                self.assertEqual(rec['key'], f'{provider}:board:{expected}')
+
     def test_samples_are_valid(self):
         for prov, base in SAMPLES.items():
             rec = adapters.normalize(prov, 'b', copy.deepcopy(base))
