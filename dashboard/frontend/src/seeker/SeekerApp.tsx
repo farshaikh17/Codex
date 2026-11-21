@@ -198,7 +198,7 @@ export const SeekerApp: React.FC = () => {
   const counts = data?.counts;
   const topBar = (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
+      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2 max-[359px]:h-auto max-[359px]:min-h-14 max-[359px]:flex-wrap max-[359px]:gap-0 max-[359px]:px-1">
         <div role="group" aria-label="Whose jobs" className="flex rounded-xl border border-slate-300 p-0.5 shrink-0">
           {PEOPLE.map((p) => (
             <button key={p} type="button" aria-pressed={person === p} onClick={() => go({ person: p, view: person && route.view !== 'home' ? route.view : 'today', jobId: null })}
@@ -238,7 +238,7 @@ export const SeekerApp: React.FC = () => {
   } else if (route.view === 'hidden') {
     body = <HiddenView key={candidateId} candidateId={candidateId!} actions={actions} onRestore={restore} refreshKey={refreshKey} />;
   } else {
-    body = !data ? <p className="text-base text-slate-600 pt-4">Loading {NAME[person]}'s jobs…</p>
+    body = !data ? null
       : <TodayView data={data} baseline={baseline.current[person]} lastRunAt={lastRunAt} actions={actions} go={(v) => go({ person, view: v, jobId: null })} />;
   }
 
@@ -248,6 +248,11 @@ export const SeekerApp: React.FC = () => {
       <main className="max-w-3xl mx-auto px-4 py-4 pb-28">
         <h1 className="sr-only">{person ? `${NAME[person]}'s jobs` : 'Jobs'}</h1>
         {ready && access === false && !isTrackerOpen() && person && <p className="mb-3 text-sm text-slate-600">Saving and tracking are switched off on this site just now.</p>}
+        {person && route.view === 'today' && (
+          <p role="status" aria-atomic="true" className={data || loadError ? 'sr-only' : 'text-base text-slate-600 pt-4'}>
+            {data ? `${NAME[person]}'s jobs loaded. Best matches: ${data.counts.best}.` : !loadError && `Loading ${NAME[person]}'s jobs…`}
+          </p>
+        )}
         {body}
       </main>
       {panelJob && person && (
