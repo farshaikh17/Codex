@@ -25,8 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Run isolated regression tests
@@ -34,7 +34,7 @@ jobs:
       - name: Run offline trial
         run: python experiments/weekend_trial.py --candidate "${{ inputs.candidate }}" --limit "${{ inputs.sample_limit }}"
       - name: Save trial report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: recruiter-trial-${{ inputs.candidate }}
           path: trial-output/
