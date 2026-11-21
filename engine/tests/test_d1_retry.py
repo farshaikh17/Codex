@@ -1,5 +1,6 @@
 """engine/dataset_discovery.d1(): a read that fails for a network or 5xx-type reason is retried (5, 20, 60 s); an SQL error is not.
 Offline: subprocess.run is replaced by a fake wrangler."""
+import json
 import subprocess
 import unittest
 from types import SimpleNamespace
@@ -36,6 +37,24 @@ class D1Retry(unittest.TestCase):
             self.assertEqual(dd.d1('SELECT 1', sleep=slept.append), [{'n': 1}])
         self.assertEqual(len(calls), 4)
         self.assertEqual(slept, [5, 20, 60])
+
+    def test_json_error_drives_retry_when_stderr_contains_a_cli_warning(self):
+        for message, count in [('503 Service Unavailable', 2), ('no such column: network: SQLITE_ERROR', 1),
+                               ("Your account has exceeded D1's free tier daily row read limit", 1)]:
+            with self.subTest(message=message):
+                failure = SimpleNamespace(returncode=1, stdout=json.dumps({'error': {'text': message}}),
+                                          stderr='Warning: a newer CLI version is available')
+                run, calls = failing(failure, OK)
+                slept = []
+                with mock.patch.object(dd.subprocess, 'run', run):
+                    if count == 2:
+                        self.assertEqual(dd.d1('SELECT 1', sleep=slept.append), [{'n': 1}])
+                    else:
+                        with self.assertRaises(dd.D1Error) as caught:
+                            dd.d1('SELECT 1', sleep=slept.append)
+                        self.assertIn(message, str(caught.exception))
+                self.assertEqual(len(calls), count)
+                self.assertEqual(slept, [5] if count == 2 else [])
 
     def test_gives_up_after_three_retries(self):
         run, calls = failing(err('502 Bad Gateway'))
