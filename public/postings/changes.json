@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-28T00:42:44.013366+00:00|greenhouse:twilio:8201630",
+ "cursor_to": "pc1|2026-10-28T07:19:58.134244+00:00|greenhouse:twilio:8267554",
  "entries": [
   {
    "availability": "listed",
@@ -369,14 +369,6 @@
    "posting_id": "greenhouse:gitlab:8861795002",
    "record": "records/greenhouse__gitlab__8861795002.json",
    "record_sha256": "722f787c0e2d4191d410580c89a81dcad616cc911bc36133ed173ee21a434b84"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "1bb96a2ba0e67f72a7febcb5723fea0692200e608848778912ded0b32f7f53ad",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8864819002",
-   "record": "records/greenhouse__gitlab__8864819002.json",
-   "record_sha256": "c448fbe80ab411220304502256b79821d3df9a0f8c81ea5b951b9a73bf19906a"
   },
   {
    "availability": "listed",
@@ -857,14 +849,6 @@
    "posting_id": "greenhouse:gitlab:8894806002",
    "record": "records/greenhouse__gitlab__8894806002.json",
    "record_sha256": "84dd70cfe22300e6c6cac638a9ea9cff4fb4d35e432e53e0d3d215fde94dd066"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "05b2e020edad6c25910ed4139d079c13a30223da503d00cf2de367e9365e7d03",
-   "last_change": "2026-10-26T23:58:52.793071+00:00",
-   "posting_id": "greenhouse:gitlab:8895451002",
-   "record": "records/greenhouse__gitlab__8895451002.json",
-   "record_sha256": "6c5884ab61234e3bf5f2090e2463915331e5aa36ac6d1d80af5f2811fe78da72"
   },
   {
    "availability": "listed",
@@ -1601,6 +1585,22 @@
    "posting_id": "greenhouse:twilio:8201630",
    "record": "records/greenhouse__twilio__8201630.json",
    "record_sha256": "f5ee1324c29fc52248c64a72c1d3921d5d46e759ae8702e2a67659d6f9142c1d"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "fd660bcf00365247e8cc81efb4f29338bf216c9e1cf842da4c5e7d696abe07fb",
+   "last_change": "2026-10-28T07:19:58.134244+00:00",
+   "posting_id": "greenhouse:gitlab:8785825002",
+   "record": "records/greenhouse__gitlab__8785825002.json",
+   "record_sha256": "e33a32ae94d96ba47844c0f716fe0600c9993dd5f13152c7352cb8865bf22ee6"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "dddc372acb711dca38213817bddd18c327963b700da67b24a76fe32ca7a38f68",
+   "last_change": "2026-10-28T07:19:58.134244+00:00",
+   "posting_id": "greenhouse:twilio:8267554",
+   "record": "records/greenhouse__twilio__8267554.json",
+   "record_sha256": "23a4ab8c0ba20de885d2b4f83c1857e7b1310c611d8d1daf384401241c491dcf"
   }
  ],
  "has_more": true,
