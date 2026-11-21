@@ -619,7 +619,7 @@ test('S6: too senior is capped just below the threshold (never Ready); Chief of 
   const lvl = (who, t, loc, d) => p2eval(who, t, loc, d);
   // Jobs QA 3: Farhan's VP, director and principal titles are capped lower still (FAR_ABOVE_GAP, test/jobs_qa3.test.mjs); Sana's VP keeps S6. Jobs QA 4: so is
   // Farhan's 'Head of' (test/jobs_qa4.test.mjs).
-  for (const [who, t, loc, d] of [[P2_SANA, 'VP, Maintenance', 'Pune, India', P2_PLANT], [P2_SANA, 'Plant Head', 'Pune, India', P2_PLANT.replace('8+ years', '20+ years')],
+  for (const [who, t, loc, d] of [[P2_SANA, 'VP, Maintenance', 'Pune, India', P2_PLANT], [P2_SANA, 'Plant Head', 'Pune, India', P2_PLANT.replace('8+ years', '14+ years')],   // jobs QA 9: 20+ years is far above her (capped lower, test/jobs_qa9.test.mjs)
     [P2_FARHAN, 'Senior Implementation Manager', 'Remote - India', P2_IMPL.replace('5+ years', '12+ years') + ' Lead a team of 25.'],   // jobs QA 4: Farhan's 'Head of' is far above (FAR_ABOVE_GAP)
     [P2_SANA, 'General Manager - Maintenance', 'Pune, India', P2_PLANT]]) {
     const r = lvl(who, t, loc, d);
