@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v23';
+export const RULES_MARKER = 'profile_v24';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -803,7 +803,7 @@ export function sanaElectricalMaintenance(title:string|null|undefined,descriptio
 // required', 'communication skills in both Turkish and English', 'Fluent Serbian'). A language only welcomed ('is a plus', 'an advantage',
 // 'preferred') is not read. Hard-ish: the score stays below the person's Worth-a-try floor.
 const LANGS='turkish|portuguese|italian|polish|japanese|mandarin|chinese|cantonese|korean|russian|vietnamese|thai|bahasa(?: indonesia| melayu)?|malay|indonesian|czech|slovak|swedish|danish|norwegian|finnish|hebrew|greek|hungarian|romanian|ukrainian|bulgarian|croatian|serbian|tagalog|filipino|german|french|dutch|spanish|arabic';
-const LANG_HARD=new RegExp(`\\b(?:(?:native|professional|business|full|working)[- ](?:level )?(?:or [\\w-]+ )?(?:fluency|proficiency) in (${LANGS})|fluen(?:t|cy) (?:in )?(?:both )?(${LANGS})|(${LANGS}) (?:language )?(?:is |are )?(?:required|mandatory|essential|a must)|(?:skills|proficiency|fluency) in both (${LANGS}) and english|(?:proficient|fluent) in english and (${LANGS})|native or business[- ]fluent (${LANGS})|(${LANGS})[- ]speak(?:ing|ers?)\\b)`,'gi');
+const LANG_HARD=new RegExp(`\\b(?:(?:native|professional|business|full|working)[- ](?:level )?(?:or [\\w-]+ )?(?:fluency|proficiency) in (${LANGS})|fluen(?:t|cy) (?:in )?(?:both )?(${LANGS})|(${LANGS}) (?:language )?(?:is |are )?(?:required|mandatory|essential|a must)|(?:skills|proficiency|fluency) in both (${LANGS}) and english|(?:proficient|fluent) in english and (${LANGS})|native or business[- ]fluent (${LANGS})|\\bnative[- ](?:level )?(${LANGS})\\b(?![- ]speakers? (?:are )?welcome)|(${LANGS})[- ]speak(?:ing|ers?)\\b)`,'gi');
 const LANG_SOFT_AFTER=/^[^.;\n]{0,40}\b(?:is |are |would be )?(?:a plus|an advantage|advantageous|preferred|desirable|nice to have|a bonus|an asset|beneficial)\b/i;
 export const LANGUAGE_HARD_GAP=11;
 /** Jobs QA 4: a non-English language the posting plainly requires (title or text), or null. */
@@ -935,7 +935,56 @@ export function farhanEngineeringField(title:string|null|undefined,description:s
  if(FARHAN_PROGRAMMING.some((re)=>anyNotDenied(re,d)))return 'software engineering';
  if(TELECOM_RF.test(d)&&TELECOM_WORD.test(d))return 'telecom radio (RF) specialist';
  if(ERP_ADMIN_YEARS.test(d))return 'finance ERP administration';
+ if(farhanCrmDevelopment(title,d))return 'CRM development (CI/CD, custom code)';   // jobs QA 9
+ if(farhanFinanceProductImplementation(title,d))return 'finance or ERP product implementation';   // jobs QA 9
  return null;
+}
+// ---- Jobs QA 9 (21 Nov: both live lists, 65 jobs, re-judged by two reviewers after the profile_v23 rebuild; 14 should not have been shown) ------
+// Farhan's field: a CRM consultant / specialist / architect / developer title whose text asks developer work on the platform: CI/CD pipelines,
+// DevOps, the PowerApps Component Framework (PCF), plug-ins or custom code ('Design, implement, and maintain CI/CD pipelines', 'custom application
+// development', 'custom components ... using the PowerApps Component Framework (PCF)'). Two kinds of that work; his CRM work is configuration.
+const CRM_PLATFORM_TITLE=/\bcrm\b|\bdynamics\b|\bsalesforce\b|\bhubspot\b|\bzoho\b/i, CRM_SEAT_TITLE=/\b(?:consultant|specialist|architect|developer)\b/i;
+const CRM_DEV_WORK=[/\bCI\s?\/\s?CD\b|\bcontinuous integration\b|\bcontinuous (?:deployment|delivery)\b/i,/\bdevops\b/i,/\bPCF\b|\bpowerapps component framework\b/i,
+ /\bplug-?ins?\b|\bcustom (?:code|coding|application development|components?|controls?)\b/i,/(?:\bC#|\.NET\b|\bJavaScript\b|\bTypeScript\b|\bX\+\+)[^.;]{0,30}\b(?:development|programming|coding)\b/i];
+export function farhanCrmDevelopment(title:string|null|undefined,description:string|null|undefined):boolean{
+ const ti=String(title||''),d=String(description||'');
+ return CRM_PLATFORM_TITLE.test(ti)&&CRM_SEAT_TITLE.test(ti)&&distinct(CRM_DEV_WORK,d)>=2;
+}
+// Farhan's field: implementation of a specialist finance or ERP product whose experience the posting asks ('1+ years of Kyriba or TMS
+// implementation experience'; NetSuite, SAP, Workday Financials / HCM, Oracle EBS). Asked as years of the product or as its implementation
+// experience, in an implementation / consultant / analyst post that names the product or finance work. His CRM platforms are not in the list
+// (owner: the Zoho / HubSpot / Salesforce platform cap stays as it is).
+const FINANCE_PRODUCT='kyriba|treasury management systems?|TMS|netsuite|sap(?: s/4 ?hana| fico| ariba| successfactors)?|workday(?: financials| hcm| financial management)?|oracle (?:ebs|e-business suite|fusion|financials|cloud erp)|coupa|blackline|anaplan|onestream';
+const FINANCE_PRODUCT_ASKED=new RegExp(`\\b\\d{1,2}\\s*\\+?\\s*(?:-\\s*\\d{1,2}\\s*)?years?\\b[^.;]{0,30}?\\b(?:${FINANCE_PRODUCT})\\b|\\b(?:${FINANCE_PRODUCT})\\b(?: or [\\w/-]+)? (?:implementation|configuration) experience\\b`,'i');
+const FINANCE_PRODUCT_TITLE=new RegExp(`\\b(?:${FINANCE_PRODUCT})\\b`,'i');
+export function farhanFinanceProductImplementation(title:string|null|undefined,description:string|null|undefined):boolean{
+ const ti=String(title||''),d=String(description||'');
+ if(!/\b(?:implementation|implementer|consultant|analyst|specialist|functional)\b/i.test(ti))return false;
+ return FINANCE_PRODUCT_ASKED.test(d)&&(FINANCE_PRODUCT_TITLE.test(ti)||/\b(?:treasury|finance|financial|accounting|erp|payroll|hcm)\b/i.test(d));
+}
+// Farhan, a stretch (Worth a try at most): a marketing-automation platform he has not used, required ('Pardot administration: Salesforce
+// connector, Engagement Studio', '3+ years of Marketo', 'Eloqua certification required'). Not when only welcomed ('a plus', 'preferred') or
+// offered as one choice ('Marketo or HubSpot').
+const MAP_PLATFORM='pardot|marketo|eloqua|account engagement';
+const MAP_REQUIRED=new RegExp(`\\b(?:${MAP_PLATFORM})\\b[^.;]{0,12}\\badmin(?:istration|istrator|istering)?\\b|\\badminist(?:er|ering|ration of)\\s+(?:${MAP_PLATFORM})\\b|\\b\\d{1,2}\\s*\\+?\\s*years?\\b[^.;]{0,30}\\b(?:${MAP_PLATFORM})\\b|\\b(?:${MAP_PLATFORM})\\b[^.;]{0,20}\\b(?:certification|certified|expertise|experience) (?:is )?(?:required|mandatory|a must)\\b`,'gi');
+const MAP_SOFT_AFTER=/^[^.;\n]{0,40}\b(?:a plus|an advantage|advantageous|preferred|desirable|nice to have|a bonus|beneficial)\b|^[^.;\n]{0,25}\bor (?:hubspot|gohighlevel|similar|equivalent)\b/i;
+export function farhanMarketingPlatformRequired(description:string|null|undefined):string|null{
+ const d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');MAP_REQUIRED.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=MAP_REQUIRED.exec(d))){
+  if(MAP_SOFT_AFTER.test(d.slice(m.index+m[0].length))||deniedBefore(d,m.index))continue;
+  return (new RegExp(MAP_PLATFORM,'i').exec(m[0])?.[0]||'').replace(/\b\w/g,(c)=>c.toUpperCase());
+ }
+ return null;
+}
+// Farhan, a stretch: an agency placing someone with its client ('We are hiring a marketing consultant for our client', 'on behalf of our client')
+// framed as a contract, or as coordination of creative marketing work ('the creative side of marketing projects', 'creative teams', twice).
+const CLIENT_PLACEMENT=/\b(?:hiring|recruiting|seeking|looking for)\b[^.;]{0,60}?\bfor (?:our|a|one of our) clients?\b|\bon behalf of (?:our|a) client\b/i;
+const CONTRACT_FRAMING=/\bcontract(?:ual)? (?:role|position|basis|engagement|assignment)\b|\bopen to (?:a )?contract\b|\b(?:long|short)[- ]term contract\b/i;
+const CREATIVE_WORK=/\bcreative (?:side|teams?|marketing|production|aspects|elements|projects|deliverables)\b|\bcreative, (?:and )?production\b/gi;
+export function farhanClientPlacement(description:string|null|undefined):boolean{
+ const d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(!CLIENT_PLACEMENT.test(d))return false;
+ return CONTRACT_FRAMING.test(d)||(d.match(CREATIVE_WORK)||[]).length>=2;
 }
 // Farhan's level: a post for recent graduates or early-career people ('Recent graduate or early-career candidate in Computer Science'), or a
 // specialist / coordinator post asking at most 2 years for high-volume email and phone outreach ('2+ years', 'Remote with high email and phone volume').
@@ -959,6 +1008,8 @@ export function farhanStretchOnly(title:string|null|undefined,description:string
  if(/\bApex\b/.test(d)&&/\bSOQL\b|\bLWC\b|lightning web components/i.test(d))return 'a Salesforce developer seat (Apex)';
  if(IPAAS_CERT.test(d))return 'an integration post that requires a vendor certification';
  if(/\bstrong proficiency in (?:javascript|typescript|python|java)\b/i.test(d))return 'a technical seat asking strong programming proficiency';
+ const map=farhanMarketingPlatformRequired(d);if(map)return `a post that requires ${map}, a marketing-automation platform the profile does not list`;   // jobs QA 9
+ if(farhanClientPlacement(d))return 'an agency placement with a client (contract or creative-marketing coordination)';   // jobs QA 9
  return null;
 }
 // Sana's field: other professions that share her words. A software or analytics vendor's implementation post ('implementation of UptimeAI's
@@ -986,15 +1037,72 @@ export function sanaOtherProfession(title:string|null|undefined,description:stri
  if(/instrumentation|\bC ?& ?I\b/i.test(ti)&&!/\belectrical\b/i.test(ti)&&/\b(?:degree|diploma|b\.? ?e\b|b\.? ?tech|bachelor'?s?)[^.;]{0,50}\b(?:C ?& ?I|control (?:and|&) instrumentation|instrumentation(?: engineering)?|electronics (?:and|&) communication|E ?& ?C|ECE)\b/i.test(d))return 'control and instrumentation';
  if(/\bcyber ?security\b/i.test(d)&&/\bfirewalls?\b|\bVPNs?\b|\b62443\b|\bCERT-In\b|\bSIEM\b/i.test(d))return 'OT cybersecurity';
  if(distinct(SANA_MACHINE_TOOL,d)>=2)return 'machine-tool (CNC) overhaul';
+ const qa9=sanaOtherProfessionQa9(ti,d);if(qa9)return qa9;   // jobs QA 9
  return null;
+}
+// ---- Jobs QA 9 (Sana) ------------------------------------------------------------------------------------------------------------------------
+// Other professions that share her words:
+//   a civil discipline in the title ('Maintenance Engineer-Civil');
+//   field-instrument work under a general plant title: the text names instruments at least four times and more often than electrical or mechanical work
+//   ('maintenance, troubleshooting & calibration of field instruments', 'Instrumentation asset', 'instrumentation Vendors');
+//   tool-room design ('Design and Built Tool Room - Design and modify production jigs, fixtures, gauges');
+//   a product architect or designer title ('Senior Engineer II, Product Architect - Smart Energy');
+//   design for a consultancy or maker, three kinds of it ('Design mechanical piping and equipment', 'Develop P&IDs', 'Professional Engineering
+//   registration', Caesar II / AutoPipe / Thermoflow, 'experience in mechanical design for turbine-generator groups', 'calculation notes');
+//   laundry and hospital facilities ('Experience in large laundry management is required', healthcare linen);
+//   an owner's-engineer consultancy for battery storage ('Owner's Engineer ... on at least three (3) utility-scale renewable energy projects', BESS);
+//   software consulting for asset management ('Utilities EAM and Field Service Consultant': IBM Maximo, SAP PM/EAM, Infor EAM, go-live support).
+// Not when the title is her own work (maintenance, O&M, operations, reliability, commissioning), except the civil title and laundry / hospital work.
+const SANA_POWER_DESIGN=[/\bP ?& ?IDs?\b/,/\bdesign (?:mechanical |electrical )?(?:piping|equipment)\b|\bpiping design\b/i,
+ /\bexperience in (?:mechanical |electrical )?design\b|\b(?:mechanical|electrical) design (?:for|of)\b|\b(?:mechanical|electrical) design software\b|\bdesign experience\b/i,
+ /\bprofessional engineer(?:ing)? (?:registration|licen[cs]e)\b|\bPE (?:registration|licen[cs]e)\b/i,/\bcaesar ii\b|\bautopipe\b|\bthermoflow\b|\bcadworx\b|\bsmart ?plant 3d\b|\bfinite element\b/i,
+ /\bsizing calculations?\b|\bcalculation notes?\b/i,/\bengineering (?:services|deliverables)\b|\bproject deliverables\b/i];
+const SANA_EAM_SOFTWARE=[/\bmaximo\b/i,/\bSAP (?:PM|EAM|S\/4)/,/\binfor (?:EAM|cloudsuite)\b/i,/\bIFS\b/,/\benterprise asset management (?:platforms?|solutions?|software|systems?)\b/i,/\bfield service (?:management|software|solutions?|transformation)\b/i,
+ /\bgo-?live\b/i,/\bsolution (?:configuration|design)\b|\bfunctional design\b/i,/\btechnology (?:implementations?|transformation)\b/i];
+const SANA_OWN_TITLE=/maintenance|o ?& ?m\b|operations|reliability|commission/i;
+export function sanaOtherProfessionQa9(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(/\bcivil\b/i.test(ti)&&!/\bmechanical\b|\belectrical\b|\bC ?& ?I\b|\bI ?& ?C\b|\bE ?& ?I\b|\binstrument/i.test(ti))return 'civil engineering';   // civil the only discipline ('Civil | Mechanical | Electrical | C&I' is not)
+ const instruments=(d.match(/\binstrument\w*/gi)||[]).length,elecMech=(d.match(/\belectrical\b|\bmechanical\b|\bmotors?\b|\bswitchgear\b|\btransformers?\b|\bpumps?\b|\bcompressors?\b|\bturbines?\b/gi)||[]).length;
+ if(!/\belectrical\b|\bmechanical\b/i.test(ti)&&!SANA_OWN_TITLE.test(ti)&&!/\binstrument/i.test(ti)&&instruments>=4&&instruments>elecMech)return 'control and instrumentation';   // not an instrument commissioning title (jobs QA 8 recall)
+ if(/\btool ?room\b/i.test(d)&&/\bjigs?\b|\bfixtures?\b/i.test(d)&&/\bdesign\w*/i.test(d))return 'tool-room and jig design';
+ if(/\bproduct (?:architect|design(?:er)?|development)\b|\barchitect\b/i.test(ti))return 'design, product or consultancy';
+ if(/\blaundr(?:y|ies)\b/i.test(d)&&/\blinen\b|\bhealthcare\b|\bhospitals?\b|\blaundry (?:management|industry|plants?|operations)\b/i.test(d))return 'laundry and hospital facilities';
+ if(/\bmaintenance|facilit/i.test(ti)&&/\bhospital (?:facilities|facility|buildings?|campus(?:es)?|engineering)\b|\bhealthcare facilit(?:y|ies)\b/i.test(d))return 'laundry and hospital facilities';
+ if(SANA_OWN_TITLE.test(ti))return null;
+ if(distinct(SANA_POWER_DESIGN,d)>=3)return 'design, product or consultancy';
+ if(/\bowner['’]?s'? engineer/i.test(d)&&/\bBESS\b|\bbattery (?:energy )?storage\b/i.test(`${ti} ${d}`))return 'owner\'s-engineer consultancy';
+ if(/\bconsultant\b/i.test(ti)&&distinct(SANA_EAM_SOFTWARE,d)>=3)return 'asset-management software consulting';
+ return null;
+}
+// Sana's level: a post for diploma and ITI holders ('Diploma in Electrical/Mechanical Engineering or relevant ITI holders with minimum 3 years')
+// is a technician's grade, when the text names no engineering degree.
+export function sanaTechnicianQualification(description:string|null|undefined):boolean{
+ const d=String(description||'');
+ return /\bITI\b/.test(d)&&/\bdiploma\b/i.test(d)&&!/\bB\.?\s?E\b|\bB\.?\s?Tech\b|\bBSc\b|\bB\.?Sc\b/.test(d)&&!/\bbachelor|\bdegree\b|\bgraduate engineer|\bengineering graduate/i.test(d);   // 'B.E.' in capitals ('may be based' is no degree)
+}
+// Both: the experience asked is far above the person's: 20 years or more, or 8 or more beyond theirs ('a minimum twenty (20+) years [15 years for
+// UAE Nationals] experience in the Oil & Gas'). Written figures in brackets are read, bracketed asides dropped, and the longer route for a diploma
+// holder is not the requirement ('B.E. with 15+ years; Diploma with 20+ years' asks 15).
+export const FAR_ABOVE_YEARS_ABS=20, FAR_ABOVE_YEARS_GAP=8;
+export function yearsFarAbove(description:string|null|undefined,have:number):number{
+ const d=String(description||'').replace(/\((\d{1,2})\s*\+?\s*\)/g,' $1+ ').replace(/\[[^\]]{0,60}\]/g,' ').replace(/\bdiploma\b[^.;]{0,60}?\bwith\s+\d{1,2}\s*\+?\s*years?[^.;]*/gi,' ').replace(/\s+/g,' ');
+ // only a figure asked of the applicant: 'N+ years', or one after 'minimum' / 'at least' / 'experience:' ('founders ... with over 20 years of
+ // experience' is the company's story, not a requirement)
+ let need=0;const re=/(?<![\w.])(\d{1,2})\s*(\+|plus)?\s*(?:(?:-|to|–)\s*\d{1,2}\s*\+?\s*)?years?\b/gi;let m:RegExpExecArray|null;
+ while((m=re.exec(d))){const n=Number(m[1]),before=d.slice(Math.max(0,m.index-45),m.index);
+  if(n<1||n>30||/\b(?:founded|founders?|alumni|history|legacy|heritage|since|over the (?:past|last))\b/i.test(before))continue;
+  if(!yearsRequired(d.slice(m.index,m.index+m[0].length+60))&&!/\bexperience\s*:\s*\(?\s*$/i.test(before))continue;   // the figure is years of experience ('Experience: 20 - 25 Years')
+  if(m[2]||/\b(?:minimum|min\.?|at least|requires?|required|must|experience\s*:|qualifications?)\b[^.;]*$/i.test(before))need=Math.max(need,n);}
+ return need>=FAR_ABOVE_YEARS_ABS||(have>0&&need>=have+FAR_ABOVE_YEARS_GAP)?need:0;
 }
 // Sana, kept but not in Best matches (Worth a try at most): maintenance of discrete-manufacturing lines built on CNC machines, servo drives, robots
 // and PLC programming; a narrow specialism (power-electronics converters, a vibration-analyst certification, HVDC transmission, battery storage);
 // building facilities for a real-estate services firm; an electrical-licence trade post; a head, director or plant-manager title; and a posting whose
 // own ceiling is below her profile ('Experience Minimum: 5 Maximum: 8', an age limit).
-const SANA_DISCRETE=[/\bCNC\b/,/\bVMC\b|\bHMC\b/,/\bservo\b/i,/\brobot(?:s|ic|ics)?\b/i,/\bPLC (?:ladder|programming|logic)\b|\bladder logic\b|\bTIA portal\b/i,/\bNC control\b|\b8[24]0D\b/,/\bwelding\b/i];
+const SANA_DISCRETE=[/\bCNC\b/,/\bVMC\b|\bHMC\b/,/\bservo\b/i,/\brobot(?:s|ic|ics)?\b/i,/\bPLC (?:ladder|program\w*|logic)\b|\bladder logic\b|\bTIA portal\b/i,/\bNC control\b|\b8[24]0D\b/,/\bwelding\b/i,/\bMES\b/,/\bpress (?:machines?|shop|lines?)\b|\bpresses\b/i,/\blaser (?:cutting|machines?)\b|\btube mill\b|\bslitting lines?\b/i];   // jobs QA 9: PLC program, MES, presses, laser / tube-mill lines
 const FM_EMPLOYER=/\b(?:jll|cbre|cushman|colliers|sodexo|knight frank|savills|compass group|iss facility)\b/i;
-export function sanaStretchOnly(title:string|null|undefined,description:string|null|undefined,company:string|null|undefined,have:number):string|null{
+export function sanaStretchOnly(title:string|null|undefined,description:string|null|undefined,company:string|null|undefined,have:number,location:string|null|undefined=undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
  if(distinct(SANA_DISCRETE,d)>=3)return 'machine and robot-line maintenance in discrete manufacturing';
  if(/\bconverter specialist\b|\bIGBTs?\b|\bpower electronics\b/i.test(`${ti} ${d}`))return 'a power-electronics converter specialism';
@@ -1006,6 +1114,31 @@ export function sanaStretchOnly(title:string|null|undefined,description:string|n
  if(/^\s*head\b(?!\s+(?:office|quarters))|\bhead (?!office|quarters|count)[a-z]|\bdirector\b|\b(?:power )?plant manager\b|\bplant head\b/i.test(ti)&&!/\b(?:deputy|assistant|asst|associate)\b/i.test(ti))return 'a head, director or plant-manager post';
  const mx=/\bexperience\b[^.;]{0,40}?\bmax(?:imum)?\.?\s*:?\s*(\d{1,2})\b/i.exec(d);if(mx&&have>0&&Number(mx[1])<have)return 'a stated experience ceiling below her years';
  if(/\bage (?:limit|bar)\b|\bmaximum age\b|\bage\s*:?\s*(?:below|under|up ?to|not more than|max(?:imum)?)\s*\d{2}\b/i.test(d))return 'an age limit';
+ return sanaStretchOnlyQa9(ti,d,company,location);   // jobs QA 9
+}
+// Jobs QA 9 (Sana), kept but not in Best matches (Worth a try at most):
+//   a degree in mechanical engineering only ('Diploma / B.E. in Mechanical Engineering'; not '... Mechanical, Electrical or a related field');
+//   years asked in a specialist sub-domain she has not worked in ('At least 5 years in a Solar Asset Management', '5 Years of experience in
+//   HVDC', '10-14 years in ... electricity procurement', '4+ years of hands-on furnace maintenance', BESS), or a robotic-cleaning (ARCS) title;
+//   commissioning for an advisory or consulting firm (Deloitte, Accenture, PwC ...);
+//   an 'Executive' or 'Senior Executive' grade at a consumer-goods or paints maker;
+//   an empty place with an employer named for a country abroad ('TAQA Arabia', Egypt-based): read like an unknown place abroad.
+const SANA_NICHE='solar asset management|solar (?:plant )?(?:o ?& ?m|operations)|HVDC|BESS|battery (?:energy )?storage|robotic cleaning|(?:renewable )?energy procurement|electricity procurement|power procurement|PPAs?|furnaces?|furnace maintenance';
+const SANA_NICHE_YEARS=new RegExp(`\\b\\d{1,2}\\s*\\+?\\s*(?:(?:-|to|–)\\s*\\d{1,2}\\s*)?\\+?\\s*years?\\b[^.;]{0,70}?\\b(?:${SANA_NICHE})\\b`,'i');
+const MECH_DEGREE=/(?:\bdiploma\b|\bB\.?\s?E\b\.?|\bB\.?\s?Tech\b\.?|\bbachelor'?s?(?: degree)?\b|\bdegree\b|\bgraduate\b)(?:[^.;:\n]|\.(?=\S|\s+[a-z]))(?:[^;:\n]){0,22}?\bmechanical\b(?:\s+engineer(?:ing)?)?/gi;
+const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|mechatronics|industrial|production|power|related|relevant|equivalent|other|any (?:engineering|discipline))\b/i;   // another discipline offered beside mechanical
+const CONSULTING_EMPLOYER=/\b(?:deloitte|pwc|price ?waterhouse|kpmg|ernst (?:&|and) young|\bey\b|accenture|mckinsey|boston consulting|bain|capgemini|grant thornton)\b/i;
+const CONSUMER_GOODS_EMPLOYER=/\b(?:asian paints|berger paints|kansai nerolac|nerolac|akzo ?nobel|indigo paints|perfetti|nestl[eé]|hindustan unilever|unilever|britannia|dabur|marico|godrej consumer|procter|colgate|mondelez|pepsico|coca[- ]cola|parle|ferrero|kellogg|emami|jyothy|tata consumer|itc limited)\b/i;
+const EMPLOYER_ABROAD_NAME=/\b(?:arabia|egypt|misr|africa|nigeria|kenya|morocco|maroc|algeria|tunisia|jordan|lebanon|iraq|turkey|t[uü]rkiye|pakistan|bangladesh)\b/i;
+export function sanaStretchOnlyQa9(title:string|null|undefined,description:string|null|undefined,company:string|null|undefined,location:string|null|undefined=undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' '),co=String(company||'');
+ MECH_DEGREE.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=MECH_DEGREE.exec(d))){const around=d.slice(Math.max(0,m.index-30),m.index)+' '+m[0]+' '+(/^(?:[^.;]|\.(?=\S)){0,50}/.exec(d.slice(m.index+m[0].length))?.[0]||'');if(!MECH_DEGREE_OTHER.test(around))return 'a mechanical-only degree requirement';}
+ if(SANA_NICHE_YEARS.test(d))return 'years asked in a specialist sub-domain she has not worked in';
+ if(/\bARCS\b|\brobotic cleaning\b/i.test(ti))return 'a robotic-cleaning (ARCS) specialism';
+ if(/commission/i.test(ti)&&(CONSULTING_EMPLOYER.test(co)||/\badvisory\b/i.test(ti)))return 'commissioning for an advisory or consulting firm';
+ if(/\b(?:sr\.?|senior)?\s*executive\b/i.test(ti)&&!/\b(?:manager|head|lead)\b/i.test(ti)&&(CONSUMER_GOODS_EMPLOYER.test(co)||/\bFMCG\b|\bpaints? (?:manufacturing|industry|plants?)\b/i.test(d)))return 'an executive-grade post at a consumer-goods or paints maker';
+ if(location!==undefined&&!String(location||'').trim()&&EMPLOYER_ABROAD_NAME.test(co)&&!INDIA_PLACE.test(d)&&!/\b(?:india|bharat)\b/i.test(d))return 'an employer abroad with no place stated';
  return null;
 }
 // Sana's place: an abroad posting whose city the rules do not know ('Pessione', 'Pantin', 'San José', 'Port Harcourt'). Read as abroad when the
@@ -1254,7 +1387,12 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  if(otherProfession)score=Math.min(score,AVOID_TITLE_CAP);
  const sanaSupervisorLow=sanaBuiltIn&&have>=7&&/\bsupervisors?\b/i.test(p.title||'')&&!/\b(?:engineer|manager)\b/i.test(p.title||'')&&need>0&&need<=4;
  if(sanaSupervisorLow)score=Math.min(score,UNDER_LEVEL_CAP);
- const sanaStretch=sanaBuiltIn&&!otherProfession&&!sanaSupervisorLow?sanaStretchOnly(p.title,p.description,p.company,have):null;
+ // Jobs QA 9: a diploma / ITI post is a technician's grade; experience asked 20+ years, or 8+ beyond the person's, is far above them (both capped).
+ const sanaTechnician=sanaBuiltIn&&have>=5&&!otherProfession&&sanaTechnicianQualification(p.description);
+ if(sanaTechnician)score=Math.min(score,UNDER_LEVEL_CAP);
+ const yearsFar=(farhanBuiltIn||sanaBuiltIn)?yearsFarAbove(p.description,have):0;
+ if(yearsFar)score=Math.min(score,UNDER_LEVEL_CAP);
+ const sanaStretch=sanaBuiltIn&&!otherProfession&&!sanaSupervisorLow&&!sanaTechnician?sanaStretchOnly(p.title,p.description,p.company,have,p.location):null;
  const stretchOnly=farhanStretch||sanaStretch;
  // Only on a confirmed row from the employer's own channel: an unconfirmed row, or a job-board row (stored unconfirmed, PUBLIC_FEED_UNVERIFIED), is
  // already Worth a try at most, and capping it below the threshold would hide it.
@@ -1290,6 +1428,8 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
   +(otherProfession?` Reads as ${otherProfession} work, not the candidate's field (score capped).`:'')
   +(farhanJunior?` Reads as ${farhanJunior}, below the candidate's level (score capped).`:'')
   +(sanaSupervisorLow?' Supervisor post asking at most 4 years, below the candidate\'s level (score capped).':'')
+  +(sanaTechnician?' Asks a diploma or ITI qualification, a technician\'s grade below the candidate\'s level (score capped).':'')
+  +(yearsFar?` Asks ${yearsFar}+ years, far above the candidate's experience (score capped).`:'')
   +(stretchCapped?` Reads as ${stretchOnly}: a stretch, kept off Best matches (score capped below the threshold).`:'')
   +(langHard?` Requires ${langHard} (kept off the shortlist).`:'')
   +(sanaPlaceUnworkable?' Remote or abroad with nothing showing it is open to someone in India (score capped).':'')
