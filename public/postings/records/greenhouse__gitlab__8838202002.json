@@ -14,6 +14,15 @@
    "from_hash": "71400324d480d9d77ba6afab12e065220e9f7168bfe0005cd0360db0fb07c35c",
    "kind": "compensation_source_added",
    "to_hash": "c2e4d0d7615ee6db9715fcdf71a8732f538924c64a017bd5f52ddc53e5aba1df"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "c2e4d0d7615ee6db9715fcdf71a8732f538924c64a017bd5f52ddc53e5aba1df",
+   "kind": "content_changed",
+   "to_hash": "7cf980513548c6612c8ccbddf24151039e8404e1b4ca6f8dc5a33dcb3926957e"
   }
  ],
  "content": {
@@ -27,14 +36,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-09-23T16:17:55-04:00",
   "title": "Senior Developer Advocate",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "c2e4d0d7615ee6db9715fcdf71a8732f538924c64a017bd5f52ddc53e5aba1df",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "7cf980513548c6612c8ccbddf24151039e8404e1b4ca6f8dc5a33dcb3926957e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +76,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 11520000, \"max_cents\": 19440000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      },
@@ -88,7 +101,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$115,200—$194,400 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      }
@@ -105,7 +118,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      },
@@ -113,7 +126,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      },
@@ -121,7 +142,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "This role focuses on showing the product in action and building relationships with customers and the community. You'll help cover events and work across U.S. and Canadian time zones.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      }
@@ -134,7 +155,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Hands-on technical experience. You understand how software gets built, with a focus on everything that happens after code is written, and can talk about it credibly with engineers.\nUnderstanding of artificial intelligence and its use in software development, from coding all the way to production. You have built and operated agentic systems and infrastructure.\nThe ability to explain technical products clearly. You can demo a product, record a walkthrough, or speak at a conference without it feeling forced.\nFluency in developer social platforms. You know what's interesting to the people we're trying to reach and can participate in the conversation with credibility.\nCuriosity and self-direction. You're already finding the next thing worth talking about, following the right people, and noticing opportunities.\nExperience engaging with customers, developers, or technical communities.\nAbility to work independently and collaborate across sales, engineering, product, and other teams.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      }
@@ -151,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      },
@@ -159,7 +180,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8838202002"
      }

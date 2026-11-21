@@ -35,7 +35,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const list = await gh(`/repos/${repo}/actions/workflows/${wf}/runs?status=completed&per_page=20`, token);
     const runs = [];
     for (const r of (list.workflow_runs || []).filter((x) => String(x.id) !== String(runId))) {
-      const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=10`, token);
+      const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=50`, token);   // max discovery: a run has about 16 jobs (8 parallel collector parts), and the discover job must be on the page
       runs.push({ id: r.id, run_started_at: r.run_started_at, jobs: jobs.jobs.map((j) => ({ name: j.name, conclusion: j.conclusion })) });
       if (runs.length >= 12) break;   // far enough back that a real run is not hidden behind a row of guard-skipped ones
     }
