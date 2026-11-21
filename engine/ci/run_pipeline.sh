@@ -14,23 +14,35 @@ fi
 WORK_DIR="${WORK_DIR:-${RUNNER_TEMP:-/tmp}/career}"
 STATE_DIR="${STATE_DIR:-$WORK_DIR/state-cache}"
 BOARDS="${BOARDS:-public/boards}"
-mkdir -p "$WORK_DIR/candidates" "$WORK_DIR/out" "$STATE_DIR"
-printf '%s' "$CANDIDATES_B64" | base64 -d | tar -xz -C "$WORK_DIR/candidates" --no-same-owner
+mkdir -p "$WORK_DIR" "$STATE_DIR"
+private_dir=$(mktemp -d "$WORK_DIR/private.XXXXXXXX")
+trap 'rm -rf -- "$private_dir"' EXIT
+mkdir -p "$private_dir/candidates" "$private_dir/out"
+# Archive tools and config validation can include private filenames or field values in errors.
+if ! (printf '%s' "$CANDIDATES_B64" | base64 -d | tar -xz -C "$private_dir/candidates" --no-same-owner) 2>/dev/null; then
+  echo "::error::Private candidate archive could not be unpacked." >&2
+  exit 1
+fi
 enc() { openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:PIPELINE_PASSPHRASE "$@"; }
 if [ -f "$STATE_DIR/state.sqlite.enc" ]; then
-  enc -d -in "$STATE_DIR/state.sqlite.enc" -out "$WORK_DIR/state.sqlite"
-  echo "restored state ($(stat -c %s "$WORK_DIR/state.sqlite") bytes)"
+  enc -d -in "$STATE_DIR/state.sqlite.enc" -out "$private_dir/state.sqlite"
+  echo "restored encrypted tracker state"
 else
   echo "no previous state: first run starts a new tracker"
 fi
-python -m engine.pipeline run --candidates "$WORK_DIR/candidates" --state "$WORK_DIR/state.sqlite" --out "$WORK_DIR/out" --boards "$BOARDS" ${PIPELINE_ARGS:-} > "$WORK_DIR/summary.json"
-enc -in "$WORK_DIR/state.sqlite" -out "$STATE_DIR/state.sqlite.enc"
-tar -czf - -C "$WORK_DIR" out | enc -out "$WORK_DIR/results.tar.gz.enc"
+if ! python -m engine.pipeline run --candidates "$private_dir/candidates" --state "$private_dir/state.sqlite" --out "$private_dir/out" --boards "$BOARDS" ${PIPELINE_ARGS:-} > "$private_dir/summary.json" 2>/dev/null; then
+  echo "::error::Private pipeline failed. Check the candidate archive and configuration locally." >&2
+  exit 1
+fi
+enc -in "$private_dir/state.sqlite" -out "$STATE_DIR/state.sqlite.enc"
+if ! (tar -czf - -C "$private_dir" out | enc -out "$WORK_DIR/results.tar.gz.enc") 2>/dev/null; then
+  echo "::error::Private results could not be packaged." >&2
+  exit 1
+fi
 # Candidate-agnostic summary only (no candidate ids, titles or counts per person).
-python - "$WORK_DIR/summary.json" <<'PY'
+python - "$private_dir/summary.json" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1])); x=d['discovery']
 print('run %s outcome %s: pool %s postings, %s new, %s search requests, %s source failure(s), VERIFIED_READY total %s'%(
     d['run_id'],d['outcome'],x['pool'],x['new_postings'],x['requests'],len(x['failures']),sum(c['verified_ready'] for c in d['candidates'].values())))
 PY
-rm -rf "$WORK_DIR/candidates" "$WORK_DIR/out" "$WORK_DIR/state.sqlite" "$WORK_DIR/state.sqlite-wal" "$WORK_DIR/state.sqlite-shm" "$WORK_DIR/summary.json"
