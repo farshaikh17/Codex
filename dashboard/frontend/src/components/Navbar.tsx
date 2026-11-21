@@ -95,11 +95,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               </label>
             )}
             </>}
-            <button aria-label="Applications" onClick={() => setActiveTab('tracker')} className={item(activeTab === 'tracker')}>
+            <button onClick={() => setActiveTab('tracker')} className={item(activeTab === 'tracker')}>
               <BookmarkCheck className="w-4 h-4" /><span>Applications</span>
               {savedCount > 0 && <span className={`ml-0.5 text-xs px-1.5 rounded-full font-mono ${activeTab === 'tracker' ? 'bg-white/20' : 'bg-slate-200'}`}>{savedCount}</span>}
             </button>
-            {!viewer && <button aria-label="Settings" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
+            {!viewer && <button aria-label="Profile" title="Candidate profile" onClick={() => setActiveTab('profile')} className={item(activeTab === 'profile')}>
               <Sliders className="w-4 h-4" /><span className="hidden sm:inline">Profile</span>
             </button>}
             {isOperator && (

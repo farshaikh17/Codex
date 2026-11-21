@@ -1865,7 +1865,10 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 //   worth_a_try    Worth a try: STRETCH_READY, not applied
 //   more_to_look   More to look through: NEEDS_REVIEW the screen has judged, not applied
 //   more_good      the part of more_to_look scored 60 or more ("good matches")
-//   everything     the full list: best + worth_a_try + every NEEDS_REVIEW row (judged or not), not applied
+//   everything     the full list: every listed row (best + worth_a_try + every NEEDS_REVIEW row, judged or not, plus any row in another status), not applied
+//   everything_else "Show everything else (n)": the To review list it opens (qualification_status=NEEDS_REVIEW&collapse_twins=true), judged or not.
+//                  Not everything - best - worth_a_try: rows in no seeker list (e.g. DISCOVERED, or APPLIED with no application) are in
+//                  `everything` but in no list (site QA 21 Nov: Farhan's button said 592, the list 557).
 //   says_india     Says it hires in India: the full list's rows whose posting says India is OK (eligibility ELIGIBLE)
 //   hidden         marked Not for me (Hold with that reason)
 //   applications   saved (Saved / Preparing), waiting (applied, first call, interviews, offer), finished (didn't work out, withdrawn)
@@ -1919,7 +1922,7 @@ async function todayCounts(env: Env, candidateId: string, snap: Snapshot | null 
   const saysIndia = n(row?.says_india) - n(row?.review_india) + groups(review.filter((r) => r.eligibility === 'ELIGIBLE'));
   return {
     best: n(row?.best), worth_a_try: n(row?.worth_a_try), more_to_look: moreToLook, more_good: moreGood,
-    everything, says_india: saysIndia, hidden: n(hidden?.n),
+    everything, everything_else: groups(review), says_india: saysIndia, hidden: n(hidden?.n),
     applications: { saved: n(apps?.saved), waiting: n(apps?.waiting), finished: n(apps?.finished), total: n(apps?.total) },
     followups_due: followupsDue, today_india: today,
   };

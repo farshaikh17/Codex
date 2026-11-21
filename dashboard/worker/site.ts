@@ -201,7 +201,7 @@ export function layout(s: Record<string, string>, opts: { title: string; descrip
 <a class="skip" href="#main">Skip to content</a>
 <div class="topbar" role="region" aria-label="Site announcement">${announce}</div>
 <header class="hdr"><div class="wrap">
-<a class="logo" href="/" aria-label="${brand} home"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a>
+<a class="logo" href="/"><i></i><span><b>${brand}</b><small>${esc(s.brand_sub)}</small></span></a>
 <nav class="nav" aria-label="Main">${navLinks}</nav>
 <div class="hdr-cta"><a class="login" href="/portal">Client login</a><a class="btn btn-coral" href="/apply">Apply now</a></div>
 <details class="menu"><summary aria-label="Menu">Menu</summary><div class="menu-panel">${navLinks}<a href="/portal">Client login</a><a class="btn btn-coral" href="/apply">Apply now</a></div></details>

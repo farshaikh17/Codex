@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Job, ApplicationStatus } from '../types';
 import { fetchApplications, fetchFollowUps, setFollowUp, FollowUp } from '../api';
 import { followUpState } from '../jobHelpers';
-import { STAGES, stageWord, SAVED_GROUP, WAITING_GROUP, FINISHED_GROUP, placeText } from './format';
-import { postingUrl, btnPlain, btnPrimary } from './JobCard';
+import { STAGES, stageWord, SAVED_GROUP, WAITING_GROUP, FINISHED_GROUP, placeText, employerName } from './format';
+import { postingUrl, btnPlain, btnPrimary, titleLink } from './JobCard';
 
 interface Props {
   candidateId: string;
@@ -37,9 +37,9 @@ const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: 
     <li data-job-id={job.id} data-testid="application" className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
       <div>
         <h3 className="text-base font-semibold text-slate-900 leading-snug break-words">
-          <a href={`#job-${encodeURIComponent(job.id)}`} onClick={(e) => { e.preventDefault(); onOpen(job); }} className="hover:underline inline-flex items-center min-h-[44px] -my-2.5">{job.title}</a>
+          <a href={`#job-${encodeURIComponent(job.id)}`} onClick={(e) => { e.preventDefault(); onOpen(job); }} className={titleLink}>{job.title}</a>
         </h3>
-        <p className="text-sm text-slate-600 break-words">{job.company} · {placeText(job)}</p>
+        <p className="text-sm text-slate-600 break-words">{employerName(job.company)} · {placeText(job)}</p>
       </div>
       <label className="block text-sm text-slate-700">Where are you with this job?
         <select aria-label={`Stage for ${job.title}`} value={shown} disabled={wait}

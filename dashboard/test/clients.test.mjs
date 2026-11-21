@@ -428,6 +428,36 @@ test('open tracker limits: a script hitting the tracker is stopped after the hou
   assert.equal(big.status, 400); assert.match(big.text, /longer than 2000/);
 });
 
+// ---- Site QA 21 Nov: "Show everything else (n)" = the list it opens ---------------------------------------------------------------
+test('site QA 21 Nov: the Show everything else number equals the To review list, with rows in no list and twins present', async () => {
+  const w = world();
+  const add = (id, title, status, o = {}) => {
+    w.run(`INSERT INTO jobs(id,title,company,source_adapter,source_url,is_active,location_restrictions,description,workplace_type,discovered_at,provenance) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      id, title, o.company || 'Beta', 'lever', 'https://jobs.lever.co/beta/' + id, 1, o.loc || 'Pune, India', o.desc || 'Plant maintenance role.', 'ONSITE', '2026-11-20T00:00:00Z', 'LIVE_PUBLIC');
+    w.run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,qualification_reason) VALUES (?,?,?,?,?)`, F, id, status, 'ELIGIBLE', o.reason || 'Matches 3 skills.');
+    w.run(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,skill_score) VALUES (?,?,?,?)`, F, id, o.score ?? 55, 40);
+  };
+  add('e1', 'Maintenance Engineer', 'READY'); add('e2', 'Energy Manager', 'STRETCH_READY');
+  add('e3', 'Shift Engineer', 'NEEDS_REVIEW', { score: 65 }); add('e4', 'Shift Engineer', 'NEEDS_REVIEW', { score: 50, loc: 'Jamnagar, Gujarat' });   // twins: counted once
+  add('e5', 'Boiler Engineer', 'NEEDS_REVIEW', { reason: '[GITHUB_COLLECTOR] Unassessed public ATS posting from x; review pending.', score: 0 });
+  add('e6', 'Plant Engineer', 'NEEDS_REVIEW', { loc: 'Bengaluru, India' });
+  // the live case: rows in a status no seeker list shows (an old import's DISCOVERED, APPLIED with no application row)
+  add('e7', 'Electrical Design Engineer', 'DISCOVERED'); add('e8', 'Electrical Trainee', 'DISCOVERED'); add('e9', 'Solutions Consultant', 'APPLIED');
+  const today = await req(w.env, 'GET', `/api/today?candidate_id=${F}`, { key: null });
+  assert.equal(today.status, 200, today.text);
+  const c = today.json.counts;
+  const list = async (q) => (await req(w.env, 'GET', `/api/jobs?candidate_id=${F}&exclude_applied=true&exclude_dismissed=true&collapse_twins=true&limit=100${q}`, { key: null })).json;
+  const review = await list('&qualification_status=NEEDS_REVIEW');
+  assert.equal(review.total, 3, 'e3 (e4 folded in), e5, e6');
+  assert.equal(c.everything_else, review.total, 'Show everything else (n) = Everything else (n)');
+  assert.equal(c.everything, (await list('')).total, 'everything is still the whole list');
+  assert.ok(c.everything - c.best - c.worth_a_try > c.everything_else, 'the old sum counted the rows in no list');
+  // the search box: title, employer, place or posting text (a job in Bengaluru is found by its place, another by its text)
+  const found = async (t) => (await list(`&qualification_status=NEEDS_REVIEW&search=${encodeURIComponent(t)}`)).jobs.map((j) => j.id).sort().join();
+  assert.equal(await found('Bengaluru'), 'e6', 'the place is searched');
+  assert.equal(await found('Plant maintenance'), 'e3,e5,e6', 'the posting text is searched');
+});
+
 // ---- Plan U12: one definition per number -----------------------------------------------------------------------------------------
 test('U12: every count on the Today screen equals what the matching list returns (one definition per number)', async () => {
   const w = world();

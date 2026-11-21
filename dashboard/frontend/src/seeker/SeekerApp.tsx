@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Job, ApplicationStatus } from '../types';
 import { loadAccessMode, isTrackerOpen, fetchToday, TodayData, fetchJobDetail, fetchProfile, fetchDiscoveryDaily, saveApplication, markJob, unsaveJob, WriteError } from '../api';
-import { PEOPLE, CANDIDATE, NAME } from './format';
+import { PEOPLE, CANDIDATE, NAME, employerName } from './format';
 import { Route, View, parseRoute, routeHash, rememberedPerson, rememberPerson, lastVisitBaseline } from './route';
 import { TodayView, AllView, HiddenView, CardActions } from './Lists';
 import { ApplicationsView } from './ApplicationsView';
@@ -65,7 +65,7 @@ export const SeekerApp: React.FC = () => {
     return () => { live = false; };
   }, [ready, candidateId, refreshKey]);
   const reload = useCallback(() => setRefreshKey((k) => k + 1), []);
-  useEffect(() => { if (person) document.title = `${NAME[person]}'s jobs`; }, [person]);
+  useEffect(() => { document.title = person ? `${NAME[person]}'s jobs` : 'Whose jobs? · Career Job Engine'; }, [person]);   // site QA 21 Nov: the first visit too
 
   // Plan U4: every action says what happened, at the bottom of the screen.
   const [toast, setToast] = useState<Toast | null>(null);
@@ -287,12 +287,18 @@ const STAGE_SAY: Record<string, string> = { SAVED: 'saved', REVIEWING: 'preparin
 
 /** "Did you apply?" after opening a posting: focus stays inside it (Tab / Shift+Tab wrap), Escape or a tap outside closes it. */
 const AskDialog: React.FC<{ title: string; company?: string | null; onClose: () => void; onAnswer: (a: 'yes' | 'later' | 'no') => void }> = ({ title, company, onClose, onAnswer }) => {
-  const ref = useDialogFocus<HTMLDivElement>(onClose, true);
+  const ref = useDialogFocus<HTMLDivElement>(onClose);
+  // site QA 21 Nov: focus starts on Close, which records nothing, so a stray Enter does not record an application
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { closeRef.current?.focus(); }, []);
   return (
     <div className="fixed inset-0 z-[60] bg-slate-900/40 flex items-end justify-center" onClick={onClose}>
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Did you apply?" onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-3xl rounded-t-2xl p-4 pb-6 space-y-3 outline-none">
-        <h2 className="text-lg font-bold text-slate-900">Did you apply?</h2>
-        <p className="text-base text-slate-700 break-words">{title}{company ? ` · ${company}` : ''}</p>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-slate-900">Did you apply?</h2>
+          <button ref={closeRef} type="button" className={btnPlain} onClick={onClose} aria-label="Close (records nothing)">Close</button>
+        </div>
+        <p className="text-base text-slate-700 break-words">{title}{company ? ` · ${employerName(company)}` : ''}</p>
         <div className="grid gap-3">
           <button type="button" className={btnPrimary} onClick={() => onAnswer('yes')}>Yes, I applied</button>
           <button type="button" className={btnPlain} onClick={() => onAnswer('later')}>Not yet (keep saved)</button>

@@ -1,5 +1,5 @@
 // The job seeker's screens built from cards: Today (plan U5), everything else (the full list), and the hidden jobs (U2).
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Job } from '../types';
 import { TodayData, fetchJobs, fetchHiddenJobs } from '../api';
 import { updatedNote } from '../jobHelpers';
@@ -61,14 +61,17 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
         {c.best > data.best.length && <button type="button" className={btnPlain} onClick={() => go('best')}>Show all {c.best} best matches</button>}
       </Section>
       <section aria-label="Worth a try" data-testid="section-worth" className="space-y-3">
-        <button type="button" aria-expanded={openWorth} onClick={() => setOpenWorth((o) => !o)} className="w-full min-h-[44px] flex items-center justify-between text-lg font-bold text-slate-900 text-left">
-          <span>Worth a try ({c.worth_a_try})</span><span aria-hidden="true">{openWorth ? '▴' : '▾'}</span>
-        </button>
+        {/* site QA 21 Nov: a heading (for heading navigation) that holds the open/close button */}
+        <h2 className="text-lg font-bold text-slate-900">
+          <button type="button" aria-expanded={openWorth} onClick={() => setOpenWorth((o) => !o)} className="w-full min-h-[44px] flex items-center justify-between text-left">
+            <span>Worth a try ({c.worth_a_try})</span><span aria-hidden="true">{openWorth ? '▴' : '▾'}</span>
+          </button>
+        </h2>
         {openWorth && (worth.length ? worth.map((j) => card(j)) : <p className="text-base text-slate-600">Nothing else here today.</p>)}
         {openWorth && c.worth_a_try > data.worth_a_try.length && <button type="button" className={btnPlain} onClick={() => go('worth')}>Show all {c.worth_a_try}</button>}
       </section>
       <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-200">
-        <button type="button" onClick={() => go('all')} className={btnPlain} data-testid="show-everything">Show everything else ({c.everything - c.best - c.worth_a_try})</button>
+        <button type="button" onClick={() => go('all')} className={btnPlain} data-testid="show-everything">Show everything else ({c.everything_else ?? c.everything - c.best - c.worth_a_try})</button>
         {c.hidden > 0 && <button type="button" onClick={() => go('hidden')} className={btnPlain}>Hidden jobs ({c.hidden})</button>}
       </div>
     </div>
@@ -87,24 +90,43 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
   const [search, setSearch] = useState('');
   const [term, setTerm] = useState('');
   const [error, setError] = useState('');
+  // site QA 21 Nov: while a filter, sort, search or page change loads, the old cards and count are not presented as the answer
+  const [loading, setLoading] = useState(true);
+  const heading = useRef<HTMLHeadingElement>(null);
+  // what the screen reader hears: only after the person changes the filter, sort, search, page or list, not on a background reload (refreshKey)
+  const [said, setSaid] = useState('');
+  const asked = `${which}|${filter}|${sort}|${term}|${page}`;
+  const lastAsked = useRef(asked);
+  const turnPage = (to: number) => {
+    setPage(to);
+    // site QA 21 Nov: the next page starts at its top, with focus on the list heading (not left at the bottom of the page)
+    const h = heading.current;
+    if (h) { h.scrollIntoView({ block: 'start' }); h.focus({ preventScroll: true }); }
+  };
   useEffect(() => { const t = setTimeout(() => setTerm(search.trim()), 400); return () => clearTimeout(t); }, [search]);
   useEffect(() => { setPage(1); }, [filter, sort, term, which]);
   useEffect(() => {
     let live = true;
+    const userChange = lastAsked.current !== asked;
+    lastAsked.current = asked;
     setError('');
+    setLoading(true);
+    setSaid(userChange ? 'Loading…' : '');
     fetchJobs({ candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, sort_by: sort, search: term || undefined, page, limit: 25,
       ...list.filters,
       eligibility: filter === 'INDIA' ? 'ELIGIBLE' : undefined, workplace_type: filter === 'REMOTE' ? 'REMOTE_ANY' : undefined })
-      .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); } })
-      .catch(() => { if (live) setError('Could not load the list. Check the connection and try again.'); });
+      .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); setLoading(false); if (userChange) setSaid(`${r.total} job${r.total === 1 ? '' : 's'} found.`); } })
+      .catch(() => { if (live) { setError('Could not load the list. Check the connection and try again.'); setLoading(false); setSaid(''); } });
     return () => { live = false; };
   }, [candidateId, filter, sort, term, page, refreshKey, which]);   // eslint-disable-line react-hooks/exhaustive-deps
   const pages = Math.max(1, Math.ceil(count / 25));
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-900">{list.title} ({count})</h2>
-      <input type="search" aria-label="Search jobs" placeholder="Search a title, employer or place" value={search} onChange={(e) => setSearch(e.target.value)}
-        className="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base" />
+      {/* the count only when it is this answer's: not while loading, not after a failed load */}
+      <h2 ref={heading} tabIndex={-1} className="text-lg font-bold text-slate-900 scroll-mt-20 rounded-lg outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2" data-testid="list-heading">{list.title}{loading || error ? '' : ` (${count})`}</h2>
+      {/* site QA 21 Nov: the search also matches the posting text, so the box says so; the placeholder is slate-500 (4.8:1 on white) */}
+      <input type="search" aria-label="Search jobs" placeholder="Search titles, employers, places or posting text" value={search} onChange={(e) => setSearch(e.target.value)}
+        className="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base placeholder:text-slate-500" />
       <div className="flex flex-wrap gap-3" role="group" aria-label="Show">
         {FILTERS.map(([k, l]) => <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}
           className={filter === k ? btnChosen : btnPlain}>{l}</button>)}
@@ -113,12 +135,17 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
         </select>
       </div>
       {error && <p role="alert" className="text-base text-rose-800">{error}</p>}
-      {jobs === null ? <p className="text-base text-slate-600">Loading…</p> : jobs.length === 0 ? <p className="text-base text-slate-600">No jobs here.</p> : jobs.map((j) => <JobCard key={j.id} job={j} {...actions} />)}
-      {pages > 1 && (
+      <p role="status" aria-atomic="true" className="sr-only" data-testid="list-status">{said}</p>
+      {loading && jobs !== null && <p className="text-base text-slate-600" aria-hidden="true">Loading…</p>}
+      {/* after a failed load the earlier cards are not shown as the answer */}
+      <div aria-busy={loading} data-testid="list-body" className={`space-y-4 ${loading && jobs !== null ? 'opacity-50 pointer-events-none' : ''}`}>
+        {error ? null : jobs === null ? <p className="text-base text-slate-600" aria-hidden="true">Loading…</p> : jobs.length === 0 ? (loading ? null : <p className="text-base text-slate-600">No jobs here.</p>) : jobs.map((j) => <JobCard key={j.id} job={j} {...actions} />)}
+      </div>
+      {pages > 1 && !error && (
         <div className="flex items-center gap-3">
-          <button type="button" className={btnPlain} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+          <button type="button" className={btnPlain} disabled={loading || page <= 1} onClick={() => turnPage(page - 1)}>Previous</button>
           <span className="text-sm text-slate-700">Page {page} of {pages}</span>
-          <button type="button" className={btnPlain} disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          <button type="button" className={btnPlain} disabled={loading || page >= pages} onClick={() => turnPage(page + 1)}>Next</button>
         </div>
       )}
     </div>
