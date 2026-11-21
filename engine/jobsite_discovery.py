@@ -12,6 +12,7 @@ import json
 import logging
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -29,19 +30,75 @@ SITE_ENDPOINT = {'indeed': 'https://apis.indeed.com/graphql', 'linkedin': 'https
 # see the PR that turns this on). True: such a site is skipped and reported as blocked by robots.txt.
 ENFORCE_ROBOTS = False
 GULF_SITES = ['bayt', 'indeed', 'linkedin']   # Bayt is the largest Gulf job board; Indeed searched in that country
-# A few searches per built-in candidate: (search term, location, Indeed country, sites). The title filter below (the
-# Worker's own role rule) removes loose matches. Owner rules 2026-11-07: Farhan remote only, from any country;
-# Sana anywhere, so her searches cover India and the Gulf job boards.
-QUERIES = {
+# Searches per built-in candidate: (search term, location, Indeed country, sites). The title filter below (the Worker's own role rule, the
+# profile's wide_role) removes loose matches, and engine/prescreen.py then keeps only rows the Worker's screen scores near the person's threshold,
+# so a wider search costs runner time, not database reads or writes. Owner rules 2026-11-07: Farhan remote only, from India;
+# Sana India, the Gulf, or abroad with a visa route.
+# 20 Nov (max discovery): Indeed answers every search from the runner (LinkedIn answers about ten rows before 429; Glassdoor and Bayt answer 403;
+# Google returns nothing), so the extra searches are Indeed's, in India and in each of the six Gulf countries; the original searches keep their
+# other sites. Measured live in DISCOVERY_PIPELINE.md ("Maximum discovery, 20 Nov 2026").
+ORIGINAL = {
     'farhan_shaikh': [('implementation manager remote', 'India', 'India', INDIA_SITES), ('solutions engineer remote', 'India', 'India', INDIA_SITES),
                       ('technical operations remote', 'India', 'India', INDIA_SITES), ('CRM automation remote', 'India', 'India', INDIA_SITES),
                       ('chief of staff remote', 'India', 'India', INDIA_SITES)],
     'sana_ansari': [('electrical maintenance engineer', 'India', 'India', INDIA_SITES), ('reliability engineer', 'India', 'India', INDIA_SITES),
                     ('energy efficiency engineer', 'India', 'India', INDIA_SITES),
                     ('power plant engineer', 'Dubai', 'United Arab Emirates', GULF_SITES), ('maintenance engineer power plant', 'Riyadh', 'Saudi Arabia', GULF_SITES),
-                    ('electrical maintenance engineer', 'Doha', 'Qatar', GULF_SITES), ('power plant engineer', 'Muscat', 'Oman', GULF_SITES)],
+                    ('electrical maintenance engineer', 'Doha', 'Qatar', GULF_SITES), ('power plant engineer', 'Muscat', 'Oman', GULF_SITES),
+                    # 19 Nov: kept where a live read (Indeed and LinkedIn, last 48 hours) found rows the searches above missed that score at or above
+                    # her threshold: thermal power plant 4 (boiler maintenance at power stations), mechanical maintenance 3, O&M power plant 1, Abu Dhabi 1.
+                    ('maintenance engineer thermal power plant', 'India', 'India', INDIA_SITES), ('mechanical maintenance engineer', 'India', 'India', INDIA_SITES),
+                    ('O&M engineer power plant', 'India', 'India', INDIA_SITES), ('maintenance engineer', 'Abu Dhabi', 'United Arab Emirates', GULF_SITES)],
 }
-MAX_QUERIES = 7
+# Indeed-only searches added 20 Nov. Farhan's are run with Indeed's remote filter (is_remote) in India. Every term is itself a title the person's
+# role rule (wide_role) accepts, except the product names (HubSpot, GoHighLevel, Zapier, n8n, Workato), whose results carry titles that do.
+FARHAN_TERMS = ['implementation consultant', 'implementation specialist', 'onboarding specialist', 'customer onboarding manager', 'solutions consultant',
+                'technical project manager', 'technical program manager', 'professional services consultant', 'delivery manager', 'CRM specialist',
+                'CRM manager', 'HubSpot', 'GoHighLevel', 'Zapier', 'n8n', 'workflow automation', 'AI automation',
+                'marketing operations', 'revenue operations', 'sales operations', 'business operations manager', 'integration specialist',
+                'integration engineer', 'technical account manager', 'Workato', 'business systems analyst',
+                'automation specialist', 'customer success operations']
+SANA_INDIA_TERMS = ['maintenance engineer', 'maintenance manager', 'plant maintenance', 'power plant engineer', 'boiler engineer', 'turbine engineer',
+                    'O&M engineer', 'utilities engineer', 'plant engineer', 'energy engineer', 'energy manager', 'commissioning engineer',
+                    'water treatment plant engineer', 'substation engineer', 'solar O&M', 'wind O&M', 'shift engineer', 'shift in charge',
+                    'HVAC maintenance engineer', 'instrumentation maintenance engineer', 'rotating equipment engineer',
+                    'gas turbine', 'electrical engineer power plant', 'reliability manager', 'operations engineer power plant']
+SANA_GULF_TERMS = ['maintenance engineer', 'electrical maintenance engineer', 'mechanical maintenance engineer', 'power plant engineer', 'O&M engineer',
+                   'reliability engineer', 'commissioning engineer', 'utilities engineer', 'water treatment plant engineer', 'energy engineer',
+                   'substation engineer', 'shift engineer', 'HVAC maintenance engineer', 'rotating equipment engineer', 'maintenance manager',
+                   'plant engineer']
+GULF_COUNTRIES = ['United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Oman', 'Kuwait', 'Bahrain']
+
+
+def build_queries():
+    """The original searches, then Indeed-only searches for each term not already searched in that country."""
+    out = {cid: list(q) for cid, q in ORIGINAL.items()}
+    def add(cid, term, loc, country):
+        if not any(t.lower() == term.lower() and c == country for t, _, c, _ in out[cid]):
+            out[cid].append((term, loc, country, ['indeed']))
+    for t in FARHAN_TERMS:
+        add('farhan_shaikh', t, 'India', 'India')
+    for t in SANA_INDIA_TERMS:
+        add('sana_ansari', t, 'India', 'India')
+    for country in GULF_COUNTRIES:
+        for t in SANA_GULF_TERMS:
+            add('sana_ansari', t, country, country)
+    return out
+
+
+QUERIES = build_queries()
+MAX_QUERIES = 11   # a resold client's own role keywords: at most this many searches
+# Parallel jobs (discovery.yml matrix): each runs one shard of the searches, so the step's time limit no longer caps how many run.
+SHARDS = ('farhan', 'sana_india', 'sana_gulf', 'clients')
+BLOCK_LIMIT = 2    # a site that refused this many searches in a run is not asked again in that run (it would only refuse again)
+
+
+def shard_of(cid, country):
+    if cid == 'farhan_shaikh':
+        return 'farhan'
+    if cid == 'sana_ansari':
+        return 'sana_india' if country == 'India' else 'sana_gulf'
+    return 'clients'
 
 
 BLOCK_WORDS = re.compile(r'\b(403|429)\b|forbidden|too many requests|rate.?limit|captcha|access denied|blocked', re.I)
@@ -72,15 +129,38 @@ def blocked_note(rows, messages):
     return messages[0] if (not rows and messages) else None
 
 
-def run_search(site, term, location, results, hours, country='India'):
+LINKEDIN_RESULTS = 25   # LinkedIn's guest search answers 429 after a few pages: asking for more only adds refusals
+
+
+def run_search(site, term, location, results, hours, country='India', remote=False):
     from jobspy import scrape_jobs
     kw = {'country_indeed': country}
     if site == 'google':
         kw = {'google_search_term': f'{term} jobs in {location} since yesterday'}
     if site in ('bayt', 'linkedin'):
         kw = {}
+    if remote and site in ('indeed', 'linkedin'):
+        kw['is_remote'] = True
+    if site == 'linkedin':
+        results = min(results, LINKEDIN_RESULTS)
     df = scrape_jobs(site_name=[site], search_term=term, location=location, results_wanted=results, hours_old=hours, verbose=0, **kw)
     return [] if df is None else df.to_dict('records')
+
+
+def write_out(out, raw_name, shard, found, log, robots_status):
+    """Writes the results so far and the report. Called after every search, so a step stopped by its time limit keeps what it found
+    (the collector job uploads whatever is there)."""
+    jobs = [clean(dict(j)) for j in found.values()]
+    out.mkdir(parents=True, exist_ok=True)
+    report = {'shard': shard, 'searches': sum(1 for x in log if 'skipped' not in x), 'blocked': sum(1 for x in log if 'error' in x),
+              'skipped_after_refusals': sum(1 for x in log if x.get('skipped', '').startswith('site refused')),
+              'skipped_for_time': sum(1 for x in log if x.get('skipped') == 'time budget'), 'returned': sum(x.get('returned', 0) for x in log), 'selected': len(jobs),
+              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}, 'robots': robots_status}
+    for name, body in ((raw_name, json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str)), ('jobsite_report.json', json.dumps({**report, 'log': log}, indent=1, default=str))):
+        tmp = out / (name + '.tmp')
+        tmp.write_text(body)
+        tmp.replace(out / name)   # never a half-written file if the step is stopped mid-write
+    return report
 
 
 def main():
@@ -89,7 +169,11 @@ def main():
     ap.add_argument('--profiles', required=True)
     ap.add_argument('--results', type=int, default=20)
     ap.add_argument('--hours', type=int, default=48)
+    ap.add_argument('--shard', default='all', choices=('all',) + SHARDS, help='run only this part of the searches (a parallel job of discovery.yml)')
+    ap.add_argument('--raw-name', default='jobsite_raw.json', help='output file name (parallel jobs write their own and the run merges them)')
+    ap.add_argument('--budget-seconds', type=int, default=0, help='no search starts after this many seconds (what was found is written)')
     a = ap.parse_args()
+    started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
     found, log = {}, []
     robots_status = {}
@@ -99,25 +183,39 @@ def main():
         except Exception as e:   # noqa: BLE001 - reported, never fatal
             robots_status[site] = f'unknown ({type(e).__name__})'
     watch = BlockWatch(); logging.getLogger().addHandler(watch)
+    refused = {}   # site -> searches it refused this run
     for cid, p in profs.items():
         # built-in candidates: the fixed searches above; a resold client: its own role keywords, in its home country
         home = p['home'].title()
         queries = QUERIES.get(cid) or [(w, home, home, INDIA_SITES if home == 'India' else ['indeed', 'linkedin']) for w in p.get('keywords', [])]
-        role = re.compile(p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
-        for term, loc, country, sites in queries[:MAX_QUERIES]:
+        if cid not in QUERIES:
+            queries = queries[:MAX_QUERIES]
+        # the Worker's own role rule (wide_role, as the dataset intake uses) when the profile carries it; the search's own role rule otherwise
+        role = re.compile(p.get('wide_role') or p['role'], re.I); exclude = re.compile(p['exclude'], re.I) if p.get('exclude') else None
+        remote = p.get('mode') == 'REMOTE_FROM_HOME'
+        for term, loc, country, sites in queries:
+            if a.shard != 'all' and shard_of(cid, country) != a.shard:
+                continue
+            if a.budget_seconds and time.monotonic() - started > a.budget_seconds:
+                log.append({'site': ','.join(sites), 'term': term, 'skipped': 'time budget'}); continue
             for site in sites:
                 if site not in SITES:   # a site dropped for compliance (Naukri) is never searched, even from an old profile
                     continue
+                if refused.get(site, 0) >= BLOCK_LIMIT:
+                    log.append({'site': site, 'term': term, 'skipped': 'site refused earlier searches this run'}); continue
                 if ENFORCE_ROBOTS and robots_status.get(site) != 'allowed':
                     log.append({'site': site, 'term': term, 'error': f'robots.txt: {robots_status.get(site)}'}); continue
                 watch.take()
                 try:
-                    rows = run_search(site, term, loc, a.results, a.hours, country)
+                    rows = run_search(site, term, loc, a.results, a.hours, country, **({'remote': True} if remote else {}))
                 except Exception as e:   # a blocked site is skipped, never fatal
-                    watch.take(); log.append({'site': site, 'term': term, 'error': str(e)[:120]}); continue
+                    watch.take(); refused[site] = refused.get(site, 0) + 1
+                    log.append({'site': site, 'term': term, 'error': str(e)[:120]}); continue
                 note = blocked_note(rows, watch.take())
                 if note:   # an empty answer plus a refusal in JobSpy's own log is a blocked search, not 'nothing found'
+                    refused[site] = refused.get(site, 0) + 1
                     log.append({'site': site, 'term': term, 'error': note}); continue
+                refused[site] = 0   # an answer: the refusals before it were not a block
                 kept = 0
                 for r in rows:
                     title, url, company = str(r.get('title') or ''), str(r.get('job_url') or ''), str(r.get('company') or '')
@@ -139,15 +237,10 @@ def main():
                     if cid not in j['candidates']:
                         j['candidates'].append(cid)
                     kept += 1
-                log.append({'site': site, 'term': term, 'returned': len(rows), 'kept': kept})
-    jobs = [clean(j) for j in found.values()]
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    report = {'searches': len(log), 'blocked': sum(1 for x in log if 'error' in x), 'selected': len(jobs),
-              'by_site': {s: sum(x.get('kept', 0) for x in log if x['site'] == s) for s in SITES}, 'robots': robots_status}
-    (out / 'jobsite_raw.json').write_text(json.dumps({'source': 'job_sites', 'jobs': jobs}, default=str))
-    (out / 'jobsite_report.json').write_text(json.dumps({**report, 'log': log}, indent=1, default=str))
+                log.append({'site': site, 'term': term, 'country': country, 'returned': len(rows), 'kept': kept})
+                write_out(Path(a.out), a.raw_name, a.shard, found, log, robots_status)
+    report = write_out(Path(a.out), a.raw_name, a.shard, found, log, robots_status)
     print(json.dumps(report))
-
 
 if __name__ == '__main__':
     sys.exit(main())

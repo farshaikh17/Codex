@@ -81,9 +81,78 @@ jobs:
           node scripts/run_log.mjs --skipped budget --kind discovery --event "${{ github.event_name }}" > ../work/runlog.sql
           npx wrangler d1 execute career-job-engine --remote --file=../work/runlog.sql > /dev/null
 
-  discover:
+  # Max discovery (20 Nov 2026): the collectors that read job sites and employer sites run as parallel jobs, each with its own time budget, so the
+  # step limits that stopped Siemens Energy, SuccessFactors, Oracle and EURES at their caps every day no longer cap what is read. They have no
+  # credentials and read no database: their search profiles are the built-in ones in the code (dataset_discovery.py --builtin-profiles). Each
+  # uploads only public postings and counts (no personal data: this repository is public, and so are its artifacts); the discover job merges them
+  # (engine/merge_collect.py), adds the clients' own searches, pre-screens every row with the Worker's screen and imports once, as before.
+  collect:
     needs: guard
     if: ${{ needs.guard.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true   # a failed or timed-out part is reported by the merge; the run goes on without it
+    strategy:
+      fail-fast: false
+      matrix:
+        part:
+          - { name: jobsites-farhan, kind: jobsites, arg: farhan, minutes: 30 }
+          - { name: jobsites-sana-india, kind: jobsites, arg: sana_india, minutes: 30 }
+          - { name: jobsites-sana-gulf, kind: jobsites, arg: sana_gulf, minutes: 40 }
+          - { name: boards, kind: boards, arg: '', minutes: 10 }
+          - { name: more-employers, kind: more, arg: 'watch_boards,arbeitnow,uncareers,jibe,eightfold,siemens_energy,adzuna', minutes: 30 }
+          - { name: more-workable, kind: more, arg: 'workable,workable_places', minutes: 30 }
+          - { name: more-successfactors, kind: more, arg: successfactors, minutes: 30 }
+          - { name: more-big, kind: more, arg: 'oracle_hcm,smartrecruiters,workday,eures', minutes: 40 }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false   # third-party code (JobSpy) runs here; no GitHub token is left in .git/config
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Built-in search profiles (from the code; no database)
+        run: mkdir -p work && python engine/dataset_discovery.py --builtin-profiles work/profiles.json
+      - name: Job-site search (JobSpy; a blocked site is skipped; off when a manual run sets job_sites=false)
+        if: ${{ matrix.part.kind == 'jobsites' && (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
+        timeout-minutes: 42
+        env:
+          MINUTES: ${{ matrix.part.minutes }}
+        run: |
+          python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
+          /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out work --results 200 --hours 48 --shard "${{ matrix.part.arg }}" --budget-seconds $(( (MINUTES - 2) * 60 ))
+      - name: Remote job boards (official public feeds)
+        if: ${{ matrix.part.kind == 'boards' }}
+        timeout-minutes: 12
+        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7 --budget-seconds 480
+      - name: More sources (one group; Adzuna when its free keys are set)
+        if: ${{ matrix.part.kind == 'more' }}
+        timeout-minutes: 42
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          # api.adzuna.com's robots.txt disallows every agent: Adzuna is read only when the owner sets this repository variable to true
+          # (accepting that Adzuna's own API terms govern the keyed API). Settings > Secrets and variables > Actions > Variables.
+          ADZUNA_API_TERMS_ACCEPTED: ${{ vars.ADZUNA_API_TERMS_ACCEPTED }}
+          MINUTES: ${{ matrix.part.minutes }}
+        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30 --budget-seconds $(( (MINUTES - 3) * 60 )) --only "${{ matrix.part.arg }}"
+      - name: Keep the results (public postings and counts only)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: collect-${{ matrix.part.name }}
+          path: |
+            work/jobsite_raw.json
+            work/jobsite_report.json
+            work/boards_report.json
+            work/more_sources_report.json
+          retention-days: 2
+          if-no-files-found: warn
+
+  discover:
+    needs: [guard, collect]
+    # after every collector part (finished, failed or timed out); not when the run was cancelled or the guards skipped it
+    if: ${{ !cancelled() && needs.guard.result == 'success' && needs.guard.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 55
     outputs:
@@ -122,12 +191,12 @@ jobs:
         run: |
           pip install duckdb==2.0.0
           npm ci --prefix dashboard --ignore-scripts --no-audit --no-fund
-      - name: Download today's dataset once (about 2.3 GB; queried locally)
+      - name: Download today's dataset once (about 3.9 GB, 7.9 million postings; queried locally)
         id: download
         continue-on-error: true   # a failed download no longer stops the day: the next step runs without the dataset
         run: |
           mkdir -p work
-          curl -fsSL --retry 5 --retry-delay 20 --retry-all-errors --connect-timeout 30 -A 'career-job-engine/1.0' -o work/all.parquet https://storage.stapply.ai/jobhive/v1/all.parquet
+          curl -fsSL --retry 5 --retry-delay 20 --retry-all-errors --connect-timeout 30 -A 'career-job-engine/1.0' -o work/all.parquet https://storage.stapply.ai/jobs/v1/all.parquet
           ls -la work/all.parquet
       - name: Discovery state and past-applications tables, read-diet indexes (idempotent)
         working-directory: dashboard
@@ -151,27 +220,48 @@ jobs:
             rm -f work/all.parquet
             python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 200
           fi
-      - name: Light job-site search (no credentials; a blocked site is skipped)
-        if: ${{ github.event_name == 'schedule' || inputs.job_sites != 'false' }}
+      - name: Collector results (the parallel collect jobs; a missing part is a warning)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: collect-*
+          path: parts
+      - name: Client profiles? (the collector parts had only the built-in ones)
+        id: clients
+        run: |
+          python3 -c "import json,sys;from pathlib import Path;sys.exit(0 if any(k not in ('farhan_shaikh','sana_ansari') for k in json.loads(Path('work/profiles.json').read_text())) else 1)" \
+            && echo "any=true" >> "$GITHUB_OUTPUT" || echo "No client profiles: no client pass"
+      - name: Clients' own job-site searches (their stored role keywords; no credentials)
+        if: ${{ steps.clients.outputs.any == 'true' && (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
         continue-on-error: true
         timeout-minutes: 10
         run: |
           python -m venv /tmp/jobsites && /tmp/jobsites/bin/pip install -q python-jobspy==1.4.1
-          /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out work --results 20 --hours 48
-      - name: Remote job boards (official public feeds; no credentials)
+          /tmp/jobsites/bin/python engine/jobsite_discovery.py --profiles work/profiles.json --out parts/collect-clients --results 100 --hours 48 --shard clients --budget-seconds 480
+      # The boards and more sources matched titles against the built-in rules only, so a client's role keywords never saw what they read. With
+      # client profiles, both read again here with every profile (their writes go to the merge, which keeps each posting once).
+      - name: Clients' matches on the remote boards and more sources (every profile's role rule; no credentials)
+        if: ${{ steps.clients.outputs.any == 'true' }}
         continue-on-error: true
-        timeout-minutes: 5
-        run: python engine/remote_boards.py --profiles work/profiles.json --out work --days 7 --budget-seconds 300
-      - name: More sources (Workable, Eightfold, Siemens Energy, SuccessFactors employers, Arbeitnow, UN Careers, EURES; Adzuna when its free keys are set)
-        continue-on-error: true
-        timeout-minutes: 22
+        timeout-minutes: 25
         env:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
-          # api.adzuna.com's robots.txt disallows every agent: Adzuna is read only when the owner sets this repository variable to true
-          # (accepting that Adzuna's own API terms govern the keyed API). Settings > Secrets and variables > Actions > Variables.
           ADZUNA_API_TERMS_ACCEPTED: ${{ vars.ADZUNA_API_TERMS_ACCEPTED }}
-        run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30 --budget-seconds 1320
+        run: |
+          python engine/remote_boards.py --profiles work/profiles.json --out parts/collect-clients-more --days 7 --budget-seconds 240
+          python engine/more_sources.py --profiles work/profiles.json --out parts/collect-clients-more --days 30 --budget-seconds 1080
+      - name: Merge the collector results (each posting once; clients matched by their own role rules)
+        env:
+          JOB_SITES: ${{ (github.event_name == 'schedule' || inputs.job_sites != 'false') }}
+        run: |
+          EXPECT=boards,more-employers,more-workable,more-successfactors,more-big
+          [ "$JOB_SITES" = "true" ] && EXPECT="$EXPECT,jobsites-farhan,jobsites-sana-india,jobsites-sana-gulf"
+          python engine/merge_collect.py --out work --profiles work/profiles.json --expect "$EXPECT" $(ls -d parts/collect-* 2>/dev/null | sort)
+      - name: Pre-screen with the Worker's screen (only rows that can reach a list go to the duplicate check; no database)
+        if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
+        continue-on-error: true   # without it every row goes to the duplicate check, as before
+        run: python engine/prescreen.py --raw work/jobsite_raw.json --candidates work/candidates.json --work work --report work/prescreen_report.json
       - name: Remove job-site results already stored
         if: ${{ hashFiles('work/jobsite_raw.json') != '' }}
         env:
@@ -320,7 +410,7 @@ jobs:
         run: |
           {
             echo '### Daily discovery'
-            for f in work/report.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json work/shortlist.report.json; do
+            for f in work/report.json work/collect_parts.json work/jobsite_report.json work/boards_report.json work/more_sources_report.json work/prescreen_report.json work/global_hirers.json work/apply.report.json work/liveness_report.json work/shortlist.report.json; do
               [ -f "$f" ] && { echo "**$f**"; echo '```'; python -c "import json,sys;d=json.load(open(sys.argv[1]));[d.pop(k,None) for k in ('log','keys','yc')];print(json.dumps(d,indent=1))" "$f"; echo '```'; }
             done
           } >> "$GITHUB_STEP_SUMMARY"

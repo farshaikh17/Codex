@@ -52,7 +52,7 @@ class PartialWrites(unittest.TestCase):
         with contextlib.ExitStack() as stack:   # every other --fast source returns nothing (no network in tests)
             for n in quiet:
                 stack.enter_context(mock.patch.object(ms, n, lambda: iter([])))
-            stack.enter_context(mock.patch.object(ms, 'workable', lambda q: one('workable')()))
+            stack.enter_context(mock.patch.object(ms, 'workable', lambda q, pages=2: one('workable')() if not pages > 2 else iter([])))
             stack.enter_context(mock.patch.object(ms, 'eightfold', second))
             stack.enter_context(mock.patch('sys.argv', self.argv + ['--fast']))
             self.assertEqual(ms.main(), 0)
@@ -95,15 +95,22 @@ class SourceOrderAndCaps(unittest.TestCase):
         self.argv = ['x', '--profiles', str(Path(self.d, 'profiles.json')), '--out', self.d]
 
     def test_watch_boards_first_big_readers_last(self):
-        names = ['workable', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards',
-                 'arbeitnow', 'uncareers', 'eures', 'adzuna']
+        names = ['workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe',
+                 'watch_boards', 'arbeitnow', 'uncareers', 'eures', 'adzuna']
         got = list(ms.ordered({n: None for n in names + ['new_source']}))
         self.assertEqual(got[0], 'watch_boards')
-        self.assertEqual(got[-4:], ['smartrecruiters', 'successfactors', 'workday', 'new_source'])
+        self.assertEqual(got[-4:], ['oracle_hcm', 'smartrecruiters', 'workday', 'new_source'])
         for cheap in ('arbeitnow', 'uncareers', 'eures', 'adzuna', 'jibe', 'oracle_hcm'):
             self.assertLess(got.index(cheap), got.index('workday'), cheap)
-            self.assertLess(got.index(cheap), got.index('successfactors'), cheap)
         self.assertEqual(sorted(got), sorted(names + ['new_source']), 'nothing lost or added')
+
+    def test_sources_outside_the_open_dataset_run_before_those_in_it(self):
+        # 19 Nov: EURES and the Oracle, SmartRecruiters and Workday employers are all in the open ATS dataset the daily run reads in full;
+        # Workable search, Jibe, Eightfold, Siemens Energy and SuccessFactors (ReNew, Tata Power) are not, so they are read first.
+        got = list(ms.ordered({n: None for n in ms.ORDER}))
+        for outside in ('jibe', 'workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors'):
+            for inside in ('eures', 'oracle_hcm', 'smartrecruiters', 'workday'):
+                self.assertLess(got.index(outside), got.index(inside), (outside, inside))
 
     def test_cap_is_a_weighted_share_of_the_time_left(self):
         self.assertIsNone(ms.source_cap('workday', ['workday'], 0, 0, 0), 'no budget: no cap')
@@ -129,7 +136,7 @@ class SourceOrderAndCaps(unittest.TestCase):
         with contextlib.ExitStack() as stack:
             for n in fast:
                 fn = slow if n == slow_name else one(n)
-                stack.enter_context(mock.patch.object(ms, n, (lambda f: (lambda *a: f()))(fn)))
+                stack.enter_context(mock.patch.object(ms, n, (lambda f: (lambda *a, **k: f()))(fn)))
             stack.enter_context(mock.patch.object(ms, 'enrich_full_text', lambda *a: False))
             stack.enter_context(mock.patch.object(ms.time, 'monotonic', lambda: clock[0]))
             stack.enter_context(mock.patch('sys.argv', self.argv + ['--fast', '--budget-seconds', '1000']))
