@@ -198,7 +198,7 @@ export const SeekerApp: React.FC = () => {
   const counts = data?.counts;
   const topBar = (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
+      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2 max-[359px]:h-auto max-[359px]:min-h-14 max-[359px]:flex-wrap max-[359px]:gap-0 max-[359px]:px-1">
         <div role="group" aria-label="Whose jobs" className="flex rounded-xl border border-slate-300 p-0.5 shrink-0">
           {PEOPLE.map((p) => (
             <button key={p} type="button" aria-pressed={person === p} onClick={() => go({ person: p, view: person && route.view !== 'home' ? route.view : 'today', jobId: null })}

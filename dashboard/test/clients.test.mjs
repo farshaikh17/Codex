@@ -480,7 +480,7 @@ test('U12: every count on the Today screen equals what the matching list returns
   assert.deepEqual(today.json.worth_a_try.map((j) => j.id), ['t3']);
   assert.deepEqual(today.json.recent.map((j) => j.id), ['t4']);
   assert.equal(today.json.best[0].why_line, 'Maintenance · on-site Pune · 3 of your skills');
-  assert.equal(today.json.worth_a_try[0].why_line, 'Energy and decarbonisation · remote, India · 3 of your skills · location not stated');
+  assert.equal(today.json.worth_a_try[0].why_line, 'Energy and decarbonisation · remote, India · 3 of your skills · location eligibility unconfirmed');
   assert.ok(!today.text.includes('PRIVATE-'), 'nothing private in the public answer');
 });
 

@@ -27,6 +27,21 @@ class CollectionTests(unittest.TestCase):
         job=public_job(SOURCE,posting('X'*50000),'test-date')
         self.assertEqual(len(job['description']),50000)
         self.assertFalse(set(job)&{'raw','history','eligibility','pay','profile','candidate'})
+    def test_lever_body_only_and_description_precedence(self):
+        from adapters import html_to_text
+        fixture = Path(__file__).parent / 'tests/fixtures/sources/lever_massive_rocket.json'
+        for raw in json.loads(fixture.read_text()):
+            with self.subTest(posting=raw['id']):
+                expected = html_to_text(raw['descriptionBody'])
+                self.assertTrue(expected)
+                self.assertEqual(public_job(SOURCE,raw,'now')['description'],expected)
+        for fields, expected in [
+            ({'descriptionPlain': 'Plain', 'description': '<p>HTML</p>'}, 'Plain'),
+            ({'description': '<p>HTML</p>'}, 'HTML'),
+            ({}, 'Fallback'),
+        ]:
+            raw = posting() | {'descriptionPlain': '', 'descriptionBody': '<p>Fallback</p>'} | fields
+            self.assertEqual(public_job(SOURCE,raw,'now')['description'],expected)
     def test_duplicate_feed_preserves_previous_snapshot(self):
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)
@@ -227,7 +242,7 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual((src['normalization_changed'],src['endpoint_changed']),(True,False))
         self.assertEqual(first['jobs'][0]['changed_fields'],['compensation_raw'])
         board=json.loads((self.out/'boards/other-ashby.json').read_text())
-        self.assertEqual(board['normalization_version'],2)
+        self.assertEqual(board['normalization_version'],3)
         again=collect([OTHER],self.out,with_tiers,lambda _:None)
         self.assertFalse(again['sources'][0]['normalization_changed'])
         self.assertEqual(again['jobs'][0]['change'],'unchanged')

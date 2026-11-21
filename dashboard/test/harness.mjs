@@ -37,7 +37,9 @@ export async function loadWorker() {
 export function makeEnv(d1, extra = {}) {
   // Most tests change rows directly between calls, so the response cache is off unless a test turns it on.
   // The edge layer in front of it (Cache API + isolate memory) is off too unless a test turns it on (test/edge_cache.test.mjs).
-  return { DB: d1, ENVIRONMENT: 'test', ADMIN_API_KEY: ADMIN_KEY, RESPONSE_CACHE: 'off', EDGE_CACHE: 'off', ...extra };
+  // TEST_SEEKER_SNAPSHOT=on (npm test's second pass over the list tests) answers the job seeker's lists from the stored copy (worker/snapshot.ts)
+  // even with the response cache off, so the same assertions check that path too.
+  return { DB: d1, ENVIRONMENT: 'test', ADMIN_API_KEY: ADMIN_KEY, RESPONSE_CACHE: 'off', EDGE_CACHE: 'off', ...(process.env.TEST_SEEKER_SNAPSHOT ? { SEEKER_SNAPSHOT: process.env.TEST_SEEKER_SNAPSHOT } : {}), ...extra };
 }
 
 export async function call(worker, env, method, urlPath, { body, key = ADMIN_KEY } = {}) {

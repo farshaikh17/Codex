@@ -149,6 +149,12 @@ for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]
   check(`${slug}: nothing operator-only on the job seeker's page`, !/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i.test(chrome), (chrome.match(/Unlock|Operator|Override|Audit Trail|Export CSV|Analytics|Tracker open|operator key/i) || [])[0]);
   check(`${slug}: no private text on the job seeker's page`, !PRIVATE_TEXT.test(t), (t.match(PRIVATE_TEXT) || [])[0]);
   check(`${slug}: no sideways scrolling`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
+  if (mode === 'mobile') {
+    await page.setViewportSize({ ...viewport, width: 320 });
+    const fits = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+    check(`${slug}: no sideways scrolling at 320px`, fits);
+    await page.setViewportSize(viewport);
+  }
 }
 check(KEY ? 'across the whole visit no request was refused' : 'across the whole visit no request was refused and no key was used',
   apiLog.filter((r) => r.status >= 400).length === 0 && (KEY || apiLog.every((r) => !r.auth)), JSON.stringify(apiLog.filter((r) => r.status >= 400).slice(0, 3)));
