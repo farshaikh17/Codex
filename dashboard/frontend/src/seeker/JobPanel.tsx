@@ -6,7 +6,7 @@ import { Job, ApplicationStatus } from '../types';
 import { fetchJobFeedback } from '../api';
 import { jobPayText, peopleSearchLinks, skillGaps, withoutAutoMark } from '../jobHelpers';
 import { whyText } from '../components/JobTable';
-import { placeText, foundText, STAGES, indiaWords, sourceText } from './format';
+import { placeText, foundText, STAGES, indiaWords, sourceText, employerName } from './format';
 import { postingUrl, btn, btnPlain, btnPrimary } from './JobCard';
 
 interface Props {
@@ -55,7 +55,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
 
   const url = postingUrl(job);
   const gaps = skillGaps(job.description || '', profileSkills);
-  const people = peopleSearchLinks(job.company || '');
+  const people = peopleSearchLinks(employerName(job.company));
   const level = levelText(job);
   const hadNote = !!(job.application?.notes || '').trim();
 
@@ -70,7 +70,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
         <div className="p-4 space-y-5">
           <section>
             <h2 className="text-xl font-bold text-slate-900 leading-snug break-words">{job.title}</h2>
-            <p className="text-base text-slate-700 mt-1 break-words">{job.company} · {placeText(job)}</p>
+            <p className="text-base text-slate-700 mt-1 break-words">{employerName(job.company)} · {placeText(job)}</p>
             <p className="text-sm text-slate-600 mt-0.5">{foundText(job.discovered_at)}</p>
             {job.why_line && <p className="text-base text-slate-900 mt-2" data-testid="panel-why">{job.why_line}</p>}
             <div className="mt-3 flex flex-wrap gap-3">
@@ -126,7 +126,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
               )}
               {people.length > 0 && (
                 <div data-testid="people-links">
-                  <h4 className="font-semibold">Find people at {job.company}</h4>
+                  <h4 className="font-semibold">Find people at {employerName(job.company)}</h4>
                   <ul className="flex flex-wrap gap-3 mt-1">
                     {people.map((p) => <li key={p.label}><a className="underline min-h-[44px] inline-flex items-center" href={p.url} target="_blank" rel="noopener noreferrer" title={p.hint}>{p.label}</a></li>)}
                   </ul>

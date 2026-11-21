@@ -37,12 +37,38 @@ export function updatedText(iso: string | null | undefined, now: Date = new Date
   return `Updated ${d.toLocaleDateString('en-GB', { timeZone: IST, day: 'numeric', month: 'short' })}, ${timeIST(iso as string)}`;
 }
 
-/** The first place named ("Pune, India"), or "Remote", short. */
+/** The first place named ("Pune, India"), or "Remote", short. A remote job whose place does not say so reads "Remote · Delhi" (site QA 21 Nov:
+ *  the Remote filter showed cards reading only "Delhi" or "Warszawa (Poland)"). */
 export function placeText(job: Pick<Job, 'location_restrictions' | 'workplace_type'>): string {
   const loc = String(job.location_restrictions || '').split(/[;|]/)[0].trim();
   const remote = String(job.workplace_type || '').toUpperCase().startsWith('REMOTE');
   if (!loc) return remote ? 'Remote' : 'Place not stated';
-  return loc.length > 40 ? loc.slice(0, 39) + '…' : loc;
+  const short = loc.length > 40 ? loc.slice(0, 39) + '…' : loc;
+  return remote && !/remote|anywhere|work from home|wfh/i.test(loc) ? `Remote · ${short}` : short;
+}
+
+// Site QA 21 Nov: some hiring systems give their account name as the employer ("nestleHRprdRMK", "MahindraCareerSite", "HatchD1"). The page
+// shows the employer's name instead; the stored name is never changed (it is what twins, caps and the operator screens read).
+const EMPLOYER_NAMES: Record<string, string> = {
+  nestle: 'Nestlé',
+  'us kraft heinz': 'Kraft Heinz', regentcollegelondon: 'Regent College London', marrinadecisions: 'Marrina Decisions',
+  myamazonguy: 'My Amazon Guy', fireworkhq: 'Firework', soterahealth: 'Sotera Health',
+};
+/** The employer's name for display: a known account name mapped to the employer, else hiring-system suffixes taken off ("CareerSite",
+ *  "Career Site", "HRprdRMK", a trailing "D1" after a word) and a one-word all-lowercase account name capitalised. Display only. */
+export function employerName(raw: string | null | undefined): string {
+  const c = String(raw || '').trim();
+  if (!c) return '';
+  const lookup = (x: string) => EMPLOYER_NAMES[x.toLowerCase().replace(/\s+/g, ' ')];
+  if (lookup(c)) return lookup(c);
+  const stripped = c
+    .replace(/\s*career\s*sites?$/i, '')                    // "Adani Career Site", "MahindraCareerSite"
+    .replace(/(?<=[a-z])HR?prd[A-Za-z0-9]*$/, '')            // "nestleHRprdRMK" (SAP SuccessFactors production tenant)
+    .replace(/(?<=[a-z]{3})D\d$/, '')                        // "HatchD1" (Workday data-centre suffix)
+    .trim();
+  const name = stripped || c;
+  if (lookup(name)) return lookup(name);
+  return /^[a-z]{4,}$/.test(name) ? name[0].toUpperCase() + name.slice(1) : name;
 }
 
 /** When the job was found. "New" uses only this, so it agrees with the "Found <date>" on the card (a re-check of an old job is not new). */

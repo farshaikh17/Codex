@@ -2,7 +2,7 @@
 // three 44 px buttons with 12 px gaps (U14).
 import React from 'react';
 import { Job } from '../types';
-import { placeText, foundText, stageWord } from './format';
+import { placeText, foundText, stageWord, employerName } from './format';
 
 import { postingUrl } from '../jobHelpers';
 export { postingUrl } from '../jobHelpers';
@@ -12,6 +12,10 @@ export const btnPrimary = `${btn} bg-slate-900 text-white hover:bg-slate-700`;
 export const btnPlain = `${btn} bg-white text-slate-800 border border-slate-300 hover:bg-slate-50`;
 // The chosen one of a row of plain buttons. Built from `btn`, not by adding colours to btnPlain: two Tailwind colour classes on one element are
 // decided by stylesheet order, and btnPlain's bg-white won, so the chosen "All" read white on white (live QA 17 Nov).
+// A card title's link: one line is a 44 px tap target (22 px line + 11 px above and below), and the padding is taken back by an equal negative
+// margin, so a title that wraps never runs into the line below it (site QA 21 Nov: min-h-[44px] -my-2.5 pulled a 2-line title 5 px into the
+// company line).
+export const titleLink = 'hover:underline break-words inline-block py-[11px] -my-[11px]';
 export const btnChosen = `${btn} bg-slate-900 text-white border border-slate-900 hover:bg-slate-800`;
 
 interface Props {
@@ -28,12 +32,12 @@ export const JobCard: React.FC<Props> = ({ job, onOpen, onPosting, onSave, onHid
   const url = postingUrl(job);
   const stage = job.application?.status;
   const saved = stage === 'SAVED' || stage === 'REVIEWING';
-  const meta = [job.company, placeText(job), foundText(job.discovered_at)].filter(Boolean).join(' · ');
+  const meta = [employerName(job.company), placeText(job), foundText(job.discovered_at)].filter(Boolean).join(' · ');
   return (
     <article data-job-id={job.id} data-testid="job-card" className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
       <div className="flex items-start gap-2">
         <h3 className="text-base font-semibold text-slate-900 leading-snug flex-1 min-w-0">
-          <a href={`#job-${encodeURIComponent(job.id)}`} onClick={(e) => { e.preventDefault(); onOpen(job); }} className="hover:underline break-words inline-flex items-center min-h-[44px] -my-2.5">{job.title}</a>
+          <a href={`#job-${encodeURIComponent(job.id)}`} onClick={(e) => { e.preventDefault(); onOpen(job); }} className={titleLink}>{job.title}</a>
         </h3>
         {isNew && <span className="shrink-0 text-sm font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2">New</span>}
       </div>

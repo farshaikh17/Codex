@@ -938,7 +938,7 @@ export async function setFollowUp(jobId: string, candidateId: string, date: stri
 
 // ---- The job seeker's page (plan phase 5) -------------------------------------------------------------------------------------------------
 export interface TodayCounts {
-  best: number; worth_a_try: number; more_to_look: number; more_good: number; everything: number; says_india: number; hidden: number;
+  best: number; worth_a_try: number; more_to_look: number; more_good: number; everything: number; everything_else?: number; says_india: number; hidden: number;
   applications: { saved: number; waiting: number; finished: number; total: number }; followups_due: number; today_india: string;
 }
 export interface TodayData { candidate_id: string; counts: TodayCounts; best: Job[]; worth_a_try: Job[]; recent: Job[] }

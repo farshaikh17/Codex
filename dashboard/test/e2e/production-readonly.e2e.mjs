@@ -141,7 +141,7 @@ for (const [slug, cid] of [['farhan', 'farhan_shaikh'], ['sana', 'sana_ansari']]
   const c = today.counts || {};
   const loadedMessage = `${slug === 'sana' ? 'Sana' : 'Farhan'}'s jobs loaded. Best matches: ${c.best}.`;
   check(`${slug}: Today announces the loaded candidate and result count`, await page.getByRole('status').filter({ hasText: loadedMessage }).count() === 1);
-  check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything - c.best - c.worth_a_try})`), t.slice(0, 200));
+  check(`${slug}: Today shows the counts of /api/today`, new RegExp(`Best matches \\(${c.best}\\)`).test(t) && new RegExp(`Worth a try \\(${c.worth_a_try}\\)`).test(t) && t.includes(`Show everything else (${c.everything_else ?? c.everything - c.best - c.worth_a_try})`), t.slice(0, 200));
   const top = await page.locator('[data-testid="job-card"]').first().boundingBox().catch(() => null);
   check(`${slug}: the first job starts within 200 px of the top (or there is none)`, !top || top.y <= 200, JSON.stringify(top));
   // Job titles are data, not screen chrome: "Field Operator - Turbine" is a real posting. Read the page without the job cards.

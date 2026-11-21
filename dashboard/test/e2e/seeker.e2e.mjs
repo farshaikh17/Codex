@@ -47,7 +47,7 @@ check('S3 load once: each request is made once, and only for the chosen person',
 const today = await api('/today?candidate_id=sana_ansari');
 const t = await body();
 check('S4 the counts on screen are the ones /api/today computes (one definition per number)',
-  t.includes(`Best matches (${today.counts.best})`) && t.includes(`Worth a try (${today.counts.worth_a_try})`) && t.includes(`Show everything else (${today.counts.everything - today.counts.best - today.counts.worth_a_try})`)
+  t.includes(`Best matches (${today.counts.best})`) && t.includes(`Worth a try (${today.counts.worth_a_try})`) && t.includes(`Show everything else (${today.counts.everything_else})`)
   && t.includes(`${today.counts.more_good} more good match`) && (await page.innerText('[data-testid="my-applications"]')).includes(`(${today.counts.applications.total})`), t.slice(0, 300));
 check('S5 the status line has the date, new since the last visit, more good matches and the update time', /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} [A-Z][a-z]{2}\b/.test(await page.innerText('[data-testid="status-line"]')) && /new since your last visit/.test(t) && /(Updated (\d{1,2} [A-Z][a-z]{2}, )?\d{2}:\d{2}|Not updated today)/.test(t), await page.innerText('[data-testid="status-line"]'));
 const firstCard = await page.locator('[data-testid="job-card"]').first().boundingBox();
@@ -93,12 +93,12 @@ await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
 await page.waitForSelector('[role=dialog][aria-label="Did you apply?"]', { timeout: 5000 }).catch(() => {});
 check('S14 coming back asks "Did you apply?" with the three answers', (await page.locator('[role=dialog][aria-label="Did you apply?"]').count()) === 1
   && /Yes, I applied/.test(await body()) && /Not yet \(keep saved\)/.test(await body()));
-{ // QA 16 Nov: focus starts on the first answer and Tab / Shift+Tab wrap inside "Did you apply?"
+{ // QA 16 Nov: Tab / Shift+Tab wrap inside "Did you apply?"; site QA 21 Nov: focus starts on Close (records nothing), not on "Yes, I applied"
   const label = () => page.evaluate(() => { const a = document.activeElement; return a && a.closest('[role=dialog][aria-label="Did you apply?"]') ? a.textContent.trim() : 'outside: ' + (a?.outerHTML || '').slice(0, 80); });
   const onOpen = await label();
   await page.keyboard.press('Shift+Tab'); const back = await label();
   await page.keyboard.press('Tab'); const fwd = await label();
-  check('S14b "Did you apply?" takes focus, Shift+Tab wraps to the last answer and Tab back to the first', onOpen === 'Yes, I applied' && back === 'Not for me' && fwd === 'Yes, I applied', `${onOpen} | ${back} | ${fwd}`);
+  check('S14b "Did you apply?" takes focus on Close, Shift+Tab wraps to the last answer and Tab back to Close', onOpen === 'Close' && back === 'Not for me' && fwd === 'Close', `${onOpen} | ${back} | ${fwd}`);
 }
 await clearToast();
 await page.getByRole('button', { name: 'Yes, I applied' }).click();

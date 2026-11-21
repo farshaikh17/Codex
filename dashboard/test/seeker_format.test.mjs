@@ -1,7 +1,7 @@
 // The job seeker's Today status line (QA 3: "Updated HH:MM" without a date made a stale page look fresh).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { updatedText, sourceText } from '../frontend/src/seeker/format.ts';
+import { updatedText, sourceText, placeText, employerName } from '../frontend/src/seeker/format.ts';
 
 test('the update time has no date only when it was today in India time', () => {
   const now = new Date('2026-11-16T12:00:00Z');                                   // 17:30 IST, 16 Nov
@@ -21,4 +21,26 @@ test('a reposting site is never called the employer\'s own site (QA 16 Nov: Jobg
   assert.equal(sourceText('lever', 'LIVE_PUBLIC', 'Turing Labs'), "From the employer's own site");
   assert.equal(sourceText('greenhouse', 'LIVE_PUBLIC', 'Acme'), "From the employer's own site");
   assert.equal(sourceText('indeed', 'LIVE_PUBLIC', 'Acme'), 'From a job board');
+});
+
+test('site QA 21 Nov: a remote job says Remote on the card even when its first place is a city', () => {
+  assert.equal(placeText({ location_restrictions: 'Delhi', workplace_type: 'REMOTE' }), 'Remote · Delhi');
+  assert.equal(placeText({ location_restrictions: 'Warszawa (Poland); Kraków', workplace_type: 'REMOTE_RESTRICTED' }), 'Remote · Warszawa (Poland)');
+  assert.equal(placeText({ location_restrictions: 'Remote - India', workplace_type: 'REMOTE' }), 'Remote - India', 'not said twice');
+  assert.equal(placeText({ location_restrictions: 'Anywhere', workplace_type: 'REMOTE_GLOBAL' }), 'Anywhere');
+  assert.equal(placeText({ location_restrictions: '', workplace_type: 'REMOTE' }), 'Remote');
+  assert.equal(placeText({ location_restrictions: 'Pune, India', workplace_type: 'ONSITE' }), 'Pune, India');
+  assert.equal(placeText({ location_restrictions: null, workplace_type: null }), 'Place not stated');
+});
+
+test('site QA 21 Nov: hiring-system account names are shown as the employer, display only', () => {
+  assert.equal(employerName('nestleHRprdRMK'), 'Nestlé');
+  assert.equal(employerName('MahindraCareerSite'), 'Mahindra');
+  assert.equal(employerName('Adani Career Site'), 'Adani');
+  assert.equal(employerName('HatchD1'), 'Hatch');
+  assert.equal(employerName('regentcollegelondon'), 'Regent College London');
+  assert.equal(employerName('US Kraft Heinz'), 'Kraft Heinz');
+  assert.equal(employerName('storyblok'), 'Storyblok', 'a one-word lowercase account name is capitalised');
+  for (const name of ['Siemens Energy', 'WSP', 'Schneider Electric', 'SUSONITY', 'GE Vernova', 'Area D1', 'ib vogt']) assert.equal(employerName(name), name, name + ' is kept');
+  assert.equal(employerName(null), '');
 });
