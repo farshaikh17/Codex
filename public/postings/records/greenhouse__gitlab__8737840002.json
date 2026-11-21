@@ -14,6 +14,15 @@
    "from_hash": "d36b4f42bd9a79a964cf6ece60db2b6de73027f8ffa73b4813c54060f6fb32f9",
    "kind": "compensation_source_added",
    "to_hash": "1d12d958e086e04b1431161c1ff3b9ec995f6e4aee5a3d29488125a45186b925"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "1d12d958e086e04b1431161c1ff3b9ec995f6e4aee5a3d29488125a45186b925",
+   "kind": "content_changed",
+   "to_hash": "444b3764f81d8bf57f10844340fed505a302f74b97f6dc20ac3c2018b2db41b2"
   }
  ],
  "content": {
@@ -26,15 +35,15 @@
    },
    {
     "source": "offices.name",
-    "text": "Federal"
+    "text": "United States of America"
    }
   ],
   "published": "2026-09-10T09:26:22-04:00",
   "title": "Public Sector Strategic Account Executive, DoW",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "1d12d958e086e04b1431161c1ff3b9ec995f6e4aee5a3d29488125a45186b925",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "444b3764f81d8bf57f10844340fed505a302f74b97f6dc20ac3c2018b2db41b2",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 12200000, \"max_cents\": 20520000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      },
@@ -88,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$122,000—$205,200 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      }
@@ -105,15 +114,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "Federal",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      },
@@ -121,7 +130,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "The Public Sector Team focuses on helping U.S. Department of War agencies modernize how they build, secure, and operate software using GitLab’s AI-powered DevSecOps platform. You’ll join a distributed group of strategic account leaders, solutions architects, and channel specialists who collaborate asynchronously across time zones to serve complex, regulated customers. We partner closely with system integrators and resellers, align with agency procurement processes, and coordinate with product, marketing, and support teams to deliver secure, compliant solutions. Our current priorities include navigating evolving procurement and compliance requirements, supporting infrastructure modernization and secure development practices, and expanding GitLab’s presence across key public sector accounts.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      }
@@ -134,7 +143,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience selling technology solutions to Department of War agencies\nKnowledge of the software development lifecycle, including CI/CD automation, secure development practices, and infrastructure modernization\nUnderstanding of compliance requirements, and agency buying cycles, with the ability to navigate complex stakeholder environments\nConsultative sales approach that positions technology as a mission enabler and aligns solutions to public sector modernization initiatives\nAbility to manage major accounts with a high degree of ownership and control, working under minimal supervision on complex opportunities\nSkill in collaborating with system integrators, resellers, and internal pre- and post-sales teams to drive successful customer outcomes\nEffective written and verbal communication skills, with strong interpersonal abilities to build consensus across technical and non-technical stakeholders\nAlignment with GitLab’s values, openness to learning, and readiness to apply transferable skills and diverse experiences to the public sector domain",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      }
@@ -151,7 +160,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8737840002"
      }

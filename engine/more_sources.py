@@ -42,6 +42,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from adapters import ashby_workplace  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 from engine.multi_place import from_count, places_text  # noqa: E402
 from engine import reposters, robots  # noqa: E402
@@ -613,7 +614,8 @@ def watch_board(company, kind, board):
         for r in json.loads(http(f'https://api.ashbyhq.com/posting-api/job-board/{urllib.parse.quote(board)}')).get('jobs') or []:
             if r.get('isListed') is False:
                 continue
-            remote = bool(r.get('isRemote')) or str(r.get('workplaceType') or '').lower() == 'remote'
+            remote_flag, _ = ashby_workplace(r)
+            remote = remote_flag is True
             places = [text(r.get('location'))] + [text(x.get('location')) for x in r.get('secondaryLocations') or [] if isinstance(x, dict)]
             yield job('watch_boards', r.get('jobUrl') or '', text(r.get('title')), company, _remote_place('; '.join(x for x in places if x), remote),
                       text(r.get('descriptionPlain') or r.get('descriptionHtml')), when(r.get('publishedAt')), board=False), remote
@@ -877,6 +879,7 @@ def main():
     ap.add_argument('--days', type=int, default=30)
     ap.add_argument('--fast', action='store_true')
     ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it, and each source has its own share of it")
+    ap.add_argument('--only', default='', help='comma-separated source names: run only these (a parallel job of discovery.yml runs one group)')
     a = ap.parse_args()
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
@@ -891,6 +894,12 @@ def main():
         del sources['workable_places']
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
+    if a.only:   # max discovery (20 Nov): the daily run reads the sources in parallel groups, each with its own time budget
+        wanted = {x.strip() for x in a.only.split(',') if x.strip()}
+        unknown = wanted - set(sources) - {'workable_places'}
+        if unknown:
+            print(f'::warning::more_sources: unknown source names {sorted(unknown)}', file=sys.stderr)
+        sources = {k: v for k, v in sources.items() if k in wanted}
     sources = ordered(sources)
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness

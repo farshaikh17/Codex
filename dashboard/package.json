@@ -16,6 +16,6 @@
     "seed:local": "node test/seed-sql.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.156.1"
+    "wrangler": "4.163.0"
   }
 }
