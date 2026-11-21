@@ -15,6 +15,15 @@
    "from_hash": "e38fffefe0e05694224dc8de9a985428cfe5b0edfb46b855653f77b3d992bc5d",
    "kind": "content_changed",
    "to_hash": "189322dbf9485aebacbd6c28b1f6a2187cef8b69c47d5f5f71d2f98a14ecbf0f"
+  },
+  {
+   "changed_at": "2026-11-20T19:14:35.616028+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "189322dbf9485aebacbd6c28b1f6a2187cef8b69c47d5f5f71d2f98a14ecbf0f",
+   "kind": "content_changed",
+   "to_hash": "7ee4b4a1d6f8d7c65f9bd6cb893873b20437189b712bba822b41bf8c15a08980"
   }
  ],
  "content": {
@@ -23,23 +32,19 @@
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote, Canada"
-   },
-   {
-    "source": "location.name",
     "text": "Remote, United States"
    },
    {
     "source": "offices.name",
-    "text": "North America"
+    "text": "United States of America"
    }
   ],
   "published": "2026-11-06T16:28:11-05:00",
   "title": "Professional Services, Program Manager",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-12T20:24:03.675870+00:00",
- "content_hash": "189322dbf9485aebacbd6c28b1f6a2187cef8b69c47d5f5f71d2f98a14ecbf0f",
+ "content_changed_at": "2026-11-20T19:14:35.616028+00:00",
+ "content_hash": "7ee4b4a1d6f8d7c65f9bd6cb893873b20437189b712bba822b41bf8c15a08980",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -68,7 +73,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 9288000, \"max_cents\": 15600000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      },
@@ -93,7 +98,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$92,880—$156,000 USD",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      }
@@ -109,24 +114,16 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "North America",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      }
@@ -139,7 +136,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Experience leading complex programs with multiple interdependent projects, stakeholders, and timelines\nStrong skill in program planning, forecasting, reporting, and communicating delivery metrics clearly to internal and external stakeholders\nAbility to organize, monitor, and manage long-term project budgets, schedules, risks, and dependencies\nProven ability to build collaborative relationships with customers and partner effectively with Engagement Managers, Architects, and delivery teams\nWorking knowledge of agile and other project management approaches, with the judgment to apply the right structure to different customer needs\nAbility to develop long-term plans that support customer adoption, transformation, and successful delivery outcomes\nComfort leading program-level meetings and driving progress across multiple workstreams\nWillingness to complete GitLab Project Management certification within 2 months of starting in the role",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      }
@@ -155,16 +152,8 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
-     },
-     {
-      "interpretation": "remote",
-      "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-12T20:24:03.675870+00:00",
+      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8929468002"
      }

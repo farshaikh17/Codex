@@ -177,6 +177,13 @@ await page.getByRole('button', { name: 'Close' }).click(); await page.waitForTim
 await page.locator('[data-testid="job-card"] h3 a').first().click(); await page.waitForSelector('[role=dialog]');
 await page.goBack(); await page.waitForTimeout(600);
 check('S27 Back closes the panel and stays on Today', (await page.locator('[role=dialog]').count()) === 0 && (await page.evaluate(() => location.hash)) === '#sana/today');
+await page.goForward();
+await page.getByRole('dialog').waitFor();
+const historyBeforeClose = await page.evaluate(() => history.length);
+await page.keyboard.press('Escape');
+await page.getByRole('dialog').waitFor({ state: 'hidden' });
+check('Closing a panel restored by Forward reuses its list history entry',
+  (await page.evaluate(() => history.length)) === historyBeforeClose && new URL(page.url()).hash === '#sana/today');
 await page.goto(BASE + '/app#sana/applications', { waitUntil: 'networkidle' }); await page.waitForTimeout(800);
 check('S28 a bookmark of the applications opens them', /Sana's applications/.test(await body()));
 

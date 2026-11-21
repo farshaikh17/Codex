@@ -42,6 +42,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from adapters import ashby_workplace  # noqa: E402
 from engine.dataset_discovery import clean  # noqa: E402
 from engine.multi_place import from_count, places_text  # noqa: E402
 from engine import reposters, robots  # noqa: E402
@@ -119,6 +120,7 @@ SUCCESSFACTORS = [# 14 Nov: ReNew (wind and solar O&M in India); its /search/ pa
 # Workday public career-site JSON (no key). (display name, tenant, data-centre prefix, site id); all three answered on a live read.
 WORKDAY = [('KBR', 'kbr', 'wd5', 'KBR_Careers'), ('GE Vernova', 'gevernova', 'wd5', 'Vernova_ExternalSite'), ('Hitachi', 'hitachi', 'wd1', 'hitachi'),
            # Added 2026-11-12 (Sana: plant, utilities and energy employers with large India and Gulf operations); each answered a live read that day.
+           ('Yokogawa', 'yokogawa', 'wd3', 'yokogawa-career-site', {'terms': ['electrical', 'commissioning'], 'pages': 1}),
            ('Johnson Controls', 'jci', 'wd5', 'JCI'), ('Baker Hughes', 'bakerhughes', 'wd5', 'BakerHughes'), ('Shell', 'shell', 'wd3', 'ShellCareers'),
            ('Unilever', 'unilever', 'wd3', 'Unilever_Experienced_Professionals'), ('Dow', 'dow', 'wd1', 'ExternalCareers'), ('3M', '3m', 'wd1', 'Search'),
            # 14 Nov (Sana): KBR's Gulf postings by place (the newest-first term reads above rarely reach them), and JLL's engineering
@@ -613,7 +615,8 @@ def watch_board(company, kind, board):
         for r in json.loads(http(f'https://api.ashbyhq.com/posting-api/job-board/{urllib.parse.quote(board)}')).get('jobs') or []:
             if r.get('isListed') is False:
                 continue
-            remote = bool(r.get('isRemote')) or str(r.get('workplaceType') or '').lower() == 'remote'
+            remote_flag, _ = ashby_workplace(r)
+            remote = remote_flag is True
             places = [text(r.get('location'))] + [text(x.get('location')) for x in r.get('secondaryLocations') or [] if isinstance(x, dict)]
             yield job('watch_boards', r.get('jobUrl') or '', text(r.get('title')), company, _remote_place('; '.join(x for x in places if x), remote),
                       text(r.get('descriptionPlain') or r.get('descriptionHtml')), when(r.get('publishedAt')), board=False), remote
@@ -877,6 +880,7 @@ def main():
     ap.add_argument('--days', type=int, default=30)
     ap.add_argument('--fast', action='store_true')
     ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it, and each source has its own share of it")
+    ap.add_argument('--only', default='', help='comma-separated source names: run only these (a parallel job of discovery.yml runs one group)')
     a = ap.parse_args()
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
@@ -891,6 +895,12 @@ def main():
         del sources['workable_places']
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
+    if a.only:   # max discovery (20 Nov): the daily run reads the sources in parallel groups, each with its own time budget
+        wanted = {x.strip() for x in a.only.split(',') if x.strip()}
+        unknown = wanted - set(sources) - {'workable_places'}
+        if unknown:
+            print(f'::warning::more_sources: unknown source names {sorted(unknown)}', file=sys.stderr)
+        sources = {k: v for k, v in sources.items() if k in wanted}
     sources = ordered(sources)
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness
