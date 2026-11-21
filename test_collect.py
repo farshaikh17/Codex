@@ -78,6 +78,32 @@ class ReliabilityTests(unittest.TestCase):
     def tearDown(self): self.tmp.cleanup()
     def run_both(self,**kw):
         return collect([SOURCE,OTHER],self.out,by_source({'sample-lever':[posting()],'other-ashby':ashby}),lambda _:None,**kw)
+    def test_unidentifiable_rows_preserve_board_until_complete_retry(self):
+        first = self.run_both()
+        board = self.out/'boards/sample-lever.json'
+        before = board.read_bytes()
+        for malformed in (None, {}, posting() | {'id': []}, posting() | {'id': True}):
+            with self.subTest(row=malformed):
+                fetch = by_source({'sample-lever':[posting() | {'id':'new'}, malformed], 'other-ashby':ashby})
+                result = collect([SOURCE, OTHER], self.out, fetch, lambda _:None)
+                self.assertEqual(result['status'], 'partial')
+                source = result['sources'][0]
+                self.assertEqual(source['status'], 'failed')
+                self.assertEqual(source['last_success_at'], first['sources'][0]['last_success_at'])
+                self.assertNotIn('no_longer_listed', source)
+                self.assertEqual(board.read_bytes(), before)
+                self.assertEqual(verify_publication(self.out), [])
+        clean = by_source({'sample-lever':[posting() | {'id':'new'}], 'other-ashby':ashby})
+        retry = collect([SOURCE, OTHER], self.out, clean, lambda _:None)
+        self.assertEqual(retry['sources'][0]['no_longer_listed'], ['lever:sample:one'])
+        self.assertEqual(retry['sources'][0]['consecutive_failures'], 0)
+
+    def test_explicit_unlisting_is_a_complete_ashby_feed(self):
+        self.run_both()
+        result = collect([OTHER], self.out, lambda _: {'jobs':[ashby()['jobs'][0] | {'isListed':False}]}, lambda _:None)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(result['sources'][0]['no_longer_listed'], ['ashby:other:two'])
+
     def test_zero_sources_never_publishes(self):
         self.run_both()
         before=snapshot(self.out)

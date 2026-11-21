@@ -132,7 +132,9 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
                 jobs,skipped,seen=[],0,set()
                 for raw in extract_jobs(source['provider'],fetcher(source)):
                     try: job=public_job(source,raw,now)
-                    except Skip:
+                    except Skip as error:
+                        if error.kind != 'unlisted':
+                            raise ValueError(f"Malformed posting ({error.kind}); incomplete board") from error
                         skipped+=1
                         continue
                     if job['key'] in seen: raise ValueError('Duplicate requisition in source')
