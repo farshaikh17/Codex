@@ -1515,7 +1515,16 @@ const TEST_APP_NOTE = 'Playwright verified rejection test';
 const realApp = (a: string) => `NOT (COALESCE(${a}.notes, '') = '${TEST_APP_NOTE}' OR ${a}.job_id LIKE 'syn-%' OR ${a}.job_id IN (SELECT tj.id FROM jobs tj WHERE tj.source_adapter = 'fixture'))`;
 const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
+// General eligibility also includes domestic office jobs and relocation. Only positive remote evidence belongs here.
+const confirmedIndiaRemote = `q.eligibility_status = 'ELIGIBLE'
+  AND UPPER(COALESCE(j.workplace_type, 'UNKNOWN')) NOT IN ('ONSITE', 'ON_SITE', 'ON-SITE', 'HYBRID')
+  AND (q.eligibility_reason IN ('Posting explicitly supports fully remote work from India.', 'Posting explicitly advertises worldwide remote work.', 'Remote role in India.',
+      'Accessible Indian market opportunity (Remote in India).', 'Worldwide remote opportunity open to international talent.')
+    OR (q.eligibility_reason = 'India affirmative verified' AND j.workplace_type IN ('REMOTE', 'REMOTE_GLOBAL', 'REMOTE_RESTRICTED'))
+    OR (COALESCE(TRIM(q.eligibility_reason), '') = ''
+      AND LOWER(TRIM(j.location_restrictions)) IN ('remote - india', 'india - remote', 'remote india', 'india remote', 'remote (india)', 'india (remote)', 'remote from india', 'remote - worldwide')))`;
 const JOB_COLUMNS = `
+        (${confirmedIndiaRemote}) AS confirmed_india_remote,
         j.id, j.title, j.company, j.company_url, j.company_headquarters,
         j.source_adapter, j.source_url, j.original_posting_url,
         j.employment_type, j.workplace_type, j.location_restrictions,
@@ -1581,7 +1590,7 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         role_family_key: family ? family.key : UNCLASSIFIED,
         strategy_lane: r.strategy_lane,
         candidate_id: candidateId,
-        remote_from_india: r.eligibility_status === 'ELIGIBLE' ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
+        remote_from_india: r.confirmed_india_remote ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
         farhan_fit: fitOf(r.qualification_status),
         application_state: r.app_status || 'NEW',
         eligibility: {
@@ -2593,7 +2602,7 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
         SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') AND ${realApp('a')}) THEN 1 ELSE 0 END) as applied_count
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
-      WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1
+      WHERE q.candidate_id = ? AND ${confirmedIndiaRemote} AND j.is_active = 1
     `).bind(candidateId).first<any>();
 
     return jsonResponse({
@@ -2636,7 +2645,7 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
     // Step 1: one light row per ELIGIBLE active job of this candidate (a few hundred at most), with only what filtering needs.
     // ORDER BY +q.job_id (the same order): a plain q.job_id let the planner walk every row of the person by key to skip the sort (18,000 rows
     // read at production size instead of about 100 through the (candidate, eligibility) index; migration 0027 notes).
-    let where = `WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1`;
+    let where = `WHERE q.candidate_id = ? AND ${confirmedIndiaRemote} AND j.is_active = 1`;
     const binds: any[] = [candidateId];
     if (search) { where += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`; const t = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`; binds.push(t, t, t); }
     const { results: light } = await env.DB.prepare(`
