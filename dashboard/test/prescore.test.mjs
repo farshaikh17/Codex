@@ -54,8 +54,9 @@ test('prescore: the shared posting keeps the jobs QA remote rules (an Oracle / W
   assert.equal(posting(row({ is_remote: false })).onsite, true);
 });
 
-test('marker: Ashby\'s remote flag needs remote words, so every stored row is re-scored once (profile_v24)', () => {
-  assert.equal(RULES_MARKER, 'profile_v24');
+test('marker: Ashby\'s remote flag needs remote words, so every stored row is re-scored once (profile_v24, bumped again by later rule changes)', () => {
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 24, RULES_MARKER);
 });
 
 test('Ashby dataset: a remote flag shared by hybrid roles cannot alone confirm remote India', () => {
