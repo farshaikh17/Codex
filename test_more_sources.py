@@ -42,6 +42,18 @@ def fake_http(url, data=None, headers=None, timeout=40):
 
 
 class MoreSources(unittest.TestCase):
+    def test_yokogawa_workday_search_budget_and_overlap(self):
+        entries = [entry for entry in ms.WORKDAY if entry[0] == 'Yokogawa']
+        self.assertEqual(len(entries), 1)
+        path = '/job/India/Commissioning-Engineer_TEST-1'
+        rows = [{'title': 'Commissioning Engineer', 'externalPath': path, 'locationsText': 'India'}]
+        with mock.patch.object(ms, 'WORKDAY', entries), mock.patch.object(ms, 'http', return_value=json.dumps({'jobPostings': rows * 20}).encode()) as read:
+            jobs = list(ms.workday())
+        self.assertEqual([(c.args[1]['searchText'], c.args[1]['offset']) for c in read.call_args_list],
+                         [('electrical', 0), ('commissioning', 0)])
+        self.assertEqual([(j['company'], j['location'], j['url']) for j in jobs],
+                         [('Yokogawa', 'India', 'https://yokogawa.wd3.myworkdayjobs.com/en-US/yokogawa-career-site' + path)])
+
     def test_parse_and_filter(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, 'profiles.json').write_text(json.dumps({'farhan_shaikh': {'role': 'revops', 'exclude': ''},
@@ -206,7 +218,7 @@ class MoreSources(unittest.TestCase):
         self.assertEqual(got[0]['company'], 'KBR'); self.assertEqual(got[0]['location'], 'Saudi Arabia, Rabigh')
         self.assertFalse(got[0]['is_remote']); self.assertTrue(got[1]['is_remote'])
         self.assertEqual(calls[0][1]['searchText'], ms.SF_TERMS[0])
-        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M', 'JLL'})
+        self.assertEqual({c[0] for c in ms.WORKDAY}, {'KBR', 'GE Vernova', 'Hitachi', 'Johnson Controls', 'Baker Hughes', 'Shell', 'Unilever', 'Dow', '3M', 'JLL', 'Yokogawa'})
 
     def test_smartrecruiters_reads_public_career_pages_not_the_api(self):
         first = (FIX / 'sr_careers_masdar.html').read_bytes()
