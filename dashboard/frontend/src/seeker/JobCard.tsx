@@ -4,10 +4,8 @@ import React from 'react';
 import { Job } from '../types';
 import { placeText, foundText, stageWord } from './format';
 
-export const postingUrl = (job: Job) => {
-  const u = job.original_posting_url && /^https:\/\//.test(job.original_posting_url) ? job.original_posting_url : job.source_url;
-  return u && /^https?:\/\//.test(u) ? u : null;
-};
+import { postingUrl } from '../jobHelpers';
+export { postingUrl } from '../jobHelpers';
 
 export const btn = 'min-h-[44px] px-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-900';
 export const btnPrimary = `${btn} bg-slate-900 text-white hover:bg-slate-700`;
