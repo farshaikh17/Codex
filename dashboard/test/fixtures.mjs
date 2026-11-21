@@ -5,7 +5,7 @@ export function seed(sqlite) {
        ('farhan_shaikh','Test Farhan','PRIVATECITY-7f3, India','India',NULL,'Asia/Kolkata',4,70),
        ('sana_ansari','Test Sana','PRIVATECITY-7f3, India','India','B.Tech in Electrical Engineering','Asia/Kolkata',9.2,60)`);
   const job = (id, company, active, src, srcId, salary = 0) =>
-    run(`INSERT INTO jobs(id,title,company,source_adapter,source_id,is_active,salary_published,discovered_at) VALUES (?,?,?,?,?,?,?,'2026-11-01T00:00:00Z')`,
+    run(`INSERT INTO jobs(id,title,company,source_adapter,source_id,is_active,salary_published,location_restrictions,discovered_at) VALUES (?,?,?,?,?,?,?,'Remote - India','2026-11-01T00:00:00Z')`,
         id, 'Role ' + id, company, src, srcId, active, salary);
   const qual = (cand, id, status, elig, override = null) =>
     run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,manual_override_status,manual_override_reason) VALUES (?,?,?,?,?,?)`,
