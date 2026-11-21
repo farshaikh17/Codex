@@ -189,3 +189,65 @@ test('Sana near misses: degrees beside electrical, general years, an operator\'s
   assert.equal(sanaStretchOnlyQa9('O&M Mechanical Engineer', 'Operate and maintain the gas-engine power plant.', 'TAQA Arabia', 'Cairo, Egypt'), null, 'a stated place is read by the place rules');
   assert.equal(sanaStretchOnly('Maintenance Engineer', 'Maintain the CNC workshop of the plant.', 'Acme', 9.2), null);
 });
+
+// ---- Review of PR #245: near misses for each rule, and the remote operations-centre cap ----------------------------------------------------------
+test('review 1: a company blurb\'s years are not the ask; the applicant\'s are', () => {
+  assert.equal(yearsFarAbove('We are a power company with 25+ years of experience in thermal generation. You have 8+ years of plant maintenance.', 9.2), 0);
+  assert.equal(yearsFarAbove('Our group has 30 years of experience building plants. Minimum 8 years in maintenance.', 9.2), 0);
+  assert.equal(yearsFarAbove('Requirements: • 20+ years of experience in plant operations.', 9.2), 20);
+  assert.equal(yearsFarAbove('Candidates should have 22 years of experience in power plants.', 9.2), 22);
+});
+test('review 2: hospital facilities as a perk or township amenity are not hospital work', () => {
+  assert.equal(sanaOtherProfessionQa9('Maintenance Manager', pad(PLANT + ' The plant township offers housing, a school and hospital facilities for families.')), null);
+  assert.equal(sanaOtherProfessionQa9('Facilities Maintenance Manager', pad(PLANT + ' Benefits include medical and hospital facilities for employees.')), null);
+  assert.equal(sanaOtherProfessionQa9('Facilities Maintenance Manager', pad('Maintain the hospital facilities and their chillers for our healthcare group.')), 'laundry and hospital facilities');
+});
+test('review 3: a designated tool room is not tool-room design', () => {
+  assert.equal(sanaOtherProfessionQa9('Senior Maintenance Engineer', pad(PLANT + ' Store jigs and fixtures in the designated tool room.')), null);
+  assert.equal(sanaOtherProfessionQa9('Senior Maintenance Engineer', pad('Run the tool room: designing jigs and fixtures for the press line.')), 'tool-room and jig design');
+});
+test('review 4: "HubSpot or Marketo" is a choice, not a required platform', () => {
+  assert.equal(farhanMarketingPlatformRequired(pad('3+ years with HubSpot or Marketo workflows.')), null);
+  assert.equal(farhanMarketingPlatformRequired(pad('Experience administering HubSpot or administering Pardot.')), null);
+});
+test('review 5: a welcomed finance product, or a transportation TMS, is not a finance implementation', () => {
+  assert.equal(farhanFinanceProductImplementation('Implementation Specialist', pad('Onboard finance teams to our SaaS. NetSuite implementation experience is a plus.')), false);
+  assert.equal(farhanFinanceProductImplementation('Implementation Analyst', pad('Accounting customers. 2+ years of NetSuite is preferred.')), false);
+  assert.equal(farhanFinanceProductImplementation('Implementation Consultant', pad('Roll out our transportation management system for shippers; 3+ years of TMS implementation experience with carriers and freight.')), false);
+  assert.equal(farhanFinanceProductImplementation('Implementation Consultant', pad('Treasury practice. 2+ years of TMS implementation experience.')), true);
+});
+test('review 6: a CRM operations / automation title with custom code actions and a DevOps partner is his own work', () => {
+  assert.equal(farhanCrmDevelopment('HubSpot CRM Operations Specialist', pad('Build workflows with custom code actions and partner with DevOps on data syncs.')), false);
+  assert.equal(farhanCrmDevelopment('Salesforce Automation Specialist', CRM_DEV), false);
+  assert.equal(farhanCrmDevelopment('CRM Consultant', pad('Write custom code for the CRM and partner with DevOps.')), false, 'two weak kinds, no CI/CD or PCF');
+});
+test('review 7: a graduate engineer who supervises ITI fitters is not a technician post', () => {
+  assert.equal(sanaTechnicianQualification(pad('Graduate in Electrical Engineering with 8 years; supervise ITI fitters and diploma technicians.')), false);
+  assert.equal(sanaTechnicianQualification(pad('b.tech electrical; lead a team of ITI and diploma staff.')), false);
+  assert.equal(sanaTechnicianQualification(pad('Lead ITI fitters and diploma technicians on shifts.')), false, 'the team\'s qualification, not the applicant\'s');
+  assert.equal(sanaTechnicianQualification(pad('Qualification: ITI or Diploma in Electrical with 5 years.')), true);
+});
+test('review 8: mechanical aptitude is not a mechanical degree', () => {
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', 'Degree holders with strong mechanical aptitude and plant experience.', 'Acme'), null);
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', 'B.E. / Mechanical Engineering.', 'Acme'), 'a mechanical-only degree requirement');
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', 'BE Mechanical Engineer with 7 years.', 'Acme'), 'a mechanical-only degree requirement');
+});
+test('review 9: boiler-furnace maintenance at a power plant is her work, not a furnace niche', () => {
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', '8+ years in boiler and furnace maintenance at a thermal power plant.', 'Acme'), null);
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', '5+ years of experience with furnaces in our plant.', 'Acme'), null, 'a bare furnace word');
+  assert.match(sanaStretchOnlyQa9('Maintenance Engineer', '5+ years of experience maintaining induction furnaces.', 'Acme'), /specialist sub-domain/);
+});
+test('review 10: onboarding for our clients on a contract is not an agency placement', () => {
+  assert.equal(farhanClientPlacement(pad('We are hiring a specialist to run onboarding for our clients. This is a contract role.')), false);
+  assert.equal(farhanClientPlacement(pad('We are hiring a RevOps lead for our clients across EMEA; long-term contract.')), false);
+  assert.equal(farhanClientPlacement(pad('You will be placed with our client, a fintech, on a contract basis.')), true);
+  assert.equal(farhanClientPlacement(pad('We are hiring an operations manager for our client, a SaaS company. Contract role.')), true);
+});
+test('Sana: remote operations-centre (ROC) monitoring of plants is Worth a try at most; plant monitoring on site is not', () => {
+  const ROC = pad('Monitor plant operations through the ROC, dashboards and historian systems; track plant KPIs and give remote technical support to the plant teams. Root cause analysis of upsets.');
+  assert.match(sanaStretchOnlyQa9('Associate Manager Operations & Maintenance - Onsite Operations', ROC, 'Linde'), /remote operations-centre/);
+  const e = evS('Associate Manager Operations & Maintenance', ROC);
+  assert.equal(e.eligibility, 'ELIGIBLE');
+  assert.ok(e.score < sana.qualification_threshold, `${e.score}`);
+  assert.equal(sanaStretchOnlyQa9('Maintenance Engineer', pad(PLANT + ' Monitor plant performance on the DCS during shifts.'), 'Acme'), null);
+});
