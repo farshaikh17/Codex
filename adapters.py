@@ -155,7 +155,8 @@ def normalize(provider, board, j):
         cats = j.get('categories') if isinstance(j.get('categories'), dict) else {}
         locs = [(cats.get('location'), 'categories.location')]
         locs += [(x, 'categories.allLocations') for x in _list(cats.get('allLocations'))]
-        parts = [_s(j.get('descriptionPlain')) or html_to_text(_s(j.get('description')))]
+        parts = [_s(j.get('descriptionPlain')) or html_to_text(_s(j.get('description')))
+                 or html_to_text(_s(j.get('descriptionBody')))]
         for lst in _list(j.get('lists')):
             if isinstance(lst, dict):
                 parts.append(_s(lst.get('text')) + NL + html_to_text(_s(lst.get('content'))))

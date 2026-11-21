@@ -4,7 +4,7 @@
 // Whole-name keys (lower case, letters and digits only): 'Turing Labs' is an employer, 'Turing' / 'Turing.com' the reposting site.
 export const REPOSTER_NAMES: ReadonlySet<string> = new Set([
   '20four7va', 'braintrust', 'braintrustnetwork', 'crossover', 'crossoverforwork', 'jobgether', 'jobgethercom', 'myoutdesk', 'pavago',
-  'peopleworth', 'remotestaff', 'turing', 'turingcom', 'twentyfour7va', 'usebraintrust', 'virtualstaffingph', 'wingassistant',
+  'peopleworth', 'remotestaff', 'seamlessassist', 'turing', 'turingcom', 'twentyfour7va', 'usebraintrust', 'virtualstaffingph', 'wingassistant',
 ]);
 
 export const reposterKey = (company?: string | null): string =>

@@ -59,7 +59,7 @@ found nothing new it reads and writes nothing more in the database and leaves th
 
 ## Steps
 
-1. **Download.** The workflow downloads today's dataset once: the [ats-scrapers](https://github.com/kalil0321/ats-scrapers) "jobhive" parquet file (MIT licence, refreshed daily around 14:30 UTC, about 2.3 GB). DuckDB then queries it locally.
+1. **Download.** The workflow downloads today's dataset once: the [ats-scrapers](https://github.com/kalil0321/ats-scrapers) "jobhive" parquet file (MIT licence, refreshed daily around 14:30 UTC, about 2.3 GB then; 3.9 GB and `jobs/v1` since 20 Nov). DuckDB then queries it locally.
 2. **Dataset query** (`engine/dataset_discovery.py`).
    - **Profiles.** Each person's search profile is read from D1 at run time, so no candidate data lives in the repository.
      - The two built-in candidates use focused title searches, which are subsets of the screen's own role rules.
@@ -306,6 +306,75 @@ boards: the SaaS and automation employers checked (Zapier, n8n, Workato, HubSpot
 Airtable, Notion and others) and the energy and plant employers found on a public ATS (RWE, Nordex, Wärtsilä, Sulzer, Alstom, Voith, Vestas, Uniper, SABIC,
 QatarEnergy LNG, Nesma, Alfanar, Adani, Thermax, Suzlon, Avaada, Sembcorp) are already in the open dataset. Siemens Energy's feed ignores the
 page offset when it is searched, so it stays a newest-first read.
+
+## Maximum discovery, 20 Nov 2026 (audit, then every change measured live)
+
+Owner request: scan as many postings as the free tiers allow and store only rows likely to reach a list. **Hard limits designed around:**
+D1 free tier 5,000,000 rows read and 100,000 rows written a day, 5 GB stored (about 77 MB used); GitHub Actions on this public repository:
+unlimited minutes, 6 h per job, about 14 GB disk and 16 GB RAM per runner. Scanning and scoring happen on the runners (free compute, the
+Worker's own `evaluate()` through `scripts/prescore.mjs`); the database sees only rows that can reach a list, through the one all-or-nothing
+import, whose cap is unchanged (`--max-new 1500`, about 27 rows written a new job, so at most about 40,500 writes). No paid API; Adzuna only
+with its free keys and the owner's variable; robots.txt reporting and site rules unchanged; Naukri stays off (its terms forbid automated access).
+
+### Audit (before): the run of 20 Nov 03:06-03:31 UTC (run 44665385948), 25 minutes
+
+| Source | Scanned per run | Kept (title match) | Into the import | Time | Caps hit |
+|---|---|---|---|---|---|
+| Open dataset (`all.parquet`; 7.66M postings in the 18 Nov snapshot, 7.94M in the 20 Nov one, 173,000 employers, 92 systems incl. EURES and the Bundesagentur) | the whole file (DuckDB), filtered by the narrow search title rule and the last 45 days: 49,751 Farhan + 60,042 Sana rows pre-scored | plausible 236 / 1,266 (all picked; the 6,818-per-person cap never bound) | 1,502 selected, 1,203 already stored, 201 new, 3 reopened, 117 closed | 49 s download, 3 min select | none |
+| JobSpy (Indeed, LinkedIn, Glassdoor, Google, Bayt) | 59 searches (Farhan 5, Sana 11), 20 results each, last 48 h; 22 refused (LinkedIn 429, Glassdoor and Bayt 403, Google empty) | 76 (Indeed 26, LinkedIn 52) | with the next two rows: 1,212 rows to the duplicate check, 510 new | 1 min 34 s | none |
+| Remote boards (8 public feeds) | 1,454 | 15 | (above) | 26 s | none |
+| More sources (14 sources) | 8,104 | 1,121 (Workday 434, Workable 290, SuccessFactors 106 ...) | (above) | 17 min 16 s | Siemens Energy (69 s, 460 read), SuccessFactors (207 s, 388), EURES (79 s, 203), Oracle (78 s, 234) |
+| Import (`dataset_apply.mjs`) | 1,212 + 1,502 rows | - | 297 new jobs (159 too low, 260 ineligible not stored), 400 re-scored | 1 s | MAX_NEW 1,500 not reached |
+| Watchlist (3 a day) | more sources `--fast` + boards, 960 s budget | - | - | about 15 min | same caps |
+| Collector (`collect.yml` + `sync_collector_to_d1.yml`, 5 a day) | 17 Greenhouse / Lever / Ashby boards, 850 listings | - | collector staging import | 2 min | none |
+| Worker cron (every 2 min) | `cloud_sources` boards (Remotive off) | - | at most 48 source reads and 120 postings a day (`DAY_SOURCES`, `DAY_JOBS`) | - | its own daily caps |
+
+The local re-run of the 20 Nov job-site settings gave the same 59 searches, 22 refused and 76 kept, so the live measurements below compare like with like.
+
+### Changes and measured yield ("at threshold" = Farhan 70+, Sana 60+, not ineligible; rows scored with `evaluate()` via `prescore.mjs`)
+
+| Change | Scanned | Farhan | Sana | Run time |
+|---|---|---|---|---|
+| Dataset: title rule = the Worker's own role rule (`FARHAN_ROLE` / `SANA_ROLE`, read from `discovery.ts`) or the old search rule (`wide_role`); exclusions kept (+ `powershell` for Sana: 24 PowerShell admin rows scored 60+ on "power") | 109,793 -> 371,801 rows pre-scored (45 days) | at threshold 39 -> 67 (+28, 22 ELIGIBLE: Technical Program / Project Manager, Professional Services, Technical Account Manager); plausible 218 -> 372 | 537 -> 1,018 (+481, 309 ELIGIBLE: Shift Engineer / In-charge, Mechanical Engineer, C&I maintenance); plausible 1,236 -> 2,600 | - |
+| Dataset: 45 -> 90 days (live rows in today's snapshot; undated rows were always read) | +71,903 rows | +20 (7 ELIGIBLE) | +191 (142 ELIGIBLE) | - |
+| Together (20 Nov snapshot) | 443,558 rows | plausible 466, at threshold 87 | plausible 3,013, at threshold 1,185 | 175 s locally (3 scorers in parallel, batches of 25,000, 3.2 GB peak) vs about 3 min before |
+| Excluded titles checked | 18,646 rows | 0 at threshold | 10 (database / site reliability): the exclusions are right | - |
+| JobSpy: Indeed-only searches added (Farhan 30 terms with Indeed's remote filter; Sana 28 terms in India and 16 in each of the six Gulf countries); 200 results; a site that refused twice is not asked again; title filter = `wide_role` | 59 -> 189 searches, 338 -> 3,896 rows returned, 76 -> 353 kept | 0 -> 9 at threshold (all net-new) | 30 -> 95 (77 net-new; Gulf: 2 net-new, Indeed has few Gulf rows in 48 h) | 78 s -> 153 s |
+| More sources in four parallel groups, each with its own budget (27-37 min) | Siemens Energy 460 -> 1,200 read (all 60 pages), Oracle 234 -> 528, EURES 203 -> 653, SuccessFactors read to the end without a cap | Workday answered nothing in the sandbox (2,291 read in Actions on 20 Nov), so its yield is not measured here | | each group under its budget |
+| Pre-screen of the job-site and employer-site rows before the duplicate check (`engine/prescreen.py`; floor = `fit_floor()`, as the dataset intake) | 1,104 merged rows -> 241 | 416 pairs -> 34 kept (19 at threshold) | 752 -> 207 (139 at threshold) | seconds |
+
+Checked and not added: Naukri (terms), Glassdoor, Bayt and Google through JobSpy (403 / empty from the runner and the sandbox: kept on the original searches only, where they cost one refused request each), ZipRecruiter (US / Canada only), BDJobs and HelloWork (Bangladesh, France). More ATS board directories: the dataset's own company lists already hold about 173,000 employers across 92 systems (Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Recruitee, Personio, Teamtailor, BambooHR, JazzHR, ...); the earlier checks in this file found the SaaS and energy employers of both people there.
+
+### How the run is laid out now
+
+`guard` -> `collect` (8 parallel parts, no credentials, built-in profiles from the code: `dataset_discovery.py --builtin-profiles`; JobSpy
+Farhan, Sana India, Sana Gulf; remote boards; more sources in 4 groups, `more_sources.py --only`) -> `discover` (dataset download and
+selection, the clients' own job-site searches, `merge_collect.py` (each posting once, reposters capped across parts, every person whose role
+rule matches the title added), `prescreen.py`, duplicate check, one import, then everything as before). When any client profile exists,
+the discover job also runs the clients' JobSpy searches (480 s budget) and a second pass of the remote boards and more sources with every
+profile (the collector parts match titles against the built-in rules only, so a client's keywords would otherwise never see those rows).
+A manual run with `job_sites=false` skips every JobSpy search, as before. The job-site search writes its results after every search, so a
+part stopped by its time limit still uploads what it found; the merge reports any expected part that uploaded nothing. Collector artifacts hold public
+postings and counts only (this repository and its artifacts are public); candidates, profiles of clients and decisions never leave the
+discover job. The guards read up to 50 jobs a run (a run now has about 16). The dataset address is the canonical `jobs/v1` (the manifest lists
+`jobhive/v1` as deprecated); the file is now 3.9 GB.
+
+### New daily totals (estimates from the measurements above)
+
+- **Scanned:** the whole 7.9M-posting snapshot by title, 443,558 rows scored with the screen (was 109,793); 189 job-site searches, about
+  3,900 rows (was 338); more sources read to their ends (about 10,000 rows).
+- **Relevant found:** in the dataset about 466 (Farhan) and 3,013 (Sana) rows that can reach a list, 87 and 1,185 at threshold, most already
+  stored after the first day; job sites and employer sites about 34 and 207 a day (19 and 139 at threshold).
+- **Rows written:** the first run after this change is bounded by `--max-new 1500` (about 40,500 writes, inside 100,000); after that the
+  daily new rows are the day's new postings, estimated 300 to 800 jobs (8,000 to 22,000 writes). Rows below the floor are no longer imported
+  only to be held.
+- **Rows read:** the duplicate check reads about 11 rows a selected row: dataset about 3,500 rows (about +22,000 reads), job-site rows
+  1,212 -> about 250 (about -10,000). About +12,000 of the run's 2.4M; the budget guard is unchanged.
+
+**Risks.** Job sites can refuse at any time (a refused site is skipped, and twice-refused sites are not asked again); a collector part that
+fails or times out is a warning in the merge and the run goes on; the dataset file grew to 3.9 GB (download about 1-2 min; the runner has
+14 GB); `jobhive/v1` may stop being served (we moved to `jobs/v1`); the first day after the change uses most of the write cap; the
+pre-score is now about 4x the rows (3 min on the runner, well inside the 55-minute job).
 
 ## The ten additions of 2026-11-07 (owner-approved)
 
