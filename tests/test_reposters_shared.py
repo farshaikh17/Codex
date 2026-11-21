@@ -22,6 +22,12 @@ class SharedReposterList(unittest.TestCase):
         self.assertTrue(is_reposter('Jobgether'))
         self.assertIn('jobgether', js_names())
 
+    def test_va_placement_firms_are_reposters(self):
+        # 20 Nov: Seamless Assist places virtual assistants with client businesses, like 20four7VA and Wing Assistant
+        for name in ('Seamlessassist', 'Seamless Assist', '20four7VA', 'Wing Assistant'):
+            self.assertTrue(is_reposter(name), name)
+        self.assertFalse(is_reposter('Seamless'))
+
 
 if __name__ == '__main__':
     unittest.main()

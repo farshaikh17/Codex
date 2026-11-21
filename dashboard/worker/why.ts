@@ -1,6 +1,6 @@
 // Plan U6 / U9 (phase 5): the one-line "why this job is here" on every job card, in plain words, for example
 //   "Maintenance · on-site Pune · 6 of your skills"
-//   "Implementation · remote · 3 of your skills · location not stated"
+//   "Implementation · remote · 3 of your skills · location eligibility unconfirmed"
 // Built only from what is stored (title, place, matched skills, status, eligibility); nothing is sent anywhere. Not used for any score.
 import { familyOf, listedOnlyGulf } from './discovery';
 
@@ -54,7 +54,8 @@ export function whyLine(candidateId: string, r: { title?: string | null; workpla
   const n = Array.isArray(matchedSkills) ? matchedSkills.length : 0;
   if (n > 0) parts.push(`${n} of your skills`);
   if (r.qualification_status === 'STRETCH_READY') {
-    if (r.eligibility_status !== 'ELIGIBLE') parts.push('location not stated');
+    if (r.eligibility_status === 'INELIGIBLE') parts.push('location eligibility requirements not met');
+    else if (r.eligibility_status !== 'ELIGIBLE') parts.push('location eligibility unconfirmed');
     else if (threshold != null && Number(r.overall_score || 0) < threshold) parts.push('a little below your usual match');
   }
   if (notConfirmedOpen(r)) parts.push('could not be confirmed still open (the job site blocks the check)');

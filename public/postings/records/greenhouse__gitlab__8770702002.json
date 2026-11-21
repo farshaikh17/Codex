@@ -23,6 +23,15 @@
    "from_hash": "27c90d58af9e510489afab416db326d7ff9c82b8e6ced35105f1d3ab09397dcb",
    "kind": "content_changed",
    "to_hash": "3c5da5428a6af78acd40dedcba38c23db92a0e16f375cd9afab4e2f0da28a7a1"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "3c5da5428a6af78acd40dedcba38c23db92a0e16f375cd9afab4e2f0da28a7a1",
+   "kind": "content_changed",
+   "to_hash": "30330cc9dcc58f73401abaa500657428d69a8e8664c166e899c37ef233b264d0"
   }
  ],
  "content": {
@@ -39,10 +48,6 @@
    },
    {
     "source": "offices.name",
-    "text": "Canada"
-   },
-   {
-    "source": "offices.name",
     "text": "United States of America"
    }
   ],
@@ -50,8 +55,8 @@
   "title": "Staff Backend Engineer, Database Automation (Go)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "3c5da5428a6af78acd40dedcba38c23db92a0e16f375cd9afab4e2f0da28a7a1",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "30330cc9dcc58f73401abaa500657428d69a8e8664c166e899c37ef233b264d0",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -80,7 +85,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 15280000, \"max_cents\": 25920000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -105,7 +110,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$152,800—$259,200 USD",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      }
@@ -122,7 +127,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -130,15 +135,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.name",
-      "quote": "Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -146,7 +143,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "United States of America",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      }
@@ -159,7 +156,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Professional software engineering experience working with PostgreSQL in large, complex production environments, including experience building or operating a database-as-a-service product.\nProficiency with Go, including designing, implementing, testing, and reviewing backend services.\nExperience developing Kubernetes operators, controllers, or similar automation for the lifecycle of stateful services, especially databases. Kubernetes experience is one way to demonstrate this skill, but isn't required; comparable experience building database or infrastructure automation is welcome.\nComfort with infrastructure as code and core database operations concepts such as high availability, replication, backups, and system-level performance trade-offs.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -167,7 +164,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Strong written communication skills and comfort working asynchronously in an all-remote, distributed team.\nSelf-directed work style with effective organizational skills, the ability to manage priorities as a \"manager of one,\" and alignment with GitLab's values of transparency, collaboration, inclusion, and open source contribution, as well as its operating principles.\nOwnership of the technical direction for a major initiative such as the PostgreSQL as a service platform, turning an ambiguous problem into an architecture and a sequenced plan that several engineers can execute in parallel.\nInfluence beyond the team, setting the patterns other engineers follow, partnering with sibling database, infrastructure, and platform teams, and growing engineers through design reviews and mentorship.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      }
@@ -180,7 +177,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Familiarity with Ruby is a plus but isn't required. Much of GitLab's application codebase uses Ruby on Rails, and being able to read it helps when designing automation that application teams depend on. We’ll expect you to become comfortable with it on the job, not on day one.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      }
@@ -193,7 +190,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -201,7 +198,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      },
@@ -209,7 +206,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "As a Senior or Staff Backend Engineer with the Database Excellence group, you'll build and evolve database automation and PostgreSQL as a service capabilities for GitLab. The level will be determined during the hiring process. You'll use Go to automate the full lifecycle of PostgreSQL across GitLab's infrastructure, making database operations safer, more consistent, and easier to scale for databases that sit behind high-throughput, always-on internet services. You'll work closely with partner teams to shape how GitLab provisions and manages PostgreSQL in a fully remote, highly collaborative environment.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8770702002"
      }

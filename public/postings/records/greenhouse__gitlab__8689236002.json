@@ -34,6 +34,15 @@
    "from_hash": "647653507c9f6252285c4369ecd389937845f696a34f2c3670f3b0498b73dfcd",
    "kind": "content_changed",
    "to_hash": "77a4eb01809dc2cc11df5a0bf58e873a299b72e5348d91125c3e5c44f15cef65"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "77a4eb01809dc2cc11df5a0bf58e873a299b72e5348d91125c3e5c44f15cef65",
+   "kind": "content_changed",
+   "to_hash": "67fe4afe0135307f53e4fff54ea0f8f581e0a7aa007989eea3b25df8282a43e6"
   }
  ],
  "content": {
@@ -46,10 +55,6 @@
    },
    {
     "source": "offices.name",
-    "text": "Canada"
-   },
-   {
-    "source": "offices.name",
     "text": "United States of America"
    }
   ],
@@ -57,8 +62,8 @@
   "title": "Staff Backend Engineer, Core DevOps: CI/CD Artifact Management (PST)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-09T21:36:41.943769+00:00",
- "content_hash": "77a4eb01809dc2cc11df5a0bf58e873a299b72e5348d91125c3e5c44f15cef65",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "67fe4afe0135307f53e4fff54ea0f8f581e0a7aa007989eea3b25df8282a43e6",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -87,7 +92,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 15280000, \"max_cents\": 25920000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      },
@@ -112,7 +117,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$152,800—$259,200 USD",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      }
@@ -129,15 +134,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.name",
-      "quote": "Canada",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      },
@@ -145,7 +142,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "United States of America",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      }
@@ -158,7 +155,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "A record of leading technical work across more than one team or a broad product area.\nDeep backend architecture and production experience with complex applications, services, or platforms, including application programming interfaces, service platforms, data systems, modular monoliths, or shared backend components.\nExperience modernizing a monolith or legacy backend architecture in production and using modular approaches such as bounded contexts, package encapsulation, ports and adapters, service extraction, or event-driven boundaries.\nExperience building alignment through clear written proposals and decision records so teams document, understand, and adopt technical decisions.\nExperience making trade-offs among customer outcomes, delivery speed, technical health, reliability, and long-term platform investment.\nExperience mentoring engineers and shaping standards through code review, documentation, and practice.\nProduction experience with artificial intelligence-assisted or agentic engineering workflows, including improving how a team adopts them.\nDue to customer requirements, you must be a United States Citizen (defined as any individual who is a citizen of the United States by law, birth, or naturalization) to fill this position",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      }
@@ -175,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-09T21:36:41.943769+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8689236002"
      }
