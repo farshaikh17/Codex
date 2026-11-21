@@ -24,6 +24,7 @@ Usage:
   python engine/dataset_discovery.py --dedupe work/jobsite_raw.json --out work/   (job-site results: duplicates against D1)
 """
 import argparse
+import time
 import hashlib
 import json
 import re
@@ -39,8 +40,10 @@ except ImportError:   # pragma: no cover
     from engine.company_names import display_company, http_fetch, name_jobs
     from engine.multi_place import from_count, merge_places, place_listed
 
-DATASET = 'https://storage.stapply.ai/jobhive/v1/all.parquet'
-MANIFEST = 'https://storage.stapply.ai/jobhive/v1/manifest.json'
+# 20 Nov 2026: the dataset's manifest names jobs/v1 as its canonical prefix and lists jobhive/v1 as deprecated (replaced_by jobs/v1); both served the
+# same 3.9 GB file (7.9 million postings, 173,000 employers, 92 hiring systems and public job boards such as EURES and the Bundesagentur).
+DATASET = 'https://storage.stapply.ai/jobs/v1/all.parquet'
+MANIFEST = 'https://storage.stapply.ai/jobs/v1/manifest.json'
 DASHBOARD = Path(__file__).resolve().parent.parent / 'dashboard'
 SOURCE_CHANNEL = 'ATS_DATASET'
 
@@ -68,11 +71,33 @@ BUILTIN = {
     },
     'sana_ansari': {
         'role': r'electrical|power plant|power generation|turbine|boiler|field service engineer|plant operator|control room|instandhaltung|wartung|kraftwerk|elektro(?:ingenieur|techniker|technik)|betriebsingenieur|zuverl.ssigkeit|anlagen(?:ingenieur|techniker|betreuer)|ing.nieur(?:e)? (?:maintenance|.lectricien|exploitation|fiabilit)|centrale (?:.lectrique|thermique)|onderhouds(?:ingenieur|technicus|engineer)|elektrotechnisch|energiebesparing|energieeffizienz|power station|substation|switchgear|transmission|o ?& ?m|operations (&|and) maintenance|maintenance (engineer|manager|head|lead|planner|supervisor)|plant (engineer|manager|operations|maintenance)|reliability engineer|commissioning|asset performance|energy|utilities|renewable|solar|wind (farm|turbine|energy)|thermal (power|plant|station)|hydro|decarboni[sz]|sustainability (engineer|consultant|specialist|manager)|clean ?tech|net.?zero|emissions (engineer|specialist)|efficiency (engineer|consultant|specialist)|(technical|engineering) consultant',
-        'exclude': r'(site|customer|product|network|platform|production|database|infrastructure|data|service|systems) reliability|software|cloud|devops|power platform|power bi|power apps|sales|account (executive|manager)|data (engineer|scientist|analyst)|developer|recruiter|research analyst',
+        'exclude': r'(site|customer|product|network|platform|production|database|infrastructure|data|service|systems) reliability|software|cloud|devops|power platform|power bi|power apps|sales|account (executive|manager)|data (engineer|scientist|analyst)|developer|recruiter|research analyst|powershell',
         # India first, then anywhere in the world (owner rule 2026-11-07: "anywhere which can be her dream job")
         'countries': ['IN'], 'mode': 'HOME_OR_RELOCATE', 'home': 'india', 'keywords': [], 'public': True, 'worldwide': True,
     },
 }
+def worker_role_rules(src=None):
+    """The Worker's own role rules (FARHAN_ROLE and SANA_ROLE in dashboard/worker/discovery.ts), read from their one definition: a title they do
+    not match can never score as a role match, and every title they match is scored by the screen."""
+    src = src or (DASHBOARD / 'worker' / 'discovery.ts').read_text()
+    out = {}
+    for cid, name in (('farhan_shaikh', 'FARHAN_ROLE'), ('sana_ansari', 'SANA_ROLE')):
+        m = re.search(r"^export const %s=/(.*)/i;$" % name, src, re.M)
+        if not m:
+            raise RuntimeError(f'{name} not found in dashboard/worker/discovery.ts')
+        out[cid] = m.group(1)
+    return out
+
+
+# Max discovery (20 Nov 2026): the dataset intake reads every title the Worker's role rule matches (wide_role), not only the narrower search rule,
+# because every row read is pre-scored on the runner with the Worker's own screen (free compute; no database reads). Measured on the 20 Nov
+# snapshot (DISCOVERY_PIPELINE.md, "Maximum discovery"): Sana 537 -> 1,018 rows at 60+ and not ineligible, Farhan 39 -> 67 at 70+ (Shift Engineer /
+# Shift In-charge, Mechanical Engineer, C&I maintenance; Technical Program / Project Manager, Professional Services, Technical Account Manager).
+# The search rule ('role') still drives the sources that search by title (more_sources, remote boards). The exclusions apply to both.
+for _cid, _rx in worker_role_rules().items():
+    BUILTIN[_cid]['wide_role'] = f"(?:{BUILTIN[_cid]['role']})|(?:{_rx})"
+
+
 COUNTRY_ISO = {
     'india': 'IN', 'united states': 'US', 'usa': 'US', 'united kingdom': 'GB', 'uk': 'GB', 'canada': 'CA', 'australia': 'AU',
     'germany': 'DE', 'france': 'FR', 'netherlands': 'NL', 'ireland': 'IE', 'spain': 'ES', 'portugal': 'PT', 'poland': 'PL',
@@ -120,8 +145,16 @@ def _d1_once(sql, local):
         raise D1Error(f'D1 query timed out after {e.timeout} s', True) from e
     text = out.stdout or ''
     if out.returncode != 0 or '[' not in text:
-        msg = (out.stderr or text)[-400:]
-        raise D1Error(f'D1 query failed: {msg}', bool(TRANSIENT.search(msg)))
+        # With --json, Wrangler can send the actual error to stdout and an unrelated CLI warning to stderr.
+        try:
+            payload = json.loads(text)
+        except ValueError:
+            payload = None
+        error = payload.get('error') if isinstance(payload, dict) else None
+        detail = error.get('text') if isinstance(error, dict) else None
+        msg = detail if isinstance(detail, str) and detail else (out.stderr or text)
+        permanent = re.search(r'\bSQLITE_ERROR\b|free tier daily row (?:read|write) limit|authentication error', msg, re.I)
+        raise D1Error(f'D1 query failed: {msg[-400:]}', not permanent and bool(TRANSIENT.search(msg)))
     return json.loads(text[text.index('['):])[0]['results']
 
 
@@ -149,6 +182,11 @@ def sql_str(s):
 def kw_regex(words):
     parts = [re.escape(w.lower()).replace(r'\ ', r'\s+') for w in words if w and w.strip()]
     return '(^|[^a-z0-9])(' + '|'.join(parts) + ')($|[^a-z0-9])' if parts else None
+
+
+def builtin_profiles():
+    """The built-in candidates' search profiles, exactly as profiles() returns them for those two, without a database read."""
+    return {cid: dict(p) for cid, p in BUILTIN.items()}
 
 
 def profiles(local=None):
@@ -276,6 +314,10 @@ select = select_quota   # the name earlier callers and notes use
 # person's own place rules decide (Farhan: remote and workable from India; Sana: India, the Gulf, or abroad with a stated visa route).
 # The only cap is the D1 read budget of the duplicate check that follows (split_new: about SELECT_READS_PER_ROW rows read per selected row); the
 # writes are bounded by dataset_apply.mjs --max-new, best score first.
+# 20 Nov 2026: 45 -> 90 days. Every row is a live posting in today's snapshot (undated rows were always read); on the 20 Nov snapshot the
+# 46-90-day-old rows added 191 rows at Sana's threshold (142 ELIGIBLE) and 20 at Farhan's (7 ELIGIBLE). The still-open check and the shortlist's
+# age penalty (over 30 days: -5) still apply.
+MAX_DAYS = 90
 SELECT_READS_PER_ROW = 11      # measured on a local D1 (miniflare rows_read): existing() id + URL lookups and the many-cities texts, per selected row
 SELECT_READ_BUDGET = 150_000   # D1 rows read the daily run may spend on the duplicate check of the dataset selection (about 6% of the run)
 FIT_MARGIN = 15                # "near the threshold": a row within this many points below it can still reach the lists after a re-score or taste
@@ -292,32 +334,57 @@ def fit_floor(threshold):
     return max(LOW_MATCH + 1, int(threshold) - FIT_MARGIN)
 
 
-def candidate_rows(con, src, p, max_days):
-    """Every row whose title passes the person's role rule, in any place, posted in the last max_days or undated."""
-    cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON}",
-                      {k: v for k, v in {**_params(p, max_days), 'src': src}.items() if k in ('role', 'exclude', 'since', 'src')})
+PRESCORE_BATCH = 25_000    # rows per pre-score call (one Node process each); only the rows that can fit are kept, so memory stays bounded
+PRESCORE_WORKERS = 3       # pre-score calls running at once (the runner has 4 cores; DuckDB reads the next batch meanwhile)
+
+
+def _intake_params(p, max_days, src):
+    """The role rule of the intake: the Worker's own (wide_role) for a built-in candidate, the stored role keywords for a client."""
+    q = {k: v for k, v in {**_params(p, max_days), 'src': src}.items() if k in ('role', 'exclude', 'since', 'src')}
+    q['role'] = p.get('wide_role') or p['role']
+    return q
+
+
+def candidate_batches(con, src, p, max_days, size=None):
+    """Every row whose title passes the person's role rule, in any place, posted in the last max_days or undated, in batches."""
+    cur = con.execute(f"SELECT {BASE_COLS} FROM read_parquet($src) WHERE {COMMON}", _intake_params(p, max_days, src))
     cols = [d[0] for d in cur.description]
-    return _finish([dict(zip(cols, r)) for r in cur.fetchall()])
+    while True:
+        part = cur.fetchmany(size or PRESCORE_BATCH)
+        if not part:
+            return
+        yield _finish([dict(zip(cols, r)) for r in part])
+
+
+def candidate_rows(con, src, p, max_days):
+    return [r for b in candidate_batches(con, src, p, max_days) for r in b]
 
 
 def node_scorer(work, candidates_file):
-    """The pre-score: scripts/prescore.mjs (the Worker's evaluate() and placeBand()) over a JSON-lines file. Returns score(items) -> results."""
+    """The pre-score: scripts/prescore.mjs (the Worker's evaluate() and placeBand()) over a JSON-lines file. Returns score(items) -> results.
+    Safe to call from several threads at once (each call has its own files)."""
+    import uuid
+
     def score(items):
-        inp, out = Path(work) / 'prescore_in.jsonl', Path(work) / 'prescore_out.jsonl'
+        tag = uuid.uuid4().hex[:10]
+        inp, out = Path(work) / f'prescore_in_{tag}.jsonl', Path(work) / f'prescore_out_{tag}.jsonl'
         with inp.open('w') as f:
             for k, (cid, r) in enumerate(items):
                 f.write(json.dumps({'k': k, 'cid': cid, **{x: r.get(x) for x in ('title', 'company', 'ats_type', 'location', 'description', 'is_remote', 'url',
                         'salary_min', 'salary_max', 'salary_currency', 'salary_period')}}, default=str) + '\n')
-        subprocess.run(['node', '--import', './test/register.mjs', 'scripts/prescore.mjs', '--candidates', str(Path(candidates_file).resolve()),
-                        '--in', str(inp.resolve()), '--out', str(out.resolve())], cwd=DASHBOARD, check=True, timeout=1800)
-        res = [None] * len(items)
-        for line in out.read_text().splitlines():
-            if line.strip():
-                x = json.loads(line)
-                res[x['k']] = x
-        inp.unlink(missing_ok=True)
-        out.unlink(missing_ok=True)
-        return res
+        try:
+            subprocess.run(['node', '--import', './test/register.mjs', 'scripts/prescore.mjs', '--candidates', str(Path(candidates_file).resolve()),
+                            '--in', str(inp.resolve()), '--out', str(out.resolve())], cwd=DASHBOARD, check=True, timeout=1800,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            res = [None] * len(items)
+            for line in out.read_text().splitlines():
+                if line.strip():
+                    x = json.loads(line)
+                    res[x['k']] = x
+            return res
+        finally:
+            inp.unlink(missing_ok=True)
+            out.unlink(missing_ok=True)
     return score
 
 
@@ -351,35 +418,94 @@ def pick(rows, cap, sets=()):
     return sorted(out, key=lambda r: _fit_key(r, today))
 
 
-def select_wide(con, src, profs, cands, max_days, read_budget=SELECT_READ_BUDGET, scorer=None, stats=None):
+def select_wide(con, src, profs, cands, max_days, read_budget=SELECT_READ_BUDGET, scorer=None, stats=None, workers=PRESCORE_WORKERS):
     """Wide intake. Returns {cid: rows}, each row carrying its pre-score ('_pre': score, status, eligibility, band). `cands` = candidates.json rows
-    (threshold). `stats` (a dict) receives per-person counts: candidates read, plausible, picked, and picked by place band."""
+    (threshold). `stats` (a dict) receives per-person counts: candidates read, plausible, picked, and picked by place band.
+    The rows are read and scored in batches (several at once); a row that cannot fit is dropped as soon as it is scored, so the whole snapshot
+    can be read without holding it in memory."""
+    from concurrent.futures import ThreadPoolExecutor, FIRST_COMPLETED, wait
     cap_total = max(0, int(read_budget) // SELECT_READS_PER_ROW)
     thresholds = {c['id']: c.get('qualification_threshold') for c in cands}
-    items, by_cid = [], {}
-    for cid, p in profs.items():
-        rows = candidate_rows(con, src, p, max_days)
-        by_cid[cid] = rows
-        items += [(cid, r) for r in rows]
-    results = scorer(items) if items else []
-    for (cid, r), res in zip(items, results):
-        r['_pre'] = res or {'score': 0, 'status': 'INELIGIBLE', 'eligibility': 'UNKNOWN', 'band': 'other'}
     per_person = cap_total // max(1, len(profs))
     out = {}
-    for cid, rows in by_cid.items():
+    for cid, p in profs.items():
         t = thresholds.get(cid) or (70 if cid == 'farhan_shaikh' else 60)
-        ok = [r for r in rows if r['_pre']['status'] not in ('INELIGIBLE', 'UNKNOWN_CANDIDATE') and r['_pre']['score'] >= fit_floor(t)]
+        floor = fit_floor(t)
+        read, ok, pending = 0, [], set()
+
+        def keep(fut):
+            rows, results = fut.result()
+            for r, res in zip(rows, results or []):
+                r['_pre'] = res or {'score': 0, 'status': 'INELIGIBLE', 'eligibility': 'UNKNOWN', 'band': 'other'}
+                if r['_pre']['status'] not in ('INELIGIBLE', 'UNKNOWN_CANDIDATE') and r['_pre']['score'] >= floor:
+                    ok.append(r)
+
+        with ThreadPoolExecutor(max(1, workers)) as ex:
+            for batch in candidate_batches(con, src, p, max_days):
+                read += len(batch)
+                pending.add(ex.submit(lambda b=batch: (b, scorer([(cid, r) for r in b]))))
+                while len(pending) >= max(1, workers) * 2:   # bounded: at most two batches a worker in memory
+                    done, pending = wait(pending, return_when=FIRST_COMPLETED)
+                    for f in done:
+                        keep(f)
+            for f in pending:
+                keep(f)
         out[cid] = pick(ok, per_person, PLACE_SETS.get(cid, ()))
         if stats is not None:
             bands = {}
             for r in out[cid]:
                 bands[r['_pre']['band']] = bands.get(r['_pre']['band'], 0) + 1
-            stats[cid] = {'read': len(rows), 'plausible': len(ok), 'picked': len(out[cid]), 'cap': per_person, 'floor': fit_floor(t), 'by_band': bands}
+            stats[cid] = {'read': read, 'plausible': len(ok), 'picked': len(out[cid]), 'cap': per_person, 'floor': floor, 'by_band': bands}
     return out
 
 
 def job_id(ats, url):
     return f"ds:{ats or 'ats'}:{hashlib.sha1(url.encode()).hexdigest()[:20]}"
+
+
+# Jobs QA 7 (ENGIE 'Solar Asset Manager- State Lead' shown twice: the dataset's copy and a job-site copy whose URL only adds
+# '?feedId=null&utm_source=J2WRSS&utm_medium=rss&utm_campaign=J2W_RSS'): a posting URL is compared without its tracking parameters. Other parameters
+# stay (on many career sites they are the job: '?gh_jid=6173440004', 'default.aspx?c=apply&lJobID=560804'). The same reading as postingUrlKey() in
+# dashboard/worker/discovery.ts.
+TRACKING_PARAM = re.compile(r'^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|referrer|lever-[a-z_-]*|fbclid|gclid|mc_[a-z]+|trk|rss)$', re.I)
+
+
+def clean_posting_url(url):
+    """The URL without tracking parameters (scheme, host, path and fragment as written)."""
+    from urllib.parse import urlsplit, urlunsplit, unquote_plus
+    try:
+        u = urlsplit(str(url or '').strip())
+    except ValueError:
+        return str(url or '')
+    if u.scheme not in ('http', 'https'):
+        return str(url or '')
+    # the tracking pairs are dropped from the query as written; every other pair is kept byte for byte ('jobid', '%20', '+' unchanged)
+    query = '&'.join(p for p in u.query.split('&') if p and not TRACKING_PARAM.match(unquote_plus(p.split('=', 1)[0])))
+    return urlunsplit((u.scheme, u.netloc, u.path, query, u.fragment))   # a fragment can be the job ('...oraclecloud.com/?site_number=CX#26081')
+
+
+def url_variants(url):
+    """The stored forms one posting URL may have: as given, without tracking parameters, and either with or without a trailing slash."""
+    raw, clean = str(url or ''), clean_posting_url(url)
+    out = {raw, clean}
+    if '?' not in clean and '#' not in clean:
+        out |= {clean.rstrip('/'), clean.rstrip('/') + '/'}
+    return {v for v in out if v}
+
+
+def posting_url_key(url):
+    """One key per posting across sources: lower-case host without 'www.', path without trailing slash, the remaining parameters sorted."""
+    from urllib.parse import urlsplit, parse_qsl, urlencode
+    try:
+        u = urlsplit(clean_posting_url(url))
+    except ValueError:
+        return ''
+    if u.scheme not in ('http', 'https'):
+        return ''
+    host = (u.hostname or '').lower()
+    host = host[4:] if host.startswith('www.') else host
+    q = urlencode(sorted(parse_qsl(u.query, keep_blank_values=True)))
+    return host + u.path.rstrip('/') + ('?' + q if q else '') + ('#' + u.fragment if u.fragment else '')
 
 
 def adapter(s):
@@ -395,15 +521,54 @@ def chunks(xs, n):
         yield xs[i:i + n]
 
 
-def existing(jobs, local=None):
+ACTIVE_SQL = "SELECT id, company c, title t, location_restrictions l, workplace_type w, source_url, source_id, source_channel FROM jobs WHERE is_active = 1"
+CLOSED_SQL = "SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')"
+# D1 read diet (17 Nov): the daily run read every active job three times (duplicate check, closures, job-site duplicate check) and every recently
+# closed one twice. One read now serves the run: kept in memory for the closures and written to the work folder (ACTIVE_SNAPSHOT) for the
+# job-site duplicate check, a later step of the same job; nothing writes jobs between the two (the import comes after both). Ids and URLs are
+# still checked against D1 every time.
+ACTIVE_SNAPSHOT = 'stored_jobs.json'
+SNAPSHOT_MAX_AGE_S = 3 * 3600
+
+
+def stored_jobs(local=None, snapshot=None, cache=None):
+    """(active rows, closed (company, title) rows). cache: a dict that keeps them for the rest of this run; snapshot: a work-folder file
+    written by an earlier step of the same run (read when no older than SNAPSHOT_MAX_AGE_S)."""
+    _ACTIVE = cache if cache is not None else {}
+    if 'rows' in _ACTIVE:
+        return _ACTIVE['rows'], _ACTIVE['closed']
+    if snapshot and Path(snapshot).exists():
+        try:
+            data = json.loads(Path(snapshot).read_text())
+            if time.time() - float(data.get('at', 0)) < SNAPSHOT_MAX_AGE_S:
+                _ACTIVE.update(rows=data['rows'], closed=data['closed'])
+                return _ACTIVE['rows'], _ACTIVE['closed']
+        except (ValueError, KeyError, TypeError):
+            pass
+    rows = d1(ACTIVE_SQL, local)
+    closed = d1(CLOSED_SQL, local)
+    _ACTIVE.update(rows=rows, closed=closed)
+    return rows, closed
+
+
+def write_stored_snapshot(path, cache):
+    if 'rows' in cache:
+        Path(path).write_text(json.dumps({'at': time.time(), 'rows': cache['rows'], 'closed': cache['closed']}))
+
+
+def existing(jobs, local=None, snapshot=None, cache=None):
     """Ids (with is_active), URLs and active (company, title, location) rows already in D1, so nothing is inserted twice. `stored` maps an
     active (company, title) pair to its rows (id, location, workplace) for the many-cities rule (plan B3)."""
     ids, urls = {}, set()
     for part in chunks(jobs, 150):
         id_list = json.dumps([j['id'] for j in part])
-        url_list = json.dumps([j['url'] for j in part])
         for r in d1(f"SELECT id, is_active, source_channel FROM jobs WHERE id IN (SELECT value FROM json_each({sql_str(id_list)}))", local):
             ids[r['id']] = r
+        # The URL matters only for a posting whose id is not stored (a stored id is never inserted again): most of a day's selection is
+        # already stored, so this halves the duplicate check's reads.
+        url_list = json.dumps(sorted({v for j in part if j['id'] not in ids for v in url_variants(j['url'])}))   # jobs QA 7: tracking parameters aside
+        if url_list == '[]':
+            continue
         for r in d1(f"SELECT source_url u FROM jobs WHERE source_url IN (SELECT value FROM json_each({sql_str(url_list)})) "
                     f"UNION SELECT original_posting_url FROM jobs WHERE original_posting_url IN (SELECT value FROM json_each({sql_str(url_list)}))", local):
             urls.add(r['u'])
@@ -412,11 +577,12 @@ def existing(jobs, local=None):
     # A stored employer is read through the known-names table (tenth-man review, phase 4): a row the rename left on its tenant id (applied to or
     # decided, or stored before migration 0021 ran) is the same employer as a new row named at import.
     pairs, stored = set(), {}
-    for r in d1("SELECT id, company c, title t, location_restrictions l, workplace_type w FROM jobs WHERE is_active = 1", local):
+    active, closed_rows = stored_jobs(local, snapshot, cache)
+    for r in active:
         c = norm(display_company(r['c']))
         pairs.add((c, norm(r['t']), norm(r['l'])))
-        stored.setdefault((c, norm(r['t'])), []).append(r)
-    closed = {(norm(display_company(r['c'])), norm(r['t'])) for r in d1("SELECT company c, title t FROM jobs WHERE is_active = 0 AND expired_at >= datetime('now', '-180 days')", local)}
+        stored.setdefault((c, norm(r['t'])), []).append({k: r.get(k) for k in ('id', 'c', 't', 'l', 'w')})
+    closed = {(norm(display_company(r['c'])), norm(r['t'])) for r in closed_rows}
     return ids, urls, pairs, closed, stored
 
 
@@ -509,19 +675,23 @@ def merge_cities(fresh, stored, local=None, merges=None):
     return kept
 
 
-def split_new(jobs, local=None, merges=None):
+def split_new(jobs, local=None, merges=None, snapshot=None, cache=None):
     """New jobs to insert, and earlier dataset jobs that reappeared after being closed (to reopen).
     Plan B3: a new posting with the same employer and title as a stored active one (or an earlier one in this run), differing only by city, is
     stored once: its city is added to the other's location ("Pune; Chennai; +3 more"). For a stored row the change is appended to `merges`
     ('stored': [{id, old, new}], dataset_apply.mjs writes it, guarded); stored duplicates are not merged with each other."""
-    seen, unique = set(), []
-    for j in jobs:   # duplicates inside one run (same company, title and location)
+    seen, unique, seen_urls = set(), [], set()
+    for j in jobs:   # duplicates inside one run (same company, title and location; jobs QA 7: or the same posting URL, tracking parameters aside)
         k = (norm(j['company']), norm(j['title']), norm(j.get('location')))
-        if k not in seen:
+        u = posting_url_key(j.get('url'))
+        u = (u, norm(j['title'])) if u else None   # with the title: a careers page URL shared by several jobs is not one job (urlTwinKey)
+        if k not in seen and not (u and u in seen_urls):
             seen.add(k); unique.append(j)
-    ids, urls, pairs, closed, stored = existing(unique, local) if unique else ({}, set(), set(), set(), {})
+            if u:
+                seen_urls.add(u)
+    ids, urls, pairs, closed, stored = existing(unique, local, snapshot, cache) if unique else ({}, set(), set(), set(), {})
     reopen = [j['id'] for j in unique if j['id'] in ids and not ids[j['id']]['is_active'] and ids[j['id']]['source_channel'] == SOURCE_CHANNEL]
-    fresh = [j for j in unique if j['id'] not in ids and j['url'] not in urls and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
+    fresh = [j for j in unique if j['id'] not in ids and not (url_variants(j['url']) & urls) and (norm(j['company']), norm(j['title']), norm(j.get('location'))) not in pairs]
     # Plan B3. A failure here never stops the run (tenth-man review): every posting is then inserted as before.
     try:
         part = {}
@@ -537,7 +707,7 @@ def split_new(jobs, local=None, merges=None):
     return fresh, reopen, len(jobs) - len(unique)
 
 
-def closures(con, src, manifest, local=None):
+def closures(con, src, manifest, local=None, cache=None):
     """Two-run closure with a per-ATS health check. Returns (close, mark_missing, clear_missing, counts_to_store)."""
     counts = {adapter(k): int(v.get('rows') or 0) for k, v in (manifest.get('by_ats') or {}).items()}
     prev = {}
@@ -547,7 +717,7 @@ def closures(con, src, manifest, local=None):
         except ValueError:
             prev = {}
     healthy = {a for a, n in counts.items() if prev.get(a) and n >= HEALTHY_RATIO * prev[a]}
-    tracked = d1(f"SELECT id, source_url, source_id FROM jobs WHERE source_channel = '{SOURCE_CHANNEL}' AND is_active = 1", local)
+    tracked = [{'id': r['id'], 'source_url': r['source_url'], 'source_id': r['source_id']} for r in stored_jobs(local, None, cache)[0] if r.get('source_channel') == SOURCE_CHANNEL]
     if not tracked:
         return [], [], [], counts
     con.execute('CREATE OR REPLACE TEMP TABLE tracked(url VARCHAR)')
@@ -609,7 +779,7 @@ def write_context(out, local, rescore_export, rescore_per_candidate):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--out', required=True)
+    ap.add_argument('--out', required='--builtin-profiles' not in sys.argv)
     ap.add_argument('--dataset', default=DATASET, help='a downloaded copy of all.parquet (the workflow downloads it once per run)')
     ap.add_argument('--d1-local', default=None, help='a local wrangler --persist-to path instead of the remote database')
     ap.add_argument('--select-read-budget', type=int, default=SELECT_READ_BUDGET,
@@ -619,7 +789,7 @@ def main():
     ap.add_argument('--remote-quota', type=int, default=200)
     ap.add_argument('--abroad-quota', type=int, default=300)
     ap.add_argument('--gulf-quota', type=int, default=150)
-    ap.add_argument('--max-days', type=int, default=45)
+    ap.add_argument('--max-days', type=int, default=MAX_DAYS)
     ap.add_argument('--rescore-export', action='store_true', help='also export preliminary rows not yet scored with the current profile and rules')
     ap.add_argument('--rescore-per-candidate', type=int, default=1500, help='most rows re-scored per person per run (bounds the writes)')
     ap.add_argument('--dedupe', default=None, help='only de-duplicate a job-site result file against D1')
@@ -628,7 +798,13 @@ def main():
     ap.add_argument('--pool-per-candidate', type=int, default=300)
     ap.add_argument('--no-name-lookup', action='store_true', help='use only the known employer names; open no career site (plan B1)')
     ap.add_argument('--no-dataset', action='store_true', help='the dataset download failed: write everything the later steps need and an empty matches.json')
+    ap.add_argument('--builtin-profiles', default=None, help='only write the built-in search profiles (from the code; no database) to this file: '
+                    'the parallel collector jobs of discovery.yml, which have no credentials')
     a = ap.parse_args()
+    if a.builtin_profiles:
+        Path(a.builtin_profiles).write_text(json.dumps(builtin_profiles()))
+        print(json.dumps({'profiles': len(BUILTIN)}))
+        return 0
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     if a.shortlist_pool:
         print(json.dumps(write_pool(Path(a.shortlist_pool), a.d1_local, a.pool_per_candidate)))
@@ -645,13 +821,13 @@ def main():
         jobs = [clean(j) for j in raw.get('jobs', [])]
         names = safe_names(jobs, not a.no_name_lookup)   # plan B1: employer names before the duplicate test
         merges = {}
-        fresh, _, dup = split_new(jobs, a.d1_local, merges)
+        fresh, _, dup = split_new(jobs, a.d1_local, merges, snapshot=out / ACTIVE_SNAPSHOT)
         (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': [], 'merge': merges.get('stored', [])}, default=str))
         print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh), 'employer_names': names,
                           'same_job_other_city': merges.get('merged', 0)}))
         return 0
     if a.no_dataset:
-        # The 2.3 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
+        # The 3.9 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
         write_context(out, a.d1_local, a.rescore_export, a.rescore_per_candidate)
         report = {'dataset': 'download_failed', 'new': 0, 'selected': 0, 'close': 0}
         (out / 'matches.json').write_text(json.dumps({'source': 'ats_dataset', 'snapshot': None, 'jobs': [], 'closed': []}))
@@ -689,9 +865,11 @@ def main():
     # Plan B1: the employer's name, not its hiring-system tenant id, before the duplicate test (so caps and dedupe see the display name).
     names = safe_names(jobs, not a.no_name_lookup)
     merges = {}
-    fresh, reopen, dup = split_new(jobs, a.d1_local, merges)
+    run_cache = {}   # one read of the stored jobs for the duplicate check, the closures and (through the snapshot) the job-site duplicate check
+    fresh, reopen, dup = split_new(jobs, a.d1_local, merges, cache=run_cache)
+    write_stored_snapshot(out / ACTIVE_SNAPSHOT, run_cache)   # for the job-site duplicate check later in this run
     # A partial snapshot must not close real jobs: no closures at all unless the snapshot has its usual size.
-    close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local) if total >= 1_000_000 and not stale else ([], [], [], {})
+    close, mark, clear, counts = closures(con, a.dataset, manifest, a.d1_local, run_cache) if total >= 1_000_000 and not stale else ([], [], [], {})
     report = {'snapshot': manifest.get('generated_at'), 'snapshot_age_hours': None if age is None else round(age, 1), 'stale': stale, 'dataset_jobs': total, 'profiles': len(profs), 'selected': len(jobs),
               'duplicates_in_run': dup, 'already_stored': len(jobs) - dup - len(fresh), 'new': len(fresh), 'reopen': len(reopen),
               'close': len(close), 'missing_first_time': len(mark), 'missing_cleared': len(clear), 'employer_names': names,
@@ -761,7 +939,7 @@ def taste_rows(local=None):
     return with_names(d1("""SELECT a.candidate_id, j.title, j.company, a.status AS label FROM applications a JOIN jobs j ON j.id = a.job_id
       WHERE a.status IN ('SAVED','APPLIED','SUBMITTED','INTERVIEWING','OFFER')
       UNION ALL SELECT q.candidate_id, j.title, j.company, q.manual_override_status FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-      WHERE q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED')
+      WHERE q.manual_override_status IS NOT NULL AND q.manual_override_status IN ('READY','STRETCH_READY','INELIGIBLE','HOLD','CLOSED')   -- IS NOT NULL: the partial index of decided rows (migration 0026)
       UNION ALL SELECT f.candidate_id, j.title, j.company, CASE f.rating WHEN 'UP' THEN 'GOOD_MATCH' ELSE 'NOT_FOR_ME' END FROM job_feedback f JOIN jobs j ON j.id = f.job_id
       LIMIT 4000""", local))
 
@@ -771,9 +949,11 @@ def taste_targets(local=None, per_candidate=400):
     in dataset_apply.mjs: the learned taste is re-applied to them every run, not only to new jobs."""
     rows = []
     for c in d1("SELECT id FROM candidates ORDER BY id", local):
+        # CROSS JOIN: walk the (candidate, score) index best first and stop at the limit (the planner otherwise read every row of the person
+        # and sorted them: about 50,000 rows read per person on a production-size copy; now about 2,000). Same rows, same order.
         rows += d1(f"""SELECT q.candidate_id, q.job_id, j.title, j.company, s.overall_score AS score, s.score_breakdown, q.qualification_reason AS reason
-          FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
-          WHERE q.candidate_id = {sql_str(c['id'])} AND j.is_active = 1 AND q.manual_override_status IS NULL
+          FROM candidate_job_scores s CROSS JOIN candidate_qualifications q CROSS JOIN jobs j
+          WHERE s.candidate_id = {sql_str(c['id'])} AND q.candidate_id = s.candidate_id AND q.job_id = s.job_id AND j.id = s.job_id AND j.is_active = 1 AND q.manual_override_status IS NULL
             AND COALESCE(q.qualification_reason, '') NOT LIKE 'You marked%'   -- a job the person hid (plan U2) is theirs, not the taste pass's
             AND (q.qualification_status IN ('NEEDS_REVIEW','HOLD') OR q.qualification_reason LIKE 'Shortlisted automatically.%')
             AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id)
@@ -806,7 +986,7 @@ def rescore_rows(local=None, page=400, per_candidate=1500):
             if len(part) < min(page, per_candidate - taken + len(part)):
                 break
             last = (part[-1]['cur_score'], part[-1]['job_id'])
-    return rows + legacy_rows(cands, local)
+    return rows + legacy_rows(cands, local, gate=True)
 
 
 # ---- Shortlist pool (plan phase 3, A1) ------------------------------------------------------------------------------------------
@@ -845,17 +1025,24 @@ def shortlist_pool(local=None, per_candidate=300):
     for c in d1("SELECT id FROM candidates ORDER BY id", local):
         cid = sql_str(c['id'])
         rows += [{**r, 'kind': 'auto'} for r in d1(f"""SELECT {POOL_COLS}, {marked} {POOL_FROM}
-          WHERE q.candidate_id = {cid} AND {auto} AND {POOL_FREE} ORDER BY q.job_id""", local)]
-        rows += [{**r, 'kind': 'pool'} for r in d1(f"""SELECT {POOL_COLS}, 1 AS marked {POOL_FROM}
-          WHERE q.candidate_id = {cid} AND q.qualification_status = 'NEEDS_REVIEW' AND {POOL_FREE} AND j.is_active = 1
+          WHERE q.candidate_id = {cid} AND {auto} AND {POOL_FREE} ORDER BY +q.job_id""", local)]   # +: sort these few rows, read them through the status index
+        # Both shortlist rules need a score of at least the threshold minus 10, so the walk down the (candidate, score) index stops there
+        # (the same rows as before; every row of the person used to be read).
+        rows += [{**r, 'kind': 'pool'} for r in d1(f"""SELECT {POOL_COLS}, 1 AS marked
+          FROM candidates c CROSS JOIN candidate_job_scores s CROSS JOIN candidate_qualifications q CROSS JOIN jobs j
+          WHERE c.id = {cid} AND s.candidate_id = c.id AND s.overall_score >= c.qualification_threshold - 10
+            AND q.candidate_id = s.candidate_id AND q.job_id = s.job_id AND j.id = q.job_id
+            AND q.qualification_status = 'NEEDS_REVIEW' AND {POOL_FREE} AND j.is_active = 1
             AND s.score_breakdown LIKE '%"{RULES_MARKER}":true%'
             AND (s.skill_score >= 40 OR s.score_breakdown LIKE '%"target_exact":true%') AND {fits}
           ORDER BY s.overall_score DESC, q.job_id LIMIT {int(per_candidate)}""", local)]
+        # url and source too: the selector's one-posting-per-URL rule (urlTwinKey) checks held rows by their posting URL, which needs it here.
         rows += [{**r, 'kind': 'held'} for r in d1(f"""SELECT q.candidate_id, j.id AS job_id, j.title, j.company, j.location_restrictions AS location, j.workplace_type AS workplace,
-            q.qualification_status AS status
+            q.qualification_status AS status, j.source_adapter AS source,
+            CASE WHEN j.original_posting_url LIKE 'https://%' THEN j.original_posting_url ELSE j.source_url END AS url
           FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
           WHERE q.candidate_id = {cid} AND q.qualification_status IN ('READY','READY_HIGH','STRETCH_READY')
-            AND NOT ({auto} AND {POOL_FREE}) ORDER BY q.job_id""", local)]
+            AND NOT ({auto} AND {POOL_FREE}) ORDER BY +q.job_id""", local)]
     return rows
 
 
@@ -876,12 +1063,42 @@ def write_pool(path, local=None, per_candidate=300):
     return kinds
 
 
-def legacy_rows(cands, local=None, page=300, per_candidate=1000):
+LEGACY_STATE_KEY = 'legacy_scan'
+LEGACY_RESCAN_DAYS = 7
+
+
+def _legacy_due(local=None, now=None):
+    """D1 read diet: the legacy scan walks every screening row of every person (about 100,000 rows read a day at production size) and, once the
+    first-import rows are screened, finds none. A scan that found none under the current rules is repeated weekly, not daily (a row can only
+    become legacy again when a person clears an override on a first-import row); any rules bump or a scan that found rows scans again at once."""
+    try:
+        rows = d1(f"SELECT value FROM discovery_state WHERE key = {sql_str(LEGACY_STATE_KEY)}", local)
+        st = json.loads(rows[0]['value']) if rows else {}
+        at = datetime.fromisoformat(str(st.get('at')).replace('Z', '+00:00'))
+    except Exception:   # noqa: BLE001 - no state (or no table): scan
+        return True
+    now = now or datetime.now(timezone.utc)
+    return st.get('marker') != RULES_MARKER or st.get('found') != 0 or now - at > timedelta(days=LEGACY_RESCAN_DAYS)
+
+
+def _legacy_record(found, local=None):
+    value = json.dumps({'marker': RULES_MARKER, 'found': found, 'at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')})
+    try:
+        d1(f"INSERT INTO discovery_state(key, value, updated_at) VALUES ({sql_str(LEGACY_STATE_KEY)}, {sql_str(value)}, datetime('now')) "
+           "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at", local)
+    except Exception:   # noqa: BLE001 - the scan runs again next time
+        pass
+
+
+def legacy_rows(cands, local=None, page=300, per_candidate=1000, gate=False):
     """Undecided rows the CURRENT screen never scored: still NEEDS_REVIEW, score 0 (or no score row), no 'preliminary' breakdown, not a collector
     import waiting for the Worker. They came from the first import (reason 'Preserved verified ... status') and neither the Worker's
     assessment (which looks for the collector reason) nor the re-score above (which looks for a preliminary breakdown) ever selects them, so
     they sat in "to review" with no score. Exported with legacy = 1 so dataset_apply.mjs screens them fully (status, lane, score).
-    Paged by job id through the primary key, a bounded number per person per run. Never a row with an override or an application."""
+    Paged by job id through the primary key, a bounded number per person per run. Never a row with an override or an application.
+    gate: the daily run skips the scan while the last one (same rules) found nothing, for up to LEGACY_RESCAN_DAYS (see _legacy_due)."""
+    if gate and not _legacy_due(local):
+        return []
     rows = []
     for cid in cands:
         taken, last = 0, ''
@@ -901,6 +1118,8 @@ def legacy_rows(cands, local=None, page=300, per_candidate=1000):
             if len(part) < min(page, per_candidate - taken + len(part)):
                 break
             last = part[-1]['job_id']
+    if gate:
+        _legacy_record(len(rows), local)
     return rows
 
 

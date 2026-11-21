@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark, updatedNote } from '../frontend/src/jobHelpers.ts';
+import { postingUrl, indiaRemotePayText, peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark, updatedNote } from '../frontend/src/jobHelpers.ts';
 
 test('people search links are built from the employer name, encoded, and empty for no name', () => {
   const links = peopleSearchLinks('  Black & Veatch ');
@@ -64,4 +64,30 @@ test('updated note: "Updated <date, time>" when the last daily run is recent, am
   assert.equal(old.stale, true); assert.equal(old.label, 'Not updated today'); assert.match(old.title, /^Last daily update: 12 Nov, \d{2}:\d{2}$/);
   assert.equal(updatedNote(null, now).label, 'Not updated today'); assert.equal(updatedNote(null, now).stale, true);
   assert.equal(updatedNote(undefined, now), null, 'a Worker that does not report it yet shows nothing');
+});
+
+test('seeker posting links prefer a valid HTTPS original, then a usable source', () => {
+  const source = 'https://example.org/jobs/123';
+  const link = (original_posting_url, source_url = source) => postingUrl({ original_posting_url, source_url });
+  assert.equal(link('https://example.org/jobs/123/apply'), 'https://example.org/jobs/123/apply');
+  for (const invalid of ['https://', 'https://bad host/', 'nan', 'http://example.org/old', null]) {
+    assert.equal(link(invalid), source);
+  }
+  assert.equal(link(null, 'http://example.org/legacy'), 'http://example.org/legacy');
+  assert.equal(link('https://', 'https://'), null);
+});
+
+test('India Remote cards show published pay with its original currency and period', () => {
+  const cases = [
+    [{ salary_raw_text: '₹14L – ₹18L' }, '₹14L – ₹18L'],
+    [{ salary_raw_text: '$20k plus equity' }, '$20k plus equity'],
+    [{ salary_currency: 'INR', salary_min: 100000, salary_max: 200000, salary_period: 'MONTH' }, 'INR 1,00,000 – 2,00,000 MONTH'],
+    [{ salary_currency: 'USD', salary_max: 50, salary_period: 'HOUR' }, 'USD up to 50 HOUR'],
+    [{ salary_currency: 'EUR', salary_min: 0, salary_period: 'YEAR' }, 'EUR from 0 YEAR'],
+    [{ salary_raw_text: '{"summary":"£30 per hour"}' }, '£30 per hour'],
+    [{ salary_raw_text: JSON.stringify({ tiers: [{ title: 'Canada', summary: 'CA$70K' }, { title: 'US', summary: 'US$65K' }] }) }, 'Canada: CA$70K · US: US$65K'],
+    [{ salary_raw_text: '{invalid' }, 'Salary published'],
+    [{}, 'Salary published'],
+  ];
+  for (const [fields, expected] of cases) assert.equal(indiaRemotePayText(fields), expected);
 });

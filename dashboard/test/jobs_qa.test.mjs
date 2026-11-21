@@ -226,10 +226,11 @@ test('integration 15 Nov, Farhan: a "Remote" US-market text is ruled out; worldw
   assert.equal(payroll.eligibility, 'INELIGIBLE');
   // the same number format does not rule out a posting that hires from India or worldwide
   assert.notEqual(ev(farhan, 'Implementation Manager', 'Remote', CRM + ' We hire worldwide. Call (555) 010-0199.', true).eligibility, 'INELIGIBLE');
-  // kept: a worldwide-remote head-of operations role (capped below his threshold, so Worth a try) and a remote-India sales & marketing ops manager
+  // a worldwide-remote head-of operations role: capped below his threshold (jobs QA 4: 'Head of' is far above him, so below Worth a try too);
+  // kept: a remote-India sales & marketing ops manager
   const head = evaluate({ ...farhan, qualification_threshold: 70 }, { id: 'x', title: 'Head of AI Native Operations', company: 'Acme', url: 'https://e.com/x', location: 'Remote, Global — Remote', remote: true,
     description: CRM + ' Build the agent platform and the workflow automation that runs the company. '.repeat(2) });
-  assert.equal(head.eligibility, 'ELIGIBLE'); assert.ok(head.score >= 60 && head.score < 70, String(head.score));
+  assert.equal(head.eligibility, 'ELIGIBLE'); assert.ok(head.score < 60, String(head.score));
   const ops = ev(farhan, 'Sales & Marketing Operations Manager', 'India', 'Fully remote from India. ' + CRM + ' Own Salesforce and HubSpot.', true);
   assert.equal(ops.eligibility, 'ELIGIBLE'); assert.equal(farhanTargetFit('Sales & Marketing Operations Manager', farhan.target_roles), 'word');
   assert.ok(ops.score >= 60, String(ops.score));   // the live row (more CV skills named) scores 79

@@ -14,11 +14,20 @@
    "from_hash": "206b4556a992500d6b4e6eb609ff6832fd21bbce03552e6ad1000e33ca224b3d",
    "kind": "content_changed",
    "to_hash": "85bd304bf52a38851be79b551caa2df3fe10f1e350a9c8383f45a935096df9a6"
+  },
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "85bd304bf52a38851be79b551caa2df3fe10f1e350a9c8383f45a935096df9a6",
+   "kind": "content_changed",
+   "to_hash": "1a614bafc38d73280d09b3a45ebc42bfa3e5cb813d5ebfcdaf04c0e6c5652921"
   }
  ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Billing Operations Analyst.\n\nAbout the Job\n\nTwilio is looking for a talented and results driven person who is passionate about work, savvy about billing and pricing from the business view not only financial and who lives the Twilio Magic They also have:\n\nOutstanding communication skills, both written and verbal, and ability to advocate for a position while maintaining a collaborative, and open-minded approach. You should be someone who is a champion of streamlining processes and sees projects through to completion. We are looking for someone who enjoys and thrives in a fast-paced environment, with zealous attention to detail, good judgment, and is dedicated to providing excellent customer service.\n\nResponsibilities\n\nIn this role you’ll:\n\nMaintain Revenue Team external customer email, responding to customer and other external queries in a timely manner and onboard customers to Twilio’s internal billing system and Financial ERP system, Gather and format large raw data sets to assist with customer billing reporting and queries.\n\nParticipate in month end close, including: Managing and tracking recurring billing and managing approvals, tracking and application of customer credits. Analysis of revenue related balance sheet accounts, Ad hoc customer financial reporting.\n\nAssist and participate in the development and implementation of financial controls and process surrounding revenue and invoicing, Onboard customers to Twilio’s internal billing system and Financial ERP system.\n\nParticipate in external and internal audits, as requested.\n\nResolve queries customers are facing relating to their billing.\n\nIndependently investigate customer issues, searching internal resources, previous cases, Slack channels etc to understand issues and provide detailed analysis of customer issues to the Sales team.\n\nManipulate and analyze large datasets in Excel.\n\nRespond to the Sales team in a timely manner and communicate complicated issues via Slack, via SFDC, via calls. Excellent communication skills are required - occasional calls with customers or Senior Leaders may be required.\n\nWork under pressure - high paced environment, quick turnaround times in order to comply with team SLA’s\n\nCollaborate with other teams in order to solve root problems to customer issues\n\nHelp out on other teams within the Billing Ops group, as requested\n\nParticipate in Month End close, as requested.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\nStrong experience in the area of Billings / Revenue / Order to Cash.\n\nDemonstrated problem-solving, strong interpersonal and communication skills.\n\nExperience working with Oracle, Zuora and Salesforce is advantageous, although not essential.\n\nSolid experience working with large volume transactions with strong attention to detail.\n\nAdvanced Excel user: able to handle very large raw data sets using pivots and other functions such as VLOOKUPS.\n\n1-3 years experience in an Operations role.\n\nPeriodic weekend work will also be essential for this role.\n\nProficient Spanish and English.\n\nDesired:\n\nThird level qualification in Accountancy, Finance or a Business related discipline or equivalent experience.\n\nLocation\n\nThis role will be remote, and based in Mexico City Mexico.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Billing Operations Analyst.\n\nAbout the Job\n\nTwilio is looking for a talented and results driven person who is passionate about work, savvy about billing and pricing from the business view not only financial and who lives the Twilio Magic They also have:\n\nOutstanding communication skills, both written and verbal, and ability to advocate for a position while maintaining a collaborative, and open-minded approach. You should be someone who is a champion of streamlining processes and sees projects through to completion. We are looking for someone who enjoys and thrives in a fast-paced environment, with zealous attention to detail, good judgment, and is dedicated to providing excellent customer service.\n\nResponsibilities\n\nIn this role you’ll:\n\nMaintain Revenue Team external customer email, responding to customer and other external queries in a timely manner and onboard customers to Twilio’s internal billing system and Financial ERP system, Gather and format large raw data sets to assist with customer billing reporting and queries.\n\nParticipate in month end close, including: Managing and tracking recurring billing and managing approvals, tracking and application of customer credits. Analysis of revenue related balance sheet accounts, Ad hoc customer financial reporting.\n\nAssist and participate in the development and implementation of financial controls and process surrounding revenue and invoicing, Onboard customers to Twilio’s internal billing system and Financial ERP system.\n\nParticipate in external and internal audits, as requested.\n\nResolve queries customers are facing relating to their billing.\n\nIndependently investigate customer issues, searching internal resources, previous cases, Slack channels etc to understand issues and provide detailed analysis of customer issues to the Sales team.\n\nManipulate and analyze large datasets in Excel.\n\nRespond to the Sales team in a timely manner and communicate complicated issues via Slack, via SFDC, via calls. Excellent communication skills are required - occasional calls with customers or Senior Leaders may be required.\n\nWork under pressure - high paced environment, quick turnaround times in order to comply with team SLA’s\n\nCollaborate with other teams in order to solve root problems to customer issues\n\nHelp out on other teams within the Billing Ops group, as requested\n\nParticipate in Month End close, as requested.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\nStrong experience in the area of Billings / Revenue / Order to Cash.\n\nDemonstrated problem-solving, strong interpersonal and communication skills.\n\nExperience working with Oracle, Zuora and Salesforce is advantageous, although not essential.\n\nSolid experience working with large volume transactions with strong attention to detail.\n\nAdvanced Excel user: able to handle very large raw data sets using pivots and other functions such as VLOOKUPS.\n\n1-3 years experience in an Operations role.\n\nPeriodic weekend work will also be essential for this role.\n\nProficient Spanish and English.\n\nDesired:\n\nThird level qualification in Accountancy, Finance or a Business related discipline or equivalent experience.\n\nLocation\n\nThis role will be remote, and based in Mexico City Mexico.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -33,8 +42,8 @@
   "title": "Billing Operations Analyst 1",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "85bd304bf52a38851be79b551caa2df3fe10f1e350a9c8383f45a935096df9a6",
+ "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
+ "content_hash": "1a614bafc38d73280d09b3a45ebc42bfa3e5cb813d5ebfcdaf04c0e6c5652921",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Mexico",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      },
@@ -61,7 +70,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote, and based in Mexico City Mexico.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      }
@@ -74,7 +83,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      },
@@ -82,7 +91,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "Strong experience in the area of Billings / Revenue / Order to Cash.\nDemonstrated problem-solving, strong interpersonal and communication skills.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      },
@@ -90,7 +99,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "Solid experience working with large volume transactions with strong attention to detail.\nAdvanced Excel user: able to handle very large raw data sets using pivots and other functions such as VLOOKUPS.\n1-3 years experience in an Operations role.\nPeriodic weekend work will also be essential for this role.\nProficient Spanish and English.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      }
@@ -103,7 +112,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Required:",
       "quote": "Experience working with Oracle, Zuora and Salesforce is advantageous, although not essential.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      },
@@ -111,7 +120,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Third level qualification in Accountancy, Finance or a Business related discipline or equivalent experience.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      }
@@ -124,7 +133,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Mexico",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8261245"
      }

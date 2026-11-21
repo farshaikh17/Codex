@@ -8,6 +8,7 @@ import * as site from './site';
 import { whyLine } from './why';
 import { postingUrl } from './posting_url';
 import { collapseTwins, sectionsWithoutTwins, type Twins, type TwinRow } from './twins';
+import { seekerSnapshot, seekerTouched, SNAPSHOT_VERSION, byScore, byDate, byScoreId, cmpBin, twinRows, type Snapshot } from './snapshot';
 import { BUILTIN_IDS, loadRegistry, forgetRegistry, referencedCandidates, viewTokenCandidate, newViewToken, sha256Hex, parseClient, slugId, CLIENT_ID, csvRow } from './clients';
 import { FIT_VALUES, FIT_SQL, PAY_SQL, SORTS, UNCLASSIFIED, ROLE_FAMILIES, fitOf, parsePay, roleFamilyOf, validRoleFamily, assessmentConflict, listIndiaRemote, type LightRow } from './listing';
 
@@ -19,6 +20,10 @@ export interface Env {
   ADMIN_API_KEY?: string;
   /** 'off' disables the response cache (unit tests that change rows directly between calls) */
   RESPONSE_CACHE?: string;
+  /** 'off' disables only the edge layer in front of it (Cache API + isolate memory; see edgeKey) */
+  EDGE_CACHE?: string;
+  /** the person's stored list copy (worker/snapshot.ts): 'off' never uses it, 'on' uses it even with RESPONSE_CACHE 'off'; unset follows RESPONSE_CACHE */
+  SEEKER_SNAPSHOT?: string;
   /** set by the release workflow at deploy time (wrangler deploy --var) so the live version can be matched to a commit */
   GIT_COMMIT?: string;
   DEPLOYED_AT?: string;
@@ -188,6 +193,23 @@ async function openTrackerCandidate(request: Request, url: URL): Promise<string 
   return CANDIDATE_IDS.has(id) && !PRIVATE_IDS.has(id) ? id : null;
 }
 
+/** Marks a tracker action's job in that person's stored list copy (worker/snapshot.ts). Retried once; if the mark still cannot be written, the
+ *  person's copy is deleted (rebuilt on the next read), and failing that the cache generation is raised (every copy and answer dropped). Only
+ *  if all of that fails does this throw, so an action can never be silently missing from the copy until it expires. */
+async function markCopy(env: Env, candidateId: string, jobId: string | null): Promise<void> {
+  for (let i = 0; i < 2; i++) { try { await seekerTouched(env.DB, candidateId, jobId); return; } catch { /* retried, then dropped below */ } }
+  try { await seekerTouched(env.DB, candidateId, null); return; } catch { /* then the generation */ }
+  await invalidateResponseCache(env);
+}
+
+/** The job a tracker write is about: the path's job (/api/jobs/:id/..., /api/applications/:id...) or the body's job_id. */
+async function trackerJobOf(request: Request, pathname: string): Promise<string | null> {
+  const m = pathname.match(/^\/api\/(?:jobs|applications)\/([^/]+)(?:\/|$)/);
+  if (m) { try { return decodeURIComponent(m[1]); } catch { return null; } }
+  const body = await request.clone().json<any>().catch(() => null);
+  return body && typeof body.job_id === 'string' ? body.job_id : null;
+}
+
 function isPublicRead(method: string, pathname: string): boolean {
   return method === 'GET' && PUBLIC_READ_PATTERNS.some((re) => re.test(pathname));
 }
@@ -289,12 +311,15 @@ async function lookupResponseCache(env: Env, key: string): Promise<CacheLookup |
 const TRACKER_CHANGE_KEY = '~tracker-change';
 /** readStart: when this request looked the entry up (seconds). The answer is not stored if a tracker action cleared answers since then
  *  (it may have been computed from the rows before that action); a few seconds of margin cover clock differences between isolates. */
-async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number): Promise<void> {
+/** bornAt: when the data the answer was made from was read, if earlier than now (an answer from a stored list copy is as old as the copy):
+ *  the entry is stored with that time, so the copy's age and the entry's together stay within one cache time limit. */
+async function writeResponseCache(env: Env, key: string, body: string, generation: number, readStart: number, bornAt?: number): Promise<void> {
   if (new TextEncoder().encode(body).length > CACHE_MAX_BYTES) return;
   try {
     const now = Math.floor(Date.now() / 1000);
+    const created = bornAt != null && bornAt < now ? bornAt : now;
     await env.DB.prepare(`INSERT OR REPLACE INTO response_cache(key, body, created_at, generation) SELECT ?, ?, ?, ?
-      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, now, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
+      WHERE NOT EXISTS (SELECT 1 FROM response_cache WHERE key = ? AND created_at >= ?)`).bind(key, body, created, generation, TRACKER_CHANGE_KEY, readStart - 2).run();
     meterAdd(utcDay(), { cache_writes: 1 });
     // Bounded housekeeping: occasionally drop up to 100 entries older than the stale window.
     if (Math.random() < 0.02) await env.DB.prepare('DELETE FROM response_cache WHERE key IN (SELECT key FROM response_cache WHERE created_at < ? LIMIT 100)').bind(now - STALE_MAX_SECONDS).run();
@@ -326,6 +351,79 @@ async function invalidateResponseCache(env: Env, retried = false): Promise<void>
     if (/no such table/i.test(String(e?.message))) return;          // cache not installed: nothing to invalidate
     if (!retried) return invalidateResponseCache(env, true);
     throw e;                                                        // never carry on as if the cache were coherent
+  }
+}
+
+// ---- Edge cache in front of the D1 response cache (D1 read diet, 17 Nov) ----
+// Even a D1 cache hit reads D1 (the registry's generation, the cache generation and the entry), and every UTC day's reads are capped at
+// 5,000,000 on the free plan. Public answers that are the same for every visitor are therefore also kept outside D1, for EDGE_TTL_SECONDS:
+// in Cloudflare's Cache API (caches.default: free, per data centre; Cloudflare documents it as inactive on *.workers.dev hostnames, where it
+// stores nothing) and in this isolate's memory (works on any hostname). A hit there reads nothing from D1 (X-Cache: EDGE).
+// * Only for anonymous public reads: never with an Authorization header (operator key), a share link (X-View-Token), include_test, a
+//   client that is not one of the two built-in public candidates, or a request that asks for a fresh answer (Cache-Control: no-cache /
+//   no-store / max-age=0, Pragma: no-cache: the seeker's own page sends that for a few minutes after its own change, see frontend/src/api.ts).
+// * Keyed like the D1 entry (code version + commit, path, the allowed query parameters only), plus an edge generation.
+// * Only a 200 JSON answer the D1 path would itself store is kept (never an error, a 503, a STALE answer or the outage backup).
+// * Invalidation: every operator change and tracker action raises the edge generation before and after it (in this isolate and, where the
+//   Cache API works, in this data centre). A release changes the commit, so nothing from the previous code is ever served. Data imports
+//   (daily run, watchlist, collector sync, cron) are not seen here: their answers appear when the entry expires (at most EDGE_TTL_SECONDS),
+//   and the same holds for other data centres and isolates after a change made elsewhere.
+const EDGE_TTL_SECONDS = 300;
+const EDGE_MEMORY_MAX_ENTRIES = 300, EDGE_MEMORY_MAX_BYTES = 16_000_000;
+const edgeMemory = new Map<string, { body: string; at: number }>();
+let edgeMemoryBytes = 0;
+let edgeGenerationLocal = 0;
+const edgeCacheStore = (): any => (globalThis as any).caches?.default || null;
+const EDGE_FRESH_REQUEST = /no-cache|no-store|max-age=0/i;
+/** The edge key for a request, or null when the request must not use the edge cache at all. */
+function edgeKey(request: Request, env: Env, url: URL): string | null {
+  if (env.RESPONSE_CACHE === 'off' || env.EDGE_CACHE === 'off' || request.method !== 'GET') return null;
+  if (!isPublicRead('GET', url.pathname) || PUBLIC_API_PATHS.has(url.pathname)) return null;
+  const h = request.headers;
+  if (h.has('Authorization') || h.has('X-View-Token') || url.searchParams.has('include_test')) return null;
+  if (EDGE_FRESH_REQUEST.test(h.get('Cache-Control') || '') || /no-cache/i.test(h.get('Pragma') || '')) return null;
+  if (referencedCandidates(url).some((cid) => !BUILTIN_IDS.includes(cid) || PRIVATE_IDS.has(cid))) return null;
+  return responseCacheKey('public', url, `${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`)?.key ?? null;
+}
+const edgeGenerationUrl = (url: URL) => `${url.origin}/__edge-cache/generation`;
+const edgeEntryUrl = (url: URL, key: string, gen: number) => `${url.origin}/__edge-cache/${gen}/${encodeURIComponent(key)}`;
+async function edgeGeneration(url: URL): Promise<number> {
+  const c = edgeCacheStore();
+  if (c) {
+    try { const hit = await c.match(edgeGenerationUrl(url)); if (hit) edgeGenerationLocal = Math.max(edgeGenerationLocal, Number(await hit.text()) || 0); } catch { /* best effort */ }
+  }
+  return edgeGenerationLocal;
+}
+async function bumpEdgeGeneration(env: Env, url: URL): Promise<void> {
+  edgeGenerationLocal = Math.max(Date.now(), edgeGenerationLocal + 1);
+  edgeMemory.clear(); edgeMemoryBytes = 0;
+  const c = env.RESPONSE_CACHE === 'off' || env.EDGE_CACHE === 'off' ? null : edgeCacheStore();
+  if (c) {
+    try { await c.put(edgeGenerationUrl(url), new Response(String(edgeGenerationLocal), { headers: { 'Cache-Control': 'public, max-age=86400' } })); } catch { /* best effort */ }
+  }
+}
+async function edgeLookup(url: URL, key: string, gen: number): Promise<string | null> {
+  const m = edgeMemory.get(`${gen}|${key}`);
+  if (m) {
+    if (Date.now() - m.at < EDGE_TTL_SECONDS * 1000) return m.body;
+    edgeMemory.delete(`${gen}|${key}`); edgeMemoryBytes -= m.body.length;
+  }
+  const c = edgeCacheStore();
+  if (!c) return null;
+  try { const hit = await c.match(edgeEntryUrl(url, key, gen)); return hit ? await hit.text() : null; } catch { return null; }
+}
+async function edgePut(url: URL, key: string, gen: number, body: string): Promise<void> {
+  if (body.length > CACHE_MAX_BYTES || gen !== edgeGenerationLocal) return;   // a change happened while this answer was computed: not kept
+  const k = `${gen}|${key}`;
+  const old = edgeMemory.get(k); if (old) { edgeMemory.delete(k); edgeMemoryBytes -= old.body.length; }
+  edgeMemory.set(k, { body, at: Date.now() }); edgeMemoryBytes += body.length;
+  for (const [ok, ov] of edgeMemory) {   // oldest first
+    if (edgeMemory.size <= EDGE_MEMORY_MAX_ENTRIES && edgeMemoryBytes <= EDGE_MEMORY_MAX_BYTES) break;
+    edgeMemory.delete(ok); edgeMemoryBytes -= ov.body.length;
+  }
+  const c = edgeCacheStore();
+  if (c) {
+    try { await c.put(edgeEntryUrl(url, key, gen), new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${EDGE_TTL_SECONDS}` } })); } catch { /* best effort */ }
   }
 }
 
@@ -676,6 +774,15 @@ class WorkerRouter {
       });
     }
 
+    // Edge cache (see edgeKey): an anonymous public read answered from Cloudflare's cache or this isolate's memory reads nothing from D1,
+    // so it is looked up before the registry, the key check and the D1 cache.
+    const edge = edgeKey(request, env, url);
+    const edgeGen = edge ? await edgeGeneration(url) : 0;
+    if (edge) {
+      const body = await edgeLookup(url, edge, edgeGen);
+      if (body != null) return new Response(body, { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env), 'X-Cache': 'EDGE' } });
+    }
+
     // Every /api route except the public ones below requires the operator key (Authorization: Bearer <key>).
     // Fails closed: with no ADMIN_API_KEY configured, protected routes answer 503 instead of serving data.
     const isApi = pathname.startsWith('/api/');
@@ -731,7 +838,10 @@ class WorkerRouter {
         const now = Math.floor(Date.now() / 1000);
         if (cacheKey) {
           lookup = await lookupResponseCache(env, cacheKey);
-          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) return cachedResponse(lookup, request, env, 'HIT');
+          if (lookup?.body != null && lookup.generation === lookup.current && lookup.created_at! > now - CACHE_TTL_SECONDS[level!]) {
+            if (edge && level === 'public' && edge === cacheKey) await edgePut(url, edge, edgeGen, lookup.body);
+            return cachedResponse(lookup, request, env, 'HIT');
+          }
         }
         if (metered) {
           if (level === 'public' && (await meterToday(env)).rows_read >= PUBLIC_DAILY_READ_BUDGET) {
@@ -745,7 +855,16 @@ class WorkerRouter {
         }
         // A tracker action for one known person clears only that person's answers (see invalidateCandidateCache).
         const trackerFor = operatorChange && isTrackerRoute(request.method, pathname) ? await openTrackerCandidate(request, url) : null;
-        const invalidate = () => (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env));
+        // ... and marks the job it changes in that person's stored list copy (worker/snapshot.ts), before the cached answers go, so the next read
+        // re-reads that job; if the mark cannot be written, every answer and copy is dropped instead (the generation bump).
+        const trackerJob = trackerFor ? await trackerJobOf(request, pathname) : null;
+        const invalidate = async () => {
+          await bumpEdgeGeneration(env, url);
+          let copyFailed: unknown = null;
+          if (trackerFor) { try { await markCopy(env, trackerFor, trackerJob); } catch (e) { copyFailed = e; } }
+          await (trackerFor ? invalidateCandidateCache(env, trackerFor) : invalidateResponseCache(env));
+          if (copyFailed) throw copyFailed;
+        };
         if (operatorChange) await invalidate();   // before: if this fails the change is refused
         let res: Response;
         try {
@@ -758,13 +877,15 @@ class WorkerRouter {
             if (rows > 0) meterAdd(utcDay(), { rows_read: rows, [level === 'public' ? 'public_misses' : 'operator_misses']: 1 });
           }
           if (operatorChange) {                                   // after, whatever the outcome (partial writes included)
-            try { await invalidate(); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); }
+            try { await invalidate(); }
+            catch { try { await invalidate(); } catch (e: any) { logPrivately('cache_invalidate_failed', pathname, e?.message); } }   // one retry
           }
         }
         const sameGeneration = decidedUnder.get(request) == null || lookup?.current === decidedUnder.get(request);
         if (cacheKey && lookup && sameGeneration && res.status === 200 && (res.headers.get('Content-Type') || '').includes('json')) {
           const body = await res.text();
-          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now);
+          if (keyInfo!.core || (await meterToday(env)).cache_writes < (keyInfo!.search ? CACHE_WRITES_PER_DAY / 10 : CACHE_WRITES_PER_DAY)) await writeResponseCache(env, cacheKey, body, lookup.current, now, copyBuiltAt.get(request));
+          if (edge && level === 'public' && edge === cacheKey) await edgePut(url, edge, edgeGen, body);
           await flushMeter(env, env.METER_FLUSH === 'always');
           const headers = new Headers(res.headers); headers.set('X-Cache', 'MISS'); headers.delete('Content-Length');
           return new Response(body, { status: 200, headers });
@@ -928,6 +1049,15 @@ router.get('/api/version', async (request, env) => {
 
 router.get('/api/health', async (request, env) => {
   try {
+    // A minimal DB lookup can succeed while the actual candidate feeds are unavailable.
+    if (new URL(request.url).searchParams.get('feeds') === '1') {
+      for (const id of ['farhan_shaikh', 'sana_ansari']) {
+        const feed = new URL('/api/today', request.url);
+        feed.searchParams.set('candidate_id', id);
+        const response = await router.handle(new Request(feed), env);
+        if (!response.ok) return jsonResponse({ status: 'degraded', component: 'today' }, 503, corsHeaders(request, env));
+      }
+    }
     const metaRes = await env.DB.prepare('SELECT value FROM app_meta WHERE key = ?').bind('stage').first<{ value: string }>();
     return jsonResponse({
       status: 'healthy',
@@ -1385,7 +1515,16 @@ const TEST_APP_NOTE = 'Playwright verified rejection test';
 const realApp = (a: string) => `NOT (COALESCE(${a}.notes, '') = '${TEST_APP_NOTE}' OR ${a}.job_id LIKE 'syn-%' OR ${a}.job_id IN (SELECT tj.id FROM jobs tj WHERE tj.source_adapter = 'fixture'))`;
 const NOT_APPLIED = `COALESCE((SELECT a2.status FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id ORDER BY a2.rowid DESC LIMIT 1), 'SAVED') = 'SAVED'`;
 // Columns and row shaping shared by every job listing (/api/jobs, /api/india-remote/jobs).
+// General eligibility also includes domestic office jobs and relocation. Only positive remote evidence belongs here.
+const confirmedIndiaRemote = `q.eligibility_status = 'ELIGIBLE'
+  AND UPPER(COALESCE(j.workplace_type, 'UNKNOWN')) NOT IN ('ONSITE', 'ON_SITE', 'ON-SITE', 'HYBRID')
+  AND (q.eligibility_reason IN ('Posting explicitly supports fully remote work from India.', 'Posting explicitly advertises worldwide remote work.', 'Remote role in India.',
+      'Accessible Indian market opportunity (Remote in India).', 'Worldwide remote opportunity open to international talent.')
+    OR (q.eligibility_reason = 'India affirmative verified' AND j.workplace_type IN ('REMOTE', 'REMOTE_GLOBAL', 'REMOTE_RESTRICTED'))
+    OR (COALESCE(TRIM(q.eligibility_reason), '') = ''
+      AND LOWER(TRIM(j.location_restrictions)) IN ('remote - india', 'india - remote', 'remote india', 'india remote', 'remote (india)', 'india (remote)', 'remote from india', 'remote - worldwide')))`;
 const JOB_COLUMNS = `
+        (${confirmedIndiaRemote}) AS confirmed_india_remote,
         j.id, j.title, j.company, j.company_url, j.company_headquarters,
         j.source_adapter, j.source_url, j.original_posting_url,
         j.employment_type, j.workplace_type, j.location_restrictions,
@@ -1451,7 +1590,7 @@ function shapeJob(r: any, candidateId: string, threshold: number | null) {
         role_family_key: family ? family.key : UNCLASSIFIED,
         strategy_lane: r.strategy_lane,
         candidate_id: candidateId,
-        remote_from_india: r.eligibility_status === 'ELIGIBLE' ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
+        remote_from_india: r.confirmed_india_remote ? 'CONFIRMED' : (r.eligibility_status === 'INELIGIBLE' ? 'NO' : 'UNKNOWN'),
         farhan_fit: fitOf(r.qualification_status),
         application_state: r.app_status || 'NEW',
         eligibility: {
@@ -1501,6 +1640,20 @@ const TWINS_MAX_PARAM = 90000;
 function usableTwins(t: Twins): Twins { return JSON.stringify(t.hidden).length > TWINS_MAX_PARAM ? { hidden: [], groups: NaN, places: new Map() } : t; }
 async function candidateThreshold(env: Env, candidateId: string): Promise<number | null> {
   try { const r = await env.DB.prepare('SELECT qualification_threshold AS t FROM candidates WHERE id = ?').bind(candidateId).first<any>(); return typeof r?.t === 'number' ? r.t : null; } catch { return null; }
+}
+
+// The person's stored list copy (migration 0027, worker/snapshot.ts), or null to answer from the full queries. It is a cache like the response
+// cache: off where that is off (unit tests that change rows directly), unless SEEKER_SNAPSHOT says otherwise; never older than that cache's
+// own time limit for this request's level.
+// The answer's response-cache entry is then stored with the copy's build time (copyBuiltAt, read by the router), so a copy near its limit
+// does not start a fresh 30 minutes of caching: copy and entry together are never older than one cache time limit, as before.
+const copyBuiltAt = new WeakMap<Request, number>();
+const SEARCH_IDS_PER_STATEMENT = 1000;   // about 30 KB of ids per statement (D1 keeps statements under 100 KB)
+async function listSnapshot(request: Request, env: Env, candidateId: string): Promise<Snapshot | null> {
+  if (env.SEEKER_SNAPSHOT === 'off' || (env.SEEKER_SNAPSHOT !== 'on' && env.RESPONSE_CACHE === 'off')) return null;
+  const snap = await seekerSnapshot(env.DB, candidateId, { version: `${SNAPSHOT_VERSION}:${CACHE_SCHEMA}:${env.GIT_COMMIT || 'nocommit'}`, maxAge: CACHE_TTL_SECONDS[isOperatorRequest(request) ? 'operator' : 'public'] });
+  if (snap) copyBuiltAt.set(request, Math.min(snap.builtAt, copyBuiltAt.get(request) ?? Infinity));
+  return snap;
 }
 
 router.get('/api/jobs', async (request, env, _params, url) => {
@@ -1577,13 +1730,58 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     // Jobs QA 13 Nov: collapse_twins=true (the job seeker's lists) shows one To review row per employer and title, the best-scored one, with a
     // "+N more places" note; the counts and totals below then count it once, as /api/today does.
     let twins: Twins | null = null;
-    if (url.searchParams.get('collapse_twins') === 'true') {
-      twins = usableTwins(collapseTwins(await reviewRows(env, baseWhere, baseParams)));
-      if (twins.hidden.length) { baseWhere += ` AND q.job_id NOT IN (SELECT value FROM json_each(?))`; baseParams.push(JSON.stringify(twins.hidden)); }
+    let rawStatusCounts: any[] = [];
+    let pageIds: any[] = [];
+    // Cheap views (migration 0027): the job seeker's lists (and Hidden jobs) are answered from the person's stored copy (worker/snapshot.ts):
+    // the same rows, filters, grouping, counts and order, computed here instead of by four full queries. Any other filter keeps the queries.
+    const universe = hiddenOnly ? (!excludeDismissed && !excludeApplied ? 'hidden' : null) : (excludeDismissed && excludeApplied ? 'list' : null);
+    const snapshotPath = universe && sortBy !== 'title_asc' && sortBy !== 'company_asc' && !['JOB_SITES', 'BOARDS', 'EMPLOYER'].includes(foundOn)
+      && !(sourceAdapter && sourceAdapter !== 'ALL') && !(strategyLane && strategyLane !== 'ALL') && fitParam === 'ALL' && !payParam && !newWithin;
+    const snap = snapshotPath ? await listSnapshot(request, env, candidateId) : null;
+    if (snap) {
+      let rows = universe === 'hidden' ? snap.hidden : snap.rows;
+      if (search) {
+        // Which of the copy's jobs contain the text: the same LIKE as the full query, asked of exactly those jobs by key (in groups, so each
+        // statement stays small), whatever their status.
+        const term = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
+        const hit = new Set<string>();
+        for (let i = 0; i < rows.length; i += SEARCH_IDS_PER_STATEMENT) {
+          const ids = JSON.stringify(rows.slice(i, i + SEARCH_IDS_PER_STATEMENT).map((r) => r.id));
+          const found = (await env.DB.prepare(`SELECT j.id FROM json_each(?) x CROSS JOIN jobs j ON j.id = x.value
+            WHERE (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`).bind(ids, term, term, term).all<any>()).results || [];
+          for (const r of found) hit.add(r.id);
+        }
+        rows = rows.filter((r) => hit.has(r.id));
+      }
+      if (eligibility && eligibility !== 'ALL') rows = rows.filter((r) => r.el === eligibility);
+      if (minScore > 0) rows = rows.filter((r) => r.sc >= minScore);
+      if (workplaceType === 'REMOTE_ANY') rows = rows.filter((r) => r.wt === 'REMOTE' || r.wt === 'REMOTE_GLOBAL' || r.wt === 'REMOTE_RESTRICTED');
+      else if (workplaceType === 'UNKNOWN') rows = rows.filter((r) => (r.wt ?? 'UNKNOWN') === 'UNKNOWN');
+      else if (workplaceType && workplaceType !== 'ALL') rows = rows.filter((r) => r.wt === workplaceType);
+      if (url.searchParams.get('collapse_twins') === 'true') {
+        twins = usableTwins(collapseTwins(twinRows(rows.filter((r) => r.st === 'NEEDS_REVIEW'))));
+        if (twins.hidden.length) { const out = new Set(twins.hidden); rows = rows.filter((r) => !out.has(r.id)); }
+      }
+      const byStatus = new Map<string, { qualification_status: string; cnt: number; unscreened: number }>();
+      for (const r of rows) {
+        const g = byStatus.get(r.st) || { qualification_status: r.st, cnt: 0, unscreened: 0 };
+        g.cnt++; g.unscreened += r.u; byStatus.set(r.st, g);
+      }
+      rawStatusCounts = [...byStatus.values()].sort((a, b) => cmpBin(a.qualification_status, b.qualification_status));   // GROUP BY's order (READY before READY_HIGH below)
+      const wanted = !qualificationStatus || qualificationStatus === 'ALL' ? null
+        : qualificationStatus === 'APPLY_WORTHY' ? new Set(['READY', 'READY_HIGH', 'STRETCH_READY'])
+        : qualificationStatus === 'READY' ? new Set(['READY', 'READY_HIGH']) : new Set([qualificationStatus]);
+      const page = (wanted ? rows.filter((r) => wanted.has(r.st)) : rows.slice())
+        .sort(sortBy === 'date_desc' ? byDate : sortBy === 'score_desc' ? byScore : byScoreId);
+      pageIds = page.slice(offset, offset + limit).map((r) => ({ id: r.id }));
+    } else {
+      if (url.searchParams.get('collapse_twins') === 'true') {
+        twins = usableTwins(collapseTwins(await reviewRows(env, baseWhere, baseParams)));
+        if (twins.hidden.length) { baseWhere += ` AND q.job_id NOT IN (SELECT value FROM json_each(?))`; baseParams.push(JSON.stringify(twins.hidden)); }
+      }
+      // 1. Status counts over the base predicate (one query; the total below is derived from it)
+      rawStatusCounts = (await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>()).results || [];
     }
-
-    // 1. Status counts over the base predicate (one query; the total below is derived from it)
-    const { results: rawStatusCounts } = await env.DB.prepare(`SELECT q.qualification_status, COUNT(*) as cnt, SUM(CASE WHEN q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%' THEN 1 ELSE 0 END) as unscreened ${baseWhere} GROUP BY q.qualification_status`).bind(...baseParams).all<any>();
     const status_counts: Record<string, number> = { READY: 0, STRETCH_READY: 0, NEEDS_REVIEW: 0, INELIGIBLE: 0, HOLD: 0 };
     // Collector imports the screen has not judged yet sit in NEEDS_REVIEW with score 0. They are counted separately so "to review" can be shown honestly.
     let unscreened_count = 0;
@@ -1601,6 +1799,10 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       if (qualificationStatus === 'APPLY_WORTHY') {
         filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH', 'STRETCH_READY')`;
         inStatus = (st) => st === 'READY' || st === 'READY_HIGH' || st === 'STRETCH_READY';
+      } else if (qualificationStatus === 'READY') {
+        // Best matches: READY_HIGH is a Best match too (status_counts above already counts it as READY, and so does /api/today).
+        filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH')`;
+        inStatus = (st) => st === 'READY' || st === 'READY_HIGH';
       } else {
         filteredWhere += ` AND q.qualification_status = ?`;
         filterParams.push(qualificationStatus);
@@ -1610,14 +1812,16 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     const totalMatching = (rawStatusCounts || []).reduce((n: number, r: any) => n + (inStatus(r.qualification_status) ? r.cnt : 0), 0);
 
     // 3. The ids of this page only (the score is joined here because the order uses it), then their full rows
-    const orderBy = sortBy === 'date_desc' ? 'j.discovered_at DESC, q.job_id'
-      : sortBy === 'title_asc' ? 'j.title ASC, q.job_id'
-      : sortBy === 'company_asc' ? 'j.company ASC, q.job_id'
-      : sortBy === 'score_desc' ? 'COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id'
-      : 'COALESCE(s2.overall_score, 0) DESC, q.job_id';
-    const scoreForOrder = /s2\./.test(orderBy) ? 'LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id' : '';
-    const pageWhere = filteredWhere.replace('WHERE q.candidate_id = ?', `${scoreForOrder}\n      WHERE q.candidate_id = ?`);
-    const { results: pageIds } = await env.DB.prepare(`SELECT q.job_id AS id ${pageWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...filterParams, limit, offset).all<any>();
+    if (!snap) {
+      const orderBy = sortBy === 'date_desc' ? 'j.discovered_at DESC, q.job_id'
+        : sortBy === 'title_asc' ? 'j.title ASC, q.job_id'
+        : sortBy === 'company_asc' ? 'j.company ASC, q.job_id'
+        : sortBy === 'score_desc' ? 'COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id'
+        : 'COALESCE(s2.overall_score, 0) DESC, q.job_id';
+      const scoreForOrder = /s2\./.test(orderBy) ? 'LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id' : '';
+      const pageWhere = filteredWhere.replace('WHERE q.candidate_id = ?', `${scoreForOrder}\n      WHERE q.candidate_id = ?`);
+      pageIds = (await env.DB.prepare(`SELECT q.job_id AS id ${pageWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...filterParams, limit, offset).all<any>()).results || [];
+    }
     let results: any[] = [];
     if (pageIds?.length) {
       const ids = pageIds.map((r: any) => r.id);
@@ -1670,17 +1874,22 @@ router.get('/api/jobs', async (request, env, _params, url) => {
 // worker/twins.ts), as the lists asked with collapse_twins=true show them.
 const TODAY_LIST = 25;
 const UNSCREENED_SQL = `q.qualification_reason LIKE '[GITHUB_COLLECTOR] Unassessed%'`;
-async function todayCounts(env: Env, candidateId: string) {
+async function todayCounts(env: Env, candidateId: string, snap: Snapshot | null = null) {
   // The same predicate as /api/jobs?exclude_applied=true&exclude_dismissed=true. Jobs QA 13 Nov: To review is counted one row per employer and title,
   // within each count's own rows, exactly as the lists with collapse_twins=true group them.
   const listWhere = `FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
     WHERE q.candidate_id = ? AND j.is_active = 1
       AND q.qualification_status NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD')
       AND ${NOT_APPLIED}`;
-  const review = await reviewRows(env, listWhere, [candidateId]);
+  // From the person's stored copy (the same rows as listWhere, and the Hidden rows) when there is one; otherwise the full queries.
+  const review: (TwinRow & { eligibility: string })[] = snap ? twinRows(snap.rows.filter((r) => r.st === 'NEEDS_REVIEW')) : await reviewRows(env, listWhere, [candidateId]);
   const screened = review.filter((r) => !Number(r.unscreened));
   const groups = (rows: TwinRow[]) => { const t = usableTwins(collapseTwins(rows)); return Number.isNaN(t.groups) ? rows.length : t.groups; };
-  const row = await env.DB.prepare(`SELECT
+  const count = (pred: (r: Snapshot['rows'][number]) => boolean) => snap!.rows.reduce((k, r) => k + (pred(r) ? 1 : 0), 0);
+  const row = snap ? {
+      best: count((r) => r.st === 'READY' || r.st === 'READY_HIGH'), worth_a_try: count((r) => r.st === 'STRETCH_READY'), everything: snap.rows.length,
+      says_india: count((r) => r.el === 'ELIGIBLE'), review_rows: review.length, review_india: count((r) => r.st === 'NEEDS_REVIEW' && r.el === 'ELIGIBLE'),
+    } : await env.DB.prepare(`SELECT
       SUM(CASE WHEN q.qualification_status IN ('READY','READY_HIGH') THEN 1 ELSE 0 END) AS best,
       SUM(CASE WHEN q.qualification_status = 'STRETCH_READY' THEN 1 ELSE 0 END) AS worth_a_try,
       COUNT(*) AS everything,
@@ -1688,7 +1897,7 @@ async function todayCounts(env: Env, candidateId: string) {
       SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' THEN 1 ELSE 0 END) AS review_rows,
       SUM(CASE WHEN q.qualification_status = 'NEEDS_REVIEW' AND q.eligibility_status = 'ELIGIBLE' THEN 1 ELSE 0 END) AS review_india
     ${listWhere}`).bind(candidateId).first<any>();
-  const hidden = await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
+  const hidden = snap ? { n: snap.hidden.length } : await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
     WHERE q.candidate_id = ? AND j.is_active = 1 AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`).bind(candidateId).first<any>();
   const apps = await env.DB.prepare(`SELECT
       SUM(CASE WHEN a.status IN ('SAVED','REVIEWING') THEN 1 ELSE 0 END) AS saved,
@@ -1700,7 +1909,7 @@ async function todayCounts(env: Env, candidateId: string) {
   let followupsDue = 0;
   try {
     const f = await env.DB.prepare(`SELECT COUNT(*) AS n FROM application_followups f JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
-      WHERE f.candidate_id = ? AND f.follow_up_at <= ? AND a.status NOT IN ('REJECTED','WITHDRAWN','ARCHIVED')`).bind(candidateId, today).first<any>();
+      WHERE f.candidate_id = ? AND f.follow_up_at <= ? AND ${realApp('a')} AND a.status NOT IN ('REJECTED','WITHDRAWN','ARCHIVED')`).bind(candidateId, today).first<any>();
     followupsDue = Number(f?.n || 0);
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; }
   const n = (v: any) => Number(v || 0);
@@ -1720,17 +1929,23 @@ router.get('/api/today', async (request, env, _params, url) => {
   const candidateId = knownCandidate(url?.searchParams?.get('candidate_id'));
   if (!candidateId) return badCandidate(request, env, url?.searchParams?.get('candidate_id'));
   try {
-    const counts = await todayCounts(env, candidateId);
+    const snap = await listSnapshot(request, env, candidateId);
+    const counts = await todayCounts(env, candidateId, snap);
     const base = `FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
       LEFT JOIN candidate_job_scores s2 ON s2.candidate_id = q.candidate_id AND s2.job_id = q.job_id
       WHERE q.candidate_id = ? AND j.is_active = 1 AND COALESCE(q.manual_override_status, '') NOT IN ('INELIGIBLE', 'CLOSED', 'HOLD') AND ${NOT_APPLIED}`;
     const order = `ORDER BY COALESCE(s2.overall_score, 0) DESC, j.discovered_at DESC, q.job_id LIMIT ${TODAY_LIST}`;
     const ids = async (where: string, extra: any[] = []) => ((await env.DB.prepare(`SELECT q.job_id AS id ${base} AND ${where} ${order}`).bind(candidateId, ...extra).all<any>()).results || []).map((r: any) => r.id);
+    // the same three lists from the stored copy: its rows are base's rows (Today's sections only ask for statuses the list holds), in the same order
+    const top = (pred: (r: Snapshot['rows'][number]) => boolean) => snap!.rows.filter(pred).sort(byScore).slice(0, TODAY_LIST).map((r) => r.id);
     const since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const best = await ids(`q.qualification_status IN ('READY','READY_HIGH')`);
-    const worth = await ids(`q.qualification_status = 'STRETCH_READY'`);
+    // SQLite's own julianday of the cut-off (no row read), compared with the copy's julianday values: the same comparison as the query's
+    const sinceJd = snap ? Number((await env.DB.prepare('SELECT julianday(?) AS jd').bind(since).first<any>())?.jd) : 0;
+    const best = snap ? top((r) => r.st === 'READY' || r.st === 'READY_HIGH') : await ids(`q.qualification_status IN ('READY','READY_HIGH')`);
+    const worth = snap ? top((r) => r.st === 'STRETCH_READY') : await ids(`q.qualification_status = 'STRETCH_READY'`);
     // Good matches found in the last 7 days, for "New since your last visit" (the page compares the found time with its own last visit)
-    const recent = await ids(`q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) AND COALESCE(s2.overall_score, 0) >= 60
+    const recent = snap ? top((r) => r.st === 'NEEDS_REVIEW' && !r.u && r.sc >= 60 && ((r.fj != null && r.fj >= sinceJd) || (r.qj != null && r.qj >= sinceJd)))
+      : await ids(`q.qualification_status = 'NEEDS_REVIEW' AND NOT COALESCE(${UNSCREENED_SQL}, 0) AND COALESCE(s2.overall_score, 0) >= 60
       AND (julianday(j.discovered_at) >= julianday(?) OR julianday(q.qualified_at) >= julianday(?))`, [since, since]);
     const all = [...new Set([...best, ...worth, ...recent])];
     const byId = new Map<string, any>();
@@ -2309,7 +2524,7 @@ router.get('/api/follow-ups', async (request, env, _params, url) => {
       FROM application_followups f
       JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
       JOIN jobs j ON j.id = f.job_id
-      WHERE f.candidate_id = ? ORDER BY f.follow_up_at, f.job_id LIMIT 200`).bind(candidateId).all<any>();
+      WHERE f.candidate_id = ? AND ${realApp('a')} ORDER BY f.follow_up_at, f.job_id LIMIT 200`).bind(candidateId).all<any>();
     return jsonResponse({ candidate_id: candidateId, items: results || [] }, 200, corsHeaders(request, env));
   } catch (e: any) {
     if (isDatabaseFailure(e?.message)) throw e;
@@ -2392,7 +2607,7 @@ router.get('/api/india-remote/summary', async (request, env, _params, url) => {
         SUM(CASE WHEN EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = q.candidate_id AND a.job_id = q.job_id AND a.status IN ('APPLIED','SUBMITTED','INTERVIEWING','OFFER') AND ${realApp('a')}) THEN 1 ELSE 0 END) as applied_count
       FROM candidate_qualifications q
       JOIN jobs j ON q.job_id = j.id
-      WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1
+      WHERE q.candidate_id = ? AND ${confirmedIndiaRemote} AND j.is_active = 1
     `).bind(candidateId).first<any>();
 
     return jsonResponse({
@@ -2433,7 +2648,9 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
   const search = (sp.get('search') || '').trim();
   try {
     // Step 1: one light row per ELIGIBLE active job of this candidate (a few hundred at most), with only what filtering needs.
-    let where = `WHERE q.candidate_id = ? AND q.eligibility_status = 'ELIGIBLE' AND j.is_active = 1`;
+    // ORDER BY +q.job_id (the same order): a plain q.job_id let the planner walk every row of the person by key to skip the sort (18,000 rows
+    // read at production size instead of about 100 through the (candidate, eligibility) index; migration 0027 notes).
+    let where = `WHERE q.candidate_id = ? AND ${confirmedIndiaRemote} AND j.is_active = 1`;
     const binds: any[] = [candidateId];
     if (search) { where += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`; const t = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`; binds.push(t, t, t); }
     const { results: light } = await env.DB.prepare(`
@@ -2444,7 +2661,7 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
       LEFT JOIN candidate_job_scores s ON s.candidate_id = q.candidate_id AND s.job_id = q.job_id
       LEFT JOIN applications a ON a.rowid = (SELECT MAX(a2.rowid) FROM applications a2 WHERE a2.candidate_id = q.candidate_id AND a2.job_id = q.job_id)
       ${where}
-      ORDER BY q.job_id
+      ORDER BY +q.job_id
       LIMIT 5001`).bind(...binds).all<LightRow>();
     const truncated = (light || []).length > 5000;   // far above today's few hundred; if it ever happens the answer says so
     // Step 2: filter, count and paginate on those rows (role family is derived from the title, so it cannot be a SQL predicate).

@@ -14,6 +14,15 @@
    "from_hash": "9135bb122ae5e604b06a2dfc91ed3a73449037eafc1aaf7026f0c6555394c368",
    "kind": "content_changed",
    "to_hash": "39b50a714f1a484171f9640a56df46701df8cdd0034e409af96a2f5f029ecfea"
+  },
+  {
+   "changed_at": "2026-11-19T00:16:26.514970+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "39b50a714f1a484171f9640a56df46701df8cdd0034e409af96a2f5f029ecfea",
+   "kind": "content_changed",
+   "to_hash": "1c2f7c41924a0bfccb6556e78942d0edd1bb94272be1b52d26f20d72503bcb34"
   }
  ],
  "content": {
@@ -30,11 +39,11 @@
    }
   ],
   "published": "2026-11-06T11:01:23-05:00",
-  "title": "Senior Software Engineer - Backend, Knowledge Graph",
+  "title": "Senior Software Engineer, Backend - Kotlin",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
- "content_hash": "39b50a714f1a484171f9640a56df46701df8cdd0034e409af96a2f5f029ecfea",
+ "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
+ "content_hash": "1c2f7c41924a0bfccb6556e78942d0edd1bb94272be1b52d26f20d72503bcb34",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Norway (Oslo)",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }
@@ -66,7 +75,7 @@
       "interpretation": null,
       "method": "description_section:Required Qualifications",
       "quote": "Significant experience building and operating distributed backend systems in a modern, typed language.\nStrong proficiency in Kotlin. We value deep expertise in either language and a pragmatic approach to choosing the right tool for the job.\nDeep expertise in modern authentication and authorization concepts (e.g., OIDC, OAuth2, RBAC/ABAC) and their practical application in building secure services.\nHands-on experience with cloud-native technologies, Elasticsearch and cloud platforms like GCP, AWS or Azure is vital.",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }
@@ -79,7 +88,7 @@
       "interpretation": null,
       "method": "description_section:Preferred Experience",
       "quote": "A proven track record of owning services in production, from initial design and development to deployment, monitoring, and incident response.\nA collaborative and pragmatic mindset, with good communication skills and a desire to mentor others.\nA snapshot of our many perks and benefits as a Cogniter\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n* Flat structure with direct access to decision-makers\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n* Get access to private health services with Cognite Care.\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }

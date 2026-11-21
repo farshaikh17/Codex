@@ -52,7 +52,13 @@ export const ROLE_FAMILY_KEYS = new Set(ROLE_FAMILIES.map((f) => f.key));
 export const UNCLASSIFIED = 'UNCLASSIFIED';
 export function roleFamilyOf(title: string | null | undefined): { key: string; label: string } | null {
   const t = String(title || '').slice(0, 200);   // titles come from external feeds: bound the work the rules can do
-  for (const f of ROLE_FAMILIES) if (f.re.test(t)) return { key: f.key, label: f.label };
+  for (const f of ROLE_FAMILIES) {
+    if (!f.re.test(t)) continue;
+    // Site reliability is also a software discipline. Keep explicitly industrial site titles.
+    if (f.key === 'RELIABILITY_MAINTENANCE' && /\b(?:(?:site|software|network|cloud)[- ]reliability|sre)\b/i.test(t)
+      && !/\b(?:plant|refinery|turbine|rotating equipment|industrial maintenance)\b/i.test(t)) continue;
+    return { key: f.key, label: f.label };
+  }
   return null;
 }
 export const validRoleFamily = (v: string) => v === 'ALL' || v === UNCLASSIFIED || ROLE_FAMILY_KEYS.has(v);

@@ -27,7 +27,9 @@ const GRACE_MS = 3600000;
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
 const APPLIED = (t) => `EXISTS (SELECT 1 FROM applications a WHERE a.candidate_id = ${t}.candidate_id AND a.job_id = ${t}.job_id)`;
 
-/** The audit's one read: every automatic row, plus every row with a decision or an application that the daily run wrote history for since `since`. */
+/** The audit's one read: every automatic row, plus every row with a decision or an application that the daily run wrote history for since `since`.
+ *  "candidate_id IN (candidates)" changes nothing (every row has a candidate) but lets the (candidate, status) index serve the first part: it
+ *  read every screening row of everyone before (about 38,000 rows read at production size). */
 export function auditSql(since) {
   if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(String(since || ''))) throw new Error('--since must be "YYYY-MM-DD HH:MM:SS" (UTC)');
   return `SELECT 'row' AS kind, q.candidate_id, q.job_id, q.qualification_status AS status, j.company, j.source_adapter AS source,
@@ -35,7 +37,7 @@ export function auditSql(since) {
   CASE WHEN q.manual_override_status IS NOT NULL OR ${APPLIED('q')} THEN 1 ELSE 0 END AS decided,
   j.location_restrictions AS location, j.discovered_at, j.title, j.workplace_type AS workplace
 FROM candidate_qualifications q JOIN jobs j ON j.id = q.job_id
-WHERE q.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(q.qualification_reason, '') LIKE ${q(MARK + '%')}
+WHERE q.candidate_id IN (SELECT id FROM candidates) AND q.qualification_status IN ('READY','STRETCH_READY') AND COALESCE(q.qualification_reason, '') LIKE ${q(MARK + '%')}
 UNION ALL
 SELECT DISTINCT 'touched', h.candidate_id, h.job_id, h.new_status, NULL, NULL, NULL, h.changed_at, NULL, 1, NULL, NULL, NULL, NULL
 FROM qualification_history h JOIN candidate_qualifications q ON q.candidate_id = h.candidate_id AND q.job_id = h.job_id

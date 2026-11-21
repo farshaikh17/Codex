@@ -5,10 +5,29 @@
   "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "dde142c6fa2e306e051f8a838f13fc69385b3d847ce0e76f418987d8ef457ece",
+   "kind": "content_changed",
+   "to_hash": "a131e2edbb52a647e36d4a4f460c428f2acee239d5aaab4328c4f1d87a65e29d"
+  },
+  {
+   "changed_at": "2026-11-19T21:52:19.631182+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "a131e2edbb52a647e36d4a4f460c428f2acee239d5aaab4328c4f1d87a65e29d",
+   "kind": "content_changed",
+   "to_hash": "fb636225cfacf4b7786364802d62c7ef8aa3bc51a575b759b91ad37f71667d9a"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Staff Machine Learning Engineer on Twilio’s AI/ML Platform team.\n\nAbout the job\n\nWe are actively recruiting for this role to fill an existing vacancy. This position is needed to build the foundational AI/ML capabilities and common platform tooling that power intelligent engagement experiences across Twilio. You will influence the design and evolution of our company-wide ML/AI Ops foundation, ensuring every AI capability incorporates rigorous offline and online evals to maintain exceptionally high quality.\n\nYou will drive improvements to managing LLM workloads across the company, while ensuring easy and compliant access to data for AI/ML exploration and product development. This role requires a builder mindset to bridge theoretical research, production-grade experimentation, and scalable, enterprise-quality software.\n\nResponsibilities\n\nIn this role, you’ll:\n\nConduct deep-dive research into and implement state-of-the-art LLM inference and orchestration.\n\nIdentify opportunities to leverage small language via fine-tuning/distillation.\n\nBuild ML systems that hold up at Twilio scale.\n\nSet standards and tooling for building evals across a range of AI/ML capabilities.\n\nRapidly acquire new technical skills and knowledge in a fast-paced, high-delivery environment.\n\nProactively leverage and integrate the latest AI development stacks to bypass boilerplate engineering and focus on core differentiation.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n8+ years applied ML/AI experience with a track record of owning technically ambitious systems end to end rather than contributing to someone else's design.\n\nComfort operating in a 0-to-1 setting with ambiguous requirements and a strong bias for action.\n\nProficiency in Python programming language.\n\nExperience building cloud-based services on AWS, GCP, or Azure, with high-volume data, streaming or real-time inference paths, and a range of data stores.\n\nStrong fundamentals of statistical machine learning algorithms, transformer models, LLMs.\n\nExtensive experience with ML Ops and LLM Ops patterns, including designing and implementing rigorous evaluation metrics for non-deterministic AI features at scale.\n\nStrong communication skills and highly effective collaborator who works well with teammates.\n\nFamiliarity with AI-assisted development tools (e.g., Claude, Codex, GitHub Copilot, Cursor, etc.).\n\nDesired:\n\nPrior experience building evals for autonomous agents and large language models.\n\nPrior experience building autonomous agents that handle multi-turn conversations and maintain long-term context/consistency.\n\nPrior experience working in a globally distributed team.\n\nEvidence of technical leadership/impact, such as contributions to open-source data/ML projects and/or published technical presentations, blog posts, papers, or research.\n\nLocation\n\nThis role will be remote and based in Ontario, British Columbia or Alberta, Canada.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location. Based on role, employees may also be eligible for additional compensation and benefits, including but not limited to incentive programs, commissions, equity grants, health and wellness benefits, retirement contributions, and paid time off.\n\nThe estimated pay ranges for this role are as follows:\n\n$160,320 - $200,400\n\nTarget Bonus Percentage 12.5%\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Staff Machine Learning Engineer on Twilio’s AI/ML Platform team.\n\nAbout the job\n\nWe are actively recruiting for this role to fill an existing vacancy. This position is needed to build the foundational AI/ML capabilities and common platform tooling that power intelligent engagement experiences across Twilio. You will influence the design and evolution of our company-wide ML/AI Ops foundation, ensuring every AI capability incorporates rigorous offline and online evals to maintain exceptionally high quality.\n\nYou will drive improvements to managing LLM workloads across the company, while ensuring easy and compliant access to data for AI/ML exploration and product development. This role requires a builder mindset to bridge theoretical research, production-grade experimentation, and scalable, enterprise-quality software.\n\nResponsibilities\n\nIn this role, you’ll:\n\nConduct deep-dive research into and implement state-of-the-art LLM inference and orchestration.\n\nIdentify opportunities to leverage small language via fine-tuning/distillation.\n\nBuild ML systems that hold up at Twilio scale.\n\nSet standards and tooling for building evals across a range of AI/ML capabilities.\n\nRapidly acquire new technical skills and knowledge in a fast-paced, high-delivery environment.\n\nProactively leverage and integrate the latest AI development stacks to bypass boilerplate engineering and focus on core differentiation.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n8+ years applied ML/AI experience with a track record of owning technically ambitious systems end to end rather than contributing to someone else's design.\n\nComfort operating in a 0-to-1 setting with ambiguous requirements and a strong bias for action.\n\nProficiency in Python programming language.\n\nExperience building cloud-based services on AWS, GCP, or Azure, with high-volume data, streaming or real-time inference paths, and a range of data stores.\n\nStrong fundamentals of statistical machine learning algorithms, transformer models, LLMs.\n\nExtensive experience with ML Ops and LLM Ops patterns, including designing and implementing rigorous evaluation metrics for non-deterministic AI features at scale.\n\nStrong communication skills and highly effective collaborator who works well with teammates.\n\nFamiliarity with AI-assisted development tools (e.g., Claude, Codex, GitHub Copilot, Cursor, etc.).\n\nDesired:\n\nPrior experience building evals for autonomous agents and large language models.\n\nPrior experience building autonomous agents that handle multi-turn conversations and maintain long-term context/consistency.\n\nPrior experience working in a globally distributed team.\n\nEvidence of technical leadership/impact, such as contributions to open-source data/ML projects and/or published technical presentations, blog posts, papers, or research.\n\nLocation\n\nThis role will be remote and based in Ontario, British Columbia or Alberta, Canada.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location. Based on role, employees may also be eligible for additional compensation and benefits, including but not limited to incentive programs, commissions, equity grants, health and wellness benefits, retirement contributions, and paid time off.\n\nThe estimated pay ranges for this role are as follows:\n\n$198,560 - $248,200\nTarget Bonus Percentage 15%\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +42,8 @@
   "title": "Staff Machine Learning Engineer",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "dde142c6fa2e306e051f8a838f13fc69385b3d847ce0e76f418987d8ef457ece",
+ "content_changed_at": "2026-11-19T21:52:19.631182+00:00",
+ "content_hash": "fb636225cfacf4b7786364802d62c7ef8aa3bc51a575b759b91ad37f71667d9a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +62,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Ontario, Canada (DNU)",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      },
@@ -51,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      },
@@ -59,7 +78,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in Ontario, British Columbia or Alberta, Canada.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      }
@@ -72,7 +91,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      },
@@ -80,7 +99,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "8+ years applied ML/AI experience with a track record of owning technically ambitious systems end to end rather than contributing to someone else's design.\nComfort operating in a 0-to-1 setting with ambiguous requirements and a strong bias for action.\nProficiency in Python programming language.\nExperience building cloud-based services on AWS, GCP, or Azure, with high-volume data, streaming or real-time inference paths, and a range of data stores.\nStrong fundamentals of statistical machine learning algorithms, transformer models, LLMs.\nExtensive experience with ML Ops and LLM Ops patterns, including designing and implementing rigorous evaluation metrics for non-deterministic AI features at scale.\nStrong communication skills and highly effective collaborator who works well with teammates.\nFamiliarity with AI-assisted development tools (e.g., Claude, Codex, GitHub Copilot, Cursor, etc.).",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      }
@@ -93,7 +112,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Prior experience building evals for autonomous agents and large language models.\nPrior experience building autonomous agents that handle multi-turn conversations and maintain long-term context/consistency.\nPrior experience working in a globally distributed team.\nEvidence of technical leadership/impact, such as contributions to open-source data/ML projects and/or published technical presentations, blog posts, papers, or research.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      }
@@ -106,7 +125,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Ontario, Canada (DNU)",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      },
@@ -114,7 +133,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Ontario, Canada",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-19T21:52:19.631182+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8258589"
      }

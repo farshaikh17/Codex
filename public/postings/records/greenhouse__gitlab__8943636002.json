@@ -5,14 +5,33 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-17T23:38:01.366527+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "caa9ef52c80026314e303d5100d8f5789ea942753371576083ea0dba77c47855",
+   "kind": "content_changed",
+   "to_hash": "458e5db54eacb84983e57479ab84a937a8a9cda48bb40e58e863860124a140d0"
+  },
+  {
+   "changed_at": "2026-11-20T09:06:52.812734+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "458e5db54eacb84983e57479ab84a937a8a9cda48bb40e58e863860124a140d0",
+   "kind": "content_changed",
+   "to_hash": "3f4f00747b653af476473c0bf552cbdcd81c11da602cb7388c7658118cd902d9"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs the Candidate Experience Team Lead for [Region], you'll own how candidates experience GitLab across your region by raising the capability of the specialists around you. You'll set the quality bar, balance workloads, onboard and develop specialists, and serve as the first escalation point when a process breaks down or a candidate situation needs judgment. You'll stay hands-on with interview coordination, background checks, and offers, while spending most of your time making the regional function run well. You'll use candidate experience data to surface patterns and risks to the Director, Talent Acquisition and Enablement, and partner with leads in other regions to maintain one global process. At GitLab, our mission is simple: to enable everyone to contribute to and co-create the software that powers our world.\n\nWhat you’ll do\n\nLead Candidate Experience Specialists in [Region], setting and modeling standards for interview coordination, candidate communication, contract and offer accuracy, and data hygiene in the applicant tracking system.\n\nBalance coordination work across the regional team, monitor capacity against hiring volume, and flag resourcing gaps to the Director, Talent Acquisition and Enablement before they affect candidates.\n\nResolve escalated scheduling conflicts, candidate issues, and process gaps, bringing clear recommendations to leadership when further support is needed.\n\nOwn onboarding, ramp, and ongoing development for new specialists through documentation, shadowing, and direct feedback on work quality.\n\nCoordinate interviews, prepare offers and employment contracts, manage background and reference checks, and partner with People Operations on the handoff to onboarding.\n\nBuild and maintain reporting on candidate satisfaction, specialist response times, scheduling turnaround, and data accuracy to identify patterns, bottlenecks, and risks.\n\nPartner with leads in other regions to maintain one global coordination process, contribute regional evidence to process and tooling improvements, implement agreed changes, and keep documentation accurate in the applicant tracking system and GitLab repositories.\n\nCollaborate with recruiters, hiring managers, Talent Acquisition leadership, Information Technology, and People Operations across time zones to keep hiring moving, modeling GitLab's values, culture, and all-remote approach in every interaction.\n\nWhat you’ll bring\n\nSubstantial experience in candidate experience or recruiting coordination, covering interview scheduling, offer and contract preparation, background checks, and onboarding handoffs, including serving as a senior or go-to team member.\n\nAbility to lead and develop team members without formal authority through mentoring, onboarding, direct feedback, and influence.\n\nAttention to detail in scheduling, contracts, and candidate data, with a record of professionalism, responsiveness, sound judgment under pressure, and maintaining confidentiality.\n\nExperience anticipating risks, resolving scheduling and process problems early, prioritizing competing demands, and setting clear expectations about timelines, next steps, and trade-offs.\n\nExperience building and maintaining candidate experience or scheduling reports, using data to identify bottlenecks and make a case for change.\n\nExperience working across regions or functions to standardize processes, with the judgment to distinguish genuine regional requirements from inconsistent practices.\n\nClear written and verbal communication with candidates and stakeholders at all levels, including executives, and the ability to build collaborative relationships across functions and time zones.\n\nProficiency with an applicant tracking system or interview tool for scheduling, tracking, and stage management, plus Google Workspace and scheduling tools, and a willingness to learn additional tools. Greenhouse and ModernLoop experience is beneficial but not required.\n\nAbout the team\n\nOur Candidate Experience team supports candidates through interview coordination, offers and contracts, background and reference checks, and the transition to onboarding. As regional leads and specialists, we partner with recruiters, hiring managers, Talent Acquisition leadership, Information Technology, and People Operations to deliver a consistent global candidate experience. We work across time zones, using transparent documentation in the applicant tracking system and GitLab repositories to collaborate asynchronously. Our regional leads work together to resolve process differences and bring regional evidence into global improvements.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote, India"
+    "text": "Bangalore, India"
    },
    {
     "source": "offices.name",
@@ -20,11 +39,11 @@
    }
   ],
   "published": "2026-11-16T19:18:24-05:00",
-  "title": "Senior Candidate Experience Specialist, APJ",
+  "title": "Candidate Experience Specialist, Team Lead (APJ)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-17T00:53:41.055943+00:00",
- "content_hash": "caa9ef52c80026314e303d5100d8f5789ea942753371576083ea0dba77c47855",
+ "content_changed_at": "2026-11-20T09:06:52.812734+00:00",
+ "content_hash": "3f4f00747b653af476473c0bf552cbdcd81c11da602cb7388c7658118cd902d9",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -42,8 +61,8 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote, India",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "quote": "Bangalore, India",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      },
@@ -51,7 +70,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "India",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      },
@@ -59,7 +78,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Collaborate with recruiters, hiring managers, Talent Acquisition leadership, Information Technology, and People Operations across time zones to keep hiring moving, modeling GitLab's values, culture, and all-remote approach in every interaction.",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      },
@@ -67,7 +86,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Clear written and verbal communication with candidates and stakeholders at all levels, including executives, and the ability to build collaborative relationships across functions and time zones.",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      },
@@ -75,7 +94,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Our Candidate Experience team supports candidates through interview coordination, offers and contracts, background and reference checks, and the transition to onboarding. As regional leads and specialists, we partner with recruiters, hiring managers, Talent Acquisition leadership, Information Technology, and People Operations to deliver a consistent global candidate experience. We work across time zones, using transparent documentation in the applicant tracking system and GitLab repositories to collaborate asynchronously. Our regional leads work together to resolve process differences and bring regional evidence into global improvements.",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      }
@@ -88,7 +107,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Substantial experience in candidate experience or recruiting coordination, covering interview scheduling, offer and contract preparation, background checks, and onboarding handoffs, including serving as a senior or go-to team member.\nAbility to lead and develop team members without formal authority through mentoring, onboarding, direct feedback, and influence.\nAttention to detail in scheduling, contracts, and candidate data, with a record of professionalism, responsiveness, sound judgment under pressure, and maintaining confidentiality.\nExperience anticipating risks, resolving scheduling and process problems early, prioritizing competing demands, and setting clear expectations about timelines, next steps, and trade-offs.\nExperience building and maintaining candidate experience or scheduling reports, using data to identify bottlenecks and make a case for change.\nExperience working across regions or functions to standardize processes, with the judgment to distinguish genuine regional requirements from inconsistent practices.\nClear written and verbal communication with candidates and stakeholders at all levels, including executives, and the ability to build collaborative relationships across functions and time zones.",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      }
@@ -101,7 +120,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Proficiency with an applicant tracking system or interview tool for scheduling, tracking, and stage management, plus Google Workspace and scheduling tools, and a willingness to learn additional tools. Greenhouse and ModernLoop experience is beneficial but not required.",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
+      "retrieved_at": "2026-11-20T09:06:52.812734+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
      }
@@ -109,17 +128,8 @@
     "state": "stated"
    },
    "workplace": {
-    "items": [
-     {
-      "interpretation": "remote",
-      "method": "location_text",
-      "quote": "Remote, India",
-      "retrieved_at": "2026-11-17T00:53:41.055943+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8943636002"
-     }
-    ],
-    "state": "stated"
+    "items": [],
+    "state": "not_stated"
    }
   },
   "state": "ok",

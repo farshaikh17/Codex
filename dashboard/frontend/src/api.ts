@@ -101,6 +101,21 @@ export function clearShareView(): void {
   try { window.sessionStorage.removeItem(VIEW_KEY); window.sessionStorage.removeItem(VIEW_CANDIDATE); } catch {}
 }
 
+// The Worker keeps public answers at the edge for up to 5 minutes (worker/index.ts, edgeKey). A change made here drops them where it was made,
+// but another data centre or Worker instance may still hold the previous answer; so for a little longer than that, this page's own reads ask
+// for a fresh answer (Cache-Control: no-cache), which skips the edge copy and reads the D1 cache, which the change did clear. Kept per tab.
+const FRESH_KEY = 'own_change_at', FRESH_MS = 330_000;
+let ownChangeAt = 0;
+function changedRecently(): boolean {
+  let at = ownChangeAt;
+  try { at = Math.max(at, Number(window.sessionStorage.getItem(FRESH_KEY)) || 0); } catch { /* fine */ }
+  return Date.now() - at < FRESH_MS;
+}
+function noteOwnChange(): void {
+  ownChangeAt = Date.now();
+  try { window.sessionStorage.setItem(FRESH_KEY, String(ownChangeAt)); } catch { /* fine */ }
+}
+
 /** Public pages are read-only for visitors. A read sends no key unless the operator has unlocked; a write without a
  *  key never leaves the browser, it asks for the operator unlock instead. */
 export async function authedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -118,7 +133,9 @@ export async function authedFetch(input: RequestInfo | URL, init?: RequestInit):
     throw new Error('Operator sign-in is required to change records.');
   }
 
+  if (!isWrite && changedRecently() && !headers.has('Cache-Control')) headers.set('Cache-Control', 'no-cache');
   const response = await fetch(input, { ...init, headers });
+  if (isWrite && response.ok) noteOwnChange();
 
   if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
     // write: ask for the unlock window. read: only matters when a stored key was refused (rotated/expired).

@@ -66,10 +66,16 @@ class FakeCon:
         cols = list(self.rows[0].keys())
         self.description = [(c,) for c in cols]
         self._out = [tuple(r[c] for c in cols) for r in self.rows]
+        self.params = params
         return self
 
     def fetchall(self):
-        return self._out
+        out, self._out = self._out, []
+        return out
+
+    def fetchmany(self, n):
+        out, self._out = self._out[:n], self._out[n:]
+        return out
 
 
 def dataset_row(title, location, country='', remote='', posted='2026-11-10'):
@@ -114,6 +120,61 @@ class SelectWide(unittest.TestCase):
             return [{'k': k, 'cid': c, **pre(90, status='INELIGIBLE')} for k, (c, _) in enumerate(items)]
         got = dd.select_wide(FakeCon(self.ROWS), 'x.parquet', {'farhan_shaikh': dict(dd.BUILTIN['farhan_shaikh'])}, [], 45, 100_000, scorer)
         self.assertEqual(got['farhan_shaikh'], [])
+
+
+class MaxDiscovery(unittest.TestCase):
+    """20 Nov 2026: the intake reads every title the Worker's role rule accepts, 90 days back, in batches scored several at once."""
+    def test_wide_role_is_the_workers_role_rule_plus_the_search_rule(self):
+        src = (ROOT / 'dashboard' / 'worker' / 'discovery.ts').read_text()
+        rules = dd.worker_role_rules(src)
+        for cid in ('farhan_shaikh', 'sana_ansari'):
+            wide = re.compile(dd.BUILTIN[cid]['wide_role'], re.I)
+            self.assertIn(rules[cid], dd.BUILTIN[cid]['wide_role'])
+            self.assertIn(dd.BUILTIN[cid]['role'], dd.BUILTIN[cid]['wide_role'])
+            self.assertTrue(re.compile(dd.BUILTIN[cid]['role'], re.I).search('implementation manager' if cid == 'farhan_shaikh' else 'power plant'))
+        # titles the narrow search rule missed that QA 4 judged right (and the 20 Nov snapshot scored at the threshold)
+        f, s = re.compile(dd.BUILTIN['farhan_shaikh']['wide_role'], re.I), re.compile(dd.BUILTIN['sana_ansari']['wide_role'], re.I)
+        for t in ('technical program manager', 'manager, professional services - india', 'technical account manager'):
+            self.assertTrue(f.search(t), t)
+            self.assertFalse(re.search(dd.BUILTIN['farhan_shaikh']['role'], t), f'{t}: the narrow rule missed it')
+        for t in ('shift engineer | ksa technical recruitment campaign', 'shift in charge', 'assistant manager - c&i maintenance'):
+            self.assertTrue(s.search(t), t)
+        self.assertRegex('seniorAdministrator - jenkins, windows powershell'.lower(), dd.BUILTIN['sana_ansari']['exclude'], 'PowerShell is not power')
+
+    def test_the_intake_uses_the_wide_rule_and_ninety_days(self):
+        con = FakeCon(SelectWide.ROWS)
+        list(dd.candidate_batches(con, 'x.parquet', dd.BUILTIN['sana_ansari'], dd.MAX_DAYS))
+        self.assertEqual(con.params['role'], dd.BUILTIN['sana_ansari']['wide_role'])
+        self.assertEqual(dd.MAX_DAYS, 90)
+        client = {'role': 'foo', 'exclude': None, 'countries': [], 'home': 'india'}
+        list(dd.candidate_batches(con, 'x.parquet', client, 45))
+        self.assertEqual(con.params['role'], 'foo', 'a client keeps its own keywords')
+
+    def test_batches_are_scored_separately_and_only_fits_are_kept(self):
+        rows = [dataset_row(f'Maintenance Engineer {i}', 'Pune, India') for i in range(7)]
+        sizes = []
+
+        def scorer(items):
+            sizes.append(len(items))
+            return [{'k': k, 'cid': c, **pre(80 if int(r['title'].split()[-1]) % 2 else 10, 'india_onsite')} for k, (c, r) in enumerate(items)]
+        stats = {}
+        with mock.patch.object(dd, 'PRESCORE_BATCH', 3):
+            got = dd.select_wide(FakeCon(rows), 'x.parquet', {'sana_ansari': dict(dd.BUILTIN['sana_ansari'])}, [], 90, 100_000, scorer, stats, workers=2)
+        self.assertEqual(sorted(sizes), [1, 3, 3])
+        self.assertEqual(stats['sana_ansari']['read'], 7)
+        self.assertEqual(sorted(r['title'] for r in got['sana_ansari']), ['Maintenance Engineer 1', 'Maintenance Engineer 3', 'Maintenance Engineer 5'])
+
+    def test_builtin_profiles_need_no_database(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(dd, 'd1', side_effect=AssertionError('no database read')), \
+                mock.patch('sys.argv', ['x', '--builtin-profiles', str(Path(d, 'p.json'))]):
+            self.assertEqual(dd.main(), 0)
+            got = json.loads(Path(d, 'p.json').read_text())
+        self.assertEqual(set(got), {'farhan_shaikh', 'sana_ansari'})
+        self.assertEqual(got['sana_ansari']['wide_role'], dd.BUILTIN['sana_ansari']['wide_role'])
+
+    def test_canonical_dataset_address(self):
+        self.assertTrue(dd.DATASET.startswith('https://storage.stapply.ai/jobs/v1/'))
+        self.assertTrue(dd.MANIFEST.startswith('https://storage.stapply.ai/jobs/v1/'))
 
 
 class Fallback(unittest.TestCase):

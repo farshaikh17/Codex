@@ -109,6 +109,14 @@ def _flag_from_workplace(wt):
         return False
     return None
 
+def ashby_workplace(job):
+    workplace = job.get('workplaceType')
+    flag = _flag_from_workplace(workplace)
+    if flag is None and job.get('isRemote') is True:
+        return True, 'isRemote=true'
+    return flag, workplace
+
+
 ASHBY_COMPONENT_KEYS = ('compensationType', 'currencyCode', 'interval', 'minValue', 'maxValue', 'summary')
 
 def ashby_compensation(c):
@@ -129,7 +137,10 @@ def ashby_compensation(c):
 def normalize(provider, board, j):
     if not isinstance(j, dict):
         raise Skip('not_object', 'job entry is not an object')
-    req = _s(j.get('id'))
+    raw_id = j.get('id')
+    if raw_id is not None and type(raw_id) not in (str, int):
+        raise Skip('invalid_id', 'posting id must be a string or integer')
+    req = _s(raw_id)
     if not req:
         raise Skip('missing_id', 'job has empty or missing id (title=%r); not deduplicated by title' % _s(j.get('title') or j.get('text')))
     if provider == 'greenhouse':
@@ -147,7 +158,8 @@ def normalize(provider, board, j):
         cats = j.get('categories') if isinstance(j.get('categories'), dict) else {}
         locs = [(cats.get('location'), 'categories.location')]
         locs += [(x, 'categories.allLocations') for x in _list(cats.get('allLocations'))]
-        parts = [_s(j.get('descriptionPlain')) or html_to_text(_s(j.get('description')))]
+        parts = [_s(j.get('descriptionPlain')) or html_to_text(_s(j.get('description')))
+                 or html_to_text(_s(j.get('descriptionBody')))]
         for lst in _list(j.get('lists')):
             if isinstance(lst, dict):
                 parts.append(_s(lst.get('text')) + NL + html_to_text(_s(lst.get('content'))))
@@ -165,10 +177,7 @@ def normalize(provider, board, j):
         addr = j.get('address') if isinstance(j.get('address'), dict) else {}
         postal = addr.get('postalAddress') if isinstance(addr.get('postalAddress'), dict) else {}
         locs.append((postal.get('addressCountry'), 'address.addressCountry'))
-        wt = j.get('workplaceType')
-        flag = _flag_from_workplace(wt)
-        if flag is None and j.get('isRemote') is True:
-            flag, wt = True, 'isRemote=true'
+        flag, wt = ashby_workplace(j)
         c = j.get('compensation') if isinstance(j.get('compensation'), dict) else {}
         comp = ashby_compensation(c)
         desc = _s(j.get('descriptionPlain')) or html_to_text(_s(j.get('descriptionHtml')))

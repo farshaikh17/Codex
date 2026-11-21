@@ -5,10 +5,20 @@
   "state": "listed"
  },
  "board": "twilio",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "bbc63ad4ccc428495ac360c3ce6c4299fc965b290e815f291502fa8924a14609",
+   "kind": "content_changed",
+   "to_hash": "b188f8eddaaee0b7e580a1fa7563d3c822c638bfc1069318036e71003e82c38a"
+  }
+ ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next New Business Account Executive in Japan\n\nAbout the job\n\nThis position is to play a key role as part of the growth strategy of Twilio Japan by winning new customers. You will be responsible for developing a strategy to acquire new customers for Twilio, collaborate with internal stakeholders, such as demand generation marketing, digital sales, partner managers and system engineers. Our customers are often application owners, product managers, line of business executives, CxO’s, Head’s of invitation, omni channel and digital strategy partners. Customer industries and segments are also spread from retail, financial services, manufacturing, transportation, public sectors, independent software vendors, system integrators and fast moving technology startups\n\nResponsibilities\n\nIn this role, you’ll:\n\nDevelop and implement a comprehensive territory plan, winning strategy for target accounts, execute and adjust plan and priorities to maximize results of winning new customers and its business.\n\nCollaborate with internal stakeholders, align shared goals and strategy and obtain support from them\n\nForecast the business, including sales funnel management, systematic follow up and discipline by utilizing SFDC and its supplement tools as source of truth for business and its pipelines.\n\nBe an active spokesperson for Twilio Mission, Vision and Value, Corporate Story to our customers, potential customers, and any external partners who collaborate.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n5+ years of combined experience in high-touch sales experience.\n\nComfortable working with business and highly technical leaders, while influencing their understanding and building supportive partnerships.\n\nDemonstrated track record of growth of business, growth strategy development and execution.\n\nChallenger mindset with appetite to acquire new business and customers\n\nRecord of delivering market driven results, especially to scale and enterprise customers\n\nBusiness-level proficiency in English (both spoken and written) is preferred to effectively collaborate with internal stakeholders.\n\nDesired:\n\nDeep experience working with telecom companies, including SMS aggregators, carriers, or global communications platforms\n\nSoftware, SaaS, CPaaS or CCaaS experience\n\nCloud Technology Sales - IaaS/PaaS, virtualization, security\n\nExperience working with/at System Integrators, Resell and Value-Added resellers to drive large and broad customer coverage with external partner organizations\n\nLocation\n\nThis role will be remote, and based in Japan\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 25% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as our next New Business Account Executive in Japan\n\nAbout the job\n\nThis position is to play a key role as part of the growth strategy of Twilio Japan by winning new customers. You will be responsible for developing a strategy to acquire new customers for Twilio, collaborate with internal stakeholders, such as demand generation marketing, digital sales, partner managers and system engineers. Our customers are often application owners, product managers, line of business executives, CxO’s, Head’s of invitation, omni channel and digital strategy partners. Customer industries and segments are also spread from retail, financial services, manufacturing, transportation, public sectors, independent software vendors, system integrators and fast moving technology startups\n\nResponsibilities\n\nIn this role, you’ll:\n\nDevelop and implement a comprehensive territory plan, winning strategy for target accounts, execute and adjust plan and priorities to maximize results of winning new customers and its business.\n\nCollaborate with internal stakeholders, align shared goals and strategy and obtain support from them\n\nForecast the business, including sales funnel management, systematic follow up and discipline by utilizing SFDC and its supplement tools as source of truth for business and its pipelines.\n\nBe an active spokesperson for Twilio Mission, Vision and Value, Corporate Story to our customers, potential customers, and any external partners who collaborate.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\n*Required:\n\n5+ years of combined experience in high-touch sales experience.\n\nComfortable working with business and highly technical leaders, while influencing their understanding and building supportive partnerships.\n\nDemonstrated track record of growth of business, growth strategy development and execution.\n\nChallenger mindset with appetite to acquire new business and customers\n\nRecord of delivering market driven results, especially to scale and enterprise customers\n\nBusiness-level proficiency in English (both spoken and written) is preferred to effectively collaborate with internal stakeholders.\n\nDesired:\n\nDeep experience working with telecom companies, including SMS aggregators, carriers, or global communications platforms\n\nSoftware, SaaS, CPaaS or CCaaS experience\n\nCloud Technology Sales - IaaS/PaaS, virtualization, security\n\nExperience working with/at System Integrators, Resell and Value-Added resellers to drive large and broad customer coverage with external partner organizations\n\nLocation\n\nThis role will be remote, and based in Japan\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, approximately 25% travel is anticipated to help you connect in-person in a meaningful way.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -23,8 +33,8 @@
   "title": "New Business Account Executive",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-25T21:53:38.150524+00:00",
- "content_hash": "bbc63ad4ccc428495ac360c3ce6c4299fc965b290e815f291502fa8924a14609",
+ "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
+ "content_hash": "b188f8eddaaee0b7e580a1fa7563d3c822c638bfc1069318036e71003e82c38a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -43,7 +53,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      },
@@ -51,7 +61,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote, and based in Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      }
@@ -64,7 +74,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      },
@@ -72,7 +82,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "5+ years of combined experience in high-touch sales experience.\nComfortable working with business and highly technical leaders, while influencing their understanding and building supportive partnerships.\nDemonstrated track record of growth of business, growth strategy development and execution.\nChallenger mindset with appetite to acquire new business and customers\nRecord of delivering market driven results, especially to scale and enterprise customers",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      }
@@ -85,7 +95,7 @@
       "interpretation": null,
       "method": "inline_marker_in:*Required:",
       "quote": "Business-level proficiency in English (both spoken and written) is preferred to effectively collaborate with internal stakeholders.",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      },
@@ -93,7 +103,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Deep experience working with telecom companies, including SMS aggregators, carriers, or global communications platforms\nSoftware, SaaS, CPaaS or CCaaS experience\nCloud Technology Sales - IaaS/PaaS, virtualization, security\nExperience working with/at System Integrators, Resell and Value-Added resellers to drive large and broad customer coverage with external partner organizations",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      }
@@ -106,7 +116,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - Japan",
-      "retrieved_at": "2026-10-25T21:53:38.150524+00:00",
+      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8125581"
      }

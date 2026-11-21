@@ -32,11 +32,29 @@
    "from_hash": "425be036141fdcb961b4f86ff2a14519c755e18d0203966028d6a608fb9b6fb3",
    "kind": "content_changed",
    "to_hash": "4433000170ef9054c00c6c9d01ad9d772e7c1236285e9866058d1f0e13ca0121"
+  },
+  {
+   "changed_at": "2026-11-18T19:32:43.174288+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "4433000170ef9054c00c6c9d01ad9d772e7c1236285e9866058d1f0e13ca0121",
+   "kind": "content_changed",
+   "to_hash": "c5c885b893a428e69ced8c465c86a7de374623da9868cef92a9cf4fd5bc8a11a"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "c5c885b893a428e69ced8c465c86a7de374623da9868cef92a9cf4fd5bc8a11a",
+   "kind": "content_changed",
+   "to_hash": "710295a1ded9ccfb392adce5619c49e59792cb15573f16892836dc74c8da026c"
   }
  ],
  "content": {
   "compensation_raw": null,
-  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Digital Sales Representative - Activate.\n\nAbout the job\n\nThis position is needed to grow and retain high-value self-service accounts by engaging customers at the right moment, guiding product adoption, preventing churn, and helping customers reach scale across Twilio Communications, SendGrid, or Segment products. Twilio’s Self-Service Business serves more than 300,000 active customers and generates nearly $1B annually.\n\nResponsibilities\n\nIn this role, you’ll:\n\nEngage high-value self-service customers through programmatically assigned inbound and outbound leads.\n\nIdentify growth opportunities by assessing product usage signals, customer needs, and readiness to scale.\n\nGuide customers through adoption of Twilio Communications, SendGrid, or Segment products to accelerate business outcomes.\n\nRetain priority accounts by proactively addressing risks, removing blockers, and supporting continued product value.\n\nCollaborate with Sales, Solutions Engineering, Marketing, and Product teams to improve sales plays and customer engagement strategies.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\nAt least 1 year of sales development or business development experience at a technology company, or 2-3+ years of closing experience in another industry.\n\nAbility to qualify inbound and outbound opportunities, uncover customer needs, and guide customers toward relevant solutions.\n\nStrong communication skills with the ability to engage technical and business stakeholders.\n\nComfort using data, product usage signals, and sales plays to prioritize outreach and identify growth or retention opportunities.\n\nAbility to manage a high-volume book of accounts, prioritize effectively, and follow through on customer commitments.\n\nCuriosity about cloud communications, customer engagement, email, data, or SaaS products.\n\nDesired:\n\nExperience selling SaaS, cloud communications, email, customer data, or developer-focused products.\n\nFamiliarity with product-led growth, self-service customer motions, or usage-based sales models.\n\nAbility to interpret customer usage trends and translate insights into relevant sales conversations.\n\nExperience working with Salesforce, Outreach, Gong, or similar sales engagement and CRM tools.\n\nInterest in helping customers adopt and scale solutions across Twilio Communications, SendGrid, or Segment products.\n\nLocation\n\nThis role will be remote, but is not eligible to be hired in CA, CT, IL, MA, MD, NJ, NY, OR, PA, RI, TX, VA, WA, or Washington DC.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nCompensation\n\n*Please note the salary range information provided applies only to candidates residing in California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State due to local requirements. Compensation for candidates in other locations will be discussed during the hiring process. Please note that hiring for this role is not restricted to the locations listed above.\n\nThe estimated pay ranges for this role are as follows:\n\nBased in Colorado, Hawaii, Minnesota or Vermont : $30.09/hr - $37.61/hr.\n\nBased in Washington D.C., Illinois, Maryland, Massachusetts or California (outside of the San Francisco Bay Area): $31.77/hr - $39.71/hr.\n\nBased in New York, New Jersey, Washington State, or the San Francisco Bay area, California: $33.44/hr - $41.80/hr.\n\nThis role may be eligible to participate in Twilio’s equity plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThis role is eligible to earn commissions.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplications for this role will be accepted on an ongoing basis.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
+  "description": "Who we are\n\nAt Twilio, we’re shaping the future of communications, all from the comfort of our homes. We deliver innovative solutions to hundreds of thousands of businesses and empower millions of developers worldwide to craft personalized customer experiences.\n\nOur dedication to remote-first work, and strong culture of connection and global inclusion means that no matter your location, you’re part of a vibrant team with diverse experiences making a global impact each day. As we continue to revolutionize how the world interacts, we’re acquiring new skills and experiences that make work feel truly rewarding. Your career at Twilio is in your hands.\n.\n\nHiring and how we work\n\nWe use Artificial Intelligence (AI) to help make our hiring process efficient. That said, every hiring decision is made by real Twilions!\n\nAlso, while we are a remote-first company, you may be asked to report in person on an ad-hoc basis for team gatherings, functional off-sites or customer meetings.\n.\n\nSee yourself at Twilio\n\nJoin the team as Twilio’s next Digital Sales Representative - Activate.\n\nAbout the job\n\nThis position is needed to grow and retain high-value self-service accounts by engaging customers at the right moment, guiding product adoption, preventing churn, and helping customers reach scale across Twilio Communications, SendGrid, or Segment products. Twilio’s Self-Service Business serves more than 300,000 active customers and generates nearly $1B annually.\n\nResponsibilities\n\nIn this role, you’ll:\n\nEngage high-value self-service customers through programmatically assigned inbound and outbound leads.\n\nIdentify growth opportunities by assessing product usage signals, customer needs, and readiness to scale.\n\nGuide customers through adoption of Twilio Communications, SendGrid, or Segment products to accelerate business outcomes.\n\nRetain priority accounts by proactively addressing risks, removing blockers, and supporting continued product value.\n\nCollaborate with Sales, Solutions Engineering, Marketing, and Product teams to improve sales plays and customer engagement strategies.\n\nQualifications\n\nTwilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!\n\nRequired:\n\nAt least 1 year of sales development or business development experience at a technology company, or 2-3+ years of closing experience in another industry.\n\nAbility to qualify inbound and outbound opportunities, uncover customer needs, and guide customers toward relevant solutions.\n\nStrong communication skills with the ability to engage technical and business stakeholders.\n\nComfort using data, product usage signals, and sales plays to prioritize outreach and identify growth or retention opportunities.\n\nAbility to manage a high-volume book of accounts, prioritize effectively, and follow through on customer commitments.\n\nCuriosity about cloud communications, customer engagement, email, data, or SaaS products.\n\nDesired:\n\nExperience selling SaaS, cloud communications, email, customer data, or developer-focused products.\n\nFamiliarity with product-led growth, self-service customer motions, or usage-based sales models.\n\nAbility to interpret customer usage trends and translate insights into relevant sales conversations.\n\nExperience working with Salesforce, Outreach, Gong, or similar sales engagement and CRM tools.\n\nInterest in helping customers adopt and scale solutions across Twilio Communications, SendGrid, or Segment products.\n\nLocation\n\nThis role will be remote, but is not eligible to be hired in CA, CT, MD, NJ, NY, PA, WA, or Washington DC.\n\nTravel\n\nWe prioritize connection and opportunities to build relationships with our customers and each other. For this role, you may be required to travel occasionally to participate in project or team in-person meetings.\n\nWhat We Offer\n\nWorking at Twilio offers many benefits, including competitive pay, generous time off, ample parental and wellness leave, healthcare, a retirement savings program, and much more. Offerings vary by location.\n\nCompensation\n\n*Please note the salary range information provided applies only to candidates residing in California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State due to local requirements. Compensation for candidates in other locations will be discussed during the hiring process. Please note that hiring for this role is not restricted to the locations listed above.\n\nThe estimated pay ranges for this role are as follows:\n\nBased in Colorado, Hawaii, Minnesota, Illinois, Massachusetts or Vermont : $29.42/hour - $36.78/hour.\n\nBased in Washington D.C., Maryland or California (outside of the San Francisco Bay Area): $31.15/hour- $38.94/hour.\n\nBased in New York, New Jersey, Washington State, or the San Francisco Bay area, California: $34.62/hour - $43.27/hour.\n\nThis role may be eligible to participate in Twilio’s equity plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\n\nThis role is eligible to earn commissions.\n\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\n\nApplications for this role will be accepted on an ongoing basis.\n\n.\n\nTwilio thinks big. Do you?\n\nWe like to solve problems, take initiative, pitch in when needed, and are always up for trying new things. That's why we seek out colleagues who embody our values — something we call Twilio Magic. Additionally, we empower employees to build positive change in their communities by supporting their volunteering and donation efforts.\n\nSo, if you're ready to unleash your full potential, do your best work, and be the best version of yourself, apply now! If this role isn't what you're looking for, please consider other open positions.\n.\n\nStay alert to recruitment fraud\n\nWe care about your safety. Scammers sometimes impersonate Twilio recruiters through fake job postings, emails, websites, or messages. Please ensure you are engaging with an official @twilio.com email address. We will never ask for payment, gift cards, cryptocurrency, or banking information during the recruiting process. We do not make job offers without a formal interview process or conduct interviews exclusively through text-based messaging apps.\n.\n\nTwilio is proud to be an equal opportunity employer. We do not discriminate based upon race, religion, color, national origin, sex (including pregnancy, childbirth, reproductive health decisions, or related medical conditions), sexual orientation, gender identity, gender expression, age, status as a protected veteran, status as an individual with a disability, genetic information, political views or activity, or other applicable legally protected characteristics. We also consider qualified applicants with criminal histories, consistent with applicable federal, state and local law. Qualified applicants with arrest or conviction records will be considered for employment in accordance with the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Additionally, Twilio participates in the E-Verify program in certain locations, as required by law.",
   "locations": [
    {
     "source": "location.name",
@@ -51,8 +69,8 @@
   "title": "Digital Sales Representative - Activate",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-06T18:22:30.804221+00:00",
- "content_hash": "4433000170ef9054c00c6c9d01ad9d772e7c1236285e9866058d1f0e13ca0121",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "710295a1ded9ccfb392adce5619c49e59792cb15573f16892836dc74c8da026c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -71,30 +89,30 @@
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 37.61,
-         "min": 30.09,
-         "text": "$30.09/hr - $37.61"
+         "max": 36.78,
+         "min": 29.42,
+         "text": "$29.42/hour - $36.78"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 39.71,
-         "min": 31.77,
-         "text": "$31.77/hr - $39.71"
+         "max": 38.94,
+         "min": 31.15,
+         "text": "$31.15/hour- $38.94"
         },
         {
          "currency": null,
          "currency_symbol": "$",
-         "max": 41.8,
-         "min": 33.44,
-         "text": "$33.44/hr - $41.80"
+         "max": 43.27,
+         "min": 34.62,
+         "text": "$34.62/hour - $43.27"
         }
        ],
        "variable_mentioned": true
       },
       "method": "description_section:Compensation",
-      "quote": "*Please note the salary range information provided applies only to candidates residing in California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State due to local requirements. Compensation for candidates in other locations will be discussed during the hiring process. Please note that hiring for this role is not restricted to the locations listed above.\nThe estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Minnesota or Vermont : $30.09/hr - $37.61/hr.\nBased in Washington D.C., Illinois, Maryland, Massachusetts or California (outside of the San Francisco Bay Area): $31.77/hr - $39.71/hr.\nBased in New York, New Jersey, Washington State, or the San Francisco Bay area, California: $33.44/hr - $41.80/hr.\nThis role may be eligible to participate in Twilio’s equity plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThis role is eligible to earn commissions.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\nApplications for this role will be accepted on an ongoing basis.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "quote": "*Please note the salary range information provided applies only to candidates residing in California, Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, New Jersey, New York, Vermont, Washington D.C., and Washington State due to local requirements. Compensation for candidates in other locations will be discussed during the hiring process. Please note that hiring for this role is not restricted to the locations listed above.\nThe estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Minnesota, Illinois, Massachusetts or Vermont : $29.42/hour - $36.78/hour.\nBased in Washington D.C., Maryland or California (outside of the San Francisco Bay Area): $31.15/hour- $38.94/hour.\nBased in New York, New Jersey, Washington State, or the San Francisco Bay area, California: $34.62/hour - $43.27/hour.\nThis role may be eligible to participate in Twilio’s equity plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThis role is eligible to earn commissions.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.\nApplications for this role will be accepted on an ongoing basis.\n.",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      }
@@ -111,15 +129,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      },
      {
       "interpretation": null,
       "method": "description_section:Location",
-      "quote": "This role will be remote, but is not eligible to be hired in CA, CT, IL, MA, MD, NJ, NY, OR, PA, RI, TX, VA, WA, or Washington DC.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "quote": "This role will be remote, but is not eligible to be hired in CA, CT, MD, NJ, NY, PA, WA, or Washington DC.",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      }
@@ -132,7 +150,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      },
@@ -140,7 +158,7 @@
       "interpretation": null,
       "method": "description_section:Required:",
       "quote": "At least 1 year of sales development or business development experience at a technology company, or 2-3+ years of closing experience in another industry.\nAbility to qualify inbound and outbound opportunities, uncover customer needs, and guide customers toward relevant solutions.\nStrong communication skills with the ability to engage technical and business stakeholders.\nComfort using data, product usage signals, and sales plays to prioritize outreach and identify growth or retention opportunities.\nAbility to manage a high-volume book of accounts, prioritize effectively, and follow through on customer commitments.\nCuriosity about cloud communications, customer engagement, email, data, or SaaS products.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      }
@@ -153,7 +171,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Experience selling SaaS, cloud communications, email, customer data, or developer-focused products.\nFamiliarity with product-led growth, self-service customer motions, or usage-based sales models.\nAbility to interpret customer usage trends and translate insights into relevant sales conversations.\nExperience working with Salesforce, Outreach, Gong, or similar sales engagement and CRM tools.\nInterest in helping customers adopt and scale solutions across Twilio Communications, SendGrid, or Segment products.",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      }
@@ -166,7 +184,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-06T18:22:30.804221+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8205254"
      }
