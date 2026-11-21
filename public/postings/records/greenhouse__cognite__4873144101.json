@@ -23,6 +23,15 @@
    "from_hash": "0289ba70f04acdddd16ff988d074ceef9898da8a2ce86cd671f4be057ef45546",
    "kind": "content_changed",
    "to_hash": "2a1ca62b9c33ef9584824a8c255e2057786cc2ec39ec8e01e3101a40683e722a"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "2a1ca62b9c33ef9584824a8c255e2057786cc2ec39ec8e01e3101a40683e722a",
+   "kind": "content_changed",
+   "to_hash": "1ceeded02fe28af6ec83a029381332ce5c86589a2f6e79aa9bd9b0aad6c819aa"
   }
  ],
  "content": {
@@ -32,10 +41,6 @@
    {
     "source": "location.name",
     "text": "Europe"
-   },
-   {
-    "source": "offices.name",
-    "text": "Switzerland"
    },
    {
     "source": "offices.location",
@@ -50,8 +55,8 @@
   "title": "Principal Pre-sales Solutions Consultant (Pharma/Life Science)",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-14T20:54:21.781335+00:00",
- "content_hash": "2a1ca62b9c33ef9584824a8c255e2057786cc2ec39ec8e01e3101a40683e722a",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "1ceeded02fe28af6ec83a029381332ce5c86589a2f6e79aa9bd9b0aad6c819aa",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -70,15 +75,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Europe",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.name",
-      "quote": "Switzerland",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      },
@@ -86,7 +83,7 @@
       "interpretation": null,
       "method": "ats_field:offices.location",
       "quote": "England, United Kingdom",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      },
@@ -94,7 +91,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "UK England",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      }
@@ -107,7 +104,7 @@
       "interpretation": null,
       "method": "description_section:Required qualifications",
       "quote": "Hands-on experience in Python and working with REST APIs, with solid knowledge of GitHub for version control and collaborative development.\nExperience with graph databases (GraphDB) and building on graph data models.\nHands-on experience in prompt engineering and in building agentic systems and workflows, including skills creation.\nPractical experience using AI coding tools such as Claude Code or Cursor to build and iterate on prototypes quickly.\nStrong client-facing skills, with experience building trusted relationships with technology partners, enterprise clients, and internal stakeholders to co-create solutions and drive joint opportunities.\nExpertise in industrial data, OT/IT convergence, and data integration patterns, with the ability to design scalable architectures that connect operational and enterprise systems.\nGood understanding of data platforms, APIs, and integration methods, including data pipelines, storage, security, and governance, particularly in cloud and hybrid environments.",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      }
@@ -120,7 +117,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Required qualifications",
       "quote": "Extensive experience (7+ years) in technical presales roles, ideally in enterprise SaaS, cloud platforms, or industrial software.",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      },
@@ -128,7 +125,7 @@
       "interpretation": null,
       "method": "description_section:Preferred qualifications",
       "quote": "Education or experience in Pharma, for example GxP, CPV, tech transfer, process improvement, and operational excellence.\nKnowledge of services and architectures provided by hyper scalers such as Azure, AWS and GCP.\nDemonstrated ability to lead technical validations and solution accelerators that showcase the value of complex integrated solutions to partners and customers.\nExperience working closely with product and engineering teams, providing field feedback to shape product development and align solutions with customer and partner needs.\nStrong communication, presentation, and influencing skills, with the ability to translate complex technical concepts into business value for diverse audiences including executives, partners, and technical teams.\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
-      "retrieved_at": "2026-11-14T20:54:21.781335+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4873144101"
      }

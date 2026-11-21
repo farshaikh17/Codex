@@ -360,7 +360,7 @@ test('taste pass: Good match / Not for me move the rows a person sees, every run
   const { sqlite } = createDb();
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'taste-'));
   sqlite.exec(`INSERT INTO candidates(id,full_name,primary_skills) VALUES ('farhan_shaikh','F','["CRM"]')`);
-  const add = (id, title, score, bd = '{"preliminary":true,"profile_v20":true}', o = {}) => {
+  const add = (id, title, score, bd = '{"preliminary":true,"profile_v23":true}', o = {}) => {
     sqlite.prepare(`INSERT INTO jobs(id,title,company,source_adapter,is_active,discovered_at) VALUES (?,?,?,?,1,'2026-11-01')`).run(id, title, o.company || 'Acme', 'lever');
     sqlite.prepare(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,manual_override_status) VALUES ('farhan_shaikh',?,?,?)`).run(id, 'NEEDS_REVIEW', o.override || null);
     sqlite.prepare(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score,score_breakdown) VALUES ('farhan_shaikh',?,?,?)`).run(id, score, bd);

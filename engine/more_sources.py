@@ -877,6 +877,7 @@ def main():
     ap.add_argument('--days', type=int, default=30)
     ap.add_argument('--fast', action='store_true')
     ap.add_argument('--budget-seconds', type=int, default=0, help="the step's time limit: no source starts after 80%% of it, and each source has its own share of it")
+    ap.add_argument('--only', default='', help='comma-separated source names: run only these (a parallel job of discovery.yml runs one group)')
     a = ap.parse_args()
     started = time.monotonic()
     profs = json.loads(Path(a.profiles).read_text())
@@ -891,6 +892,12 @@ def main():
         del sources['workable_places']
     if a.fast:   # watchlist runs: the employer sites and the big aggregator only
         sources = {k: v for k, v in sources.items() if k in ('workable', 'workable_places', 'eightfold', 'siemens_energy', 'successfactors', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards')}
+    if a.only:   # max discovery (20 Nov): the daily run reads the sources in parallel groups, each with its own time budget
+        wanted = {x.strip() for x in a.only.split(',') if x.strip()}
+        unknown = wanted - set(sources) - {'workable_places'}
+        if unknown:
+            print(f'::warning::more_sources: unknown source names {sorted(unknown)}', file=sys.stderr)
+        sources = {k: v for k, v in sources.items() if k in wanted}
     sources = ordered(sources)
     since = datetime.now(timezone.utc) - timedelta(days=a.days)
     no_cutoff = {'siemens_energy', 'successfactors', 'eightfold', 'smartrecruiters', 'workday', 'oracle_hcm', 'jibe', 'watch_boards'}   # employer sites: the date is the original posting date; the still-open check guards staleness
