@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-10-25T21:53:38.150524+00:00",
-  "reason": "first listed",
-  "state": "listed"
+  "at": "2026-11-20T09:06:52.812734+00:00",
+  "reason": "absent from successful retrieval",
+  "state": "missing"
  },
  "board": "gitlab",
  "changes": [

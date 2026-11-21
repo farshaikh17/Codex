@@ -11,7 +11,8 @@ HOSTS={p:feed[0] for p,feed in registry.FEEDS.items()}
 DUE_SLACK=timedelta(minutes=15)  # hourly ticks drift; without slack a 5-hour interval becomes 6
 # Bumped when adapters change how a field is written, so the change is not mistaken for an employer edit.
 # 2: Ashby compensation_raw keeps compensationTiers as JSON instead of the one-line summary.
-NORMALIZATION_VERSION=2
+# 3: Lever descriptionBody is retained when the standard description fields are empty.
+NORMALIZATION_VERSION=3
 FIELDS=('key','provider','board','req_id','title','locations','workplace_type','url','apply_url','published','description','compensation_raw')
 NOTICE='Public discovery data only. Not personal fit or READY evidence. Failed sources retain old timestamps; absence is not closure.'
 def read(path,default):
@@ -131,7 +132,9 @@ def collect(sources,output,fetcher=fetch,pause=time.sleep,due=None,run_id=None,t
                 jobs,skipped,seen=[],0,set()
                 for raw in extract_jobs(source['provider'],fetcher(source)):
                     try: job=public_job(source,raw,now)
-                    except Skip:
+                    except Skip as error:
+                        if error.kind != 'unlisted':
+                            raise ValueError(f"Malformed posting ({error.kind}); incomplete board") from error
                         skipped+=1
                         continue
                     if job['key'] in seen: raise ValueError('Duplicate requisition in source')

@@ -27,6 +27,21 @@ class CollectionTests(unittest.TestCase):
         job=public_job(SOURCE,posting('X'*50000),'test-date')
         self.assertEqual(len(job['description']),50000)
         self.assertFalse(set(job)&{'raw','history','eligibility','pay','profile','candidate'})
+    def test_lever_body_only_and_description_precedence(self):
+        from adapters import html_to_text
+        fixture = Path(__file__).parent / 'tests/fixtures/sources/lever_massive_rocket.json'
+        for raw in json.loads(fixture.read_text()):
+            with self.subTest(posting=raw['id']):
+                expected = html_to_text(raw['descriptionBody'])
+                self.assertTrue(expected)
+                self.assertEqual(public_job(SOURCE,raw,'now')['description'],expected)
+        for fields, expected in [
+            ({'descriptionPlain': 'Plain', 'description': '<p>HTML</p>'}, 'Plain'),
+            ({'description': '<p>HTML</p>'}, 'HTML'),
+            ({}, 'Fallback'),
+        ]:
+            raw = posting() | {'descriptionPlain': '', 'descriptionBody': '<p>Fallback</p>'} | fields
+            self.assertEqual(public_job(SOURCE,raw,'now')['description'],expected)
     def test_duplicate_feed_preserves_previous_snapshot(self):
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)
@@ -63,6 +78,32 @@ class ReliabilityTests(unittest.TestCase):
     def tearDown(self): self.tmp.cleanup()
     def run_both(self,**kw):
         return collect([SOURCE,OTHER],self.out,by_source({'sample-lever':[posting()],'other-ashby':ashby}),lambda _:None,**kw)
+    def test_unidentifiable_rows_preserve_board_until_complete_retry(self):
+        first = self.run_both()
+        board = self.out/'boards/sample-lever.json'
+        before = board.read_bytes()
+        for malformed in (None, {}, posting() | {'id': []}, posting() | {'id': True}):
+            with self.subTest(row=malformed):
+                fetch = by_source({'sample-lever':[posting() | {'id':'new'}, malformed], 'other-ashby':ashby})
+                result = collect([SOURCE, OTHER], self.out, fetch, lambda _:None)
+                self.assertEqual(result['status'], 'partial')
+                source = result['sources'][0]
+                self.assertEqual(source['status'], 'failed')
+                self.assertEqual(source['last_success_at'], first['sources'][0]['last_success_at'])
+                self.assertNotIn('no_longer_listed', source)
+                self.assertEqual(board.read_bytes(), before)
+                self.assertEqual(verify_publication(self.out), [])
+        clean = by_source({'sample-lever':[posting() | {'id':'new'}], 'other-ashby':ashby})
+        retry = collect([SOURCE, OTHER], self.out, clean, lambda _:None)
+        self.assertEqual(retry['sources'][0]['no_longer_listed'], ['lever:sample:one'])
+        self.assertEqual(retry['sources'][0]['consecutive_failures'], 0)
+
+    def test_explicit_unlisting_is_a_complete_ashby_feed(self):
+        self.run_both()
+        result = collect([OTHER], self.out, lambda _: {'jobs':[ashby()['jobs'][0] | {'isListed':False}]}, lambda _:None)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(result['sources'][0]['no_longer_listed'], ['ashby:other:two'])
+
     def test_zero_sources_never_publishes(self):
         self.run_both()
         before=snapshot(self.out)
@@ -227,7 +268,7 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual((src['normalization_changed'],src['endpoint_changed']),(True,False))
         self.assertEqual(first['jobs'][0]['changed_fields'],['compensation_raw'])
         board=json.loads((self.out/'boards/other-ashby.json').read_text())
-        self.assertEqual(board['normalization_version'],2)
+        self.assertEqual(board['normalization_version'],3)
         again=collect([OTHER],self.out,with_tiers,lambda _:None)
         self.assertFalse(again['sources'][0]['normalization_changed'])
         self.assertEqual(again['jobs'][0]['change'],'unchanged')

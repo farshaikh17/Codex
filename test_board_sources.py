@@ -73,6 +73,18 @@ class WatchBoards(unittest.TestCase):
         self.assertTrue(all(j['board'] is False for j in got))
         self.assertEqual({w[0] for w in ms.WATCH}, {'MonetizeMore', 'Massive Rocket', 'Sprinto', 'UptimeAI', 'Canvas Medical', 'Fingerprint', 'Paired', 'Firework'})
 
+    def test_ashby_remote_workplace_precedence(self):
+        sample = json.loads((FIX / 'ashby_uptimeai.json').read_bytes())['jobs'][0]
+        for workplace, legacy, expected in [('Hybrid', True, False), ('OnSite', True, False),
+                                            ('Remote', False, True), (None, True, True),
+                                            (None, 'false', False)]:
+            with self.subTest(workplace=workplace, legacy=legacy):
+                row = dict(sample, workplaceType=workplace, isRemote=legacy)
+                with mock.patch.object(ms, 'http', return_value=json.dumps({'jobs': [row]})):
+                    [(job, remote)] = ms.watch_board('UptimeAI', 'ashby', 'uptimeai')
+                self.assertIs(remote, expected)
+                self.assertEqual(job['location'].startswith('Remote ('), expected)
+
     def test_jazzhr_detail_and_places(self):
         page = (FIX / 'jazzhr_monetizem_job.html').read_bytes()
         j = {'url': 'https://monetizem.applytojob.com/apply/jobs/details/QMtZDQf0Lj', 'description': '', 'location': 'Remote (India)', 'posted_at': ''}

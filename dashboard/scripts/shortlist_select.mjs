@@ -14,7 +14,7 @@
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
 import { indianPlace as namesIndia, worldwidePlace } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India or a worldwide place (fitsStretchRule)
-import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey } from '../worker/discovery.ts';
 import { titleKey } from '../worker/twins.ts';
 import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
 
@@ -38,7 +38,7 @@ export function when(s) {
 // skills only when the posting has a description to check it against (300+ characters; 'Reliability Engineer II' at a trading firm had none).
 export const EXACT_TITLE_MIN_TEXT = 300;
 const skillsOk = (r) => Number(r.skill_score) >= 40 || (!!Number(r.target_exact) && String(r.description || '').trim().length >= EXACT_TITLE_MIN_TEXT);
-const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !r.dead;
+const base = (r) => !!Number(r.active) && !!Number(r.marked) && skillsOk(r) && !r.dead && !r.placeOut;
 /** Ready: score at the person's threshold and eligibility confirmed. */
 export const fitsReady = (r) => base(r) && Number(r.score) >= Number(r.threshold) && r.eligibility === 'ELIGIBLE';
 /** Stretch's own rule: the threshold with eligibility still to confirm, or confirmed and up to 10 below. Jobs QA 2 (14 Nov): for Farhan (remote from India
@@ -66,17 +66,22 @@ export const twinKey = (r) => {
 /** Which copy of a twin group stays (16 Nov): the best ranked (rankKey: score, the incumbent bonus, the age penalty), then one whose place names
  *  India, then the newest, then the smallest job id. Pure; the selector and the audit share twinKey(). */
 export function keepTwins(rows, now) {
-  const best = new Map();
   const better = (a, b) => rankKey(a, now) - rankKey(b, now) || Number(!!namesIndia(a.location)) - Number(!!namesIndia(b.location))
     || String(a.discovered_at || '').localeCompare(String(b.discovered_at || '')) || (String(a.job_id) < String(b.job_id) ? 1 : String(a.job_id) > String(b.job_id) ? -1 : 0);
-  for (const r of rows) { const k = twinKey(r), cur = best.get(k); if (!cur || better(r, cur) > 0) best.set(k, r); }
-  return rows.filter((r) => best.get(twinKey(r)) === r);
+  const keep = (xs, keyOf) => { const best = new Map(); for (const r of xs) { const k = keyOf(r), cur = best.get(k); if (!cur || better(r, cur) > 0) best.set(k, r); } return xs.filter((r) => best.get(keyOf(r)) === r); };
+  // Jobs QA 7: one posting stored twice under two sources, whose URLs differ only by tracking parameters ('?feedId=null&utm_source=J2WRSS'), and
+  // whose employer is written two ways ('ENGIE', 'ENGIE INFORMATION TECHNOLOGIES SA'), is one job: one copy per posting URL first.
+  return keep(keep(rows, urlTwinKey), twinKey);
 }
+/** Jobs QA 7: the posting URL without tracking parameters or trailing slash (postingUrlKey), with the title as titleKey() reads it (a careers page
+ *  URL shared by several jobs is not one job); a row with no URL is its own key. */
+export const urlTwinKey = (r) => { const u = postingUrlKey(r.url); return u ? `${u}|${titleKey(r.title)}` : `id:${r.job_id}`; };
 /** Twin groups among rows (the audit's check): twinKey -> rows, only the keys with more than one row. */
 export function twinGroups(rows) {
   const m = new Map();
   for (const r of rows || []) { const k = twinKey(r); m.set(k, [...(m.get(k) || []), r]); }
-  return new Map([...m].filter(([, g]) => g.length > 1));
+  for (const r of rows || []) { const k = 'url|' + urlTwinKey(r); m.set(k, [...(m.get(k) || []), r]); }   // jobs QA 7: the same posting URL
+  return new Map([...m].filter(([k, g]) => g.length > 1 && !(k.startsWith('url|') && [...m].some(([k2, g2]) => !k2.startsWith('url|') && g.every((x) => g2.includes(x))))));
 }
 export const isAuto = (r) => TIERS.includes(r.status) && String(r.reason || '').startsWith(MARK);
 
@@ -193,15 +198,15 @@ function pickFor(rows, held, ctx) {
   // meets a second copy of the same employer and title.
   const usable = ranked(keepTwins(rows.filter((r) => shortlistable(r) && !dupes.has(r.job_id) && !shortlistTenant(r)), now), now);
   const pos = new Map(usable.map((r, i) => [r.job_id, i]));
-  const heldKeys = new Set(held.map(twinKey));
+  const heldKeys = new Set([...held.map(twinKey), ...held.map((r) => 'url|' + urlTwinKey(r))]);
   const lists = { READY: [], STRETCH_READY: [] };
   const tierOf = new Map();
   const qualifies = (r, tier) => (tier === 'READY' ? readyOk(r) : fitsReady(r) || fitsStretchRule(r));
   // Hard rules: one posting per employer and title across both tiers and the rows a person holds; and those of ctx.hard (plan A4).
   const hardOk = (r, tier, without = null) => {
     const k = twinKey(r);
-    if (heldKeys.has(k)) return false;
-    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && twinKey(x) === k) return false;
+    if (heldKeys.has(k) || heldKeys.has('url|' + urlTwinKey(r))) return false;
+    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && (twinKey(x) === k || urlTwinKey(x) === urlTwinKey(r))) return false;
     return (ctx.hard || HARD_RULES).every((h) => h(r, tier, lists, without, ctx));
   };
   const fill = (tier, candidates) => {
@@ -306,7 +311,15 @@ export function skillsOf(candidates, cid) {
   return Array.isArray(v) ? v.map(String) : [];
 }
 
-/** Pure: pool rows (with kind auto | pool | held) -> the tier every auto or pool row should have, and what changes. Deterministic. */
+/** Jobs QA 7: the still-open check's reading of the employer's own record (engine/liveness.py 'facts'): hybrid or on site, or remote only from a
+ *  country other than India. The same test as not_remote_from_india() there. */
+export function notRemoteFromIndia(f) {
+  const countries = (f?.countries || []).map(String).filter(Boolean);
+  return f?.workplace === 'HYBRID' || f?.workplace === 'ONSITE' || (countries.length > 0 && !countries.some((c) => c.toLowerCase() === 'india'));
+}
+/** Pure: pool rows (with kind auto | pool | held) -> the tier every auto or pool row should have, and what changes. Deterministic.
+ *  opts.facts (jobs QA 7): job id -> the employer's record from today's still-open check; a Farhan row it shows is not remote from India is not
+ *  shortlisted today (the job is re-scored with the employer's place on the next run). */
 export function selectShortlist(pool, opts = {}) {
   const now = opts.now ?? Date.now();
   const size = opts.tierSize ?? TIER_SIZE;
@@ -319,7 +332,7 @@ export function selectShortlist(pool, opts = {}) {
     if (r0.kind === 'held') { c.held.push(r0); continue; }
     if (r0.kind !== 'auto' && r0.kind !== 'pool') continue;
     if (c.rows.some((x) => x.job_id === r0.job_id)) continue;
-    const r = { ...r0, dead: dead.has(r0.job_id) };
+    const r = { ...r0, dead: dead.has(r0.job_id), placeOut: r0.candidate_id === 'farhan_shaikh' && !!opts.facts?.[r0.job_id] && notRemoteFromIndia(opts.facts[r0.job_id]) };
     r.auto = isAuto(r);
     r.family = familyOf(r0.candidate_id, r0.title);
     r.band = placeBand(r0.candidate_id, r0.location, r0.workplace, null, r0.description);
@@ -386,7 +399,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
   const live = read(opt('--liveness')) || {};
-  const { changes, report } = selectShortlist(pool.rows, { alive: live.alive, dead: live.dead, relaxed: args.includes('--relaxed'), candidates: read(opt('--candidates')) || [] });
+  const { changes, report } = selectShortlist(pool.rows, { alive: live.alive, dead: live.dead, facts: live.facts, relaxed: args.includes('--relaxed'), candidates: read(opt('--candidates')) || [] });
   fs.writeFileSync(opt('--out'), selectionSql(changes));
   if (opt('--report')) fs.writeFileSync(opt('--report'), JSON.stringify(report, null, 1));
   console.log(JSON.stringify({ changes: changes.length, report }));

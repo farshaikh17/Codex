@@ -54,15 +54,25 @@ def title_signal(title):
 
 INDIA = (r'\bindia\b|bengaluru|bangalore|\bpune\b|mumbai|hyderabad|chennai|delhi|gurgaon|gurugram|noida|kolkata|ahmedabad|'
          r'vadodara|jaipur|kochi|coimbatore|nagpur|indore|chandigarh|bhubaneswar|lucknow|visakhapatnam|thiruvananthapuram|mysuru|mysore')
-REGION_ONLY = r'remote|worldwide|anywhere|global|\bAPAC\b|asia|\bEMEA\b|international|no location restriction'
+# Only general location wording may remain after removing separators. A country or city
+# alongside "remote" is still explicit location evidence.
+REGION_ONLY = re.compile(
+    r'\b(?:fully remote|100% remote|remote(?:ly)?|worldwide|anywhere|global(?:ly)?|international|'
+    r'no location restrictions?(?: stated)?|work from anywhere|apac|emea|latam|namer|europe|eu|asia(?: pacific)?|'
+    r'north america|south america|latin america|africa|middle east|oceania)\b', re.I)
+
+def region_only(label):
+    remainder = REGION_ONLY.sub('', label)
+    return bool(REGION_ONLY.search(label)) and not re.search(r'\w', remainder)
+
 
 def geography(locations):
     """Location evidence class from original wording. 'india_explicit' names India or an Indian city; region/remote
     wording alone (APAC, worldwide) is 'remote_or_region_only' and is never India eligibility."""
     texts = [str(l.get('text') or '') for l in (locations or []) if isinstance(l, dict)]
     joined = ' | '.join(texts)
-    if not joined.strip(): return {'class': 'unstated', 'india_terms': []}
+    if not any(t.strip() for t in texts): return {'class': 'unstated', 'india_terms': []}
     terms = sorted({m.group(0).lower() for m in re.finditer(INDIA, joined, re.I)})
     if terms: return {'class': 'india_explicit', 'india_terms': terms}
-    if all(re.search(REGION_ONLY, t, re.I) for t in texts if t.strip()): return {'class': 'remote_or_region_only', 'india_terms': []}
+    if all(region_only(t) for t in texts if t.strip()): return {'class': 'remote_or_region_only', 'india_terms': []}
     return {'class': 'other_locations', 'india_terms': []}
