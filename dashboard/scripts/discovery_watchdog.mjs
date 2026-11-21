@@ -43,7 +43,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const r of list.workflow_runs || []) {
       let discover = null, budgetSkip = false;
       if (r.status === 'completed') {   // a run whose health job went red still did the day's work when its 'discover' job succeeded
-        const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=10`, token);
+        const jobs = await gh(`/repos/${repo}/actions/runs/${r.id}/jobs?per_page=50`, token);   // max discovery: a run has about 16 jobs (8 parallel collector parts), and the discover job must be on the page
         discover = (jobs.jobs.find((j) => j.name === 'discover') || {}).conclusion || null;
         budgetSkip = (jobs.jobs.find((j) => j.name === 'skipped') || {}).conclusion === 'success';   // runs only when the budget guard postponed it
       }
