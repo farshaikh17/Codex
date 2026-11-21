@@ -939,7 +939,7 @@ export function farhanEngineeringField(title:string|null|undefined,description:s
  if(farhanFinanceProductImplementation(title,d))return 'finance or ERP product implementation';   // jobs QA 9
  return null;
 }
-// ---- Jobs QA 9 (21 Nov: both live lists, 65 jobs, re-judged by two reviewers after the profile_v23 rebuild; 14 should not have been shown) ------
+// ---- Jobs QA 9 (21 Nov: both live lists, 65 jobs, re-judged by two reviewers after the v23 rules rebuild; 14 should not have been shown) ------
 // Farhan's field: a CRM consultant / specialist / architect / developer title whose text asks developer work on the platform: CI/CD pipelines,
 // DevOps, the PowerApps Component Framework (PCF), plug-ins or custom code ('Design, implement, and maintain CI/CD pipelines', 'custom application
 // development', 'custom components ... using the PowerApps Component Framework (PCF)'). Two kinds of that work; his CRM work is configuration.
