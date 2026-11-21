@@ -357,7 +357,8 @@ def run(config,sources,employers,out,network=None,now=None):
                 halted(key,"run halted")  # budget/429: never cool down or mark failed what was not attempted
             except Exception as e:
                 errors.append({"source":key,"error":str(e)[:200]})
-                state[key]=_cooldown(now,"failed",prev)
+                cursors = {k: prev[k] for k in ("offset", "profile_offset") if k in prev}
+                state[key]=_cooldown(now,"failed",prev,**cursors)
     configured={(s['provider'],s['board'].lower()) for s in sources if s.get('enabled',True)}
     with meter("reviewed_feeds"):
         for approved in config.get('reviewed_feeds',[])[:2]:

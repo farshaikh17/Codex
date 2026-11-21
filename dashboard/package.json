@@ -9,13 +9,13 @@
   "scripts": {
     "build:frontend": "npm --prefix frontend ci && npm --prefix frontend run build",
     "build:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
-    "test": "node --import ./test/register.mjs --test test/*.test.mjs && node test_dst_transitions.js && node test_authed_fetch_regression.js && python3 test_migration_chain.py",
+    "test": "node --import ./test/register.mjs --test test/*.test.mjs && TEST_SEEKER_SNAPSHOT=on node --import ./test/register.mjs --test test/clients.test.mjs test/listing.test.mjs test/owner_decisions.test.mjs test/worker.test.mjs test/followups.test.mjs test/edge_cache.test.mjs && node test_dst_transitions.js && node test_authed_fetch_regression.js && python3 test_migration_chain.py",
     "test:worker": "node --import ./test/register.mjs --test test/worker.test.mjs test/discovery.test.mjs test/listing.test.mjs test/assessment.test.mjs test/clients.test.mjs test/site.test.mjs",
     "verify": "npm run build:frontend && npm run build:worker && npm test",
     "e2e": "node test/e2e/browser.e2e.mjs",
     "seed:local": "node test/seed-sql.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.156.1"
+    "wrangler": "4.163.0"
   }
 }
