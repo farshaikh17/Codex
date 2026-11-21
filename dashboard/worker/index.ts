@@ -1701,9 +1701,9 @@ router.get('/api/jobs', async (request, env, _params, url) => {
     if (hiddenOnly) baseWhere += ` AND q.qualification_status = 'HOLD' AND q.qualification_reason LIKE 'You marked this Not for me%'`;
     if (search) {
       // % and _ in what was typed are literal characters, not wildcards (as in the India Remote search)
-      baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
+      baseWhere += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.location_restrictions LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`;
       const term = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
-      baseParams.push(term, term, term);
+      baseParams.push(term, term, term, term);
     }
     if (eligibility && eligibility !== 'ALL') { baseWhere += ` AND q.eligibility_status = ?`; baseParams.push(eligibility); }
     if (minScore > 0) { baseWhere += ` AND COALESCE(s.overall_score, 0) >= ?`; baseParams.push(minScore); }
@@ -1748,7 +1748,7 @@ router.get('/api/jobs', async (request, env, _params, url) => {
         for (let i = 0; i < rows.length; i += SEARCH_IDS_PER_STATEMENT) {
           const ids = JSON.stringify(rows.slice(i, i + SEARCH_IDS_PER_STATEMENT).map((r) => r.id));
           const found = (await env.DB.prepare(`SELECT j.id FROM json_each(?) x CROSS JOIN jobs j ON j.id = x.value
-            WHERE (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`).bind(ids, term, term, term).all<any>()).results || [];
+            WHERE (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.location_restrictions LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`).bind(ids, term, term, term, term).all<any>()).results || [];
           for (const r of found) hit.add(r.id);
         }
         rows = rows.filter((r) => hit.has(r.id));
@@ -2652,7 +2652,7 @@ router.get('/api/india-remote/jobs', async (request, env, _params, url) => {
     // read at production size instead of about 100 through the (candidate, eligibility) index; migration 0027 notes).
     let where = `WHERE q.candidate_id = ? AND ${confirmedIndiaRemote} AND j.is_active = 1`;
     const binds: any[] = [candidateId];
-    if (search) { where += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`; const t = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`; binds.push(t, t, t); }
+    if (search) { where += ` AND (j.title LIKE ? ESCAPE '\\' OR j.company LIKE ? ESCAPE '\\' OR j.location_restrictions LIKE ? ESCAPE '\\' OR j.description LIKE ? ESCAPE '\\')`; const t = `%${search.replace(/[\\%_]/g, (c) => '\\' + c)}%`; binds.push(t, t, t, t); }
     const { results: light } = await env.DB.prepare(`
       SELECT j.id, j.title, j.company, j.discovered_at, COALESCE(j.salary_published, 0) AS pub, q.qualification_status AS status,
              COALESCE(s.overall_score, 0) AS score, a.status AS app_status

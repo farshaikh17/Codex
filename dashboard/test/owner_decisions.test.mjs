@@ -207,3 +207,21 @@ test('U4: a write from an old copy is refused with 409; an empty note never sile
   assert.equal((await req(w.env, 'POST', '/api/applications', { body: { candidate_id: F, job_id: 's1', status: 'APPLIED', notes: '', clear_notes: true } })).status, 200);
   assert.equal(w.sqlite.prepare(`SELECT notes FROM applications WHERE job_id='s1'`).get().notes, '');
 });
+
+test('public candidate search preserves punctuation and searches the place shown on a card', async () => {
+  const w = world();
+  w.job('literal', 'O&M C++ specialist', "O'Brien");
+  w.job('control', 'OM C specialist', 'Obrien');
+  w.run('UPDATE jobs SET location_restrictions = ?, description = ? WHERE id = ?', 'North_Port (Zone 5%)', 'Path A\\B', 'literal');
+  w.run('UPDATE jobs SET location_restrictions = ? WHERE id = ?', 'NorthXPort (Zone 50)', 'control');
+  for (const id of ['literal', 'control']) {
+    w.run('INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status) VALUES (?,?,?)', F, id, 'NEEDS_REVIEW');
+  }
+  for (const term of ['o&m', 'C++', "O'Brien", 'A\\B', 'North_Port', '(Zone 5%)', 'NorthXPort', 'no-such-role']) {
+    const query = new URLSearchParams({ candidate_id: F, search: term, exclude_applied: 'true', exclude_dismissed: 'true' });
+    const { status, json } = await req(w.env, 'GET', '/api/jobs?' + query, { key: null });
+    assert.equal(status, 200);
+    const expected = term === 'NorthXPort' ? ['control'] : term === 'no-such-role' ? [] : ['literal'];
+    assert.deepEqual(json.jobs.map((job) => job.id), expected, term);
+  }
+});

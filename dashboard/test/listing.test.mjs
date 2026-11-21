@@ -363,3 +363,16 @@ test('India Remote requires remote evidence while the general list retains eligi
   assert.deepEqual(ids(await get(w, IR('', S), null)).sort(), ['india', 'legacy', 'world']);
   assert.equal((await get(w, '/api/india-remote/summary?candidate_id=' + S, null)).json.total_confirmed, 3);
 });
+
+test('search also matches the place shown on a card: the seeker list (stored copy or full query) and India Remote', async () => {
+  const w = world();
+  w.add(F, 'pune', 'Implementation Manager', { status: 'READY', score: 90 });
+  w.add(F, 'other', 'Implementation Manager', { status: 'READY', score: 80 });
+  w.run('UPDATE jobs SET location_restrictions = ? WHERE id = ?', 'Remote - India (Pune preferred)', 'pune');
+  w.run("UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE job_id IN ('pune', 'other')");   // confirmed India Remote
+  const seeker = await get(w, JOBS('exclude_applied=true&exclude_dismissed=true&search=Pune'), null);
+  assert.equal(seeker.status, 200);
+  assert.deepEqual(ids(seeker), ['pune']);
+  assert.deepEqual(ids(await get(w, JOBS('search=Pune'), null)), ['pune'], 'the full query too');
+  assert.deepEqual(ids(await get(w, IR('search=Pune'), null)), ['pune']);
+});
