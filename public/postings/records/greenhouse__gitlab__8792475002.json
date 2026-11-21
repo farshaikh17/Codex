@@ -14,6 +14,15 @@
    "from_hash": "39aaaae03dd978114c4feb54cd58c0366ec412790e1f19d87e54e05b848c88a1",
    "kind": "compensation_source_added",
    "to_hash": "9c119cf3c690967812bef580470ec5a5f477b7dd01740998302b69e888fdfd0e"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "9c119cf3c690967812bef580470ec5a5f477b7dd01740998302b69e888fdfd0e",
+   "kind": "content_changed",
+   "to_hash": "f31bb834313b43b3065bafce84ced673d0dc0cfb3eb6076cbb32a60c8610160c"
   }
  ],
  "content": {
@@ -27,14 +36,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-09-09T19:09:52-04:00",
   "title": "Director, Social Media",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "9c119cf3c690967812bef580470ec5a5f477b7dd01740998302b69e888fdfd0e",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "f31bb834313b43b3065bafce84ced673d0dc0cfb3eb6076cbb32a60c8610160c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +76,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 13920000, \"max_cents\": 23520000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      },
@@ -88,7 +101,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$139,200—$235,200 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      }
@@ -105,7 +118,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      },
@@ -113,7 +126,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      }
@@ -126,7 +147,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "10+ years in social media, including at least 5 years leading social strategy for a global brand at the senior manager level or above, and accountable for the function's results.\nExperience owning a social function end to end, including strategy, budget, headcount, tooling, and results as the accountable leader.\nExperience leading teams, agencies, and cross-functional programs, with clear ownership of and accountability for outcomes.\nDepth in YouTube strategy, including owning and growing a brand or business channel, and can speak to programming decisions, video formats, packaging, and the metrics that actually move a channel.\nHands-on experience growing LinkedIn and X as primary channels, with judgment about what content, format, and cadence work on each.\nExperience with paid social programs and how organic and paid social reinforce each other, including creative for paid, audience strategy, and interpreting paid performance data.\nExperience connecting social media programs to broader brand, communications, product, or business priorities.\nStrong editorial judgment and the ability to turn complex topics into clear, engaging content.\nFluency with short-form and long-form video as core social formats, including working with production partners and creators.\nExperience defining a measurement framework for social, including KPIs, dashboards, and reporting cadence, and presenting performance, learnings, and recommendations to executive leadership on a standing basis.\nExperience building or scaling an employee advocacy program, including driving adoption across multiple functions, sustaining participation beyond launch, and reporting attributed reach and business contribution\nFluency with an enterprise social stack for publishing, listening, and advocacy. Ours is Sprout Social, Meltwater, and EveryoneSocial.\nExperience running social programs across multiple regions and languages, and judgment about what to localize versus centralize.\nSkill in managing multiple priorities and making sound decisions in fast-moving situations.\nA collaborative, inclusive approach and the ability to work effectively in a distributed, asynchronous environment.\nPassion about GitLab's mission and the future of software development, open source, artificial intelligence, and DevSecOps.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      }
@@ -143,7 +164,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      },
@@ -151,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8792475002"
      }

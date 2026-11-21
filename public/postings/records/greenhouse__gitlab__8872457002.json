@@ -16,6 +16,15 @@
    "from_hash": "cf209c71b8921203a4e546220a81eb9861fc1dd5c5cd004b8ebe214c67887629",
    "kind": "content_changed",
    "to_hash": "3f440212a18aefae18e578308299b0a50c660d57b74214b1ef51fbd89bc97afd"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "3f440212a18aefae18e578308299b0a50c660d57b74214b1ef51fbd89bc97afd",
+   "kind": "content_changed",
+   "to_hash": "c9c6017798a76dc26097d96dda8d4df4f3bbccce89ca07a282f6edfc262a63b6"
   }
  ],
  "content": {
@@ -37,18 +46,14 @@
    {
     "source": "offices.name",
     "text": "Ireland"
-   },
-   {
-    "source": "offices.name",
-    "text": "United Kingdom"
    }
   ],
   "published": "2026-10-07T13:32:58-04:00",
   "title": "Business Development Representative, German Speaking",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-29T17:31:35.200593+00:00",
- "content_hash": "3f440212a18aefae18e578308299b0a50c660d57b74214b1ef51fbd89bc97afd",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "c9c6017798a76dc26097d96dda8d4df4f3bbccce89ca07a282f6edfc262a63b6",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -67,7 +72,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -75,7 +80,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -83,7 +88,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -91,15 +96,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Ireland",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.name",
-      "quote": "United Kingdom",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -107,7 +104,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "As part of GitLab's growing Sales team, you will work closely with the Field and Digital Marketing teams, as well as the Sales and Customer Success teams. Our BDRs come from diverse backgrounds, and we provide extensive onboarding and training so you have the DevOps and GitLab knowledge you need to succeed. You'll partner with Account Executives, working fully remote and distributed across multiple U.S. time zones, collaborating asynchronously through GitLab, video calls, and shared playbooks. This role provides a clear path for advancing to an Account Executive position within GitLab.",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      }
@@ -120,7 +117,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Fluency in German.\nPrevious tech industry experience in an outbound sales development role is required.\nPositive and energetic phone skills, excellent listening skills, strong writing skills.\nAbility to prioritize tasks, manage a high volume of outreach, and consistently follow through on prospecting activities.\nProven experience taking initiative, persisting through setbacks, and independently driving projects or activities through to successful outcomes.\nAlignment with our values and working in accordance with those values.\nKnowledge of business process, roles, and organizational structure.\nProficiency in using Salesforce, Sales Navigator, and Outreach or similar prospecting and sequencing tools.\nThe ability to travel for events such as trainings, team offsites, customer meetings, etc.\nProficiency in English, our company language, is required for effective communication.",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      }
@@ -137,7 +134,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -145,7 +142,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -153,7 +150,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -161,7 +158,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "This position is 100% remote and will be based in the UK, Spain, and Ireland.",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      },
@@ -169,7 +166,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "As part of GitLab's growing Sales team, you will work closely with the Field and Digital Marketing teams, as well as the Sales and Customer Success teams. Our BDRs come from diverse backgrounds, and we provide extensive onboarding and training so you have the DevOps and GitLab knowledge you need to succeed. You'll partner with Account Executives, working fully remote and distributed across multiple U.S. time zones, collaborating asynchronously through GitLab, video calls, and shared playbooks. This role provides a clear path for advancing to an Account Executive position within GitLab.",
-      "retrieved_at": "2026-10-29T17:31:35.200593+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8872457002"
      }

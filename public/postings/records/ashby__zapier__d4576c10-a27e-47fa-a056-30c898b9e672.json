@@ -41,10 +41,19 @@
    "from_hash": "1be8648ea42c1bd64a7de155b624f2340bb7c240e8f5de11da14dcd4dc3d50cd",
    "kind": "content_changed",
    "to_hash": "af88198ab593a8b731fe94b494b0d696dffb9af29ba1bfca1c69bce64dd5ccdc"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "af88198ab593a8b731fe94b494b0d696dffb9af29ba1bfca1c69bce64dd5ccdc",
+   "kind": "content_changed",
+   "to_hash": "b953597f27113dd1c594375089eddc3a76862437f2e65b9060714cc320233ecb"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$140K – $170K • Offers Equity • Offers Commission • Multiple Ranges\",\"tiers\":[{\"title\":\"L2 USA\",\"summary\":\"OTE $140K – $170K • Offers Equity • Offers Commission\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Commission\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE $140K – $170K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"L2 Canada\",\"summary\":\"OTE CA$140K – CA$170K • Offers Equity • Offers Commission\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Commission\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE CA$140K – CA$170K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$140K – $170K • Offers Equity • Offers Commission • Multiple Ranges\",\"tiers\":[{\"title\":\"L2 USA\",\"summary\":\"OTE $140K – $170K • Offers Equity • Offers Commission\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE $140K – $170K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Commission\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"}]},{\"title\":\"L2 Canada\",\"summary\":\"OTE CA$140K – CA$170K • Offers Equity • Offers Commission\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Commission\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE CA$140K – CA$170K\"}]}]}",
   "description": "AI AT ZAPIER\n\nAt Zapier https://zapier.com/about, we build and use automation every day to make work more efficient, creative, and human. So if you’re using AI tools while applying here - that’s great! We just ask that you use them responsibly and transparently.\n\nCheck out our guidance on How to Collaborate with AI During Zapier’s Hiring Process https://zapier.com/l/jobs/ai-at-zapier, including how to use AI tools like ChatGPT, Claude, Gemini, or others during our hiring process - and when not to.\n\nABOUT ZAPIER\n\nWe’re on a mission to make automation work for everyone.\n\nAs the leader in easy automation, Zapier empowers businesses to automate workflows and move data across 7,000+ apps. We work with what you work with, across your apps and tech stack, so you can make magic happen.\n\nWe’re at an interesting inflection point at Zapier. Automation and AI are reshaping how businesses operate, and we’re right in the middle of it. We’re looking for someone who wants to help drive that innovation, not just someone who wants to hit a number.\n\nThe role: you’ll be selling Zapier’s AI Orchestration platform to companies with up to 1,000 employees, owning the full sales cycle from prospecting to close.\n\nMost of your pipeline will come from you. Cold outreach, turning a warm signal into a real conversation, finding the deal before it finds you, that's the job, and we need people who are built for that part, not just willing to do it.\n\nZapier's Mid-Market motion is early. We need architects, not order-takers. You won't inherit a playbook. You'll help write it\n\nThere's more than one path to this role\n\nLikely you’ve been a top performer in SaaS sales (or consistently exceeding in mid-market, and you’re ready to step up) and can run a deal end-to-end, including prospecting. However, if you have a track record of tackling hard problems, hands-on experience with AI tools (not just familiarity), put customers first, and have a drive to make things happen you may also be a great fit for our team.\n\nEither way, what separates a good candidate from a great one is proactive ownership, the ability to navigate ambiguity, strong stakeholder communication, cross-functional collaboration, and a genuine hunger to learn fast.\n\nWHAT WE ARE LOOKING FOR\n\n- You have 2-5 years of demonstrated success in selling horizontal SaaS solutions to multi-stakeholder or technical organizations across the mid-market levels, with a strong focus on automation, integrations, and enhancing tech stack efficiency.\n\n- Proven track record of success in closing software deals over and meeting or exceeding your sales quota\n\n- Strong understanding of APIs, integrations, and tools like Zapier, with the ability to explain their importance in modern tech ecosystems.\n\n- Demonstrated ability to discuss IT concerns, including security, scalability, compliance, and performance, in a credible and knowledgeable manner.\n\n- Excellent communication skills both with customers and within an organization\n\n- Ability to develop and navigate senior-level relationships quickly and effectively\n\n- You thrive in a state of ambiguity and are motivated by strong personal drive\n\n- You use AI in your work today, not occasionally, but as part of how you operate at a high level. You can point to workflows you’ve built, how your approach has evolved through iteration, and the impact on quality, efficiency, and experience while intentionally applying AI for the right outcomes, setting a high bar for outputs, and taking ownership of what ships.\n\nAI Fluency Assessment https://ai-fluency-hub.vercel.app/\n\n- Take our 10 minute AI Fluency Assessment by clicking the link above. See how your skills stack up against our sales bar, get a personalized tier, and walk away with actionable next steps to level up your AI skills.\n\nWHAT YOU’LL DO\n\n- Own mid-market accounts end-to-end: prospecting, discovery, negotiation, close, and expansion\n\n- Sell Zapier’s AI-powered automation platform to enterprises moving from manual workflows to orchestrated, AI-first operations\n\n- Show up in the field: build relationships at events, conferences, and executive briefings that go deeper than a LinkedIn connection\n\n- Build relationships across the org from the people doing the work up to the C-suite\n\n- Lead conversations that help customers think through the real business impact of automation, not just the product features\n\n- Quarterback complex deals across Solutions Engineering, Customer Success, and Product. You’re accountable for the outcome, not just your piece\n\n- Help shape how we go to market at the mid-market level; the team is small, fast, and building the motion from scratch\n\nWHO SHOULD NOT APPLY\n\nThis section exists to save everyone time.\n\n- You’re coming from a large enterprise org and need a defined territory, established SDR/BDR support, and fully built enablement to be successful\n\n- You measure success by activity volume over deal quality\n\n- You want to avoid ambiguity and prefer a structured, repeatable process handed to you\n\n- You can demo a product’s features, but can’t frame the ROI or build a business case from a customer’s pain\n\n- AI is something you’ll “get around to” rather than something you’re already using\n\nWHY JOIN NOW\n\nZapier is profitable, has been around long enough to know what we’re doing, and is growing into a bigger opportunity in AI and automation. You’ll do real work where your contributions are visible and your impact is measurable. Our team is deeply curious and always looking for innovative ways to meet and exceed our customers' needs.\n\nIf breaking into AI is something you’re thinking about, there are very few companies where you’ll build with it the way you will here. We’ll take you from capable to transformative—and that’s increasingly a career-defining skill set.\n\nWe are a remote-first company. We believe the people who win in AI and automation aren’t just product experts; they synthesize information, build business cases, and move faster than the competition.\n\nHOW TO APPLY\n\nAt Zapier, we believe that diverse perspectives and experiences make us better, which is why we have a non-standard application process designed to promote inclusion and equity. We're looking for the best fit for each of our roles, regardless of the type of companies in your background, so we encourage you to apply even if your skills and experiences don’t exactly match the job description. All we ask is that you answer a few in-depth questions in our application that would typically be asked at the start of an interview process. This helps speed things up by letting us get to know you and your skillset a bit better right out of the gate. Please be sure to answer each question; the resume and CV fields are optional.\n\nEducation is not a requirement for our roles; however, if you receive an offer, you will need to include your most recent educational experience as part of our background check process.\n\nAfter you apply, you are going to hear back from us—even if we don’t see an immediate fit with our team. In fact, throughout the process, we strive to never go more than seven days without letting you know the status of your application. We know we’ll make mistakes from time to time, so if you ever have questions about where you stand or about the process, just ask your recruiter!\n\nZapier is an equal-opportunity employer and we're excited to work with talented and empathetic people of all identities. Zapier does not discriminate based on someone's identity in any aspect of hiring or employment as required by law and in line with our commitment to Diversity, Inclusion, Belonging and Equity. Our code of conduct https://zapier.com/jobs/zapier-code-of-conduct provides a beacon for the kind of company we strive to be, and we celebrate our differences because those differences are what allow us to make a product that serves a global user base. Zapier will consider all qualified applicants, including those with criminal histories, consistent with applicable laws.\n\nZapier prioritizes the security of our customers' information and is dedicated to adhering to all applicable data privacy laws. You can review our privacy policy here https://zapier.com/legal/data-privacy.\n\nZapier is committed to inclusion. As part of this commitment, Zapier welcomes applications from individuals with disabilities and will work to provide reasonable accommodations. If reasonable accommodations are needed to participate in the job application or interview process, please contact jobs@zapier.com.\n\nAPPLICATION DEADLINE:\n\nThe anticipated application window is 30 days from the date job is posted, unless the number of applicants requires it to close sooner or later, or if the position is filled.\n\nEven though we’re an all-remote company, we still need to be thoughtful about where we have Zapiens working. Check out this resource https://docs.google.com/spreadsheets/d/1_lXQvKwuU4xXEbye7EW_En8iv1ZIMlQNmT7B2Mzbo24/edit?gid=0#gid=0 for a list of countries where we currently cannot have Zapiens permanently working.",
   "locations": [
    {
@@ -60,34 +69,14 @@
   "title": "Account Executive, Mid Market",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
- "content_hash": "af88198ab593a8b731fe94b494b0d696dffb9af29ba1bfca1c69bce64dd5ccdc",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "b953597f27113dd1c594375089eddc3a76862437f2e65b9060714cc320233ecb",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
   "fields": {
    "compensation": {
     "items": [
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "variable",
-       "component_type": "Commission",
-       "equity_mentioned": false,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "L2 USA",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [],
-       "variable_mentioned": true
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Commission\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
-     },
      {
       "interpretation": {
        "amount_unit": null,
@@ -112,7 +101,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE $140K – $170K\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      },
@@ -132,7 +121,27 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
+     },
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "variable",
+       "component_type": "Commission",
+       "equity_mentioned": false,
+       "estimated": false,
+       "interval_raw": "1 YEAR",
+       "label": "L2 USA",
+       "multiple_ranges": true,
+       "period": "year",
+       "ranges": [],
+       "variable_mentioned": true
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"Commission\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"}",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      },
@@ -152,7 +161,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Commission\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Commission\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      },
@@ -172,7 +181,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      },
@@ -200,7 +209,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":140000,\"maxValue\":170000,\"summary\":\"OTE CA$140K – CA$170K\"}",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      }
@@ -217,7 +226,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "NAMER",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      },
@@ -225,7 +234,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      }
@@ -246,7 +255,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/d4576c10-a27e-47fa-a056-30c898b9e672"
      }

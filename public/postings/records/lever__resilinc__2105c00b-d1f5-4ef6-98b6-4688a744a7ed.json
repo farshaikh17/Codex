@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-19T16:06:56.311511+00:00",
-  "reason": "source retrieval failed: The read operation timed out",
-  "state": "inaccessible"
+  "at": "2026-11-19T21:52:19.631182+00:00",
+  "reason": "listed again after inaccessible",
+  "state": "listed"
  },
  "board": "resilinc",
  "changes": [],
