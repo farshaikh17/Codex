@@ -31,6 +31,14 @@ export function indiaRemotePayText(job: Pick<Job, 'salary_currency' | 'salary_mi
   return raw || 'Salary published';
 }
 
+export function jobPayText(job: Job): string | null {
+  if (!job.salary_published) return null;
+  // Keep employer wording such as bonuses and equity when numeric bounds also exist.
+  const raw = job.salary_raw_text?.trim();
+  if (raw && !raw.startsWith('{')) return raw;
+  return indiaRemotePayText(job);
+}
+
 // Small deterministic helpers for the job inspection panel. No network, no AI, nothing stored.
 
 /** Links that open ready-made people searches for an employer. The candidate contacts people themselves; nothing is sent from here. */

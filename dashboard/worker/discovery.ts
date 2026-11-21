@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v23';
+export const RULES_MARKER = 'profile_v24';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -588,7 +588,8 @@ export function mixedTitle(title:string|null|undefined):[string,string]|null{
 const ONSITE_TEXT=/\bposition is based (?:in|at|out of)\b|#li[-_ ]?(?:onsite|on-site|hybrid)\b|\b(?:\d|one|two|three|four)\s*(?:-\s*(?:\d|two|three|four|five)\s*)?days?\s+(?:a|per|each)\s+week\s+(?:in|from|at)\s+(?:the|our)\s+(?:[\w-]+\s+){0,3}office/gi;
 // Jobs QA 2 (14 Nov): Oracle, Workday and SuccessFactors set the dataset's remote flag on on-site postings (Mashreq, Bengaluru: nothing in the text
 // says remote). For those sources the flag counts only when the text or the place also says remote.
-const FLAG_DOUBTFUL_SOURCE=/^(?:oracle|oracle_?hcm|workday|successfactors)$/i, REMOTE_WORDS=/\b(?:remote(?:ly)?|work from home|wfh|home[- ]based|telecommut\w*)\b/i;
+// Ashby also sets isRemote on Hybrid postings. Dataset rows carry only that boolean.
+const FLAG_DOUBTFUL_SOURCE=/^(?:ashby|oracle|oracle_?hcm|workday|successfactors)$/i, REMOTE_WORDS=/\b(?:remote(?:ly)?|work from home|wfh|home[- ]based|telecommut\w*)\b/i;
 export function remoteFlagTrusted(source:string|null|undefined,description:string|null|undefined,location:string|null|undefined){
  return !FLAG_DOUBTFUL_SOURCE.test(String(source||'').trim())||REMOTE_WORDS.test(String(description||''))||REMOTE_WORDS.test(String(location||''));
 }
