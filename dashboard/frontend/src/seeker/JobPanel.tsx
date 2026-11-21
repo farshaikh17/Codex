@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useDialogFocus } from './useDialogFocus';
 import { Job, ApplicationStatus } from '../types';
 import { fetchJobFeedback } from '../api';
-import { peopleSearchLinks, skillGaps, withoutAutoMark } from '../jobHelpers';
+import { jobPayText, peopleSearchLinks, skillGaps, withoutAutoMark } from '../jobHelpers';
 import { whyText } from '../components/JobTable';
 import { placeText, foundText, STAGES, indiaWords, sourceText } from './format';
 import { postingUrl, btn, btnPlain, btnPrimary } from './JobCard';
@@ -20,13 +20,6 @@ interface Props {
   busy?: boolean;   // a write for this job is on its way: the controls wait
 }
 
-const payText = (job: Job) => {
-  if (!job.salary_published) return 'Pay: not stated';
-  if (job.salary_raw_text) return `Pay: ${job.salary_raw_text}`;
-  const f = (n?: number | null) => (n ? Number(n).toLocaleString('en-IN') : '');
-  const range = [f(job.salary_min), f(job.salary_max)].filter(Boolean).join(' – ');
-  return range ? `Pay: ${job.salary_currency || ''} ${range}${job.salary_period ? ' a ' + String(job.salary_period).toLowerCase().replace(/ly$/, '') : ''}`.trim() : 'Pay: not stated';
-};
 const levelText = (job: Job) => {
   const s = job.score?.breakdown?.seniority_assessment;
   if (!s || !s.job_seniority || !s.candidate_seniority) return null;
@@ -123,7 +116,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
               <div><h4 className="font-semibold">How well it matches you</h4>
                 <p>Match: {Math.round(job.score?.overall_score || 0)} out of 100{(job.score?.breakdown?.matched_skills || []).length ? ` · your skills it names: ${(job.score?.breakdown?.matched_skills || []).join(', ')}` : ''}</p>
                 {level && <p>{level}</p>}
-                <p>{payText(job)}</p></div>
+                <p>Pay: {jobPayText(job) ?? 'not stated'}</p></div>
               {gaps.asked.length > 0 && (
                 <div data-testid="skill-gaps">
                   <h4 className="font-semibold">Skills the posting names</h4>
