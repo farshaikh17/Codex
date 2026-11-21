@@ -1895,7 +1895,7 @@ async function todayCounts(env: Env, candidateId: string, snap: Snapshot | null 
   let followupsDue = 0;
   try {
     const f = await env.DB.prepare(`SELECT COUNT(*) AS n FROM application_followups f JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
-      WHERE f.candidate_id = ? AND f.follow_up_at <= ? AND a.status NOT IN ('REJECTED','WITHDRAWN','ARCHIVED')`).bind(candidateId, today).first<any>();
+      WHERE f.candidate_id = ? AND f.follow_up_at <= ? AND ${realApp('a')} AND a.status NOT IN ('REJECTED','WITHDRAWN','ARCHIVED')`).bind(candidateId, today).first<any>();
     followupsDue = Number(f?.n || 0);
   } catch (e: any) { if (isDatabaseFailure(e?.message)) throw e; }
   const n = (v: any) => Number(v || 0);
@@ -2510,7 +2510,7 @@ router.get('/api/follow-ups', async (request, env, _params, url) => {
       FROM application_followups f
       JOIN applications a ON a.candidate_id = f.candidate_id AND a.job_id = f.job_id
       JOIN jobs j ON j.id = f.job_id
-      WHERE f.candidate_id = ? ORDER BY f.follow_up_at, f.job_id LIMIT 200`).bind(candidateId).all<any>();
+      WHERE f.candidate_id = ? AND ${realApp('a')} ORDER BY f.follow_up_at, f.job_id LIMIT 200`).bind(candidateId).all<any>();
     return jsonResponse({ candidate_id: candidateId, items: results || [] }, 200, corsHeaders(request, env));
   } catch (e: any) {
     if (isDatabaseFailure(e?.message)) throw e;
