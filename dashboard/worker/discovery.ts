@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v23';
+export const RULES_MARKER = 'profile_v24';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -1048,8 +1048,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Jobs QA 4: a remote posting whose title names India among its places ('Marketing Automation Manager - Canada, Spain, India') hires from India.
  const titleIndiaRemote=remote&&titlePlaces(p.title).some((x)=>indianPlace(x));
  const explicitIndiaRemote=lineIndiaRemote||titleIndiaRemote||india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
- const usRemotePosition = /(?:^|[.!?]\s+|\blocation\s*[:–-]?\s+)remote (?:position|role|job) within (?:the )?(?:United States|USA|US)\b(?=\s*(?:$|[.!?](?:\s|$)|,\s*with\b))/i.test(p.description || '');
- const blocked=usRemotePosition||/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
+ const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  // Jobs QA 7 (MSD Rahway: 'Relocation: VISA Sponsorship: Travel Requirements:'): an application-form label left empty offers nothing.
  const offerText=text.replace(EMPTY_FORM_FIELD,' ');

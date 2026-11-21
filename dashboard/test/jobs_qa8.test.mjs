@@ -17,8 +17,9 @@ const evF = (title, location, description, o = {}) => evaluate(farhan, { id: 'x'
 const FLOOR_S = sana.qualification_threshold - 10;
 const pad = (s) => (s + ' ').repeat(2) + 'We offer a competitive package, medical cover and annual leave in line with local law. Applicants should send a CV in English.';
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v23)', () => {
-  assert.equal(RULES_MARKER, 'profile_v23');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v23, bumped again by later rule changes)', () => {
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 23, RULES_MARKER);
 });
 
 test('place: "Town, <Indian state code>, IN" is India; a US state code without IN, and Indiana, are not', () => {
