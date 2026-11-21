@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "16269a591bed67b221a756fc0f69175473637e3856f88500c62f0b070220583d",
+   "kind": "content_changed",
+   "to_hash": "4549ec6065db49818de17cd54336388b8ee0ee81514c019c91aa24c09985b70c"
+  }
+ ],
  "content": {
   "compensation_raw": "[{\"min_cents\": 10480000, \"max_cents\": 17640000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nWe're looking for a strategic, data-driven owner for about.gitlab.com, the site where developers, platform teams and enterprise buyers first meet GitLab. You'll build a performance-based strategy for where the site goes next, align partners around it, and see it through: from the roadmap and experimentation program to the pages behind every major product launch and event.\n\nYou set direction and orchestrate the work; you don't need to build it yourself.\n\nWhat You'll Do\n\nBuild a performance-based strategy and quarterly roadmap for about.gitlab.com, tied to pipeline and self-serve trial goals, and align Marketing leadership and partners around it.\n\nSet the experimentation roadmap based on business goals and manage the optimization program, partnering with User Experience (UX) Design so design shapes what we test from the start.\n\nOwn launch page production for major product launches and events, from calendar and brief to launch readiness and post-launch cleanup, with UX Design, Product Marketing, Content and Marketing Engineering.\n\nSet direction for information architecture and content governance, so a site with many contributors stays coherent, on brand and easy for search and artificial intelligence (AI) answer engines to understand.\n\nRepresent content contributors on the content management system (CMS) roadmap, and bring AI into their workflows with clear guardrails for human review.\n\nBuild a two-way partnership with localization content managers so learnings flow between the English and localized sites.\n\nDefine the site's success metrics (conversion on key paths, site-sourced pipeline, test velocity and win rate, on-time launches) and report progress to Marketing leadership.\n\nWhat You'll Bring\n\nExperience owning strategy for a high-traffic business-to-business software-as-a-service website, ideally one with many audiences and contributors.\n\nA track record of setting an experimentation roadmap and running a program that delivered measurable conversion or pipeline lift.\n\nExperience running website launches across design, content, product marketing and engineering teams.\n\nSkill at turning analytics, research and A/B test results into clear priorities.\n\nThe ability to lead through influence: you build credibility with designers, engineers and marketers, and act as a partner, not a gatekeeper.\n\nTechnical fluency with modern websites and content management systems, enough to make tradeoffs with engineers. You don't need to write production code.\n\nCuriosity about AI and experience using it to improve content or web workflows.\n\nClear, concise asynchronous writing and the ability to thrive in GitLab's all-remote, handbook-first culture.\n\nBonus points: experience marketing to developers, running localized sites, or working with technical search engine optimization (SEO) and answer engine optimization (AEO).\n\nAbout the team\n\nYou'll lead through a dedicated team of specialists in UX design, technical SEO, AEO, marketing analytics, content, paid and campaigns, and partner with Marketing Engineering to ship.\n\nIf this role excites you but you don't meet every requirement, we still encourage you to apply.\n\nThe base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.\n\nUnited States Salary Range\n\n$104,800—$176,400 USD\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -17,14 +27,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-11-04T12:16:13-05:00",
   "title": "Senior Website Manager, about.gitlab.com",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-04T18:50:19.577531+00:00",
- "content_hash": "16269a591bed67b221a756fc0f69175473637e3856f88500c62f0b070220583d",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "4549ec6065db49818de17cd54336388b8ee0ee81514c019c91aa24c09985b70c",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +67,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 10480000, \"max_cents\": 17640000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      },
@@ -78,7 +92,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$104,800—$176,400 USD",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      }
@@ -95,7 +109,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      },
@@ -103,7 +117,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      }
@@ -116,7 +138,7 @@
       "interpretation": null,
       "method": "description_section:What You'll Bring",
       "quote": "A track record of setting an experimentation roadmap and running a program that delivered measurable conversion or pipeline lift.\nExperience running website launches across design, content, product marketing and engineering teams.\nSkill at turning analytics, research and A/B test results into clear priorities.\nThe ability to lead through influence: you build credibility with designers, engineers and marketers, and act as a partner, not a gatekeeper.\nTechnical fluency with modern websites and content management systems, enough to make tradeoffs with engineers. You don't need to write production code.\nCuriosity about AI and experience using it to improve content or web workflows.\nClear, concise asynchronous writing and the ability to thrive in GitLab's all-remote, handbook-first culture.",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      }
@@ -129,7 +151,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What You'll Bring",
       "quote": "Experience owning strategy for a high-traffic business-to-business software-as-a-service website, ideally one with many audiences and contributors.",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      },
@@ -137,7 +159,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What You'll Bring",
       "quote": "Bonus points: experience marketing to developers, running localized sites, or working with technical search engine optimization (SEO) and answer engine optimization (AEO).",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      }
@@ -150,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      },
@@ -158,7 +180,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-04T18:50:19.577531+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8928762002"
      }

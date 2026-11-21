@@ -16,7 +16,8 @@ export function titleKey(title: string | null | undefined) {
 export function reviewKey(company: string | null | undefined, title: string | null | undefined) {
   return (companyKey(company) || String(company || '').trim().toLowerCase()) + '|' + titleKey(title);
 }
-export type TwinRow = { id: string; title: string | null; company: string | null; location?: string | null; score?: number | null; found?: string | null; unscreened?: number | boolean | null };
+export type TwinRow = { id: string; title: string | null; company: string | null; location?: string | null; score?: number | null; found?: string | null; unscreened?: number | boolean | null;
+  key?: string };   // key: reviewKey(company, title) when the caller already has it (worker/snapshot.ts)
 export type Twins = { hidden: string[]; groups: number; places: Map<string, { more: number; places: string[] }> };
 /** Groups To review rows by reviewKey. The kept row is the best score (then the newest, then the smallest id); the others are hidden. A row the
  *  screen has not judged yet is never grouped. `places` gives, per kept row, how many were hidden and up to three of their places. */
@@ -25,7 +26,7 @@ export function collapseTwins(rows: TwinRow[]): Twins {
   let single = 0;
   for (const r of rows) {
     if (Number(r.unscreened)) { single++; continue; }
-    const k = reviewKey(r.company, r.title);
+    const k = r.key ?? reviewKey(r.company, r.title);
     const g = byKey.get(k);
     if (g) g.push(r); else byKey.set(k, [r]);
   }
