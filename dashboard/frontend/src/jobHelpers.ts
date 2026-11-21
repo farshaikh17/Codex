@@ -1,5 +1,16 @@
 import type { Job } from './types';
 
+export function postingUrl(job: Pick<Job, 'original_posting_url' | 'source_url'>): string | null {
+  for (const [value, allowHttp] of [[job.original_posting_url, false], [job.source_url, true]] as const) {
+    if (!value || !/^https?:\/\//i.test(value)) continue;
+    try {
+      const url = new URL(value);
+      if (!url.username && !url.password && (url.protocol === 'https:' || allowHttp)) return value;
+    } catch { /* Try the source when the preferred posting address is incomplete. */ }
+  }
+  return null;
+}
+
 export function indiaRemotePayText(job: Pick<Job, 'salary_currency' | 'salary_min' | 'salary_max' | 'salary_period' | 'salary_raw_text'>): string {
   const { salary_min: min, salary_max: max, salary_currency, salary_period } = job;
   const format = (amount: number) => amount.toLocaleString(salary_currency === 'INR' ? 'en-IN' : 'en-US');

@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDb, loadWorker, makeEnv, call } from './harness.mjs';
+import { seekerLists } from '../frontend/src/seeker/listFilters.ts';
 import { roleFamilyOf, fitOf, assessmentConflict, ROLE_FAMILIES } from '../worker/listing.ts';
 
 const worker = await loadWorker();
@@ -322,6 +323,25 @@ test('listings never write: applications, history, qualifications and scores are
   assert.equal(snap(), before);
 });
 
+test('Best matches opens every READY and READY_HIGH job counted on Today', async () => {
+  const w = world();
+  w.add(S, 'ordinary', 'Planner', { status: 'READY' });
+  w.add(S, 'high', 'Reliability Engineer', { status: 'READY_HIGH' });
+  w.add(S, 'applied', 'Senior Planner', { status: 'READY_HIGH', app: 'APPLIED' });
+  w.add(S, 'stretch', 'Lead Engineer', { status: 'STRETCH_READY' });
+  w.add(F, 'other', 'Operations Lead', { status: 'READY_HIGH' });
+  const today = await get(w, '/api/today?candidate_id=' + S, null);
+  const query = new URLSearchParams(seekerLists.best.filters);
+  const list = await get(w, JOBS(query + '&exclude_applied=true&exclude_dismissed=true', S), null);
+  assert.equal(today.status, 200);
+  assert.equal(list.status, 200);
+  assert.equal(today.json.counts.best, 2);
+  assert.equal(list.json.total, today.json.counts.best);
+  assert.deepEqual(ids(list).sort(), ['high', 'ordinary']);
+  assert.equal(seekerLists.best.filters.farhan_fit, undefined, 'a status filter, not farhan_fit, so the list keeps the stored-copy path (#222)');
+  assert.deepEqual(ids(await get(w, JOBS('qualification_status=READY', S), null)).sort(), ['applied', 'high', 'ordinary'], 'READY reads as READY + READY_HIGH');
+});
+
 test('India Remote requires remote evidence while the general list retains eligible office and relocation jobs', async () => {
   const w = world();
   for (const [id, workplace, location, reason] of [
@@ -342,4 +362,17 @@ test('India Remote requires remote evidence while the general list retains eligi
   assert.deepEqual(jobs.filter(j => j.remote_from_india === 'CONFIRMED').map(j => j.id).sort(), ['india', 'legacy', 'world']);
   assert.deepEqual(ids(await get(w, IR('', S), null)).sort(), ['india', 'legacy', 'world']);
   assert.equal((await get(w, '/api/india-remote/summary?candidate_id=' + S, null)).json.total_confirmed, 3);
+});
+
+test('search also matches the place shown on a card: the seeker list (stored copy or full query) and India Remote', async () => {
+  const w = world();
+  w.add(F, 'pune', 'Implementation Manager', { status: 'READY', score: 90 });
+  w.add(F, 'other', 'Implementation Manager', { status: 'READY', score: 80 });
+  w.run('UPDATE jobs SET location_restrictions = ? WHERE id = ?', 'Remote - India (Pune preferred)', 'pune');
+  w.run("UPDATE candidate_qualifications SET eligibility_reason = 'Remote role in India.' WHERE job_id IN ('pune', 'other')");   // confirmed India Remote
+  const seeker = await get(w, JOBS('exclude_applied=true&exclude_dismissed=true&search=Pune'), null);
+  assert.equal(seeker.status, 200);
+  assert.deepEqual(ids(seeker), ['pune']);
+  assert.deepEqual(ids(await get(w, JOBS('search=Pune'), null)), ['pune'], 'the full query too');
+  assert.deepEqual(ids(await get(w, IR('search=Pune'), null)), ['pune']);
 });
