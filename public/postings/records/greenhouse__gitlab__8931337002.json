@@ -14,6 +14,15 @@
    "from_hash": "7a2c9e07396cbd74a7f09e92adb8e71268f37cd3a5568d0af3098f205705cc48",
    "kind": "content_changed",
    "to_hash": "b3695bfc90a711052f68bd6167dca802ae99d2c3fb9b88bdce5a3119e0d52cc6"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "b3695bfc90a711052f68bd6167dca802ae99d2c3fb9b88bdce5a3119e0d52cc6",
+   "kind": "content_changed",
+   "to_hash": "69095e75b36908170440a3c98798f95a9188f7515ed2484769fa8a0d74f5055e"
   }
  ],
  "content": {
@@ -22,23 +31,31 @@
   "locations": [
    {
     "source": "location.name",
-    "text": "Remote, United States"
+    "text": "Remote, Brazil"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Mexico"
    },
    {
     "source": "offices.name",
-    "text": "North America"
+    "text": "Brazil"
    },
    {
     "source": "offices.name",
-    "text": "United States of America"
+    "text": "LATAM"
+   },
+   {
+    "source": "offices.name",
+    "text": "Mexico"
    }
   ],
   "published": "2026-11-06T17:55:25-05:00",
   "title": "Customer Success LATAM",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-17T23:38:01.366527+00:00",
- "content_hash": "b3695bfc90a711052f68bd6167dca802ae99d2c3fb9b88bdce5a3119e0d52cc6",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "69095e75b36908170440a3c98798f95a9188f7515ed2484769fa8a0d74f5055e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -67,7 +84,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 9360000, \"max_cents\": 15840000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      },
@@ -92,7 +109,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$93,600—$158,400 USD",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      }
@@ -108,24 +125,40 @@
      {
       "interpretation": null,
       "method": "ats_field:location.name",
-      "quote": "Remote, United States",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "quote": "Remote, Brazil",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Mexico",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "North America",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "quote": "Brazil",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "United States of America",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "quote": "LATAM",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Mexico",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      }
@@ -138,7 +171,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Business-level fluency in English, Spanish, and Portuguese.\nFamiliarity with the LATAM market.\nExperience across the full customer journey, including post-sales adoption, value realization, and advocacy.\nBackground in customer success, professional services, technical account management, or a related function with direct customer engagement.\nAbility to understand and discuss Git, common branching strategies, and how customers use version control in their workflows.\nKnowledge of the software development lifecycle, including typical development pipelines and tooling.\nAbility to learn and use GitLab, triage technical questions, share product and infrastructure best practices, and provide hands-on product enablement for customers.\nBasic-to-intermediate knowledge of development and operations (DevOps), including familiarity with continuous integration, continuous deployment, and DevSecOps concepts and practices.\nSkill in translating product usage data and technical details into clear, actionable insights for both technical and executive stakeholders.\nProven ability to build trusted relationships with customers and coworkers, facilitate workshops, and guide customers through best practices and operational change.\nAbility to manage multiple customer needs simultaneously and maintain clear, thorough documentation.\nCommitment to learning and growing, with a willingness to investigate questions and work through problems independently.\nTransferable skills from adjacent roles or industries that support collaborative, outcome-focused customer partnerships.",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      }
@@ -151,7 +184,7 @@
       "interpretation": null,
       "method": "description_section:Nice to have",
       "quote": "Prior experience at a startup.\nPrior experience at a GitLab competitor.\nIntermediate-to-advanced DevOps knowledge.\nPrior experience leading executive-level conversations.\nPrior experience selling services.",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      }
@@ -163,8 +196,16 @@
      {
       "interpretation": "remote",
       "method": "location_text",
-      "quote": "Remote, United States",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "quote": "Remote, Brazil",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Mexico",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8931337002"
      }

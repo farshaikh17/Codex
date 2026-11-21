@@ -14,6 +14,15 @@
    "from_hash": "a69131c352fc2efed553cb9b168dd724c84c3fa80e00810269b85b69ac7f18c2",
    "kind": "compensation_source_added",
    "to_hash": "d08b74bfda1f496ecc0948102b19d3350ea3fc942b7bb3155adba143b1bd3661"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "d08b74bfda1f496ecc0948102b19d3350ea3fc942b7bb3155adba143b1bd3661",
+   "kind": "content_changed",
+   "to_hash": "9fccb42fd170d6db8efe781eb479a8c503089d6d1b5754370e4c8aac9eb87094"
   }
  ],
  "content": {
@@ -27,14 +36,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-10-01T11:02:28-04:00",
   "title": "Principal Product Marketing Manager, Competitive",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "d08b74bfda1f496ecc0948102b19d3350ea3fc942b7bb3155adba143b1bd3661",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "9fccb42fd170d6db8efe781eb479a8c503089d6d1b5754370e4c8aac9eb87094",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +76,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 16800000, \"max_cents\": 28560000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      },
@@ -88,7 +101,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$168,000—$285,600 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      }
@@ -105,7 +118,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      },
@@ -113,7 +126,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      }
@@ -126,7 +147,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Proven impact at the organizational and industry level\nDeep domain expertise in SDLC, DevSecOps, and agentic software development to engage technical buyers and executive audiences\nTrack record of driving competitive positioning that delivers measurable win-rate impact\nFluency in the AI/agentic coding landscape and competitor exposure areas\nEstablished thought leadership with industry recognition (speaking, publications, advisory roles)\nExperience briefing executives, investor relations, and industry analysts\nAbility to form and articulate a clear point of view quickly despite incomplete information\nStrong communication skills to translate complex technical concepts into clear narratives\nPractical experience using AI tools within your workflow\nSelf-directed, data-driven mindset using win/loss insights to guide strategy",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      }
@@ -143,7 +164,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      },
@@ -151,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8859224002"
      }

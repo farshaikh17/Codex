@@ -41,6 +41,15 @@
    "from_hash": "bf97048139542f94085d4da2c5bd83b0bf522afea10600f863739c30e389a43b",
    "kind": "content_changed",
    "to_hash": "0d8b980b5fedeb8960d82c3b88fd9203c9e62ea4dd94208650c9dc4311a12c4f"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "0d8b980b5fedeb8960d82c3b88fd9203c9e62ea4dd94208650c9dc4311a12c4f",
+   "kind": "content_changed",
+   "to_hash": "92acc28a67a5cea4f3f0c183b5b704aed7cdf514702d5e391dbbb94862fdaf8e"
   }
  ],
  "content": {
@@ -57,15 +66,15 @@
    },
    {
     "source": "offices.name",
-    "text": "North America"
+    "text": "United States of America"
    }
   ],
   "published": "2026-10-23T18:47:07-04:00",
   "title": "Backend Engineer, GitLab Orbit",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "0d8b980b5fedeb8960d82c3b88fd9203c9e62ea4dd94208650c9dc4311a12c4f",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "92acc28a67a5cea4f3f0c183b5b704aed7cdf514702d5e391dbbb94862fdaf8e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -94,7 +103,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 11520000, \"max_cents\": 16200000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      },
@@ -119,7 +128,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$115,200—$162,000 USD",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      }
@@ -136,7 +145,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      },
@@ -144,15 +153,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "North America",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      },
@@ -160,7 +169,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Comfort working in a low-process, high-ownership environment where you take responsibility for your work, refine problem statements with teammates, and communicate progress clearly in writing across time zones in an all-remote team.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      }
@@ -173,7 +182,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Professional experience building and maintaining backend systems in production, with an understanding of reliability, maintainability, and how to support services over time (for example, incident response and follow-ups).\nProficiency in at least one modern backend language and strong interest in Rust, with either prior Rust experience or clear evidence you can ramp quickly and deliver in a Rust-first, performance-sensitive codebase.\nSome exposure to distributed data or analytics systems (for example, OLAP databases, Kafka- or NATS-style messaging, or change data capture (CDC) pipelines), or strong motivation to develop those skills in this role.\nInterest in graph data modeling and query patterns (property graphs, multi-step (n-hop) traversals, aggregations), and willingness to learn the tools and concepts used in Knowledge Graph over time.\nPractical experience (or strong interest) using AI tools in day-to-day development, along with a thoughtful approach to validating outputs and integrating AI into your workflow.\nA language-agnostic mindset and evidence that you can pick up new languages and frameworks as needed (for example, Ruby, Go, or TypeScript/Vue where the work touches adjacent systems).\nSolid fundamentals in system design for your level, including the ability to reason about trade-offs, ask good questions, and align your implementation work with documented architectural decisions.\nComfort working in a low-process, high-ownership environment where you take responsibility for your work, refine problem statements with teammates, and communicate progress clearly in writing across time zones in an all-remote team.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      }
@@ -190,7 +199,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Canada",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      },
@@ -198,7 +207,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8771512002"
      }

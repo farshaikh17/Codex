@@ -51,6 +51,15 @@
    "from_hash": "2f226065e196ffbb62b66cd3b254dc6135819ad3d9ff7e3e142985ef65514e5c",
    "kind": "content_changed",
    "to_hash": "454260e27fddb50c991a6ddc005ef81b0acbccc58aff5770d6485fbed75f72aa"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "454260e27fddb50c991a6ddc005ef81b0acbccc58aff5770d6485fbed75f72aa",
+   "kind": "content_changed",
+   "to_hash": "d9caf357f1c701e416057fcf5f9973fe394dd2fb7fcc0ab230062860e79cf1a0"
   }
  ],
  "content": {
@@ -62,20 +71,16 @@
     "text": "Remote, Poland"
    },
    {
-    "source": "offices.location",
-    "text": "Turkey"
-   },
-   {
     "source": "offices.name",
-    "text": "EMEA"
+    "text": "Poland"
    }
   ],
   "published": "2026-09-08T15:16:51-04:00",
   "title": "Backend Engineer, Trusted Agentic Development",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-12T21:45:55.934535+00:00",
- "content_hash": "454260e27fddb50c991a6ddc005ef81b0acbccc58aff5770d6485fbed75f72aa",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "d9caf357f1c701e416057fcf5f9973fe394dd2fb7fcc0ab230062860e79cf1a0",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -103,7 +108,7 @@
       },
       "method": "description_text",
       "quote": "Poland base salary range: zł 248,000 - zł 372,000",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      }
@@ -120,23 +125,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.location",
-      "quote": "Turkey",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "EMEA",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "quote": "Poland",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      }
@@ -149,7 +146,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Hands-on experience building software with artificial intelligence agents and understanding why their output can pass tests yet fail to behave as intended, from encountering that gap yourself or building something to prevent it.\nBackend development experience in at least one of Rust, Ruby, Go, or Python, with openness to working across languages.\nExperience taking backend features from design into production, discussing implementation trade-offs, and knowing when to ask for guidance.\nComfort working inside a large existing codebase, not only on greenfield projects.\nA practical approach to prototyping, learning from results, and turning useful ideas into working software.\nClear written communication and the ability to collaborate in an all-remote, asynchronous environment.\nThe ability to share decisions transparently and improve your work through iteration and feedback.",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      }
@@ -162,7 +159,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Familiarity with containerized services; Kubernetes experience is a plus.",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      }
@@ -175,7 +172,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Poland",
-      "retrieved_at": "2026-11-12T21:45:55.934535+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8760233002"
      }
