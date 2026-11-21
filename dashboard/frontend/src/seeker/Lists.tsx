@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Job } from '../types';
 import { TodayData, fetchJobs, fetchHiddenJobs } from '../api';
 import { updatedNote } from '../jobHelpers';
+import { seekerLists } from './listFilters';
 import { JobCard, btnPlain, btnChosen } from './JobCard';
 import { todayLabel, listedAt, updatedText } from './format';
 
@@ -76,13 +77,8 @@ export const TodayView: React.FC<{ data: TodayData; baseline: number; lastRunAt:
 
 const FILTERS: [string, string][] = [['ALL', 'All'], ['INDIA', 'Says it hires in India'], ['REMOTE', 'Remote']];
 
-// What each list screen shows: the rest of the list (To review), all Best matches, all Worth a try, or the good matches (60+) of the rest.
-const LIST_OF: Record<string, { title: string; status: string; min?: number }> = {
-  all: { title: 'Everything else', status: 'NEEDS_REVIEW' }, best: { title: 'Best matches', status: 'READY' },
-  worth: { title: 'Worth a try', status: 'STRETCH_READY' }, good: { title: 'More good matches', status: 'NEEDS_REVIEW', min: 60 },
-};
 export const AllView: React.FC<{ candidateId: string; which: string; total: number; actions: CardActions; refreshKey: number }> = ({ candidateId, which, total, actions, refreshKey }) => {
-  const list = LIST_OF[which] || LIST_OF.all;
+  const list = seekerLists[which] || seekerLists.all;
   const [jobs, setJobs] = useState<Job[] | null>(null);
   const [count, setCount] = useState(total);
   const [page, setPage] = useState(1);
@@ -97,7 +93,7 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
     let live = true;
     setError('');
     fetchJobs({ candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, sort_by: sort, search: term || undefined, page, limit: 25,
-      qualification_status: list.status, min_score: list.min, collapse_twins: list.status === 'NEEDS_REVIEW',   // one To review row per employer and title (jobs QA 13 Nov)
+      ...list.filters,
       eligibility: filter === 'INDIA' ? 'ELIGIBLE' : undefined, workplace_type: filter === 'REMOTE' ? 'REMOTE_ANY' : undefined })
       .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); } })
       .catch(() => { if (live) setError('Could not load the list. Check the connection and try again.'); });
