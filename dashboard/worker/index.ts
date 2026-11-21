@@ -1769,7 +1769,8 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       }
       rawStatusCounts = [...byStatus.values()].sort((a, b) => cmpBin(a.qualification_status, b.qualification_status));   // GROUP BY's order (READY before READY_HIGH below)
       const wanted = !qualificationStatus || qualificationStatus === 'ALL' ? null
-        : qualificationStatus === 'APPLY_WORTHY' ? new Set(['READY', 'READY_HIGH', 'STRETCH_READY']) : new Set([qualificationStatus]);
+        : qualificationStatus === 'APPLY_WORTHY' ? new Set(['READY', 'READY_HIGH', 'STRETCH_READY'])
+        : qualificationStatus === 'READY' ? new Set(['READY', 'READY_HIGH']) : new Set([qualificationStatus]);
       const page = (wanted ? rows.filter((r) => wanted.has(r.st)) : rows.slice())
         .sort(sortBy === 'date_desc' ? byDate : sortBy === 'score_desc' ? byScore : byScoreId);
       pageIds = page.slice(offset, offset + limit).map((r) => ({ id: r.id }));
@@ -1798,6 +1799,10 @@ router.get('/api/jobs', async (request, env, _params, url) => {
       if (qualificationStatus === 'APPLY_WORTHY') {
         filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH', 'STRETCH_READY')`;
         inStatus = (st) => st === 'READY' || st === 'READY_HIGH' || st === 'STRETCH_READY';
+      } else if (qualificationStatus === 'READY') {
+        // Best matches: READY_HIGH is a Best match too (status_counts above already counts it as READY, and so does /api/today).
+        filteredWhere += ` AND q.qualification_status IN ('READY', 'READY_HIGH')`;
+        inStatus = (st) => st === 'READY' || st === 'READY_HIGH';
       } else {
         filteredWhere += ` AND q.qualification_status = ?`;
         filterParams.push(qualificationStatus);
