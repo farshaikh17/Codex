@@ -84,5 +84,5 @@ privacy boundary and live acceptance requirements.
 ## Dashboard
 
 The public career dashboard (React frontend, Cloudflare Worker API, D1 migrations, release workflow and its tests) lives in
-[`dashboard/`](dashboard/README.md). Viewing is public. With the open tracker enabled, tracker actions can update real candidate records without an operator key. Use local fixtures when testing changes. See the [tracker permissions](dashboard/docs/RELEASE.md#open-tracker-limits-and-undo). See
-[`dashboard/docs/REPOSITORIES.md`](dashboard/docs/REPOSITORIES.md) for how it connects to this collector.
+[`dashboard/`](dashboard/README.md). Viewing is public. With the open tracker enabled, tracker actions can update real candidate records without an operator key. Use local fixtures when testing changes. See the [tracker permissions](dashboard/docs/RELEASE.md#open-tracker-limits-and-undo).
+[`dashboard/docs/REPOSITORIES.md`](dashboard/docs/REPOSITORIES.md) explains how it connects to this collector.
