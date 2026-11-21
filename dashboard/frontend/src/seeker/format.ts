@@ -48,27 +48,24 @@ export function placeText(job: Pick<Job, 'location_restrictions' | 'workplace_ty
 }
 
 // Site QA 21 Nov: some hiring systems give their account name as the employer ("nestleHRprdRMK", "MahindraCareerSite", "HatchD1"). The page
-// shows the employer's name instead; the stored name is never changed (it is what twins, caps and the operator screens read).
+// shows the employer's name instead; the stored name is never changed (it is what twins, caps and the operator screens read). Only known account
+// names and clear hiring-system suffixes are changed: a name written in lower case on purpose (deliveroo, adidas) is kept as it is.
 const EMPLOYER_NAMES: Record<string, string> = {
-  nestle: 'Nestlé',
-  'us kraft heinz': 'Kraft Heinz', regentcollegelondon: 'Regent College London', marrinadecisions: 'Marrina Decisions',
-  myamazonguy: 'My Amazon Guy', fireworkhq: 'Firework', soterahealth: 'Sotera Health',
+  nestle: 'Nestlé', hatchd1: 'Hatch', 'us kraft heinz': 'Kraft Heinz', regentcollegelondon: 'Regent College London',
+  marrinadecisions: 'Marrina Decisions', myamazonguy: 'My Amazon Guy', fireworkhq: 'Firework', soterahealth: 'Sotera Health',
 };
-/** The employer's name for display: a known account name mapped to the employer, else hiring-system suffixes taken off ("CareerSite",
- *  "Career Site", "HRprdRMK", a trailing "D1" after a word) and a one-word all-lowercase account name capitalised. Display only. */
+/** The employer's name for display: a known account name mapped to the employer, else the hiring-system suffixes "CareerSite" / "Career Site" /
+ *  "HRprd…" taken off; any other name exactly as stored. No lookbehind in these patterns: the build targets Safari 14. Display only. */
 export function employerName(raw: string | null | undefined): string {
   const c = String(raw || '').trim();
-  if (!c) return '';
   const lookup = (x: string) => EMPLOYER_NAMES[x.toLowerCase().replace(/\s+/g, ' ')];
+  if (!c) return '';
   if (lookup(c)) return lookup(c);
   const stripped = c
+    .replace(/([a-z])HR?prd[A-Za-z0-9]*$/, '$1')             // "nestleHRprdRMK" (SAP SuccessFactors production tenant)
     .replace(/\s*career\s*sites?$/i, '')                    // "Adani Career Site", "MahindraCareerSite"
-    .replace(/(?<=[a-z])HR?prd[A-Za-z0-9]*$/, '')            // "nestleHRprdRMK" (SAP SuccessFactors production tenant)
-    .replace(/(?<=[a-z]{3})D\d$/, '')                        // "HatchD1" (Workday data-centre suffix)
     .trim();
-  const name = stripped || c;
-  if (lookup(name)) return lookup(name);
-  return /^[a-z]{4,}$/.test(name) ? name[0].toUpperCase() + name.slice(1) : name;
+  return !stripped || stripped === c ? c : lookup(stripped) || stripped;
 }
 
 /** When the job was found. "New" uses only this, so it agrees with the "Found <date>" on the card (a re-check of an old job is not new). */

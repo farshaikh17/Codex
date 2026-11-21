@@ -34,13 +34,14 @@ test('site QA 21 Nov: a remote job says Remote on the card even when its first p
 });
 
 test('site QA 21 Nov: hiring-system account names are shown as the employer, display only', () => {
+  assert.equal(employerName('MahindraCareerSiteHRprd'), 'Mahindra', 'both suffixes');
   assert.equal(employerName('nestleHRprdRMK'), 'Nestlé');
   assert.equal(employerName('MahindraCareerSite'), 'Mahindra');
   assert.equal(employerName('Adani Career Site'), 'Adani');
   assert.equal(employerName('HatchD1'), 'Hatch');
   assert.equal(employerName('regentcollegelondon'), 'Regent College London');
   assert.equal(employerName('US Kraft Heinz'), 'Kraft Heinz');
-  assert.equal(employerName('storyblok'), 'Storyblok', 'a one-word lowercase account name is capitalised');
-  for (const name of ['Siemens Energy', 'WSP', 'Schneider Electric', 'SUSONITY', 'GE Vernova', 'Area D1', 'ib vogt']) assert.equal(employerName(name), name, name + ' is kept');
+  for (const name of ['Siemens Energy', 'WSP', 'Schneider Electric', 'SUSONITY', 'GE Vernova', 'Area D1', 'ib vogt', 'deliveroo', 'adidas', 'storyblok', 'AcmeD2'])
+    assert.equal(employerName(name), name, name + ' is kept as stored (lower case on purpose, or a D-digit name not in the list)');
   assert.equal(employerName(null), '');
 });

@@ -55,7 +55,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
 
   const url = postingUrl(job);
   const gaps = skillGaps(job.description || '', profileSkills);
-  const people = peopleSearchLinks(employerName(job.company));
+  const people = peopleSearchLinks(employerName(job.company));   // the stored name unless a known account name or a hiring-system suffix was cleaned
   const level = levelText(job);
   const hadNote = !!(job.application?.notes || '').trim();
 

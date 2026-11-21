@@ -93,6 +93,10 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
   // site QA 21 Nov: while a filter, sort, search or page change loads, the old cards and count are not presented as the answer
   const [loading, setLoading] = useState(true);
   const heading = useRef<HTMLHeadingElement>(null);
+  // what the screen reader hears: only after the person changes the filter, sort, search, page or list, not on a background reload (refreshKey)
+  const [said, setSaid] = useState('');
+  const asked = `${which}|${filter}|${sort}|${term}|${page}`;
+  const lastAsked = useRef(asked);
   const turnPage = (to: number) => {
     setPage(to);
     // site QA 21 Nov: the next page starts at its top, with focus on the list heading (not left at the bottom of the page)
@@ -103,19 +107,23 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
   useEffect(() => { setPage(1); }, [filter, sort, term, which]);
   useEffect(() => {
     let live = true;
+    const userChange = lastAsked.current !== asked;
+    lastAsked.current = asked;
     setError('');
     setLoading(true);
+    setSaid(userChange ? 'Loading…' : '');
     fetchJobs({ candidate_id: candidateId, exclude_applied: true, exclude_dismissed: true, sort_by: sort, search: term || undefined, page, limit: 25,
       ...list.filters,
       eligibility: filter === 'INDIA' ? 'ELIGIBLE' : undefined, workplace_type: filter === 'REMOTE' ? 'REMOTE_ANY' : undefined })
-      .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); setLoading(false); } })
-      .catch(() => { if (live) { setError('Could not load the list. Check the connection and try again.'); setLoading(false); } });
+      .then((r) => { if (live) { setJobs(r.jobs); setCount(r.total); setLoading(false); if (userChange) setSaid(`${r.total} job${r.total === 1 ? '' : 's'} found.`); } })
+      .catch(() => { if (live) { setError('Could not load the list. Check the connection and try again.'); setLoading(false); setSaid(''); } });
     return () => { live = false; };
   }, [candidateId, filter, sort, term, page, refreshKey, which]);   // eslint-disable-line react-hooks/exhaustive-deps
   const pages = Math.max(1, Math.ceil(count / 25));
   return (
     <div className="space-y-4">
-      <h2 ref={heading} tabIndex={-1} className="text-lg font-bold text-slate-900 scroll-mt-20 outline-none" data-testid="list-heading">{list.title}{loading ? '' : ` (${count})`}</h2>
+      {/* the count only when it is this answer's: not while loading, not after a failed load */}
+      <h2 ref={heading} tabIndex={-1} className="text-lg font-bold text-slate-900 scroll-mt-20 rounded-lg outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2" data-testid="list-heading">{list.title}{loading || error ? '' : ` (${count})`}</h2>
       {/* site QA 21 Nov: the search also matches the posting text, so the box says so; the placeholder is slate-500 (4.8:1 on white) */}
       <input type="search" aria-label="Search jobs" placeholder="Search titles, employers, places or posting text" value={search} onChange={(e) => setSearch(e.target.value)}
         className="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-base placeholder:text-slate-500" />
@@ -127,13 +135,13 @@ export const AllView: React.FC<{ candidateId: string; which: string; total: numb
         </select>
       </div>
       {error && <p role="alert" className="text-base text-rose-800">{error}</p>}
-      <p role="status" aria-atomic="true" className={loading && jobs !== null ? 'text-base text-slate-600' : 'sr-only'} data-testid="list-status">
-        {loading ? 'Loading…' : error ? '' : `${count} job${count === 1 ? '' : 's'} found.`}
-      </p>
+      <p role="status" aria-atomic="true" className="sr-only" data-testid="list-status">{said}</p>
+      {loading && jobs !== null && <p className="text-base text-slate-600" aria-hidden="true">Loading…</p>}
+      {/* after a failed load the earlier cards are not shown as the answer */}
       <div aria-busy={loading} data-testid="list-body" className={`space-y-4 ${loading && jobs !== null ? 'opacity-50 pointer-events-none' : ''}`}>
-        {jobs === null ? <p className="text-base text-slate-600" aria-hidden="true">Loading…</p> : jobs.length === 0 ? (loading ? null : <p className="text-base text-slate-600">No jobs here.</p>) : jobs.map((j) => <JobCard key={j.id} job={j} {...actions} />)}
+        {error ? null : jobs === null ? <p className="text-base text-slate-600" aria-hidden="true">Loading…</p> : jobs.length === 0 ? (loading ? null : <p className="text-base text-slate-600">No jobs here.</p>) : jobs.map((j) => <JobCard key={j.id} job={j} {...actions} />)}
       </div>
-      {pages > 1 && (
+      {pages > 1 && !error && (
         <div className="flex items-center gap-3">
           <button type="button" className={btnPlain} disabled={loading || page <= 1} onClick={() => turnPage(page - 1)}>Previous</button>
           <span className="text-sm text-slate-700">Page {page} of {pages}</span>
