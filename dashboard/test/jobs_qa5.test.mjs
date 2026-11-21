@@ -36,8 +36,8 @@ const NEAR_MISS = [
   'Candidates must be based in one of our offices.',
 ];
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v20)', () => {
-  assert.equal(RULES_MARKER, 'profile_v20');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v20, bumped again by later rule changes)', () => {
+  assert.match(RULES_MARKER, /^profile_v(?:2\d|[3-9]\d)$/);
 });
 
 test('the restriction is read from the text; India, a denied or bare requirement and the employer\'s own duties are not', () => {

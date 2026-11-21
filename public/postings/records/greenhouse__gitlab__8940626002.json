@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-20T22:19:12.259913+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "cce705d0677ec239382800e7b47a01c997c1f1072bcc352676ae03c609c8c189",
+   "kind": "content_changed",
+   "to_hash": "c1906bfad8c91eaea4758032dc526e15bfff0524632fb46d6764aa7f7ff7dd92"
+  }
+ ],
  "content": {
   "compensation_raw": "[{\"min_cents\": 15280000, \"max_cents\": 22000000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of the role\n\nAs Manager, Corporate Security - Platform Engineering, you'll lead a small, distributed team of security engineers and own programs that span Corporate Security teams. You'll define clear team boundaries, run security tooling through GitOps-based engineering practices, and bring program priorities, budgets, and vendor decisions to Security leadership. This is a hands-on technical leadership role: you won't be the primary implementer, but you'll write code, review designs and merge requests, make architecture decisions, and support incident response. This role is remote within North America, reports to the VP, Corporate Security, and is at job level M3 (Manager, Security Engineering).\n\nWhat you’ll do\n\nLead, hire, coach, and develop security engineers, including Staff engineers setting technical direction in artificial intelligence (AI) security and cloud environments. Build clear career paths and support ownership, written communication, and psychological safety.\n\nOwn the lifecycle of shared security tools, from evaluation and procurement through renewal and retirement. Use infrastructure-as-code repositories and GitOps practices, and give each tool a named owner, budget line, and exit plan. Initial priorities include Axonius, Push Security, Island, Material Security, the transition from Koi to Fleet osquery, and the CrowdStrike contract split with Security Operations.\n\nLead the secure access service edge (SASE) and always-on virtual private network (VPN) rollout, and own data loss prevention policy. Coordinate Federal Risk and Authorization Management Program (FedRAMP) boundary decisions with Security Compliance, working with Endpoint Engineering on clients and device posture signals and Identity Engineering on Okta network-zone policy.\n\nRun the corporate email gateway and own domain-based message authentication, reporting, and conformance (DMARC), sender policy framework (SPF), and DomainKeys Identified Mail (DKIM) across GitLab domains, including the FedRAMP tenant. Complete the separation of product email flow from corporate Google Workspace.\n\nOperate Sandbox Cloud across Amazon Web Services (AWS), Azure, and Google Cloud Platform (GCP), including the self-service portal, demo and training environments, the SSP GitLab instance, and other gitlab.systems environments. Build automated deprovisioning and cost guardrails while keeping identity and access management with Identity Engineering and production infrastructure with Infrastructure Security and Site Reliability Engineering.\n\nOwn Corporate Security's operating-model reporting, annual operating plan, software spend, change management, systems directory, handbook upkeep, and dashboards. Coordinate audit evidence across all three teams for Sarbanes-Oxley (SOX), System and Organization Controls 2 (SOC 2), and FedRAMP, replacing screenshots with code and query exports.\n\nRun departmental intake and reduce repeated requests through Slack automation, Serval, self-service security reviews, documentation hubs, and AI-assisted answers. Help each team focus on the systems it owns rather than routine triage.\n\nRepresent Platform Engineering in Corporate Security and Security leadership forums, the Authorization to Operate Council, and monthly AI spend reviews. Partner with Corporate IT, Infrastructure Security, security incident response, Security Compliance, Security Risk, Enterprise AI, Legal and Privacy, Procurement, and Finance to resolve shared priorities and ownership questions.\n\nWhat you’ll bring\n\nExperience managing security or platform engineering teams across time zones, including hiring engineers and developing senior individual contributors. Experience defining a team's remit and redirecting work to the right owner.\n\nExperience owning several categories of corporate security tooling, such as network security, email security, software-as-a-service security posture, asset visibility, and cloud sandboxes. Sound judgment about when to adopt, consolidate, or retire tools.\n\nExperience leading a team that operates tools as code using Terraform or OpenTofu, GitOps, merge-request change management, continuous integration pipelines, and Python or a similar language. The technical depth to review designs and code.\n\nHands-on experience deploying SASE, zero-trust network access, or always-on VPN solutions, alongside data loss prevention controls, in a remote-first company.\n\nKnowledge of AWS and GCP organization structures, account provisioning, guardrails, and cost controls sufficient to operate a self-service sandbox platform safely.\n\nExperience owning objectives and key results, vendor relationships, budgets, and security audit evidence programs, with the ability to write clear, concise plans for senior Security leadership.\n\nExperience using agentic AI tools in your work and a clear approach to governing AI tools, Model Context Protocol (MCP) servers, and credentials. The ability to run an enablement program without becoming the approver for every tool.\n\nClear written and asynchronous communication, a record of resolving ownership questions across functions, and an approach aligned with GitLab's values and all-remote, handbook-first ways of working. We welcome diverse backgrounds and transferable experience relevant to this work.\n\nAbout the team\n\nPlatform Engineering owns shared security tooling, non-production environments, and department-wide programs within Corporate Security. The team works alongside Endpoint Engineering and Identity Engineering, with clear boundaries around each team's responsibilities. Its focus is to make security services easier to operate and use through automation, self-service, and written documentation, while keeping ownership, costs, and audit evidence clear. You'll lead a small, distributed team and collaborate asynchronously across time zones with technical, security, and business partners.\n\nThe base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.\n\nUnited States Salary Range\n\n$152,800—$220,000 USD\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -16,15 +26,15 @@
    },
    {
     "source": "offices.name",
-    "text": "North America"
+    "text": "United States of America"
    }
   ],
   "published": "2026-11-17T10:54:24-05:00",
   "title": "Manager, Corporate Security - Platform Security",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-17T23:38:01.366527+00:00",
- "content_hash": "cce705d0677ec239382800e7b47a01c997c1f1072bcc352676ae03c609c8c189",
+ "content_changed_at": "2026-11-20T22:19:12.259913+00:00",
+ "content_hash": "c1906bfad8c91eaea4758032dc526e15bfff0524632fb46d6764aa7f7ff7dd92",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +63,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 15280000, \"max_cents\": 22000000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      },
@@ -78,7 +88,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$152,800—$220,000 USD",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      }
@@ -95,15 +105,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "North America",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      },
@@ -111,7 +121,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Experience managing security or platform engineering teams across time zones, including hiring engineers and developing senior individual contributors. Experience defining a team's remit and redirecting work to the right owner.",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      },
@@ -119,7 +129,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Platform Engineering owns shared security tooling, non-production environments, and department-wide programs within Corporate Security. The team works alongside Endpoint Engineering and Identity Engineering, with clear boundaries around each team's responsibilities. Its focus is to make security services easier to operate and use through automation, self-service, and written documentation, while keeping ownership, costs, and audit evidence clear. You'll lead a small, distributed team and collaborate asynchronously across time zones with technical, security, and business partners.",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      }
@@ -132,7 +142,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience managing security or platform engineering teams across time zones, including hiring engineers and developing senior individual contributors. Experience defining a team's remit and redirecting work to the right owner.\nExperience owning several categories of corporate security tooling, such as network security, email security, software-as-a-service security posture, asset visibility, and cloud sandboxes. Sound judgment about when to adopt, consolidate, or retire tools.\nExperience leading a team that operates tools as code using Terraform or OpenTofu, GitOps, merge-request change management, continuous integration pipelines, and Python or a similar language. The technical depth to review designs and code.\nHands-on experience deploying SASE, zero-trust network access, or always-on VPN solutions, alongside data loss prevention controls, in a remote-first company.\nKnowledge of AWS and GCP organization structures, account provisioning, guardrails, and cost controls sufficient to operate a self-service sandbox platform safely.\nExperience owning objectives and key results, vendor relationships, budgets, and security audit evidence programs, with the ability to write clear, concise plans for senior Security leadership.\nExperience using agentic AI tools in your work and a clear approach to governing AI tools, Model Context Protocol (MCP) servers, and credentials. The ability to run an enablement program without becoming the approver for every tool.\nClear written and asynchronous communication, a record of resolving ownership questions across functions, and an approach aligned with GitLab's values and all-remote, handbook-first ways of working. We welcome diverse backgrounds and transferable experience relevant to this work.",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      }
@@ -149,7 +159,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      },
@@ -157,7 +167,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "As Manager, Corporate Security - Platform Engineering, you'll lead a small, distributed team of security engineers and own programs that span Corporate Security teams. You'll define clear team boundaries, run security tooling through GitOps-based engineering practices, and bring program priorities, budgets, and vendor decisions to Security leadership. This is a hands-on technical leadership role: you won't be the primary implementer, but you'll write code, review designs and merge requests, make architecture decisions, and support incident response. This role is remote within North America, reports to the VP, Corporate Security, and is at job level M3 (Manager, Security Engineering).",
-      "retrieved_at": "2026-11-17T23:38:01.366527+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8940626002"
      }

@@ -14,6 +14,24 @@
    "from_hash": "051376044e15351490f55a60a97bf329443f074cafffd3131cd9836067ee4eee",
    "kind": "content_changed",
    "to_hash": "2fdc059e2353bf30a4a34bc1a4abe341b0030f0f43f320181a3c840736057cc5"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "2fdc059e2353bf30a4a34bc1a4abe341b0030f0f43f320181a3c840736057cc5",
+   "kind": "content_changed",
+   "to_hash": "051376044e15351490f55a60a97bf329443f074cafffd3131cd9836067ee4eee"
+  },
+  {
+   "changed_at": "2026-11-20T19:14:35.616028+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "051376044e15351490f55a60a97bf329443f074cafffd3131cd9836067ee4eee",
+   "kind": "content_changed",
+   "to_hash": "2fdc059e2353bf30a4a34bc1a4abe341b0030f0f43f320181a3c840736057cc5"
   }
  ],
  "content": {
@@ -37,7 +55,7 @@
   "title": "Business Development Representative (EMEA)",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-12T20:24:03.675870+00:00",
+ "content_changed_at": "2026-11-20T19:14:35.616028+00:00",
  "content_hash": "2fdc059e2353bf30a4a34bc1a4abe341b0030f0f43f320181a3c840736057cc5",
  "content_hash_version": 1,
  "extraction": {

@@ -15,7 +15,7 @@ function world(extraEnv = {}) {
        ('farhan_shaikh','Test Farhan','India','India','Asia/Kolkata',4,70), ('sana_ansari','Test Sana','India','India','Asia/Kolkata',9,60)`);
   const add = (cand, id, title, { status = 'NEEDS_REVIEW', elig = 'ELIGIBLE', score = 50, pub = 0, active = 1, app = null, lane = 'STRONGEST_FIT', override = null, company = 'Co', at = '2026-11-01T00:00:00Z' } = {}) => {
     if (!sqlite.prepare('SELECT 1 FROM jobs WHERE id=?').get(id))
-      run(`INSERT INTO jobs(id,title,company,source_adapter,is_active,salary_published,discovered_at) VALUES (?,?,?,?,?,?,?)`, id, title, company, 'lever', active, pub, at);
+      run(`INSERT INTO jobs(id,title,company,source_adapter,is_active,salary_published,discovered_at,location_restrictions) VALUES (?,?,?,?,?,?,?,'Remote - India')`, id, title, company, 'lever', active, pub, at);
     run(`INSERT INTO candidate_qualifications(candidate_id,job_id,qualification_status,eligibility_status,strategy_lane,manual_override_status,manual_override_reason) VALUES (?,?,?,?,?,?,?)`,
       cand, id, status, elig, lane, override, override ? 'PRIVATE-OVERRIDE-REASON-9c1' : null);
     run(`INSERT INTO candidate_job_scores(candidate_id,job_id,overall_score) VALUES (?,?,?)`, cand, id, score);
@@ -63,6 +63,21 @@ test('role families come from the title only, in rule order; an unmatched title 
   const t0 = Date.now(); roleFamilyOf('ai '.repeat(30000)); assert.ok(Date.now() - t0 < 200, 'a very long title cannot make the rules expensive');
   assert.ok(!ROLE_FAMILIES.some((f) => /stretch/i.test(f.label)), '"Adjacent Stretch" is a fit, not a role family');
   assert.equal(fitOf('READY_HIGH'), 'READY'); assert.equal(fitOf('HOLD'), 'NOT_FIT'); assert.equal(fitOf('CLOSED'), 'NOT_FIT'); assert.equal(fitOf(undefined), 'NOT_FIT');
+});
+
+test('software site reliability titles do not enter the plant reliability filter or its counts', async () => {
+  const w = world();
+  for (const [id, title] of [
+    ['software', 'Site Reliability Engineer - India'], ['gitops', 'Senior Site Reliability / GitOps Engineer'],
+    ['network', 'Network Reliability Engineer'], ['sre', 'SRE - Software Reliability Engineer'],
+    ['plant', 'Plant Reliability Engineer'], ['equipment', 'Rotating Equipment Reliability Engineer'],
+    ['refinery', 'Site Reliability Engineer - Refinery'],
+  ]) w.add(S, id, title);
+  const plant = await get(w, IR('role_family=RELIABILITY_MAINTENANCE', S), null);
+  assert.deepEqual(ids(plant).sort(), ['equipment', 'plant', 'refinery']);
+  const other = await get(w, IR('role_family=UNCLASSIFIED', S), null);
+  assert.deepEqual(ids(other).sort(), ['gitops', 'network', 'software', 'sre']);
+  assert.equal(other.json.facets.role_family.find(f => f.key === 'RELIABILITY_MAINTENANCE').count, 3);
 });
 
 test('India Remote: the unfiltered list is exactly the ELIGIBLE active jobs of the candidate, best score first', async () => {
@@ -305,4 +320,26 @@ test('listings never write: applications, history, qualifications and scores are
   for (const q of ['', 'farhan_fit=READY', 'role_family=SOLUTIONS&pay_filter=PUBLISHED', 'exclude_applied=true&limit=2&offset=2', 'search=analyst']) { await get(w, IR(q)); await get(w, IR(q, S)); await get(w, IR(q), null); }
   await get(w, JOBS('qualification_status=READY&limit=100')); await get(w, JOBS('farhan_fit=READY&pay_filter=PUBLISHED'), null);
   assert.equal(snap(), before);
+});
+
+test('India Remote requires remote evidence while the general list retains eligible office and relocation jobs', async () => {
+  const w = world();
+  for (const [id, workplace, location, reason] of [
+    ['india', 'REMOTE', 'Remote - India', ''],
+    ['world', 'UNKNOWN', 'Worldwide', 'Posting explicitly advertises worldwide remote work.'],
+    ['legacy', 'UNKNOWN', 'India', 'Accessible Indian market opportunity (Remote in India).'],
+    ['office', 'ONSITE', 'Wada, India', 'On-site or hybrid in India: workable for the candidate (owner decision 2026-11-12).'],
+    ['hybrid', 'HYBRID', 'Remote - India', 'Posting explicitly supports fully remote work from India.'],
+    ['visa', 'REMOTE_RESTRICTED', 'Berlin', 'Posting affirmatively mentions sponsorship/relocation; eligibility still requires review.'],
+    ['unknown', 'UNKNOWN', 'India', ''],
+  ]) {
+    w.add(S, id, 'Engineer');
+    w.run('UPDATE jobs SET workplace_type=?, location_restrictions=? WHERE id=?', workplace, location, id);
+    w.run('UPDATE candidate_qualifications SET eligibility_reason=? WHERE job_id=?', reason, id);
+  }
+  const jobs = (await get(w, JOBS('', S), null)).json.jobs;
+  assert.equal(jobs.length, 7);
+  assert.deepEqual(jobs.filter(j => j.remote_from_india === 'CONFIRMED').map(j => j.id).sort(), ['india', 'legacy', 'world']);
+  assert.deepEqual(ids(await get(w, IR('', S), null)).sort(), ['india', 'legacy', 'world']);
+  assert.equal((await get(w, '/api/india-remote/summary?candidate_id=' + S, null)).json.total_confirmed, 3);
 });

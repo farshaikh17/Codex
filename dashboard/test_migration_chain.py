@@ -29,6 +29,7 @@ migrations = [
     '0024_drop_remotive_source.sql',
     '0025_queue_404_gone.sql',
     '0026_read_diet.sql',
+    '0027_cheap_views.sql',
 ]
 base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
 for m in migrations:
@@ -103,3 +104,20 @@ for word in ('UPDATE', 'DELETE', 'INSERT', 'DROP', 'ALTER', 'CREATE TABLE'):
     assert word not in body.upper(), f'0026 must only add indexes ({word})'
 conn.executescript(m26)
 print('0026 adds the read-diet indexes, idempotently')
+
+# 0027: two new tables (the stored list copy and its dirty marks, both empty) and one partial index; no row of an existing table changes;
+# re-applying changes nothing
+with open(os.path.join(base, '0027_cheap_views.sql'), 'r', encoding='utf-8') as f:
+    m27 = f.read()
+tables27 = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+assert {'seeker_snapshot', 'seeker_dirty'} <= tables27, tables27
+assert 'idx_cq_not_for_me' in {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+body27 = '\n'.join(l for l in m27.splitlines() if not l.startswith('--')).upper()
+for word in ('UPDATE', 'DELETE', 'INSERT', 'DROP', 'ALTER'):
+    assert word not in body27, f'0027 must not change existing rows ({word})'
+assert body27.count('CREATE TABLE IF NOT EXISTS') == 2 and body27.count('CREATE TABLE') == 2
+conn.execute("INSERT INTO seeker_dirty(candidate_id, job_id, at) VALUES ('c', 'j', 1)")
+conn.executescript(m27)
+assert conn.execute('SELECT COUNT(*) FROM seeker_dirty').fetchone() == (1,), '0027 is not idempotent'
+conn.execute('DELETE FROM seeker_dirty')
+print('0027 adds the stored list copy tables and the Not-for-me index, idempotently')

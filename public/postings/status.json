@@ -1,51 +1,51 @@
 {
  "changes": {
   "cursor_from": null,
-  "cursor_to": "pc1|2026-10-27T20:29:45.949737+00:00|lever:gohighlevel:ff1b1484-a414-4d3a-9a94-d1a542eb7c08",
+  "cursor_to": "pc1|2026-10-28T07:19:58.134244+00:00|greenhouse:twilio:8267554",
   "entries": 200,
   "has_more": true
  },
  "extraction": {
   "failed": 1,
-  "ok": 995,
-  "uncertain": 217
+  "ok": 1028,
+  "uncertain": 219
  },
  "files": {
-  "changes.json": "adebf9f14a97cd4a07c402a147104cd249fa59f1157469828470b1229f561e78",
-  "index.json": "bdbe71f970a57dabd914d30320b99e90c315566e1b2b6e6c94292997c5d10d08"
+  "changes.json": "72b927cc47998d72b4bf8fc2bceb29a553315349cd4b66ec4c94101d4664ca0f",
+  "index.json": "1801da1ed0a6f9681878d086d75cf1a9eaf47fc6c64880259df03d6f4075f3de"
  },
- "generated_at": "2026-11-19T16:09:03.740645+00:00",
- "latest_cursor": "pc1|2026-11-19T16:06:56.311511+00:00|lever:resilinc:eedf50e9-f97f-40ae-a531-023993ecb32e",
+ "generated_at": "2026-11-21T06:14:47.198752+00:00",
+ "latest_cursor": "pc1|2026-11-21T02:46:35.321332+00:00|greenhouse:twilio:8383319",
  "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
- "records_rewritten": 1213,
+ "records_rewritten": 1248,
  "schema": "posting-status-1",
  "sources": [
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 54,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 55,
    "missing": 4,
    "source_id": "avathon-greenhouse"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 97,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 98,
    "missing": 5,
    "source_id": "cai-lever"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 15,
    "missing": 10,
    "source_id": "celigo-greenhouse"
@@ -53,29 +53,29 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 37,
-   "missing": 17,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 34,
+   "missing": 20,
    "source_id": "clipboard-ashby"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 62,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 64,
    "missing": 18,
    "source_id": "cognite-greenhouse"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 37,
    "missing": 1,
    "source_id": "drivetrain-lever"
@@ -83,9 +83,9 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 17,
    "missing": 4,
    "source_id": "energyhub-greenhouse"
@@ -93,39 +93,39 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 246,
-   "missing": 117,
+   "missing": 129,
    "source_id": "gitlab-greenhouse"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 90,
-   "missing": 40,
+   "missing": 42,
    "source_id": "highlevel-lever"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 21,
-   "missing": 13,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 20,
+   "missing": 16,
    "source_id": "oyster-ashby"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 9,
    "missing": 4,
    "source_id": "posthog-ashby"
@@ -133,39 +133,39 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 2,
    "missing": 0,
    "source_id": "remote-greenhouse"
   },
   {
    "expired": 0,
-   "inaccessible": 12,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
-   "last_status": "failed",
-   "last_success": "2026-11-19T16:00:23.452573+00:00",
-   "listed": 0,
+   "inaccessible": 0,
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
+   "last_status": "ok",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 13,
    "missing": 1,
    "source_id": "resilinc-lever"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 107,
-   "missing": 91,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 109,
+   "missing": 102,
    "source_id": "twilio-greenhouse"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
    "listed": 13,
    "missing": 9,
    "source_id": "voltus-lever"
@@ -173,29 +173,29 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 24,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 25,
    "missing": 23,
    "source_id": "weave-ashby"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-19T16:06:56.311511+00:00",
+   "last_attempt": "2026-11-21T06:13:29.084615+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-19T16:06:56.311511+00:00",
-   "listed": 10,
-   "missing": 3,
+   "last_success": "2026-11-21T06:13:29.084615+00:00",
+   "listed": 9,
+   "missing": 4,
    "source_id": "zapier-ashby"
   }
  ],
  "totals": {
   "expired": 0,
-  "inaccessible": 12,
-  "listed": 841,
-  "missing": 360
+  "inaccessible": 0,
+  "listed": 856,
+  "missing": 392
  },
  "versions": {
   "content_hash_version": 1,
