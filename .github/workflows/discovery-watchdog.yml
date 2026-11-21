@@ -44,7 +44,7 @@ jobs:
       contents: read
       actions: write   # to read discovery runs and start one (workflow_dispatch)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Start the daily discovery run if it is overdue

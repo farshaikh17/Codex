@@ -33,7 +33,7 @@ jobs:
       skip: ${{ steps.g.outputs.skip == 'true' || steps.r.outputs.skip == 'true' }}
       budget_skip: ${{ steps.g.outputs.skip == 'true' && steps.r.outputs.skip != 'true' }}   # skipped for the budget although the run was due
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Budget guard (account rows read today, from Cloudflare analytics; reads nothing from D1)
         id: g
         env:
@@ -64,10 +64,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Record the skipped run
@@ -105,10 +105,10 @@ jobs:
           - { name: more-successfactors, kind: more, arg: successfactors, minutes: 30 }
           - { name: more-big, kind: more, arg: 'oracle_hcm,smartrecruiters,workday,eures', minutes: 40 }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false   # third-party code (JobSpy) runs here; no GitHub token is left in .git/config
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Built-in search profiles (from the code; no database)
@@ -138,7 +138,7 @@ jobs:
         run: python engine/more_sources.py --profiles work/profiles.json --out work --days 30 --budget-seconds $(( (MINUTES - 3) * 60 )) --only "${{ matrix.part.arg }}"
       - name: Keep the results (public postings and counts only)
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: collect-${{ matrix.part.name }}
           path: |
@@ -165,13 +165,13 @@ jobs:
       - name: Run start (the shortlist audit checks what this run wrote since then)
         id: start
         run: echo "at=$(date -u '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false   # the job-site and feed steps run third-party code; no GitHub token is left in .git/config for them
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: D1 usage at the start (plan H1; Cloudflare analytics, reads nothing from D1; the run row stores what this run used)
@@ -221,7 +221,7 @@ jobs:
             python engine/dataset_discovery.py --out work --no-dataset --rescore-export --rescore-per-candidate 200
           fi
       - name: Collector results (the parallel collect jobs; a missing part is a warning)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           pattern: collect-*
@@ -427,7 +427,7 @@ jobs:
     timeout-minutes: 6
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Is a channel set up?
@@ -438,11 +438,11 @@ jobs:
         run: |
           if [ -n "$TELEGRAM_BOT_TOKEN" ] || [ "$DIGEST_PROVIDER" = "smtp" ]; then echo "on=true" >> "$GITHUB_OUTPUT"
           else echo "Daily message: skipped - no channel is set up (repository secret TELEGRAM_BOT_TOKEN, or variable DIGEST_PROVIDER=smtp with its secrets). See dashboard/docs/RELEASE.md."; fi
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: ${{ steps.channel.outputs.on == 'true' }}
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: ${{ steps.channel.outputs.on == 'true' }}
         with:
           node-version: '22'
