@@ -738,3 +738,13 @@ test('full state and province names (gap fix, 13 Nov): "Houston, Texas" is abroa
   assert.ok(india.score > VISA_UNLIKELY_CAP && gulf.score > VISA_UNLIKELY_CAP, 'India and the Gulf are not capped');
   assert.ok(mk('Panaji, Goa').score > VISA_UNLIKELY_CAP && mk('Indore, Madhya Pradesh').score > VISA_UNLIKELY_CAP);
 });
+
+test('Farhan: a US work location in the role description overrides a Fully Remote label', () => {
+  const assess = (description) => p2eval(P2_FARHAN, 'Implementation Manager', 'Fully Remote', description, true);
+  const restricted = assess(P2_IMPL + ' LOCATION Remote position within the United States, with occasional travel.');
+  assert.equal(restricted.eligibility, 'INELIGIBLE');
+  assert.notEqual(p2tier(P2_FARHAN, restricted), 'READY');
+  for (const location of ['Remote position within the United States or India.', 'Remote position within India, with occasional travel to the United States.']) {
+    assert.equal(assess(P2_IMPL + ' LOCATION ' + location).eligibility, 'ELIGIBLE');
+  }
+});

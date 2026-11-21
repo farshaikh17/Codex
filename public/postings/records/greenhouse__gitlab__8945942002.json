@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-20T22:19:12.259913+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "3c9aa95a0a1ebded25e5bb7b2fc08d74ff3464d9ef0d225d500400ec3c020553",
+   "kind": "content_changed",
+   "to_hash": "f6f134538ac413583409dca26e6d4ddb3dbb823429a0da7b761ad4c56708b36e"
+  }
+ ],
  "content": {
   "compensation_raw": "[{\"min_cents\": 11520000, \"max_cents\": 19440000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs a Revenue Technology Manager at GitLab, you'll lead how the tools we build and buy work together as we grow our consumption-based business. You'll own the vision, roadmap, and requirements for internal go-to-market applications, starting with Command Center, which helps field teams act on product usage and consumption data. You'll decide what those applications need to do and how they should fit with the rest of the stack. Engineering will own their technical architecture, code, and infrastructure. This is a senior individual contributor role with no direct reports, reporting to the Director, Revenue Technology, within Revenue Operations.\n\nWhat you’ll do\n\nDefine how internal and third-party tools fit together, including integrations, data flows, and governance, in partnership with the people who manage each tool.\n\nRecommend when to build, buy, or consolidate tools based on cost, return on investment, and how well each option meets the needs of go-to-market teams.\n\nOwn the roadmap for Command Center and other internal applications. Turn requests from Sales, Solutions Architecture, Customer Experience, Product, and Ecosystem into clear requirements, and explain what you won't prioritize and why.\n\nPartner with Engineering to deliver applications that fit the existing stack and limit technical debt. Lead user acceptance testing, launch, documentation, and enablement, then use adoption data to decide what to improve, expand, or retire.\n\nSet the long-term direction of the revenue technology stack with Revenue Strategy, Revenue Operations, and field leaders as the business and artificial intelligence capabilities evolve.\n\nBuild artificial intelligence and automation workflows that save time for Revenue Technology and go-to-market teams, and help the team decide when to use them.\n\nBring consumption metrics into the tools and workflows field teams rely on, and adapt them as GitLab's consumption model matures.\n\nWhat you’ll bring\n\nExperience in Revenue Operations, Sales or Customer Success Operations, business systems, or a related role, with ownership of tools from defining the use case and choosing a solution through launch.\n\nExperience designing or guiding a go-to-market technology stack, including how tools connect and share data through application programming interfaces, integrations, data models, and permissions. Working knowledge of Salesforce, product usage data, and revenue tools such as Gainsight, Clari, Gong, or Outreach.\n\nHands-on experience with a consumption- or usage-based business model, including how teams use consumption metrics across the customer lifecycle.\n\nExperience delivering internal tools with engineering teams, including writing scoped requirements and acceptance criteria and running user acceptance testing before release.\n\nExperience making build-versus-buy or consolidation decisions based on cost, return on investment, and business fit. You can reconcile competing requests from senior stakeholders and explain your decisions clearly.\n\nExperience shipping artificial intelligence agents or workflows people rely on, with the judgment to know where automation helps and where it adds complexity.\n\nStrong written communication in an all-remote, asynchronous environment. You can prioritize your work, keep teammates informed, and collaborate through issues, documents, and merge requests.\n\nExperience querying data directly with Structured Query Language (SQL) or a comparable tool, working with go-to-market analytics, or supporting field enablement is helpful, not required. We welcome transferable skills from related roles.\n\nAbout the team\n\nRevenue Technology owns the tools GitLab's go-to-market teams use, whether we build them or buy them. We're a globally distributed team that works asynchronously and partners with Revenue Operations, Revenue Strategy, Enablement, IT, and Engineering to support Sales, Customer Success, Professional Services, and Ecosystem teams. We put decisions in writing and focus on making the tools easier for field teams to use.\n\nRemote-Global\n\nThe base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.\n\nUnited States Salary Range\n\n$115,200—$194,400 USD\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -20,11 +30,11 @@
    }
   ],
   "published": "2026-11-19T17:56:45-05:00",
-  "title": "Revenue Operations Manager",
+  "title": "Revenue Technology Manager",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-19T23:11:44.215439+00:00",
- "content_hash": "3c9aa95a0a1ebded25e5bb7b2fc08d74ff3464d9ef0d225d500400ec3c020553",
+ "content_changed_at": "2026-11-20T22:19:12.259913+00:00",
+ "content_hash": "f6f134538ac413583409dca26e6d4ddb3dbb823429a0da7b761ad4c56708b36e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +63,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 11520000, \"max_cents\": 19440000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      },
@@ -78,7 +88,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$115,200—$194,400 USD",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      }
@@ -95,7 +105,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      },
@@ -103,7 +113,7 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "United States of America",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      }
@@ -116,7 +126,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience in Revenue Operations, Sales or Customer Success Operations, business systems, or a related role, with ownership of tools from defining the use case and choosing a solution through launch.\nExperience designing or guiding a go-to-market technology stack, including how tools connect and share data through application programming interfaces, integrations, data models, and permissions. Working knowledge of Salesforce, product usage data, and revenue tools such as Gainsight, Clari, Gong, or Outreach.\nHands-on experience with a consumption- or usage-based business model, including how teams use consumption metrics across the customer lifecycle.\nExperience delivering internal tools with engineering teams, including writing scoped requirements and acceptance criteria and running user acceptance testing before release.\nExperience making build-versus-buy or consolidation decisions based on cost, return on investment, and business fit. You can reconcile competing requests from senior stakeholders and explain your decisions clearly.\nExperience shipping artificial intelligence agents or workflows people rely on, with the judgment to know where automation helps and where it adds complexity.\nStrong written communication in an all-remote, asynchronous environment. You can prioritize your work, keep teammates informed, and collaborate through issues, documents, and merge requests.",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      }
@@ -129,7 +139,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Experience querying data directly with Structured Query Language (SQL) or a comparable tool, working with go-to-market analytics, or supporting field enablement is helpful, not required. We welcome transferable skills from related roles.",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      }
@@ -142,7 +152,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-19T23:11:44.215439+00:00",
+      "retrieved_at": "2026-11-20T22:19:12.259913+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8945942002"
      }

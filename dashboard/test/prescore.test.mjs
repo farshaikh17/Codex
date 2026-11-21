@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { posting, prescore, contextFor } from '../scripts/prescore.mjs';
-import { evaluate, placeBand } from '../worker/discovery.ts';
+import { evaluate, placeBand, RULES_MARKER } from '../worker/discovery.ts';
 
 const sana = { id: 'sana_ansari', primary_skills: '["Reliability","Plant Engineering"]', target_roles: '["Maintenance Manager"]', total_years_experience: 9, qualification_threshold: 65, rejected_companies: '[]' };
 const farhan = { id: 'farhan_shaikh', primary_skills: '["Workflow Automation","CRM Configuration"]', target_roles: '["Implementation Manager"]', total_years_experience: 9, qualification_threshold: 70, rejected_companies: '[{"company":"Rejecting Co","on":"2026-10-01"}]' };
@@ -52,4 +52,16 @@ test('prescore: the shared posting keeps the jobs QA remote rules (an Oracle / W
   const office = posting(row({ is_remote: true, ats_type: 'lever', location: 'India', description: 'The position is based in our Pune office. #LI-Onsite' }));
   assert.equal(office.remote, false); assert.equal(office.onsite, true);
   assert.equal(posting(row({ is_remote: false })).onsite, true);
+});
+
+test('marker: Ashby\'s remote flag needs remote words, so every stored row is re-scored once (profile_v24)', () => {
+  assert.equal(RULES_MARKER, 'profile_v24');
+});
+
+test('Ashby dataset: a remote flag shared by hybrid roles cannot alone confirm remote India', () => {
+  for (const location of ['Bengaluru Office', 'New Delhi', 'Remote - India']) {
+    const p = posting(row({ ats_type: 'ashby', is_remote: true, title: 'Implementation Manager', location, description: 'Configure CRM workflows.' }));
+    assert.equal(p.remote, location === 'Remote - India');
+    assert.equal(evaluate(farhan, p).eligibility === 'ELIGIBLE', location === 'Remote - India');
+  }
 });

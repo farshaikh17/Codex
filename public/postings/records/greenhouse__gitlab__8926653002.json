@@ -14,6 +14,15 @@
    "from_hash": "0b2427b81400a68344d1bb8b006199d61fa446760ecefba57af0a569dd4a3ad6",
    "kind": "content_changed",
    "to_hash": "3e21e333e0bd9f3b795109f6ec287d8305c666f923b3bebb56f7554aed977050"
+  },
+  {
+   "changed_at": "2026-11-20T18:27:48.802263+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "3e21e333e0bd9f3b795109f6ec287d8305c666f923b3bebb56f7554aed977050",
+   "kind": "content_changed",
+   "to_hash": "4f27b4bb419be4b4ddbee19ca33a5e78336cb96cdb827efcad245883f087521d"
   }
  ],
  "content": {
@@ -25,16 +34,60 @@
     "text": "Remote Ireland"
    },
    {
+    "source": "location.name",
+    "text": "Remote, France"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Germany"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Italy"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, Spain"
+   },
+   {
+    "source": "location.name",
+    "text": "Remote, United Kingdom"
+   },
+   {
+    "source": "offices.location",
+    "text": "France"
+   },
+   {
+    "source": "offices.name",
+    "text": "France"
+   },
+   {
+    "source": "offices.name",
+    "text": "Germany"
+   },
+   {
     "source": "offices.name",
     "text": "Ireland"
+   },
+   {
+    "source": "offices.name",
+    "text": "Italy"
+   },
+   {
+    "source": "offices.name",
+    "text": "Spain"
+   },
+   {
+    "source": "offices.name",
+    "text": "United Kingdom"
    }
   ],
   "published": "2026-11-13T08:11:49-05:00",
   "title": "Renewals Manager - Italy/ Spain",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-19T16:00:23.452573+00:00",
- "content_hash": "3e21e333e0bd9f3b795109f6ec287d8305c666f923b3bebb56f7554aed977050",
+ "content_changed_at": "2026-11-20T18:27:48.802263+00:00",
+ "content_hash": "4f27b4bb419be4b4ddbee19ca33a5e78336cb96cdb827efcad245883f087521d",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -53,7 +106,63 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, France",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Germany",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Italy",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, Spain",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:location.name",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.location",
+      "quote": "France",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Germany",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      },
@@ -61,7 +170,31 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Ireland",
-      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Italy",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "Spain",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United Kingdom",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }
@@ -74,7 +207,7 @@
       "interpretation": null,
       "method": "description_section:What You’ll Bring",
       "quote": "Can execute basic renewal processes independently (\"basic knots\") and has been introduced to more advanced scenarios (\"complex knots\") such as multi-year deals, upsell-attached renewals, or non-standard terms.\nDeveloping understanding of GitLab's way of working, values, and high-performance culture.\nAwareness of GitLab's remote work best practices.\nGrowth mindset and sense of ownership — proactively seeks out ways to learn and improve, and takes action rather than waiting for direction.\nStrong attention to detail and organizational skills; comfortable managing many renewals at once.\nClear written and verbal communication skills.\nAbility to follow defined processes and frameworks while flagging exceptions appropriately.\nCollaborative mindset and openness to feedback and coaching from senior teammates and manager.\nThe ability to travel for events such as trainings, team offsites, customer meetings, etc.",
-      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }
@@ -91,7 +224,47 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-11-19T16:00:23.452573+00:00",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, France",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Germany",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Italy",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, Spain",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
+     },
+     {
+      "interpretation": "remote",
+      "method": "location_text",
+      "quote": "Remote, United Kingdom",
+      "retrieved_at": "2026-11-20T18:27:48.802263+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8926653002"
      }

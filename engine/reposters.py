@@ -12,7 +12,9 @@ REPOSTER_CAP = 3
 REPOSTER_NAMES = {'jobgether', 'jobgethercom', 'turing', 'turingcom', 'crossover', 'crossoverforwork', 'peopleworth', 'pavago',
                   'braintrust', 'usebraintrust', 'braintrustnetwork',
                   # 14 Nov: virtual-assistant staffing firms seen in Farhan's dataset rows (Breezy)
-                  '20four7va', 'twentyfour7va', 'myoutdesk', 'wingassistant', 'virtualstaffingph', 'remotestaff'}
+                  '20four7va', 'twentyfour7va', 'myoutdesk', 'wingassistant', 'virtualstaffingph', 'remotestaff',
+                  # 20 Nov: Seamless Assist places virtual assistants with client businesses (careers-page.com, Manatal)
+                  'seamlessassist'}
 # A company name that says it is a virtual-assistant staffing firm.
 VA_NAME = re.compile(r'(?:^|[^a-z])(?:virtual (?:assistants?|staff(?:ing)?)|va (?:staffing|services|agency)|\d+\s*va)(?:[^a-z]|$)', re.I)
 

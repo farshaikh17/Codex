@@ -16,21 +16,19 @@ const PENDING_KEY = 'seeker:asked-apply';
 
 export const SeekerApp: React.FC = () => {
   const [route, setRoute] = useState<Route>(() => {
-    const r = parseRoute(window.location.hash);
+    const r = parseRoute(window.location.hash, window.history.state?.seekerFromView);
     if (r.person) return r;
     const p = rememberedPerson();
     return p ? { person: p, view: 'today', jobId: null } : r;
   });
   const underneath = useRef<View>(route.view);
-  const pushedPanel = useRef(false);
   // Plan U11: the address follows the screen; Back closes the panel; a reload lands on the same place.
   useEffect(() => {
     const want = routeHash(route);
     if (want && window.location.hash !== want) window.history.replaceState(null, '', window.location.pathname + window.location.search + want);
     const onHash = () => {
-      const r = parseRoute(window.location.hash, underneath.current);
+      const r = parseRoute(window.location.hash, window.history.state?.seekerFromView ?? underneath.current);
       if (!r.jobId) underneath.current = r.view;
-      if (!r.jobId) pushedPanel.current = false;
       setRoute(r);
     };
     window.addEventListener('hashchange', onHash);
@@ -96,12 +94,24 @@ export const SeekerApp: React.FC = () => {
     if (!skills[candidateId]) fetchProfile(candidateId).then((p) => setSkills((s) => ({ ...s, [candidateId]: p.primary_skills || [] }))).catch(() => {});
     return () => { live = false; };
   }, [ready, candidateId, route.jobId, refreshKey]);   // eslint-disable-line react-hooks/exhaustive-deps
-  const openJob = useCallback((job: Job) => { if (!person) return; pushedPanel.current = true; go({ person, view: underneath.current, jobId: job.id }); }, [person, go]);
+  const openJob = useCallback((job: Job) => {
+    if (!person) return;
+    const next = { person, view: underneath.current, jobId: job.id };
+    // Store the origin on this history entry so Forward and reload retain its close behaviour.
+    window.history.pushState({ seekerFromView: next.view }, '', routeHash(next));
+    setRoute(next);
+  }, [person]);
   const closeJob = useCallback(() => {
     if (!person) return;
-    if (pushedPanel.current) window.history.back();
-    else go({ person, view: underneath.current, jobId: null });
-  }, [person, go]);
+    if (window.history.state?.seekerFromView) {
+      window.history.back();
+      return;
+    }
+    // A bookmarked panel has no in-app predecessor. Replace it so Back still leaves the dashboard.
+    const next = { person, view: underneath.current, jobId: null };
+    window.history.replaceState(null, '', routeHash(next));
+    setRoute(next);
+  }, [person]);
 
   // Plan U7: after "Open posting", coming back to the tab asks "Did you apply?"
   const [asking, setAsking] = useState<Job | null>(null);
@@ -198,7 +208,7 @@ export const SeekerApp: React.FC = () => {
   const counts = data?.counts;
   const topBar = (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
+      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2 max-[359px]:h-auto max-[359px]:min-h-14 max-[359px]:flex-wrap max-[359px]:gap-0 max-[359px]:px-1">
         <div role="group" aria-label="Whose jobs" className="flex rounded-xl border border-slate-300 p-0.5 shrink-0">
           {PEOPLE.map((p) => (
             <button key={p} type="button" aria-pressed={person === p} onClick={() => go({ person: p, view: person && route.view !== 'home' ? route.view : 'today', jobId: null })}
@@ -238,7 +248,7 @@ export const SeekerApp: React.FC = () => {
   } else if (route.view === 'hidden') {
     body = <HiddenView key={candidateId} candidateId={candidateId!} actions={actions} onRestore={restore} refreshKey={refreshKey} />;
   } else {
-    body = !data ? <p className="text-base text-slate-600 pt-4">Loading {NAME[person]}'s jobs…</p>
+    body = !data ? null
       : <TodayView data={data} baseline={baseline.current[person]} lastRunAt={lastRunAt} actions={actions} go={(v) => go({ person, view: v, jobId: null })} />;
   }
 
@@ -248,6 +258,11 @@ export const SeekerApp: React.FC = () => {
       <main className="max-w-3xl mx-auto px-4 py-4 pb-28">
         <h1 className="sr-only">{person ? `${NAME[person]}'s jobs` : 'Jobs'}</h1>
         {ready && access === false && !isTrackerOpen() && person && <p className="mb-3 text-sm text-slate-600">Saving and tracking are switched off on this site just now.</p>}
+        {person && route.view === 'today' && (
+          <p role="status" aria-atomic="true" className={data || loadError ? 'sr-only' : 'text-base text-slate-600 pt-4'}>
+            {data ? `${NAME[person]}'s jobs loaded. Best matches: ${data.counts.best}.` : !loadError && `Loading ${NAME[person]}'s jobs…`}
+          </p>
+        )}
         {body}
       </main>
       {panelJob && person && (

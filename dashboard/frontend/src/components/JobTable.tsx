@@ -1,4 +1,5 @@
 import React from 'react';
+import { jobPayText } from '../jobHelpers';
 import { Job } from '../types';
 import { Search, Bookmark, XCircle, ChevronRight, RotateCcw, MapPin, Building, Sparkles, CheckCircle2, HelpCircle } from 'lucide-react';
 
@@ -64,14 +65,6 @@ export function whyText(reason?: string | null) {
   t = t.replace('Outside candidate target role family; retained for review.', 'Outside the usual role family.').trim();
   return t || 'Matches the role family. Open it to see the full posting.';
 }
-
-const payText = (job: Job) => {
-  if (!job.salary_published) return null;
-  if (job.salary_raw_text) return job.salary_raw_text;
-  const f = (n?: number | null) => (n ? Number(n).toLocaleString() : '');
-  const range = [f(job.salary_min), f(job.salary_max)].filter(Boolean).join(' – ');
-  return range ? `${job.salary_currency || ''} ${range}${job.salary_period ? ' / ' + job.salary_period : ''}`.trim() : null;
-};
 
 const scoreCls = (s: number) => (s >= 75 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : s >= 55 ? 'text-blue-700 bg-blue-50 border-blue-200' : 'text-amber-700 bg-amber-50 border-amber-200');
 
@@ -162,7 +155,7 @@ export const JobTable: React.FC<JobTableProps> = ({
               const notScreened = job.qualification_status === 'NEEDS_REVIEW' && String(job.qualification_reason || '').startsWith('[GITHUB_COLLECTOR] Unassessed');
               const st = notScreened ? { label: 'Not screened yet', cls: 'bg-slate-100 text-slate-600 border-slate-300' } : (STATUS_WORDS[String(job.qualification_status || 'NEEDS_REVIEW')] || STATUS_WORDS.NEEDS_REVIEW);
               const score = Number(job.score?.overall_score) || 0;
-              const pay = payText(job);
+              const pay = jobPayText(job);
               const elig = job.eligibility?.classification;
               return (
                 <li key={job.id} data-job-id={job.id} onClick={() => onSelectJob(job)} tabIndex={0} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectJob(job); } }} className="p-4 hover:bg-slate-50/80 cursor-pointer transition-colors group flex gap-3 items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600">

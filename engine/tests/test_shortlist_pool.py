@@ -78,6 +78,14 @@ class ShortlistPool(unittest.TestCase):
         self.assertEqual((by[(F, 'auto_closed')]['active'], by[(F, 'auto_fell')]['score']), (0, 20))
         self.assertEqual(by[(F, 'one_skill_exact')]['target_exact'], 1)
 
+    def test_held_rows_carry_their_posting_url(self):
+        # The selector's held-URL check (urlTwinKey) needs the held row's posting URL; without it the same SuccessFactors posting under a
+        # second job id could be shortlisted beside a held one.
+        self.add(F, 'held', 80, status='READY', reason='Strongest Fit verified match (61%)', url='https://career5.successfactors.eu/job?jobId=1')
+        self.db.commit()
+        held = [r for r in self.pool() if r['kind'] == 'held']
+        self.assertEqual([(r['job_id'], r['url'], r['source']) for r in held], [('held', 'https://career5.successfactors.eu/job?jobId=1', 'greenhouse')])
+
     def test_limit_keeps_the_best_and_every_auto_row(self):
         for i in range(12):
             self.add(F, f'p{i:02d}', 61 + i)

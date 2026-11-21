@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { postingUrl, peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark, updatedNote } from '../frontend/src/jobHelpers.ts';
+import { postingUrl, indiaRemotePayText, peopleSearchLinks, skillGaps, followUpState, localDay, SKILL_VOCABULARY, isAutoShortlisted, withoutAutoMark, updatedNote } from '../frontend/src/jobHelpers.ts';
 
 test('people search links are built from the employer name, encoded, and empty for no name', () => {
   const links = peopleSearchLinks('  Black & Veatch ');
@@ -75,4 +75,19 @@ test('seeker posting links prefer a valid HTTPS original, then a usable source',
   }
   assert.equal(link(null, 'http://example.org/legacy'), 'http://example.org/legacy');
   assert.equal(link('https://', 'https://'), null);
+});
+
+test('India Remote cards show published pay with its original currency and period', () => {
+  const cases = [
+    [{ salary_raw_text: '₹14L – ₹18L' }, '₹14L – ₹18L'],
+    [{ salary_raw_text: '$20k plus equity' }, '$20k plus equity'],
+    [{ salary_currency: 'INR', salary_min: 100000, salary_max: 200000, salary_period: 'MONTH' }, 'INR 1,00,000 – 2,00,000 MONTH'],
+    [{ salary_currency: 'USD', salary_max: 50, salary_period: 'HOUR' }, 'USD up to 50 HOUR'],
+    [{ salary_currency: 'EUR', salary_min: 0, salary_period: 'YEAR' }, 'EUR from 0 YEAR'],
+    [{ salary_raw_text: '{"summary":"£30 per hour"}' }, '£30 per hour'],
+    [{ salary_raw_text: JSON.stringify({ tiers: [{ title: 'Canada', summary: 'CA$70K' }, { title: 'US', summary: 'US$65K' }] }) }, 'Canada: CA$70K · US: US$65K'],
+    [{ salary_raw_text: '{invalid' }, 'Salary published'],
+    [{}, 'Salary published'],
+  ];
+  for (const [fields, expected] of cases) assert.equal(indiaRemotePayText(fields), expected);
 });
