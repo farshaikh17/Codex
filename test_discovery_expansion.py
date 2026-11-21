@@ -99,6 +99,19 @@ class SignalAndRotationTests(unittest.TestCase):
         self.assertEqual(signals.geography([{"text":"Remote - APAC"},{"text":"Worldwide"}])["class"],"remote_or_region_only")
         self.assertEqual(signals.geography([{"text":"Mumbai"}])["india_terms"],["mumbai"])
 
+    def test_remote_geography_preserves_named_locations(self):
+        for label in ('Remote - United Kingdom', 'Remote, UAE', 'Remote - Singapore', 'Norway (remote)'):
+            with self.subTest(label=label):
+                self.assertEqual(signals.geography([{'text':label}])['class'], 'other_locations')
+        for label in ('Worldwide', 'Remote - APAC', 'Remote, North America', 'Europe'):
+            self.assertEqual(signals.geography([{'text':label}])['class'], 'remote_or_region_only')
+        for labels, expected in [
+            (['Remote - EMEA', 'Remote - Poland'], 'other_locations'),
+            (['Remote', 'Remote - India'], 'india_explicit'),
+            ([' ', ''], 'unstated'),
+        ]:
+            self.assertEqual(signals.geography([{'text':x} for x in labels])['class'], expected)
+
     def test_rotation_shows_unseen_cards_before_repeating(self):
         jobs=[{"key":"k%d"%i,"employer":"a","title":"Implementation Manager %s"%chr(65+i)} for i in range(6)]
         history={}
@@ -157,6 +170,34 @@ class RunTests(unittest.TestCase):
 
     def go(self,out,net,now=NOW):
         return m.run(CONFIG,SRC,EMP,out,network=net,now=now)
+
+    def test_directory_cursors_survive_failure_and_resume_after_cooldown(self):
+        url = 'https://dir.example/partners'
+        directory = {'url': url, 'link_pattern': r'^https://agency', 'profile_pattern': r'^/partner/'}
+        config = {'schema': 'market-sources-1', 'targets': [], 'directories': [directory]}
+        links = ''.join(f'<a href="https://agency{i:02}.example/">site</a>' for i in range(60))
+        profiles = [f'https://dir.example/partner/{i}' for i in range(7)]
+        links += ''.join(f'<a href="{p}">profile</a>' for p in profiles)
+        pages = {url: (200, url, links), **{p: (200, p, '') for p in profiles}}
+        key = 'directory:' + url
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)/'discovery'
+            def run(net, now):
+                report = m.run(config, SRC, EMP, out, network=net, now=now)
+                return report, json.loads((out/'state.json').read_text())[key]
+            _, first = run(FakeNet(pages), NOW)
+            self.assertEqual((first['offset'], first['profile_offset']), (25, 3))
+            _, failed = run(FakeNet({url: (503, url, '')}), NOW + timedelta(days=1))
+            self.assertEqual(failed['status'], 'failed')
+            waiting = FakeNet(pages)
+            run(waiting, NOW + timedelta(days=1, hours=12))
+            self.assertNotIn(url, waiting.log)
+            retry = FakeNet(pages)
+            report, resumed = run(retry, NOW + timedelta(days=2))
+            self.assertEqual([p for p in retry.log if p in profiles], profiles[3:6])
+            self.assertEqual((resumed['offset'], resumed['profile_offset']), (50, 6))
+            self.assertEqual({lead['host'] for lead in report['employer_leads']},
+                             {f'agency{i:02}.example' for i in range(50)})
 
     def test_full_run_separates_exact_provisional_and_measures_cost(self):
         with tempfile.TemporaryDirectory() as tmp:

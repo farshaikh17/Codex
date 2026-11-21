@@ -1,7 +1,7 @@
 {
   "schema": "market-discovery-1",
   "notice": "Untrusted public discovery evidence; never eligibility or READY. Missing is not closed; unchanged is not assessed; a healthy collection is not candidate relevance.",
-  "generated_at": "2026-11-21T06:04:12.188001+00:00",
+  "generated_at": "2026-11-21T06:14:03.736751+00:00",
   "requests": 1,
   "halted": "HTTP 429; stop run",
   "employer_leads": [
@@ -7947,7 +7947,7 @@
   ],
   "source_proposals": {
     "schema": "source-discovery-1",
-    "run_at": "2026-11-21T06:04:12.188001+00:00",
+    "run_at": "2026-11-21T06:14:03.736751+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -7968,7 +7968,7 @@
   },
   "lead_validation": {
     "schema": "source-discovery-1",
-    "run_at": "2026-11-21T06:04:12.188001+00:00",
+    "run_at": "2026-11-21T06:14:03.736751+00:00",
     "limits": {
       "max_pages": 2,
       "max_pages_cap": 20,
@@ -8157,14 +8157,14 @@
       "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4757047005",
       "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4757047005",
       "published": "2026-11-19T16:32:34-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8185,41 +8185,37 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:cagents:48f4493c-86d6-4eea-8bba-aaaeda5e0ef9",
-      "req_id": "48f4493c-86d6-4eea-8bba-aaaeda5e0ef9",
-      "title": "Lead C&Q Engineer - Utilities",
+      "key": "lever:cagents:14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "req_id": "14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "title": "Electrical Commissioning Manager",
       "locations": [
         {
-          "text": "Frankfurt",
+          "text": "Brisbane, Australia",
           "source": "categories.location"
         },
         {
-          "text": "Frankfurt",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "Ireland, Ireland",
+          "text": "Brisbane, Australia",
           "source": "categories.allLocations"
         }
       ],
       "workplace_type": "onsite",
-      "url": "https://jobs.lever.co/cagents/48f4493c-86d6-4eea-8bba-aaaeda5e0ef9",
-      "apply_url": "https://jobs.lever.co/cagents/48f4493c-86d6-4eea-8bba-aaaeda5e0ef9/apply",
-      "published": "2026-10-21T14:01:00.950000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6",
+      "apply_url": "https://jobs.lever.co/cagents/14aab6ce-7d1f-4459-9330-145dca982cd6/apply",
+      "published": "2026-01-23T09:24:56.433000+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "power-utilities-energy"
+        "asset-reliability-maintenance"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -8231,7 +8227,19 @@
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
+      "same_title_elsewhere": [
+        {
+          "key": "lever:cagents:6d02f4a5-8bfe-4f55-86af-f5bfd8a92f3d",
+          "req_id": "6d02f4a5-8bfe-4f55-86af-f5bfd8a92f3d",
+          "url": "https://jobs.lever.co/cagents/6d02f4a5-8bfe-4f55-86af-f5bfd8a92f3d",
+          "provenance": "boards/cai-lever.json",
+          "locations": [
+            "Sydney",
+            "Sydney",
+            "Melbourne"
+          ]
+        }
+      ]
     },
     {
       "key": "greenhouse:celigo:8083888",
@@ -8251,14 +8259,14 @@
       "url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
       "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8083888",
       "published": "2026-08-05T15:55:02-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "celigo",
       "source_id": "celigo-greenhouse",
       "provenance": "boards/celigo-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8300,14 +8308,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/86679ead-020d-4a8c-a205-d8300a64188e",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/86679ead-020d-4a8c-a205-d8300a64188e/application",
       "published": "2026-11-17T19:40:34.120000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8366,14 +8374,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034372101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5034372101",
       "published": "2026-11-18T12:35:24-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8411,14 +8419,14 @@
       "url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f",
       "apply_url": "https://jobs.lever.co/drivetrain/edb8a8f7-16ac-4177-bf2e-99c36ab47d5f/apply",
       "published": "2024-06-10T06:38:02.883000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8462,14 +8470,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8928138002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8928138002",
       "published": "2026-11-12T10:33:25-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8507,14 +8515,14 @@
       "url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
       "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8730125002",
       "published": "2026-09-03T13:40:13-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8555,14 +8563,14 @@
       "url": "https://jobs.lever.co/gohighlevel/0c2b2992-ffe4-4663-8d5d-6edc3ed9bfe6",
       "apply_url": "https://jobs.lever.co/gohighlevel/0c2b2992-ffe4-4663-8d5d-6edc3ed9bfe6/apply",
       "published": "2026-11-20T15:44:19.958000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8624,14 +8632,14 @@
       "url": "https://jobs.ashbyhq.com/oyster/f5291a09-f28c-45b1-9bf9-eebb50c712da",
       "apply_url": "https://jobs.ashbyhq.com/oyster/f5291a09-f28c-45b1-9bf9-eebb50c712da/application",
       "published": "2026-11-19T18:32:19.234000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "oyster",
       "source_id": "oyster-ashby",
       "provenance": "boards/oyster-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8775,14 +8783,14 @@
       "url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
       "apply_url": "https://job-boards.greenhouse.io/twilio/jobs/8405805",
       "published": "2026-11-20T14:23:22-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "twilio",
       "source_id": "twilio-greenhouse",
       "provenance": "boards/twilio-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8796,7 +8804,7 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "remote_or_region_only",
+        "class": "other_locations",
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
@@ -8820,14 +8828,14 @@
       "url": "https://jobs.lever.co/voltus/9714394d-00dc-43a0-b9c1-c79f95375c4f",
       "apply_url": "https://jobs.lever.co/voltus/9714394d-00dc-43a0-b9c1-c79f95375c4f/apply",
       "published": "2026-11-17T15:32:09.010000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "voltus",
       "source_id": "voltus-lever",
       "provenance": "boards/voltus-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8865,14 +8873,14 @@
       "url": "https://jobs.ashbyhq.com/weave/ec210370-9770-45ec-b067-47a36e5f0ce6",
       "apply_url": "https://jobs.ashbyhq.com/weave/ec210370-9770-45ec-b067-47a36e5f0ce6/application",
       "published": "2026-11-18T19:42:18.106000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "weave",
       "source_id": "weave-ashby",
       "provenance": "boards/weave-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8910,14 +8918,14 @@
       "url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0",
       "apply_url": "https://jobs.ashbyhq.com/zapier/45b2c110-f8e0-497a-914c-72fddf447ed0/application",
       "published": "2026-09-22T22:08:20.467000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "zapier",
       "source_id": "zapier-ashby",
       "provenance": "boards/zapier-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8938,9 +8946,9 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:avathon:4754350005",
-      "req_id": "4754350005",
-      "title": "Forward Deployed Design Lead — Planning, (FDE Product Manager)",
+      "key": "greenhouse:avathon:4737079005",
+      "req_id": "4737079005",
+      "title": "Forward Deployed Design Lead — Product Lifecycle Management (PLM) (FDE Product Manager)",
       "locations": [
         {
           "text": "Pleasanton, California, United States",
@@ -8956,17 +8964,17 @@
         }
       ],
       "workplace_type": null,
-      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
-      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
-      "published": "2026-11-13T18:02:11-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005",
+      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4737079005",
+      "published": "2026-09-23T11:47:59-04:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -8987,37 +8995,73 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "lever:cagents:5631b050-9e93-4506-9935-d95aa18b4194",
-      "req_id": "5631b050-9e93-4506-9935-d95aa18b4194",
-      "title": "Project Manager",
+      "key": "lever:cagents:19882404-3327-4e1c-b51d-d47d33beed79",
+      "req_id": "19882404-3327-4e1c-b51d-d47d33beed79",
+      "title": "Data Center Services Mechanical Commissioning Engineer",
       "locations": [
         {
-          "text": "Melbourne",
+          "text": "Phoenix, Arizona",
           "source": "categories.location"
         },
         {
-          "text": "Melbourne",
+          "text": "Phoenix, Arizona",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Reno, Nevada",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Austin, Texas",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Portland, Oregon",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "United States",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Des Moines, Iowa",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Raleigh, North Carolina",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Atlanta, Georgia",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Miami, Florida",
+          "source": "categories.allLocations"
+        },
+        {
+          "text": "Dallas, Texas",
           "source": "categories.allLocations"
         }
       ],
-      "workplace_type": "onsite",
-      "url": "https://jobs.lever.co/cagents/5631b050-9e93-4506-9935-d95aa18b4194",
-      "apply_url": "https://jobs.lever.co/cagents/5631b050-9e93-4506-9935-d95aa18b4194/apply",
-      "published": "2023-01-20T05:02:15.319000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "workplace_type": "hybrid",
+      "url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79",
+      "apply_url": "https://jobs.lever.co/cagents/19882404-3327-4e1c-b51d-d47d33beed79/apply",
+      "published": "2024-02-20T17:24:49.573000+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "cai",
       "source_id": "cai-lever",
       "provenance": "boards/cai-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "delivery-coordination"
+        "asset-reliability-maintenance"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -9049,14 +9093,14 @@
       "url": "https://job-boards.greenhouse.io/celigo/jobs/8221306",
       "apply_url": "https://job-boards.greenhouse.io/celigo/jobs/8221306",
       "published": "2026-09-25T18:14:08-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "celigo",
       "source_id": "celigo-greenhouse",
       "provenance": "boards/celigo-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9098,14 +9142,14 @@
       "url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60",
       "apply_url": "https://jobs.ashbyhq.com/clipboard/82df7116-0720-4434-a330-ca7e0389dc60/application",
       "published": "2026-05-05T00:16:27.950000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "clipboard",
       "source_id": "clipboard-ashby",
       "provenance": "boards/clipboard-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9143,14 +9187,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913079101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/4913079101",
       "published": "2026-08-18T08:09:56-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9188,14 +9232,14 @@
       "url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f",
       "apply_url": "https://jobs.lever.co/drivetrain/6a56a48c-32e0-43ee-ac4b-b6638c83f81f/apply",
       "published": "2024-07-21T17:30:24.682000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9239,14 +9283,14 @@
       "url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "apply_url": "https://job-boards.greenhouse.io/energyhub/jobs/8747080002",
       "published": "2026-08-31T13:59:29-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "energyhub",
       "source_id": "energyhub-greenhouse",
       "provenance": "boards/energyhub-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9267,35 +9311,31 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:gitlab:8936091002",
-      "req_id": "8936091002",
-      "title": "Senior Professional Services Project Manager, Paris",
+      "key": "greenhouse:gitlab:8693068002",
+      "req_id": "8693068002",
+      "title": "Principal Technical Program Manager",
       "locations": [
         {
-          "text": "Remote, France",
+          "text": "Remote, Canada",
           "source": "location.name"
         },
         {
-          "text": "Turkey",
-          "source": "offices.location"
-        },
-        {
-          "text": "EMEA",
-          "source": "offices.name"
+          "text": "Remote, United States",
+          "source": "location.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8936091002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936091002",
-      "published": "2026-11-11T10:24:53-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8693068002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8693068002",
+      "published": "2026-08-25T17:56:15-04:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9313,12 +9353,23 @@
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
+      "same_title_elsewhere": [
+        {
+          "key": "greenhouse:gitlab:8784056002",
+          "req_id": "8784056002",
+          "url": "https://job-boards.greenhouse.io/gitlab/jobs/8784056002",
+          "provenance": "boards/gitlab-greenhouse.json",
+          "locations": [
+            "Bangalore, India",
+            "India"
+          ]
+        }
+      ]
     },
     {
-      "key": "lever:gohighlevel:2ed5358c-1960-4063-a0ea-f5ae4207c426",
-      "req_id": "2ed5358c-1960-4063-a0ea-f5ae4207c426",
-      "title": "Lead Product Data Analyst - AI Products",
+      "key": "lever:gohighlevel:a718fab2-3fc6-4acd-b364-883f5fc59cac",
+      "req_id": "a718fab2-3fc6-4acd-b364-883f5fc59cac",
+      "title": "Software Development Engineer III (CRM - Opportunities - AI)",
       "locations": [
         {
           "text": "India",
@@ -9330,27 +9381,27 @@
         }
       ],
       "workplace_type": "remote",
-      "url": "https://jobs.lever.co/gohighlevel/2ed5358c-1960-4063-a0ea-f5ae4207c426",
-      "apply_url": "https://jobs.lever.co/gohighlevel/2ed5358c-1960-4063-a0ea-f5ae4207c426/apply",
-      "published": "2026-09-26T03:51:23.131000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://jobs.lever.co/gohighlevel/a718fab2-3fc6-4acd-b364-883f5fc59cac",
+      "apply_url": "https://jobs.lever.co/gohighlevel/a718fab2-3fc6-4acd-b364-883f5fc59cac/apply",
+      "published": "2026-09-17T04:43:38.924000+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "highlevel",
       "source_id": "highlevel-lever",
       "provenance": "boards/highlevel-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
-        "ai-implementation"
+        "crm-implementation"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "specialist software title"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -9363,12 +9414,17 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "rss:siemens-energy:296043",
-      "req_id": "296043",
-      "title": "Lead Electrical Engineer",
-      "locations": [],
-      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Lead-Electrical-Engineer/296043",
-      "published": "Tue, 19 May 2026 00:00:00 +0000",
+      "key": "rss:siemens-energy:305510",
+      "req_id": "305510",
+      "title": "Chapter Lead for Integration Digital Consulting",
+      "locations": [
+        {
+          "source": "rss.description (unlabelled; may be location)",
+          "text": "India"
+        }
+      ],
+      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Chapter-Lead-for-Integration-Digital-Consulting/305510",
+      "published": "Thu, 30 Oct 2025 00:00:00 +0000",
       "observed_at": "2026-11-20T09:07:15.748855+00:00",
       "employer": "siemens-energy",
       "provenance": {
@@ -9384,13 +9440,12 @@
       "extraction": {
         "method": "rss",
         "uncertainty": [
-          "identifier taken from the official URL",
-          "no location wording"
+          "identifier taken from the official URL"
         ]
       },
       "checked_at": "2026-11-20T09:07:15.748855+00:00",
       "responsibility_signals": [
-        "asset-reliability-maintenance"
+        "crm-implementation"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -9398,8 +9453,10 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "unstated",
-        "india_terms": []
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
       "same_title_elsewhere": []
@@ -9422,14 +9479,14 @@
       "url": "https://jobs.ashbyhq.com/weave/5648ae73-a63c-4918-9929-293f9d0fb44b",
       "apply_url": "https://jobs.ashbyhq.com/weave/5648ae73-a63c-4918-9929-293f9d0fb44b/application",
       "published": "2026-11-06T18:41:32.742000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "weave",
       "source_id": "weave-ashby",
       "provenance": "boards/weave-ashby.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9450,93 +9507,41 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "greenhouse:avathon:4714154005",
-      "req_id": "4714154005",
-      "title": "Senior AI Engineer - Product Engineering",
+      "key": "greenhouse:avathon:4754350005",
+      "req_id": "4754350005",
+      "title": "Forward Deployed Design Lead — Planning, (FDE Product Manager)",
       "locations": [
         {
-          "text": "Bengaluru, Karnataka, India",
+          "text": "Pleasanton, California, United States",
           "source": "location.name"
         },
         {
-          "text": "Bengaluru, Karnataka, India",
+          "text": "Pleasanton, California, United States",
           "source": "offices.location"
         },
         {
-          "text": "Bengaluru",
+          "text": "Pleasanton, CA (HQ)",
           "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4714154005",
-      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4714154005",
-      "published": "2026-07-12T07:44:12-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
+      "apply_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4754350005",
+      "published": "2026-11-13T18:02:11-05:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "avathon",
       "source_id": "avathon-greenhouse",
       "provenance": "boards/avathon-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
       "stage": "exact_vacancy_unreviewed",
       "responsibility_signals": [
         "ai-implementation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "bengaluru",
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "lever:cagents:73128cae-7ea5-4ef7-8283-0fc1c25b01c6",
-      "req_id": "73128cae-7ea5-4ef7-8283-0fc1c25b01c6",
-      "title": "Senior Validation Project Manager",
-      "locations": [
-        {
-          "text": "Denver, Colorado",
-          "source": "categories.location"
-        },
-        {
-          "text": "Denver, Colorado",
-          "source": "categories.allLocations"
-        },
-        {
-          "text": "Portland, Oregon",
-          "source": "categories.allLocations"
-        }
-      ],
-      "workplace_type": "onsite",
-      "url": "https://jobs.lever.co/cagents/73128cae-7ea5-4ef7-8283-0fc1c25b01c6",
-      "apply_url": "https://jobs.lever.co/cagents/73128cae-7ea5-4ef7-8283-0fc1c25b01c6/apply",
-      "published": "2026-10-26T18:10:43.841000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
-      "employer": "cai",
-      "source_id": "cai-lever",
-      "provenance": "boards/cai-lever.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
-      "discovery": {
-        "method": "configured_feed"
-      },
-      "stage": "exact_vacancy_unreviewed",
-      "responsibility_signals": [
-        "delivery-coordination"
       ],
       "signal_strength": "strong",
       "signal_notes": [
@@ -9548,19 +9553,54 @@
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": [
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "lever:cagents:1b450d2b-ff4e-4b18-b1fa-27f06a80ada9",
+      "req_id": "1b450d2b-ff4e-4b18-b1fa-27f06a80ada9",
+      "title": "Lead Commissioning (Cx) Engineer - Electrical",
+      "locations": [
         {
-          "key": "lever:cagents:fc0f65cb-4884-414c-9303-39c1ea0f7ba0",
-          "req_id": "fc0f65cb-4884-414c-9303-39c1ea0f7ba0",
-          "url": "https://jobs.lever.co/cagents/fc0f65cb-4884-414c-9303-39c1ea0f7ba0",
-          "provenance": "boards/cai-lever.json",
-          "locations": [
-            "Princeton, New Jersey",
-            "Princeton, New Jersey",
-            "Bridgewater, New Jersey"
-          ]
+          "text": "India",
+          "source": "categories.location"
+        },
+        {
+          "text": "India",
+          "source": "categories.allLocations"
         }
-      ]
+      ],
+      "workplace_type": "onsite",
+      "url": "https://jobs.lever.co/cagents/1b450d2b-ff4e-4b18-b1fa-27f06a80ada9",
+      "apply_url": "https://jobs.lever.co/cagents/1b450d2b-ff4e-4b18-b1fa-27f06a80ada9/apply",
+      "published": "2025-05-19T11:39:37.796000+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
+      "employer": "cai",
+      "source_id": "cai-lever",
+      "provenance": "boards/cai-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
+      "discovery": {
+        "method": "configured_feed"
+      },
+      "stage": "exact_vacancy_unreviewed",
+      "responsibility_signals": [
+        "asset-reliability-maintenance"
+      ],
+      "signal_strength": "strong",
+      "signal_notes": [
+        "title keywords only; fit not assessed"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
     },
     {
       "key": "greenhouse:cognite:5036085101",
@@ -9608,14 +9648,14 @@
       "url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5036085101",
       "apply_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5036085101",
       "published": "2026-11-13T11:36:55-05:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "cognite",
       "source_id": "cognite-greenhouse",
       "provenance": "boards/cognite-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9654,14 +9694,14 @@
       "url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1",
       "apply_url": "https://jobs.lever.co/drivetrain/0d26b224-9643-4be7-aade-7fa2e0e53ec1/apply",
       "published": "2026-02-05T05:55:59.879000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "drivetrain",
       "source_id": "drivetrain-lever",
       "provenance": "boards/drivetrain-lever.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9675,7 +9715,7 @@
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
-        "class": "other_locations",
+        "class": "remote_or_region_only",
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
@@ -9713,80 +9753,27 @@
       ]
     },
     {
-      "key": "greenhouse:gitlab:8800489002",
-      "req_id": "8800489002",
-      "title": "Staff Site Reliability Engineer, Environment Automation",
+      "key": "greenhouse:gitlab:8855883002",
+      "req_id": "8855883002",
+      "title": "Senior Product Manager, Salesforce CRM",
       "locations": [
         {
-          "text": "Bangalore, India",
+          "text": "Remote, United States",
           "source": "location.name"
-        },
-        {
-          "text": "India",
-          "source": "offices.name"
         }
       ],
       "workplace_type": null,
-      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
-      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8800489002",
-      "published": "2026-09-18T09:47:37-04:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
+      "url": "https://job-boards.greenhouse.io/gitlab/jobs/8855883002",
+      "apply_url": "https://job-boards.greenhouse.io/gitlab/jobs/8855883002",
+      "published": "2026-10-02T13:56:31-04:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
       "employer": "gitlab",
       "source_id": "gitlab-greenhouse",
       "provenance": "boards/gitlab-greenhouse.json",
       "freshness": "last_observed",
       "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
-      "discovery": {
-        "method": "configured_feed"
-      },
-      "stage": "exact_vacancy_unreviewed",
-      "responsibility_signals": [
-        "business-systems-automation"
-      ],
-      "signal_strength": "weak",
-      "signal_notes": [
-        "software reliability or sales commission, not asset work",
-        "specialist software title"
-      ],
-      "signal_basis": "public title keywords only",
-      "geographic_evidence": {
-        "class": "india_explicit",
-        "india_terms": [
-          "bangalore",
-          "india"
-        ]
-      },
-      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": []
-    },
-    {
-      "key": "lever:gohighlevel:4fcbfdc9-6923-4712-8484-e06c410e1dae",
-      "req_id": "4fcbfdc9-6923-4712-8484-e06c410e1dae",
-      "title": "Sr Manager, Product Design (AI Workflows)",
-      "locations": [
-        {
-          "text": "United States",
-          "source": "categories.location"
-        },
-        {
-          "text": "United States",
-          "source": "categories.allLocations"
-        }
-      ],
-      "workplace_type": "remote",
-      "url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae",
-      "apply_url": "https://jobs.lever.co/gohighlevel/4fcbfdc9-6923-4712-8484-e06c410e1dae/apply",
-      "published": "2026-09-02T05:28:03.264000+00:00",
-      "observed_at": "2026-11-21T06:03:33.059729+00:00",
-      "employer": "highlevel",
-      "source_id": "highlevel-lever",
-      "provenance": "boards/highlevel-lever.json",
-      "freshness": "last_observed",
-      "source_status": "ok",
-      "source_checked_at": "2026-11-21T06:03:33.059729+00:00",
-      "source_last_success_at": "2026-11-21T06:03:33.059729+00:00",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
       "discovery": {
         "method": "configured_feed"
       },
@@ -9807,12 +9794,59 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "rss:siemens-energy:296879",
-      "req_id": "296879",
-      "title": "Project Lead Engineer",
+      "key": "lever:gohighlevel:aa1ac843-c6a4-471f-8783-de8089e9d325",
+      "req_id": "aa1ac843-c6a4-471f-8783-de8089e9d325",
+      "title": "Sr. SDE (Fullstack ) - Workflows",
+      "locations": [
+        {
+          "text": "India",
+          "source": "categories.location"
+        },
+        {
+          "text": "India",
+          "source": "categories.allLocations"
+        }
+      ],
+      "workplace_type": "remote",
+      "url": "https://jobs.lever.co/gohighlevel/aa1ac843-c6a4-471f-8783-de8089e9d325",
+      "apply_url": "https://jobs.lever.co/gohighlevel/aa1ac843-c6a4-471f-8783-de8089e9d325/apply",
+      "published": "2026-05-05T07:29:32.915000+00:00",
+      "observed_at": "2026-11-21T06:13:29.084615+00:00",
+      "employer": "highlevel",
+      "source_id": "highlevel-lever",
+      "provenance": "boards/highlevel-lever.json",
+      "freshness": "last_observed",
+      "source_status": "ok",
+      "source_checked_at": "2026-11-21T06:13:29.084615+00:00",
+      "source_last_success_at": "2026-11-21T06:13:29.084615+00:00",
+      "discovery": {
+        "method": "configured_feed"
+      },
+      "stage": "exact_vacancy_unreviewed",
+      "responsibility_signals": [
+        "crm-implementation"
+      ],
+      "signal_strength": "weak",
+      "signal_notes": [
+        "specialist software title"
+      ],
+      "signal_basis": "public title keywords only",
+      "geographic_evidence": {
+        "class": "india_explicit",
+        "india_terms": [
+          "india"
+        ]
+      },
+      "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
+      "same_title_elsewhere": []
+    },
+    {
+      "key": "rss:siemens-energy:284638",
+      "req_id": "284638",
+      "title": "Field Service Representative",
       "locations": [],
-      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Project-Lead-Engineer/296879",
-      "published": "Wed, 27 May 2026 00:00:00 +0000",
+      "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Field-Service-Representative/284638",
+      "published": "Tue, 20 Jan 2026 00:00:00 +0000",
       "observed_at": "2026-11-20T09:07:15.748855+00:00",
       "employer": "siemens-energy",
       "provenance": {
@@ -9834,11 +9868,11 @@
       },
       "checked_at": "2026-11-20T09:07:15.748855+00:00",
       "responsibility_signals": [
-        "delivery-coordination"
+        "asset-reliability-maintenance"
       ],
-      "signal_strength": "strong",
+      "signal_strength": "weak",
       "signal_notes": [
-        "title keywords only; fit not assessed"
+        "no concrete role noun"
       ],
       "signal_basis": "public title keywords only",
       "geographic_evidence": {
@@ -9846,18 +9880,7 @@
         "india_terms": []
       },
       "eligibility": "not_assessed (private review only; remote/APAC wording is not India eligibility)",
-      "same_title_elsewhere": [
-        {
-          "key": "rss:siemens-energy:296880",
-          "req_id": "296880",
-          "url": "https://jobs.siemens-energy.com/jobs/FolderDetail/Project-Lead-Engineer/296880",
-          "provenance": {
-            "career_feed": "https://jobs.siemens-energy.com/en_US/jobs/Jobs/feed/?folderRecordsPerPage=20&search=India",
-            "ownership_evidence": "https://www.siemens-energy.com/global/en/home/careers.html"
-          },
-          "locations": []
-        }
-      ]
+      "same_title_elsewhere": []
     }
   ],
   "provisional_cards": [
@@ -10545,18 +10568,18 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:insidea/jobs/hubspot-specialist-3505807669",
-      "title": "HubSpot Specialist",
+      "key": "himalayas:insidea/jobs/crm-specialist",
+      "title": "CRM Specialist",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/insidea/jobs/hubspot-specialist-3505807669",
-      "apply_url": "https://himalayas.app/companies/insidea/jobs/hubspot-specialist-3505807669?utm_source=api",
-      "published": "2026-11-19T16:49:10+00:00",
-      "valid_through": "2027-01-09T02:17:53+00:00",
+      "url": "https://himalayas.app/companies/insidea/jobs/crm-specialist",
+      "apply_url": "https://himalayas.app/companies/insidea/jobs/crm-specialist?utm_source=api",
+      "published": "2026-11-19T17:02:03+00:00",
+      "valid_through": "2026-12-28T05:36:10+00:00",
       "observed_at": "2026-11-20T18:28:36.432404+00:00",
       "employer": "aggregator:insidea",
       "employer_name": "Insidea",
@@ -11247,19 +11270,19 @@
       "same_title_elsewhere": []
     },
     {
-      "key": "himalayas:pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer",
-      "title": "Senior QA Automation Engineer",
+      "key": "himalayas:pradeepit-consulting-services-pvt-ltd/jobs/salesforce-lead-developer-with-prm-expertise-6-years-ist-time-zone-remote",
+      "title": "Salesforce Lead Developer with PRM Expertise | 6+ Years | IST Time Zone | Remote",
       "locations": [
         {
           "source": "himalayas.locationRestrictions",
           "text": "India"
         }
       ],
-      "url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer",
-      "apply_url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/senior-qa-automation-engineer?utm_source=api",
-      "published": "2026-09-30T22:27:12+00:00",
-      "valid_through": "2026-11-29T22:27:11+00:00",
-      "observed_at": "2026-11-20T09:07:15.748855+00:00",
+      "url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/salesforce-lead-developer-with-prm-expertise-6-years-ist-time-zone-remote",
+      "apply_url": "https://himalayas.app/companies/pradeepit-consulting-services-pvt-ltd/jobs/salesforce-lead-developer-with-prm-expertise-6-years-ist-time-zone-remote?utm_source=api",
+      "published": "2026-09-30T21:25:08+00:00",
+      "valid_through": "2026-11-29T21:25:07+00:00",
+      "observed_at": "2026-11-20T22:19:58.210946+00:00",
       "employer": "aggregator:pradeepit-consulting-services-pvt-ltd",
       "employer_name": "PradeepIT Consulting Services Pvt Ltd",
       "freshness": "cached_from_last_check",
@@ -11267,13 +11290,12 @@
       "discovery": {
         "channel": "himalayas",
         "method": "role_search",
-        "query": "automation specialist",
+        "query": "Salesforce administrator",
         "attribution": "Listing from Himalayas (https://himalayas.app); apply only through the supplied Himalayas applicationLink."
       },
-      "checked_at": "2026-11-20T09:07:15.748855+00:00",
+      "checked_at": "2026-11-20T22:19:58.210946+00:00",
       "responsibility_signals": [
-        "crm-implementation",
-        "business-systems-automation"
+        "crm-implementation"
       ],
       "signal_strength": "weak",
       "signal_notes": [
@@ -11947,9 +11969,9 @@
         "excluded": 10
       },
       "geography": {
-        "other_locations": 536,
+        "other_locations": 655,
         "india_explicit": 185,
-        "remote_or_region_only": 140,
+        "remote_or_region_only": 21,
         "unstated": 35
       },
       "by_method": {
@@ -12090,7 +12112,7 @@
     },
     "cost": {
       "requests": 1,
-      "seconds": 0.37,
+      "seconds": 0.46,
       "by_method": {
         "directories": {
           "requests": 0,
@@ -12114,7 +12136,7 @@
         },
         "lead_validation": {
           "requests": 1,
-          "seconds": 0.2
+          "seconds": 0.29
         }
       }
     },
