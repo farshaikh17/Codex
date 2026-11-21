@@ -23,3 +23,14 @@ test('why line: "could not be confirmed still open" only for an automatic, unver
   for (const o of no) assert.doesNotMatch(whyLine('sana_ansari', { ...base, ...o }, ['a'], 60), /confirmed/, JSON.stringify(o));
   assert.ok(notConfirmedOpen({ ...base, last_verified_at: new Date(Date.now() - 5 * 86400000).toISOString() }), 'verified 5 days ago is not recent');
 });
+
+test('Stretch explains eligibility independently of whether the posting names a place', () => {
+  const why = (location, eligibility) => whyLine('sana_ansari', {
+    ...base, workplace_type: 'UNKNOWN', location_restrictions: location, eligibility_status: eligibility,
+    original_posting_url: 'https://example.org/job/1',
+  }, [], 60);
+  assert.match(why('Yanbu, Saudi Arabia', 'UNKNOWN'), /Yanbu · location eligibility unconfirmed$/);
+  assert.match(why('', 'UNKNOWN'), /place not stated · location eligibility unconfirmed$/);
+  assert.match(why('Dubai', 'INELIGIBLE'), /Dubai · location eligibility requirements not met$/);
+  assert.doesNotMatch(why('Pune', 'ELIGIBLE'), /unconfirmed|not met/);
+});

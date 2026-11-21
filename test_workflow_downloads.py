@@ -10,7 +10,7 @@ FLAGS = '--retry 5 --retry-delay 20 --retry-all-errors --connect-timeout 30'
 class Downloads(unittest.TestCase):
     def test_main_dataset_download_retries_all_errors(self):
         t = (WF / 'discovery.yml').read_text()
-        line = next(l for l in t.splitlines() if 'jobhive/v1/all.parquet' in l and 'curl' in l)
+        line = next(l for l in t.splitlines() if 'jobs/v1/all.parquet' in l and 'curl' in l)
         self.assertIn('curl -fsSL ' + FLAGS + ' ', line)
 
     def test_every_download_curl_uses_the_same_retry_flags(self):
