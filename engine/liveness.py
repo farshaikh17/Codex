@@ -114,6 +114,41 @@ ASHBY_URL = re.compile(r'^https://jobs\.ashbyhq\.com/', re.I)
 COUNTRY_CODES = {'IN': 'India', 'US': 'United States', 'GB': 'United Kingdom', 'UK': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia', 'DE': 'Germany',
                  'FR': 'France', 'ES': 'Spain', 'IT': 'Italy', 'NL': 'Netherlands', 'IE': 'Ireland', 'PL': 'Poland', 'PT': 'Portugal', 'BR': 'Brazil',
                  'MX': 'Mexico', 'SG': 'Singapore', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'PH': 'Philippines', 'BG': 'Bulgaria', 'RO': 'Romania'}
+# Jobs QA 10: closed-page facts. A hiring system's own words on the posting page that the posting is closed (ENGIE's SAP SuccessFactors career site:
+# 'You can't view this job because it's not available at this time.', HTTP 200). SuccessFactors pages carry these words after their scripts, past the
+# 64 KB read, so a page that names the system in its first part is read on to SF_PAGE_BYTES.
+CLOSED_PAGE_FACTS = [
+    ('successfactors closed page', re.compile(r"you can(?:'|’|&#39;|&#x27;|&rsquo;)?t view this job because it(?:'|’|&#39;|&#x27;|&rsquo;)?s not available at this time", re.I)),
+]
+SF_PAGE = re.compile(rb'successfactors|\brmk-|j2w', re.I)
+SF_PAGE_BYTES = 524288
+
+
+def closed_page(html):
+    """The label of the first closed-page fact the page text shows, or None."""
+    h = html.decode('utf-8', 'replace') if isinstance(html, bytes) else str(html or '')
+    return next((label for label, rx in CLOSED_PAGE_FACTS if rx.search(h)), None)
+
+
+# Jobs QA 10 (Koch 'Utilities Engineer', stored with no place): an Avature posting page names its place in a 'Location(s)' field
+# ('Lincoln, Nebraska'), and its URL starts the job's slug with the country ('/JobDetail/United-States-Utility-Engineer/195640').
+AVATURE_URL = re.compile(r'^https://[a-z0-9-]+\.avature\.net/', re.I)
+AVATURE_LOCATION = re.compile(r'Location\(s\)\s*</div>\s*<div[^>]*field__value[^>]*>\s*([^<]{2,120}?)\s*</div>', re.I)
+SLUG_COUNTRIES = ['United States', 'United Kingdom', 'United Arab Emirates', 'Saudi Arabia', 'South Africa', 'New Zealand', 'India', 'Canada',
+                  'Australia', 'Germany', 'France', 'Mexico', 'Brazil', 'China', 'Japan', 'Singapore', 'Qatar', 'Oman', 'Kuwait', 'Bahrain', 'Egypt',
+                  'Netherlands', 'Belgium', 'Spain', 'Italy', 'Poland', 'Ireland']
+
+
+def avature_facts(html, url):
+    h = html.decode('utf-8', 'replace') if isinstance(html, bytes) else str(html or '')
+    m = AVATURE_LOCATION.search(h)
+    loc = re.sub(r'\s+', ' ', m.group(1)).strip() if m else None
+    slug = re.search(r'/JobDetail/([^/?#]+)/', str(url or ''), re.I)
+    words = slug.group(1).replace('-', ' ').lower() + ' ' if slug else ''
+    country = next((c for c in SLUG_COUNTRIES if words.startswith(c.lower() + ' ')), None)
+    return {k: v for k, v in {'location': loc, 'countries': [country] if country else []}.items() if v}
+
+
 US_WORDS = re.compile(r'(?<![A-Za-z])(?:US|USA|U\.S\.?)(?![A-Za-z])|\bunited states\b', re.I)
 
 
@@ -217,8 +252,15 @@ def probe(url, timeout=TIMEOUT, facts=None, records=True):
             final = r.geturl()
             ashby = facts is not None and bool(ASHBY_URL.match(final or url))
             body = r.read(ASHBY_PAGE_BYTES if ashby else 65536)
+            if isinstance(body, bytes) and SF_PAGE.search(body[:65536]) and len(body) >= 65536:   # jobs QA 10: read a SuccessFactors page on
+                body += r.read(SF_PAGE_BYTES - len(body))
+            closed = closed_page(body)
+            if closed:
+                return 'dead', closed
             if ashby:
                 facts.update(ashby_facts(body.decode('utf-8', 'replace') if isinstance(body, bytes) else body))
+            if facts is not None and AVATURE_URL.match(final or url):
+                facts.update(avature_facts(body, final or url))
             if 'greenhouse.io' in final and 'error=true' in final:
                 return 'dead', 'greenhouse error redirect'
             initial_url, final_url = urlsplit(url), urlsplit(final)
@@ -331,6 +373,12 @@ def place_sql(job_id, facts, marker):
     countries = [str(c).strip() for c in f.get('countries') or [] if str(c).strip()]
     abroad = bool(countries) and not any(c.lower() == 'india' for c in countries)
     writes = []
+    # Jobs QA 10: a job stored with no place gets the employer's own (with its country when the place does not name it): the guard is the empty place.
+    if loc:
+        filled = loc if not countries or any(c.lower() in loc.lower() for c in countries) else f"{loc} ({', '.join(countries)})"
+        writes.append(("TRIM(COALESCE(location_restrictions, '')) = ''", f'location_restrictions = {q(filled)}'))
+    elif countries:
+        writes.append(("TRIM(COALESCE(location_restrictions, '')) = ''", f"location_restrictions = {q(', '.join(countries))}"))
     if wp in ('HYBRID', 'ONSITE'):   # stored remote, the employer says hybrid or on site: both the flag and the place say so ('IND-Pune (Hybrid)')
         word = 'Hybrid' if wp == 'HYBRID' else 'On-site'
         place = f"{q(loc + ' (' + word + ')')}" if loc else f"COALESCE(NULLIF(location_restrictions, '') || ' ', '') || {q('(' + word + ')')}"

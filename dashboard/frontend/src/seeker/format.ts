@@ -54,9 +54,14 @@ const EMPLOYER_NAMES: Record<string, string> = {
   nestle: 'Nestlé', hatchd1: 'Hatch', 'us kraft heinz': 'Kraft Heinz', regentcollegelondon: 'Regent College London',
   marrinadecisions: 'Marrina Decisions', myamazonguy: 'My Amazon Guy', fireworkhq: 'Firework', soterahealth: 'Sotera Health',
 };
+// Jobs QA 10: an Oracle Recruiting site gives its own label as the employer ("Candidate Experience site"); the employer is then known only by the
+// site's host (Majesco: fa-emad-saasfaprod1.fa.ocs.oraclecloud.com). A label after a name ("Acme Candidate Experience site") is a suffix.
+const EMPLOYER_HOSTS: Record<string, string> = { 'fa-emad-saasfaprod1.fa.ocs.oraclecloud.com': 'Majesco' };
+const hostOf = (url?: string | null) => { const m = /^https?:\/\/([^/:?#]+)/i.exec(String(url || '').trim()); return m ? m[1].toLowerCase() : ''; };
 /** The employer's name for display: a known account name mapped to the employer, else the hiring-system suffixes "CareerSite" / "Career Site" /
- *  "HRprd…" taken off; any other name exactly as stored. No lookbehind in these patterns: the build targets Safari 14. Display only. */
-export function employerName(raw: string | null | undefined): string {
+ *  "HRprd…" / "Candidate Experience site" taken off; a name that is only a hiring system's label is read from the posting's host when known; any
+ *  other name exactly as stored. No lookbehind in these patterns: the build targets Safari 14. Display only. */
+export function employerName(raw: string | null | undefined, url?: string | null): string {
   const c = String(raw || '').trim();
   const lookup = (x: string) => EMPLOYER_NAMES[x.toLowerCase().replace(/\s+/g, ' ')];
   if (!c) return '';
@@ -64,8 +69,10 @@ export function employerName(raw: string | null | undefined): string {
   const stripped = c
     .replace(/([a-z])HR?prd[A-Za-z0-9]*$/, '$1')             // "nestleHRprdRMK" (SAP SuccessFactors production tenant)
     .replace(/\s*career\s*sites?$/i, '')                    // "Adani Career Site", "MahindraCareerSite"
+    .replace(/\s*candidate\s*experience(?:\s*(?:site|page))?$/i, '')   // jobs QA 10: an Oracle Recruiting site's label
     .trim();
-  return !stripped || stripped === c ? c : lookup(stripped) || stripped;
+  if (!stripped) return EMPLOYER_HOSTS[hostOf(url)] || c;   // only the label: the employer by the site's host, else as stored
+  return stripped === c ? c : lookup(stripped) || stripped;
 }
 
 /** When the job was found. "New" uses only this, so it agrees with the "Found <date>" on the card (a re-check of an old job is not new). */

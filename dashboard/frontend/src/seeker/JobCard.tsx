@@ -32,7 +32,7 @@ export const JobCard: React.FC<Props> = ({ job, onOpen, onPosting, onSave, onHid
   const url = postingUrl(job);
   const stage = job.application?.status;
   const saved = stage === 'SAVED' || stage === 'REVIEWING';
-  const meta = [employerName(job.company), placeText(job), foundText(job.discovered_at)].filter(Boolean).join(' · ');
+  const meta = [employerName(job.company, job.original_posting_url || job.source_url), placeText(job), foundText(job.discovered_at)].filter(Boolean).join(' · ');
   return (
     <article data-job-id={job.id} data-testid="job-card" className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
       <div className="flex items-start gap-2">

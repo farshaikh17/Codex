@@ -39,7 +39,7 @@ const Item: React.FC<Props & { job: Job; followUp?: FollowUp; onFollowUp: (job: 
         <h3 className="text-base font-semibold text-slate-900 leading-snug break-words">
           <a href={`#job-${encodeURIComponent(job.id)}`} onClick={(e) => { e.preventDefault(); onOpen(job); }} className={titleLink}>{job.title}</a>
         </h3>
-        <p className="text-sm text-slate-600 break-words">{employerName(job.company)} · {placeText(job)}</p>
+        <p className="text-sm text-slate-600 break-words">{employerName(job.company, job.original_posting_url || job.source_url)} · {placeText(job)}</p>
       </div>
       <label className="block text-sm text-slate-700">Where are you with this job?
         <select aria-label={`Stage for ${job.title}`} value={shown} disabled={wait}
