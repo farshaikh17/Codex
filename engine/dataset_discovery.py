@@ -493,6 +493,11 @@ def url_variants(url):
     return {v for v in out if v}
 
 
+# Jobs QA 10 (DP World req 28315 on its Oracle site and on a job board, whose copy links '...oraclecloud.com:443/hcmUI/CandidateExperience/en/job/28315'):
+# an Oracle Recruiting job is its host and requisition id, whatever the language and site parts of the path. The same reading as postingUrlKey().
+ORACLE_CX_JOB = re.compile(r'^/hcmUI/CandidateExperience/(?:[a-z]{2}(?:-[A-Za-z]{2})?/)?(?:sites/[^/]+/)?(?:job|requisitions/preview)/(\d+)(?:/.*)?$', re.I)
+
+
 def posting_url_key(url):
     """One key per posting across sources: lower-case host without 'www.', path without trailing slash, the remaining parameters sorted."""
     from urllib.parse import urlsplit, parse_qsl, urlencode
@@ -502,10 +507,11 @@ def posting_url_key(url):
         return ''
     if u.scheme not in ('http', 'https'):
         return ''
-    host = (u.hostname or '').lower()
+    host = (u.hostname or '').lower()   # never the port (':443')
     host = host[4:] if host.startswith('www.') else host
     q = urlencode(sorted(parse_qsl(u.query, keep_blank_values=True)))
-    return host + u.path.rstrip('/') + ('?' + q if q else '') + ('#' + u.fragment if u.fragment else '')
+    path = ORACLE_CX_JOB.sub(r'/hcmUI/CandidateExperience/job/\1', u.path)
+    return host + path.rstrip('/') + ('?' + q if q else '') + ('#' + u.fragment if u.fragment else '')
 
 
 def adapter(s):
@@ -707,6 +713,79 @@ def split_new(jobs, local=None, merges=None, snapshot=None, cache=None):
     return fresh, reopen, len(jobs) - len(unique)
 
 
+# Jobs QA 10: the text and employer read for a same-text twin, the same reading as twinText() / twinEmployer() in dashboard/worker/discovery.ts: the
+# first TWIN_TEXT_CHARS characters (the shortlist pool stores 2000), entities decoded, tags dropped, lower case, words only; the employer is the first
+# word of its name ('the' aside). Shared hiring-system hosts (jobs.lever.co, boards.greenhouse.io) serve many employers, while one employer can be
+# written two ways ('ENGIE', 'ENGIE Information Technologies SA').
+TWIN_TEXT_CHARS = 2000
+_ENTITY = {'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', 'apos': "'", 'nbsp': ' ', 'rsquo': "'", 'lsquo': "'", 'rdquo': '"', 'ldquo': '"',
+           'ndash': '-', 'mdash': '-', 'hellip': '...'}
+
+
+def _entity(m):
+    e = m.group(1).lower()
+    if e.startswith('#'):
+        try:
+            return chr(int(e[2:], 16) if e[1:2] == 'x' else int(e[1:]))
+        except (ValueError, OverflowError):
+            return m.group(0)
+    return _ENTITY.get(e, m.group(0))
+
+
+def twin_text(desc):
+    raw = re.sub(r'&(#x[0-9a-f]+|#\d+|[a-z]+);', _entity, str(desc or '')[:TWIN_TEXT_CHARS], flags=re.I)
+    return re.sub(r'[^a-z0-9]+', ' ', re.sub(r'<[^>]*>', ' ', raw).lower()).strip()
+
+
+def twin_employer(company):
+    w = [x for x in re.sub(r'[^a-z0-9]+', ' ', str(company or '').lower()).split() if x != 'the']
+    return w[0] if w else ''
+
+
+# Jobs QA 10 (DP World req 28315 shown twice for Sana: the employer's Oracle copy and an Indeed copy whose apply link is the same posting at
+# '...oraclecloud.com:443/hcmUI/CandidateExperience/en/job/28315'; ENGIE's Jubail 'Electrical Engineer' twice on its own site under two requisition
+# ids with the same text). A job-site posting is one we already have when its posting URL or its apply link (posting_url_key: no port, no tracking
+# parameters, an Oracle requisition by its id), with its title, is an employer's row stored and active, or one of this run's dataset rows (the title
+# too, as in split_new: a careers page URL shared by several jobs is not one job); or when its site, employer, title, place and text are those of one
+# of this run's dataset rows. The employer's copy is kept. The same text in another city is left to the many-cities rule (plan B3).
+def _text_key(j, url):
+    k, t = posting_url_key(url), twin_text(j.get('description'))
+    who = twin_employer(j.get('company'))
+    return (k.split('/')[0], who, norm(j.get('title')), norm(j.get('location')), t) if k and who and len(t) >= SAME_TEXT_MIN else None
+
+
+def board_twins(jobs, stored_rows, run_rows):
+    """(jobs to keep, ids dropped as copies of an employer's posting). stored_rows: active rows ({source_url, t, source_channel}, ACTIVE_SQL);
+    run_rows: this run's dataset postings ({url, title, company, location, description})."""
+    ats = {(posting_url_key(r.get('source_url')), norm(r.get('t'))) for r in stored_rows or [] if r.get('source_channel') != 'JOB_SITES'}
+    ats |= {(posting_url_key(r.get('url')), norm(r.get('title'))) for r in run_rows or []}
+    ats = {k for k in ats if k[0]}
+    texts = {_text_key(r, r.get('url')) for r in run_rows or []} - {None}
+    keep, dropped = [], []
+    for j in jobs:
+        keys = {(posting_url_key(u), norm(j.get('title'))) for u in (j.get('url'), j.get('apply_url'))} - {('', norm(j.get('title')))}
+        if keys & ats or _text_key(j, j.get('apply_url') or j.get('url')) in texts:
+            dropped.append(j['id'])
+        else:
+            keep.append(j)
+    return keep, dropped
+
+
+def same_text_twins(jobs):
+    """Jobs QA 10: within one run, postings of one site, employer, title, place and text (SAME_TEXT_MIN characters or more) are one posting, stored
+    once (the first one). Returns (kept, dropped ids)."""
+    seen, keep, dropped = set(), [], []
+    for j in jobs:
+        key = _text_key(j, j.get('url'))
+        if key and key in seen:
+            dropped.append(j['id'])
+            continue
+        if key:
+            seen.add(key)
+        keep.append(j)
+    return keep, dropped
+
+
 def closures(con, src, manifest, local=None, cache=None):
     """Two-run closure with a per-ATS health check. Returns (close, mark_missing, clear_missing, counts_to_store)."""
     counts = {adapter(k): int(v.get('rows') or 0) for k, v in (manifest.get('by_ats') or {}).items()}
@@ -820,11 +899,23 @@ def main():
         raw = json.loads(Path(a.dedupe).read_text())
         jobs = [clean(j) for j in raw.get('jobs', [])]
         names = safe_names(jobs, not a.no_name_lookup)   # plan B1: employer names before the duplicate test
-        merges = {}
-        fresh, _, dup = split_new(jobs, a.d1_local, merges, snapshot=out / ACTIVE_SNAPSHOT)
+        merges, run_cache, copies, same_text = {}, {}, [], []
+        # Jobs QA 10: a job-site copy of an employer's posting (stored, or found by this run's dataset step) is not stored again. The stored jobs
+        # are read once, only when there is a posting to compare (the same read split_new() would make; nothing is read for an empty file).
+        if jobs:
+            run_rows = []
+            if (out / 'matches.json').exists():
+                try:
+                    run_rows = json.loads((out / 'matches.json').read_text()).get('jobs', [])
+                except ValueError:
+                    run_rows = []
+            active, _ = stored_jobs(a.d1_local, snapshot=out / ACTIVE_SNAPSHOT, cache=run_cache)
+            jobs, copies = board_twins(jobs, active, run_rows)
+            jobs, same_text = same_text_twins(jobs)
+        fresh, _, dup = split_new(jobs, a.d1_local, merges, snapshot=out / ACTIVE_SNAPSHOT, cache=run_cache)
         (out / 'jobsite_matches.json').write_text(json.dumps({'source': 'job_sites', 'jobs': fresh, 'closed': [], 'merge': merges.get('stored', [])}, default=str))
-        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup, 'new': len(fresh), 'employer_names': names,
-                          'same_job_other_city': merges.get('merged', 0)}))
+        print(json.dumps({'job_sites_selected': len(raw.get('jobs', [])), 'duplicates_in_run': dup + len(same_text), 'new': len(fresh), 'employer_names': names,
+                          'same_job_other_city': merges.get('merged', 0), 'copies_of_employer_postings': len(copies)}))
         return 0
     if a.no_dataset:
         # The 3.9 GB download failed: the boards, other sources, re-score, still-open check and shortlist still run today.
@@ -864,6 +955,7 @@ def main():
     jobs = [j for j in found.values() if len(j['url']) < LIMITS['url']]
     # Plan B1: the employer's name, not its hiring-system tenant id, before the duplicate test (so caps and dedupe see the display name).
     names = safe_names(jobs, not a.no_name_lookup)
+    jobs, _same_text = same_text_twins(jobs)   # jobs QA 10: one site's same posting under two requisition ids is stored once
     merges = {}
     run_cache = {}   # one read of the stored jobs for the duplicate check, the closures and (through the snapshot) the job-site duplicate check
     fresh, reopen, dup = split_new(jobs, a.d1_local, merges, cache=run_cache)

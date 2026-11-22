@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v25';
+export const RULES_MARKER = 'profile_v26';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -804,7 +804,7 @@ export function sanaElectricalMaintenance(title:string|null|undefined,descriptio
 // required', 'communication skills in both Turkish and English', 'Fluent Serbian'). A language only welcomed ('is a plus', 'an advantage',
 // 'preferred') is not read. Hard-ish: the score stays below the person's Worth-a-try floor.
 const LANGS='turkish|portuguese|italian|polish|japanese|mandarin|chinese|cantonese|korean|russian|vietnamese|thai|bahasa(?: indonesia| melayu)?|malay|indonesian|czech|slovak|swedish|danish|norwegian|finnish|hebrew|greek|hungarian|romanian|ukrainian|bulgarian|croatian|serbian|tagalog|filipino|german|french|dutch|spanish|arabic';
-const LANG_HARD=new RegExp(`\\b(?:(?:native|professional|business|full|working)[- ](?:level )?(?:or [\\w-]+ )?(?:fluency|proficiency) in (${LANGS})|fluen(?:t|cy) (?:in )?(?:both )?(${LANGS})|(${LANGS}) (?:language )?(?:is |are )?(?:required|mandatory|essential|a must)|(?:skills|proficiency|fluency) in both (${LANGS}) and english|(?:proficient|fluent) in english and (${LANGS})|native or business[- ]fluent (${LANGS})|\\bnative[- ](?:level )?(${LANGS})\\b(?![- ]speakers? (?:are )?welcome)|(${LANGS})[- ]speak(?:ing|ers?)\\b)`,'gi');
+const LANG_HARD=new RegExp(`\\b(?:(?:native|professional|business|full|working)[- ](?:level )?(?:or [\\w-]+ )?(?:fluency|proficiency) in (${LANGS})|fluen(?:t|cy) (?:in )?(?:both )?(${LANGS})|(${LANGS}) (?:language )?(?:is |are )?(?:required|mandatory|essential|a must)|(?:skills|proficiency|fluency) in both (${LANGS}) and english|(?:excellent |strong |full |good |fluent |native )?command of (?:both )?(${LANGS}) and english|(?:excellent |strong |full |good |fluent |native )?command of (?:both )?english and (${LANGS})|(?:proficient|fluent) in english and (${LANGS})|native or business[- ]fluent (${LANGS})|\\bnative[- ](?:level )?(${LANGS})\\b(?![- ]speakers? (?:are )?welcome)|(${LANGS})[- ]speak(?:ing|ers?)\\b)`,'gi');
 const LANG_SOFT_AFTER=/^[^.;\n]{0,40}\b(?:is |are |would be )?(?:a plus|an advantage|advantageous|preferred|desirable|nice to have|a bonus|an asset|beneficial)\b/i;
 export const LANGUAGE_HARD_GAP=11;
 /** Jobs QA 4: a non-English language the posting plainly requires (title or text), or null. */
@@ -938,6 +938,7 @@ export function farhanEngineeringField(title:string|null|undefined,description:s
  if(ERP_ADMIN_YEARS.test(d))return 'finance ERP administration';
  if(farhanCrmDevelopment(title,d))return 'CRM development (CI/CD, custom code)';   // jobs QA 9
  if(farhanFinanceProductImplementation(title,d))return 'finance or ERP product implementation';   // jobs QA 9
+ const qa10=farhanOtherFieldQa10(title,d);if(qa10)return qa10;   // jobs QA 10
  return null;
 }
 // ---- Jobs QA 9 (21 Nov: both live lists, 65 jobs, re-judged by two reviewers after the v23 rules rebuild; 14 should not have been shown) ------
@@ -952,6 +953,7 @@ const CRM_DEV_WORK=[/\bCI\s?\/\s?CD\b|\bcontinuous integration\b|\bcontinuous (?
 const CRM_OWN_TITLE=/\b(?:operations|ops|admin(?:istrator)?|automation|revops)\b/i;
 export function farhanCrmDevelopment(title:string|null|undefined,description:string|null|undefined):boolean{
  const ti=String(title||''),d=String(description||'');
+ if(farhanSalesforceCode(d))return true;   // jobs QA 10: Salesforce code asked as hands-on work, whatever the title (Firework, see farhanSalesforceCode)
  if(!CRM_PLATFORM_TITLE.test(ti)||!CRM_SEAT_TITLE.test(ti)||CRM_OWN_TITLE.test(ti))return false;
  const kinds=distinct(CRM_DEV_WORK,d);
  return kinds>=3||(kinds>=2&&(CRM_DEV_WORK[0].test(d)||CRM_DEV_WORK[2].test(d)));
@@ -1023,7 +1025,7 @@ export function farhanStretchOnly(title:string|null|undefined,description:string
  if(/\bstrong proficiency in (?:javascript|typescript|python|java)\b/i.test(d))return 'a technical seat asking strong programming proficiency';
  const map=farhanMarketingPlatformRequired(d);if(map)return `a post that requires ${map}, a marketing-automation platform the profile does not list`;   // jobs QA 9
  if(farhanClientPlacement(d))return 'an agency placement with a client (contract or creative-marketing coordination)';   // jobs QA 9
- return null;
+ return farhanStretchOnlyQa10(ti,d);   // jobs QA 10
 }
 // Sana's field: other professions that share her words. A software or analytics vendor's implementation post ('implementation of UptimeAI's
 // AI-powered industrial analytics platform', 'analytical models'); a BI or analytics post ('Analytics' in the title, or Power BI / Tableau / cloud IoT
@@ -1051,7 +1053,7 @@ export function sanaOtherProfession(title:string|null|undefined,description:stri
  if(/\bcyber ?security\b/i.test(d)&&/\bfirewalls?\b|\bVPNs?\b|\b62443\b|\bCERT-In\b|\bSIEM\b/i.test(d))return 'OT cybersecurity';
  if(distinct(SANA_MACHINE_TOOL,d)>=2)return 'machine-tool (CNC) overhaul';
  const qa9=sanaOtherProfessionQa9(ti,d);if(qa9)return qa9;   // jobs QA 9
- return null;
+ return sanaOtherProfessionQa10(ti,d);   // jobs QA 10
 }
 // ---- Jobs QA 9 (Sana) ------------------------------------------------------------------------------------------------------------------------
 // Other professions that share her words:
@@ -1161,7 +1163,7 @@ const SANA_NICHE='solar asset management|solar (?:plant )?(?:o ?& ?m|operations)
 const SANA_NICHE_YEARS=new RegExp(`\\b\\d{1,2}\\s*\\+?\\s*(?:(?:-|to|–)\\s*\\d{1,2}\\s*)?\\+?\\s*years?\\b[^.;]{0,70}?\\b(?:${SANA_NICHE})\\b`,'i');
 // The degree names mechanical as its subject ('Diploma / B.E. in Mechanical Engineering', 'B.E. / Mechanical', 'BE Mechanical Engineer',
 // 'Bachelor's degree (Mechanical)'); 'Degree holders with strong mechanical aptitude' is not.
-const DEGREE_WORD=String.raw`(?:diploma|b\.?\s?e\b\.?|b\.?\s?tech\b\.?|bachelor['’]?s?(?: degree)?|degree|graduate)`;
+const DEGREE_WORD=String.raw`(?:diploma|b\.?\s?e\b\.?|b\.?\s?tech\b\.?|bachelor of (?:engineering|technology)|bachelor['’]?s?(?: degree)?|degree|graduate)`;   // jobs QA 10: 'Bachelor of Engineering in Mechanical Engineering'
 const MECH_DEGREE=new RegExp(String.raw`\b${DEGREE_WORD}(?:\s*(?:\/|or|,)\s*${DEGREE_WORD})*\s*(?:(?:in|of)\s+|\(\s*|[-–:\/]\s*|(?<=\b(?:b\.?\s?e|b\.?\s?tech)\.?)\s+)mechanical\b(?:\s+engineer(?:ing)?)?`,'gi');
 const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|mechatronics|industrial|production|power|related|relevant|equivalent|other|any (?:engineering|discipline))\b/i;   // another discipline offered beside mechanical
 const CONSULTING_EMPLOYER=/\b(?:deloitte|pwc|price ?waterhouse|kpmg|ernst (?:&|and) young|\bey\b|accenture|mckinsey|boston consulting|bain|capgemini|grant thornton)\b/i;
@@ -1180,6 +1182,159 @@ export function sanaStretchOnlyQa9(title:string|null|undefined,description:strin
  if(/commission/i.test(ti)&&(CONSULTING_EMPLOYER.test(co)||/\badvisory\b/i.test(ti)))return 'commissioning for an advisory or consulting firm';
  if(/\b(?:sr\.?|senior)?\s*executive\b/i.test(ti)&&!/\b(?:manager|head|lead)\b/i.test(ti)&&(CONSUMER_GOODS_EMPLOYER.test(co)||/\bFMCG\b|\bpaints? (?:manufacturing|industry|plants?)\b/i.test(d)))return 'an executive-grade post at a consumer-goods or paints maker';
  if(location!==undefined&&!String(location||'').trim()&&EMPLOYER_ABROAD_NAME.test(co)&&!INDIA_PLACE.test(d)&&!/\b(?:india|bharat)\b/i.test(d))return 'an employer abroad with no place stated';
+ return sanaStretchOnlyQa10(ti,d);   // jobs QA 10
+}
+// ---- Jobs QA 10 (22 Nov: both live lists, 92 jobs, re-judged by two reviewers after the previous rules release and the wide-intake rebuild) --------
+// Farhan, another field (capped like an avoid-list title):
+//   a strategy / operations title that asks years in consulting or market research ('a minimum of 6 years in Strategy or Management Consulting',
+//   'At least 5 years experience in Marketing Strategy, Research roles'); 'ideally in consulting' alone is a stretch (farhanStretchOnlyQa10);
+//   a support, solutions or consultant title that asks infrastructure or security engineering: three kinds of it (production Kubernetes clusters,
+//   cloud IAM and VPC networking, Terraform / infrastructure as code, SOC / SIEM tooling), or two named incident-response platforms (RTIR, MISP,
+//   OpenCTI, Wazuh, Security Onion ...);
+//   a project, programme or delivery manager title asking years (or 'Mandatory:') in another domain: finance / economics / public policy,
+//   pharma / clinical research / life sciences, information security / GRC (ISO 27001, SOC 2), data warehousing / ETL / data architecture;
+//   a specialist platform asked with years or a required certification ('5+ years of hands-on ServiceNow experience', 'ServiceNow Certified
+//   System Administrator (CSA) Required', 'SAP Certification (required)'); his CRM platforms are not in the list;
+//   an engineer title asking strong coding and a mandatory developer certification ('Strong development skills in TypeScript and JavaScript',
+//   'At least one mandatory Microsoft certification: PL-400 ... or PL-500');
+//   a recruiting or staffing title asking years in recruitment ('6–12 years of experience in IT recruitment, technical staffing');
+//   hardware or chip design (RTL, ASIC, SoC design, synthesis and timing, STA, the semiconductor industry), three kinds.
+const QA10_SOFT_AFTER=/^[^.;\n]{0,40}\b(?:a plus|plus|an advantage|advantageous|preferred|desirable|nice to have|a bonus|beneficial|an asset|optional)\b/i;
+const firstAsked=(re:RegExp,d:string)=>{const g=new RegExp(re.source,re.flags.includes('g')?re.flags:re.flags+'g');let m:RegExpExecArray|null;while((m=g.exec(d))){if(QA10_SOFT_AFTER.test(d.slice(m.index+m[0].length))||deniedBefore(d,m.index))continue;return m[0];}return null;};   // the first match neither welcomed only nor denied
+const askedNotSoft=(re:RegExp,d:string)=>firstAsked(re,d)!==null;
+const STRATEGY_CONSULTING_YEARS=/\b(?:minimum|at least|min\.?)\s+(?:of\s+)?\d{1,2}\s*\+?\s*years?\b[^.;]{0,30}\b(?:in|of|with)\s+(?:[\w-]+\s+){0,2}?(?:strategy|management) consulting\b|\b\d{1,2}\s*\+?\s*years?(?: of)?(?: experience)?(?: in| with)\s+(?:marketing strategy|market research|(?:strategy|management) consulting)\b/i;
+const FARHAN_INFRA_SEC=[/\bproduction kubernetes\b|\bkubernetes clusters?\b/i,/\bIAM\b[^.;]{0,60}\bVPCs?\b|\bVPCs?\b[^.;]{0,60}\bsecurity groups?\b/i,/\bterraform\b|\bHCL\b|\binfrastructure[- ]as[- ]code\b/i,/\bSIEM\b|\bSOAR\b|\bSOC\b[^.;]{0,20}\b(?:operations|analyst|tooling|workflows)\b/];
+const CIRT_PLATFORMS=[/\bRTIR\b/,/\bMISP\b/,/\bOpenCTI\b/i,/\bWazuh\b/i,/\bSecurity Onion\b/i,/\bGraylog\b/i,/\bT-?POT\b/,/\bTARANIS\b/i,/\bGhidra\b/i];
+const OTHER_DOMAIN=String.raw`finance|economics|public policy|pharma\w*|biotech\w*|clinical (?:research|trials?|studies)|life sciences|drug development|information security|IT compliance|GRC|cyber ?security|data[- ]warehous\w*|ETL|data model(?:l)?ing|data architecture`;
+const DOMAIN_YEARS=new RegExp(String.raw`\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,90}?\b(?:${OTHER_DOMAIN})\b|\bmandatory\b\s*:?[^.;]{0,80}?\b(?:${OTHER_DOMAIN})\b`,'i');
+const FARHAN_OWN_PLATFORM=/\b(?:hubspot|salesforce|zoho|gohighlevel|ghl|zapier|make\.com|n8n|workato)\b/i;
+const SPECIALIST_PLATFORM=String.raw`servicenow|successfactors|sap(?: [a-z0-9/]{2,12})?|workday(?: [a-z]{3,12})?|oracle (?:hcm|erp|fusion|ebs|e-business suite|cloud)|netsuite|coupa|anaplan|kyriba|guidewire|pega(?:systems)?|veeva`;
+const SPECIALIST_REQUIRED=new RegExp(String.raw`\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b(?: of)?(?: hands-on| professional| proven| relevant)?\s+(?:${SPECIALIST_PLATFORM})\b|\b(?:${SPECIALIST_PLATFORM})\b[^.;]{0,80}?\bcertifi(?:cation|ed)\b[^.;]{0,60}?(?:\(\s*)?\b(?:required|mandatory)\b`,'i');
+const STRONG_CODING=/\bstrong (?:development|programming|coding|software development) skills in (?:typescript|javascript|python|java|c#|c\+\+|go|golang)\b|\bstrong (?:typescript|javascript|python|java|c#) (?:development|programming|coding) skills\b/i;
+const DEV_CERT_REQUIRED=/\bmandatory\b[^.;]{0,40}\bcertification\b|\bcertification\b[^.;]{0,20}\b(?:is )?(?:required|mandatory)\b|\b(?:PL-400|PL-500|PL-600|AZ-204|PD1|PD2)\b[^.;]{0,30}\b(?:required|mandatory)\b/i;
+const RECRUIT_YEARS=/\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?(?: of)?(?: experience)?\s+in\s+(?:[\w-]+\s+){0,2}?(?:recruitment|recruiting|staffing|talent acquisition)\b/i;
+const CHIP_DESIGN=[/\bRTL\b/,/\bASIC\b/,/\bSoC\b|\bSOC (?:design|RTL|integration|architecture)\b/,/\bsynthesis\b[^.;]{0,40}\btiming\b|\btiming (?:constraints|closure)\b/i,/\bSTA\b/,/\bsemiconductor (?:industry|companies|company|startup)\b/i,/\b(?:system)?verilog\b|\bVHDL\b/i,/\btape-?outs?\b|\bphysical design\b|\bDFT\b/i];
+export function farhanOtherFieldQa10(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(/\bstrateg/i.test(ti)&&askedNotSoft(STRATEGY_CONSULTING_YEARS,d))return 'strategy consulting and market research';
+ if(/\b(?:support|solutions?|consultant|operations|technical)\b/i.test(ti)&&(distinct(FARHAN_INFRA_SEC,d)>=3||distinct(CIRT_PLATFORMS,d)>=2))return 'infrastructure or security engineering';
+ if(/\b(?:project|program(?:me)?|delivery)\s+(?:manager|management|lead)\b|\bPMO?\b/i.test(ti)){const m=firstAsked(DOMAIN_YEARS,d);if(m)return `project management in another domain (${(new RegExp(String.raw`\b(?:${OTHER_DOMAIN})\b`,'i').exec(m)?.[0]||'another field').toLowerCase()})`;}
+ const sp=firstAsked(SPECIALIST_REQUIRED,d);if(sp){const name=new RegExp(String.raw`\b(?:${SPECIALIST_PLATFORM})\b`,'i').exec(sp)?.[0]||'a specialist platform';if(!FARHAN_OWN_PLATFORM.test(name))return `specialist platform work (${name}: years or a certification required)`;}
+ if(/\bengineer\b/i.test(ti)&&STRONG_CODING.test(d)&&DEV_CERT_REQUIRED.test(d))return 'software development with a required developer certification';
+ if(/\brecruit\w*|\bstaffing\b|\btalent acquisition\b/i.test(ti)&&RECRUIT_YEARS.test(d))return 'recruitment and staffing';
+ if(distinct(CHIP_DESIGN,`${ti} ${d}`)>=3)return 'hardware or chip design';
+ return null;
+}
+// Farhan's CRM development (why Firework's 'Sales & Marketing Operations Manager' escaped farhanCrmDevelopment in QA 9): that rule reads only a
+// CRM consultant / specialist / architect / developer title, never an operations one, and its kinds of developer work had no Salesforce code
+// ('Apex', 'SOQL', 'Lightning Web Components') and no 'custom development' or 'custom functionality'. Salesforce code asked as hands-on work
+// ('Hands-on proficiency with Salesforce configuration, Salesforce Flow, Apex, SOQL, and custom development', 'Develop custom functionality using
+// Apex, SOQL, and Lightning Web Components') is developer work whatever the title. Apex only welcomed ('a plus') stays a stretch.
+const SALESFORCE_CODE=/\bApex\b[^.;]{0,40}\b(?:SOQL|LWC|Lightning Web Components)\b|\b(?:SOQL|LWC|Lightning Web Components)\b[^.;]{0,40}\bApex\b/;
+const CUSTOM_DEV=/\bcustom (?:development|functionality|code|coding|components?)\b|\bhands-on (?:proficiency|experience|development)\b[^.;]{0,80}\bApex\b|\bdevelop(?:s|ing)?\b[^.;]{0,30}\busing\b[^.;]{0,10}\bApex\b/i;
+export function farhanSalesforceCode(description:string|null|undefined):boolean{
+ const d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ const g=new RegExp(SALESFORCE_CODE.source,'g');let m:RegExpExecArray|null;
+ while((m=g.exec(d))){if(QA10_SOFT_AFTER.test(d.slice(m.index+m[0].length))||deniedBefore(d,m.index))continue;const around=d.slice(Math.max(0,m.index-120),m.index+m[0].length+60);if(CUSTOM_DEV.test(around))return true;}
+ return false;
+}
+// Farhan, a stretch (Worth a try at most):
+//   delivery of AI / machine-learning projects that asks the ML engineering itself (three kinds: machine-learning fundamentals with model development,
+//   MLOps / LLMOps, Databricks / MLflow, Docker / Kubernetes, NLP or computer vision);
+//   remote only 'depending on project and business requirements';
+//   hands-on building of agentic or RAG systems (LangChain / LangGraph, RAG pipelines, knowledge graphs, multi-agent orchestration, two kinds);
+//   a strategy title built on sales and finance modelling with a consulting, investment-banking or private-equity background.
+const FARHAN_ML_WORK=[/\bmachine learning (?:fundamentals|models?)\b[^.;]{0,60}\bmodel (?:development|training|evaluation|deployment)\b|\bmodel development, evaluation\b/i,/\bMLOps\b|\bLLMOps\b/,/\bDatabricks\b|\bMLflow\b|\bSageMaker\b|\bVertex AI\b/i,/\bDocker\b[^.;]{0,20}\bKubernetes\b|\bKubernetes\b[^.;]{0,20}\bDocker\b/i,/\bNLP\b[^.;]{0,30}\bcomputer vision\b|\bcomputer vision\b[^.;]{0,30}\bNLP\b/i];
+const AGENT_BUILD=[/\blang(?:chain|graph)\b|\bllamaindex\b|\bcrewai\b|\bautogen\b/i,/\bRAG (?:pipelines?|architectures?|systems?)\b/,/\bknowledge graphs?\b/i,/\bmulti-agent (?:orchestration|systems?)\b/i,/\bvector (?:databases?|stores?)\b/i];
+const REMOTE_DEPENDS=/\bremote (?:work |working )?(?:opportunit(?:y|ies)|options?|arrangements?)?\s*(?:depending|dependent|based) on (?:the )?(?:project|client|business)/i;
+export function farhanStretchOnlyQa10(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(distinct(FARHAN_ML_WORK,d)>=3)return 'delivery of machine-learning work that asks ML engineering (models, MLOps)';
+ if(REMOTE_DEPENDS.test(d))return 'a post that is remote only depending on the project';
+ if(/\bhands-on (?:experience )?(?:building|developing|with)\b[^.;]{0,40}\b(?:agentic|multi-agent|AI agents?|RAG|LLM)/i.test(d)&&distinct(AGENT_BUILD,d)>=2)return 'hands-on building of agentic or RAG systems';
+ if(/\bstrateg/i.test(ti)&&/\bfinancial (?:and operating )?models?\b|\bquota setting\b/i.test(d)&&/\b(?:consulting|investment banking|private equity)\b/i.test(d))return 'sales strategy and finance modelling (a consulting or banking background)';
+ return null;
+}
+// Farhan's place:
+//   remote words that describe other teams ('Experience successfully working with distributed teams as the delivery teams are fully remote') say
+//   nothing of this job;
+//   a remote job locked to one country other than India wins over an India entry in a multi-place string ('Remote - Bengaluru; Remote - Mexico'
+//   with 'This is a remote position open to candidates based in Mexico'; an aggregator's 'Anywhere in the World' for 'This is a fully remote
+//   opportunity and can be worked from any location in the United States').
+// Only wording that names another team is stripped ('the delivery teams are fully remote', 'our client teams work remotely', 'the engineering team is
+// remote'); a statement about the employer itself ('Our team is fully remote', 'our company is remote-first', 'our employees work remotely') stays.
+export const OTHER_TEAMS_REMOTE=/\b(?:the |our |their |its |all )?(?:delivery|client|customer|engineering|development|dev|support|sales|offshore|onshore|project|partner|vendor|other|distributed|global|product|implementation)\s+(?:teams?|engineers|developers|consultants|staff)\s+(?:are|is|work|working|operate|that are|who are)\s+(?:all\s+)?(?:fully |100% |mostly |largely |primarily |entirely )?remote(?:ly)?\b/gi;
+// The place is the whole list to the end of the sentence ('Mexico and India', 'the US, Canada, or India'); a list naming India, APAC, Asia, worldwide
+// or anywhere is no lock. 'This job is geo-locked' counts only with its place ('geo-locked to the United States').
+const LOCK_PLACE=String.raw`((?:[^.;!?]|\.(?=\S)|(?<=\b[A-Z])\.(?=\s+(?:and|or)\b|,)){2,80})`;   // 'the U.S. and Canada'
+const COUNTRY_LOCK=new RegExp(String.raw`\b(?:position|role|job|opportunity|vacancy)\s+(?:is\s+)?open\s+(?:only\s+)?to\s+(?:candidates|applicants|people|individuals|those)\s+(?:who are\s+)?(?:based|located|residing|living)\s+in\s+(?:the\s+)?${LOCK_PLACE}|\bcan be (?:worked|performed|done) from any (?:location|where|state|city) (?:in|within|across) (?:the\s+)?${LOCK_PLACE}|\bthis job is geo-?locked\s+(?:to|in)\s+(?:the\s+)?${LOCK_PLACE}`,'gi');
+const LOCK_OPEN=/\b(?:india|indian|apac|asia|asia[- ]pacific|anywhere|worldwide|world|globe|global(?:ly)?)\b/i;
+export function remoteLockedElsewhere(description:string|null|undefined):string|null{
+ const d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');COUNTRY_LOCK.lastIndex=0;let m:RegExpExecArray|null;
+ while((m=COUNTRY_LOCK.exec(d))){if(deniedBefore(d,m.index))continue;const place=String(m[1]||m[2]||m[3]||'').replace(/\s+only\s*$/i,'').trim();if(!place||LOCK_OPEN.test(place))continue;return place;}
+ return null;
+}
+// Sana, another profession (capped like an avoid-list title):
+//   control and instrumentation: an instrumentation title whose minimum qualification is an instrumentation degree ('Minimum qualification:
+//   B.E./B.Tech. Instrumentation & Control Engineering'; the full stops of 'B.Tech.' no longer hide it) or that writes DCS / PLC logic ('Preparation
+//   and modification of master SCADA/DCS logic', 'Downloading and uploading the program on DCS, PLC');
+//   reliability at an AI or software vendor whose job is building its product ('supporting the development of <vendor>'s reliability & predictive
+//   maintenance solution', with AI/ML or GenAI work);
+//   production or plant management of electronics assembly (SMT, reflow, AOI, PCB, pick-and-place, solder paste: three kinds) under a title that is not
+//   maintenance or reliability;
+//   reliability in a product-testing or validation lab (shaker rigs, vibration test fixtures, thermal chambers, SOLIDWORKS: three kinds);
+//   investment and technical advisory consulting (financial modelling, asset valuation, lender's or independent engineering reviews, due diligence,
+//   investment decisions: three kinds).
+const DEG_ABBR=String.raw`(?:B\.\s?E\b|BE\b|B\.?\s?[Tt]ech\b|B\.\s?Sc\b|BSc\b)`;   // case-sensitive: the English word 'be' is no degree
+const CI_DEGREE=new RegExp(String.raw`\b(?:[Dd]egree|[Dd]iploma|[Bb]achelor of [Ee]ngineering|[Bb]achelor'?s?|${DEG_ABBR})\.?\s*(?:\/\s*${DEG_ABBR}\.?\s*)?(?:in\s+)?(?:C ?& ?I\b|[Cc]ontrol (?:and|&) [Ii]nstrumentation|[Ii]nstrumentation(?: (?:and|&) [Cc]ontrol)?(?: [Ee]ngineering)?|INSTRUMENTATION|[Ee]lectronics (?:and|&) [Cc]ommunication|E ?& ?C\b|ECE\b)`);
+const CI_LOGIC=/\b(?:DCS|PLC|SCADA)(?:\s*\/\s*(?:DCS|PLC|SCADA))?\s+logic\b|\b(?:download|upload)\w*\b[^.;]{0,40}\bprogram\b[^.;]{0,20}\b(?:DCS|PLC)\b|\bprogramming (?:of |on )?(?:the )?(?:DCS|PLC)\b/i;
+const VENDOR_BUILD=/\b(?:development|delivery|building) of\b(?:[^.;]|\.(?=\S)){0,80}\b(?:solutions?|platforms?|products?|software)\b/i, VENDOR_AI=/\bGen ?AI\b|\bAI\s*\/\s*ML\b|\bAI\/\s*GenAI\b|\bsoftware know-how\b/i;
+const SMT_WORK=[/\bSMT\b/,/\breflow\b/i,/\bAOI\b/,/\bPCBA?s?\b/,/\bpick[- ]and[- ]place\b/i,/\bsolder paste\b|\bwave soldering\b/i,/\bSPI\b/];
+const TEST_LAB=[/\bshakers?(?: rigs?| tables?)?\b/i,/\bvibration (?:test(?:ing|s)?|lab|profiles?)\b/i,/\bthermal chambers?\b|\bclimatic chambers?\b/i,/\btest fixtures?\b/i,/\bSOLIDWORKS\b/i,/\bvalidation (?:lab|tests?|testing)\b|\bDVP\b/i];
+const ADVISORY_WORK=[/\bfinancial model(?:l)?ing\b|\bfinancial (?:and economic|consulting) (?:analysis|studies)\b/i,/\basset valuations?\b|\bvaluation assessments?\b/i,/\blender'?s? (?:technical )?reviews?\b|\bindependent engineer(?:ing)?\b/i,/\bdue diligence\b/i,/\binvestment (?:decisions|recommendations|banking)\b|\binvestors\b/i,/\bNPV\b|\bIRR\b/];
+export function sanaOtherProfessionQa10(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(/instrument|\bC ?& ?I\b/i.test(ti)&&!/\belectrical\b|\bmechanical\b|commission/i.test(ti)&&(CI_DEGREE.test(d)||CI_LOGIC.test(d)))return 'control and instrumentation';
+ if(/\breliability\b/i.test(ti)&&VENDOR_BUILD.test(d)&&VENDOR_AI.test(d))return 'software product (a reliability solution vendor)';
+ if(!/maintenance|reliability|o ?& ?m\b/i.test(ti)&&distinct(SMT_WORK,`${ti} ${d}`)>=3)return 'electronics assembly manufacturing';
+ if(distinct(TEST_LAB,d)>=3)return 'product testing and validation';
+ if(distinct(ADVISORY_WORK,d)>=3)return 'investment and technical advisory consulting';
+ return null;
+}
+// Sana's level: a technician's grade under an engineer title. An ITI candidate is accepted beside the engineer ('Graduate engineer ... with 2–3
+// years' experience; OR Diploma engineer with 3–5 years' experience; OR ITI candidate with 8–10 years'), or the graduate route asks at most 3 years
+// with a diploma route offered beside it.
+const ITI_ROUTE=/\b(?:or|\/)\s+(?:relevant\s+)?ITI\b(?:\s+(?:candidates?|holders?|qualified))?[^.;]{0,30}\bwith\b|\bITI (?:candidates?|holders?)\s+with\s+\d/i;
+const GRADUATE_FEW=new RegExp(String.raw`\b(?:[Gg]raduate|GRADUATE|[Dd]egree|[Bb]achelor'?s?|${DEG_ABBR})\.?(?:[^.;]|\.(?=\S)){0,60}?\b[Ww]ith\s+(\d{1,2})\s*(?:(?:-|–|to)\s*(\d{1,2})\s*)?\+?\s*[Yy](?:ears?|rs?)\b`);
+export function sanaTechnicianGrade(description:string|null|undefined):boolean{
+ const d=String(description||'').replace(/\s+/g,' ');
+ if(ITI_ROUTE.test(d))return true;
+ const g=GRADUATE_FEW.exec(d);return !!g&&Number(g[2]||g[1])<=3&&/\bOR\s+(?:a\s+)?diploma\b|\bdiploma (?:engineers?|holders?) with\b/i.test(d);
+}
+// Sana, kept but not in Best matches (Worth a try at most):
+//   an Executive or Senior Executive grade (title, or the text's own job title: 'Job Description: Maintenance Executive') asking a minimum of 4
+//   years or fewer, or accepting a diploma ('Diploma / Bachelor's Degree');
+//   a junior engineer post that supports a senior engineer ('Support Senior Engineer', 'tasks as assigned by Senior Engineer');
+//   maintenance for a heavy-fabrication shop (welding, rolling, fit-up, blasting, painting: four kinds);
+//   engineering services for an IT or office campus ('Position: Campus Head - Engineering Services');
+//   a specialist refrigeration or coating process ('ultra-low temperature refrigeration', cryogenic cooling, coating processes);
+//   a consultant or advisory title at a consultancy (advisory or consulting practice, 'our clients'): consultancy is capped;
+//   years asked in a dedicated reliability role ('Overall 10 years of experience with 5 years in Reliability field').
+const EXEC_GRADE_TEXT=/\b(?:job description|position|designation|role|job title)\s*[:\-–]\s*(?:[\w&]+\s+){0,3}?(?:sr\.?\s+|senior\s+)?executive\b/i;
+const FEW_YEARS_MIN=/\bminimum\s*(?:of\s*)?:?\s*([1-4])\s*\+?\s*years?\b|\b([1-4])\s*(?:-|–|to)\s*\d{1,2}\s*\+?\s*years?\b|\b([1-4])\s*\+\s*years?\b/i;
+const DIPLOMA_ACCEPTED=new RegExp(String.raw`\b[Dd]iploma\s*(?:\/|or)\s*(?:a\s+)?(?:[Bb]achelor|[Dd]egree|${DEG_ABBR})`);
+const FABRICATION=[/\bwelding\b/i,/\brolling\b/i,/\bfit-?up\b/i,/\bblasting\b/i,/\bpainting\b/i,/\bfabrication\b/i];
+const CAMPUS_SERVICES=[/\belevators?\b|\blifts\b/i,/\bfire (?:& life safety|and life safety|alarm|fighting|detection|systems?)\b/i,/\bBMS\b/,/\bdata cent(?:er|re)s?\b/i,/\bIFMS\b|\bintegrated facilit/i];
+const SPECIAL_PROCESS=[/\bultra-low temperature\b|\bcryogenic\b/i,/\bcascade refrigeration\b|\brefrigeration systems? operating below\b/i,/\bcoating (?:processes|systems|plants?|machines?)\b/i,/\bvacuum (?:systems|technology|pumps)\b/i];
+export function sanaStretchOnlyQa10(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if((/\bexecutive\b/i.test(ti)||EXEC_GRADE_TEXT.test(d))&&!/\b(?:manager|head|lead)\b/i.test(ti)&&(FEW_YEARS_MIN.test(d)||DIPLOMA_ACCEPTED.test(d)))return 'an executive-grade post asking few years or accepting a diploma';
+ if(/\b(?:support|assist)s?\s+(?:the\s+)?senior engineers?\b|\bassigned by (?:the )?senior engineers?\b/i.test(d))return 'a junior engineer post under a senior engineer';
+ if(distinct(FABRICATION,d)>=4)return 'maintenance for a heavy-fabrication shop';
+ if(/\bcampus head\b/i.test(`${ti} ${d}`)||(/\b(?:office|IT|corporate|technology) campus\b/i.test(d)&&distinct(CAMPUS_SERVICES,d)>=3))return 'engineering services for an office campus';
+ if(distinct(SPECIAL_PROCESS,d)>=2)return 'a specialist refrigeration or coating process';
+ if(/\bconsultant\b|\badvis(?:or|ory)\b/i.test(ti)&&/\badvisory\b|\bconsultancy\b|\bconsulting (?:firm|practice|services|organi[sz]ation|team|business)\b|\b(?:our|its) clients\b/i.test(d))return 'a consultancy or advisory post';
+ const rel=/\b(\d{1,2})\s*\+?\s*years?\b[^.;]{0,25}\bin (?:the )?reliability (?:field|engineering|roles?|function|domain)\b/i.exec(d);if(rel&&Number(rel[1])>=5)return 'years asked in a dedicated reliability role';
  return null;
 }
 // Sana's place: an abroad posting whose city the rules do not know ('Pessione', 'Pantin', 'San José', 'Port Harcourt'). Read as abroad when the
@@ -1220,7 +1375,10 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const locLine=textLocation(p.description), lineIndiaRemote=indianPlace(locLine)&&/\b(?:remote|work from home|wfh)\b/i.test(locLine);   // jobs QA 3: 'Location: India (remote)'
  // Jobs QA 4: a remote posting whose title names India among its places ('Marketing Automation Manager - Canada, Spain, India') hires from India.
  const titleIndiaRemote=remote&&titlePlaces(p.title).some((x)=>indianPlace(x));
- const explicitIndiaRemote=lineIndiaRemote||titleIndiaRemote||india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(p.description))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
+ // Jobs QA 10 (HCLTech 'Program Manager', Noida: 'working with distributed teams as the delivery teams are fully remote'): remote words about other
+ // teams say nothing of this job.
+ const remoteDesc=String(p.description||'').replace(OTHER_TEAMS_REMOTE,' ');
+ const explicitIndiaRemote=lineIndiaRemote||titleIndiaRemote||india&&(remote||/\b(fully remote|100% remote|remote position|remote role)\b/i.test(remoteDesc))||/\b(remote (?:in|from|within|[-–]) india|india[- ]remote|hiring (?:remote workers|remotely) (?:in|from) india)\b/i.test(text);
  const blocked=/\b(us|usa|u\.s\.|united states|uk|united kingdom|canada|europe|eu|germany|australia)\s+(?:residents?\s+)?only\b|must (?:reside|be based|be located) in (?:the )?(?:us|usa|united states|uk|europe)|not hiring (?:in|from) india|excluding india|except india/i.test(text);
  const security=/\b(?:active |must (?:have|hold) )?(?:secret|top secret) clearance|ts\/sci|\bitar\b|\b(?:us|uk) citizen(?:ship)? (?:only|required)\b/i.test(text);
  // Jobs QA 7 (MSD Rahway: 'Relocation: VISA Sponsorship: Travel Requirements:'): an application-form label left empty offers nothing.
@@ -1238,7 +1396,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // The posting itself says it offers no visa route ("unable to provide visa sponsorship", "must be authorized to work in the US without current or future sponsorship").
  const noVisaWords=/\b(?:not|never|cannot|unable to)\b[^.!?]{0,60}\b(?:applicants?|candidates?|individuals?|anyone)\b[^.!?]{0,40}?\b(?:who|that)\s+(?:will\s+)?(?:now or in the future\s+)?(?:requires?|needs?)\s+(?:(?:visa|immigration|employment)\s+)?sponsorship|\b(?:unable|not able|cannot|can't|will not|won't|do not|does not|don't|doesn't|not)\b[^.!?]{0,40}\b(?:provide|offer|sponsor|support)\b[^.!?]{0,30}\b(?:visa|work (?:permit|authori[sz]ation)|sponsorship)|\bwithout (?:the )?(?:need for |requiring )?(?:current or future |future or current )?(?:visa )?sponsorship|\bno (?:visa )?sponsorship (?:is |will be )?(?:available|offered|provided)|\bsponsorship\b(?:\s*\([^)]{0,80}\))?\s+(?:is|will)\s+not\s+(?:be\s+)?(?:available|offered|provided)/i.test(text);   // jobs QA 8: 'U.S. work visa sponsorship (such as TN, O-1, H-1B, etc.) is not available'
  // Application-form style answers: 'Visa Sponsorship Available: No', 'Relocation eligible : No' (Black & Veatch, owner review 2026-11-12).
- const noVisaRoute=noVisaWords||/\b(?:visa\s+)?sponsorship(?:\s+(?:available|offered|provided))?\s*[:\-–]\s*no\b/i.test(text);
+ const noVisaRoute=noVisaWords||/\b(?:visa\s+)?sponsorship(?:\s+(?:available|offered|provided))?\s*(?:\?\s*[:\-–]?|[:\-–])\s*no\b/i.test(text);   // jobs QA 10: 'Is Sponsorship Available? No'
  const globalRemoteWords=/\bworldwide\W{0,6}remote|\bremote\W{0,6}worldwide|remote.?global|work from anywhere in the world/i.test(text);   // 'Remote - Worldwide' and 'Worldwide (Remote)' as well as 'worldwide remote'
  // Plan S5: plain worldwide wording in a remote posting's location ('Remote (Global)', 'Anywhere', 'Worldwide', 'Fully remote') is worldwide remote, unless
  // the location also names a place ('Anywhere in the US', 'Global - EMEA'). For Farhan, 'Remote - APAC' or 'Asia' with no country restriction counts too.
@@ -1251,7 +1409,8 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  // Plan S8: "work from home" in the description is not a remote signal by itself (a perk of an office job), and a description that sets hybrid work or
  // office days rules a remote-only candidate out. Only wording tied to THIS job counts (tenth-man review: a company's "hybrid working model" for its office
  // staff, or a customer's hybrid schedules, are not the job); a denied mention ("this is not a hybrid role") does not count.
- const officeDays=onsiteText||(()=>{const re=/\b(?:this|the)\s+(?:role|position|job)\s+is\s+hybrid\b|\bhybrid\s+(?:role|position|job)\b|\(hybrid\)|\b\d\s*(?:-\s*\d\s*)?days?\s+(?:a|per)\s+week\s+in\s+(?:the|our)\s+(?:\w+\s+)?office/gi;const d=String(p.description||'').toLowerCase();let m:RegExpExecArray|null;while((m=re.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|isn't|without)\b[^.!?]*$/.test(before))return true;}return false;})();
+ // Jobs QA 10 (Orange: 'possibility to combine work from office and home (hybrid ways of working)'): that wording sets hybrid work too.
+ const officeDays=onsiteText||(()=>{const re=/\b(?:this|the)\s+(?:role|position|job)\s+is\s+hybrid\b|\bhybrid\s+(?:role|position|job)\b|\(hybrid\)|\b\d\s*(?:-\s*\d\s*)?days?\s+(?:a|per)\s+week\s+in\s+(?:the|our)\s+(?:\w+\s+)?office|\bhybrid ways? of working\b|\bcombine work(?:ing)? from (?:the )?office and (?:from )?home\b/gi;const d=String(p.description||'').toLowerCase();let m:RegExpExecArray|null;while((m=re.exec(d))){const before=d.slice(Math.max(0,m.index-40),m.index);if(!/\b(?:no|not|never|isn't|without)\b[^.!?]*$/.test(before))return true;}return false;})();
  // Jobs QA 7: a posting open only to the employer's own staff is no job for either person.
  const internal=internalOnly(p.description);
  if(internal){eligibility='INELIGIBLE';reason='Internal posting: open only to the employer\'s own staff.';}
@@ -1271,9 +1430,13 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  }
  else if(candidate.id==='farhan_shaikh'){
   // Owner rules 2026-11-07: remote only (from anywhere; a role that is not remote is not shown), US-only remote is rejected.
-  const remoteSignal=remote||explicitIndiaRemote||globalRemote||/\b(fully remote|100% remote|remote[- ]first|remote position|remote role|work from anywhere)\b/i.test(p.description||'');
+  const remoteSignal=remote||explicitIndiaRemote||globalRemote||/\b(fully remote|100% remote|remote[- ]first|remote position|remote role|work from anywhere)\b/i.test(remoteDesc);
+  const lockedTo=remoteLockedElsewhere(p.description);   // jobs QA 10
   if(blocked){eligibility='INELIGIBLE';reason='Posting explicitly restricts work location outside India.';}
   else if(FARHAN_SKIP_EMPLOYER.test(p.company||'')){eligibility='INELIGIBLE';reason='Employer the candidate asked to skip.';}
+  // Jobs QA 10: the text locks the remote job to one other country ('This is a remote position open to candidates based in Mexico', 'can be worked
+  // from any location in the United States'), whatever India entry the place string or an aggregator's worldwide tag carries.
+  else if(lockedTo){eligibility='INELIGIBLE';reason=`Remote only for people based in ${lockedTo} (the posting says so), not from India.`;}
   // Jobs QA 7: the text keeps the job in the United States ('OR US Remote', 'Remote position within the United States', a US salary range or
   // benefits package, a 401(k)), whatever an aggregator's worldwide tag says. An employer's own place naming India wins (a job board's does not).
   else if(usRemoteByText(p.description)&&!lineIndiaRemote&&!titleIndiaRemote&&!(indianPlace(p.location)&&!AGGREGATOR_SOURCE.test(String(p.source||'').trim()))){eligibility='INELIGIBLE';reason='Remote within another country only (the posting\'s text says so), not from India.';}
@@ -1429,7 +1592,7 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const sanaSupervisorLow=sanaBuiltIn&&have>=7&&/\bsupervisors?\b/i.test(p.title||'')&&!/\b(?:engineer|manager)\b/i.test(p.title||'')&&need>0&&need<=4;
  if(sanaSupervisorLow)score=Math.min(score,UNDER_LEVEL_CAP);
  // Jobs QA 9: a diploma / ITI post is a technician's grade; experience asked 20+ years, or 8+ beyond the person's, is far above them (both capped).
- const sanaTechnician=sanaBuiltIn&&have>=5&&!otherProfession&&sanaTechnicianQualification(p.description);
+ const sanaTechnician=sanaBuiltIn&&have>=5&&!otherProfession&&(sanaTechnicianQualification(p.description)||sanaTechnicianGrade(p.description));   // jobs QA 10: an ITI route beside the engineer's
  if(sanaTechnician)score=Math.min(score,UNDER_LEVEL_CAP);
  const yearsFar=(farhanBuiltIn||sanaBuiltIn)?yearsFarAbove(p.description,have):0;
  if(yearsFar)score=Math.min(score,UNDER_LEVEL_CAP);
@@ -1497,12 +1660,27 @@ async function hash(value:string){return Array.from(new Uint8Array(await crypto.
 // parameters (utm_*, feedId, gh_src, source, src, ref, lever-*, fbclid, gclid, mc_*). Other parameters stay: on many career sites they ARE the job
 // ('?gh_jid=6173440004', 'default.aspx?c=apply&lJobID=560804'). The same reading as posting_url_key() in engine/dataset_discovery.py.
 export const TRACKING_PARAM=/^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|referrer|lever-[a-z_-]*|fbclid|gclid|mc_[a-z]+|trk|rss)$/i;
+// Jobs QA 10: the text and employer read for a same-text twin, the same reading as twin_text() / twin_employer() in engine/dataset_discovery.py:
+// the first TWIN_TEXT_CHARS characters (the shortlist pool stores 2000), entities decoded, tags dropped, lower case, words only. The employer is the
+// first word of its name ('the' aside): shared hiring-system hosts (jobs.lever.co, boards.greenhouse.io) serve many employers, while one employer
+// can be written two ways ('ENGIE', 'ENGIE Information Technologies SA').
+export const TWIN_TEXT_CHARS=2000;
+const ENTITY:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' ',rsquo:"'",lsquo:"'",rdquo:'"',ldquo:'"',ndash:'-',mdash:'-',hellip:'...'};
+export function twinText(description:string|null|undefined):string{
+ const raw=String(description||'').slice(0,TWIN_TEXT_CHARS).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(m,e:string)=>{const l=e.toLowerCase();if(l[0]==='#'){const n=l[1]==='x'?parseInt(l.slice(2),16):parseInt(l.slice(1),10);return Number.isFinite(n)?String.fromCodePoint(n):m;}return ENTITY[l]??m;});
+ return raw.replace(/<[^>]*>/g,' ').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+export function twinEmployer(company:string|null|undefined):string{const w=String(company||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(' ').filter((x)=>x&&x!=='the');return w[0]||'';}
+const ORACLE_CX_JOB=/^\/hcmUI\/CandidateExperience\/(?:[a-z]{2}(?:-[A-Za-z]{2})?\/)?(?:sites\/[^/]+\/)?(?:job|requisitions\/preview)\/(\d+)(?:\/.*)?$/i;
 export function postingUrlKey(url:string|null|undefined):string{
  let u:URL;try{u=new URL(String(url||'').trim());}catch{return '';}
  if(!/^https?:$/.test(u.protocol))return '';
  const keys:string[]=[];u.searchParams.forEach((_,k)=>keys.push(k));for(const k of keys)if(TRACKING_PARAM.test(k))u.searchParams.delete(k);
  u.searchParams.sort();const q=u.searchParams.toString();
- return u.hostname.toLowerCase().replace(/^www\./,'')+u.pathname.replace(/\/+$/,'')+(q?'?'+q:'')+(u.hash.length>1?u.hash:'');   // a fragment can be the job ('...oraclecloud.com/?site_number=CX#26081')
+ // Jobs QA 10 (DP World req 28315: '.../hcmUI/CandidateExperience/en/sites/CX_1/job/28315' and a job board's ':443/hcmUI/CandidateExperience/en/job/28315'):
+ // an Oracle Recruiting job is its host and requisition id, whatever the language and site parts (the port never counts: hostname has none).
+ const path=u.pathname.replace(ORACLE_CX_JOB,'/hcmUI/CandidateExperience/job/$1');
+ return u.hostname.toLowerCase().replace(/^www\./,'')+path.replace(/\/+$/,'')+(q?'?'+q:'')+(u.hash.length>1?u.hash:'');   // a fragment can be the job ('...oraclecloud.com/?site_number=CX#26081')
 }
 function canonical(url:string){const u=new URL(url),keys:string[]=[];u.searchParams.forEach((_,k)=>keys.push(k));for(const k of keys)if(/^(utm_|gh_src|source|ref|lever-source)/.test(k))u.searchParams.delete(k);u.hash='';u.pathname=u.pathname.replace(/\/$/,'');return u.toString().replace(/\/$/,'');}
 export async function persist(db:DB,s:Source,p:Posting,now=iso()) {

@@ -18,8 +18,9 @@ const evS = (title, description, o = {}) => evaluate(sana, { id: 'x', title, com
 const pad = (s) => s + ' We offer a competitive package, medical cover and annual leave in line with local law. Applicants should send a CV in English.';
 const PLANT = 'Plan preventive and breakdown maintenance of the boilers, compressors and pumps in our continuous-process plant, lead root cause analysis and run the utilities and spares.';
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v25)', () => {
-  assert.equal(RULES_MARKER, 'profile_v25');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v25, bumped again by later rule changes)', () => {
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 25, RULES_MARKER);
 });
 
 // ---- Farhan ----------------------------------------------------------------------------------------------------------------------------------------

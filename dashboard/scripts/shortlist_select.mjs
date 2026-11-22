@@ -14,7 +14,7 @@
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
 import { indianPlace as namesIndia, worldwidePlace } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India or a worldwide place (fitsStretchRule)
-import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey, AGGREGATOR_SOURCE, twinText, twinEmployer } from '../worker/discovery.ts';
 import { titleKey } from '../worker/twins.ts';
 import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
 
@@ -68,11 +68,24 @@ export const twinKey = (r) => {
 export function keepTwins(rows, now) {
   const better = (a, b) => rankKey(a, now) - rankKey(b, now) || Number(!!namesIndia(a.location)) - Number(!!namesIndia(b.location))
     || String(a.discovered_at || '').localeCompare(String(b.discovered_at || '')) || (String(a.job_id) < String(b.job_id) ? 1 : String(a.job_id) > String(b.job_id) ? -1 : 0);
-  const keep = (xs, keyOf) => { const best = new Map(); for (const r of xs) { const k = keyOf(r), cur = best.get(k); if (!cur || better(r, cur) > 0) best.set(k, r); } return xs.filter((r) => best.get(keyOf(r)) === r); };
+  // Jobs QA 10: of two copies of one posting (the same posting URL, or the same text on the same site), the employer's own copy stays, then as above.
+  const sameBetter = (a, b) => Number(employerCopy(a)) - Number(employerCopy(b)) || better(a, b);
+  const keep = (xs, keyOf, cmp = better) => { const best = new Map(); for (const r of xs) { const k = keyOf(r), cur = best.get(k); if (!cur || cmp(r, cur) > 0) best.set(k, r); } return xs.filter((r) => best.get(keyOf(r)) === r); };
   // Jobs QA 7: one posting stored twice under two sources, whose URLs differ only by tracking parameters ('?feedId=null&utm_source=J2WRSS'), and
   // whose employer is written two ways ('ENGIE', 'ENGIE INFORMATION TECHNOLOGIES SA'), is one job: one copy per posting URL first.
-  return keep(keep(rows, urlTwinKey), twinKey);
+  return keep(keep(keep(rows, urlTwinKey, sameBetter), textTwinKey, sameBetter), twinKey);
 }
+/** Jobs QA 10: the employer's own copy (its hiring system), not a job board's or an aggregator's. */
+export const employerCopy = (r) => r.provenance !== 'PUBLIC_FEED_UNVERIFIED' && !AGGREGATOR_SOURCE.test(String(r.source || '').trim());
+/** Jobs QA 10 (ENGIE 'Electrical Engineer', Jubail, posted twice on its own career site under two requisition ids with the same text): the site's
+ *  host, the employer (twinEmployer), the title (titleKey), the place and the text (twinText, 200 characters or more) are one posting. A row with a
+ *  short text is its own key. */
+export const TEXT_TWIN_MIN = 200;
+export const textTwinKey = (r) => {
+  const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description), who = twinEmployer(r.company);
+  const place = String(r.location || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();   // the same text in another city is the many-cities rule's (plan B3)
+  return host && who && text.length >= TEXT_TWIN_MIN ? `text|${host}|${who}|${titleKey(r.title)}|${place}|${text}` : `id:${r.job_id}`;
+};
 /** Jobs QA 7: the posting URL without tracking parameters or trailing slash (postingUrlKey), with the title as titleKey() reads it (a careers page
  *  URL shared by several jobs is not one job); a row with no URL is its own key. */
 export const urlTwinKey = (r) => { const u = postingUrlKey(r.url); return u ? `${u}|${titleKey(r.title)}` : `id:${r.job_id}`; };
@@ -81,6 +94,7 @@ export function twinGroups(rows) {
   const m = new Map();
   for (const r of rows || []) { const k = twinKey(r); m.set(k, [...(m.get(k) || []), r]); }
   for (const r of rows || []) { const k = 'url|' + urlTwinKey(r); m.set(k, [...(m.get(k) || []), r]); }   // jobs QA 7: the same posting URL
+  for (const r of rows || []) { const k = 'url|' + textTwinKey(r); m.set(k, [...(m.get(k) || []), r]); }   // jobs QA 10: the same text on the same site
   return new Map([...m].filter(([k, g]) => g.length > 1 && !(k.startsWith('url|') && [...m].some(([k2, g2]) => !k2.startsWith('url|') && g.every((x) => g2.includes(x))))));
 }
 export const isAuto = (r) => TIERS.includes(r.status) && String(r.reason || '').startsWith(MARK);
@@ -206,7 +220,7 @@ function pickFor(rows, held, ctx) {
   const hardOk = (r, tier, without = null) => {
     const k = twinKey(r);
     if (heldKeys.has(k) || heldKeys.has('url|' + urlTwinKey(r))) return false;
-    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && (twinKey(x) === k || urlTwinKey(x) === urlTwinKey(r))) return false;
+    for (const t of TIERS) for (const x of lists[t]) if (x !== without && x !== r && (twinKey(x) === k || urlTwinKey(x) === urlTwinKey(r) || textTwinKey(x) === textTwinKey(r))) return false;
     return (ctx.hard || HARD_RULES).every((h) => h(r, tier, lists, without, ctx));
   };
   const fill = (tier, candidates) => {

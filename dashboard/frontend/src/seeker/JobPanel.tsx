@@ -55,7 +55,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
 
   const url = postingUrl(job);
   const gaps = skillGaps(job.description || '', profileSkills);
-  const people = peopleSearchLinks(employerName(job.company));   // the stored name unless a known account name or a hiring-system suffix was cleaned
+  const people = peopleSearchLinks(employerName(job.company, job.original_posting_url || job.source_url));   // the stored name unless a known account name or a hiring-system suffix was cleaned
   const level = levelText(job);
   const hadNote = !!(job.application?.notes || '').trim();
 
@@ -70,7 +70,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
         <div className="p-4 space-y-5">
           <section>
             <h2 className="text-xl font-bold text-slate-900 leading-snug break-words">{job.title}</h2>
-            <p className="text-base text-slate-700 mt-1 break-words">{employerName(job.company)} · {placeText(job)}</p>
+            <p className="text-base text-slate-700 mt-1 break-words">{employerName(job.company, job.original_posting_url || job.source_url)} · {placeText(job)}</p>
             <p className="text-sm text-slate-600 mt-0.5">{foundText(job.discovered_at)}</p>
             {job.why_line && <p className="text-base text-slate-900 mt-2" data-testid="panel-why">{job.why_line}</p>}
             <div className="mt-3 flex flex-wrap gap-3">
@@ -126,7 +126,7 @@ export const JobPanel: React.FC<Props> = ({ job, profileSkills, onClose, onPosti
               )}
               {people.length > 0 && (
                 <div data-testid="people-links">
-                  <h4 className="font-semibold">Find people at {employerName(job.company)}</h4>
+                  <h4 className="font-semibold">Find people at {employerName(job.company, job.original_posting_url || job.source_url)}</h4>
                   <ul className="flex flex-wrap gap-3 mt-1">
                     {people.map((p) => <li key={p.label}><a className="underline min-h-[44px] inline-flex items-center" href={p.url} target="_blank" rel="noopener noreferrer" title={p.hint}>{p.label}</a></li>)}
                   </ul>
