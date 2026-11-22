@@ -1261,11 +1261,17 @@ export function farhanStretchOnlyQa10(title:string|null|undefined,description:st
 //   a remote job locked to one country other than India wins over an India entry in a multi-place string ('Remote - Bengaluru; Remote - Mexico'
 //   with 'This is a remote position open to candidates based in Mexico'; an aggregator's 'Anywhere in the World' for 'This is a fully remote
 //   opportunity and can be worked from any location in the United States').
-export const OTHER_TEAMS_REMOTE=/\b(?:the |our |their |its |client |customer )?(?:[\w-]+ ){0,2}(?:teams?|colleagues|staff|engineers|developers|workforce|employees|members|consultants)\s+(?:are|is|work|working|operate|that are|who are)\s+(?:fully |100% |mostly |largely |primarily |entirely )?remote(?:ly)?\b/gi;
-const COUNTRY_LOCK=/\b(?:position|role|job|opportunity|vacancy)\s+(?:is\s+)?open\s+(?:only\s+)?to\s+(?:candidates|applicants|people|individuals|those)\s+(?:who are\s+)?(?:based|located|residing|living)\s+in\s+(?:the\s+)?([A-Z][\w .,&-]{1,60}?)(?=[.;!)*]|\s*$|\s+(?:only|and|who)\b)|\bcan be (?:worked|performed|done) from any (?:location|where|state|city) (?:in|within|across) (?:the\s+)?([A-Z][\w .&-]{1,40}?)(?=[.;!)*,]|\s*$)|\bthis job is geo-?locked\b/gi;
+// Only wording that names another team is stripped ('the delivery teams are fully remote', 'our client teams work remotely', 'the engineering team is
+// remote'); a statement about the employer itself ('Our team is fully remote', 'our company is remote-first', 'our employees work remotely') stays.
+export const OTHER_TEAMS_REMOTE=/\b(?:the |our |their |its |all )?(?:delivery|client|customer|engineering|development|dev|support|sales|offshore|onshore|project|partner|vendor|other|distributed|global|product|implementation)\s+(?:teams?|engineers|developers|consultants|staff)\s+(?:are|is|work|working|operate|that are|who are)\s+(?:all\s+)?(?:fully |100% |mostly |largely |primarily |entirely )?remote(?:ly)?\b/gi;
+// The place is the whole list to the end of the sentence ('Mexico and India', 'the US, Canada, or India'); a list naming India, APAC, Asia, worldwide
+// or anywhere is no lock. 'This job is geo-locked' counts only with its place ('geo-locked to the United States').
+const LOCK_PLACE=String.raw`((?:[^.;!?]|\.(?=\S)|(?<=\b[A-Z])\.(?=\s+(?:and|or)\b|,)){2,80})`;   // 'the U.S. and Canada'
+const COUNTRY_LOCK=new RegExp(String.raw`\b(?:position|role|job|opportunity|vacancy)\s+(?:is\s+)?open\s+(?:only\s+)?to\s+(?:candidates|applicants|people|individuals|those)\s+(?:who are\s+)?(?:based|located|residing|living)\s+in\s+(?:the\s+)?${LOCK_PLACE}|\bcan be (?:worked|performed|done) from any (?:location|where|state|city) (?:in|within|across) (?:the\s+)?${LOCK_PLACE}|\bthis job is geo-?locked\s+(?:to|in)\s+(?:the\s+)?${LOCK_PLACE}`,'gi');
+const LOCK_OPEN=/\b(?:india|indian|apac|asia|asia[- ]pacific|anywhere|worldwide|world|globe|global(?:ly)?)\b/i;
 export function remoteLockedElsewhere(description:string|null|undefined):string|null{
  const d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');COUNTRY_LOCK.lastIndex=0;let m:RegExpExecArray|null;
- while((m=COUNTRY_LOCK.exec(d))){if(deniedBefore(d,m.index))continue;const place=(m[1]||m[2]||'another country').trim();if(/\b(?:india|apac|asia|anywhere|worldwide|world|globe)\b/i.test(place))continue;return place;}
+ while((m=COUNTRY_LOCK.exec(d))){if(deniedBefore(d,m.index))continue;const place=String(m[1]||m[2]||m[3]||'').replace(/\s+only\s*$/i,'').trim();if(!place||LOCK_OPEN.test(place))continue;return place;}
  return null;
 }
 // Sana, another profession (capped like an avoid-list title):
@@ -1279,7 +1285,8 @@ export function remoteLockedElsewhere(description:string|null|undefined):string|
 //   reliability in a product-testing or validation lab (shaker rigs, vibration test fixtures, thermal chambers, SOLIDWORKS: three kinds);
 //   investment and technical advisory consulting (financial modelling, asset valuation, lender's or independent engineering reviews, due diligence,
 //   investment decisions: three kinds).
-const CI_DEGREE=/\b(?:degree|diploma|b\.? ?e\b|b\.? ?tech\b|bachelor'?s?)\.?\s*(?:\/\s*(?:b\.? ?e\b|b\.? ?tech\b)\.?\s*)?(?:in\s+)?(?:C ?& ?I\b|control (?:and|&) instrumentation|instrumentation(?: (?:and|&) control)?(?: engineering)?|electronics (?:and|&) communication|E ?& ?C\b|ECE\b)/i;
+const DEG_ABBR=String.raw`(?:B\.\s?E\b|BE\b|B\.?\s?[Tt]ech\b|B\.\s?Sc\b|BSc\b)`;   // case-sensitive: the English word 'be' is no degree
+const CI_DEGREE=new RegExp(String.raw`\b(?:[Dd]egree|[Dd]iploma|[Bb]achelor of [Ee]ngineering|[Bb]achelor'?s?|${DEG_ABBR})\.?\s*(?:\/\s*${DEG_ABBR}\.?\s*)?(?:in\s+)?(?:C ?& ?I\b|[Cc]ontrol (?:and|&) [Ii]nstrumentation|[Ii]nstrumentation(?: (?:and|&) [Cc]ontrol)?(?: [Ee]ngineering)?|INSTRUMENTATION|[Ee]lectronics (?:and|&) [Cc]ommunication|E ?& ?C\b|ECE\b)`);
 const CI_LOGIC=/\b(?:DCS|PLC|SCADA)(?:\s*\/\s*(?:DCS|PLC|SCADA))?\s+logic\b|\b(?:download|upload)\w*\b[^.;]{0,40}\bprogram\b[^.;]{0,20}\b(?:DCS|PLC)\b|\bprogramming (?:of |on )?(?:the )?(?:DCS|PLC)\b/i;
 const VENDOR_BUILD=/\b(?:development|delivery|building) of\b(?:[^.;]|\.(?=\S)){0,80}\b(?:solutions?|platforms?|products?|software)\b/i, VENDOR_AI=/\bGen ?AI\b|\bAI\s*\/\s*ML\b|\bAI\/\s*GenAI\b|\bsoftware know-how\b/i;
 const SMT_WORK=[/\bSMT\b/,/\breflow\b/i,/\bAOI\b/,/\bPCBA?s?\b/,/\bpick[- ]and[- ]place\b/i,/\bsolder paste\b|\bwave soldering\b/i,/\bSPI\b/];
@@ -1298,7 +1305,7 @@ export function sanaOtherProfessionQa10(title:string|null|undefined,description:
 // years' experience; OR Diploma engineer with 3–5 years' experience; OR ITI candidate with 8–10 years'), or the graduate route asks at most 3 years
 // with a diploma route offered beside it.
 const ITI_ROUTE=/\b(?:or|\/)\s+(?:relevant\s+)?ITI\b(?:\s+(?:candidates?|holders?|qualified))?[^.;]{0,30}\bwith\b|\bITI (?:candidates?|holders?)\s+with\s+\d/i;
-const GRADUATE_FEW=/\b(?:graduate|degree|bachelor'?s?|B\.?\s?Tech|B\.?\s?E)\b\.?(?:[^.;]|\.(?=\S)){0,60}?\bwith\s+(\d{1,2})\s*(?:(?:-|–|to)\s*(\d{1,2})\s*)?\+?\s*years?\b/i;
+const GRADUATE_FEW=new RegExp(String.raw`\b(?:[Gg]raduate|GRADUATE|[Dd]egree|[Bb]achelor'?s?|${DEG_ABBR})\.?(?:[^.;]|\.(?=\S)){0,60}?\b[Ww]ith\s+(\d{1,2})\s*(?:(?:-|–|to)\s*(\d{1,2})\s*)?\+?\s*[Yy](?:ears?|rs?)\b`);
 export function sanaTechnicianGrade(description:string|null|undefined):boolean{
  const d=String(description||'').replace(/\s+/g,' ');
  if(ITI_ROUTE.test(d))return true;
@@ -1315,7 +1322,7 @@ export function sanaTechnicianGrade(description:string|null|undefined):boolean{
 //   years asked in a dedicated reliability role ('Overall 10 years of experience with 5 years in Reliability field').
 const EXEC_GRADE_TEXT=/\b(?:job description|position|designation|role|job title)\s*[:\-–]\s*(?:[\w&]+\s+){0,3}?(?:sr\.?\s+|senior\s+)?executive\b/i;
 const FEW_YEARS_MIN=/\bminimum\s*(?:of\s*)?:?\s*([1-4])\s*\+?\s*years?\b|\b([1-4])\s*(?:-|–|to)\s*\d{1,2}\s*\+?\s*years?\b|\b([1-4])\s*\+\s*years?\b/i;
-const DIPLOMA_ACCEPTED=/\bdiploma\s*(?:\/|or)\s*(?:a\s+)?(?:bachelor|degree|b\.?\s?e\b|b\.?\s?tech)/i;
+const DIPLOMA_ACCEPTED=new RegExp(String.raw`\b[Dd]iploma\s*(?:\/|or)\s*(?:a\s+)?(?:[Bb]achelor|[Dd]egree|${DEG_ABBR})`);
 const FABRICATION=[/\bwelding\b/i,/\brolling\b/i,/\bfit-?up\b/i,/\bblasting\b/i,/\bpainting\b/i,/\bfabrication\b/i];
 const CAMPUS_SERVICES=[/\belevators?\b|\blifts\b/i,/\bfire (?:& life safety|and life safety|alarm|fighting|detection|systems?)\b/i,/\bBMS\b/,/\bdata cent(?:er|re)s?\b/i,/\bIFMS\b|\bintegrated facilit/i];
 const SPECIAL_PROCESS=[/\bultra-low temperature\b|\bcryogenic\b/i,/\bcascade refrigeration\b|\brefrigeration systems? operating below\b/i,/\bcoating (?:processes|systems|plants?|machines?)\b/i,/\bvacuum (?:systems|technology|pumps)\b/i];
@@ -1653,6 +1660,17 @@ async function hash(value:string){return Array.from(new Uint8Array(await crypto.
 // parameters (utm_*, feedId, gh_src, source, src, ref, lever-*, fbclid, gclid, mc_*). Other parameters stay: on many career sites they ARE the job
 // ('?gh_jid=6173440004', 'default.aspx?c=apply&lJobID=560804'). The same reading as posting_url_key() in engine/dataset_discovery.py.
 export const TRACKING_PARAM=/^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|referrer|lever-[a-z_-]*|fbclid|gclid|mc_[a-z]+|trk|rss)$/i;
+// Jobs QA 10: the text and employer read for a same-text twin, the same reading as twin_text() / twin_employer() in engine/dataset_discovery.py:
+// the first TWIN_TEXT_CHARS characters (the shortlist pool stores 2000), entities decoded, tags dropped, lower case, words only. The employer is the
+// first word of its name ('the' aside): shared hiring-system hosts (jobs.lever.co, boards.greenhouse.io) serve many employers, while one employer
+// can be written two ways ('ENGIE', 'ENGIE Information Technologies SA').
+export const TWIN_TEXT_CHARS=2000;
+const ENTITY:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' ',rsquo:"'",lsquo:"'",rdquo:'"',ldquo:'"',ndash:'-',mdash:'-',hellip:'...'};
+export function twinText(description:string|null|undefined):string{
+ const raw=String(description||'').slice(0,TWIN_TEXT_CHARS).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(m,e:string)=>{const l=e.toLowerCase();if(l[0]==='#'){const n=l[1]==='x'?parseInt(l.slice(2),16):parseInt(l.slice(1),10);return Number.isFinite(n)?String.fromCodePoint(n):m;}return ENTITY[l]??m;});
+ return raw.replace(/<[^>]*>/g,' ').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+export function twinEmployer(company:string|null|undefined):string{const w=String(company||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(' ').filter((x)=>x&&x!=='the');return w[0]||'';}
 const ORACLE_CX_JOB=/^\/hcmUI\/CandidateExperience\/(?:[a-z]{2}(?:-[A-Za-z]{2})?\/)?(?:sites\/[^/]+\/)?(?:job|requisitions\/preview)\/(\d+)(?:\/.*)?$/i;
 export function postingUrlKey(url:string|null|undefined):string{
  let u:URL;try{u=new URL(String(url||'').trim());}catch{return '';}

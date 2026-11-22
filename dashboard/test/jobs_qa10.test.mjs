@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluate, languageHardRequired, farhanCrmDevelopment, farhanEngineeringField, farhanStretchOnly, farhanOtherFieldQa10, farhanSalesforceCode,
   farhanStretchOnlyQa10, remoteLockedElsewhere, sanaOtherProfession, sanaOtherProfessionQa10, sanaTechnicianGrade, sanaStretchOnly, sanaStretchOnlyQa10,
-  postingUrlKey, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP, LANGUAGE_HARD_GAP, RULES_MARKER } from '../worker/discovery.ts';
+  postingUrlKey, twinText, twinEmployer, OTHER_TEAMS_REMOTE, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, VISA_UNLIKELY_CAP, LANGUAGE_HARD_GAP, RULES_MARKER } from '../worker/discovery.ts';
 import { keepTwins, textTwinKey, urlTwinKey, employerCopy } from '../scripts/shortlist_select.mjs';
 import { employerName } from '../frontend/src/seeker/format.ts';
 
@@ -57,6 +57,16 @@ test('Farhan 3: remote words about other teams do not make an office job remote'
   assert.equal(e.eligibility, 'INELIGIBLE', e.reason);
   const ok = evF('Program Manager', OPS + 'This is a fully remote role.', { location: 'IN', remote: false, source: 'successfactors' });
   assert.equal(ok.eligibility, 'ELIGIBLE', 'a remote statement for the role itself still counts');
+  // review of #247: the employer's own remote statement is about this job too; only another team's is stripped
+  for (const own of ['Our team is fully remote.', 'Our company is fully remote.', 'Our employees work remotely.', 'The team is 100% remote.'])
+    assert.equal(evF('Program Manager', OPS + own + ' This is a fully remote role.', { location: 'IN', remote: false, source: 'successfactors' }).eligibility, 'ELIGIBLE', own);
+  const strip = (t) => t.replace(OTHER_TEAMS_REMOTE, '#');
+  assert.equal(strip('Our team is fully remote.'), 'Our team is fully remote.');
+  assert.equal(strip('Our company is remote-first.'), 'Our company is remote-first.');
+  assert.equal(strip('as the delivery teams are fully remote.'), 'as #.');
+  assert.equal(strip('Our client teams work remotely.'), '#.');
+  assert.equal(strip('The engineering team is remote.'), '#.');
+  assert.equal(evF('Program Manager', OPS + 'Our team is fully remote.', { location: 'IN', remote: false, source: 'successfactors' }).eligibility, 'ELIGIBLE');
 });
 
 test('Farhan 4: a support or solutions title asking infrastructure or security engineering is another field', () => {
@@ -90,6 +100,17 @@ test('Farhan 6: a remote job locked to one other country beats an India entry or
   assert.equal(remoteLockedElsewhere('This is a fully remote opportunity and can be worked from any location in the United States.'), 'United States');
   const w = evF('Senior GTM Engineer', OPS + 'This is a fully remote opportunity and can be worked from any location in the United States.', { location: 'Anywhere in the World', source: 'weworkremotely', board: true });
   assert.equal(w.eligibility, 'INELIGIBLE', w.reason);
+});
+test('Farhan 6 (review of #247): a country list naming India anywhere is no lock, and "geo-locked" needs its place', () => {
+  assert.equal(remoteLockedElsewhere('This role is open to candidates based in Mexico and India.'), null);
+  assert.equal(remoteLockedElsewhere('It can be worked from any location in the US, Canada, or India.'), null);
+  assert.equal(remoteLockedElsewhere('It can be worked from any location in the US, Canada, or APAC.'), null);
+  assert.equal(remoteLockedElsewhere('This job is geo-locked to India.'), null);
+  assert.equal(remoteLockedElsewhere('This job is geo-locked.'), null, 'no place: nothing to read');
+  assert.equal(remoteLockedElsewhere('This job is geo-locked to the United States.'), 'United States');
+  assert.equal(remoteLockedElsewhere('This role is open to candidates based in Mexico and Brazil.'), 'Mexico and Brazil');
+  assert.equal(remoteLockedElsewhere('It can be worked from any location in the U.S. and Canada.'), 'U.S. and Canada');
+  assert.equal(evF('Technical Account Manager', OPS + 'This job is geo-locked to India.').eligibility, 'ELIGIBLE');
 });
 test('Farhan 6 near misses: open to candidates in India, or several countries with India', () => {
   assert.equal(remoteLockedElsewhere('This is a remote position open to candidates based in India.'), null);
@@ -174,6 +195,9 @@ test('Sana 1 near misses: an instrument commissioning title, an E&I title, or a 
   assert.equal(sanaOtherProfessionQa10('Instrument Engineer (Pre Commissioning Field)', PLANT + 'B.E. Instrumentation.'), null);
   assert.equal(sanaOtherProfessionQa10('Electrical & Instrumentation Manager', PLANT + 'B.E. Instrumentation.'), null);
   assert.equal(sanaOtherProfessionQa10('Plant Engineer', PLANT + 'Operate the units from the DCS.'), null);
+  // review of #247: the English word 'be' is no degree
+  assert.equal(sanaOtherProfessionQa10('Instrumentation Lead', PLANT + 'You will be instrumentation-minded and coordinate with vendors.'), null);
+  assert.equal(sanaOtherProfessionQa10('Instrumentation Lead', PLANT + 'Should be in instrumentation maintenance for 10 years.'), null);
 });
 
 test('Sana 2: a technician grade under an engineer title (an ITI route beside the engineer\'s, or a graduate asked 2-3 years) is below her level', () => {
@@ -184,6 +208,10 @@ test('Sana 2: a technician grade under an engineer title (an ITI route beside th
 });
 test('Sana 2 near misses: a graduate asked 8+ years beside a diploma route, or ITI fitters she would lead', () => {
   assert.equal(sanaTechnicianGrade(PLANT + 'B.E. with 8+ years; or a Diploma with 12+ years.'), false);
+  // review of #247: the English word 'be' is no B.E. degree
+  assert.equal(sanaTechnicianGrade('Degree or diploma in mechanical engineering. You should be comfortable with 2 years of shift work.'), false);
+  assert.equal(sanaTechnicianGrade('You will be working with 2 years of data; or diploma holders may apply.'), false);
+  assert.equal(sanaTechnicianGrade("BE Electrical with 2-3 years' experience; OR Diploma engineer with 5 years."), true, 'BE in capitals is the degree');
   assert.equal(sanaTechnicianGrade(PLANT + 'B.E. Mechanical with 9 years. Lead a team of ITI fitters and technicians.'), false);
 });
 
@@ -265,6 +293,17 @@ test('Sana 9 (with the closed-page fact): the same text twice on one employer si
   assert.notEqual(textTwinKey(s), textTwinKey({ ...t, location: 'Yanbu, SA' }), 'another city: the many-cities rule decides');
   assert.notEqual(textTwinKey(s), textTwinKey({ ...t, description: PLANT.repeat(2) + 'Different duties.' }));
   assert.match(textTwinKey({ ...s, description: 'short' }), /^id:/, 'a short text is never merged');
+  // review of #247: a shared hiring-system host serves many employers; the employer is part of the key
+  const lv = (id, company) => row(id, { url: `https://jobs.lever.co/${company.toLowerCase()}/${id}`, company, title: 'Implementation Manager', location: 'Remote - India' });
+  assert.notEqual(textTwinKey(lv('a1', 'Acme')), textTwinKey(lv('b2', 'Globex')), 'two employers on jobs.lever.co with the same template text');
+  assert.equal(keepTwins([lv('a1', 'Acme'), lv('b2', 'Globex')], NOW).length, 2);
+});
+test('one text reading for twins (review of #247): entities decoded, tags dropped, first 2000 characters; the same output as twin_text() in the engine', () => {
+  assert.equal(twinText('<p>Plan &amp; run the plant&#39;s boilers &rsquo;&#x41;</p> CAPEX'), 'plan run the plant s boilers a capex');
+  assert.equal(twinText('Plan &amp; run'), twinText('Plan & run'));
+  assert.equal(twinText('x'.repeat(2000) + ' tail'), 'x'.repeat(2000), 'cut at 2000 characters before reading, as the pool stores it');
+  assert.equal(twinEmployer('The Convergence Foundation'), 'convergence');
+  assert.equal(twinEmployer('ENGIE Information Technologies SA'), twinEmployer('ENGIE'));
 });
 
 // ---- Display -------------------------------------------------------------------------------------------------------------------------------------
@@ -327,11 +366,19 @@ const RIGHT = [
   ["sana_", "Wort", "Maintenance Engineer", "Riyadh, Riyadh - SAU (Saudi Arabia)", false, false, "Here is a glimpse of what you'll do… General Task Management Perform preventive, predictive, and corrective maintenance for all machines and equipment (hands-on Train, mentor, and support junior technicians and apprentices. Spare parts management, communication with OEM and suppliers technically a hands-on People Management Supervise and guide maintenance technicians and contractors during maintenance and repair work. Minimum 3-5 years of experience in industrial or factory maintenance."],
   ["sana_", "Wort", "Shift Engineer | KSA Technical Recruitment Campaign", "Saudi Arabia", false, false, "Job Specifications Minimum Education Bachelor's degree in Engineering. Minimum Experience Minimum 8 years of relevant experience in water desalination and/or power generation plants. At least 2 years of experience in a supervisory role."],
   ["sana_", "Wort", "Reliability Engineer ( Mechanical)", "GJ, India", false, true, ""],
-  ["sana_", "Wort", "Utilities Engineer", "", false, false, "Review, update, and maintain P&ID drawings, equipment records, operating and maintenance procedures, service reports, inspection records, calibration certificates, statutory documentation, and project files for completeness and accuracy."],
   ["sana_", "Wort", "AM/DM- Utilities Automation", "MH, India", false, true, "8 to 10 years of experience in Automation, Controls Engineering, Industrial Automation, Manufacturing Automation, or Process Control within a manufacturing environment. 5 .Hands-on experience in programming, commissioning, troubleshooting, maintenance, and optimization of automation and control systems. Bachelor's Degree in Electrical Engineering, Electronics Engineering, Instrumentation Engineering, Mechatronics Engineering, Production Engineering, Mechanical Engineering, or a related discipline from a recognized university."],
   ["sana_", "Wort", "Plant Maintenance Engineer", "Arakkonam", false, false, ""],
   ["sana_", "Wort", "Deputy Manager Safety & Sustainability", "Nagpur, Nagpur Plant, IN", false, false, ""],
 ];
+// Decided after review (22 Nov): the QA 8 note keeping Koch's 'Utilities Engineer' on Worth a try is superseded. Once its empty place is filled
+// from the employer's page (engine/liveness.py), the abroad-without-visa cap of the QA 6 rulings hides it, so it is not in the RIGHT-kept list.
+test('Koch-style US plant job: listed while the place is empty, hidden by the abroad-without-visa cap once the place is filled', () => {
+  const D = PLANT + PLANT + 'Review, update, and maintain P&ID drawings and equipment records.';
+  assert.equal(listedS(evS('Utilities Engineer', D, { location: '', source: 'avature' })), true);
+  const e = evS('Utilities Engineer', D, { location: 'Lincoln, Nebraska (United States)', source: 'avature' });
+  assert.ok(e.score <= VISA_UNLIKELY_CAP, `${e.score}`);
+  assert.equal(listedS(e), false);
+});
 test('RIGHT jobs: no new rule reads them, and each stays listed (Best matches stay Best)', () => {
   const bad = [];
   for (const [who, list, title, location, remote, board, lines] of RIGHT) {

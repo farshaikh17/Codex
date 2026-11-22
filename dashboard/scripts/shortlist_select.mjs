@@ -14,7 +14,7 @@
 // changes nothing. With no pool file nothing is written, so the lists stay as they are.
 import fs from 'node:fs';
 import { indianPlace as namesIndia, worldwidePlace } from '../worker/discovery.ts';   // an unconfirmed Farhan row needs a place naming India or a worldwide place (fitsStretchRule)
-import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey, AGGREGATOR_SOURCE } from '../worker/discovery.ts';
+import { companyKey, familyOf, placeBand, remoteFromStored, listedOnlyGulf, LISTED_DAYS, postingUrlKey, AGGREGATOR_SOURCE, twinText, twinEmployer } from '../worker/discovery.ts';
 import { titleKey } from '../worker/twins.ts';
 import { isReposterName } from '../shared/reposters.ts';   // one reposter list with the seeker page and engine/reposters.py
 
@@ -78,13 +78,13 @@ export function keepTwins(rows, now) {
 /** Jobs QA 10: the employer's own copy (its hiring system), not a job board's or an aggregator's. */
 export const employerCopy = (r) => r.provenance !== 'PUBLIC_FEED_UNVERIFIED' && !AGGREGATOR_SOURCE.test(String(r.source || '').trim());
 /** Jobs QA 10 (ENGIE 'Electrical Engineer', Jubail, posted twice on its own career site under two requisition ids with the same text): the site's
- *  host, the title (titleKey), the place and the text (200 characters or more, as stored in the pool) are one posting. A row with a short text is its
- *  own key. */
+ *  host, the employer (twinEmployer), the title (titleKey), the place and the text (twinText, 200 characters or more) are one posting. A row with a
+ *  short text is its own key. */
 export const TEXT_TWIN_MIN = 200;
 export const textTwinKey = (r) => {
-  const host = postingUrlKey(r.url).split('/')[0], text = String(r.description || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+  const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description), who = twinEmployer(r.company);
   const place = String(r.location || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();   // the same text in another city is the many-cities rule's (plan B3)
-  return host && text.length >= TEXT_TWIN_MIN ? `text|${host}|${titleKey(r.title)}|${place}|${text}` : `id:${r.job_id}`;
+  return host && who && text.length >= TEXT_TWIN_MIN ? `text|${host}|${who}|${titleKey(r.title)}|${place}|${text}` : `id:${r.job_id}`;
 };
 /** Jobs QA 7: the posting URL without tracking parameters or trailing slash (postingUrlKey), with the title as titleKey() reads it (a careers page
  *  URL shared by several jobs is not one job); a row with no URL is its own key. */
