@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "f98bf92200290af9313899dde568186a3d920726dff4747d33a10603a096d18b",
+   "kind": "content_changed",
+   "to_hash": "c1ce3edb9190d8a411e1df788efa1c8ccb73965e4e7e71b60312b02d361b920a"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nThe Customer Success Engineer (CSE) role provides deep subject matter expertise on GitLab technical and product solutions and best practices. CSEs provide customers with technical guidance, go in-depth on use case implementation, and demonstrate the value of GitLab product capabilities.\n\nWhat You’ll Do\n\nEngage with customers, via Zoom calls and emails, in a technical consultancy and advisor role during the post-sales process while providing technical and solution guidance\n\nProviding technical, architectural and best practice guidance\n\nDrive the achievement of measurable value (business outcomes), leading to product adoption, renewal, and expansion\n\nAlign with Account Executives and Renewals Managers to provide customer-facing subject matter expertise based on the customer’s business objectives\n\nFocus on solution-based programs that are customized to fit an individual customer’s needs\n\nDevelop and collaborate on customer workshops, demos, and other enablement\n\nMaintain specialty competency in one or more technologies related to GitLab’s market focus through activities such as training, certification and creation of working examples for reuse internally and by customers and partners\n\nContinuously improve professional skills with a focus on personal mastery and team learning through activities such as training, reading and seeking mentorship from others\n\nContributes to our docs, YouTube channel, and other enablement programs such as the Digital Journey\n\nWhat You’ll Bring\n\nExperience with a GitLab use case (SCM, CI, CD, DevSecOps, Agile Planning) to provide in-depth customer guidance and enablement\n\nProficiency using DevSecOps tools or highly technical tooling in adjacent fields\n\nSpecialize in GitLab use cases to provide in-depth guidance and enablement to customers of all sizes, including large enterprise organizations\n\nTechnical experience in development or systems engineering\n\nDemonstrated capacity to clearly and concisely communicate about complex technical, architectural, and/or organizational problems and propose thorough iterative solutions\n\nHave demonstrated the ability to become a trusted technical advisor to customer and business leaders\n\nExceptional verbal, presentation, and written communication skills\n\nExcellent time management and ability to work with several different teams at any given time\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -15,20 +25,16 @@
     "text": "Remote, Israel"
    },
    {
-    "source": "offices.location",
-    "text": "Turkey"
-   },
-   {
     "source": "offices.name",
-    "text": "EMEA"
+    "text": "Israel"
    }
   ],
   "published": "2026-11-15T03:00:12-05:00",
   "title": "Customer Success Engineer, EMEA",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-15T08:04:18.357584+00:00",
- "content_hash": "f98bf92200290af9313899dde568186a3d920726dff4747d33a10603a096d18b",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "c1ce3edb9190d8a411e1df788efa1c8ccb73965e4e7e71b60312b02d361b920a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -47,23 +53,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-11-15T08:04:18.357584+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8937825002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.location",
-      "quote": "Turkey",
-      "retrieved_at": "2026-11-15T08:04:18.357584+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8937825002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "EMEA",
-      "retrieved_at": "2026-11-15T08:04:18.357584+00:00",
+      "quote": "Israel",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8937825002"
      }
@@ -76,7 +74,7 @@
       "interpretation": null,
       "method": "description_section:What You’ll Bring",
       "quote": "Experience with a GitLab use case (SCM, CI, CD, DevSecOps, Agile Planning) to provide in-depth customer guidance and enablement\nProficiency using DevSecOps tools or highly technical tooling in adjacent fields\nSpecialize in GitLab use cases to provide in-depth guidance and enablement to customers of all sizes, including large enterprise organizations\nTechnical experience in development or systems engineering\nDemonstrated capacity to clearly and concisely communicate about complex technical, architectural, and/or organizational problems and propose thorough iterative solutions\nHave demonstrated the ability to become a trusted technical advisor to customer and business leaders\nExceptional verbal, presentation, and written communication skills\nExcellent time management and ability to work with several different teams at any given time",
-      "retrieved_at": "2026-11-15T08:04:18.357584+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8937825002"
      }
@@ -93,7 +91,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Israel",
-      "retrieved_at": "2026-11-15T08:04:18.357584+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8937825002"
      }

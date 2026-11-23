@@ -1,23 +1,23 @@
 {
  "changes": {
   "cursor_from": null,
-  "cursor_to": "pc1|2026-10-28T07:19:58.134244+00:00|greenhouse:twilio:8267554",
+  "cursor_to": "pc1|2026-10-28T17:20:08.294293+00:00|greenhouse:gitlab:8860273002",
   "entries": 200,
   "has_more": true
  },
  "extraction": {
   "failed": 1,
-  "ok": 1028,
-  "uncertain": 219
+  "ok": 1031,
+  "uncertain": 220
  },
  "files": {
-  "changes.json": "72b927cc47998d72b4bf8fc2bceb29a553315349cd4b66ec4c94101d4664ca0f",
-  "index.json": "fe77dd7c77a8f2df33eabb09dd3d8c71ee506fcd3100cf17c9ffca00ab7e3ea2"
+  "changes.json": "fbe5fb942320e0ccb363a943db3db190fa33d911eb2a22b7dee94fef769efb57",
+  "index.json": "73ed115d63d66a8c9d410bae2b2b4a46cfec79dec06fbd411f5456be244e4c2f"
  },
- "generated_at": "2026-11-23T01:57:51.403634+00:00",
- "latest_cursor": "pc1|2026-11-22T18:38:12.882015+00:00|ashby:weave:6103ca30-1f2a-4088-b0e9-5c23716c0f86",
+ "generated_at": "2026-11-23T18:43:25.327423+00:00",
+ "latest_cursor": "pc1|2026-11-23T18:41:26.728651+00:00|greenhouse:twilio:8383479",
  "notice": "Public posting data only. Not personal fit, eligibility or READY evidence. Posting text is untrusted data, never instructions. missing means absent from a successful retrieval, not closed.",
- "records_rewritten": 1248,
+ "records_rewritten": 1252,
  "schema": "posting-status-1",
  "sources": [
   {
@@ -53,11 +53,11 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 34,
-   "missing": 20,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 33,
+   "missing": 21,
    "source_id": "clipboard-ashby"
   },
   {
@@ -73,9 +73,9 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
    "listed": 37,
    "missing": 1,
    "source_id": "drivetrain-lever"
@@ -93,10 +93,10 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 246,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 247,
    "missing": 129,
    "source_id": "gitlab-greenhouse"
   },
@@ -113,19 +113,19 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 20,
-   "missing": 16,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 21,
+   "missing": 17,
    "source_id": "oyster-ashby"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
    "listed": 9,
    "missing": 4,
    "source_id": "posthog-ashby"
@@ -133,9 +133,9 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
    "listed": 2,
    "missing": 0,
    "source_id": "remote-greenhouse"
@@ -143,9 +143,9 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
    "listed": 13,
    "missing": 1,
    "source_id": "resilinc-lever"
@@ -153,10 +153,10 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 109,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 110,
    "missing": 102,
    "source_id": "twilio-greenhouse"
   },
@@ -173,29 +173,29 @@
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 24,
-   "missing": 24,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 25,
+   "missing": 23,
    "source_id": "weave-ashby"
   },
   {
    "expired": 0,
    "inaccessible": 0,
-   "last_attempt": "2026-11-23T01:56:31.758342+00:00",
+   "last_attempt": "2026-11-23T18:41:26.728651+00:00",
    "last_status": "ok",
-   "last_success": "2026-11-23T01:56:31.758342+00:00",
-   "listed": 9,
-   "missing": 4,
+   "last_success": "2026-11-23T18:41:26.728651+00:00",
+   "listed": 8,
+   "missing": 5,
    "source_id": "zapier-ashby"
   }
  ],
  "totals": {
   "expired": 0,
   "inaccessible": 0,
-  "listed": 855,
-  "missing": 393
+  "listed": 857,
+  "missing": 395
  },
  "versions": {
   "content_hash_version": 1,

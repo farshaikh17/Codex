@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "f3cfd813df97367f0081989b6a07827e4e56762af72b752569408cb20a0c1d48",
+   "kind": "content_changed",
+   "to_hash": "600f77f2d74d3a2dd3a80d800a43eb61120e56cef609a7dee3ac1c5d0f6a89d2"
+  }
+ ],
  "content": {
   "compensation_raw": "[{\"min_cents\": 20320000, \"max_cents\": 34560000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}]",
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn Overview of This Role\n\nAs Director of Product, SaaS Platforms, you'll own the product direction and business outcomes for GitLab's software as a service (SaaS) environments: GitLab.com, our multi-tenant platform, and GitLab Dedicated, our single-tenant offering. You'll connect reliability, scalability, and operability with the commercial decisions that make these platforms sustainable businesses.\n\nYour scope spans both platforms, not a single feature roadmap. On GitLab.com, you'll guide growth through better customer isolation and additional cells, alongside rate limits, usage limits, and monetization. On GitLab Dedicated, you'll help scale it to hundreds of customers through automation, customer self-service, and closer alignment with GitLab's latest releases. You'll balance customer needs with operating costs and gross margin.\n\nThis director-level role starts as an individual contributor. It's remote and open to candidates based in the United States or Canada, with no specific time zone preference.\n\nWhat You'll Do\n\nSet the product strategy and roadmap across GitLab.com and GitLab Dedicated, connecting platform capabilities to customer and business outcomes.\n\nDrive improvements in platform reliability, scalability, and operability, including better separation between customers and expansion of GitLab.com's cell-based architecture.\n\nDefine GitLab.com's rate limits, usage limits, and related monetization approach.\n\nScale GitLab Dedicated through maintenance-window automation and other operational improvements, while controlling costs and improving gross margin.\n\nExpand customer self-service through Switchboard, giving customers tools to monitor, observe, and operate their Dedicated tenants.\n\nGuide capabilities such as customer-initiated disaster recovery and geographic redundancy, and enable earlier access to beta features on GitLab Dedicated.\n\nReduce the delay between GitLab releases and their availability on Dedicated.\n\nOwn the business side of the portfolio as well as the technical product direction, developing profit and loss (P&L) ownership for both platforms and helping establish GitLab.com as a P&L business.\n\nWhat You'll Bring\n\nExperience leading a product portfolio at director level or with comparable scope, setting direction across multiple related products rather than a single roadmap.\n\nTechnical product experience with cloud platforms, infrastructure, or SaaS environments, including the tradeoffs involved in reliability, scalability, and operations.\n\nThe ability to connect product decisions to commercial outcomes, including monetization, operating costs, and gross margin.\n\nExperience translating complex platform challenges into product priorities and working across teams to deliver them.\n\nThe ability to lead through product direction and influence in a director-level individual contributor role.\n\nDirect ownership of a product P&L is particularly valuable. Experience in an organization actively adopting artificial intelligence (AI) would also be helpful.\n\nAbout the Team\n\nThe SaaS platform portfolio brings together GitLab.com and GitLab Dedicated. The work spans shared-platform growth, single-tenant operations, and the tools customers use to manage their environments. The challenge is to improve the customer experience and platform capabilities while building a scalable, financially sustainable operating model for each offering.\n\nAt GitLab, our mission is simple: to enable everyone to contribute to and co-create the software that powers our world. Our platform brings together development, security, and operations, helping teams collaborate throughout software delivery.\n\nThe base salary range for this role’s listed level is currently for residents of the United States only. This range is intended to reflect the role's base salary rate in locations throughout the US. Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data, and geographic location. The base salary range does not include any bonuses, equity, or benefits. See more information on our benefits and equity. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.\n\nUnited States Salary Range\n\n$203,200—$345,600 USD\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -13,14 +23,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-11-05T15:56:38-05:00",
   "title": "Director of Product Management, Platforms",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-05T22:13:41.942088+00:00",
- "content_hash": "f3cfd813df97367f0081989b6a07827e4e56762af72b752569408cb20a0c1d48",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "600f77f2d74d3a2dd3a80d800a43eb61120e56cef609a7dee3ac1c5d0f6a89d2",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -49,7 +63,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 20320000, \"max_cents\": 34560000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      },
@@ -74,7 +88,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$203,200—$345,600 USD",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      }
@@ -91,7 +105,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      },
@@ -99,7 +121,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "This director-level role starts as an individual contributor. It's remote and open to candidates based in the United States or Canada, with no specific time zone preference.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      }
@@ -112,7 +134,7 @@
       "interpretation": null,
       "method": "description_section:What You'll Bring",
       "quote": "Experience leading a product portfolio at director level or with comparable scope, setting direction across multiple related products rather than a single roadmap.\nTechnical product experience with cloud platforms, infrastructure, or SaaS environments, including the tradeoffs involved in reliability, scalability, and operations.\nThe ability to connect product decisions to commercial outcomes, including monetization, operating costs, and gross margin.\nExperience translating complex platform challenges into product priorities and working across teams to deliver them.\nThe ability to lead through product direction and influence in a director-level individual contributor role.\nDirect ownership of a product P&L is particularly valuable. Experience in an organization actively adopting artificial intelligence (AI) would also be helpful.",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      }
@@ -129,7 +151,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8893054002"
      }

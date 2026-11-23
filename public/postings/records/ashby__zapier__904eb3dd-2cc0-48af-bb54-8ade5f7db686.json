@@ -41,10 +41,19 @@
    "from_hash": "6caebe65ddd0aa5e0ebf757c855608e9e679cffa87fef7fc7e0e587c51769683",
    "kind": "content_changed",
    "to_hash": "e9c94c3de089757e41c59e91164b51c92d17dc882cbcc2ee9789fbe8d745028f"
+  },
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "e9c94c3de089757e41c59e91164b51c92d17dc882cbcc2ee9789fbe8d745028f",
+   "kind": "content_changed",
+   "to_hash": "0e3b9da33dee39921d9e3cab084ddc0db03fded8e97754384a3a317f1ef65bf2"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"$174.2K – $261.2K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}]},{\"title\":\"Canada\",\"summary\":\"CA$174.2K – CA$261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"}]},{\"title\":\"United Kingdom\",\"summary\":\"£109.4K – £164.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Bonus\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":109400,\"maxValue\":164200,\"summary\":\"£109.4K – £164.2K\"}]},{\"title\":\"Spain\",\"summary\":\"€112.2K – €168.4K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":112200,\"maxValue\":168400,\"summary\":\"€112.2K – €168.4K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus • Multiple Ranges\",\"tiers\":[{\"title\":\"United States\",\"summary\":\"$174.2K – $261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"$174.2K – $261.2K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}]},{\"title\":\"Canada\",\"summary\":\"CA$174.2K – CA$261.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"}]},{\"title\":\"United Kingdom\",\"summary\":\"£109.4K – £164.2K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":109400,\"maxValue\":164200,\"summary\":\"£109.4K – £164.2K\"}]},{\"title\":\"Spain\",\"summary\":\"€112.2K – €168.4K • Offers Equity • Offers Bonus\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Bonus\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":112200,\"maxValue\":168400,\"summary\":\"€112.2K – €168.4K\"}]}]}",
   "description": "AI AT ZAPIER\n\nAt Zapier https://zapier.com/about, we build and use automation every day to make work more efficient, creative, and human. So if you’re using AI tools while applying here - that’s great! We just ask that you use them responsibly and transparently.\n\nCheck out our guidance on How to Collaborate with AI During Zapier’s Hiring Process https://zapier.com/l/jobs/ai-at-zapier, including how to use AI tools like ChatGPT, Claude, Gemini, or others during our hiring process - and when not to.\n\nSR. ENGINEER, DATABASE RELIABILITY\n\nHi there!\n\nWe're looking for a Database Reliability Engineer (DBRE) to join the State team at Zapier. We need someone who can set direction on our data infrastructure and isn’t afraid to get into the weeds to solve challenging operational problems.\n\nThe State team owns the platform behind Zapier's stateful services: our relational database fleet (MySQL and PostgreSQL), a caching layer built on Redis and ElastiCache, and the tooling that lets product teams use it all easily, safely, and reliably. You'll shape our practices around automation, observability, performance, reliability, and disaster recovery, and help make the right way the easy way for the teams building on top of our data layer. This is a senior DBRE role on the State team. You'll be the technical center of gravity for database and cache work: the person other engineers come to for design review, the one setting the bar for how we operate the data layer, and the one responsible for growing the DBRE practice on the team over time.\n\nWe know applying for and taking on a new job at any company requires a leap of faith. We want you to feel comfortable and excited to apply at Zapier. To help share a bit more about life at Zapier, here are a few resources in addition to the job description that can give you an inside look at what life is like at Zapier. Hopefully, you'll take the leap of faith and apply.\n\nOur Commitment to Applicants\nhttps://zapier.com/jobs/our-commitment-to-applicantsCulture and Values at Zapier\nhttps://zapier.com/jobs/culture-and-values-at-zapier/Zapier Guide to Remote Work\nhttps://zapier.com/learn/remote-work/Diversity and Inclusivity at Zapier https://zapier.com/jobs/diversity-and-inclusivity-at-zapier/\n\nZapier is proud to be an equal opportunity workplace dedicated to pursuing and hiring a diverse workforce.\n\nABOUT YOU\n\nYou're an experienced database technologist. You have at least 7 years in systems administration, systems engineering, or software development, with at least 4 years running production relational databases. You have deep expertise in MySQL or PostgreSQL and working knowledge of the other, including each engine's ecosystem of extensions and tools. You understand caching (such as Redis) as part of the data layer, how to design and operate it at scale, and the tradeoffs between caching and the database underneath.\n\nYou know the cloud and treat infrastructure as code. You've designed and maintained highly available, cloud-based database systems in AWS or another cloud platform, and you manage that infrastructure with Terraform or similar IaC tooling rather than by hand. You're comfortable operating stateful services alongside Kubernetes or other distributed systems, and you understand the tradeoffs of running data workloads in and around orchestrated environments.\n\nYou build and use observability. You've implemented metrics, logging, and alerting for data systems using tools like Datadog, Prometheus, or CloudWatch, and you know the difference between a dashboard that looks good and one that catches problems before customers do. You treat query performance data, replication lag, and cache hit rates as first-class signals.\n\nYou partner with product teams. Product teams are your customers. When a team comes to you with a design or a problem, you ask about their workload before prescribing a solution, give them options with tradeoffs rather than edicts, and leave them more capable than you found them. You handle support requests with the same care as incident response, you participate in an on-call rotation for production data systems, and you'd rather teach a team to fish than field the same question twice. You document things well so your knowledge can be consumed asynchronously.\n\nYou raise the bar for the team around you. You're an experienced DBRE on this team, and you treat that as a responsibility. You review peers' designs and give feedback that makes the design better and the engineer sharper. You pair on hard problems when it helps someone else grow. You turn things you've learned the hard way into docs, patterns, and runbooks so the next person doesn't have to learn them the hard way too. You care about the team being more capable a year from now than it is today.\n\nYou ship code to solve systems problems. You automate repetitive work and build tools that make the team more effective. You're comfortable digging into application code to fix a bug or launching a backend service to close a gap in our data management strategy. You take ownership of difficult problems and know that \"just throw more hardware at it\" isn't a scaling strategy.\n\nYou work AI-first. AI tools are already part of how you operate: you use them to write and review automation code, analyze query plans and logs, draft runbooks, and accelerate incident investigation. You have real judgment about where AI output is reliable and where it isn't, especially against production data systems, and you're building that fluency into your team's practices, not just your own.\n\nTHINGS YOU'LL DO\n\nKeep the lights on\n\n- Own the reliability of our caching layer: capacity planning, failover behavior, upgrade strategy, and healthy usage patterns for caches hosted in Redis Enterprise and AWS ElastiCache.\n\n- Participate in our on-call rotation and serve as the point of escalation for data-layer issues during production incidents.\n\n- Support internal customers day to day, from troubleshooting a slow query to advising on storage usage, and turn recurring questions into documentation and tooling.\n\nMake the right way the easy way\n\n- Manage our database and cache infrastructure as code, evolving our Terraform modules and provisioning workflows so changes are repeatable, reviewable, and safe.\n\n- Build database and cache templated standards within our internal platform's golden path that take developers from zero to a scalable, performant, and secure setup, so they can focus on building great services quickly and easily.\n\n- Build and maintain observability for the data layer: dashboards, alerts, and SLOs that give both our team and our internal customers a clear picture of database and cache health.\n\nShape where the data layer goes next\n\n- Identify and implement strategies to improve performance and resilience across our MySQL, PostgreSQL, and Redis fleets. Our application is continually growing and evolving, and we need your help to keep scaling effectively.\n\n- Work with development teams to make architectural decisions about new services and new technologies, including which engine fits the workload and where caching belongs.\n\n- Consult with product teams on schema design, query patterns, and capacity planning so they succeed with the data layer rather than being handed rules.\n\nGrow the practice\n\n- Lead design review for data-layer work and mentor engineers across the team on database and cache practice.\n\n- Raise the overall bar for how we operate the data layer, turning your experience into docs, patterns, and runbooks the team can rely on.\n\nHOW TO APPLY\n\nAt Zapier, we believe that diverse perspectives and experiences make us better, which is why we have a non-standard application process designed to promote inclusion and equity. We're looking for the best fit for each of our roles, regardless of the type of companies in your background, so we encourage you to apply even if your skills and experiences don’t exactly match the job description. All we ask is that you answer a few in-depth questions in our application that would typically be asked at the start of an interview process. This helps speed things up by letting us get to know you and your skillset a bit better right out of the gate. Please be sure to answer each question; the resume and CV fields are optional.\n\nEducation is not a requirement for our roles; however, if you receive an offer, you will need to include your most recent educational experience as part of our background check process.\n\nAfter you apply, you are going to hear back from us—even if we don’t see an immediate fit with our team. In fact, throughout the process, we strive to never go more than seven days without letting you know the status of your application. We know we’ll make mistakes from time to time, so if you ever have questions about where you stand or about the process, just ask your recruiter!\n\nZapier is an equal-opportunity employer and we're excited to work with talented and empathetic people of all identities. Zapier does not discriminate based on someone's identity in any aspect of hiring or employment as required by law and in line with our commitment to Diversity, Inclusion, Belonging and Equity. Our code of conduct https://zapier.com/jobs/zapier-code-of-conduct provides a beacon for the kind of company we strive to be, and we celebrate our differences because those differences are what allow us to make a product that serves a global user base. Zapier will consider all qualified applicants, including those with criminal histories, consistent with applicable laws.\n\nZapier prioritizes the security of our customers' information and is dedicated to adhering to all applicable data privacy laws. You can review our privacy policy here https://zapier.com/legal/data-privacy.\n\nZapier is committed to inclusion. As part of this commitment, Zapier welcomes applications from individuals with disabilities and will work to provide reasonable accommodations. If reasonable accommodations are needed to participate in the job application or interview process, please contact jobs@zapier.com.\n\nAPPLICATION DEADLINE:\n\nThe anticipated application window is 30 days from the date job is posted, unless the number of applicants requires it to close sooner or later, or if the position is filled.\n\nEven though we’re an all-remote company, we still need to be thoughtful about where we have Zapiens working. Check out this resource https://docs.google.com/spreadsheets/d/1_lXQvKwuU4xXEbye7EW_En8iv1ZIMlQNmT7B2Mzbo24/edit?gid=0#gid=0 for a list of countries where we currently cannot have Zapiens permanently working.",
   "locations": [
    {
@@ -64,8 +73,8 @@
   "title": "Sr. Engineer, Database Reliability",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
- "content_hash": "e9c94c3de089757e41c59e91164b51c92d17dc882cbcc2ee9789fbe8d745028f",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "0e3b9da33dee39921d9e3cab084ddc0db03fded8e97754384a3a317f1ef65bf2",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -96,7 +105,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"$174.2K – $261.2K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -116,7 +125,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -136,7 +145,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -156,7 +165,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -176,7 +185,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -204,27 +213,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":174200,\"maxValue\":261200,\"summary\":\"CA$174.2K – CA$261.2K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "variable",
-       "component_type": "Bonus",
-       "equity_mentioned": false,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "United Kingdom",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [],
-       "variable_mentioned": true
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -244,7 +233,27 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
+     },
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "variable",
+       "component_type": "Bonus",
+       "equity_mentioned": false,
+       "estimated": false,
+       "interval_raw": "1 YEAR",
+       "label": "United Kingdom",
+       "multiple_ranges": true,
+       "period": "year",
+       "ranges": [],
+       "variable_mentioned": true
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -272,7 +281,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"GBP\",\"interval\":\"1 YEAR\",\"minValue\":109400,\"maxValue\":164200,\"summary\":\"£109.4K – £164.2K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -292,7 +301,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -312,7 +321,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Bonus\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Bonus\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -340,7 +349,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":112200,\"maxValue\":168400,\"summary\":\"€112.2K – €168.4K\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      }
@@ -357,7 +366,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "NAMER",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -365,7 +374,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "EMEA",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      },
@@ -373,7 +382,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      }
@@ -386,7 +395,7 @@
       "interpretation": null,
       "method": "description_section:ABOUT YOU",
       "quote": "You're an experienced database technologist. You have at least 7 years in systems administration, systems engineering, or software development, with at least 4 years running production relational databases. You have deep expertise in MySQL or PostgreSQL and working knowledge of the other, including each engine's ecosystem of extensions and tools. You understand caching (such as Redis) as part of the data layer, how to design and operate it at scale, and the tradeoffs between caching and the database underneath.\nYou know the cloud and treat infrastructure as code. You've designed and maintained highly available, cloud-based database systems in AWS or another cloud platform, and you manage that infrastructure with Terraform or similar IaC tooling rather than by hand. You're comfortable operating stateful services alongside Kubernetes or other distributed systems, and you understand the tradeoffs of running data workloads in and around orchestrated environments.\nYou build and use observability. You've implemented metrics, logging, and alerting for data systems using tools like Datadog, Prometheus, or CloudWatch, and you know the difference between a dashboard that looks good and one that catches problems before customers do. You treat query performance data, replication lag, and cache hit rates as first-class signals.\nYou partner with product teams. Product teams are your customers. When a team comes to you with a design or a problem, you ask about their workload before prescribing a solution, give them options with tradeoffs rather than edicts, and leave them more capable than you found them. You handle support requests with the same care as incident response, you participate in an on-call rotation for production data systems, and you'd rather teach a team to fish than field the same question twice. You document things well so your knowledge can be consumed asynchronously.\nYou raise the bar for the team around you. You're an experienced DBRE on this team, and you treat that as a responsibility. You review peers' designs and give feedback that makes the design better and the engineer sharper. You pair on hard problems when it helps someone else grow. You turn things you've learned the hard way into docs, patterns, and runbooks so the next person doesn't have to learn them the hard way too. You care about the team being more capable a year from now than it is today.\nYou ship code to solve systems problems. You automate repetitive work and build tools that make the team more effective. You're comfortable digging into application code to fix a bug or launching a backend service to close a gap in our data management strategy. You take ownership of difficult problems and know that \"just throw more hardware at it\" isn't a scaling strategy.\nYou work AI-first. AI tools are already part of how you operate: you use them to write and review automation code, analyze query plans and logs, draft runbooks, and accelerate incident investigation. You have real judgment about where AI output is reliable and where it isn't, especially against production data systems, and you're building that fluency into your team's practices, not just your own.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      }
@@ -403,7 +412,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-05T22:13:41.942088+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/zapier/904eb3dd-2cc0-48af-bb54-8ade5f7db686"
      }

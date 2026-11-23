@@ -14,6 +14,15 @@
    "from_hash": "5275b28d98f638ff7730d54b3ab1cc429bb3d73c14042851272cd38aa8c8f08a",
    "kind": "compensation_source_added",
    "to_hash": "a6829babe3fb423b604ec323567b6622b89cbc1fea1b6b7c456f1bf784147ba7"
+  },
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "a6829babe3fb423b604ec323567b6622b89cbc1fea1b6b7c456f1bf784147ba7",
+   "kind": "content_changed",
+   "to_hash": "ec7c88ccc781eba647bd0660339ad1a55d7fcea3d8b9049fc123f2223165fac3"
   }
  ],
  "content": {
@@ -23,14 +32,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-10-23T15:37:00-04:00",
   "title": "Senior Product Manager, Switchboard",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "a6829babe3fb423b604ec323567b6622b89cbc1fea1b6b7c456f1bf784147ba7",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "ec7c88ccc781eba647bd0660339ad1a55d7fcea3d8b9049fc123f2223165fac3",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -59,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 13920000, \"max_cents\": 23520000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
      },
@@ -84,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$139,200—$235,200 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
      }
@@ -101,7 +114,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
      }
@@ -114,7 +135,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience owning a product vision and roadmap and working with engineering to deliver improvements for users.\nTechnical understanding that helps you discuss infrastructure and operational tradeoffs with engineers and translate them into clear product decisions.\nA strong focus on user experience, with experience making complex technical workflows easier to understand and use.\nClear communication and the ability and interest to work directly with customers. Experience with internal tools is relevant, provided you're comfortable taking on customer-facing product work.\nThe ability to work independently, make sense of an evolving problem space, and prioritize across customer experience, operational efficiency, and business needs.\nYou may also bring experience with control planes, cloud management consoles, infrastructure products, internal operational tools, customer migrations, or incident management, but these aren't required.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
      }
@@ -131,7 +152,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8894806002"
      }

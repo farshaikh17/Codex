@@ -14,6 +14,15 @@
    "from_hash": "44a53ceb868cd10be88e5b8f9b3120a0786ac5dbddb705396b829f392e552b56",
    "kind": "compensation_source_added",
    "to_hash": "d28a6445915a8095db635b754afcbdf5754896cc5875b2d0cf68b37c8d2cb59e"
+  },
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "d28a6445915a8095db635b754afcbdf5754896cc5875b2d0cf68b37c8d2cb59e",
+   "kind": "content_changed",
+   "to_hash": "afda59bf0f378d853cf96c384adb8be13891dc7d1567e4c2ad5709a317e63c6a"
   }
  ],
  "content": {
@@ -23,14 +32,18 @@
    {
     "source": "location.name",
     "text": "Remote, United States"
+   },
+   {
+    "source": "offices.name",
+    "text": "United States of America"
    }
   ],
   "published": "2026-09-14T12:37:57-04:00",
   "title": "Director of Product Management, Agentic Software Delivery",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-26T23:58:52.793071+00:00",
- "content_hash": "d28a6445915a8095db635b754afcbdf5754896cc5875b2d0cf68b37c8d2cb59e",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "afda59bf0f378d853cf96c384adb8be13891dc7d1567e4c2ad5709a317e63c6a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -59,7 +72,7 @@
       },
       "method": "ats_field:pay_input_ranges",
       "quote": "{\"min_cents\": 20320000, \"max_cents\": 34560000, \"currency_type\": \"USD\", \"title\": \"United States Salary Range\", \"blurb\": \"<p><em>The base salary range for this role’s listed level is currently for residents of the&nbsp;United States only. This range is intended to reflect the role's base salary rate in locations throughout the US.&nbsp;Grade level and salary ranges are determined through interviews and a review of education, experience, knowledge, skills, abilities of the applicant, equity with other team members, alignment with market data,&nbsp;and geographic location.&nbsp;The base salary range does not include any bonuses, equity, or benefits. See more information on our <a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/total-rewards/benefits/general-and-entity-benefits/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLBeneUS\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">benefits</a><span data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#000000;font-weight:normal;text-decoration:none;font-family:'Arial';font-style:normal;text-decoration-skip-ink:none;\\\"> and </span><a class=\\\"waffle-rich-text-link\\\" href=\\\"https://about.gitlab.com/handbook/stock-options/\\\" data-sheets-formula-bar-text-link=\\\"https://bit.ly/GLequity\\\" data-sheets-formula-bar-text-style=\\\"font-size:12px;color:#1155cc;font-weight:normal;text-decoration:underline;font-family:''Arial'';font-style:normal;text-decoration-skip-ink:none;\\\">equity</a>. Sales roles are also eligible for incentive pay targeted at up to 100% of the offered base salary.</em></p>\"}",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
      },
@@ -84,7 +97,7 @@
       },
       "method": "description_section:United States Salary Range",
       "quote": "$203,200—$345,600 USD",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
      }
@@ -101,7 +114,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "United States of America",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
      }
@@ -114,7 +135,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Experience leading product managers, including developing senior and principal talent, hiring, and addressing performance directly.\nA track record of owning a portfolio across multiple product areas and being accountable for adoption, retention, and revenue, not only roadmap delivery.\nProduct management depth in one or more relevant areas, such as continuous integration and continuous delivery pipelines, artifact or package management, release management, or observability.\nSound judgment about where to invest and where to stop, including experience making and defending build, buy, or partner decisions with a business case.\nTechnical fluency to work with engineers and architects on pipeline design, artifact workflows, deployment strategies, and observability signals such as logs, metrics, and traces.\nExperience shaping pricing and packaging for technical products across free, commercial, and enterprise offerings.\nExperience working with technical customers in developer tools, DevOps, or software delivery environments where engineers and engineering leaders are primary users.\nExecutive-level communication and influence.\nPractical use of AI tools in product management workflows, along with a thoughtful view of how AI and agentic workflows are changing software delivery. We welcome candidates whose experience may come from different but transferable product and leadership paths.",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
      }
@@ -131,7 +152,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United States",
-      "retrieved_at": "2026-10-26T23:58:52.793071+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8806017002"
      }

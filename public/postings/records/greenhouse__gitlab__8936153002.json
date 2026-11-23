@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "342ce6c310e7a24899730cd218350889feb4ec6ba79db1b7756a8eb060aaa0d7",
+   "kind": "content_changed",
+   "to_hash": "a64c1c113cff500ca106ae98a383d1fcc80c1529d220d276265f33265483a57d"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nGitLab’s Forward Deployed Engineering team is a field-situated product engineering function focused on strategic customer outcomes, artificial intelligence (AI) adoption, and direct contributions to GitLab’s product. This isn't a traditional field engineering, solutions architecture, or professional services role. As a Staff Forward Deployed Engineer, you'll work closely with customers while maintaining the technical standards and contribution discipline of a Staff-level product engineer.\n\nYou'll work where strategic customer urgency, complex technical ambiguity, and GitLab product execution intersect. You'll partner directly with strategic customers and teams across Product, Engineering, Support, Site Reliability Engineering (SRE), Solutions Architecture (SA), Customer Success Architecture (CSA), Customer Success Management (CSM), and Professional Services. You'll diagnose and resolve high-impact adoption blockers, contribute production-quality fixes and features, and turn what you learn into repeatable patterns for GitLab and its customers.\n\nWhy this role exists\n\nStrategic customers sometimes encounter challenges that are too broad, deep, urgent, or cross-functional for any single team to own from start to finish. These challenges may involve product gaps, performance degradation, scale bottlenecks, AI governance, adoption blockers, architectural constraints, Git usage patterns, continuous integration and continuous delivery (CI/CD) complexity, application programming interface (API) automation, security requirements, or operational instability.\n\nForward Deployed Engineering provides technical stewardship in these moments. The team doesn't simply observe, report, or escalate. You'll engage directly, diagnose the underlying technical problem, collaborate with the right teams, contribute code or technical solutions where appropriate, and transition the outcome into normal ownership once the customer is stable and the learning can be reused.\n\nWhat you’ll do\n\nProduct contribution\n\nContribute production-quality code to GitLab’s product and adjacent systems.\n\nDevelop bug fixes, features, integrations, tooling, and performance improvements when strategic customer outcomes require direct engineering work.\n\nWork within GitLab’s product and engineering processes, including issue discovery, merge request creation, testing, review, documentation, and maintainability.\n\nPartner with Product and Engineering so customer-driven solutions support long-term product direction rather than becoming one-off customizations.\n\nTurn blockers discovered in the field into durable product improvements, reference architectures, documentation, and repeatable implementation patterns.\n\nStrategic technical stewardship\n\nEngage with strategically important customers when adoption, retention, executive confidence, or public trust is materially at risk.\n\nDiagnose complex problems across GitLab product behavior, customer architecture, Git internals, CI/CD workflows, API usage, observability, infrastructure, networking, and cloud environments.\n\nCoordinate across Product, Engineering, SRE, Support, SA, CSA, CSM, Professional Services, and customer technical teams to drive resolution from discovery through handoff.\n\nProvide recommendations grounded in data, traces, and systems analysis to improve GitLab usage, workflows, automation, and architecture.\n\nCreate durable outcomes without establishing permanent dependency on Forward Deployed Engineering.\n\nAI adoption and agentic software development lifecycle\n\nDrive governed, measurable, and production-oriented adoption of GitLab Duo Agent Platform with strategic customers.\n\nIdentify and resolve AI adoption blockers involving governance, usage controls, auditability, security, compliance, operating models, workflow design, and integrations.\n\nDevelop customer-safe adoption patterns for the agentic software development lifecycle (SDLC), AI-assisted development, intent-based review, AI governance, and human-in-the-loop software delivery.\n\nPartner with Product, Engineering, Field, and Customer Success teams to turn AI adoption learning into reusable guidance and product improvements.\n\nThought leadership\n\nCreate technical narratives grounded in customer experience and product reality that can help shape the industry’s approach.\n\nContribute to Well-Architected Frameworks, whitepapers, webinars, reference architectures, technical strategy memos, and adoption frameworks.\n\nGuide ideas through discovery, formulation, validation, amplification, and adoption across GitLab.\n\nPartner with SA, CSA, Product, Engineering, Marketing, Product Marketing Management, CSM, Support, and executive stakeholders to make technical thought leadership a shared company capability.\n\nWhat you’ll bring\n\nStaff-level experience building, operating, or improving complex production software systems.\n\nExperience contributing to large, mature product codebases with high standards for testing, maintainability, performance, and security.\n\nStrong Ruby on Rails or Go experience and the ability to contribute directly to GitLab’s product and adjacent systems.\n\nExperience with AI-assisted software development, agentic workflows, AI governance, model evaluation, context management, prompt and workflow design, or AI adoption in enterprise environments.\n\nExperience diagnosing complex system behavior across application code, data stores, infrastructure, observability, networking, APIs, and customer usage patterns.\n\nDeep knowledge of modern DevSecOps workflows, including Git, merge requests, CI/CD, security controls, compliance needs, and enterprise software delivery.\n\nExperience working with strategic customers or senior technical stakeholders in ambiguous, high-impact situations.\n\nThe ability to coordinate across product, engineering, field, and customer teams without formal authority.\n\nStrong written communication and sound judgment, including the ability to create technical narratives and distinguish reusable product work from customer-specific customization.\n\nStrongly preferred qualifications\n\nDirect experience with GitLab as a platform, including GitLab.com, GitLab Dedicated, or GitLab Self-Managed.\n\nProduction experience with Ruby on Rails, Go, PostgreSQL, Redis, Sidekiq, Vue, TypeScript, Kubernetes, Docker, Linux, or observability tools.\n\nDeep familiarity with Git internals, repository performance, large-scale Git usage patterns, or GitLab Runner behavior.\n\nExperience creating technical thought-leadership materials, such as whitepapers, technical talks, architecture frameworks, requests for comments, public technical writing, or internal strategy documents.\n\nA background in performance engineering, site reliability engineering, platform engineering, infrastructure engineering, or distributed systems.\n\nExperience working in open source or highly asynchronous engineering environments.\n\nTechnologies and domains\n\nDirectly relevant technologies and domains include:\n\nRuby on Rails\n\nGo\n\nAI-assisted development and the agentic SDLC\n\nPostgreSQL\n\nRedis and Sidekiq\n\nGit internals\n\nGitLab CI/CD and Runner architecture\n\nKubernetes and containers\n\nTerraform\n\nLinux, networking, observability, and performance analysis\n\nVue and TypeScript\n\nAPIs and automation\n\nDevSecOps governance, security, and compliance\n\nWhat this role is not\n\nThis role isn't:\n\nA generic field engineering role.\n\nA proof-of-concept factory.\n\nA replacement for Solutions Architecture, Customer Success Architecture, Customer Success Management, Professional Services, Support, SRE, Product, or Engineering.\n\nA customer-specific customization function.\n\nUnbilled Professional Services.\n\nA requirements-gathering role that only escalates to Product.\n\nAn AI evangelism role disconnected from product execution.\n\nSuccess measures\n\nSuccess in this role may include:\n\nStabilizing strategic customer adoption or retention risks.\n\nFixing product bugs or contributing features.\n\nRemoving AI adoption blockers for strategic accounts.\n\nCreating reusable implementation patterns and transitioning them to long-term owners.\n\nProducing or enabling Well-Architected Frameworks, whitepapers, webinars, or technical narratives.\n\nResolving cross-functional customer challenges without creating permanent dependency on Forward Deployed Engineering.\n\nEquipping Product, Engineering, Support, CSA, CSM, Professional Services, and SA teams with better guidance based on learning from the field.\n\nIncreasing adoption and effective use of GitLab capabilities, especially GitLab Duo and GitLab Duo Agent Platform, in targeted accounts.\n\nAbout the team\n\nThe Forward Deployed Engineering team connects strategic customer needs with GitLab product execution. The team works directly with customers and across GitLab to resolve complex adoption challenges, contribute durable product improvements, and create reusable technical guidance. Its goal is to stabilize urgent situations, improve the product, and transition ongoing ownership to the appropriate team rather than create a permanent dependency.\n\nIdeal candidate profile\n\nYou're a Staff-level product or platform engineer who can operate in the field without becoming field-only. You're comfortable reading traces, writing production code, debugging architecture, discussing AI governance, leading a customer technical session, opening a merge request, outlining a whitepaper, and coordinating across teams to achieve a strategic customer outcome.\n\nYou're not simply a strong communicator with technical awareness. You're a credible engineer with the judgment, presence, and narrative ability to turn customer reality into product contributions, adoption guidance, and company-level thought leadership.\n\nWe welcome candidates with different backgrounds and levels of experience. Many successful candidates don't meet every qualification. If you're excited about this role, we encourage you to apply and let our recruiting team assess your application.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -39,20 +49,16 @@
     "text": "Remote, United Kingdom"
    },
    {
-    "source": "offices.location",
-    "text": "Turkey"
-   },
-   {
     "source": "offices.name",
-    "text": "EMEA"
+    "text": "Germany"
    }
   ],
   "published": "2026-11-12T09:31:21-05:00",
   "title": "Staff Forward Deployed Engineer, EMEA",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-12T15:33:41.918357+00:00",
- "content_hash": "342ce6c310e7a24899730cd218350889feb4ec6ba79db1b7756a8eb060aaa0d7",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "a64c1c113cff500ca106ae98a383d1fcc80c1529d220d276265f33265483a57d",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -71,7 +77,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -79,7 +85,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Austria",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -87,7 +93,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, France",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -95,7 +101,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Germany",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -103,7 +109,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Netherlands",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -111,7 +117,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -119,23 +125,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.location",
-      "quote": "Turkey",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "EMEA",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "quote": "Germany",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      }
@@ -148,7 +146,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Staff-level experience building, operating, or improving complex production software systems.\nExperience contributing to large, mature product codebases with high standards for testing, maintainability, performance, and security.\nStrong Ruby on Rails or Go experience and the ability to contribute directly to GitLab’s product and adjacent systems.\nExperience with AI-assisted software development, agentic workflows, AI governance, model evaluation, context management, prompt and workflow design, or AI adoption in enterprise environments.\nExperience diagnosing complex system behavior across application code, data stores, infrastructure, observability, networking, APIs, and customer usage patterns.\nDeep knowledge of modern DevSecOps workflows, including Git, merge requests, CI/CD, security controls, compliance needs, and enterprise software delivery.\nExperience working with strategic customers or senior technical stakeholders in ambiguous, high-impact situations.\nThe ability to coordinate across product, engineering, field, and customer teams without formal authority.\nStrong written communication and sound judgment, including the ability to create technical narratives and distinguish reusable product work from customer-specific customization.",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -156,7 +154,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Direct experience with GitLab as a platform, including GitLab.com, GitLab Dedicated, or GitLab Self-Managed.\nProduction experience with Ruby on Rails, Go, PostgreSQL, Redis, Sidekiq, Vue, TypeScript, Kubernetes, Docker, Linux, or observability tools.\nDeep familiarity with Git internals, repository performance, large-scale Git usage patterns, or GitLab Runner behavior.\nExperience creating technical thought-leadership materials, such as whitepapers, technical talks, architecture frameworks, requests for comments, public technical writing, or internal strategy documents.\nA background in performance engineering, site reliability engineering, platform engineering, infrastructure engineering, or distributed systems.\nExperience working in open source or highly asynchronous engineering environments.\nTechnologies and domains\nDirectly relevant technologies and domains include:\nRuby on Rails\nGo\nAI-assisted development and the agentic SDLC\nPostgreSQL\nRedis and Sidekiq\nGit internals\nGitLab CI/CD and Runner architecture\nKubernetes and containers\nTerraform\nLinux, networking, observability, and performance analysis\nVue and TypeScript\nAPIs and automation\nDevSecOps governance, security, and compliance",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      }
@@ -169,7 +167,7 @@
       "interpretation": null,
       "method": "inline_marker_in:What you’ll bring",
       "quote": "Strongly preferred qualifications",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      }
@@ -182,7 +180,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -190,7 +188,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Austria",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -198,7 +196,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, France",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -206,7 +204,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Germany",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -214,7 +212,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Netherlands",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -222,7 +220,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      },
@@ -230,7 +228,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-11-12T15:33:41.918357+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8936153002"
      }

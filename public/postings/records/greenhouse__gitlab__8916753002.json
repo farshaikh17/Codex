@@ -5,7 +5,17 @@
   "state": "listed"
  },
  "board": "gitlab",
- "changes": [],
+ "changes": [
+  {
+   "changed_at": "2026-11-23T18:41:26.728651+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "2794ca35620a33ef8713c5a60721611dc13bfa4b274702e844f83ffcdf8e539b",
+   "kind": "content_changed",
+   "to_hash": "d90bff9a0970f3397777873c0f1b287a9f0d01021d985fb2c605a205ef0ffc4a"
+  }
+ ],
  "content": {
   "compensation_raw": null,
   "description": "GitLab is the intelligent orchestration platform for DevSecOps. GitLab enables organizations to increase developer productivity, improve operational efficiency, reduce security and compliance risk, and accelerate digital transformation. More than 50 million registered users and more than 50% of the Fortune 100* trust GitLab to ship better, more secure software faster.\n\nThe same principles built into our products are reflected in how our team works: we embrace AI as a core productivity multiplier, with all team members expected to incorporate AI into their daily workflows to drive efficiency, innovation, and impact. GitLab is where careers accelerate, innovation flourishes, and every voice is valued. Our high-performance culture is driven by our values and continuous knowledge exchange, enabling our team members to reach their full potential while collaborating with industry leaders to solve complex problems. Co-create the future with us as we build technology that transforms how the world develops software.\n\n*Fortune 500® is a registered trademark of Fortune Media IP Limited, used under license. Claim based on GitLab data. Fortune 100 refers to the top 20% ranked companies in the 2025 Fortune 500 list, published in June 2025. Fortune and Fortune Media IP Limited are not affiliated with, and do not endorse products or services of GitLab.\n\nAn overview of this role\n\nAs the Manager, Professional Services Engineers, you will manage a team that works directly with customers to deliver installation, migration, training, and advisory services across the full GitLab platform. In this role, you will be accountable for the performance, development, and day-to-day management of a team of Professional Services Engineers based across Europe, helping them deliver high-quality outcomes in a remote, asynchronous environment.\n\nYou will partner closely with Technical Architects and Professional Services management to enable consistent delivery across implementation projects, migrations, and statement of work engagements. This is a people-first role with meaningful technical depth. You will step in hands-on with your team when needed while also building the operating rhythm, team culture, and delivery approach that help the broader practice scale. You will also work closely with cross-functional partners to improve utilization, customer satisfaction, and delivery execution.\n\nIn your first year, you will help strengthen team capability, improve delivery consistency, and create the conditions for a high-performing services team across the region. This is an opportunity to manage a team doing technically complex, customer-facing work that directly helps customers realize value from GitLab.\n\nSome examples of our projects:\n\nLeading a team of Professional Services Engineers through end-to-end GitLab implementation and migration engagements for enterprise customers across Europe\n\nPartnering with Sales, Customer Success, and Technical Architects to support statement of work scoping and align the right technical resources to customer needs\n\nWhat you’ll do\n\nLead and manage a team of Professional Services Engineers, supporting their growth, performance, and day-to-day delivery across customer engagements.\n\nDevelop team members through regular 1:1s, coaching, feedback, and career conversations that help them grow their technical and consulting skills.\n\nOwn delivery outcomes across your team’s portfolio, including implementations, migrations, advisory services, and statement of work engagements.\n\nMonitor project health, identify delivery risks early, and step in directly or escalate when needed to keep customer work on track.\n\nPartner with Technical Architects, Engagement Managers, Sales, and Customer Success to plan, scope, resource, and support successful services engagements.\n\nTrack team utilization, customer satisfaction, and escalation trends, and use those insights to improve team performance and operational effectiveness.\n\nAct as a senior escalation point for complex customer situations, helping guide resolution while maintaining a high bar for service quality.\n\nContribute to the continuous improvement of Professional Services processes, tooling, knowledge sharing, and delivery standards across the broader organization.\n\nWhat you’ll bring\n\nSignificant experience leading and developing high-performing technical teams in a customer-facing environment.\n\nA strong technical foundation in software delivery, DevSecOps, platform engineering, or a related area, with the ability to engage credibly in technical discussions.\n\nExperience managing or supporting professional services, implementation delivery, migration programs, or technical consulting engagements for enterprise customers.\n\nProven ability to navigate customer escalations, balance competing priorities, and drive clear outcomes in complex situations.\n\nStrong collaboration skills and the ability to work effectively with cross-functional partners such as Sales, Customer Success, and Technical Architects.\n\nA delivery mindset focused on accountability, quality, and measurable results rather than activity alone.\n\nComfort working in a fully remote, asynchronous organization with strong written communication and organizational skills.\n\nAlignment with GitLab’s values and the ability to lead with transparency, trust, and a focus on team development.\n\nOn the Professional Services team at GitLab, we help customers adopt the platform in ways that fit their technical goals and operating environment through technical delivery, guidance, and enablement.\n\nAs part of this organization, we focus on hands-on delivery work across customer engagements across EMEA. We work closely with a sister team of Technical Architects, along with cross-functional partners across the business, to support strong project execution and customer outcomes. We are building a high-quality services practice grounded in technical excellence, customer focus, and continuous improvement. This is a good fit for someone who enjoys leading experienced technical practitioners, improving how services are delivered, and helping customers succeed through meaningful, complex work.\n\nHow GitLab Supports Full-Time Employees\n\nBenefits to support your health, finances, and well-being\n\nFlexible Paid Time Off\n\nTeam Member Resource Groups\n\nEquity Compensation & Employee Stock Purchase Plan\n\nGrowth and Development Fund\n\nParental Leave\n\nPlease note that we welcome interest from candidates with varying levels of experience; many successful candidates do not meet every single requirement. Additionally, studies have shown that people from underrepresented groups are less likely to apply to a job unless they meet every single qualification. If you're excited about this role, please apply and allow our recruiters to assess your application.\n\nCountry Hiring Guidelines: GitLab hires new team members in countries around the world. All of our roles are remote, however some roles may carry specific location-based eligibility requirements. Our Talent Acquisition team can help answer any questions about location after starting the recruiting process.\n\nPrivacy Policy: Please review our Recruitment Privacy Policy. Your privacy is important to us.\n\nGitLab is proud to be an equal opportunity workplace and is an affirmative action employer. GitLab’s policies and practices relating to recruitment, employment, career development and advancement, promotion, and retirement are based solely on merit, regardless of race, color, religion, ancestry, sex (including pregnancy, lactation, sexual orientation, gender identity, or gender expression), national origin, age, citizenship, marital status, mental or physical disability, genetic information (including family medical history), discharge status from the military, protected veteran status (which includes disabled veterans, recently separated veterans, active duty wartime or campaign badge veterans, and Armed Forces service medal veterans), or any other basis protected by law. GitLab will not tolerate discrimination or harassment based on any of these characteristics. See also GitLab’s EEO Policy and EEO is the Law. If you have a disability or special need that requires accommodation, please let us know during the recruiting process.",
@@ -31,20 +41,16 @@
     "text": "Remote, United Kingdom"
    },
    {
-    "source": "offices.location",
-    "text": "Turkey"
-   },
-   {
     "source": "offices.name",
-    "text": "EMEA"
+    "text": "United Kingdom"
    }
   ],
   "published": "2026-10-28T10:53:30-04:00",
   "title": "Manager, Professional Services Engineers, EMEA",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-28T17:20:08.294293+00:00",
- "content_hash": "2794ca35620a33ef8713c5a60721611dc13bfa4b274702e844f83ffcdf8e539b",
+ "content_changed_at": "2026-11-23T18:41:26.728651+00:00",
+ "content_hash": "d90bff9a0970f3397777873c0f1b287a9f0d01021d985fb2c605a205ef0ffc4a",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -63,7 +69,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -71,7 +77,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, France",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -79,7 +85,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Germany",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -87,7 +93,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -95,23 +101,15 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
-     },
-     {
-      "interpretation": null,
-      "method": "ats_field:offices.location",
-      "quote": "Turkey",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
      {
       "interpretation": null,
       "method": "ats_field:offices.name",
-      "quote": "EMEA",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "quote": "United Kingdom",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      }
@@ -124,7 +122,7 @@
       "interpretation": null,
       "method": "description_section:What you’ll bring",
       "quote": "Significant experience leading and developing high-performing technical teams in a customer-facing environment.\nA strong technical foundation in software delivery, DevSecOps, platform engineering, or a related area, with the ability to engage credibly in technical discussions.\nExperience managing or supporting professional services, implementation delivery, migration programs, or technical consulting engagements for enterprise customers.\nProven ability to navigate customer escalations, balance competing priorities, and drive clear outcomes in complex situations.\nStrong collaboration skills and the ability to work effectively with cross-functional partners such as Sales, Customer Success, and Technical Architects.\nA delivery mindset focused on accountability, quality, and measurable results rather than activity alone.\nComfort working in a fully remote, asynchronous organization with strong written communication and organizational skills.\nAlignment with GitLab’s values and the ability to lead with transparency, trust, and a focus on team development.\nOn the Professional Services team at GitLab, we help customers adopt the platform in ways that fit their technical goals and operating environment through technical delivery, guidance, and enablement.\nAs part of this organization, we focus on hands-on delivery work across customer engagements across EMEA. We work closely with a sister team of Technical Architects, along with cross-functional partners across the business, to support strong project execution and customer outcomes. We are building a high-quality services practice grounded in technical excellence, customer focus, and continuous improvement. This is a good fit for someone who enjoys leading experienced technical practitioners, improving how services are delivered, and helping customers succeed through meaningful, complex work.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      }
@@ -141,7 +139,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote Ireland",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -149,7 +147,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, France",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -157,7 +155,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Germany",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -165,7 +163,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Spain",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -173,7 +171,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, United Kingdom",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      },
@@ -181,7 +179,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Comfort working in a fully remote, asynchronous organization with strong written communication and organizational skills.",
-      "retrieved_at": "2026-10-28T17:20:08.294293+00:00",
+      "retrieved_at": "2026-11-23T18:41:26.728651+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8916753002"
      }
