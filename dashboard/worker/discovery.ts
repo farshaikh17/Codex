@@ -1137,8 +1137,15 @@ export function yearsFarAbove(description:string|null|undefined,have:number):num
 // and PLC programming; a narrow specialism (power-electronics converters, a vibration-analyst certification, HVDC transmission, battery storage);
 // building facilities for a real-estate services firm; an electrical-licence trade post; a head, director or plant-manager title; and a posting whose
 // own ceiling is below her profile ('Experience Minimum: 5 Maximum: 8', an age limit).
+// Jobs QA 9: PLC program, MES, presses, laser / tube-mill lines.
+// Jobs QA 11: injection moulding; extrusion or blow moulding (EBM / IBM in capitals, only beside moulding or extrusion, so 'IBM Maximo' never counts);
+// SPMs; and years required in the automotive or plastics industry ('More than 6 years of experience in maintenance within the Automotive / Plastic
+// Injection Molding manufacturing industry'). PLCs with HMIs alone are plant controls, not a machine line.
 const SANA_DISCRETE=[/\bCNC\b/,/\bVMC\b|\bHMC\b/,/\bservo\b/i,/\brobot(?:s|ic|ics)?\b/i,/\bPLC (?:ladder|program\w*|logic)\b|\bladder logic\b|\bTIA portal\b/i,/\bNC control\b|\b8[24]0D\b/,/\bwelding\b/i,/\bMES\b/,/\bpress (?:machines?|shop|lines?)\b|\bpresses\b/i,/\blaser (?:cutting|machines?)\b|\btube mill\b|\bslitting lines?\b/i,
- /\binjection mou?ld(?:ing|ed)?\b/i,/\bextrusion\b|\bEBM\b|\bIBM\b|\bblow mou?ld/i,/\bSPMs?\b/,/\bPLCs?\b[^.;]{0,30}\bHMIs?\b/i,/\b(?:automotive|plastics?) (?:\/ ?[\w ]{0,30})?(?:manufacturing|processing|parts|components|plants?|industry)\b/i];   // jobs QA 11: moulding, extrusion, SPM, PLC/HMI   // jobs QA 9: PLC program, MES, presses, laser / tube-mill lines
+ /\binjection mou?ld(?:ing|ed)?\b/i,
+ /\b[Ee]xtrusion\b|\b[Bb]low [Mm]ou?ld|(?:[Mm]ou?ld\w*|[Ee]xtrusion)[^.;]{0,40}\b(?:EBM|IBM)\b|\b(?:EBM|IBM)\b[^.;]{0,40}(?:[Mm]ou?ld|[Ee]xtrusion)/,
+ /\bSPMs?\b/,
+ /\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,80}\b(?:automotive|plastics?|injection mou?lding)\b[^.;]{0,40}\b(?:industry|manufacturing)\b/i];
 const FM_EMPLOYER=/\b(?:jll|cbre|cushman|colliers|sodexo|knight frank|savills|compass group|iss facility)\b/i;
 export function sanaStretchOnly(title:string|null|undefined,description:string|null|undefined,company:string|null|undefined,have:number,location:string|null|undefined=undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
@@ -1173,8 +1180,9 @@ const DEGREE_WORD=String.raw`(?:diploma|b\.?\s?e\b\.?|b\.?\s?tech\b\.?|bachelor 
 const DEGREE_ASIDE=String.raw`(?:\s*\([^)]{0,25}\))?`;
 const MECH_DEGREE=new RegExp(String.raw`\b${DEGREE_WORD}${DEGREE_ASIDE}(?:\s*(?:\/|or|,)\s*${DEGREE_WORD}${DEGREE_ASIDE})*\s*(?:\/\s*)?(?:(?:in|of)\s+|\(\s*|[-–:\/]\s*|(?<=\b(?:b\.?\s?e|b\.?\s?tech)\.?)\s+)mechanical\b(?:\s+engineer(?:ing)?)?|\b(?:educational qualifications?|qualifications?|education)\s*:\s*in\s+mechanical\b(?:\s+engineer(?:ing)?)?`,'gi');
 // Another discipline offered beside mechanical. Jobs QA 11: 'or a related field', 'or equivalent', 'relevant' or 'other' name no discipline, so
-// 'B.E. in Mechanical Engineering or a related field' is mechanical-only (it used to read as open to any discipline); 'any engineering' still opens it.
-const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|mechatronics|industrial|production|power|any (?:engineering|discipline))\b/i;
+// 'B.E. in Mechanical Engineering or a related field' is mechanical-only (it used to read as open to any discipline); another branch named ('any
+// other engineering discipline', 'or related engineering discipline', 'allied branches') still opens it.
+const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|mechatronics|industrial|production|power|any (?:other )?(?:engineering|discipline|branch)|other engineering|related engineering (?:disciplines?|branch(?:es)?|fields?)|allied (?:engineering|disciplines?|branch(?:es)?))\b/i;
 const CONSULTING_EMPLOYER=/\b(?:deloitte|pwc|price ?waterhouse|kpmg|ernst (?:&|and) young|\bey\b|accenture|mckinsey|boston consulting|bain|capgemini|grant thornton)\b/i;
 const CONSUMER_GOODS_EMPLOYER=/\b(?:asian paints|berger paints|kansai nerolac|nerolac|akzo ?nobel|indigo paints|perfetti|nestl[eé]|hindustan unilever|unilever|britannia|dabur|marico|godrej consumer|procter|colgate|mondelez|pepsico|coca[- ]cola|parle|ferrero|kellogg|emami|jyothy|tata consumer|itc limited)\b/i;
 const EMPLOYER_ABROAD_NAME=/\b(?:arabia|egypt|misr|africa|nigeria|kenya|morocco|maroc|algeria|tunisia|jordan|lebanon|iraq|turkey|t[uü]rkiye|pakistan|bangladesh)\b/i;
@@ -1316,15 +1324,19 @@ export function sanaOtherProfessionQa10(title:string|null|undefined,description:
 const ITI_ROUTE=/\b(?:or|\/)\s+(?:relevant\s+)?ITI\b(?:\s+(?:candidates?|holders?|qualified))?[^.;]{0,30}\bwith\b|\bITI (?:candidates?|holders?)\s+with\s+\d/i;
 const GRADUATE_FEW=new RegExp(String.raw`\b(?:[Gg]raduate|GRADUATE|[Dd]egree|[Bb]achelor'?s?|${DEG_ABBR})\.?(?:[^.;]|\.(?=\S)){0,60}?\b[Ww]ith\s+(\d{1,2})\s*(?:(?:-|–|to)\s*(\d{1,2})\s*)?\+?\s*[Yy](?:ears?|rs?)\b`);
 // Jobs QA 11 (YASH foundry: 'ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable', '4-6 + years'): ITI_ROUTE read
-// only 'or ITI ... with' and 'ITI candidates/holders with N', so an ITI accepted in its own sentence was missed. An ITI accepted in any of these words,
-// with the lowest years range ending at 7 or less (or no range), is a technician's grade.
-const ITI_ACCEPTED=/\bITI\b[^.;]{0,90}?\b(?:is|are)\s+(?:also\s+)?(?:suitable|acceptable|accepted|eligible|considered|welcome)\b|\bITI\b[^.;]{0,40}?\b(?:may|can|could)\s+(?:also\s+)?apply\b|\b(?:or|\/)\s*(?:relevant\s+)?ITI\b|\bITI (?:candidates?|holders?|qualified)\b/i;
+// only 'or ITI ... with' and 'ITI candidates/holders with N', so an ITI accepted in its own sentence was missed. An ITI accepted in so many words ('is
+// also suitable', 'accepted', 'can apply'; not a denied one), where no years figure the posting asks goes above 7, is a technician's grade.
+const ITI_ACCEPTED=/\bITI\b[^.;]{0,90}?\b(?:is|are)\s+(?:also\s+)?(?:suitable|acceptable|accepted|eligible|considered|welcome)\b|\bITI\b[^.;]{0,40}?\b(?:may|can|could)\s+(?:also\s+)?apply\b/i;
+const YEARS_FIGURE=/\b(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*(\d{1,2})\s*)?\+?\s*(?:years?|yrs)\b/gi;
+const YEARS_STORY=/\b(?:for over|over the (?:past|last)|since|founded|history|legacy|we have|has been|in business)\b[^.;]{0,30}$/i;
+/** The highest years figure the posting asks (the top of a range; a company's own history is left out), or 0. */
+function yearsAskedTop(d:string):number{let top=0;YEARS_FIGURE.lastIndex=0;let m:RegExpExecArray|null;while((m=YEARS_FIGURE.exec(d))){if(YEARS_STORY.test(d.slice(Math.max(0,m.index-50),m.index)))continue;top=Math.max(top,Number(m[2]||m[1]));}return top;}
 export const ITI_YEARS_TOP=7;
-function lowestYearsTop(d:string):number|null{let lo:number|null=null;const re=/\b(\d{1,2})\s*\+?\s*(?:-|–|to)\s*(\d{1,2})\s*\+?\s*(?:years?|yrs)\b/gi;let m:RegExpExecArray|null;while((m=re.exec(d))){const t=Number(m[2]);if(t>=Number(m[1])&&(lo===null||t<lo))lo=t;}return lo;}
+function lowestYearsTop(d:string):number|null{let lo:number|null=null;const re=/\b(\d{1,2})\s*\+?\s*(?:-|–|to)\s*(\d{1,2})\s*\+?\s*(?:years?|yrs)\b/gi;let m:RegExpExecArray|null;while((m=re.exec(d))){const t=Number(m[2]);if(t>=Number(m[1])&&(lo===null||t<lo))lo=t;}return lo;}   // the MEP shift cap below
 export function sanaTechnicianGrade(description:string|null|undefined):boolean{
  const d=String(description||'').replace(/\s+/g,' ');
  if(ITI_ROUTE.test(d))return true;
- if(ITI_ACCEPTED.test(d)){const top=lowestYearsTop(d);if(top===null||top<=ITI_YEARS_TOP)return true;}
+ {const m=ITI_ACCEPTED.exec(d);if(m&&!deniedBefore(d,m.index)&&!/\b(?:not|no|never)\b/i.test(m[0])&&yearsAskedTop(d)<=ITI_YEARS_TOP)return true;}
  const g=GRADUATE_FEW.exec(d);return !!g&&Number(g[2]||g[1])<=3&&/\bOR\s+(?:a\s+)?diploma\b|\bdiploma (?:engineers?|holders?) with\b/i.test(d);
 }
 // Sana, kept but not in Best matches (Worth a try at most):
@@ -1360,14 +1372,16 @@ export function sanaStretchOnlyQa10(title:string|null|undefined,description:stri
 //   a QA, quality-analyst, SDET or test title built on a test framework (Cypress, Selenium, Playwright): test-automation engineering;
 //   a pricing, bid or commercial-solutions title that is bid, pricing, sourcing and contract work and asks years in a named industry.
 const IPAAS_DEV='boomi|airbyte|mulesoft|informatica|talend|snaplogic|fivetran|tibco|jitterbit|azure data factory';
-const IPAAS_MANDATORY=new RegExp(String.raw`\b(?:${IPAAS_DEV})\b[^.;]{0,20}?(?:[-–:]\s*)?\b(?:mandatory|required|is a must|must)\b|\bmandatory\b[^.;]{0,40}\b(?:${IPAAS_DEV})\b`,'i');
+const IPAAS_MANDATORY=new RegExp(String.raw`\b(?:${IPAAS_DEV})\b[^.;]{0,25}?(?:[-–:]\s*)?\b(?:mandatory|required|is a must)\b|\bmandatory\b[^.;]{0,40}\b(?:${IPAAS_DEV})\b`,'gi');
+/** A mandatory iPaaS platform: not denied ('is not required', 'no MuleSoft'), not only welcomed ('optional', 'a plus', 'nice to have'). */
+function ipaasMandatory(d:string):boolean{IPAAS_MANDATORY.lastIndex=0;let m:RegExpExecArray|null;while((m=IPAAS_MANDATORY.exec(d))){if(/\b(?:not|no|non|never|optional)\b/i.test(m[0])||deniedBefore(d,m.index)||QA10_SOFT_AFTER.test(d.slice(m.index+m[0].length)))continue;return true;}return false;}
 const INTEGRATION_DEV=/\bmiddleware development\b|\bmicroservices\b|\bdistributed systems\b|\bAWS\b|\bcode reviews?\b|\bETL\s*\/\s*ELT\b/i;
 const TEST_FRAMEWORK=/\b(?:cypress|selenium|playwright|appium|webdriver ?io|testng|junit|pytest|robot framework)\b/i;
 const BID_WORK=[/\bbids?\b|\bbid management\b|\btenders?\b/i,/\bpricing (?:strategy|models?|tools?)\b|\bcommercial and pricing\b|\bsparing models?\b/i,/\bprocurement\b|\bsourcing strateg/i,/\bcontract(?:ual)? (?:terms|negotiations?)\b|\bcontract negotiations?\b/i];
 const NAMED_INDUSTRY=/\bexperience in the [\w &-]{2,40} industry\b/i;
 export function farhanOtherFieldQa11(title:string|null|undefined,description:string|null|undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
- if(/\bintegration\b/i.test(ti)&&/\b(?:engineer|lead|developer|architect)\b/i.test(ti)&&IPAAS_MANDATORY.test(d)&&INTEGRATION_DEV.test(d))return 'integration platform engineering (a mandatory iPaaS or ETL platform)';
+ if(/\bintegration\b/i.test(ti)&&/\b(?:engineer|lead|developer|architect)\b/i.test(ti)&&ipaasMandatory(d)&&INTEGRATION_DEV.test(d))return 'integration platform engineering (a mandatory iPaaS or ETL platform)';
  if(/\bQA\b|\bquality (?:analyst|assurance|engineer)\b|\bSDET\b|\btest(?:ing|er)?\b/i.test(ti)&&TEST_FRAMEWORK.test(d))return 'test automation (QA) engineering';
  if(/\bpricing\b|\bcommercial solutions?\b|\bbid\b/i.test(ti)&&distinct(BID_WORK,d)>=3&&NAMED_INDUSTRY.test(d))return 'commercial bid and pricing work';
  return null;
@@ -1385,7 +1399,7 @@ export function farhanJuniorSupport(title:string|null|undefined,description:stri
 //   SCADA or control-system duty work with a named platform or RTU mandatory ('Mandatory hands-on experience with Siemens Spectrum Power 5',
 //   'Mandatory experience with AK Series RTUs') or years asked in SCADA ('5–7 years of experience in SCADA and Industrial Automation systems');
 //   a facility or building MEP supervisor (foreman grade) over technicians on split / cassette / VRF air conditioning and sanitary or plumbing work.
-const SCADA_MANDATORY=/\bmandatory\b[^.;]{0,60}\b(?:SCADA|RTUs?|spectrum power|DMS|EMS|historian)\b|\b(?:SCADA|RTUs?|spectrum power)\b[^.;]{0,40}\b(?:mandatory|is a must)\b|\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,30}\bin SCADA\b/i;
+const SCADA_MANDATORY=/\bmandatory\b[^.;]{0,60}\b(?:SCADA|RTUs?|spectrum power|historians?)\b|\b(?:SCADA|RTUs?|spectrum power)\b[^.;]{0,40}\b(?:mandatory|is a must)\b|\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,30}\bin SCADA\b/i;   // jobs QA 11 review: no bare DMS / EMS (ISO 14001 EMS)
 const BUILDING_HVAC=/\bsplit\b|\bcassette\b|\bVRF\b|\bVRV\b|\bsanitary\b|\bplumbing\b|\bfan coil\b|\bFCUs?\b/i;
 export function sanaOtherProfessionQa11(title:string|null|undefined,description:string|null|undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
@@ -1399,7 +1413,7 @@ export function sanaOtherProfessionQa11(title:string|null|undefined,description:
 //   maintenance that also carries product-manufacturing duties ('Develop and execute daily/weekly/monthly RMU production plans', 'Minimum 10 years in
 //   RMU or MV switchgear manufacturing');
 //   oil-and-gas capital-project or FEED engineering ('Lead Front End Engineering Design (FEED)', 'Brownfield modification/retrofit projects').
-const FEED_WORK=/\bFEED\b|\bfront[- ]end engineering design\b|\b(?:brownfield|greenfield) (?:modification|retrofit|projects?)\b/i;
+const FEED_WORK=/\bFEED\b|\b[Ff]ront[- ][Ee]nd [Ee]ngineering [Dd]esign\b|\b[Bb]rownfield (?:modification|retrofit|projects?)\b|\b[Gg]reenfield (?:modification|retrofit|projects?)\b/;   // case-sensitive: 'boiler feed pumps' is no FEED
 export function sanaStretchOnlyQa11(title:string|null|undefined,description:string|null|undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
  if(/\bMEP\b/.test(`${ti} ${d}`)&&/\b(?:terminal|airport|building|facilit(?:y|ies)|mall|tower|campus)\b/i.test(`${ti} ${d}`)&&DIPLOMA_ACCEPTED.test(d)){const top=lowestYearsTop(d);if(top!==null&&top<=8)return 'a building MEP shift post accepting a diploma';}
@@ -1736,8 +1750,8 @@ export const TRACKING_PARAM=/^(?:utm_[a-z_]*|feedid|gh_src|source|src|ref|referr
 // can be written two ways ('ENGIE', 'ENGIE Information Technologies SA').
 export const TWIN_TEXT_CHARS=2000;
 const ENTITY:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' ',rsquo:"'",lsquo:"'",rdquo:'"',ldquo:'"',ndash:'-',mdash:'-',hellip:'...'};
-export function twinText(description:string|null|undefined):string{
- const raw=String(description||'').slice(0,TWIN_TEXT_CHARS).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(m,e:string)=>{const l=e.toLowerCase();if(l[0]==='#'){const n=l[1]==='x'?parseInt(l.slice(2),16):parseInt(l.slice(1),10);return Number.isFinite(n)?String.fromCodePoint(n):m;}return ENTITY[l]??m;});
+export function twinText(description:string|null|undefined,max:number=TWIN_TEXT_CHARS):string{
+ const raw=String(description||'').slice(0,max).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(m,e:string)=>{const l=e.toLowerCase();if(l[0]==='#'){const n=l[1]==='x'?parseInt(l.slice(2),16):parseInt(l.slice(1),10);return Number.isFinite(n)?String.fromCodePoint(n):m;}return ENTITY[l]??m;});
  return raw.replace(/<[^>]*>/g,' ').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
 export function twinEmployer(company:string|null|undefined):string{const w=String(company||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(' ').filter((x)=>x&&x!=='the');return w[0]||'';}

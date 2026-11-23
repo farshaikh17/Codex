@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluate, farhanOtherFieldQa11, farhanJuniorSupport, farhanBelowLevel, farhanOtherFieldQa10, farhanEngineeringField, sanaOtherProfessionQa11,
   sanaStretchOnlyQa11, sanaStretchOnly, sanaTechnicianGrade, sanaOtherProfession, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, RULES_MARKER } from '../worker/discovery.ts';
-import { keepTwins, sameRepost, dropReposts } from '../scripts/shortlist_select.mjs';
+import { keepTwins, sameRepost, dropReposts, requisition, newerPosting, nearSameTitle } from '../scripts/shortlist_select.mjs';
 import { employerName } from '../frontend/src/seeker/format.ts';
 
 const farhan = { id: 'farhan_shaikh', qualification_threshold: 70, total_years_experience: 9,
@@ -141,6 +141,62 @@ test('Sana cap near misses: thermal plant boilers, an MEP post asking a degree o
   assert.equal(sanaStretchOnlyQa11('MEP Engineer', 'MEP systems of the terminal. B.E. Electrical. 4-8 years.'), null);
   assert.equal(sanaStretchOnlyQa11('Maintenance Manager', 'Ensure uninterrupted production through effective maintenance planning. 10+ years in power plants.'), null);
   assert.equal(sanaStretchOnlyQa11('Maintenance Engineer', 'Support brownfield projects during shutdowns.'), null, 'not a project title');
+});
+
+// ---- Review of #248: the exact failing inputs ------------------------------------------------------------------------------------------------------
+test('review 1: "FEED" is the acronym only; boiler feed pumps and feed water are plant work', () => {
+  assert.equal(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Erection of boiler feed pumps and condensate lines for the 660 MW unit.'), null);
+  assert.equal(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Commission the feed water heaters and the feed pump.'), null);
+  assert.match(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Lead the FEED for the new compressor station.'), /FEED/);
+  assert.match(sanaStretchOnlyQa11('Senior Project Engineer', 'Lead front-end engineering design studies.'), /FEED/);
+});
+test('review 2: another branch named ("any other engineering discipline", "related engineering discipline") opens a mechanical degree', () => {
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'B.E. in Mechanical Engineering or any other engineering discipline.', 'Acme', 9.2), null);
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'B.E. in Mechanical or related engineering discipline.', 'Acme', 9.2), null);
+  assert.match(sanaStretchOnly('Dy.Manager-Mechanical-BOP', 'Bachelor of Engineering (B.E.) in Mechanical Engineering or a related field.', 'Acme', 9.2), /mechanical-only/);
+  assert.match(sanaStretchOnly('Lead Mechanical Turbine', 'Educational Qualification: in Mechanical Engineering or equivalent degree related field.', 'Acme', 9.2), /mechanical-only/);
+});
+test('review 3: ITI counts only when accepted in so many words, and only when no years figure asked goes above 7', () => {
+  assert.equal(sanaTechnicianGrade('Qualification: B.E./Diploma/ITI with 15+ years in power plant maintenance.'), false);
+  assert.equal(sanaTechnicianGrade('B.E. Mechanical or ITI. 12-15 years overall, including 2-3 years as shift in-charge.'), false);
+  assert.equal(sanaTechnicianGrade('Experience: 4-6 + years in a foundry. ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable.'), true);
+  assert.equal(sanaTechnicianGrade('Experience: 2 - 7 + years in a foundry. ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable.'), true);
+  assert.equal(sanaTechnicianGrade('Experience: 4-6 years. ITI holders are not suitable for this role.'), false, 'a denied ITI');
+  assert.equal(sanaTechnicianGrade('Founded over 40 years ago. 5-7 years in maintenance. ITI holders can also apply.'), true, 'the company story is not the requirement');
+});
+test('review 4: IBM Maximo, PLCs with HMIs, or an automotive employer alone are no machine line; Sperton, TE and Kongsberg still are', () => {
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'Plant maintenance using IBM Maximo CMMS. PLCs and HMIs troubleshooting. Experience in automotive components industry.', 'Acme', 9.2), null);
+  assert.match(sanaStretchOnly('Maintenance Supervisor', 'Machine Experience: Injection moulding, EBM/IBM, extrusion/accumulator head. PLC, HMI, VFD/servo drives.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnly('SUPV II MAINTENANCE', 'Maintenance of injection molding machines; PLC, HMI, VFD/servo drives. More than 6 years of experience in maintenance within the Automotive / Plastic Injection Molding manufacturing industry.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnly('Maintenance Specialist', 'Troubleshooting & maintenance of Injection molding machine, SPM, Robots (Fanuc & Epson), Extrusion line.', 'Acme', 9.2), /discrete manufacturing/);
+});
+test('review 5 and 8: reposts need near-identical titles and the whole text; template posts of two grades stay two jobs', () => {
+  const T = PLANT.repeat(12);
+  const row = (id, title, o = {}) => ({ job_id: id, title, company: 'Acme Power', location: 'Korba, Chhattisgarh, India', description: T, url: `https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/${id}`, discovered_at: '2026-11-20T00:00:00Z', ...o });
+  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer')]).length, 2);
+  assert.equal(nearSameTitle('Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', 'Lead Electrical Boiler/Turbine/Generator'), true);
+  assert.equal(nearSameTitle('Maintenance Engineer', 'Senior Maintenance Engineer'), false);
+  assert.deepEqual(dropReposts([row('59535', 'Lead - Electrical Boiler/Turbine/Generator/Shift Engineer'), row('61412', 'Lead Electrical Boiler/Turbine/Generator', { location: 'Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India' })]).map((r) => r.job_id), ['61412']);
+  assert.equal(dropReposts([row('59535', 'Plant Engineer'), row('61412', 'Plant Engineer', { description: T + ' The last paragraph differs.' })]).length, 2, 'texts that differ after the first 2000 characters are not one posting');
+  const many = Array.from({ length: 3000 }, (_, i) => row(String(70000 + i), 'Plant Engineer', { company: `Employer ${i}`, description: T + i }));
+  const t0 = Date.now(); assert.equal(dropReposts(many).length, 3000); assert.ok(Date.now() - t0 < 2000, 'bucketed: no pairwise scan of unrelated rows');
+});
+test('review 6: a platform denied or only welcomed is not mandatory; a bare "must" nearby does not count', () => {
+  assert.equal(farhanOtherFieldQa11('Integration Engineer', OPS + 'MuleSoft is not required; we use Workato. Microservices experience helps.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Lead', OPS + 'Boomi is optional. You must know microservices.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Lead', OPS + 'Informatica - required is a plus for us. AWS pipelines.'), null);
+  assert.match(farhanOtherFieldQa11('Senior Integration Lead Engineer', OPS + 'Strong hands-on experience with Boomi - Mandatory. Middleware development and microservices.'), /integration platform/);
+});
+test('review 7: EMS / DMS alone are no SCADA platform', () => {
+  assert.equal(sanaOtherProfessionQa11('Mechanical Engineer', 'Work with the control room. Mandatory awareness of ISO 14001 EMS and safety.'), null);
+  assert.equal(sanaOtherProfessionQa11('Power SCADA - Duty Engineer', 'Mandatory hands-on experience with Siemens Spectrum Power 5. Mandatory experience with AK Series RTUs.'), 'SCADA and control systems');
+});
+test('review 9: the requisition id is read where the hiring system puts it; other shapes fall back to the discovery date', () => {
+  assert.deepEqual(requisition({ url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/61412' }), { form: 'abcd.fa.em2.oraclecloud.com#0', id: 61412 });
+  assert.equal(requisition({ url: 'https://acme.wd3.myworkdayjobs.com/ext/job/Pune/Plant-Engineer_R10077327' }).id, 10077327);
+  assert.equal(requisition({ url: 'https://e.com/careers/2026/plant-engineer-300' }), null, 'no digit run read at random');
+  const a = { url: 'https://e.com/careers/2026/a', discovered_at: '2026-11-22' }, b = { url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/1', discovered_at: '2026-11-20' };
+  assert.ok(newerPosting(a, b) > 0, 'different shapes: the later discovery');
 });
 
 // ---- Display -------------------------------------------------------------------------------------------------------------------------------------
