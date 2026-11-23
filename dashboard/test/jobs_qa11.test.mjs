@@ -1,0 +1,281 @@
+// Jobs QA 11 (23 Nov, after the profile_v26 release and rebuild): both live lists (78 jobs) were re-judged by two reviewers; 5 of Farhan's and 5 of
+// Sana's should not have been shown, and 14 of Sana's belonged on Worth a try at most. Each general rule has positive cases in short paraphrased or
+// quoted wording and the near misses it must leave alone; the last test checks that every job the reviewers judged RIGHT keeps its list. No personal
+// data.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { evaluate, farhanOtherFieldQa11, farhanJuniorSupport, farhanBelowLevel, farhanOtherFieldQa10, farhanEngineeringField, sanaOtherProfessionQa11,
+  sanaStretchOnlyQa11, sanaStretchOnly, sanaTechnicianGrade, sanaOtherProfession, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, RULES_MARKER } from '../worker/discovery.ts';
+import { keepTwins, sameRepost, dropReposts, requisition, newerPosting, nearSameTitle } from '../scripts/shortlist_select.mjs';
+import { employerName } from '../frontend/src/seeker/format.ts';
+
+const farhan = { id: 'farhan_shaikh', qualification_threshold: 70, total_years_experience: 9,
+  primary_skills: JSON.stringify(['HubSpot', 'Workflow Automation', 'CRM Configuration', 'Zapier', 'Process Design', 'API Integrations', 'Product Implementation', 'Stakeholder Management', 'Technical Delivery']),
+  target_roles: JSON.stringify(['Technical Operations Lead', 'Implementation Manager', 'Automation Specialist', 'Revenue Operations Specialist', 'CRM Operations Specialist', 'Technical Project Manager']) };
+const sana = { id: 'sana_ansari', qualification_threshold: 60, total_years_experience: 9.2,
+  primary_skills: JSON.stringify(['Reliability', 'Preventive Maintenance', 'Root Cause Analysis', 'Breakdown Maintenance', 'Maintenance Planning', 'Industrial Utilities']),
+  target_roles: JSON.stringify(['Reliability Engineer', 'Maintenance Engineer (Power Plant)', 'Plant Engineer']) };
+const evF = (title, description, o = {}) => evaluate(farhan, { id: 'x', title, company: o.company || 'Acme', url: 'https://e.com/x', location: o.location ?? 'Remote - India', description, remote: o.remote ?? true, source: o.source || 'greenhouse', board: o.board });
+const evS = (title, description, o = {}) => evaluate(sana, { id: 'x', title, company: o.company || 'Acme Industries', url: 'https://e.com/x', location: o.location ?? 'Pune, Maharashtra, India', description, remote: o.remote ?? false, source: o.source || 'successfactors', board: o.board });
+const OPS = 'Own the implementation of our platform for new customers: requirements gathering, CRM configuration, workflow automation with Zapier and API integrations, process design and stakeholder management through go-live. ';
+const PLANT = 'Plan preventive and breakdown maintenance of the boilers, compressors and pumps in our continuous-process plant, lead root cause analysis, maintenance planning and run the industrial utilities and spares. ';
+const listedF = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE' ? e.score >= 60 : e.score >= 70);
+const listedS = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE' ? e.score >= 50 : e.score >= 60);
+const capS = (title, D, o = {}) => { const e = evS(title, PLANT + PLANT + D, o); assert.equal(e.eligibility, 'ELIGIBLE', e.reason); assert.ok(e.score < 60 && e.score >= 50, `${title}: ${e.score} ${e.qualification_reason}`); return e; };
+
+test('marker: the rules changed, so every stored row is re-scored once (profile_v27)', () => {
+  assert.equal(RULES_MARKER, 'profile_v27');
+});
+
+// ---- Farhan: hidden ------------------------------------------------------------------------------------------------------------------------------
+test('Farhan 1: an integration engineer whose iPaaS / ETL platform is mandatory, with middleware or microservices development, is engineering', () => {
+  const D = OPS + '6-8 years of experience in enterprise integration and middleware development. Strong hands-on experience with Boomi - Mandatory. Strong hands-on experience with Airbyte - Mandatory. Strong understanding of microservices.';
+  assert.match(farhanOtherFieldQa11('Senior Integration Lead Engineer', D), /integration platform/);
+  assert.ok(evF('Senior Integration Lead Engineer', D).score <= AVOID_TITLE_CAP);
+});
+test('Farhan 1 near misses: Workato (his platform), a platform only welcomed, or no development work', () => {
+  assert.equal(farhanOtherFieldQa11('Senior Workato Integration Engineer', OPS + 'Workato certification is mandatory. Build recipes on AWS.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Engineer', OPS + 'MuleSoft experience is a plus. Work with microservices teams.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Lead', OPS + 'Boomi experience is mandatory for configuring our connectors.'), null);
+});
+
+test('Farhan 2: "automation" in a QA, quality-analyst, SDET or test title with a test framework is test-automation engineering', () => {
+  assert.equal(farhanOtherFieldQa11('Automation Quality Analyst', OPS + 'Build and maintain UI and API automation using Cypress. 5+ years of hands-on QA and automation experience.'), 'test automation (QA) engineering');
+  assert.equal(farhanOtherFieldQa11('SDET - Automation', OPS + 'Selenium and Playwright suites in CI.'), 'test automation (QA) engineering');
+  assert.equal(farhanOtherFieldQa11('Automation Specialist', OPS + 'Test your Zapier zaps before go-live.'), null, 'not a QA title');
+  assert.equal(farhanOtherFieldQa11('QA Lead - Implementation', OPS + 'Review implementation checklists with customers.'), null, 'no test framework');
+});
+
+test('Farhan 3: a programme manager for creative, print, packaging or CPG production asking domain years is another field', () => {
+  const D = OPS + 'Shopper marketing assets, retail displays and packaging production. 8+ years of project or program management experience, ideally within the consumer packaged goods (CPG) industry.';
+  assert.match(farhanOtherFieldQa10('Creative Program Manager', D), /consumer packaged goods/);
+  assert.ok(evF('Creative Program Manager', D, { location: 'India', source: 'lever' }).score <= AVOID_TITLE_CAP);
+  assert.equal(farhanOtherFieldQa10('Technical Program Manager', OPS + '8+ years of program management for SaaS rollouts; our clients include CPG brands.'), null);
+});
+
+test('Farhan 4: a support desk graded junior, middle or associate, asking 1-2 years, handling refunds or cancellations, is below his level', () => {
+  const D = OPS + 'Handle subscription cancellations, refund requests and payment inquiries. Monitor ticket resolution. At least 2 years of experience in Customer Support or Operations.';
+  assert.equal(farhanJuniorSupport('Middle Customer Support Operations Specialist', D), true);
+  assert.match(farhanBelowLevel('Middle Customer Support Operations Specialist', D, 2), /junior support-desk/);
+  assert.ok(evF('Middle Customer Support Operations Specialist', D, { location: 'India', source: 'lever' }).score <= UNDER_LEVEL_CAP);
+});
+test('Farhan 4 near misses: a senior support title, more years asked, or no ticket work', () => {
+  const D = OPS + 'Handle refund requests and tickets. At least 2 years of experience.';
+  assert.equal(farhanJuniorSupport('Senior Customer Support Operations Lead', D), false);
+  assert.equal(farhanJuniorSupport('Associate Support Engineer', OPS + 'Handle tickets. 5+ years of SaaS support experience.'), false);
+  assert.equal(farhanJuniorSupport('Associate Customer Support Specialist', OPS + 'At least 2 years of onboarding experience.'), false);
+});
+
+test('Farhan 5: a pricing / commercial-solutions title doing bids, pricing, sourcing and contracts in a named industry is another field', () => {
+  const D = OPS + 'Manage the complexities of large and major bids; set a Commercial and Pricing strategy; sourcing strategies; vigorous commercial and contractual terms. Previous proven experience in the IT Field Service industry.';
+  assert.equal(farhanOtherFieldQa11('Commercial Solutions and Pricing Architect', D), 'commercial bid and pricing work');
+  assert.match(farhanEngineeringField('Commercial Solutions and Pricing Architect', D), /bid and pricing/);
+  assert.equal(farhanOtherFieldQa11('Solutions Engineer', D), null, 'a solutions engineer title is not a pricing seat');
+  assert.equal(farhanOtherFieldQa11('Pricing Operations Specialist', OPS + 'Maintain pricing tables in the CRM.'), null);
+});
+
+// ---- Sana: hidden --------------------------------------------------------------------------------------------------------------------------------
+test('Sana 1: SCADA duty work with a mandatory platform or RTU, or years in SCADA, is control-systems work', () => {
+  const D = PLANT + '5-7 years of experience in SCADA and Industrial Automation systems. Mandatory hands-on experience with Siemens Spectrum Power 5. Mandatory experience with AK Series RTUs.';
+  assert.equal(sanaOtherProfessionQa11('Power SCADA - Duty Engineer', D), 'SCADA and control systems');
+  assert.ok(evS('Power SCADA - Duty Engineer', D, { location: 'Dubai, United Arab Emirates', source: 'manatal' }).score <= AVOID_TITLE_CAP);
+  assert.equal(sanaOtherProfessionQa11('AM/DM - Utilities Automation', PLANT + '8 to 10 years of experience in Automation, Controls Engineering or Process Control. Work with SCADA and PLCs.'), null, 'stays capped, not hidden');
+  assert.equal(sanaOtherProfessionQa11('Maintenance Engineer', PLANT + 'SCADA knowledge is mandatory for monitoring.'), null, 'her own title');
+});
+
+test('Sana 2: a facility or building MEP supervisor over technicians on split / VRF air conditioning and plumbing is foreman work', () => {
+  const D = PLANT + 'Supervise daily MEP maintenance activities and assign tasks to technicians; split and cassette AC units, VRF systems, sanitary fixtures.';
+  assert.equal(sanaOtherProfessionQa11('MEP Maintenance Supervisor', D), 'building MEP supervision');
+  assert.equal(sanaOtherProfessionQa11('MEP Maintenance Engineer', D), null, 'an engineer title is not foreman grade');
+  assert.equal(sanaOtherProfessionQa11('Maintenance Supervisor', PLANT + 'Supervise technicians on the boilers.'), null);
+});
+
+test('Sana 3 (why QA 8 missed it): an ITI accepted in its own sentence ("is also suitable") with years ending at 7 or less is a technician grade', () => {
+  const D = PLANT + 'Experience: 4-6 + years of maintenance experience in a foundry industry. Education: Diploma/B.E. in Mechanical Engineering, Electrical Engineering, or a related technical qualification. ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable.';
+  assert.equal(sanaTechnicianGrade(D), true);
+  assert.equal(sanaTechnicianGrade(D.replace('4-6 + years', '2 - 7 + years')), true);
+  assert.ok(evS('Maintenance Engineer - Foundry Industry', D, { location: 'Wai, MH, India', source: 'keka' }).score <= UNDER_LEVEL_CAP);
+  assert.equal(sanaTechnicianGrade(D.replace('4-6 + years', '10-15 years')), false, 'years ending above 7');
+  assert.equal(sanaTechnicianGrade(PLANT + 'B.E. Electrical, 8-12 years. Lead a team of ITI fitters.'), false, 'ITI is the team, not the applicant');
+});
+
+test('Sana 4: an employer\'s repost of the same text, a new requisition, a title of the same words, a place sharing a city: the newest stays', () => {
+  const T = PLANT.repeat(4);
+  const row = (id, o) => ({ kind: 'pool', candidate_id: 'sana_ansari', job_id: id, company: 'Acme Power', description: T, workplace: 'ONSITE', source: 'oracle', provenance: 'ATS_DATASET', active: 1,
+    score: 95, skill_score: 80, eligibility: 'ELIGIBLE', status: 'NEEDS_REVIEW', reason: '', threshold: 60, marked: 1, target_exact: 0, discovered_at: '2026-11-20T00:00:00Z', last_verified_at: '2026-11-23T00:00:00Z', ...o });
+  const old = row('ds:oracle:old', { title: 'Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', location: 'Korba, Chhattisgarh, India', url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/59535', discovered_at: '2026-11-21T00:00:00Z' });
+  const fresh = row('ds:oracle:new', { title: 'Lead Electrical Boiler/Turbine/Generator', location: 'Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India', url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/61412' });
+  assert.equal(sameRepost(old, fresh), true);
+  assert.deepEqual(dropReposts([old, fresh]).map((r) => r.job_id), ['ds:oracle:new'], 'the higher requisition, even if found earlier');
+  assert.deepEqual(keepTwins([old, fresh], Date.parse('2026-11-23T12:00:00Z')).map((r) => r.job_id), ['ds:oracle:new']);
+  const other = row('ds:oracle:mundra', { title: 'Associate Manager - Operations & Maintenance', location: 'Mundra, Gujarat, India', url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/61000' });
+  assert.equal(sameRepost(fresh, { ...other, title: fresh.title }), false, 'no shared city: the many-cities rule');
+  assert.equal(sameRepost(fresh, { ...other, location: 'Korba, Chhattisgarh, India' }), false, 'another title: another job on the same template');
+  assert.equal(sameRepost(fresh, { ...old, company: 'Globex Energy' }), false, 'another employer on a shared host');
+  assert.equal(sameRepost(fresh, { ...old, description: 'Short text.' }), false);
+});
+
+// ---- Sana: capped (Best -> Worth a try) ----------------------------------------------------------------------------------------------------------
+test('Sana caps (why QA 8 missed it): "Mechanical Engineering or a related field / or equivalent" is a mechanical-only degree unless Electrical is named', () => {
+  assert.match(sanaStretchOnly('Associate Manager - Mechanical BOP', 'Educational Qualification: Bachelor of Technology () or Bachelor of Engineering (B.E.) in Mechanical Engineering or a related field.', 'Acme', 9.2), /mechanical-only/);
+  assert.match(sanaStretchOnly('Lead Mechanical Turbine', 'Educational Qualification: in Mechanical Engineering or equivalent degree related field.', 'Acme', 9.2), /mechanical-only/);
+  assert.match(sanaStretchOnly('Maintenance Engineer', "Education: Bachelor's (Master's preferred) in Mechanical Engineering or a related field.", 'Acme', 9.2), /mechanical-only/);
+  assert.match(sanaStretchOnly('SMS Crane Maintenance', 'Diploma / B.E. / in Mechanical Engineering. 10-15 years in Steel Melt Shop mechanical maintenance.', 'Acme', 9.2), /mechanical-only/);
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'Diploma/B.E. in Mechanical Engineering, Electrical Engineering, or a related technical qualification.', 'Acme', 9.2), null, 'electrical named too');
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'B.E. in Mechanical or any engineering discipline.', 'Acme', 9.2), null);
+  capS('Dy.Manager-Mechanical-BOP', 'Bachelor of Engineering (B.E.) in Mechanical Engineering or a related field. 4+ years.', { location: 'Korba, Chhattisgarh, India', source: 'oracle' });
+});
+test('Sana caps: years in solar PV, discrete moulding / robot lines, building MEP shifts accepting a diploma, maintenance with production duties, FEED projects', () => {
+  assert.match(sanaStretchOnly('O&M Engineer', '4 - 8 years of experience in Solar PV O&M.', 'Acme', 9.2), /specialist sub-domain/);
+  assert.match(sanaStretchOnly('Regional Manager - O&M', '10-12 years of experience in Solar PV, preferably in O&M.', 'Acme', 9.2), /specialist sub-domain/);
+  assert.match(sanaStretchOnly('Maintenance Supervisor', 'Machine experience: injection moulding, EBM/IBM, extrusion; PLC, HMI, VFD/servo drives.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnly('Maintenance Specialist', 'Troubleshooting of injection molding machines, SPM, robots (Fanuc), extrusion lines.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnlyQa11('Shift Engineer MEP Terminal', 'Operation of all MEP systems in the airport terminal. Diploma / B.E. / in Electrical, Mechanical. 4-8 years relevant MEP operations.'), /building MEP shift/);
+  assert.match(sanaStretchOnlyQa11('Assistant Manager - Maintenance', 'Develop and execute daily/weekly/monthly RMU production plans. Minimum 10 years in RMU or MV switchgear manufacturing.'), /product-manufacturing/);
+  assert.match(sanaStretchOnlyQa11('Senior / Project Engineer - Mechanical', 'Execution of multiple Brownfield modification/retrofit projects; lead Front End Engineering Design (FEED).'), /FEED/);
+  capS('O&M Engineer', '4 - 8 years of experience in Solar PV O&M.', { location: 'Gujarat, India', source: 'zoho_recruit' });
+  capS('Shift Engineer MEP Terminal', 'All MEP systems in the airport terminal. Diploma / B.E. / in Electrical, Mechanical. 4-8 years relevant MEP operations.', { location: 'Jewar, Uttar Pradesh, India', source: 'darwinbox' });
+});
+test('Sana cap near misses: thermal plant boilers, an MEP post asking a degree only, a maintenance post naming production uptime, a maintenance project', () => {
+  assert.equal(sanaStretchOnly('Maintenance Engineer', '8+ years in thermal power plant maintenance of boilers and turbines.', 'Acme', 9.2), null);
+  assert.equal(sanaStretchOnlyQa11('MEP Engineer', 'MEP systems of the terminal. B.E. Electrical. 4-8 years.'), null);
+  assert.equal(sanaStretchOnlyQa11('Maintenance Manager', 'Ensure uninterrupted production through effective maintenance planning. 10+ years in power plants.'), null);
+  assert.equal(sanaStretchOnlyQa11('Maintenance Engineer', 'Support brownfield projects during shutdowns.'), null, 'not a project title');
+});
+
+// ---- Review of #248: the exact failing inputs ------------------------------------------------------------------------------------------------------
+test('review 1: "FEED" is the acronym only; boiler feed pumps and feed water are plant work', () => {
+  assert.equal(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Erection of boiler feed pumps and condensate lines for the 660 MW unit.'), null);
+  assert.equal(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Commission the feed water heaters and the feed pump.'), null);
+  assert.match(sanaStretchOnlyQa11('Project Engineer - Mechanical', 'Lead the FEED for the new compressor station.'), /FEED/);
+  assert.match(sanaStretchOnlyQa11('Senior Project Engineer', 'Lead front-end engineering design studies.'), /FEED/);
+});
+test('review 2: another branch named ("any other engineering discipline", "related engineering discipline") opens a mechanical degree', () => {
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'B.E. in Mechanical Engineering or any other engineering discipline.', 'Acme', 9.2), null);
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'B.E. in Mechanical or related engineering discipline.', 'Acme', 9.2), null);
+  assert.match(sanaStretchOnly('Dy.Manager-Mechanical-BOP', 'Bachelor of Engineering (B.E.) in Mechanical Engineering or a related field.', 'Acme', 9.2), /mechanical-only/);
+  assert.match(sanaStretchOnly('Lead Mechanical Turbine', 'Educational Qualification: in Mechanical Engineering or equivalent degree related field.', 'Acme', 9.2), /mechanical-only/);
+});
+test('review 3: ITI counts only when accepted in so many words, and only when no years figure asked goes above 7', () => {
+  assert.equal(sanaTechnicianGrade('Qualification: B.E./Diploma/ITI with 15+ years in power plant maintenance.'), false);
+  assert.equal(sanaTechnicianGrade('B.E. Mechanical or ITI. 12-15 years overall, including 2-3 years as shift in-charge.'), false);
+  assert.equal(sanaTechnicianGrade('Experience: 4-6 + years in a foundry. ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable.'), true);
+  assert.equal(sanaTechnicianGrade('Experience: 2 - 7 + years in a foundry. ITI (Fitter/Electrician) with relevant foundry maintenance experience is also suitable.'), true);
+  assert.equal(sanaTechnicianGrade('Experience: 4-6 years. ITI holders are not suitable for this role.'), false, 'a denied ITI');
+  assert.equal(sanaTechnicianGrade('Founded over 40 years ago. 5-7 years in maintenance. ITI holders can also apply.'), true, 'the company story is not the requirement');
+});
+test('review 4: IBM Maximo, PLCs with HMIs, or an automotive employer alone are no machine line; Sperton, TE and Kongsberg still are', () => {
+  assert.equal(sanaStretchOnly('Maintenance Engineer', 'Plant maintenance using IBM Maximo CMMS. PLCs and HMIs troubleshooting. Experience in automotive components industry.', 'Acme', 9.2), null);
+  assert.match(sanaStretchOnly('Maintenance Supervisor', 'Machine Experience: Injection moulding, EBM/IBM, extrusion/accumulator head. PLC, HMI, VFD/servo drives.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnly('SUPV II MAINTENANCE', 'Maintenance of injection molding machines; PLC, HMI, VFD/servo drives. More than 6 years of experience in maintenance within the Automotive / Plastic Injection Molding manufacturing industry.', 'Acme', 9.2), /discrete manufacturing/);
+  assert.match(sanaStretchOnly('Maintenance Specialist', 'Troubleshooting & maintenance of Injection molding machine, SPM, Robots (Fanuc & Epson), Extrusion line.', 'Acme', 9.2), /discrete manufacturing/);
+});
+test('review 5 and 8: reposts need near-identical titles and the whole text; template posts of two grades stay two jobs', () => {
+  const T = PLANT.repeat(12);
+  const row = (id, title, o = {}) => ({ job_id: id, title, company: 'Acme Power', location: 'Korba, Chhattisgarh, India', description: T, url: `https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/${id}`, discovered_at: '2026-11-20T00:00:00Z', ...o });
+  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer')]).length, 2);
+  assert.equal(nearSameTitle('Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', 'Lead Electrical Boiler/Turbine/Generator'), true);
+  assert.equal(nearSameTitle('Maintenance Engineer', 'Senior Maintenance Engineer'), false);
+  assert.deepEqual(dropReposts([row('59535', 'Lead - Electrical Boiler/Turbine/Generator/Shift Engineer'), row('61412', 'Lead Electrical Boiler/Turbine/Generator', { location: 'Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India' })]).map((r) => r.job_id), ['61412']);
+  assert.equal(dropReposts([row('59535', 'Plant Engineer'), row('61412', 'Plant Engineer', { description: T + ' The last paragraph differs.' })]).length, 2, 'texts that differ after the first 2000 characters are not one posting');
+  const many = Array.from({ length: 3000 }, (_, i) => row(String(70000 + i), 'Plant Engineer', { company: `Employer ${i}`, description: T + i }));
+  const t0 = Date.now(); assert.equal(dropReposts(many).length, 3000); assert.ok(Date.now() - t0 < 2000, 'bucketed: no pairwise scan of unrelated rows');
+});
+test('review 6: a platform denied or only welcomed is not mandatory; a bare "must" nearby does not count', () => {
+  assert.equal(farhanOtherFieldQa11('Integration Engineer', OPS + 'MuleSoft is not required; we use Workato. Microservices experience helps.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Lead', OPS + 'Boomi is optional. You must know microservices.'), null);
+  assert.equal(farhanOtherFieldQa11('Integration Lead', OPS + 'Informatica - required is a plus for us. AWS pipelines.'), null);
+  assert.match(farhanOtherFieldQa11('Senior Integration Lead Engineer', OPS + 'Strong hands-on experience with Boomi - Mandatory. Middleware development and microservices.'), /integration platform/);
+});
+test('review 7: EMS / DMS alone are no SCADA platform', () => {
+  assert.equal(sanaOtherProfessionQa11('Mechanical Engineer', 'Work with the control room. Mandatory awareness of ISO 14001 EMS and safety.'), null);
+  assert.equal(sanaOtherProfessionQa11('Power SCADA - Duty Engineer', 'Mandatory hands-on experience with Siemens Spectrum Power 5. Mandatory experience with AK Series RTUs.'), 'SCADA and control systems');
+});
+test('review 9: the requisition id is read where the hiring system puts it; other shapes fall back to the discovery date', () => {
+  assert.deepEqual(requisition({ url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/61412' }), { form: 'abcd.fa.em2.oraclecloud.com#0', id: 61412 });
+  assert.equal(requisition({ url: 'https://acme.wd3.myworkdayjobs.com/ext/job/Pune/Plant-Engineer_R10077327' }).id, 10077327);
+  assert.equal(requisition({ url: 'https://e.com/careers/2026/plant-engineer-300' }), null, 'no digit run read at random');
+  const a = { url: 'https://e.com/careers/2026/a', discovered_at: '2026-11-22' }, b = { url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/1', discovered_at: '2026-11-20' };
+  assert.ok(newerPosting(a, b) > 0, 'different shapes: the later discovery');
+});
+
+// ---- Display -------------------------------------------------------------------------------------------------------------------------------------
+test('display: the live Majesco row (company "Candidate Experience site", its Oracle posting URL) reads "Majesco"', () => {
+  assert.equal(employerName('Candidate Experience site', 'https://fa-emad-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_6001/job/5370'), 'Majesco');
+  assert.equal(employerName('Majesco'), 'Majesco', 'the name kept for the "Did you apply?" prompt stays as it is');
+});
+
+// ---- Every job the reviewers judged RIGHT keeps its place ------------------------------------------------------------------------------------------
+// [person, list, title, place, remote, job-board row, the posting's lines nearest to the new rules (quoted)]. Koch (x2) is left out: its place is now
+// filled (US) and the abroad-without-visa cap of the QA 6 rulings hides it (decided after review of #247).
+const RIGHT = [
+  ["farha", "Best", "Customer Success & Technical Project Manager", "Delhi, Bangalore Urban", true, false, "We also have hands-on experience building climate strategies for global clients and implementing clean-energy solutions like solar. We believe climate change is the greatest challenge facing humanity and want to dedicate our careers to fighting against it. Gather client feedback to inform product development and service improvements. Hands-on, proactive, and adaptable to shifting priorities in an early-stage startup."],
+  ["farha", "Best", "Marketing Automation & CRM Operations Manager", "Remote", true, false, "Location: India (remote). Collaborate with sales and marketing teams to streamline lead qualification, follow-up, and reporting processes. Conduct A/B testing and analyse engagement metrics to continuously optimise campaigns. Hands-on experience using Click Dimensions for marketing automation and lead nurturing. Oversee the marketing processes within Microsoft Dynamics 365 (lead capture, qualification inputs, campaign attribution)."],
+  ["farha", "Best", "Technical Delivery Manager (PL7038)", "Remote job", true, false, "Technical Delivery Manager Fully Remote within India Long Term Contract Shift Timings: 2:00 pm to 11:00 pm IST Experienced Technical Delivery Manager Coordinate delivery across engineering, product, architecture, DevOps, infrastructure, data, security, QA, TNI, operations, and third-party teams. Translate technical concepts into clear business-level communication for executives and non-technical stakeholders. Understand system architecture, APIs, integrations, cloud infrastructure, data flows, security requirements, environments, CI/CD, testing, and production operations to manage technical delivery effectively."],
+  ["farha", "Best", "Senior Marketing Operations Specialist", "Remote (Bengaluru)", true, false, "Being remote means we rely less on proximity and more on trust. We believe progress beats perfection, feedback is a gift, and doing the right thing matters, even when nobody is watching. Test and monitor workflows, measure their impact and document how they work. 3+ years in marketing or revenue operations, ideally in B2B SaaS."],
+  ["farha", "Best", "Staff, Technical Account Manager", "India", true, false, "Our partner is looking for a Staff, Technical Account Manager based in India. Working closely with internal Product and Engineering teams, you will translate customer feedback into actionable improvements and help enhance the overall support experience. This remote opportunity is ideal for an experienced technical professional who enjoys solving complex problems, collaborating across teams, and building trusted customer partnerships. - Communicate customer concerns, technical challenges, and product feedback to internal Product and Engineering teams to support continuous platform improvements."],
+  ["farha", "Best", "Implementation & Solutions Engineer", "Bangalore Urban", true, false, "ClearFeed is an AI-powered helpdesk built for Slack-native companies that streamlines customer and employee interactions on Slack, MS Teams, Live Chat and Email. Role and Responsibilities We are seeking a hands-on Solutions Engineer to be an early member of our Solutions team. What We're Looking For Our ideal candidate is hands-on with technology, someone who can handle a hectic startup schedule and enjoys interacting with customers and has a passion for making them successful. Why ClearFeed? At ClearFeed, you'll be part of a fast growing company with a product loved and used by hundreds of firms."],
+  ["farha", "Best", "Marketing Operations Manager (Demand Generation and RevOps)", "India", true, false, "Operating for over 20 years, we specialize in workflow and knowledge processes, as well as technical support, helpdesk and multilingual support services. This is a hands-on execution role rather than a strategy or people-management role. · QA new records on sync and import; · Produce landing page copy variants for testing."],
+  ["farha", "Best", "Sr. Project Manager", "India, India", true, false, "Reports To: Director, GTM Project Management Office (PMO) Location: India (Remote) Shift: Monday Our people With over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership. What You'll Bring : Bachelor's degree in Business, Operations, or a related field (MBA a plus). 5+ years of project management experience, ideally in SaaS, GTM, revenue operations, or high-growth environments."],
+  ["farha", "Wort", "Technical Project Manager", "India", true, false, "- Run the cross-functional team: Coordinate solution architects, engineers, QA, and client stakeholders toward a shared outcome, removing blockers, resolving conflicts, and making sure everyone knows what they own and by when. - Stakeholder management: Excellent communication, comfort presenting to senior and executive audiences, and the ability to manage scope, timelines, and difficult conversations without losing the relationship. PMP, PRINCE2, PSM, or equivalent certification; Growth: Professional development support, remote workspace setup bonus"],
+  ["farha", "Wort", "RevOps Manager", "Anywhere in the World", true, true, "Every workflow you build has an owner, a test, and an alert when it breaks, so a broken lead flow shows up in your inbox the same day it breaks and gets fixed before it reaches the quarter-end numbers. and the operating processes behind sales and customer success: quote and discount approvals, agency account handovers, refunds, chargebacks, and failed-payment recovery."],
+  ["farha", "Wort", "Marketing Operations Specialist - Direct Response (GoHighLevel / ActiveCampaign)", "Remote (India)", true, true, "A compliance and QA checklist on every ad and email before it reaches the Head of Growth: banned words, claims, naming, landing page, tracking. Anything repeatable, whether that is reporting, QA checks, drafting procedures or reconciling data, is yours to automate. 2+ years in a marketing operations, campaign operations, or funnel-build role, ideally in an online coaching, course, or direct-response business, or an agency that serves them. You want to be excellent at operations, you take satisfaction in doing a repeatable thing properly, and you want a company you can stay with for several years."],
+  ["farha", "Wort", "GTM Strategy & Operations, APAC Lead", "Remote, APAC", true, false, "Customers including Nvidia, Blackstone, Royal Bank of Canada (RBC), Palo Alto Networks, Adobe, and T-Mobile run Factory to ship code, review PRs, run tests, and deploy continuously - Own the forecast for your segments: run the cadence, pressure-test the calls, and give leadership a defensible view of where the quarter lands. 4+ years of professional experience, ideally in consulting, investment banking, private equity, corporate strategy, or a high-growth startup. - Communication and stakeholder management: You're credible with sales leaders, engineers, and executives, and you earn senior stakeholders' confidence with clear, well-structured recommendations."],
+  ["farha", "Wort", "Senior Solutions Analyst", "Remote", true, false, ""],
+  ["farha", "Wort", "Project Manager - Software Development (Fintech)", "Bengaluru, IN", true, false, "Location Zact is a global company with multiple locations across US, Europe and India. We provide 100% Remote Working Option. Candidates applying for this role should be located in one of the European or Indian Time zones."],
+  ["farha", "Wort", "AI Delivery Manager", "India", true, false, "Our partner is looking for an AI Delivery Manager based in India. - Develop and manage comprehensive project plans, schedules, budgets, resource allocation, and delivery roadmaps. - Organize project reviews, steering committee meetings, stakeholder discussions, and executive reporting sessions. Flexible working arrangements, including remote work opportunities depending on project and business requirements."],
+  ["farha", "Wort", "Technical Account Manager", "Remote Working, India", true, false, "Provide weekly updates to key customer support contacts on open support tickets and activities. All About You Minimum 10+ years of experience in customer engagement, technical support, or account management role; at least 3-5 years of experience on insurance technologies is preferred. Experience with software implementation project(s) in requirement gathering, functional specifications, QA, user acceptance testing, or training."],
+  ["farha", "Wort", "Solutions Engineer - India", "Remote", true, false, "Fingerprint is a globally dispersed, 100% remote company. 5000 list of America's fastest-growing private companies. Location Preference: Remote Preference for candidates located in India, travel may be required to visit clients on site."],
+  ["farha", "Wort", "REMOTE (INDIA): Project Manager/Business Operations Manager", "Remote", true, false, "Project Manager/Business Operations Manager (India, Remote) Company Overview: We are hiring a marketing consultant for our client who is dedicated to delivering high-impact marketing solutions. Maintain detailed project roadmaps, resource allocation, and timelines to align all initiatives with marketing goals. Monitor and adjust project management practices to optimize productivity and resource allocation across multiple projects. Experience : Minimum of 5 years in project management with a strong focus on Google Sheets for project tracking and deadline management."],
+  ["farha", "Wort", "Marketing Automation Manager - Canada, Spain, India ", "Remote", true, false, "Monthly remote work stipend (home internet costs, electricity). As a fully remote company, with work-life balance at its core, you'll enjoy flexible schedules - Load lead lists from events, content syndication and paid social with the right campaign, source and consent, and run the request board: intake, SLA, QA before launch. - Run optimization: Test subject lines, send times and content on every sequence, and personalise by segment, industry and stage."],
+  ["farha", "Wort", "Senior Workato Integration Engineer", "India (Remote)", true, false, "- Support and maintain integrations between UKG Pro, Deel, Greenhouse, Degreed Learning Experience Platform, Replicon, and other business applications, partnering with Business Technology teams as needed. - Design and implement secure authentication patterns (OAuth 2.0, JWT, SAML, API keys, certificates) and manage secrets in accordance with least privilege principles. Minimum of 5 years of hands-on integration experience. - Workato certification required (e.g., Workato Automation Pro or higher)."],
+  ["farha", "Wort", "Sr. Revenue Operations Analyst", "India, India", true, false, "Revenue Operations Analyst Department: Revenue Operations Location: India(Remote) Shift Timings: 2PM Our people With over 2,000 team members across 10+ countries, HighLevel operates as a global, remote-first organization built for speed and ownership."],
+  ["farha", "Wort", "Senior Project Manager", "Remote, India, India", true, false, "Senior Project Manager Job Description Opportunity Summary We are looking for a Senior Project Manager to join our India-based Center of Excellence (CoE) team. The ideal candidate combines executive-level customer communication, sound commercial judgment, technical fluency, and a hands-on approach to resolving delivery challenges in a fast-paced global environment. Serve as a trusted customer-facing delivery leader, including executive steering meetings, escalations, recovery plans, and difficult scope or schedule discussions. Directly manage and lead a team of Project Managers, including workload allocation, performance management, coaching, career development, and accountability for consistent project delivery."],
+  ["farha", "Wort", "Customer Engineer, APAC", "Remote (APAC)", true, false, "You'll partner with account executives to conduct discovery, deliver compelling demos, architect solutions, and overcome technical objections. This role sits at the intersection of sales, engineering, and product-you'll need to be equally comfortable in customer meetings, building demo environments, and providing product feedback to engineering. - Partner with AEs throughout the sales cycle from discovery through close, including responding to proposals and technical questions and presenting at customer meetings, QBRs, and executive briefings. - Provide feedback to Product and Engineering on feature requests, competitive gaps, and market requirements to inform roadmap prioritization."],
+  ["sana_", "Best", "Assistant Manager - Electrical", "Raipur, Chhattisgarh, India; Mundra, Gujarat, India", false, false, "About Business: Adani Group: Adani Group is a diversified organisation in India comprising 10 publicly traded companies. It has created a world-class logistics and utility infrastructure portfolio that has a pan-India presence. Adani Group is headquartered in Ahmedabad, in the state of Gujarat, India. Over the years, Adani Group has positioned itself to be the market leader in its logistics and energy businesses focusing on large-scale infrastructure development in India with O & M practices benchmarked to global standards."],
+  ["sana_", "Best", "Lead Electrical Boiler/Turbine/Generator", "Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India", false, false, "About Business: Adani Group: Adani Group is a diversified organisation in India comprising 10 publicly traded companies. It has created a world-class logistics and utility infrastructure portfolio that has a pan-India presence. Adani Group is headquartered in Ahmedabad, in the state of Gujarat, India. Over the years, Adani Group has positioned itself to be the market leader in its logistics and energy businesses focusing on large-scale infrastructure development in India with O & M practices benchmarked to global standards."],
+  ["sana_", "Best", "Senior Manager - Plant Maintenance & Utility", "IN", false, false, "Lead and supervise technicians and contractors across mechanical, electrical, and utility functions, managing productivity and maintenance expenses while building team capability and execution discipline."],
+  ["sana_", "Best", "Dy. Manager - Building, Utilities & Other Infra for Common Infra (Electrical)", "Nagpur, Nagpur, IN", false, false, "Coordinate with consultants, contractors, equipment suppliers and internal stakeholders for utility load planning, installation, testing and commissioning activities to ensure infrastructure readiness for Start of Production (SOP). Support implementation and integration of SCADA, EMS (Energy Management Systems), energy metering systems and other electrical monitoring solutions across the plant infrastructure. Experience 5+ years in electrical utilities, industrial infrastructure, facilities management or plant engineering with exposure to Greenfield automotive, manufacturing or large industrial projects. Industry Preferred Automobile OEMs, Auto Component Manufacturing, Heavy Engineering, Industrial Manufacturing, EPC Organizations, Utility Infrastructure Companies Qualifications B.E./B.Tech Electrical Engineering"],
+  ["sana_", "Best", "RMT Facilities & Utilities", "Baramati, MH, IN", false, false, "Roof Top Solar plant operation & maintenance About You: Education: Degree in Electrical Engineering . Certification of Refrigeration System Certificate in Energy Experience: 4-7 years of experience preferably in FMCG or Food Manufacturing Industry ."],
+  ["sana_", "Best", "Plant Maintenance & Electricals Manager", "Pune, India", false, false, "The incumbent will lead the overall maintenance function, ensuring maximum equipment uptime, reliability, safety, energy efficiency, and operational excellence across manufacturing and testing facilities. The role requires strong technical leadership in electrical systems, genset integration, testing, troubleshooting, and maintenance strategy development. From world-class events that last a few weeks to mining operations and remote communities who rely on us for decades. Oversee high-voltage and low-voltage distribution networks, switchgear, protection relays, SCADA, PLC controls, and load bank testing facilities."],
+  ["sana_", "Best", "Maintenance Lead- Ponda (Goa)", "Ponda, IN", false, false, "Location: Ponda (Goa) Key Responsibilities Lead the factory maintenance and asset reliability strategy across production equipment, utilities, workshops, and infrastructure. Experience, Skills & Education Qualification Bachelor's degree in Mechanical, Electrical, Instrumentation, Mechatronics Engineering, or a related engineering discipline. Typically 8 to 12 years of industrial maintenance experience, preferably within FMCG, food & beverage, confectionery, or a comparable manufacturing environment. Hands-on experience with SAP PM or similar computerized maintenance management systems (CMMS)."],
+  ["sana_", "Best", "Deputy Manager - Utilities", "Nagpur, Nagpur Plant, IN", false, false, "The successful candidate should demonstrate comprehensive academic knowledge relevant to industrial maintenance, utilities management, and engineering fundamentals to effectively manage complex mechanical and electrical systems. Additional certifications or training related to project management, quality management systems (such as ISO standards), energy management, or health and safety regulations will be highly advantageous. General Experience Candidates should bring between 5 to 8 years of solid experience in maintenance management within manufacturing or related heavy industry environments. Experience must include hands-on involvement in equipment breakdown analysis, preventive and predictive maintenance strategies, and maintenance planning for utilities encompassing mechanical and electrical systems."],
+  ["sana_", "Best", "Reliability Engineer", "Bangalore, KA, IN, 560066", false, false, "ExxonMobil's affiliates in India ExxonMobil's affiliates have offices in India in Bengaluru, Mumbai and the National Capital Region. ExxonMobil's affiliates in India supporting the Product Solutions business engage in the marketing, sales and distribution of performance as well as specialty products across chemicals and lubricants businesses. The India planning teams are also embedded with global business units for business planning and analytics. ExxonMobil's LNG affiliate in India supporting the upstream business provides consultant services for other ExxonMobil upstream affiliates and conducts LNG market-development activities."],
+  ["sana_", "Best", "Manager Maintenance", "Hyderabad, Telangana, India", false, false, "Team Supervision Lead and supervise maintenance technicians, electricians, and mechanical staff. E / in Mechanical or Electrical Engineering Experience 5+ years of experience in maintenance in food processing, FMCG plants . Location: Medchal, Hyderabad, Telangana."],
+  ["sana_", "Best", "Deputy Manager Safety & Sustainability", "Nagpur, Nagpur Plant, IN", false, false, "Competencies Overall Feedback Responsibilities & Key Deliverables Monitoring process effectiveness and efficiency;"],
+  ["sana_", "Wort", "Plant Performance Engineer", "Abu Dhabi, United Arab Emirates", false, false, "Prepares logistics plans and pricing schedules for individual projects;"],
+  ["sana_", "Wort", "Planning Engineer -Mechanical", "Mesaieed, Qatar", false, false, "Mechanical Maintenance Planning & Scheduling Supervise the activities assigned to Senior Planners and cross-functional maintenance planning teams. Participate in planning and coordination of preventive, predictive, corrective, breakdown, routine, and major mechanical maintenance programs. Ensure all required manpower, mechanical spare parts, materials, tools, equipment, lifting facilities, scaffolding, specialist services, and contractors are available before work execution. Review maintenance backlog and prioritize mechanical maintenance activities based on equipment criticality, production requirements, safety, reliability, and plant operating conditions."],
+  ["sana_", "Wort", "Senior Mechanical Engineer - Relating Equipment", "Abu Dhabi, United Arab Emirates", false, false, "Qualification (minimum) Bachelors in Mechanical engineering Other conditions All other conditions will be as per UAE/ABU DHABI LABOUR LAW."],
+  ["sana_", "Wort", "Mechanical Engineer | KSA Technical Recruitment Campaign", "SA", false, false, "Roles & Responsibilities Plan and supervise preventive, corrective, and predictive mechanical maintenance activities to ensure equipment reliability and plant availability. Oversee maintenance and troubleshooting of pumps, compressors, turbines, valves, piping systems, and other rotating and static mechanical equipment. Provide technical support for RO desalination equipment, including high-pressure pumps and energy recovery systems, or CCGT equipment, including gas and steam turbines, HRSGs, condensers, and mechanical auxiliaries. Coordinate mechanical inspections, equipment overhauls, planned outages, and specialist maintenance activities with Operations and OEM representatives."],
+  ["sana_", "Wort", "MAINTENANCE  MECHANICAL ENGINEER", "Dubai - SEAD Terminal (United Arab Emirates)", false, false, "Provide technical engineering support for preventive, predictive, corrective, and breakdown maintenance of mechanical equipment and terminal infrastructure. • Supervise and coordinate maintenance activities involving centrifugal pumps, mechanical seals, valves, piping, loading arms, firefighting systems, and other rotating and static mechanical equipment. • Review maintenance findings, inspection results, equipment testing, and reinstatement requirements before recommending equipment return to service. Develop, review, and improve mechanical maintenance procedures, work instructions, inspection checklists, and technical specifications."],
+  ["sana_", "Wort", "Deputy Manager- Plant Maintenance", "KA, India", false, true, "Would you like to join us, and move people further? Deputy Manager- Plant Maintenance (Mechanical) We are in the process of identifying a suitable candidate for the role of Deputy Manager Lead troubleshooting and maintenance of mechanical, hydraulic, and utility systems. Hands-on & Resilient : Comfortable working close to operations, solving issues and leading through ambiguity. Collaborative Change Enabler : Builds trust across cultures and functions while supporting transition, automation and continuous improvement If you want to go further This position will be located Bangalore , India."],
+  ["sana_", "Wort", "Commissioning & Service Engineer -BESS", "KA, India", false, true, "Required Experience, minimum: 5 years Required Experience, maximum: 10 years Skills: Service, Commissioning Engineers Minimum Qualification: Bachelor of Technology (BTech), General Diploma BESS Field Service Engineer Location: Bangalore / Coimbatore / Kanchipuram Reports To: Bess The role requires strong expertise in lithium-ion battery systems, PCS/Inverters, MV/HV equipment, SCADA, EMS, networking, and electrical protection systems. Validate communication between Battery, PCS, EMS, SCADA, and Grid Operator interfaces."],
+  ["sana_", "Wort", "Mechanical Maintenance Engineer / Outage Leader", "Dubai, United Arab Emirates", false, false, "He also is responsible, under supervision and guidance of Senior Mechanical Engineer and Maintenance Manager to organize, prepare and execute all planned outage (boilers and later steam turbine)."],
+  ["sana_", "Wort", "O&M Mechanical Engineer", "", false, false, "Job Overview: Responsible for overseeing the mechanical systems and equipment of the gas engine-fired power plant. This includes the operation, maintenance, and repair of all mechanical plant components such as gas engines, cooling systems, pumps, and piping systems. The engineer will collaborate with other plant personnel to ensure that the mechanical systems operate efficiently, reliably, and safely in compliance with all company policies, environmental regulations, and safety standards. Job Responsibilities: Perform the operation, troubleshooting, and maintenance of all mechanical systems and equipment including gas engines, cooling systems, and associated auxiliary systems."],
+  ["sana_", "Wort", "Power Plant Manager", "Yanbu, Saudi Arabia", false, false, "Liaise with external vendors, contractors and OEMs for all equipment and utility service related matters Qualifications: Education & Experience Bachelors degree in Mechanical, Electrical, or Power Engineering. Minimum 810 years of experience in power plant operations, with at least 3 years in a managerial/supervisory role. Familiarity with SCADA, DCS."],
+  ["sana_", "Wort", "Power Plant Manager", "", false, false, "Develop work plans, budget estimates, and resource allocation to meet production targets. Qualifications Requirements Bachelor of Engineering degree Electrical Power 8 Years in Electrical"],
+  ["sana_", "Wort", "Electrical Engineer | KSA Technical Recruitment Campaign", "SA", false, false, "Coordinate electrical testing, protection relay testing, equipment inspections, and planned maintenance outages in collaboration with Operations and OEM specialists. Job Specifications Minimum Education Bachelor's degree in Electrical Engineering. Minimum Experience 8-10 years of experience in electrical maintenance within power generation and/or water desalination plants. At least 2 years of experience in a supervisory role."],
+  ["sana_", "Wort", "Maintenance Engineer", "Riyadh, Riyadh - SAU (Saudi Arabia)", false, false, "We are creative, collaborative and passionate problem-solvers from diverse backgrounds, driven by our shared mission to provide smart solar and software solutions for our customers and to mitigate climate change for future generations. The role involves leading preventive, predictive and corrective maintenance activities, troubleshooting electrical and mechanical faults, and supporting continuous improvement initiatives across the plant. Here is a glimpse of what you'll do… General Task Management Perform preventive, predictive, and corrective maintenance for all machines and equipment (hands-on Train, mentor, and support junior technicians and apprentices. Diagnose and repair electrical, mechanical, pneumatic, and hydraulic systems."],
+  ["sana_", "Wort", "Shift Engineer | KSA Technical Recruitment Campaign", "Saudi Arabia", false, false, "Coordinate maintenance activities, equipment isolation, permit-to-work requirements, protection testing, and safe return-to-service procedures. Job Specifications Minimum Education Bachelor's degree in Engineering. Minimum Experience Minimum 8 years of relevant experience in water desalination and/or power generation plants. At least 2 years of experience in a supervisory role."],
+  ["sana_", "Wort", "Reliability Engineer ( Mechanical)", "GJ, India", false, true, "Utilize SAP S/4HANA EAM functionalities including Equipment, Functional Locations, Notifications, Work Orders, Maintenance Plans, Task Lists, and Asset Analytics for reliability assessments and recommendations."],
+  ["sana_", "Wort", "AM/DM- Utilities Automation", "MH, India", false, true, "8 to 10 years of experience in Automation, Controls Engineering, Industrial Automation, Manufacturing Automation, or Process Control within a manufacturing environment. Proven experience in PLC, SCADA, HMI, Robotics, Servo Systems, Variable Frequency Drives (VFDs), Motion Control, and Industrial Networks. 5 .Hands-on experience in programming, commissioning, troubleshooting, maintenance, and optimization of automation and control systems. Qualifications ------------------ 1."],
+  ["sana_", "Wort", "Plant Maintenance Engineer", "Arakkonam", false, false, ""],
+  ["sana_", "Wort", "Associate Manager- Electrical Engineering (Automation & Maintenance)", "Riyadh, Saudi Arabia", false, false, "This role will focus on industrial automation, SCADA integration, preventive maintenance, and the continuous digital transformation of operations to ensure high equipment reliability and operational efficiency. Automation & Control Systems Lead and oversee industrial automation systems, including SCADA integration, PLC programming (Siemens, Allen Bradley), MES domain, and IoT implementation. Ensure efficient operation of SCADA infrastructure, including servers (application, domain, historian, SAP MII), clients, and PLC networks. Implement and upgrade control systems for pasteurizers, filler machines, packaging lines, and robotics."],
+];
+test('RIGHT jobs: no new rule reads them, and each stays listed (Best matches stay Best)', () => {
+  const bad = [];
+  for (const [who, list, title, location, remote, board, lines] of RIGHT) {
+    const name = `${who} ${list}: ${title}`;
+    if (who === 'farha') {
+      if (farhanOtherFieldQa11(title, lines) || farhanJuniorSupport(title, lines)) bad.push(`${name}: a new rule`);
+      const e = evF(title, OPS + OPS + lines, { location, remote, board, source: board ? 'workable' : 'greenhouse' });
+      if (!(list === 'Best' ? e.eligibility === 'ELIGIBLE' && e.score >= 70 : listedF(e))) bad.push(`${name}: ${e.score} ${e.eligibility} ${e.reason}`);
+    } else {
+      if (sanaOtherProfessionQa11(title, lines) || sanaStretchOnlyQa11(title, lines) || sanaTechnicianGrade(lines)) bad.push(`${name}: a new rule`);
+      if (list === 'Best' && sanaStretchOnly(title, lines, 'Acme', 9.2)) bad.push(`${name}: ${sanaStretchOnly(title, lines, 'Acme', 9.2)}`);
+      const e = evS(title, PLANT + PLANT + lines, { location, remote, board });
+      if (!(list === 'Best' ? e.eligibility === 'ELIGIBLE' && e.score >= 60 : listedS(e))) bad.push(`${name}: ${e.score} ${e.eligibility} ${e.reason}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});

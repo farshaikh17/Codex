@@ -73,7 +73,51 @@ export function keepTwins(rows, now) {
   const keep = (xs, keyOf, cmp = better) => { const best = new Map(); for (const r of xs) { const k = keyOf(r), cur = best.get(k); if (!cur || cmp(r, cur) > 0) best.set(k, r); } return xs.filter((r) => best.get(keyOf(r)) === r); };
   // Jobs QA 7: one posting stored twice under two sources, whose URLs differ only by tracking parameters ('?feedId=null&utm_source=J2WRSS'), and
   // whose employer is written two ways ('ENGIE', 'ENGIE INFORMATION TECHNOLOGIES SA'), is one job: one copy per posting URL first.
-  return keep(keep(keep(rows, urlTwinKey, sameBetter), textTwinKey, sameBetter), twinKey);
+  return keep(dropReposts(keep(keep(rows, urlTwinKey, sameBetter), textTwinKey, sameBetter)), twinKey);
+}
+/** Jobs QA 11 (Adani 'Lead – Electrical Boiler/Turbine/Generator/Shift Engineer', Korba, req 59535, and 'Lead Electrical Boiler/Turbine/Generator',
+ *  'Ottapidaram; Korba', req 61412: the same text): one employer's repost of the same text on the same site, under a new requisition, is one posting
+ *  when the titles are near-identical (the same words, or one title is the other with at most two words added at its end; 'Senior Maintenance Engineer'
+ *  and 'Maintenance Engineer' are two grades, two jobs) and the places share a city. The whole stored text is compared, not its first part. The newest
+ *  stays: the higher requisition id when both URLs carry one in the same form on the same host, else the later discovery. Places that share no city
+ *  stay apart (the many-cities rule, plan B3). Rows are bucketed by employer, site and text first, so only true candidates are compared. */
+export const repostGroupKey = (r) => {
+  const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description, Infinity), who = twinEmployer(r.company);
+  return host && who && text.length >= TEXT_TWIN_MIN ? `${host}|${who}|${text}` : '';
+};
+const cities = (loc) => new Set(String(loc || '').split(/[;|]/).map((p) => p.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()).filter(Boolean));
+const titleWords = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+export function nearSameTitle(a, b) {
+  const [x, y] = [titleWords(a), titleWords(b)].sort((p, q) => p.length - q.length);
+  return x.length > 0 && y.length - x.length <= 2 && x.every((w, i) => y[i] === w);
+}
+export function sameRepost(a, b, key = repostGroupKey(a)) {
+  if (!key || key !== repostGroupKey(b)) return false;
+  const ca = cities(a.location), cb = cities(b.location);
+  return [...ca].some((c) => cb.has(c)) && nearSameTitle(a.title, b.title);
+}
+// The requisition id where the hiring system puts it: Oracle '/job/<id>', Workday '_R<id>' / '_JR<id>' / '_REQ<id>', SuccessFactors '/<id>/' after the
+// slug, Greenhouse 'gh_jid=' or '/jobs/<id>', Taleo 'job=<id>', Avature '/JobDetail/<slug>/<id>'.
+const REQ_FORMS = [/\/hcmUI\/CandidateExperience\/job\/(\d+)$/i, /_(?:R|JR|REQ)-?(\d+)(?:-\d+)?$/i, /\/job\/[^/?#]+\/(\d{6,})$/i, /[?&]gh_jid=(\d+)/i, /\/jobs\/(\d+)$/i, /[?&]job=(\d+)/i, /\/JobDetail\/[^/]+\/(\d+)$/i];
+export function requisition(r) {
+  const u = postingUrlKey(r.url);
+  for (let i = 0; i < REQ_FORMS.length; i++) { const m = REQ_FORMS[i].exec(u); if (m) return { form: `${u.split('/')[0]}#${i}`, id: Number(m[1]) }; }
+  return null;
+}
+export const newerPosting = (a, b) => {
+  const ra = requisition(a), rb = requisition(b);
+  return (ra && rb && ra.form === rb.form ? ra.id - rb.id : 0) || String(a.discovered_at || '').localeCompare(String(b.discovered_at || ''));
+};
+export function dropReposts(rows) {
+  const buckets = new Map();
+  for (const r of rows) { const k = repostGroupKey(r); if (k) buckets.set(k, [...(buckets.get(k) || []), r]); }
+  const drop = new Set();
+  for (const [k, group] of buckets) {
+    if (group.length < 2) continue;
+    const kept = [];
+    for (const r of [...group].sort((a, b) => newerPosting(b, a))) if (kept.some((x) => sameRepost(x, r, k))) drop.add(r); else kept.push(r);
+  }
+  return drop.size ? rows.filter((r) => !drop.has(r)) : rows;
 }
 /** Jobs QA 10: the employer's own copy (its hiring system), not a job board's or an aggregator's. */
 export const employerCopy = (r) => r.provenance !== 'PUBLIC_FEED_UNVERIFIED' && !AGGREGATOR_SOURCE.test(String(r.source || '').trim());
