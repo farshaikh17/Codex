@@ -73,7 +73,32 @@ export function keepTwins(rows, now) {
   const keep = (xs, keyOf, cmp = better) => { const best = new Map(); for (const r of xs) { const k = keyOf(r), cur = best.get(k); if (!cur || cmp(r, cur) > 0) best.set(k, r); } return xs.filter((r) => best.get(keyOf(r)) === r); };
   // Jobs QA 7: one posting stored twice under two sources, whose URLs differ only by tracking parameters ('?feedId=null&utm_source=J2WRSS'), and
   // whose employer is written two ways ('ENGIE', 'ENGIE INFORMATION TECHNOLOGIES SA'), is one job: one copy per posting URL first.
-  return keep(keep(keep(rows, urlTwinKey, sameBetter), textTwinKey, sameBetter), twinKey);
+  return keep(dropReposts(keep(keep(rows, urlTwinKey, sameBetter), textTwinKey, sameBetter)), twinKey);
+}
+/** Jobs QA 11 (Adani 'Lead – Electrical Boiler/Turbine/Generator/Shift Engineer', Korba, req 59535, and 'Lead Electrical Boiler/Turbine/Generator',
+ *  'Ottapidaram; Korba', req 61412: the same text): one employer's repost of the same text on the same site, under a new requisition, with a title whose
+ *  words contain the other's and a place that shares a city, is one posting. The newest stays: the higher requisition number in the posting URL, then
+ *  the later discovery. Places that share no city stay apart (the many-cities rule, plan B3), and so do titles that are not one another's words. */
+export const repostGroupKey = (r) => {
+  const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description), who = twinEmployer(r.company);
+  return host && who && text.length >= TEXT_TWIN_MIN ? `${host}|${who}|${text}` : '';
+};
+const cities = (loc) => new Set(String(loc || '').split(/[;|]/).map((p) => p.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()).filter(Boolean));
+const titleWords = (t) => new Set(String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w.length > 1));
+const within = (a, b) => [...a].every((w) => b.has(w));
+export function sameRepost(a, b) {
+  const k = repostGroupKey(a);
+  if (!k || k !== repostGroupKey(b)) return false;
+  const ca = cities(a.location), cb = cities(b.location), ta = titleWords(a.title), tb = titleWords(b.title);
+  return [...ca].some((c) => cb.has(c)) && (ta.size <= tb.size ? within(ta, tb) : within(tb, ta));
+}
+const reqNumber = (r) => { const m = /(\d{3,})(?!.*\d{3,})/.exec(postingUrlKey(r.url)); return m ? Number(m[1]) : -1; };
+export const newerPosting = (a, b) => reqNumber(a) - reqNumber(b) || String(a.discovered_at || '').localeCompare(String(b.discovered_at || ''));
+export function dropReposts(rows) {
+  const kept = [];
+  for (const r of [...rows].sort((a, b) => newerPosting(b, a))) if (!kept.some((k) => sameRepost(k, r))) kept.push(r);
+  const keep = new Set(kept);
+  return rows.filter((r) => keep.has(r));
 }
 /** Jobs QA 10: the employer's own copy (its hiring system), not a job board's or an aggregator's. */
 export const employerCopy = (r) => r.provenance !== 'PUBLIC_FEED_UNVERIFIED' && !AGGREGATOR_SOURCE.test(String(r.source || '').trim());

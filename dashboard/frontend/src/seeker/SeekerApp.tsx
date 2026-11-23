@@ -118,7 +118,7 @@ export const SeekerApp: React.FC = () => {
   const pending = useRef<Job | null>(null);
   const onPosting = useCallback((job: Job) => {
     pending.current = { ...job, candidate_id: candidateId || job.candidate_id, asked_at: Date.now() } as Job;
-    try { window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ id: job.id, title: job.title, company: job.company, candidate_id: candidateId, application: job.application, asked_at: Date.now() })); } catch { /* fine */ }
+    try { window.sessionStorage.setItem(PENDING_KEY, JSON.stringify({ id: job.id, title: job.title, company: employerName(job.company, job.original_posting_url || job.source_url),   /* jobs QA 11: the display name, so a restored prompt reads 'Majesco' */ candidate_id: candidateId, application: job.application, asked_at: Date.now() })); } catch { /* fine */ }
   }, [candidateId]);
   useEffect(() => {
     const back = () => {
@@ -269,7 +269,7 @@ export const SeekerApp: React.FC = () => {
         <JobPanel job={panelJob} profileSkills={skills[candidateId!]} onClose={closeJob} onPosting={onPosting} onHide={hide} onGoodMatch={goodMatch}
           onStage={(job, status, notes, clear) => setStage(job, status, notes, clear)} busy={!!busy[panelJob.id]} />
       )}
-      {asking && <AskDialog title={asking.title} company={asking.company} onClose={() => setAsking(null)} onAnswer={answer} />}
+      {asking && <AskDialog title={asking.title} company={employerName(asking.company, asking.original_posting_url || asking.source_url)} onClose={() => setAsking(null)} onAnswer={answer} />}
       {toast && (
         <div key={toast.id} role="status" aria-live="polite" data-testid="toast" className="fixed bottom-4 inset-x-4 z-[70] mx-auto max-w-md bg-slate-900 text-white rounded-2xl px-4 py-2 flex items-center justify-between gap-3 shadow-lg">
           <span className="text-base">{toast.message}</span>

@@ -23,8 +23,9 @@ const PLANT = 'Plan preventive and breakdown maintenance of the boilers, compres
 const listedF = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE' ? e.score >= 60 : e.score >= 70);
 const listedS = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE' ? e.score >= 50 : e.score >= 60);
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v26)', () => {
-  assert.equal(RULES_MARKER, 'profile_v26');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v26, bumped again by later rule changes)', () => {
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 26, RULES_MARKER);
 });
 
 // ---- Farhan: hidden ------------------------------------------------------------------------------------------------------------------------------
