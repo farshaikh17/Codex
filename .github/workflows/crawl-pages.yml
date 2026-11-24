@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         id: python
         with:
           python-version: '3.12'
@@ -43,7 +43,7 @@ jobs:
           echo "PLAYWRIGHT_VERSION=$(python -m playwright --version | awk '{print $2}')" >> "$GITHUB_ENV"
       - name: Restore Playwright browsers
         id: browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}

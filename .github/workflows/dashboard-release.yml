@@ -61,13 +61,13 @@ jobs:
           [ "$ACTOR" = "$OWNER" ] || { echo "::error::Only the repository owner may run releases"; exit 1; }
           [ "$REF" = "refs/heads/main" ] || { echo "::error::Releases run from main only (this run is on $REF)"; exit 1; }
           [ "$CONFIRM" = "$SHA" ] || { echo "::error::confirm_sha does not match the commit being released ($SHA)"; exit 1; }
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: npm ci
@@ -92,10 +92,10 @@ jobs:
         working-directory: .   # runs before checkout, when ./dashboard does not exist yet
         run: |
           [ "$ACTOR" = "$OWNER" ] && [ "$REF" = "refs/heads/main" ] && [ "$CONFIRM" = "$SHA" ] || { echo "::error::Not the owner, not main, or confirm_sha mismatch"; exit 1; }
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - run: npm ci
