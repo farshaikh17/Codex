@@ -77,24 +77,39 @@ export function keepTwins(rows, now) {
 }
 /** Jobs QA 11 (Adani 'Lead – Electrical Boiler/Turbine/Generator/Shift Engineer', Korba, req 59535, and 'Lead Electrical Boiler/Turbine/Generator',
  *  'Ottapidaram; Korba', req 61412: the same text): one employer's repost of the same text on the same site, under a new requisition, is one posting
- *  when the titles are near-identical (the same words, or one title is the other with at most two words added at its end; 'Senior Maintenance Engineer'
- *  and 'Maintenance Engineer' are two grades, two jobs) and the places share a city. The whole stored text is compared, not its first part. The newest
+ *  when the places share a city and the titles name one role (sameRole: a reworded title, never a grade added; jobs QA 12: 'Sr.Engg - Electrical
+ *  Boiler/Turbine/Generator', req 58786, carries 61412's text word for word). The whole stored text is compared, not its first part. The newest
  *  stays: the higher requisition id when both URLs carry one in the same form on the same host, else the later discovery. Places that share no city
  *  stay apart (the many-cities rule, plan B3). Rows are bucketed by employer, site and text first, so only true candidates are compared. */
 export const repostGroupKey = (r) => {
   const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description, Infinity), who = twinEmployer(r.company);
-  return host && who && text.length >= TEXT_TWIN_MIN ? `${host}|${who}|${text}` : '';
+  return host && who && text.length >= TEXT_TWIN_MIN && text.split(' ').length >= REPOST_MIN_WORDS ? `${host}|${who}|${text}` : '';
 };
+/** A real description: at least this many words (a placeholder or a one-line text is never read as a repost). */
+export const REPOST_MIN_WORDS = 40;
 const cities = (loc) => new Set(String(loc || '').split(/[;|]/).map((p) => p.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()).filter(Boolean));
 const titleWords = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
 export function nearSameTitle(a, b) {
-  const [x, y] = [titleWords(a), titleWords(b)].sort((p, q) => p.length - q.length);
+  const [x, y] = [Array.isArray(a) ? a : titleWords(a), Array.isArray(b) ? b : titleWords(b)].sort((p, q) => p.length - q.length);
   return x.length > 0 && y.length - x.length <= 2 && x.every((w, i) => y[i] === w);
+}
+/** Jobs QA 12 review: grade words. A title that is another title with grade words added ('Senior Maintenance Engineer' / 'Maintenance Engineer') is a
+ *  second grade, another job. Titles whose core (the words left once grade words are taken out) match, or where one core is the other with at most two
+ *  words added at its end, name one role reworded ('Sr.Engg - Electrical Boiler/Turbine/Generator' / 'Lead Electrical Boiler/Turbine/Generator';
+ *  'Lead – Electrical Boiler/Turbine/Generator/Shift Engineer' / 'Lead Electrical Boiler/Turbine/Generator'). */
+export const GRADE_WORDS = new Set(['senior', 'sr', 'lead', 'junior', 'jr', 'engg', 'engr', 'eng', 'engineer', 'manager', 'mgr', 'assistant', 'asst', 'deputy', 'dy',
+  'associate', 'principal', 'i', 'ii', 'iii', 'iv']);
+const isSubsequence = (x, y) => { let i = 0; for (const w of y) if (i < x.length && w === x[i]) i++; return i === x.length; };
+export function sameRole(a, b) {
+  const [x, y] = [titleWords(a), titleWords(b)].sort((p, q) => p.length - q.length);
+  if (x.length < y.length && isSubsequence(x, y) && y.filter((w) => !x.includes(w)).every((w) => GRADE_WORDS.has(w))) return false;   // a grade added: another job
+  const core = (ws) => ws.filter((w) => !GRADE_WORDS.has(w));
+  return nearSameTitle(core(x), core(y));
 }
 export function sameRepost(a, b, key = repostGroupKey(a)) {
   if (!key || key !== repostGroupKey(b)) return false;
   const ca = cities(a.location), cb = cities(b.location);
-  return [...ca].some((c) => cb.has(c)) && nearSameTitle(a.title, b.title);
+  return [...ca].some((c) => cb.has(c)) && sameRole(a.title, b.title);   // jobs QA 12: a reworded title (Adani 'Sr.Engg - Electrical BTG', req 58786, is 61412's text), never a grade added
 }
 // The requisition id where the hiring system puts it: Oracle '/job/<id>', Workday '_R<id>' / '_JR<id>' / '_REQ<id>', SuccessFactors '/<id>/' after the
 // slug, Greenhouse 'gh_jid=' or '/jobs/<id>', Taleo 'job=<id>', Avature '/JobDetail/<slug>/<id>'.
