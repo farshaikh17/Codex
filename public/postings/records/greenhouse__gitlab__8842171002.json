@@ -14,6 +14,15 @@
    "from_hash": "6499d0344830976a8d3a5567196ddac74ccda923048d584e5b8153011f250421",
    "kind": "content_changed",
    "to_hash": "a942874f6e46817c6a669587a58d98077a303c55faecee1a93acf35a12964e02"
+  },
+  {
+   "changed_at": "2026-11-24T05:28:58.079667+00:00",
+   "fields": [
+    "title"
+   ],
+   "from_hash": "a942874f6e46817c6a669587a58d98077a303c55faecee1a93acf35a12964e02",
+   "kind": "content_changed",
+   "to_hash": "a832af0f1aca1145a2a5dd8517523f822d8a02ac39e267a8967d1a41ec746e1e"
   }
  ],
  "content": {
@@ -34,11 +43,11 @@
    }
   ],
   "published": "2026-09-28T00:02:11-04:00",
-  "title": "Senior Manager of Success Architects",
+  "title": "Director of Success Architects",
   "workplace_type": null
  },
- "content_changed_at": "2026-10-30T07:41:51.441512+00:00",
- "content_hash": "a942874f6e46817c6a669587a58d98077a303c55faecee1a93acf35a12964e02",
+ "content_changed_at": "2026-11-24T05:28:58.079667+00:00",
+ "content_hash": "a832af0f1aca1145a2a5dd8517523f822d8a02ac39e267a8967d1a41ec746e1e",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -57,7 +66,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote, Singapore",
-      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "retrieved_at": "2026-11-24T05:28:58.079667+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8842171002"
      },
@@ -65,7 +74,7 @@
       "interpretation": null,
       "method": "ats_field:offices.location",
       "quote": "Singapore",
-      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "retrieved_at": "2026-11-24T05:28:58.079667+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8842171002"
      }
@@ -78,7 +87,7 @@
       "interpretation": null,
       "method": "description_section:What you'll bring",
       "quote": "Experience leading customer-facing delivery teams in software, technology, consulting, sales, or customer success environments preferably in DevOps or related domain.\nAbility to guide teams that drive software adoption and manage customer relationships across onboarding, adoption, business reviews, and renewals.\nKnowledge of software development lifecycle practices, related tools, and agile or DevOps ways of working.\nFamiliarity with cloud or container technologies such as Kubernetes and Docker, application security concepts such as static application security testing (SAST) and dynamic application security testing (DAST), or cloud platforms such as Amazon Web Services (AWS), Google Cloud Platform (GCP), and Microsoft Azure.\nSkill in translating strategy into clear initiatives, coordinating execution, and tracking delivery across competing priorities.\nCapability to lead distributed teams across regions, cultures, and lines of business, while working effectively with senior executives and external stakeholders.\nWillingness to travel occasionally for customer meetings and team events, as needed.\nStrength in communication, coaching, feedback, delegation, planning, and process improvement.\nWarmth and care in your leadership approach—able to coach with empathy and build trust on a human level.\nInterest in candidates with transferable experience who can connect technical concepts to business value and collaborate well across functions.",
-      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "retrieved_at": "2026-11-24T05:28:58.079667+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8842171002"
      }
@@ -95,7 +104,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote, Singapore",
-      "retrieved_at": "2026-10-30T07:41:51.441512+00:00",
+      "retrieved_at": "2026-11-24T05:28:58.079667+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/gitlab/jobs/8842171002"
      }
