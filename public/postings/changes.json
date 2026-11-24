@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-28T17:20:08.294293+00:00|greenhouse:gitlab:8860273002",
+ "cursor_to": "pc1|2026-10-29T01:11:58.821444+00:00|greenhouse:celigo:7844080",
  "entries": [
   {
    "availability": "listed",
@@ -89,14 +89,6 @@
    "posting_id": "ashby:weave:3fef281a-0bd6-4b18-9259-e3a81ba4023a",
    "record": "records/ashby__weave__3fef281a-0bd6-4b18-9259-e3a81ba4023a.json",
    "record_sha256": "c5897ec4dcbf03e16372d1968bef00ddee18123c338733e949beb3b8bf5471eb"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "dd66a6feeeb2d28be566f26b0f3ea9898da0be431d825b19a65a6f578df86aa4",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "ashby:weave:5000eb6e-ef0f-4840-af5f-55a8043d5ff6",
-   "record": "records/ashby__weave__5000eb6e-ef0f-4840-af5f-55a8043d5ff6.json",
-   "record_sha256": "544ac2593b15b39bec1803ef7202427ea866d5c616bc11c5686043a39c9356a1"
   },
   {
    "availability": "listed",
@@ -1092,14 +1084,6 @@
   },
   {
    "availability": "listed",
-   "content_hash": "40ac6e9abae909a8b400a9b0332dd973882e01069b8d468f47410ffe19e1cc67",
-   "last_change": "2026-10-27T20:29:45.949737+00:00",
-   "posting_id": "lever:gohighlevel:65ab785e-d3a4-4c3b-9991-3b35f369b24d",
-   "record": "records/lever__gohighlevel__65ab785e-d3a4-4c3b-9991-3b35f369b24d.json",
-   "record_sha256": "1f2a06ccd36c016b4b86fb3d3fec19cd36cbdc61eb97b86cd08615043db3e6fb"
-  },
-  {
-   "availability": "listed",
    "content_hash": "74b7552fe1ca6cc8911741e0c15c9168381f198fb4ddb456a747a8e9bc59eccb",
    "last_change": "2026-10-27T20:29:45.949737+00:00",
    "posting_id": "lever:gohighlevel:67018376-b4a5-43e0-90d9-f3d4b359ae5e",
@@ -1201,14 +1185,6 @@
    "posting_id": "lever:gohighlevel:9fe6cd8e-85ac-41ed-8c20-fe2a947a5f47",
    "record": "records/lever__gohighlevel__9fe6cd8e-85ac-41ed-8c20-fe2a947a5f47.json",
    "record_sha256": "fb6c7ffa219d69d51dd716729552f9530428c192b23175fbc457010412fb21c2"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "34d3c6993d5242c65552fbf4bcd653c8e74ed2de082956292789de7ef8fb1c6a",
-   "last_change": "2026-10-27T20:29:45.949737+00:00",
-   "posting_id": "lever:gohighlevel:a569233d-a1d9-47b0-8a28-2f3357ba3d6e",
-   "record": "records/lever__gohighlevel__a569233d-a1d9-47b0-8a28-2f3357ba3d6e.json",
-   "record_sha256": "7a8050d21c2f1851a07236c535c429d279f4f0ce9863e414697fe2ce875d5bb4"
   },
   {
    "availability": "listed",
@@ -1601,6 +1577,30 @@
    "posting_id": "greenhouse:gitlab:8860273002",
    "record": "records/greenhouse__gitlab__8860273002.json",
    "record_sha256": "e389cd9f9cd7a65a8362c830a6797dece668f4039098f58b1e6b3f7d672b6446"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "03bc2e09499164aa4d12035fda9d6373e053d5dacdc8198dacfa6021cc772311",
+   "last_change": "2026-10-28T17:20:08.294293+00:00",
+   "posting_id": "greenhouse:gitlab:8887401002",
+   "record": "records/greenhouse__gitlab__8887401002.json",
+   "record_sha256": "b17b42a30bea336a74a407c52d5f039a5f69ea84174c14a9fe9b47630ad0d7ab"
+  },
+  {
+   "availability": "listed",
+   "content_hash": "6a8b5e48e0bceb4d263668b14bfb1f3bc8139ac76ff7052f34ea2135ee2e015b",
+   "last_change": "2026-10-28T17:20:08.294293+00:00",
+   "posting_id": "greenhouse:gitlab:8918853002",
+   "record": "records/greenhouse__gitlab__8918853002.json",
+   "record_sha256": "34d40f0305d1b9e699764bf529e8d05bcbe84c356650350e32a65a3a3cb26733"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "4c1ab9dd4217902242f358b0c2903c4e74c9b8410615ad391a803e48f4062f1c",
+   "last_change": "2026-10-29T01:11:58.821444+00:00",
+   "posting_id": "greenhouse:celigo:7844080",
+   "record": "records/greenhouse__celigo__7844080.json",
+   "record_sha256": "792644c2dddb232a7b4f3060d406f34d1c873e52d311274b27ae8c9d9b71c5ed"
   }
  ],
  "has_more": true,

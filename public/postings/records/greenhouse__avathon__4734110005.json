@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-19T00:16:26.514970+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-24T01:23:55.600132+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "avathon",
  "changes": [
@@ -15,11 +15,21 @@
    "from_hash": "58264f709b2df59160333452481c497be3d55fb2f5c1a7286845655b8eeba8bd",
    "kind": "content_changed",
    "to_hash": "56fa61a91a684bc68572973a1708c4176e0c926541d6d975b129019c35f3ffc3"
+  },
+  {
+   "changed_at": "2026-11-24T01:23:55.600132+00:00",
+   "fields": [
+    "description",
+    "title"
+   ],
+   "from_hash": "56fa61a91a684bc68572973a1708c4176e0c926541d6d975b129019c35f3ffc3",
+   "kind": "content_changed",
+   "to_hash": "7a851552b13dc78dcf535a3c0332b1e30ae54f74562b634a3d6422233262bbd1"
   }
  ],
  "content": {
   "compensation_raw": null,
-  "description": "Who We Are & Why Join Us\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries -- energy, mining, manufacturing, aerospace, defense, and logistics -- accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management. With capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nCutting-Edge AI Innovation -- Join a team at the forefront of AI, developing groundbreaking solutions that shape the future. High-Growth Environment -- Thrive in a fast-scaling startup where agility, collaboration, and rapid professional growth are the norm. Meaningful Impact -- Work on AI-driven projects that drive real change across industries and improve lives.\n\nLearn more at: avathon.com\n\nBuild the story of Physical AI. Show the world what industrial autonomy looks like.\n\nAvathon is building the future of Physical AI by bringing intelligence and autonomy to the industrial systems that power, produce, move, and protect the world.\n\nOur technology is being applied to some of the most consequential real-world environments: energy, mining, aerospace, defense, manufacturing, and global supply chains. From our strategic partnership with Aramco Digital and work across the Saudi industrial ecosystem, to our work with Airbus, Boeing, and the U.S. Department of War, Avathon is helping leading organizations move from AI insights toward intelligent, increasingly autonomous operations.\n\nWe are now looking for an exceptional Senior Creative & Video Producer to help tell that story. You will be Avathon’s internal creative and multimedia powerhouse - Part filmmaker, part storyteller, part brand builder, and part AI-native creator. You will translate complex technology and extraordinary industrial environments into compelling content that makes people understand and feel the scale of what Avathon is building. You will have the opportunity to tell stories from oil fields and mines to aircraft production, defense operations, factories, and global supply chains. Your work will help define how customers, talent, investors, policymakers, and the broader market experience the Avathon brand.\n\nWhat You’ll Do\n\nOwn video storytelling end-to-end. Develop concepts, write scripts, direct, shoot, light, edit, animate, and deliver exceptional content across customer stories, executive narratives, product launches, events, social media, recruiting, and brand campaigns.\n\nTurn breakthrough industrial AI into powerful stories. Work directly with executives, engineers, customers, and partners to translate sophisticated Physical AI capabilities into narratives that are visually compelling, technically credible, and easy to understand.\n\nCapture Avathon in the real world. Produce content around major customer and partner initiatives, executive engagements, industrial deployments, conferences, and on-location shoots across energy, mining, aerospace, defense, manufacturing, and transportation.\n\nBuild an unmistakable visual identity. Help establish the creative language for Avathon across video, motion graphics, photography, digital content, and social, creating a brand that feels as advanced and consequential as the technology we are building.\n\nCreate a high-velocity content engine. Turn a customer interview, keynote, webinar, product demonstration, or field shoot into a portfolio of high-impact assets from flagship films to 30-second social cuts, executive clips, animations, and campaign content.\n\nBe AI-native in how you create. Experiment aggressively with generative video, imagery, voice, animation, editing, and production workflows using tools such as Runway, Midjourney, Descript, ChatGPT, and emerging creative AI platforms.\n\nMake complex technology visual. Develop creative ways to bring concepts such as computational knowledge graphs, digital twins, autonomous agents, predictive intelligence, computer vision, and autonomous industrial operations to life.\n\nOperate with the speed of a startup and the quality of a global brand. You should be equally comfortable creating something exceptional yourself in 48 hours and directing external agencies or production partners when a larger production requires it.\n\nWhat We’re Looking For\n\nYou are a maker first. You don't need a large agency, production crew, or extensive brief to create exceptional work. You see a powerful story, figure out how to capture it, and execute.\n\nYou bring 6-10 years of exceptional hands-on experience across video production, editing, motion, and multimedia storytelling, with a portfolio that demonstrates strong creative judgment and the ability to make sophisticated subjects compelling.\n\nYou can independently concept, script, shoot, light, record, edit, animate, and deliver professional-quality work. You are highly proficient with Adobe Creative Cloud, including Premiere Pro, After Effects, and Photoshop, and comfortable operating professional camera, lighting, and audio equipment.\n\nJust as importantly, you are already experimenting with AI-native creative workflows and are excited by how rapidly the creative profession is changing.\n\nExperience in enterprise technology, AI, industrial technology, aerospace, energy, defense, automotive, or another technically sophisticated category is valuable, but exceptional storytelling ability and intellectual curiosity matter more.\n\nWhy Avathon\n\nThis is a rare opportunity to help build the creative identity of a company defining an entirely new category. The stories are already extraordinary: AI operating across some of the world's largest industrial assets, mines, aerospace programs, energy systems, factories, and defense environments. Your job is to make those stories impossible to ignore. You will work closely with Avathon's leadership, technology teams, customers, and partners and have unusual access to the people and environments shaping the future of Physical AI.\n\nLocation & Travel:\n\nCandidates should be based in the Bangalore area. Regular presence at Avathon's Bangalore office and periodic travel will be required for executive, customer, event, and on-location production.\n\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\n\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
+  "description": "Who We Are & Why Join Us\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries -- energy, mining, manufacturing, aerospace, defense, and logistics -- accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management. With capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nCutting-Edge AI Innovation -- Join a team at the forefront of AI, developing groundbreaking solutions that shape the future. High-Growth Environment -- Thrive in a fast-scaling startup where agility, collaboration, and rapid professional growth are the norm. Meaningful Impact -- Work on AI-driven projects that drive real change across industries and improve lives.\n\nLearn more at: avathon.com\n\nBrand Designer\n\nBangalore, India (in office) · Full-time · Reports to the Director of Marketing\n\nWe're looking for our design unicorn.\n\nIndustrial AI is one of the fastest-growing spaces in tech, and Avathon is growing with it. We're building our brand and creative team in Bangalore, and we want a designer who is exceptional at their craft, with taste and ideas we can learn from. You'll own how Avathon looks and tells its story, as a creative partner to marketing, sales, product and leadership. And you'll have a great time doing it with us.\n\nWho We Are & Why Join Us\n\nAvathon is the leading Industrial AI autonomy platform, helping customers across heavy industries - energy, mining, manufacturing, aerospace, defense, and logistics - accelerate the journey toward autonomous operations. Our platform is built on a Computational Knowledge Graph foundation that contextualizes and connects operational data across siloed systems, bringing together time series, structured, unstructured, and machine vision data to power AI-driven applications in asset performance management, supply chain intelligence, visual AI, and global trade management. With capabilities spanning digital twins, normal behavior modeling, natural language processing, and computer vision, Avathon delivers real-time predictive intelligence and agentic decision-making at industrial scale.\n\nCutting-Edge AI Innovation - Join a team at the forefront of AI, developing groundbreaking solutions that shape the future.\n\nHigh-Growth Environment - Thrive in a fast-scaling startup where agility, collaboration, and rapid professional growth are the norm.\n\nMeaningful Impact - Work on AI-driven projects that drive real change across industries and improve lives.\n\nWhat you'll do\n\nBuild the design system. As our first brand design leader, set it up from scratch with external partners, then own it in-house: the Figma library, templates and rules for using it.\n\nMake other teams self-serve. Canva and slide templates so anyone can make on-brand material without waiting on design.\n\nDesign across marketing. Sales decks and one-pagers, campaigns, ads, social, the website, events and trade shows.\n\nMake customer stories look like proof. Real sites, real people and one clear result per story.\n\nBuild our executive and talent brand. Visuals for our CEO's LinkedIn presence and for hiring campaigns.\n\nAI in this role\n\nDesign is still a human process. The ideas, the taste and the original thinking come from you. But we want someone who hates grunt work (resizing, reformatting, repeating the same layout) so much that they automate it. We're building an AI-first marketing team, and you'll set up the design workflows that let us support the whole company:\n\nEnd-to-end workflows. For example, a product launch → web page, one-pager, email, social and slides. AI drafts; you set the rules and make the final call.\n\nBrand rules AI can follow. Prompts, templates and guardrails, so output is on-brand the first time.\n\nFaster concepts. AI for moodboards, storyboards and resizing, finished by hand.\n\nOur tools: Claude, Figma, Canva and Adobe. You'll help choose what we add.\n\nWhat you bring\n\n6–10 years in design, with 4–6 at B2B or SaaS brands, in-house or at an agency. We're not looking for B2C or consumer-only portfolios.\n\nA portfolio from creative B2B brands known for great storytelling, including design systems or brand guidelines you built.\n\nStrong layout and typography, and the judgement to make dense technical material clear.\n\nA strong client focus, for both our customers and your internal partners across Avathon. You treat every team you design for as a client: you listen, ask the right questions, and deliver work that solves their problem.\n\nExpert in Figma and Adobe Creative Suite.\n\nYou already use AI in your daily design work, and know where it falls short.\n\nYou'd rather build something once that saves 50 requests than do the 50 requests.\n\nClear written and spoken English, for daily work with teams in the US.\n\nNice to have\n\nMotion or video editing, data visualisation, trade show graphics, web design, and experience in industrial, energy, manufacturing, aerospace or defence.\n\nWho you are\n\nThis is a core team, so we're looking for senior people who can build systems, not just follow them.\n\nHigh agency. You get things done without waiting to be told.\n\nCurious. You ask why, learn the business, and bring ideas no one asked for.\n\nNo ego. The best idea wins, whoever it comes from.\n\nEmpathetic and a great listener. You understand what people need before you design for them.\n\nA real team player. You make the people around you better, across teams and time zones.\n\nGreat Energy. You make building something new enjoyable.\n\nHow to apply\n\nSend your CV and portfolio link, with one project where you built or extended a design system. In two or three lines, tell us what you did, what you inherited, and how others used it.\n\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\n\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
   "locations": [
    {
     "source": "location.name",
@@ -35,11 +45,11 @@
    }
   ],
   "published": "2026-09-15T15:44:19-04:00",
-  "title": "Senior Creative & Video Producer",
+  "title": "Brand Designer",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-10T03:47:47.693386+00:00",
- "content_hash": "56fa61a91a684bc68572973a1708c4176e0c926541d6d975b129019c35f3ffc3",
+ "content_changed_at": "2026-11-24T01:23:55.600132+00:00",
+ "content_hash": "7a851552b13dc78dcf535a3c0332b1e30ae54f74562b634a3d6422233262bbd1",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -58,7 +68,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Bengaluru, Karnataka, India",
-      "retrieved_at": "2026-11-10T03:47:47.693386+00:00",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
      },
@@ -66,15 +76,15 @@
       "interpretation": null,
       "method": "ats_field:offices.name",
       "quote": "Bengaluru",
-      "retrieved_at": "2026-11-10T03:47:47.693386+00:00",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
      },
      {
       "interpretation": null,
       "method": "description_text",
-      "quote": "Candidates should be based in the Bangalore area. Regular presence at Avathon's Bangalore office and periodic travel will be required for executive, customer, event, and on-location production.",
-      "retrieved_at": "2026-11-10T03:47:47.693386+00:00",
+      "quote": "A real team player. You make the people around you better, across teams and time zones.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
      }
@@ -85,9 +95,17 @@
     "items": [
      {
       "interpretation": null,
-      "method": "description_section:What We’re Looking For",
-      "quote": "You are a maker first. You don't need a large agency, production crew, or extensive brief to create exceptional work. You see a powerful story, figure out how to capture it, and execute.\nYou bring 6-10 years of exceptional hands-on experience across video production, editing, motion, and multimedia storytelling, with a portfolio that demonstrates strong creative judgment and the ability to make sophisticated subjects compelling.\nYou can independently concept, script, shoot, light, record, edit, animate, and deliver professional-quality work. You are highly proficient with Adobe Creative Cloud, including Premiere Pro, After Effects, and Photoshop, and comfortable operating professional camera, lighting, and audio equipment.\nJust as importantly, you are already experimenting with AI-native creative workflows and are excited by how rapidly the creative profession is changing.\nExperience in enterprise technology, AI, industrial technology, aerospace, energy, defense, automotive, or another technically sophisticated category is valuable, but exceptional storytelling ability and intellectual curiosity matter more.\nWhy Avathon\nThis is a rare opportunity to help build the creative identity of a company defining an entirely new category. The stories are already extraordinary: AI operating across some of the world's largest industrial assets, mines, aerospace programs, energy systems, factories, and defense environments. Your job is to make those stories impossible to ignore. You will work closely with Avathon's leadership, technology teams, customers, and partners and have unusual access to the people and environments shaping the future of Physical AI.\nLocation & Travel:\nCandidates should be based in the Bangalore area. Regular presence at Avathon's Bangalore office and periodic travel will be required for executive, customer, event, and on-location production.\nAvathon is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws.\nAvathon is committed to providing reasonable accommodations throughout the recruiting process. If you need a reasonable accommodation, please contact us to discuss how we can assist you.",
-      "retrieved_at": "2026-11-10T03:47:47.693386+00:00",
+      "method": "description_section:What you bring",
+      "quote": "6–10 years in design, with 4–6 at B2B or SaaS brands, in-house or at an agency. We're not looking for B2C or consumer-only portfolios.\nA portfolio from creative B2B brands known for great storytelling, including design systems or brand guidelines you built.\nStrong layout and typography, and the judgement to make dense technical material clear.\nA strong client focus, for both our customers and your internal partners across Avathon. You treat every team you design for as a client: you listen, ask the right questions, and deliver work that solves their problem.\nExpert in Figma and Adobe Creative Suite.\nYou already use AI in your daily design work, and know where it falls short.\nYou'd rather build something once that saves 50 requests than do the 50 requests.\nClear written and spoken English, for daily work with teams in the US.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
+     },
+     {
+      "interpretation": null,
+      "method": "description_section:Who you are",
+      "quote": "This is a core team, so we're looking for senior people who can build systems, not just follow them.\nHigh agency. You get things done without waiting to be told.\nCurious. You ask why, learn the business, and bring ideas no one asked for.\nNo ego. The best idea wins, whoever it comes from.\nEmpathetic and a great listener. You understand what people need before you design for them.\nA real team player. You make the people around you better, across teams and time zones.\nGreat Energy. You make building something new enjoyable.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
      }
@@ -95,8 +113,17 @@
     "state": "stated"
    },
    "requirements_preferred": {
-    "items": [],
-    "state": "not_stated"
+    "items": [
+     {
+      "interpretation": null,
+      "method": "description_section:Nice to have",
+      "quote": "Motion or video editing, data visualisation, trade show graphics, web design, and experience in industrial, energy, manufacturing, aerospace or defence.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://avathon.com/company/careers-job-listing/?gh_jid=4734110005"
+     }
+    ],
+    "state": "stated"
    },
    "workplace": {
     "items": [],

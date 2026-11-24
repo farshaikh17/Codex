@@ -23,11 +23,20 @@
    "from_hash": "39b50a714f1a484171f9640a56df46701df8cdd0034e409af96a2f5f029ecfea",
    "kind": "content_changed",
    "to_hash": "1c2f7c41924a0bfccb6556e78942d0edd1bb94272be1b52d26f20d72503bcb34"
+  },
+  {
+   "changed_at": "2026-11-24T01:23:55.600132+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "1c2f7c41924a0bfccb6556e78942d0edd1bb94272be1b52d26f20d72503bcb34",
+   "kind": "content_changed",
+   "to_hash": "7297e4a062372f0aa805ac9fbd4290d2d0274eb4ec99916163f32deec8e757fb"
   }
  ],
  "content": {
   "compensation_raw": null,
-  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAs the first line of defense for securing privileged customer data, our work is crucial to customer and company success. We operate where security, infrastructure, and product meet: designing authorization, identity, and audit solutions that are fast, correct, and observable. As a Senior or Principal Engineer, you will take ownership of security-critical backend systems, directly impacting how our platform is secured and used.\n\nThe Impact you bring to Cognite\n\nArchitecting and building our core authentication and authorization services, applying modern security principles to protect all customer data.\n\nDesigning and scaling resilient gRPC/HTTP APIs and microservices on Kubernetes, ensuring high availability, low latency, and ease of integration for other internal teams.\n\nDriving backend innovation by writing clean, maintainable code and refining our service architecture to support rapid product growth.\n\nLeading development initiatives including threat modeling, performance tuning, and reliability engineering to harden our systems against evolving security challenges.\n\nMentoring engineers and collaborating across teams to shape our technical roadmap and foster a culture of secure-by-default engineering.\n\nRequired Qualifications\n\nSignificant experience building and operating distributed backend systems in a modern, typed language.\n\nStrong proficiency in Kotlin. We value deep expertise in either language and a pragmatic approach to choosing the right tool for the job.\n\nDeep expertise in modern authentication and authorization concepts (e.g., OIDC, OAuth2, RBAC/ABAC) and their practical application in building secure services.\n\nHands-on experience with cloud-native technologies, Elasticsearch and cloud platforms like GCP, AWS or Azure is vital.\n\nPreferred Experience\n\nA proven track record of owning services in production, from initial design and development to deployment, monitoring, and incident response.\n\nA collaborative and pragmatic mindset, with good communication skills and a desire to mentor others.\n\nA snapshot of our many perks and benefits as a Cogniter\n\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n\n* Flat structure with direct access to decision-makers\n\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n\n* Get access to private health services with Cognite Care.\n\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
+  "description": "What Cognite is Relentless to Achieve\n\nCognite operates at the forefront of industrial digitalization, building AI and data solutions that solve the world’s hardest, highest-impact problems. Our Moonshot is bold: unlock $100B in customer value by 2035, and redefine how global industry works.\n\nHow you’ll demonstrate Ownership\n\nAs the first line of defense for securing privileged customer data, our work is crucial to customer and company success. We operate where security, infrastructure, and product meet: designing authorization, identity, and audit solutions that are fast, correct, and observable. As a Senior or Principal Engineer, you will take ownership of security-critical backend systems, directly impacting how our platform is secured and used.\n\nThe Impact you bring to Cognite\n\nArchitecting and building our core authentication and authorization services, applying modern security principles to protect all customer data.\n\nDesigning and scaling resilient gRPC/HTTP APIs and microservices on Kubernetes, ensuring high availability, low latency, and ease of integration for other internal teams.\n\nDriving backend innovation by writing clean, maintainable code and refining our service architecture to support rapid product growth.\n\nLeading development initiatives including threat modeling, performance tuning, and reliability engineering to harden our systems against evolving security challenges.\n\nMentoring engineers and collaborating across teams to shape our technical roadmap and foster a culture of secure-by-default engineering.\n\nRequired Qualifications\n\nSignificant experience building and operating distributed backend systems in a modern, typed language.\n\nExperience developing and maintaining backend services in production, ideally from a SaaS product environment, in Kotlin, Python, Rust or a similar language.\n\nDeep expertise in modern authentication and authorization concepts (e.g., OIDC, OAuth2, RBAC/ABAC) and their practical application in building secure services.\n\nHands-on experience with cloud-native technologies, Elasticsearch and cloud platforms like GCP, AWS or Azure is vital.\n\nPreferred Experience\n\nA proven track record of owning services in production, from initial design and development to deployment, monitoring, and incident response.\n\nA collaborative and pragmatic mindset, with good communication skills and a desire to mentor others.\n\nA snapshot of our many perks and benefits as a Cogniter\n\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n\n* Flat structure with direct access to decision-makers\n\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n\n* Get access to private health services with Cognite Care.\n\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\n\nWhy Cognite\n\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.\n\nEqual Opportunity\n\nCognite is committed to creating a diverse and inclusive environment at work and is proud to be an equal opportunity employer. All qualified applicants will receive the same level of consideration for employment.",
   "locations": [
    {
     "source": "location.name",
@@ -42,8 +51,8 @@
   "title": "Senior Software Engineer, Backend - Kotlin",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-19T00:16:26.514970+00:00",
- "content_hash": "1c2f7c41924a0bfccb6556e78942d0edd1bb94272be1b52d26f20d72503bcb34",
+ "content_changed_at": "2026-11-24T01:23:55.600132+00:00",
+ "content_hash": "7297e4a062372f0aa805ac9fbd4290d2d0274eb4ec99916163f32deec8e757fb",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -62,7 +71,7 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Norway (Oslo)",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }
@@ -74,8 +83,16 @@
      {
       "interpretation": null,
       "method": "description_section:Required Qualifications",
-      "quote": "Significant experience building and operating distributed backend systems in a modern, typed language.\nStrong proficiency in Kotlin. We value deep expertise in either language and a pragmatic approach to choosing the right tool for the job.\nDeep expertise in modern authentication and authorization concepts (e.g., OIDC, OAuth2, RBAC/ABAC) and their practical application in building secure services.\nHands-on experience with cloud-native technologies, Elasticsearch and cloud platforms like GCP, AWS or Azure is vital.",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "quote": "Significant experience building and operating distributed backend systems in a modern, typed language.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
+     },
+     {
+      "interpretation": null,
+      "method": "description_section:Required Qualifications",
+      "quote": "Deep expertise in modern authentication and authorization concepts (e.g., OIDC, OAuth2, RBAC/ABAC) and their practical application in building secure services.\nHands-on experience with cloud-native technologies, Elasticsearch and cloud platforms like GCP, AWS or Azure is vital.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }
@@ -86,9 +103,17 @@
     "items": [
      {
       "interpretation": null,
+      "method": "inline_marker_in:Required Qualifications",
+      "quote": "Experience developing and maintaining backend services in production, ideally from a SaaS product environment, in Kotlin, Python, Rust or a similar language.",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
+     },
+     {
+      "interpretation": null,
       "method": "description_section:Preferred Experience",
       "quote": "A proven track record of owning services in production, from initial design and development to deployment, monitoring, and incident response.\nA collaborative and pragmatic mindset, with good communication skills and a desire to mentor others.\nA snapshot of our many perks and benefits as a Cogniter\n* Join an organization of 60 different nationalities 🌐 with Diversity, Equality and Inclusion (DEI) in focus 🤝\n* A highly modern and fun working environment with sublime culture across the organization, follow us on Instagram @cognitedata 📷 to know more\n* Flat structure with direct access to decision-makers\n* Opportunity to work with and learn from some of the best people on some of the most ambitious projects found anywhere, across industries, with cutting edge technology\n* Join our HUB 🗣️ to be part of the conversation directly with Cogniters and our partners.\n* Get access to private health services with Cognite Care.\n* Hungry? We’ve got your back. A subsidized lunch at the canteen is delivered by the chefs at Fornebuporten (Aker Tech House)\n* Our own Cognite exclusive coffee bar ☕ with the friendliest baristas is here to brew coffee for coffee lovers, tea for tea lovers, smoothie for smoothie lovers, and the baristas creative concoctions when the mood strikes.\n* We take your mental- and physical health seriously by having a broad health offering and a free membership to our fully-staffed gym on-site.\n* A pet lover? Get the chance to meet Spot at the Robot Garden!\nWhy Cognite\nYou will work at the forefront of Industrial AI, partnering with some of the world's leading industrial organisations to solve problems that actually matter at scale — not hypothetical ones. You'll join a collaborative, fast-moving environment where curiosity and ownership are the norm, not the exception. If you want delivery work you can point to and be proud of, we'd love to hear from you.",
-      "retrieved_at": "2026-11-19T00:16:26.514970+00:00",
+      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.eu.greenhouse.io/cognite/jobs/5020904101"
      }
