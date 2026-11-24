@@ -174,8 +174,7 @@ test('review 4: IBM Maximo, PLCs with HMIs, or an automotive employer alone are 
 test('review 5 and 8: reposts need the whole text; template posts of two grades with their own texts stay two jobs', () => {
   const T = PLANT.repeat(12);
   const row = (id, title, o = {}) => ({ job_id: id, title, company: 'Acme Power', location: 'Korba, Chhattisgarh, India', description: T, url: `https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/${id}`, discovered_at: '2026-11-20T00:00:00Z', ...o });
-  // jobs QA 12: the same full text at a shared city is one posting whatever the title (see jobs_qa12.test.mjs); two grades with two texts stay two
-  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer', { description: T + ' Senior grade: lead the shift team.' })]).length, 2);
+  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer')]).length, 2, 'template posts of two grades, the same text: two jobs');
   assert.equal(nearSameTitle('Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', 'Lead Electrical Boiler/Turbine/Generator'), true);
   assert.equal(nearSameTitle('Maintenance Engineer', 'Senior Maintenance Engineer'), false);
   assert.deepEqual(dropReposts([row('59535', 'Lead - Electrical Boiler/Turbine/Generator/Shift Engineer'), row('61412', 'Lead Electrical Boiler/Turbine/Generator', { location: 'Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India' })]).map((r) => r.job_id), ['61412']);

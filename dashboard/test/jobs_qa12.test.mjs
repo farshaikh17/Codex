@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluate, farhanOtherFieldQa11, farhanOtherFieldQa12, farhanEngineeringField, genericSkillsOnly, sanaOtherProfessionQa12, sanaJuniorBodyGrade,
   sanaStretchOnlyQa12, sanaStretchOnly, sanaOtherProfession, AVOID_TITLE_CAP, UNDER_LEVEL_CAP, RULES_MARKER } from '../worker/discovery.ts';
-import { dropReposts, sameRepost } from '../scripts/shortlist_select.mjs';
+import { dropReposts, sameRepost, sameRole, fitsReady, fitsStretchRule } from '../scripts/shortlist_select.mjs';
 
 const farhan = { id: 'farhan_shaikh', qualification_threshold: 70, total_years_experience: 9,
   primary_skills: JSON.stringify(['HubSpot', 'Workflow Automation', 'CRM Configuration', 'Zapier', 'Process Design', 'API Integrations', 'Product Implementation', 'Stakeholder Management', 'Technical Delivery', 'Requirements Gathering']),
@@ -108,6 +108,43 @@ test('Sana cap near misses: a technical centre, one CNC control, a licence prefe
   assert.equal(sanaStretchOnlyQa12('Maintenance Manager', 'Our ISO 9001 and IATF 16949 certified switchgear plant.'), null);
   assert.equal(sanaStretchOnlyQa12('Maintenance Manager', 'Senior Executive leadership exposure. PLCs and robots. 12-15 years.'), null);
   assert.equal(sanaStretchOnlyQa12('Maintenance Engineer', 'B.E. Electrical. 5-10 years in a transformers manufacturing plant.'), null, 'no diploma route');
+});
+
+// ---- Review of #249: the failing inputs ------------------------------------------------------------------------------------------------------------
+test('review 1: a reworded title is one role, a grade added to the same title is another job', () => {
+  assert.equal(sameRole('Sr.Engg - Electrical Boiler/Turbine/Generator', 'Lead Electrical Boiler/Turbine/Generator'), true);
+  assert.equal(sameRole('Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', 'Lead Electrical Boiler/Turbine/Generator'), true);
+  assert.equal(sameRole('Maintenance Engineer', 'Senior Maintenance Engineer'), false);
+  assert.equal(sameRole('Plant Engineer', 'Plant Engineer II'), false);
+  assert.equal(sameRole('Electrical Engineer', 'Instrumentation Engineer'), false);
+  const T = PLANT.repeat(12);
+  const row = (id, title) => ({ job_id: id, title, company: 'Acme Power', location: 'Korba, Chhattisgarh, India', description: T, discovered_at: '2026-11-20T00:00:00Z',
+    url: `https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/${id}` });
+  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer')]).length, 2);
+});
+test('review 4: "Degree", "Bachelor" or "Graduate" in any case is a degree route', () => {
+  assert.equal(sanaJuniorBodyGrade('Engineer - Utility Maintenance', PLANT + 'We are looking for a Junior Engineer - Utility Maintenance. Qualification: Diploma or Degree in Electrical Engineering.'), false);
+  assert.equal(sanaJuniorBodyGrade('Engineer - Utility Maintenance', PLANT + 'Junior Engineer. Education: Diploma in Electrical; Graduates may also apply.'), false);
+  assert.equal(sanaJuniorBodyGrade('Engineer - Utility Maintenance', PLANT + 'Junior Engineer. Education: Diploma in Electrical. You will be on shifts.'), true, '"be" is no BE');
+});
+test('review 5: "a licence" is no grade letter; the IMI wording still caps', () => {
+  assert.equal(sanaStretchOnlyQa12('Maintenance Engineer', 'Candidate must hold a licence from CEA; it is required.'), null);
+  assert.equal(sanaStretchOnlyQa12('Maintenance Engineer', 'A licence from the state board is required.'), null);
+  assert.match(sanaStretchOnlyQa12('Sr. Engineer - Maintenance', 'Electrical C-license from Tamil Nadu electrical board is mandatorily required.'), /licence/);
+  assert.match(sanaStretchOnlyQa12('Maintenance Engineer', 'A "B" licence holder is a must.'), /licence/);
+});
+test('review 6: "a manufacturing plant" names no factory; "transformers manufacturing plant" does', () => {
+  assert.equal(sanaStretchOnlyQa12('Maintenance Engineer', '5-8 years of maintenance experience in a manufacturing plant. Qualification: Diploma/B.E. Electrical.'), null);
+  assert.equal(sanaStretchOnlyQa12('Maintenance Engineer', '5-8 years in any manufacturing plant. Diploma / B.E. Electrical.'), null);
+  assert.match(sanaStretchOnlyQa12('Repair & Maintenance Engineer', 'Diploma /Degree in Electrical engineering. Minimum 5-10 years of experience of maintenance of Plant machinery of transformers manufacturing plant.'), /one kind of factory/);
+});
+test('review 8: a row with no skill matched is already kept off both lists (skillsOk) unless its title is exactly a target role', () => {
+  const r = (o) => ({ kind: 'pool', active: 1, marked: 1, candidate_id: 'farhan_shaikh', score: 90, threshold: 70, eligibility: 'ELIGIBLE', location: 'Remote - India', description: 'x '.repeat(400), skill_score: 0, target_exact: 0, ...o });
+  assert.equal(fitsReady(r({})), false);
+  assert.equal(fitsStretchRule(r({ score: 65 })), false);
+  assert.equal(fitsReady(r({ target_exact: 1 })), true, 'an exact target title with a real text');
+  assert.equal(fitsReady(r({ skill_score: 40 })), true);
+  assert.equal(genericSkillsOnly([]), false, 'so the generic-skills guard needs no zero-skill case');
 });
 
 // ---- Every job the reviewers judged RIGHT keeps its place ------------------------------------------------------------------------------------------

@@ -1464,7 +1464,7 @@ export function sanaJuniorBodyGrade(title:string|null|undefined,description:stri
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
  if(/\bjunior\b/i.test(ti))return false;   // a junior title is read elsewhere
  const junior=/\bjunior engineer\b/i.test(d)||(/\b[A-Z]{2,5} title\s*:\s*[A-Za-z ]{2,30}\)/.test(d)&&/\bjunior\b|\btrainee\b/i.test(d));
- const diplomaOnly=/\b(?:education|qualifications?)\b[^.;]{0,40}\bdiploma\b/i.test(d)&&!/\bdegree\b|\bbachelor|\bB\.\s?E\b|\bBE\b|\bB\.?\s?Tech\b|\bgraduate engineer\b/.test(d);
+ const diplomaOnly=/\b(?:education|qualifications?)\b[^.;]{0,40}\bdiploma\b/i.test(d)&&!/\bdegrees?\b|\bbachelor|\bgraduates?\b|\bB\.?\s?Tech\b/i.test(d)&&!/\bB\.\s?E\b|\bBE\b/.test(d);   // review: 'Degree', 'Bachelor', 'Graduate' in any case; BE in capitals only
  return junior&&diplomaOnly;
 }
 // Sana, kept but not in Best matches (Worth a try at most):
@@ -1477,17 +1477,23 @@ export function sanaJuniorBodyGrade(title:string|null|undefined,description:stri
 //   machinery maintenance of one kind of factory asked in years ('5-10 years of experience of maintenance of Plant machinery of transformers
 //   manufacturing plant') with a diploma accepted.
 const TEST_RIGS=[/\btest (?:equipment|stands?|rigs?|lab(?:oratory)?|benches?)\b|\btest lab\b/i,/\bDAQ\b|\bdata acq\w*/i,/\bLab ?VIEW\b/i,/\bCAN[- ]?bus\b|\bController Area Network\b/i,/\bNI (?:hardware|software|cDAQ|PXI)\b/i];
+// A state electrical licence grade ('Electrical C-license from Tamil Nadu electrical board', '"B" licence', 'Class C licence'): the grade letter in
+// capitals and written as a grade (hyphenated, quoted, or after 'class' / 'grade'), never 'a licence' or 'A licence from the board'.
+const STATE_LICENCE=/(?:\b[Ee]lectrical\s+)?(?:\b[ABC]-[Ll]icen[cs]e|["“'][ABC]["”'] ?[Ll]icen[cs]e|\b(?:[Cc]lass|[Gg]rade) [ABC] [Ll]icen[cs]e)/;
 const CNC_CONTROLS=[/\b(?:siemens )?840D\b/i,/\bHeidenhain\b/i,/\bFanuc\b/i,/\bFagor\b/i,/\bMitsubishi (?:CNC|M\d)/i];
+// Years of machinery maintenance in one kind of factory, named by its product ('transformers manufacturing plant'); 'a manufacturing plant', 'any
+// manufacturing plant' or an adjective ('large', 'reputed') names no product.
+const FACTORY_YEARS=/\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,80}\b(?!(?:a|an|any|the|our|this|that|large|small|big|modern|leading|reputed|reputable|similar|good|well|established|renowned|industrial|manufacturing)\b)[a-z][\w-]{2,} manufacturing plants?\b/i;
 export function sanaStretchOnlyQa12(title:string|null|undefined,description:string|null|undefined,location:string|null|undefined=''):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' '),loc=String(location||'');
  if(/\bIT (?:delivery|development) cent(?:er|re)\b|\bdelivery cent(?:er|re)\b|\bIT (?:campus|park)\b/i.test(loc)||/\bwithin a large IT organi[sz]ation\b|\bIT (?:office )?campus\b/i.test(d))return 'maintenance at a site that is not a plant (IT centre or campus)';
  if(distinct(TEST_RIGS,d)>=3)return 'maintenance of R&D test rigs, not a plant';
  if(/\bCNC\b/.test(d)&&distinct(CNC_CONTROLS,d)>=2)return 'CNC machine maintenance as the main work';
- if(/\b(?:electrical )?[ABC][- ]?licen[cs]e\b[^.;]{0,60}\b(?:mandator\w*|required|must)\b/i.test(d))return 'a mandatory state electrical licence';
+ {const lic=STATE_LICENCE.exec(d);if(lic&&/\b(?:mandator\w*|required|must)\b/i.test(d.slice(lic.index,lic.index+lic[0].length+80).split(/[.;]/)[0]))return 'a mandatory state electrical licence';}
  if(/\bmandatory skills?\s*:\s*[^.;]{0,40}\b(?:oil (?:and|&) gas|downstream|upstream|refining|petrochemicals?)\b/i.test(d)||(/\bconsultant\b/i.test(ti)&&/\bGE (?:APM|SmartSignal)\b|\bSmartSignal\b|\bSIL\s*\/\s*SIS\b|\bIEC 61511\b/i.test(d)))return 'consulting with mandatory oil-and-gas or APM / SIL skills';
  if(/\bIATF\s*16949\b/i.test(d)&&/\bautomotive\b|\bvehicles?\b|\bseat ?belts?\b|\bairbags?\b|\btwo[- ]wheelers?\b|\bEVs?\b/i.test(d))return 'automotive-parts plant maintenance (IATF 16949)';
  if(/\b(?:sr\.?|senior) executive\b/i.test(`${ti} ${d}`)&&!/\b(?:manager|head)\b/i.test(ti)&&yearsAskedTop(d)>0&&yearsAskedTop(d)<=8&&/\bPLCs?\b/.test(d)&&/\brobot/i.test(d))return 'an executive-grade post on PLC and robot lines';
- if(/\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,80}\b[\w-]+ manufacturing plant\b/i.test(d)&&DIPLOMA_ACCEPTED.test(d))return 'machinery maintenance of one kind of factory, diploma accepted';
+ if(FACTORY_YEARS.test(d)&&DIPLOMA_ACCEPTED.test(d))return 'machinery maintenance of one kind of factory, diploma accepted';
  return null;
 }
 // Sana's place: an abroad posting whose city the rules do not know ('Pessione', 'Pantin', 'San José', 'Port Harcourt'). Read as abroad when the

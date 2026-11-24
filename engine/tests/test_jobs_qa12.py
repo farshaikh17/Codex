@@ -49,6 +49,11 @@ class FilledPage(unittest.TestCase):
         self.assertEqual(probe(url, {url: b'<p>Sorry, this position has been filled.</p>'}), ('dead', 'position filled page'))
         self.assertEqual(probe(url, {url: b'<p>This position is open. Apply now.</p>'})[0], 'alive')
 
+    def test_the_phrase_in_a_script_block_is_not_the_page_saying_so(self):   # review of #249
+        url = 'https://careers.example.org/jobs/7'
+        page = b'<script>var msgs={filled:"Sorry, this position has been filled."}</script><h1>Plant Engineer</h1><p>Apply now.</p>'
+        self.assertEqual(probe(url, {url: page})[0], 'alive')
+
 
 class JazzHR(unittest.TestCase):
     URL = 'https://acme.applytojob.com/apply/jobs/details/64FaArERCz'
@@ -57,6 +62,15 @@ class JazzHR(unittest.TestCase):
     def test_a_redirect_to_the_list_without_the_posting_is_closed(self):
         page = b'<title>Job Listings</title>' + b'<a href="/apply/jobs/details/bzWI99viVn">Lecturer</a>' * 50
         self.assertEqual(probe(self.URL, {self.LIST: page}, {self.URL: self.LIST}), ('dead', 'jazzhr posting gone from the board list'))
+
+    def test_a_redirect_elsewhere_or_a_list_cut_off_proves_nothing(self):   # review of #249
+        signin = 'https://acme.applytojob.com/login'
+        self.assertEqual(probe(self.URL, {signin: b'<form>Sign in</form>'}, {self.URL: signin})[0], 'unknown')
+        other = 'https://status.example.com/apply/jobs'
+        self.assertEqual(probe(self.URL, {other: b'<p>Down for maintenance</p>'}, {self.URL: other})[0], 'unknown', 'another host')
+        long_list = b'<a href="/apply/jobs/details/bzWI99viVn">Lecturer</a>' * 20000   # past the 512 KB bound: cut off
+        self.assertGreater(len(long_list), liveness.JAZZHR_LIST_BYTES)
+        self.assertEqual(probe(self.URL, {self.LIST: long_list}, {self.URL: self.LIST})[0], 'unknown')
 
     def test_the_posting_page_or_a_list_still_carrying_it_is_open(self):
         self.assertEqual(probe(self.URL, {self.URL: b'<h1>Marketing Automation Manager</h1>'})[0], 'alive')
@@ -72,7 +86,8 @@ class UKG(unittest.TestCase):
         open_page = ('<script>new US.Opportunity.CandidateOpportunityDetail({"Id":"%s","Title":"Senior Project Manager","OpportunityIsClosed":false})</script>' % self.ID).encode()
         self.assertEqual(probe(self.URL, {self.URL: b'x' * 50000 + open_page})[0], 'alive')
         self.assertEqual(probe(self.URL, {self.URL: open_page.replace(b'"OpportunityIsClosed":false', b'"OpportunityIsClosed":true')}), ('dead', 'ukg opportunity closed'))
-        self.assertEqual(probe(self.URL, {self.URL: b'<script>var flags=["OpportunityList"]</script>'}), ('dead', 'ukg opportunity data missing'))
+        # review of #249: missing data is no positive signal; it proves nothing (the usual reading: the page answered)
+        self.assertNotEqual(probe(self.URL, {self.URL: b'<script>var flags=["OpportunityList"]</script>'})[0], 'dead')
         internal = b'This is an internal opportunity. To view this opportunity, please log in through your company portal.'
         self.assertEqual(probe(self.URL, {self.URL: internal})[0], 'dead')
 
