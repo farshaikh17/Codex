@@ -1,6 +1,6 @@
 {
  "cursor_from": null,
- "cursor_to": "pc1|2026-10-29T01:11:58.821444+00:00|greenhouse:celigo:7844080",
+ "cursor_to": "pc1|2026-10-29T01:11:58.821444+00:00|greenhouse:celigo:8211343",
  "entries": [
   {
    "availability": "listed",
@@ -449,14 +449,6 @@
    "posting_id": "greenhouse:gitlab:8904961002",
    "record": "records/greenhouse__gitlab__8904961002.json",
    "record_sha256": "140ca444947c70659746974fde09961e623ad921508a4e67d59b73c425c763bd"
-  },
-  {
-   "availability": "listed",
-   "content_hash": "b7aa30a112a62fc957e9ad2648ca4156f728e6ea8f617d2297ce7a3b3d7e56ca",
-   "last_change": "2026-10-25T21:53:38.150524+00:00",
-   "posting_id": "greenhouse:gitlab:8907028002",
-   "record": "records/greenhouse__gitlab__8907028002.json",
-   "record_sha256": "048fbb8b4800dbb19dfca033e6f8727f7b20df2d691f0da0e07ff4488ca3d644"
   },
   {
    "availability": "listed",
@@ -1601,6 +1593,14 @@
    "posting_id": "greenhouse:celigo:7844080",
    "record": "records/greenhouse__celigo__7844080.json",
    "record_sha256": "792644c2dddb232a7b4f3060d406f34d1c873e52d311274b27ae8c9d9b71c5ed"
+  },
+  {
+   "availability": "missing",
+   "content_hash": "9cea637a7d27133c76597fff2061fa85a1c5659dd86665a75f6db7e89e29dd30",
+   "last_change": "2026-10-29T01:11:58.821444+00:00",
+   "posting_id": "greenhouse:celigo:8211343",
+   "record": "records/greenhouse__celigo__8211343.json",
+   "record_sha256": "8529a1c75162c2ee574235f0c632edd658e52d5ee86882f550c43b685a0e6701"
   }
  ],
  "has_more": true,

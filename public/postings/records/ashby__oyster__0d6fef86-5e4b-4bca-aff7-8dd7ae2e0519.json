@@ -87,10 +87,19 @@
    "from_hash": "01e97cf66368d24d2567bb62a76c03a1c909f63071711dbeeb3f541cd924d864",
    "kind": "content_changed",
    "to_hash": "fe6e7340ee82624412a8c587ca9be4477f073a369dadc44efbfc335bbe9979c9"
+  },
+  {
+   "changed_at": "2026-11-24T18:13:53.677683+00:00",
+   "fields": [
+    "compensation_raw"
+   ],
+   "from_hash": "fe6e7340ee82624412a8c587ca9be4477f073a369dadc44efbfc335bbe9979c9",
+   "kind": "content_changed",
+   "to_hash": "30d7181a39931daed0be69dba20b6501bf46c15b65a5d6c910c8efc9ca0b1ab5"
   }
  ],
  "content": {
-  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"€54K – €100K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"Portugal\",\"summary\":\"€54K – €65K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":54000,\"maxValue\":65000,\"summary\":\"€54K – €65K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Spain\",\"summary\":\"€80K – €100K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":80000,\"maxValue\":100000,\"summary\":\"€80K – €100K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Brazil\",\"summary\":\"R$310K – R$380K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"BRL\",\"interval\":\"1 YEAR\",\"minValue\":310000,\"maxValue\":380000,\"summary\":\"R$310K – R$380K\"}]},{\"title\":\"Colombia\",\"summary\":\"COP 190M – COP 220M\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"COP\",\"interval\":\"1 YEAR\",\"minValue\":190000000,\"maxValue\":220000000,\"summary\":\"COP 190M – COP 220M\"}]},{\"title\":\"Canada\",\"summary\":\"ZAR 130K – ZAR 160K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"},{\"compensationType\":\"Salary\",\"currencyCode\":\"ZAR\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"ZAR 130K – ZAR 160K\"}]}]}",
+  "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"€54K – €100K • Offers Equity • Multiple Ranges\",\"tiers\":[{\"title\":\"Portugal\",\"summary\":\"€54K – €65K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":54000,\"maxValue\":65000,\"summary\":\"€54K – €65K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Spain\",\"summary\":\"€80K – €100K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":80000,\"maxValue\":100000,\"summary\":\"€80K – €100K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]},{\"title\":\"Brazil\",\"summary\":\"R$310K – R$380K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"BRL\",\"interval\":\"1 YEAR\",\"minValue\":310000,\"maxValue\":380000,\"summary\":\"R$310K – R$380K\"}]},{\"title\":\"Colombia\",\"summary\":\"COP 190M – COP 220M\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"COP\",\"interval\":\"1 YEAR\",\"minValue\":190000000,\"maxValue\":220000000,\"summary\":\"COP 190M – COP 220M\"}]},{\"title\":\"Canada\",\"summary\":\"CA$130K – CA$160K • Offers Equity\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"CA$130K – CA$160K\"},{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}]}]}",
   "description": "✨ ONE PLATFORM, A WHOLE WORLD OF OPPORTUNITY\n\nThe best jobs have always clustered in a handful of the world's wealthiest cities. But talent is everywhere. Oyster set out to close that gap - building a global employment platform that lets companies hire, pay, and care for brilliant people anywhere.\n\nWe're proof that a high-performing culture doesn't need an office. Distributed across 60+ countries since 2020, we've built something the industry keeps noticing:\n\n- Ranked #10 of 250 on TIME and Statista's 2026 list of America's Top WorkTech Companies https://www.oysterhr.com/library/oyster-hr-named-10-of-americas-top-worktech-companies-of-2026-by-time\n\n- Named one of America's Greatest Startup Workplaces 2026 https://www.oysterhr.com/library/oyster-2026-newsweek-award by Newsweek\n\n- A G2 Spring 2026 Leader https://www.oysterhr.com/library/oyster-named-best-roi-for-any-global-employment-platform-for-g2-spring-2026 across Employer of Record, Global Employment, Multi-country Payroll, and HR Compliance\n\n- The only B Corp-certified global employment platform ~ independently verified since 2023\n\nTwo of those rankings measured our business impact from the outside. One measured how our own people feel about working here. They landed in the same place ~ because at Oyster, culture and performance aren't separate conversations. They're the same one.\n\nAnd we're just getting started. If you want to do the best work of your career alongside people who care as much as you do, we'd love for you to apply.\n\nTHE ROLE\n\nLocation: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be based within UTC−6 to UTC+3.\n\nAll applications will be reviewed after the submission deadline on Nov 6th, and we’ll be in touch with next steps shortly after. We appreciate your patience and interest in joining the team.\n\nRole Summary\n\nOyster is looking for a Partner Marketing Manager to build a scalable engine that creates demand and pipeline through our partner ecosystem. You will inherit an active portfolio, keep important commitments moving, and decide what to continue, improve, or retire using performance and cost data. Working across Channel and Marketing, you will design and execute programs that market to partners, with partners, and through partners—turning partner strategy into repeatable go-to-market motions with clear measurement. This is a high-autonomy individual-contributor role with global remit, budget ownership, and direct partnership with the Director of Demand and Growth.\n\nKey Responsibilities\n\n- Design, orchestrate, execute, and measure partner marketing programs across the ecosystem.\n\n- Build programs that market to partners, with partners, and through partners.\n\n- Protect existing partner commitments during handover while reviewing the portfolio for performance, cost, and strategic fit.\n\n- Own and allocate the partner marketing budget, including co-marketing and MDF, and defend investment decisions with return data.\n\n- Develop partner segmentation, positioning, messaging, and repeatable operating models.\n\n- Create joint programs across partner types, including technology partners.\n\n- Enable partners to take Oyster’s message and value proposition to their audiences.\n\n- Align Channel, Demand Generation, Product Marketing, Content, Sales, and Revenue Operations around integrated plans.\n\n- Establish credible reporting for partner-sourced pipeline, partner-influenced pipeline, engagement, and program ROI.\n\n- Apply AI and automation processes to improve segmentation, personalization, program development, execution, and insight generation.\n\nCore Requirements\n\n- Demonstrated ownership of measurable partner or ecosystem marketing programs from strategy through execution and reporting.\n\n- Strong understanding of marketing to, with, and through partners.\n\n- Ability to connect marketing activity to sourced or influenced pipeline and explain attribution trade-offs.\n\n- Strong cross-functional collaboration across partnerships, channel, marketing, sales, and revenue operations.\n\n- Experience managing a program portfolio and making evidence-based choices about what to continue, change, or stop.\n\n- Ability to adapt messaging and motions across partner types, incentives, audiences, and regions.\n\n- Sound budget judgment and confidence allocating spend against expected return.\n\n- AI-native working style, with evidence of rebuilding marketing workflows around AI while managing quality and privacy risks.\n\n- Comfort operating independently in a fully remote, asynchronous environment.\n\nBonus / Nice-to-Have Experience\n\n- Experience in B2B SaaS, HR technology, global employment, or another partner-led ecosystem.\n\n- Experience marketing with technology partners.\n\n- Experience building a partner marketing function, measurement model, or operating cadence from an early stage.\n\n- Familiarity with PRM, marketing automation, CRM, attribution, and analytics tools.\n\n- Experience supporting global programs across regions and time zones.\n\nThis might not be right for you if...\n\n- You prefer isolated campaign execution to building an interconnected partner program.\n\n- You are uncomfortable owning pipeline outcomes, attribution, and budget trade-offs.\n\n- You want a blank page rather than inheriting live commitments and partner relationships.\n\n- You rely on manual workflows and are not motivated to adopt AI-enabled ways of working.\n\n- Sustained alignment across Channel, Marketing, Revenue Operations, and external partners feels like overhead rather than core work.\n\nYou'll also need\n\n- A reliable home internet connection and fluency in both written and spoken English.\n\nHOW WE WORK TOGETHER AT OYSTER\n\nOur values guide the work we do, the decisions we make, and the culture that makes Oyster what it is. We make it happen—progress is our default setting. We drive change, we build and give trust, and we move as one united team.\n\nOur mission is to create a more equal world of work: helping companies everywhere hire, pay, and care for talent anywhere. Everything we do ladders up to our mission. We embrace asynchronous, collaborative work and share how we operate in the Oyster Public HQ https://oysterhr.notion.site/Welcome-to-The-Reef-Oyster-s-Open-Source-Employee-Guide-fc482e3f107c4afd8c85ed217f1d0c1d so other global teams can learn from us.\n\nHOW YOU WORK\n\nWith diverse locations, cultures, and needs, we created How YOU Work; https://oysterhr.notion.site/How-YOU-work-ac16c1932e314ffd8cb693e332458395 a program supporting your whole human experience at Oyster:\n\n- Work from anywhere: Oyster has no borders or HQ. As long as work is timely, your team is supported, and you're authorized to work where you live, you can work from anywhere.\n\n- Paid time off: Enjoy 40 days off per year (including holidays and vacation), or more if required by your country.\n\n- Mental health support: Access Plumm https://oysterhr.notion.site/Plumm-3b5e7e70dec6428e975f68f25972cfb7, our mental well-being service.\n\n- Wellbeing allowance: Each month, receive a wellbeing allowance in your ThanksBen wallet to spend on a wide range of options.\n\n- Flexible parental leave: All new parents are eligible for at least three months’ paid leave, with job protection for up to 12 months or as required locally.\n\n- WFH stipend: Receive a stipend for your laptop and home office equipment to get you set up quickly.\n\n✨ THE BEST JOBS SHOULD BE AVAILABLE TO EVERYONE\n\nWe embrace diverse perspectives and intentionally build our product and company with an inclusive, global mindset. We encourage you to apply, even if you don’t meet every criterion, and are committed to a trust-based, thriving environment.\n\nOyster is committed to ensuring equal opportunity of employment for qualified persons with disabilities and actively fosters an inclusive work environment. If you require reasonable accommodations throughout the recruiting process, please email jobs@oysterhr.com with the subject line: Interview Accommodations.\n\nOur available positions are on our careers page. Our team will only contact you from an @oysterhr.com email, and we will never ask for money as part of an interview process or job offer. If you receive a suspicious email about Oyster jobs or are directed to a site other than www.oysterhr.com/careers http://www.oysterhr.com/careers, please report it via our Compliance and Ethics Helpline https://faceup.com/c/8tpzyyye.",
   "locations": [
    {
@@ -122,8 +131,8 @@
   "title": "Lead Partner Marketing Manager",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-20T19:14:35.616028+00:00",
- "content_hash": "fe6e7340ee82624412a8c587ca9be4477f073a369dadc44efbfc335bbe9979c9",
+ "content_changed_at": "2026-11-24T18:13:53.677683+00:00",
+ "content_hash": "30d7181a39931daed0be69dba20b6501bf46c15b65a5d6c910c8efc9ca0b1ab5",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -154,7 +163,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":54000,\"maxValue\":65000,\"summary\":\"€54K – €65K\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -174,7 +183,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -202,7 +211,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"EUR\",\"interval\":\"1 YEAR\",\"minValue\":80000,\"maxValue\":100000,\"summary\":\"€80K – €100K\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -222,7 +231,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -250,7 +259,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"BRL\",\"interval\":\"1 YEAR\",\"minValue\":310000,\"maxValue\":380000,\"summary\":\"R$310K – R$380K\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -278,7 +287,35 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"COP\",\"interval\":\"1 YEAR\",\"minValue\":190000000,\"maxValue\":220000000,\"summary\":\"COP 190M – COP 220M\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
+     },
+     {
+      "interpretation": {
+       "amount_unit": null,
+       "basis": "base",
+       "component_type": "Salary",
+       "equity_mentioned": false,
+       "estimated": false,
+       "interval_raw": "1 YEAR",
+       "label": "Canada",
+       "multiple_ranges": true,
+       "period": "year",
+       "ranges": [
+        {
+         "currency": "CAD",
+         "currency_symbol": null,
+         "max": 160000,
+         "min": 130000,
+         "text": "CA$130K – CA$160K"
+        }
+       ],
+       "variable_mentioned": false
+      },
+      "method": "ats_field:compensationTiers",
+      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"CAD\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"CA$130K – CA$160K\"}",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -298,35 +335,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"EquityPercentage\",\"currencyCode\":null,\"interval\":\"NONE\",\"minValue\":null,\"maxValue\":null,\"summary\":\"Offers Equity\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
-      "schema_version": "evidence-1",
-      "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
-     },
-     {
-      "interpretation": {
-       "amount_unit": null,
-       "basis": "base",
-       "component_type": "Salary",
-       "equity_mentioned": false,
-       "estimated": false,
-       "interval_raw": "1 YEAR",
-       "label": "Canada",
-       "multiple_ranges": true,
-       "period": "year",
-       "ranges": [
-        {
-         "currency": "ZAR",
-         "currency_symbol": null,
-         "max": 160000,
-         "min": 130000,
-         "text": "ZAR 130K – ZAR 160K"
-        }
-       ],
-       "variable_mentioned": false
-      },
-      "method": "ats_field:compensationTiers",
-      "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"ZAR\",\"interval\":\"1 YEAR\",\"minValue\":130000,\"maxValue\":160000,\"summary\":\"ZAR 130K – ZAR 160K\"}",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      }
@@ -343,7 +352,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Global",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -351,7 +360,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Portugal",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -359,7 +368,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Spain",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -367,7 +376,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Brazil",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -375,7 +384,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Colombia",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -383,7 +392,7 @@
       "interpretation": null,
       "method": "ats_field:secondaryLocations",
       "quote": "Canada",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -391,7 +400,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be based within UTC−6 to UTC+3.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -399,7 +408,7 @@
       "interpretation": null,
       "method": "description_text",
       "quote": "- Experience supporting global programs across regions and time zones.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      }
@@ -412,7 +421,7 @@
       "interpretation": null,
       "method": "description_section:Core Requirements",
       "quote": "- Demonstrated ownership of measurable partner or ecosystem marketing programs from strategy through execution and reporting.\n- Strong understanding of marketing to, with, and through partners.\n- Ability to connect marketing activity to sourced or influenced pipeline and explain attribution trade-offs.\n- Strong cross-functional collaboration across partnerships, channel, marketing, sales, and revenue operations.\n- Experience managing a program portfolio and making evidence-based choices about what to continue, change, or stop.\n- Ability to adapt messaging and motions across partner types, incentives, audiences, and regions.\n- Sound budget judgment and confidence allocating spend against expected return.\n- AI-native working style, with evidence of rebuilding marketing workflows around AI while managing quality and privacy risks.\n- Comfort operating independently in a fully remote, asynchronous environment.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -420,7 +429,7 @@
       "interpretation": null,
       "method": "description_section:You'll also need",
       "quote": "- A reliable home internet connection and fluency in both written and spoken English.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      }
@@ -433,7 +442,7 @@
       "interpretation": null,
       "method": "description_section:Bonus / Nice-to-Have Experience",
       "quote": "- Experience in B2B SaaS, HR technology, global employment, or another partner-led ecosystem.\n- Experience marketing with technology partners.\n- Experience building a partner marketing function, measurement model, or operating cadence from an early stage.\n- Familiarity with PRM, marketing automation, CRM, attribution, and analytics tools.\n- Experience supporting global programs across regions and time zones.\nThis might not be right for you if...\n- You prefer isolated campaign execution to building an interconnected partner program.\n- You are uncomfortable owning pipeline outcomes, attribution, and budget trade-offs.\n- You want a blank page rather than inheriting live commitments and partner relationships.\n- You rely on manual workflows and are not motivated to adopt AI-enabled ways of working.\n- Sustained alignment across Channel, Marketing, Revenue Operations, and external partners feels like overhead rather than core work.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      }
@@ -446,7 +455,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -454,7 +463,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "Location: While this position is posted in a specific location, all of Oyster’s positions are fully remote and you can work from home. Forever. To create the best experience for our new hire, this role requires you to be based within UTC−6 to UTC+3.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      },
@@ -462,7 +471,7 @@
       "interpretation": "remote",
       "method": "description_text",
       "quote": "- Comfort operating independently in a fully remote, asynchronous environment.",
-      "retrieved_at": "2026-11-20T19:14:35.616028+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/oyster/0d6fef86-5e4b-4bca-aff7-8dd7ae2e0519"
      }

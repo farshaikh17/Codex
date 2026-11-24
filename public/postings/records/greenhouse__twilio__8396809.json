@@ -14,6 +14,15 @@
    "from_hash": "59bbae045e487172bc577366b08d9e71ea453496fe0826770bdb824656c0a923",
    "kind": "content_changed",
    "to_hash": "db5c703edbdc29249ecf9d8736bf4481040f2b35e02f74576d478af5ae7032dc"
+  },
+  {
+   "changed_at": "2026-11-24T18:13:53.677683+00:00",
+   "fields": [
+    "locations"
+   ],
+   "from_hash": "db5c703edbdc29249ecf9d8736bf4481040f2b35e02f74576d478af5ae7032dc",
+   "kind": "content_changed",
+   "to_hash": "aa6d829167d2778c99624d6bd6ea424c4850a68b61968e83bacd15aed04c6f63"
   }
  ],
  "content": {
@@ -25,16 +34,20 @@
     "text": "Remote - US"
    },
    {
+    "source": "offices.location",
+    "text": "San Francisco, California"
+   },
+   {
     "source": "offices.name",
-    "text": "Remote - US"
+    "text": "San Francisco"
    }
   ],
   "published": "2026-11-17T15:53:26-05:00",
   "title": "Developer Evangelist",
   "workplace_type": null
  },
- "content_changed_at": "2026-11-18T19:32:43.174288+00:00",
- "content_hash": "db5c703edbdc29249ecf9d8736bf4481040f2b35e02f74576d478af5ae7032dc",
+ "content_changed_at": "2026-11-24T18:13:53.677683+00:00",
+ "content_hash": "aa6d829167d2778c99624d6bd6ea424c4850a68b61968e83bacd15aed04c6f63",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -76,7 +89,7 @@
       },
       "method": "description_section:Compensation",
       "quote": "The estimated pay ranges for this role are as follows:\nBased in Colorado, Hawaii, Illinois, Maryland, Massachusetts, Minnesota, Vermont or Washington D.C. : $131,440 - $164,300.\nBased in New York, New Jersey, Washington State, or California (outside of the San Francisco Bay area): $139,200 - $174,000.\nBased in the San Francisco Bay area, California: $154,640 - $193,300.\nThis role may be eligible to participate in Twilio’s equity plan and corporate bonus plan. All roles are generally eligible for the following benefits: health care insurance, 401(k) retirement account, paid sick time, paid personal time off, paid parental leave.\nThe successful candidate’s starting salary will be determined based on permissible, non-discriminatory factors such as skills, experience, and geographic location.",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      }
@@ -93,7 +106,23 @@
       "interpretation": null,
       "method": "ats_field:location.name",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.location",
+      "quote": "San Francisco, California",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
+      "schema_version": "evidence-1",
+      "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
+     },
+     {
+      "interpretation": null,
+      "method": "ats_field:offices.name",
+      "quote": "San Francisco",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      },
@@ -101,7 +130,7 @@
       "interpretation": null,
       "method": "description_section:Location",
       "quote": "This role will be remote and based in the Bay Area.",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      }
@@ -114,7 +143,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "Twilio values diverse experiences from all kinds of industries, and we encourage everyone who meets the required qualifications to apply. If your career is just starting or hasn't followed a traditional path, don't let that stop you from considering Twilio. We are always looking for people who will bring something new to the table!",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      },
@@ -122,7 +151,7 @@
       "interpretation": null,
       "method": "description_section:*Required:",
       "quote": "Proficient in writing Python, PHP, Node, C# (.NET), or Java with insights into web frameworks within or across these languages.\nTechnical foundational expertise in AI tools, technologies and/or platforms.\nAbility to navigate the emerging AI developer ecosystem, community and emerging industry trends.\nA love of teaching others, curiosity and excitement about technology.\n3-5 years of experience writing production code, with strong empathy for developers to successfully guide their building process.\nExperience in cross-functional collaboration with teams like sales, support, product and marketing.\nCreative and collaborative problem-solving skills, with a focus on data-driven decision-making for system and process improvements.\nSkilled in storytelling to highlight developers building on Twilio and inspire others.\nExperience in public speaking, writing, and/or organizing engaging programs.",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      }
@@ -135,7 +164,7 @@
       "interpretation": null,
       "method": "description_section:Desired:",
       "quote": "Familiarity with the Bay Area developer community and industry landscape, including local communities, events and programs.\nFamiliarity with the local AI developer ecosystem, particularly through the Developer Relations lens.\nFamiliarity with project management tools and methodologies.\nAbility to influence and build effective working relationships across all levels of the organization.\nExcellent skills in influencing, problem-solving, consensus-building, and strong interpersonal communication.\nExperience in organizing and running developer events, meetups and/or user groups",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      }
@@ -148,7 +177,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote - US",
-      "retrieved_at": "2026-11-18T19:32:43.174288+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://job-boards.greenhouse.io/twilio/jobs/8396809"
      }

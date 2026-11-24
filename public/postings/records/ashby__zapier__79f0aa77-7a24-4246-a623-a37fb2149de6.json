@@ -1,8 +1,8 @@
 {
  "availability": {
-  "at": "2026-11-18T19:32:43.174288+00:00",
-  "reason": "absent from successful retrieval",
-  "state": "missing"
+  "at": "2026-11-24T18:13:53.677683+00:00",
+  "reason": "listed again after missing",
+  "state": "listed"
  },
  "board": "zapier",
  "changes": [],

@@ -23,11 +23,20 @@
    "from_hash": "604e3f6936df80c012e8289c5e0f87093262df8065551c649a9fbdf165489a9e",
    "kind": "content_changed",
    "to_hash": "984ecf35c689608538ea9fd4ab22f907588bf65fa993514a5c29e32b7abeb879"
+  },
+  {
+   "changed_at": "2026-11-24T18:13:53.677683+00:00",
+   "fields": [
+    "description"
+   ],
+   "from_hash": "984ecf35c689608538ea9fd4ab22f907588bf65fa993514a5c29e32b7abeb879",
+   "kind": "content_changed",
+   "to_hash": "44f1f5f69f45ae58840e53012807c61cfa04075cb1c2c565c51d1cbce0d05ca6"
   }
  ],
  "content": {
   "compensation_raw": "{\"source\":\"ashby.compensationTiers\",\"summary\":\"$12K – $19K\",\"tiers\":[{\"title\":null,\"summary\":\"$12K – $19K\",\"additional_information\":null,\"components\":[{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":12000,\"maxValue\":19000,\"summary\":\"$12K – $19K\"}]}]}",
-  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOverview\n\n📍 Remote Global - APAC\n\nWe are seeking a WFM Central - Real Time Analyst to serve as the central governance layer for live operations across multiple Lines of Business (LoB). This is not a traditional monitoring role; it is designed for a high-caliber, forensic operator who functions as an operational architect. You will be a trusted partner to operational leadership, responsible for continuing to evolve our operations to a standardized, and fiscally sound control model.\n\nThe ideal candidate possesses the technical \"know-how\" of a forensic analyst and the communication prowess of a business consultant, capable of telling a compelling story through data to stakeholders ranging from Team Leads to Directors. You won't just report that a queue is at risk; you will diagnose the business impact, identify the root cause, and prescribe the specific levers leadership must pull to preserve SLA and the customer experience. You will be the owner of all aspects of the support queues and ensure we are meeting our customers where they need us.\n\nResponsibilities\n\n- Stakeholder Storytelling: Distill complex, \"noisy\" operational signals into high-impact narratives. You must be able to share in-depth observations and supporting data that tell a clear story to stakeholders, at all levels of leadership, on exactly what actions must be taken.\n\n- Business-Level Analysis: Go beyond the \"what\" and the \"why\" to analyze long-term business trends. Evaluate the financial efficiency of SLA safeguarding and the fiscal impact of current staffing vs. demand density.\n\n- Operational Control & Forensic Auditing: Serve as the authoritative \"voice of reason\" during incidents. Conduct forensic audits of agent behaviors such as \"On Hold\" abuse or status irregularities to ensure hidden capacity drains are eliminated.\n\n- Centralized Core Governance: Enact queue management playbooks for real-time levers across multiple LoBs, ensuring aggressive SLAs are preserved through structured accountability.\n\n- Strategic Planning & Optimization: Partner with WFM to create a concise feedback loop for continued improvement in planning and scheduling.\n\nQualifications\n\n- Exceptional Communication: Proven ability to translate complex data into a clear jargon-free business story. You must be comfortable presenting actionable insights to senior leadership under high-pressure conditions.\n\n- Advanced Forensic Analysis: Expert proficiency in Google Sheets is required, familiarity with Metabase preferred. You must be able to build complex, automated tracking tools and forensic audits from scratch. Not just for basic queue health, but also analyzing business data that influences our operations.\n\n- Strategic Judgment: Demonstrated experience making high-judgment decisions that impact the entire business, particularly in environments with aggressive SLAs and fluctuating volume patterns.\n\n- Operational Architecture: Take ownership in documenting best practices into governed frameworks and playbooks.\n\n- Resilient Mindset: Comfortable operating autonomously in a 24/7 environment, with the flexibility to adapt to operational needs as part of a high-impact, interdependent team.\n\n- Systems Fluency: Familiarity with Amazon Connect, Zendesk Omnichannel routing, and Assembled WFM is highly preferred.\n\nWhat Success Looks Like\n\n- Operational anomalies are quickly investigated, with root causes clearly identified and communicated, reducing repeat issues and leadership uncertainty\n\n- You evolve queue management processes from reactive to a documented, standardized, and predictive operating model.\n\n- Champion of the team’s brand with Operational Leadership. You are looked to as the primary source of truth, relying on your data-driven stories to make critical staffing and operational decisions.\n\n- Live queues remain stable, governed, and resilient across all supported lines of business, even during unexpected spikes, outages, or incidents\n\n- Stakeholders receive timely, clear updates during incidents that explain impact, cause, and corrective actions in a concise and actionable manner.\n\nHIRING PROCESS\n\n- Application\n\n- Intro Call with Recruiter\n\n- Case Study\n\n- Interview with Central WFM - RTA Team Lead\n\n- Interview with Queue Operations Manager - Core Services\n\n- Interview with Head of Core Services\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
+  "description": "ABOUT CLIPBOARD\n\nOur mission is to uplift as many communities as possible. We do this through our app-based marketplace that connects healthcare professionals with the workplaces that need amazing workers. This enables hundreds of thousands of people to achieve financial stability for themselves and their families while providing essential care to millions of people across the U.S.\n\nFounded in 2016, we are a remote-first team of over 1,000 people building a top Y-Combinator company https://www.ycombinator.com/topcompanies/ and have been profitable since 2022. We’re the leader in Long-Term Care staffing and are rapidly expanding into Home Health, Hospitals, and more, meaning we have more work to do than people to do it, and are growing our team to support millions more people and their communities.\n\nOverview\n\n📍 Remote Global - APAC\n\nWe are seeking a WFM Central - Real Time Analyst to serve as the central governance layer for live operations across multiple Lines of Business (LoB). This is not a traditional monitoring role; it is designed for a high-caliber, forensic operator who functions as an operational architect. You will be a trusted partner to operational leadership, responsible for continuing to evolve our operations to a standardized, and fiscally sound control model.\n\nThe ideal candidate possesses the technical \"know-how\" of a forensic analyst and the communication prowess of a business consultant, capable of telling a compelling story through data to stakeholders ranging from Team Leads to Directors. You won't just report that a queue is at risk; you will diagnose the business impact, identify the root cause, and prescribe the specific levers leadership must pull to preserve SLA and the customer experience. You will be the owner of all aspects of the support queues and ensure we are meeting our customers where they need us.\n\nResponsibilities\n\n- Stakeholder Storytelling: Distill complex, \"noisy\" operational signals into high-impact narratives. You must be able to share in-depth observations and supporting data that tell a clear story to stakeholders, at all levels of leadership, on exactly what actions must be taken.\n\n- Business-Level Analysis: Go beyond the \"what\" and the \"why\" to analyze long-term business trends. Evaluate the financial efficiency of SLA safeguarding and the fiscal impact of current staffing vs. demand density.\n\n- Operational Control & Forensic Auditing: Serve as the authoritative \"voice of reason\" during incidents. Conduct forensic audits of agent behaviors such as \"On Hold\" abuse or status irregularities to ensure hidden capacity drains are eliminated.\n\n- Centralized Core Governance: Enact queue management playbooks for real-time levers across multiple LoBs, ensuring aggressive SLAs are preserved through structured accountability.\n\n- Strategic Planning & Optimization: Partner with WFM to create a concise feedback loop for continued improvement in planning and scheduling.\n\nQualifications\n\n- Exceptional Communication: Proven ability to translate complex data into a clear jargon-free business story. You must be comfortable presenting actionable insights to senior leadership under high-pressure conditions.\n\n- Advanced Forensic Analysis: Expert proficiency in Google Sheets is required, familiarity with Metabase preferred. You must be able to build complex, automated tracking tools and forensic audits from scratch. Not just for basic queue health, but also analyzing business data that influences our operations.\n\n- Strategic Judgment: Demonstrated experience making high-judgment decisions that impact the entire business, particularly in environments with aggressive SLAs and fluctuating volume patterns.\n\n- Operational Architecture: Take ownership in documenting best practices into governed frameworks and playbooks.\n\n- Resilient Mindset: Comfortable operating autonomously in a 24/7 environment, with the flexibility to adapt to operational needs as part of a high-impact, interdependent team.\n\n- Systems Fluency: Familiarity with Amazon Connect, Zendesk Omnichannel routing, and Assembled WFM is highly preferred.\n\nWhat Success Looks Like\n\n- Operational anomalies are quickly investigated, with root causes clearly identified and communicated, reducing repeat issues and leadership uncertainty\n\n- You evolve queue management processes from reactive to a documented, standardized, and predictive operating model.\n\n- Champion of the team’s brand with Operational Leadership. You are looked to as the primary source of truth, relying on your data-driven stories to make critical staffing and operational decisions.\n\n- Live queues remain stable, governed, and resilient across all supported lines of business, even during unexpected spikes, outages, or incidents\n\n- Stakeholders receive timely, clear updates during incidents that explain impact, cause, and corrective actions in a concise and actionable manner.\n\nHIRING PROCESS\n\n- Application\n\n- Case Study\n\n- Interview with Central WFM - RTA Team Lead\n\n- Interview with Queue Operations Manager - Core Services\n\n- Interview with Head of Core Services\n\n- Final Culture Interview with Executive Leadership\n\nQuick Note on Scammers:\n\nClipboard would never ask you for money or your bank details to participate in our hiring process. Report any scammers impersonating the Clipboard hiring team members here https://forms.gle/SyGaxHFbon7Hg9fW6.",
   "locations": [
    {
     "source": "location",
@@ -42,8 +51,8 @@
   "title": "Workforce Management - Real Time Analyst",
   "workplace_type": "Remote"
  },
- "content_changed_at": "2026-11-24T01:23:55.600132+00:00",
- "content_hash": "984ecf35c689608538ea9fd4ab22f907588bf65fa993514a5c29e32b7abeb879",
+ "content_changed_at": "2026-11-24T18:13:53.677683+00:00",
+ "content_hash": "44f1f5f69f45ae58840e53012807c61cfa04075cb1c2c565c51d1cbce0d05ca6",
  "content_hash_version": 1,
  "extraction": {
   "extractor_version": 5,
@@ -74,7 +83,7 @@
       },
       "method": "ats_field:compensationTiers",
       "quote": "{\"compensationType\":\"Salary\",\"currencyCode\":\"USD\",\"interval\":\"1 YEAR\",\"minValue\":12000,\"maxValue\":19000,\"summary\":\"$12K – $19K\"}",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      }
@@ -91,7 +100,7 @@
       "interpretation": null,
       "method": "ats_field:location",
       "quote": "Remote (APAC)",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      },
@@ -99,7 +108,7 @@
       "interpretation": null,
       "method": "ats_field:address.addressCountry",
       "quote": "Philippines",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      }
@@ -112,7 +121,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "- Exceptional Communication: Proven ability to translate complex data into a clear jargon-free business story. You must be comfortable presenting actionable insights to senior leadership under high-pressure conditions.",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      },
@@ -120,7 +129,7 @@
       "interpretation": null,
       "method": "description_section:Qualifications",
       "quote": "- Strategic Judgment: Demonstrated experience making high-judgment decisions that impact the entire business, particularly in environments with aggressive SLAs and fluctuating volume patterns.\n- Operational Architecture: Take ownership in documenting best practices into governed frameworks and playbooks.\n- Resilient Mindset: Comfortable operating autonomously in a 24/7 environment, with the flexibility to adapt to operational needs as part of a high-impact, interdependent team.",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      }
@@ -133,7 +142,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Qualifications",
       "quote": "- Advanced Forensic Analysis: Expert proficiency in Google Sheets is required, familiarity with Metabase preferred. You must be able to build complex, automated tracking tools and forensic audits from scratch. Not just for basic queue health, but also analyzing business data that influences our operations.",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      },
@@ -141,7 +150,7 @@
       "interpretation": null,
       "method": "inline_marker_in:Qualifications",
       "quote": "- Systems Fluency: Familiarity with Amazon Connect, Zendesk Omnichannel routing, and Assembled WFM is highly preferred.",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      }
@@ -154,7 +163,7 @@
       "interpretation": "remote",
       "method": "location_text",
       "quote": "Remote (APAC)",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      },
@@ -162,7 +171,7 @@
       "interpretation": "remote",
       "method": "ats_field:workplace_type",
       "quote": "Remote",
-      "retrieved_at": "2026-11-24T01:23:55.600132+00:00",
+      "retrieved_at": "2026-11-24T18:13:53.677683+00:00",
       "schema_version": "evidence-1",
       "source_url": "https://jobs.ashbyhq.com/clipboard/2dfae75c-66e8-4243-aa46-2f1c7238d942"
      }
