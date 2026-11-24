@@ -77,14 +77,17 @@ export function keepTwins(rows, now) {
 }
 /** Jobs QA 11 (Adani 'Lead – Electrical Boiler/Turbine/Generator/Shift Engineer', Korba, req 59535, and 'Lead Electrical Boiler/Turbine/Generator',
  *  'Ottapidaram; Korba', req 61412: the same text): one employer's repost of the same text on the same site, under a new requisition, is one posting
- *  when the titles are near-identical (the same words, or one title is the other with at most two words added at its end; 'Senior Maintenance Engineer'
- *  and 'Maintenance Engineer' are two grades, two jobs) and the places share a city. The whole stored text is compared, not its first part. The newest
+ *  when the places share a city. Jobs QA 12: whatever the title ('Sr.Engg - Electrical Boiler/Turbine/Generator', req 58786, carries 61412's text
+ *  word for word): the near-identical-title test (QA 11 review) let reworded reposts through. The whole stored text is compared, not its first part,
+ *  so two grades written as two texts stay two jobs. The newest
  *  stays: the higher requisition id when both URLs carry one in the same form on the same host, else the later discovery. Places that share no city
  *  stay apart (the many-cities rule, plan B3). Rows are bucketed by employer, site and text first, so only true candidates are compared. */
 export const repostGroupKey = (r) => {
   const host = postingUrlKey(r.url).split('/')[0], text = twinText(r.description, Infinity), who = twinEmployer(r.company);
-  return host && who && text.length >= TEXT_TWIN_MIN ? `${host}|${who}|${text}` : '';
+  return host && who && text.length >= TEXT_TWIN_MIN && text.split(' ').length >= REPOST_MIN_WORDS ? `${host}|${who}|${text}` : '';
 };
+/** A real description: at least this many words (a placeholder or a one-line text is never read as a repost). */
+export const REPOST_MIN_WORDS = 40;
 const cities = (loc) => new Set(String(loc || '').split(/[;|]/).map((p) => p.split(',')[0].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()).filter(Boolean));
 const titleWords = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
 export function nearSameTitle(a, b) {
@@ -94,7 +97,7 @@ export function nearSameTitle(a, b) {
 export function sameRepost(a, b, key = repostGroupKey(a)) {
   if (!key || key !== repostGroupKey(b)) return false;
   const ca = cities(a.location), cb = cities(b.location);
-  return [...ca].some((c) => cb.has(c)) && nearSameTitle(a.title, b.title);
+  return [...ca].some((c) => cb.has(c));   // jobs QA 12: whatever the title (Adani 'Sr.Engg - Electrical BTG', req 58786, is 61412's text)
 }
 // The requisition id where the hiring system puts it: Oracle '/job/<id>', Workday '_R<id>' / '_JR<id>' / '_REQ<id>', SuccessFactors '/<id>/' after the
 // slug, Greenhouse 'gh_jid=' or '/jobs/<id>', Taleo 'job=<id>', Avature '/JobDetail/<slug>/<id>'.

@@ -23,8 +23,9 @@ const listedF = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE
 const listedS = (e) => e.status !== 'INELIGIBLE' && (e.eligibility === 'ELIGIBLE' ? e.score >= 50 : e.score >= 60);
 const capS = (title, D, o = {}) => { const e = evS(title, PLANT + PLANT + D, o); assert.equal(e.eligibility, 'ELIGIBLE', e.reason); assert.ok(e.score < 60 && e.score >= 50, `${title}: ${e.score} ${e.qualification_reason}`); return e; };
 
-test('marker: the rules changed, so every stored row is re-scored once (profile_v27)', () => {
-  assert.equal(RULES_MARKER, 'profile_v27');
+test('marker: the rules changed, so every stored row is re-scored once (profile_v27, bumped again by later rule changes)', () => {
+  const v = /^profile_v(\d+)$/.exec(RULES_MARKER);
+  assert.ok(v && Number(v[1]) >= 27, RULES_MARKER);
 });
 
 // ---- Farhan: hidden ------------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +111,7 @@ test('Sana 4: an employer\'s repost of the same text, a new requisition, a title
   assert.deepEqual(keepTwins([old, fresh], Date.parse('2026-11-23T12:00:00Z')).map((r) => r.job_id), ['ds:oracle:new']);
   const other = row('ds:oracle:mundra', { title: 'Associate Manager - Operations & Maintenance', location: 'Mundra, Gujarat, India', url: 'https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/61000' });
   assert.equal(sameRepost(fresh, { ...other, title: fresh.title }), false, 'no shared city: the many-cities rule');
-  assert.equal(sameRepost(fresh, { ...other, location: 'Korba, Chhattisgarh, India' }), false, 'another title: another job on the same template');
+  assert.equal(sameRepost(fresh, { ...other, location: 'Korba, Chhattisgarh, India', description: T + ' Mundra O&M duties.' }), false, 'another text: another job');
   assert.equal(sameRepost(fresh, { ...old, company: 'Globex Energy' }), false, 'another employer on a shared host');
   assert.equal(sameRepost(fresh, { ...old, description: 'Short text.' }), false);
 });
@@ -170,10 +171,11 @@ test('review 4: IBM Maximo, PLCs with HMIs, or an automotive employer alone are 
   assert.match(sanaStretchOnly('SUPV II MAINTENANCE', 'Maintenance of injection molding machines; PLC, HMI, VFD/servo drives. More than 6 years of experience in maintenance within the Automotive / Plastic Injection Molding manufacturing industry.', 'Acme', 9.2), /discrete manufacturing/);
   assert.match(sanaStretchOnly('Maintenance Specialist', 'Troubleshooting & maintenance of Injection molding machine, SPM, Robots (Fanuc & Epson), Extrusion line.', 'Acme', 9.2), /discrete manufacturing/);
 });
-test('review 5 and 8: reposts need near-identical titles and the whole text; template posts of two grades stay two jobs', () => {
+test('review 5 and 8: reposts need the whole text; template posts of two grades with their own texts stay two jobs', () => {
   const T = PLANT.repeat(12);
   const row = (id, title, o = {}) => ({ job_id: id, title, company: 'Acme Power', location: 'Korba, Chhattisgarh, India', description: T, url: `https://abcd.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job/${id}`, discovered_at: '2026-11-20T00:00:00Z', ...o });
-  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer')]).length, 2);
+  // jobs QA 12: the same full text at a shared city is one posting whatever the title (see jobs_qa12.test.mjs); two grades with two texts stay two
+  assert.equal(dropReposts([row('50001', 'Maintenance Engineer'), row('50002', 'Senior Maintenance Engineer', { description: T + ' Senior grade: lead the shift team.' })]).length, 2);
   assert.equal(nearSameTitle('Lead - Electrical Boiler/Turbine/Generator/Shift Engineer', 'Lead Electrical Boiler/Turbine/Generator'), true);
   assert.equal(nearSameTitle('Maintenance Engineer', 'Senior Maintenance Engineer'), false);
   assert.deepEqual(dropReposts([row('59535', 'Lead - Electrical Boiler/Turbine/Generator/Shift Engineer'), row('61412', 'Lead Electrical Boiler/Turbine/Generator', { location: 'Ottapidaram, Tamil Nadu, India; Korba, Chhattisgarh, India' })]).map((r) => r.job_id), ['61412']);

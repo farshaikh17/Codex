@@ -119,7 +119,42 @@ COUNTRY_CODES = {'IN': 'India', 'US': 'United States', 'GB': 'United Kingdom', '
 # 64 KB read, so a page that names the system in its first part is read on to SF_PAGE_BYTES.
 CLOSED_PAGE_FACTS = [
     ('successfactors closed page', re.compile(r"you can(?:'|’|&#39;|&#x27;|&rsquo;)?t view this job because it(?:'|’|&#39;|&#x27;|&rsquo;)?s not available at this time", re.I)),
+    # Jobs QA 12 (RPG, SuccessFactors): 'Sorry, this position has been filled.'
+    ('position filled page', re.compile(r'sorry,? this position has been filled', re.I)),
+    # Jobs QA 12 (Upland, UKG): 'This is an internal opportunity. To view this opportunity, please log in through your company portal'
+    ('ukg internal opportunity', re.compile(r'this is an internal opportunity\.?\s*to view this opportunity,? please log in', re.I)),
 ]
+# Jobs QA 12, more hiring systems' own answers for a closed posting (each page read at most once, within its byte bound):
+#   JazzHR: the posting URL ('<board>.applytojob.com/apply/jobs/details/<id>') redirects to the board's job list, and the list does not carry the id;
+#   UKG: an OpportunityDetail page whose server-rendered opportunity data ('CandidateOpportunityDetail({"Id":"<id>"') is missing, or says
+#   '"OpportunityIsClosed":true';
+#   amazon.jobs: an apply link on account.amazon.jobs is checked at its public page, www.amazon.jobs/en/jobs/<id>, where a closed job is a 404.
+JAZZHR_URL = re.compile(r'^https://[a-z0-9-]+\.applytojob\.com/apply/jobs/details/([A-Za-z0-9]+)', re.I)
+JAZZHR_LIST_BYTES = 524288
+UKG_URL = re.compile(r'^https://recruiting\d*\.ultipro\.com/.+/OpportunityDetail\?(?:.*&)?opportunityId=([0-9a-f-]{36})', re.I)
+UKG_PAGE_BYTES = 262144
+AMAZON_APPLY = re.compile(r'^https://account\.amazon\.jobs/(?:[a-z-]+/)?jobs/(\d+)', re.I)
+
+
+def public_url(url):
+    """The page a posting is checked at: an amazon.jobs apply link maps to its public job page; any other URL is itself."""
+    m = AMAZON_APPLY.match(str(url or ''))
+    return f'https://www.amazon.jobs/en/jobs/{m.group(1)}' if m else url
+
+
+def board_closed(url, final, body):
+    """JazzHR and UKG: a closed posting by the hiring system's own page, or None."""
+    h = body.decode('utf-8', 'replace') if isinstance(body, bytes) else str(body or '')
+    m = JAZZHR_URL.match(url)
+    if m and not JAZZHR_URL.match(final or '') and m.group(1) not in h:
+        return 'jazzhr posting gone from the board list'
+    m = UKG_URL.match(url)
+    if m:
+        if '"OpportunityIsClosed":true' in h:
+            return 'ukg opportunity closed'
+        if m.group(1).lower() not in h.lower():
+            return 'ukg opportunity data missing'
+    return None
 SF_PAGE = re.compile(rb'successfactors|\brmk-|j2w', re.I)
 SF_PAGE_BYTES = 524288
 
@@ -246,15 +281,18 @@ def probe(url, timeout=TIMEOUT, facts=None, records=True):
                 return 'dead', f'workday record {e.code}'
         except Exception:   # noqa: BLE001 - timeouts, unreadable JSON: the page below decides
             pass
+    url = public_url(url)   # jobs QA 12: amazon.jobs apply links
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.5'})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:   # noqa: S310 (URLs from our own database, https only)
             final = r.geturl()
             ashby = facts is not None and bool(ASHBY_URL.match(final or url))
-            body = r.read(ASHBY_PAGE_BYTES if ashby else 65536)
-            if isinstance(body, bytes) and SF_PAGE.search(body[:65536]) and len(body) >= 65536:   # jobs QA 10: read a SuccessFactors page on
+            jazz_list = bool(JAZZHR_URL.match(url)) and not JAZZHR_URL.match(final or '')
+            limit = ASHBY_PAGE_BYTES if ashby else JAZZHR_LIST_BYTES if jazz_list else UKG_PAGE_BYTES if UKG_URL.match(url) else 65536
+            body = r.read(limit)
+            if isinstance(body, bytes) and SF_PAGE.search(body[:65536]) and len(body) >= 65536 and limit < SF_PAGE_BYTES:   # jobs QA 10: read a SuccessFactors page on
                 body += r.read(SF_PAGE_BYTES - len(body))
-            closed = closed_page(body)
+            closed = closed_page(body) or board_closed(url, final, body)
             if closed:
                 return 'dead', closed
             if ashby:

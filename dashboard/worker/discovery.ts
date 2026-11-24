@@ -4,7 +4,7 @@ export const RULE_VERSION = 'cloud-conservative-review-1';
 // The rules marker (plan R9): a score breakdown carrying {"<RULES_MARKER>": true} was scored under the current rules. The ONLY place it is written;
 // scripts/dataset_apply.mjs imports it and engine/dataset_discovery.py reads it from this line. Bump it once per phase that changes evaluate()
 // or a scoring rule (every stored row is then re-scored over the next runs). This module is not the Worker entry (worker/index.ts), so exporting is safe.
-export const RULES_MARKER = 'profile_v27';
+export const RULES_MARKER = 'profile_v28';
 const PAGE = 10, MAX_BYTES = 512 * 1024, DAY_JOBS = 120, DAY_SOURCES = 48;
 type DB = D1Database;
 type Source = {id:string;kind:string;slug:string;name:string;cursor:number;failures:number;cursor_token?:string;cursor_started_at?:number};
@@ -940,6 +940,7 @@ export function farhanEngineeringField(title:string|null|undefined,description:s
  if(farhanFinanceProductImplementation(title,d))return 'finance or ERP product implementation';   // jobs QA 9
  const qa10=farhanOtherFieldQa10(title,d);if(qa10)return qa10;   // jobs QA 10
  const qa11=farhanOtherFieldQa11(title,d);if(qa11)return qa11;   // jobs QA 11
+ const qa12=farhanOtherFieldQa12(title,d);if(qa12)return qa12;   // jobs QA 12
  return null;
 }
 // ---- Jobs QA 9 (21 Nov: both live lists, 65 jobs, re-judged by two reviewers after the v23 rules rebuild; 14 should not have been shown) ------
@@ -1055,7 +1056,7 @@ export function sanaOtherProfession(title:string|null|undefined,description:stri
  if(/\bcyber ?security\b/i.test(d)&&/\bfirewalls?\b|\bVPNs?\b|\b62443\b|\bCERT-In\b|\bSIEM\b/i.test(d))return 'OT cybersecurity';
  if(distinct(SANA_MACHINE_TOOL,d)>=2)return 'machine-tool (CNC) overhaul';
  const qa9=sanaOtherProfessionQa9(ti,d);if(qa9)return qa9;   // jobs QA 9
- return sanaOtherProfessionQa10(ti,d)||sanaOtherProfessionQa11(ti,d);   // jobs QA 10, 11
+ return sanaOtherProfessionQa10(ti,d)||sanaOtherProfessionQa11(ti,d)||sanaOtherProfessionQa12(ti,d);   // jobs QA 10, 11, 12
 }
 // ---- Jobs QA 9 (Sana) ------------------------------------------------------------------------------------------------------------------------
 // Other professions that share her words:
@@ -1180,9 +1181,10 @@ const DEGREE_WORD=String.raw`(?:diploma|b\.?\s?e\b\.?|b\.?\s?tech\b\.?|bachelor 
 const DEGREE_ASIDE=String.raw`(?:\s*\([^)]{0,25}\))?`;
 const MECH_DEGREE=new RegExp(String.raw`\b${DEGREE_WORD}${DEGREE_ASIDE}(?:\s*(?:\/|or|,)\s*${DEGREE_WORD}${DEGREE_ASIDE})*\s*(?:\/\s*)?(?:(?:in|of)\s+|\(\s*|[-–:\/]\s*|(?<=\b(?:b\.?\s?e|b\.?\s?tech)\.?)\s+)mechanical\b(?:\s+engineer(?:ing)?)?|\b(?:educational qualifications?|qualifications?|education)\s*:\s*in\s+mechanical\b(?:\s+engineer(?:ing)?)?`,'gi');
 // Another discipline offered beside mechanical. Jobs QA 11: 'or a related field', 'or equivalent', 'relevant' or 'other' name no discipline, so
+// Jobs QA 12: mechatronics is the mechanical family ('Mechanical Engineering, Mechatronics Engineering, or a related field' is mechanical-only).
 // 'B.E. in Mechanical Engineering or a related field' is mechanical-only (it used to read as open to any discipline); another branch named ('any
 // other engineering discipline', 'or related engineering discipline', 'allied branches') still opens it.
-const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|mechatronics|industrial|production|power|any (?:other )?(?:engineering|discipline|branch)|other engineering|related engineering (?:disciplines?|branch(?:es)?|fields?)|allied (?:engineering|disciplines?|branch(?:es)?))\b/i;
+const MECH_DEGREE_OTHER=/\b(?:electrical|EEE|electronics|instrumentation|chemical|industrial|production|power|any (?:other )?(?:engineering|discipline|branch)|other engineering|related engineering (?:disciplines?|branch(?:es)?|fields?)|allied (?:engineering|disciplines?|branch(?:es)?))\b/i;
 const CONSULTING_EMPLOYER=/\b(?:deloitte|pwc|price ?waterhouse|kpmg|ernst (?:&|and) young|\bey\b|accenture|mckinsey|boston consulting|bain|capgemini|grant thornton)\b/i;
 const CONSUMER_GOODS_EMPLOYER=/\b(?:asian paints|berger paints|kansai nerolac|nerolac|akzo ?nobel|indigo paints|perfetti|nestl[eé]|hindustan unilever|unilever|britannia|dabur|marico|godrej consumer|procter|colgate|mondelez|pepsico|coca[- ]cola|parle|ferrero|kellogg|emami|jyothy|tata consumer|itc limited)\b/i;
 const EMPLOYER_ABROAD_NAME=/\b(?:arabia|egypt|misr|africa|nigeria|kenya|morocco|maroc|algeria|tunisia|jordan|lebanon|iraq|turkey|t[uü]rkiye|pakistan|bangladesh)\b/i;
@@ -1199,7 +1201,7 @@ export function sanaStretchOnlyQa9(title:string|null|undefined,description:strin
  if(/commission/i.test(ti)&&(CONSULTING_EMPLOYER.test(co)||/\badvisory\b/i.test(ti)))return 'commissioning for an advisory or consulting firm';
  if(/\b(?:sr\.?|senior)?\s*executive\b/i.test(ti)&&!/\b(?:manager|head|lead)\b/i.test(ti)&&(CONSUMER_GOODS_EMPLOYER.test(co)||/\bFMCG\b|\bpaints? (?:manufacturing|industry|plants?)\b/i.test(d)))return 'an executive-grade post at a consumer-goods or paints maker';
  if(location!==undefined&&!String(location||'').trim()&&EMPLOYER_ABROAD_NAME.test(co)&&!INDIA_PLACE.test(d)&&!/\b(?:india|bharat)\b/i.test(d))return 'an employer abroad with no place stated';
- return sanaStretchOnlyQa10(ti,d)||sanaStretchOnlyQa11(ti,d);   // jobs QA 10, 11
+ return sanaStretchOnlyQa10(ti,d)||sanaStretchOnlyQa11(ti,d)||sanaStretchOnlyQa12(ti,d,location);   // jobs QA 10, 11, 12
 }
 // ---- Jobs QA 10 (22 Nov: both live lists, 92 jobs, re-judged by two reviewers after the previous rules release and the wide-intake rebuild) --------
 // Farhan, another field (capped like an avoid-list title):
@@ -1371,17 +1373,21 @@ export function sanaStretchOnlyQa10(title:string|null|undefined,description:stri
 //   Airbyte, MuleSoft, Informatica ...) beside middleware, microservices or AWS development (Workato, which he uses, is not in the list);
 //   a QA, quality-analyst, SDET or test title built on a test framework (Cypress, Selenium, Playwright): test-automation engineering;
 //   a pricing, bid or commercial-solutions title that is bid, pricing, sourcing and contract work and asks years in a named industry.
-const IPAAS_DEV='boomi|airbyte|mulesoft|informatica|talend|snaplogic|fivetran|tibco|jitterbit|azure data factory';
+const IPAAS_DEV='boomi|airbyte|mulesoft|informatica|talend|snaplogic|fivetran|tibco|jitterbit|azure data factory|(?:ibm )?datapower|api connect|ibm mq|websphere mq|webmethods|apigee';   // jobs QA 12: enterprise middleware and API gateways
 const IPAAS_MANDATORY=new RegExp(String.raw`\b(?:${IPAAS_DEV})\b[^.;]{0,25}?(?:[-–:]\s*)?\b(?:mandatory|required|is a must)\b|\bmandatory\b[^.;]{0,40}\b(?:${IPAAS_DEV})\b`,'gi');
 /** A mandatory iPaaS platform: not denied ('is not required', 'no MuleSoft'), not only welcomed ('optional', 'a plus', 'nice to have'). */
+// Jobs QA 12 (IBM DataPower Integration Designer: 'Hands-on experience in designing IBM DataPower integration solutions'): hands-on design or
+// development experience asked on the platform is required too.
+const IPAAS_HANDS_ON=new RegExp(String.raw`\bhands-on (?:experience )?(?:in|with|on)\s+(?:designing |developing |building |implementing )?(?:[\w-]+\s+){0,2}?(?:${IPAAS_DEV})\b`,'gi');
+function ipaasHandsOn(d:string):boolean{IPAAS_HANDS_ON.lastIndex=0;let m:RegExpExecArray|null;while((m=IPAAS_HANDS_ON.exec(d))){if(deniedBefore(d,m.index)||QA10_SOFT_AFTER.test(d.slice(m.index+m[0].length)))continue;return true;}return false;}
 function ipaasMandatory(d:string):boolean{IPAAS_MANDATORY.lastIndex=0;let m:RegExpExecArray|null;while((m=IPAAS_MANDATORY.exec(d))){if(/\b(?:not|no|non|never|optional)\b/i.test(m[0])||deniedBefore(d,m.index)||QA10_SOFT_AFTER.test(d.slice(m.index+m[0].length)))continue;return true;}return false;}
-const INTEGRATION_DEV=/\bmiddleware development\b|\bmicroservices\b|\bdistributed systems\b|\bAWS\b|\bcode reviews?\b|\bETL\s*\/\s*ELT\b/i;
+const INTEGRATION_DEV=/\bmiddleware development\b|\bmicroservices\b|\bdistributed systems\b|\bAWS\b|\bcode reviews?\b|\bSOAP\b|\bWSDL\b|\bXSLT\b|\bHLD\b|\bLLD\b|\bETL\s*\/\s*ELT\b/i;
 const TEST_FRAMEWORK=/\b(?:cypress|selenium|playwright|appium|webdriver ?io|testng|junit|pytest|robot framework)\b/i;
 const BID_WORK=[/\bbids?\b|\bbid management\b|\btenders?\b/i,/\bpricing (?:strategy|models?|tools?)\b|\bcommercial and pricing\b|\bsparing models?\b/i,/\bprocurement\b|\bsourcing strateg/i,/\bcontract(?:ual)? (?:terms|negotiations?)\b|\bcontract negotiations?\b/i];
 const NAMED_INDUSTRY=/\bexperience in the [\w &-]{2,40} industry\b/i;
 export function farhanOtherFieldQa11(title:string|null|undefined,description:string|null|undefined):string|null{
  const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
- if(/\bintegration\b/i.test(ti)&&/\b(?:engineer|lead|developer|architect)\b/i.test(ti)&&ipaasMandatory(d)&&INTEGRATION_DEV.test(d))return 'integration platform engineering (a mandatory iPaaS or ETL platform)';
+ if(/\bintegration\b/i.test(ti)&&/\b(?:engineer|lead|developer|architect|designer)\b/i.test(ti)&&(ipaasMandatory(d)||ipaasHandsOn(d))&&INTEGRATION_DEV.test(d))return 'integration platform engineering (a mandatory iPaaS or ETL platform)';
  if(/\bQA\b|\bquality (?:analyst|assurance|engineer)\b|\bSDET\b|\btest(?:ing|er)?\b/i.test(ti)&&TEST_FRAMEWORK.test(d))return 'test automation (QA) engineering';
  if(/\bpricing\b|\bcommercial solutions?\b|\bbid\b/i.test(ti)&&distinct(BID_WORK,d)>=3&&NAMED_INDUSTRY.test(d))return 'commercial bid and pricing work';
  return null;
@@ -1419,6 +1425,69 @@ export function sanaStretchOnlyQa11(title:string|null|undefined,description:stri
  if(/\bMEP\b/.test(`${ti} ${d}`)&&/\b(?:terminal|airport|building|facilit(?:y|ies)|mall|tower|campus)\b/i.test(`${ti} ${d}`)&&DIPLOMA_ACCEPTED.test(d)){const top=lowestYearsTop(d);if(top!==null&&top<=8)return 'a building MEP shift post accepting a diploma';}
  if(/\bmaintenance\b/i.test(ti)&&/\bproduction plans?\b|\bproduction (?:achievement|planning (?:&|and) operations)\b/i.test(d)&&/\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,40}\bmanufacturing\b/i.test(d))return 'maintenance with product-manufacturing duties';
  if(/\bproject\b/i.test(ti)&&FEED_WORK.test(d))return 'oil-and-gas capital-project (FEED) engineering';
+ return null;
+}
+// ---- Jobs QA 12 (24 Nov: both live lists, 75 jobs, re-judged by two reviewers after the v27 rebuild) -----------------------------------------
+// Farhan, another field: a 'GTM Engineer' or growth title whose core work and hard requirement is cold outbound (ICP research, sending domains with
+// SPF / DKIM / DMARC and warm-up, sequencers such as Instantly, Smartlead, lemlist, Clay or Apollo: three kinds) with a sending track record as the hard
+// requirement ('volumes sent, reply rate, positive replies'): SDR and demand generation. Building outbound systems with automation tools and no sending
+// record asked stays his (a 'GTM Engineer' building enrichment and n8n / Make workflows).
+const COLD_OUTBOUND=[/\bcold (?:email|outbound|outreach|calling)\b|\boutbound (?:machine|motion|sequences?|campaigns?)\b|\brunning (?:B2B )?(?:growth or )?outbound\b/i,/\bSPF\b|\bDKIM\b|\bDMARC\b|\bwarm(?:-?up|ing)? (?:them|domains|inboxes)\b|\bsending domains?\b/i,
+ /\b(?:instantly|smartlead|lemlist|clay|apollo|sales navigator|outreach\.io)\b/i,/\bICP\b/];
+const OUTBOUND_TRACK=/\breply rates?\b|\bpositive replies\b|\bvolumes? sent\b/i;   // the hard requirement: a sending track record
+export function farhanOtherFieldQa12(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(/\bGTM\b|\bgrowth\b|\boutbound\b|\bdemand gen/i.test(ti)&&OUTBOUND_TRACK.test(d)&&distinct(COLD_OUTBOUND,d)>=3)return 'cold outbound (SDR or demand generation)';
+ return null;
+}
+// Both: a Best match must not rest on generic skills alone (QA 12: an IBM DataPower design post reached Best on 'Requirements Gathering',
+// 'Stakeholder Management' and 'Technical Delivery'). When every skill matched is a generic one and the title is not exactly a target role, the row
+// is a stretch: Worth a try at most.
+export const GENERIC_SKILLS=/^(?:requirements gathering|stakeholder management|technical delivery|technical team leadership|sop development|process design|procurement|technical specifications|tender documents|contractor supervision)$/i;
+export function genericSkillsOnly(skills:string[]):boolean{return skills.length>0&&skills.every((x)=>GENERIC_SKILLS.test(String(x).trim()));}
+// Sana, another profession (capped like an avoid-list title):
+//   a Gulf post that requires local professional registration ('Valid Society of Engineers UAE (SOE) membership', 'Dubai Municipality DEQS
+//   accreditation', 'Registered to practice as an electrical engineer in Dubai', a DM contracting certificate that 'is must');
+//   EPC electrical design in ETAP with two more kinds of design work (single-line diagrams, cable sizing and layouts, load schedules, earthing and
+//   lighting design) under a title that is not maintenance or operations; reviewing SLDs and cable schedules as a project manager is not enough.
+const GULF_REGISTRATION=/\bSociety of Engineers\b|\bSOE\b[^.;]{0,20}\bmembership\b|\bDEQS\b|\bregistered to practi[cs]e\b[^.;]{0,50}\b(?:Dubai|Abu Dhabi|Sharjah|UAE|Saudi|Qatar|Oman|Kuwait|Bahrain)\b|\bDubai Municipality\b[^.;]{0,60}\bcertificate\b|\bSaudi Council of Engineers\b|\bSCE (?:membership|registration|accreditation)\b|\bQatar (?:MME|Engineers) (?:registration|licen[cs]e)\b/i;
+const EPC_DESIGN=[/\bsingle[- ]line diagrams?\b|\bSLDs?\b/i,/\bETAP\b/,/\bcable (?:sizing|layouts?|schedules?|routing)\b/i,/\bload (?:schedules?|lists?)\b/i,/\bearthing\b|\blighting (?:design|calculations?)\b|\bDialux\b/i];
+export function sanaOtherProfessionQa12(title:string|null|undefined,description:string|null|undefined):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(GULF_REGISTRATION.test(`${ti} ${d}`))return 'a Gulf post requiring local professional registration';
+ if(!/maintenance|o ?& ?m\b|operations|reliability/i.test(ti)&&EPC_DESIGN[1].test(d)&&distinct(EPC_DESIGN,d)>=3)return 'EPC electrical design';
+ return null;
+}
+// Sana's level: the body names a technician grade under an engineer title ('We are looking for a Junior Engineer- Utility Maintenance (GJA Title:
+// Engineer)') and a diploma is the only qualification it lists.
+export function sanaJuniorBodyGrade(title:string|null|undefined,description:string|null|undefined):boolean{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' ');
+ if(/\bjunior\b/i.test(ti))return false;   // a junior title is read elsewhere
+ const junior=/\bjunior engineer\b/i.test(d)||(/\b[A-Z]{2,5} title\s*:\s*[A-Za-z ]{2,30}\)/.test(d)&&/\bjunior\b|\btrainee\b/i.test(d));
+ const diplomaOnly=/\b(?:education|qualifications?)\b[^.;]{0,40}\bdiploma\b/i.test(d)&&!/\bdegree\b|\bbachelor|\bB\.\s?E\b|\bBE\b|\bB\.?\s?Tech\b|\bgraduate engineer\b/.test(d);
+ return junior&&diplomaOnly;
+}
+// Sana, kept but not in Best matches (Worth a try at most):
+//   maintenance at a site that is not a plant: an IT delivery centre or IT campus (the place or the text), or R&D / test-lab rigs (test stands, DAQ,
+//   LabView, CAN bus, NI hardware: three kinds);
+//   CNC machines as the main work (two or more CNC controls: Siemens 840D, Heidenhain, Fanuc, Fagor), or a mandatory state electrical licence
+//   ('Electrical C-license from Tamil Nadu electrical board is mandatorily required');
+//   consulting with mandatory oil-and-gas skills ('Mandatory Skills: Downstream - Oil and Gas'), GE APM / SmartSignal or SIL/SIS under a consultant title;
+//   automotive-parts plant maintenance under IATF 16949; a Senior Executive grade asking at most 8 years with PLC and robot lines;
+//   machinery maintenance of one kind of factory asked in years ('5-10 years of experience of maintenance of Plant machinery of transformers
+//   manufacturing plant') with a diploma accepted.
+const TEST_RIGS=[/\btest (?:equipment|stands?|rigs?|lab(?:oratory)?|benches?)\b|\btest lab\b/i,/\bDAQ\b|\bdata acq\w*/i,/\bLab ?VIEW\b/i,/\bCAN[- ]?bus\b|\bController Area Network\b/i,/\bNI (?:hardware|software|cDAQ|PXI)\b/i];
+const CNC_CONTROLS=[/\b(?:siemens )?840D\b/i,/\bHeidenhain\b/i,/\bFanuc\b/i,/\bFagor\b/i,/\bMitsubishi (?:CNC|M\d)/i];
+export function sanaStretchOnlyQa12(title:string|null|undefined,description:string|null|undefined,location:string|null|undefined=''):string|null{
+ const ti=String(title||''),d=String(description||'').replace(/[*_`#]+/g,' ').replace(/\s+/g,' '),loc=String(location||'');
+ if(/\bIT (?:delivery|development) cent(?:er|re)\b|\bdelivery cent(?:er|re)\b|\bIT (?:campus|park)\b/i.test(loc)||/\bwithin a large IT organi[sz]ation\b|\bIT (?:office )?campus\b/i.test(d))return 'maintenance at a site that is not a plant (IT centre or campus)';
+ if(distinct(TEST_RIGS,d)>=3)return 'maintenance of R&D test rigs, not a plant';
+ if(/\bCNC\b/.test(d)&&distinct(CNC_CONTROLS,d)>=2)return 'CNC machine maintenance as the main work';
+ if(/\b(?:electrical )?[ABC][- ]?licen[cs]e\b[^.;]{0,60}\b(?:mandator\w*|required|must)\b/i.test(d))return 'a mandatory state electrical licence';
+ if(/\bmandatory skills?\s*:\s*[^.;]{0,40}\b(?:oil (?:and|&) gas|downstream|upstream|refining|petrochemicals?)\b/i.test(d)||(/\bconsultant\b/i.test(ti)&&/\bGE (?:APM|SmartSignal)\b|\bSmartSignal\b|\bSIL\s*\/\s*SIS\b|\bIEC 61511\b/i.test(d)))return 'consulting with mandatory oil-and-gas or APM / SIL skills';
+ if(/\bIATF\s*16949\b/i.test(d)&&/\bautomotive\b|\bvehicles?\b|\bseat ?belts?\b|\bairbags?\b|\btwo[- ]wheelers?\b|\bEVs?\b/i.test(d))return 'automotive-parts plant maintenance (IATF 16949)';
+ if(/\b(?:sr\.?|senior) executive\b/i.test(`${ti} ${d}`)&&!/\b(?:manager|head)\b/i.test(ti)&&yearsAskedTop(d)>0&&yearsAskedTop(d)<=8&&/\bPLCs?\b/.test(d)&&/\brobot/i.test(d))return 'an executive-grade post on PLC and robot lines';
+ if(/\b\d{1,2}\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?years?\b[^.;]{0,80}\b[\w-]+ manufacturing plant\b/i.test(d)&&DIPLOMA_ACCEPTED.test(d))return 'machinery maintenance of one kind of factory, diploma accepted';
  return null;
 }
 // Sana's place: an abroad posting whose city the rules do not know ('Pessione', 'Pantin', 'San José', 'Port Harcourt'). Read as abroad when the
@@ -1676,12 +1745,14 @@ export function evaluate(candidate:any,p:Posting,ctx:EvalContext={}) {
  const sanaSupervisorLow=sanaBuiltIn&&have>=7&&/\bsupervisors?\b/i.test(p.title||'')&&!/\b(?:engineer|manager)\b/i.test(p.title||'')&&need>0&&need<=4;
  if(sanaSupervisorLow)score=Math.min(score,UNDER_LEVEL_CAP);
  // Jobs QA 9: a diploma / ITI post is a technician's grade; experience asked 20+ years, or 8+ beyond the person's, is far above them (both capped).
- const sanaTechnician=sanaBuiltIn&&have>=5&&!otherProfession&&(sanaTechnicianQualification(p.description)||sanaTechnicianGrade(p.description));   // jobs QA 10: an ITI route beside the engineer's
+ const sanaTechnician=sanaBuiltIn&&have>=5&&!otherProfession&&(sanaTechnicianQualification(p.description)||sanaTechnicianGrade(p.description)||sanaJuniorBodyGrade(p.title,p.description));   // jobs QA 10: an ITI route beside the engineer's
  if(sanaTechnician)score=Math.min(score,UNDER_LEVEL_CAP);
  const yearsFar=(farhanBuiltIn||sanaBuiltIn)?yearsFarAbove(p.description,have):0;
  if(yearsFar)score=Math.min(score,UNDER_LEVEL_CAP);
  const sanaStretch=sanaBuiltIn&&!otherProfession&&!sanaSupervisorLow&&!sanaTechnician?sanaStretchOnly(p.title,p.description,p.company,have,p.location):null;
- const stretchOnly=farhanStretch||sanaStretch;
+ // Jobs QA 12: a role match resting on generic skills alone is a stretch too (genericSkillsOnly).
+ const softOnly=(farhanBuiltIn||sanaBuiltIn)&&!farhanStretch&&!sanaStretch&&!engField&&!otherProfession&&fit!=='exact'&&genericSkillsOnly(skills);
+ const stretchOnly=farhanStretch||sanaStretch||(softOnly?'a match on generic skills only':null);
  // Only on a confirmed row from the employer's own channel: an unconfirmed row, or a job-board row (stored unconfirmed, PUBLIC_FEED_UNVERIFIED), is
  // already Worth a try at most, and capping it below the threshold would hide it.
  const stretchCapped=!!stretchOnly&&eligibility==='ELIGIBLE'&&!p.board;
