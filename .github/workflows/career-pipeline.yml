@@ -16,14 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Pipeline regression tests (offline)
         run: python -m unittest -v engine.tests.test_pipeline engine.tests.test_pipeline_privacy engine.tests.test_match
       - name: Restore encrypted tracker state
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: state-cache
           key: career-state-${{ github.run_id }}
@@ -38,13 +38,13 @@ jobs:
         run: bash engine/ci/run_pipeline.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Save encrypted tracker state
         if: hashFiles('state-cache/state.sqlite.enc') != ''
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: state-cache
           key: career-state-${{ github.run_id }}
       - name: Upload encrypted dashboards and CSVs
         if: hashFiles('state-cache/state.sqlite.enc') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: career-results-${{ github.run_id }}
           path: |

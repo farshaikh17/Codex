@@ -20,7 +20,7 @@ jobs:
     outputs:
       skip: ${{ steps.g.outputs.skip == 'true' || steps.r.outputs.skip == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Budget guard (account rows read today, from Cloudflare analytics; reads nothing from D1)
         id: g
         env:
@@ -48,13 +48,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false   # the job-site and feed steps run third-party code; no GitHub token is left in .git/config for them
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: D1 usage at the start (plan H1; Cloudflare analytics, reads nothing from D1; the run row stores what this run used)
